@@ -1,0 +1,2009 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CassiopeiaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     30.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "spell0_effect1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect2": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect4": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 3.5,
+    "max_rank": 3.5
+   },
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CassiopeiaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     30.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "spell0_effect1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect2": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect4": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 3.5,
+    "max_rank": 3.5
+   },
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "CassiopeiaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     30.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "spell0_effect1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect2": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "spell0_effect4": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 3.5,
+    "max_rank": 3.5
+   },
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CassiopeiaQDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CassiopeiaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.75,
+    "max_rank": 0.75
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaEAbility/CassiopeiaE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "CassiopeiaE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.75,
+    "max_rank": 0.75
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaEAbility/CassiopeiaE"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "CassiopeiaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CassPoisonDebuffListener",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassPoisonDebuffListener"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CassiopeiaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    20.0,
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     20.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "spell0_effect1": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "spell0_effect2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 24.0,
+    "max_rank": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CassiopeiaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    20.0,
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     20.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "spell0_effect1": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "spell0_effect2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 24.0,
+    "max_rank": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "CassiopeiaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    20.0,
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     20.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "spell0_effect1": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "spell0_effect2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 24.0,
+    "max_rank": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "CassiopeiaWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    0.0,
+    0.0,
+    125.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     0.0,
+     0.0,
+     125.0
+    ],
+    "spell0_effect1": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "spell0_effect2": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 10.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "CassiopeiaRStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    0.0,
+    0.0,
+    125.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     0.0,
+     0.0,
+     125.0
+    ],
+    "spell0_effect1": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "spell0_effect2": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 10.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaRStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "CassiopeiaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 10.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CassiopeiaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 10.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CassiopeiaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 10.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "CassiopeiaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "CassiopeiaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "CassiopeiaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "CassiopeiaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "cassiopeia Passive (E (Twin Fang heal))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "E (Twin Fang heal)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CassiopeiaWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7170
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+   ],
+   "inherited_from": "CassiopeiaW",
+   "evidence": "inherited:CassiopeiaW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CassiopeiaWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7170
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+   ],
+   "inherited_from": "CassiopeiaW",
+   "evidence": "inherited:CassiopeiaW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "CassiopeiaWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7170
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+   ],
+   "inherited_from": "CassiopeiaW",
+   "evidence": "inherited:CassiopeiaW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "CassiopeiaPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement Speed",
+    "Serpentine Grace"
+   ],
+   "binary": [
+    "Characters/Cassiopeia/Spells/CassiopeiaPassiveAbility/CassiopeiaPassive"
+   ],
+   "evidence": "wiki:Serpentine Grace increases effectiveness of all movement speed bonuses"
+  }
+ }
+]

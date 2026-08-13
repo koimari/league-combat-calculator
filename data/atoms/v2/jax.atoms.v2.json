@@ -1,0 +1,3780 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JaxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JaxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "AttackTower"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JaxBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "AttackTower"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "AttackTower2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JaxBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "AttackTower2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JaxCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.388,
+    "behavior": "Crit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=400.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.388,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JaxE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    17.0,
+    15.0,
+    13.0,
+    11.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PercentIncreasedPerDodge": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "MaxDodgesForDamageIncrease": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PercentHealthDamage": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DodgeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "AoEDamageReduction": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxEAbility/JaxE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Idle1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JaxE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    17.0,
+    15.0,
+    13.0,
+    11.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PercentIncreasedPerDodge": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "MaxDodgesForDamageIncrease": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PercentHealthDamage": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DodgeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "AoEDamageReduction": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxEAbility/JaxE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Idle1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    17.0,
+    15.0,
+    13.0,
+    11.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PercentIncreasedPerDodge": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "MaxDodgesForDamageIncrease": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PercentHealthDamage": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DodgeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "AoEDamageReduction": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxEAbility/JaxE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Idle1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "JaxE",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    17.0,
+    15.0,
+    13.0,
+    11.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PercentIncreasedPerDodge": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "MaxDodgesForDamageIncrease": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PercentHealthDamage": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DodgeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "AoEDamageReduction": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxEAbility/JaxE"
+   ],
+   "evidence": "tag:Trait_Parry"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Idle1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxE",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    17.0,
+    15.0,
+    13.0,
+    11.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PercentIncreasedPerDodge": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "MaxDodgesForDamageIncrease": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PercentHealthDamage": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DodgeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "AoEDamageReduction": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxEAbility/JaxE"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Idle1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxFishingPassiveBlueFishBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f6e8e014}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxFishingPassiveGoldFishBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{3eece5ba}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.passive-gold-generation",
+  "family": "vision-economy",
+  "behavior": "JaxFishingPassiveGoldFishBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gold",
+    "Gold income"
+   ],
+   "binary": [
+    "{3eece5ba}"
+   ],
+   "evidence": "name:passivegold"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BuffDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxStacks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "FallOffRate": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "BelvethVsJaxQuestRewardStacks": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxPassiveAbility/JaxPassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxPassive",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "BuffDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxStacks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "FallOffRate": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "BelvethVsJaxQuestRewardStacks": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Stacking",
+    "On-hit"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxPassiveAbility/JaxPassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxPassiveAS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxPassiveAbility/JaxPassiveAS"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "JaxQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     25.0,
+     65.0,
+     105.0,
+     145.0,
+     185.0,
+     225.0,
+     265.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxQAbility/JaxQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "Spell2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 5.5
+   },
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "damage": [
+    25.0,
+    65.0,
+    105.0,
+    145.0,
+    185.0,
+    225.0,
+    265.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     25.0,
+     65.0,
+     105.0,
+     145.0,
+     185.0,
+     225.0,
+     265.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxQAbility/JaxQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "Spell2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 5.5
+   },
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "damage": [
+    25.0,
+    65.0,
+    105.0,
+    145.0,
+    185.0,
+    225.0,
+    265.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     25.0,
+     65.0,
+     105.0,
+     145.0,
+     185.0,
+     225.0,
+     265.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23615
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxQAbility/JaxQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "Spell2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 5.5
+   },
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JaxR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    100.0,
+    90.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    75.0,
+    130.0,
+    185.0,
+    240.0,
+    295.0,
+    350.0
+   ],
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "OnHitDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     },
+     {
+      "name": "BaseArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.4000000059604645
+     },
+     {
+      "name": "BonusArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.10000000149011612
+     },
+     {
+      "name": "SwingDamageTotal",
+      "stat": null,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ],
+    "stat_2": 0.10000000149011612,
+    "bonus_ad": 0.10000000149011612
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Duration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveBaseDamage": [
+     20.0,
+     75.0,
+     130.0,
+     185.0,
+     240.0,
+     295.0,
+     350.0
+    ],
+    "PassiveFallOffTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseResists": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "ResistsPerExtraTarget": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "MRMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SwingDamageBase": [
+     25.0,
+     100.0,
+     175.0,
+     250.0,
+     325.0,
+     400.0,
+     475.0
+    ],
+    "AoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 110.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.0727,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    100.0,
+    90.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    75.0,
+    130.0,
+    185.0,
+    240.0,
+    295.0,
+    350.0
+   ],
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "OnHitDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     },
+     {
+      "name": "BaseArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.4000000059604645
+     },
+     {
+      "name": "BonusArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.10000000149011612
+     },
+     {
+      "name": "SwingDamageTotal",
+      "stat": null,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ],
+    "stat_2": 0.10000000149011612,
+    "bonus_ad": 0.10000000149011612
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Duration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveBaseDamage": [
+     20.0,
+     75.0,
+     130.0,
+     185.0,
+     240.0,
+     295.0,
+     350.0
+    ],
+    "PassiveFallOffTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseResists": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "ResistsPerExtraTarget": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "MRMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SwingDamageBase": [
+     25.0,
+     100.0,
+     175.0,
+     250.0,
+     325.0,
+     400.0,
+     475.0
+    ],
+    "AoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 110.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.0727,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    100.0,
+    90.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "OnHitDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     },
+     {
+      "name": "BaseArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.4000000059604645
+     },
+     {
+      "name": "BonusArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.10000000149011612
+     },
+     {
+      "name": "SwingDamageTotal",
+      "stat": null,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ],
+    "stat_2": 0.10000000149011612,
+    "bonus_ad": 0.10000000149011612
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Duration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveBaseDamage": [
+     20.0,
+     75.0,
+     130.0,
+     185.0,
+     240.0,
+     295.0,
+     350.0
+    ],
+    "PassiveFallOffTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseResists": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "ResistsPerExtraTarget": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "MRMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SwingDamageBase": [
+     25.0,
+     100.0,
+     175.0,
+     250.0,
+     325.0,
+     400.0,
+     475.0
+    ],
+    "AoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 110.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.0727,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxRPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    100.0,
+    90.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    75.0,
+    130.0,
+    185.0,
+    240.0,
+    295.0,
+    350.0
+   ],
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "OnHitDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     },
+     {
+      "name": "BaseArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.4000000059604645
+     },
+     {
+      "name": "BonusArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.10000000149011612
+     },
+     {
+      "name": "SwingDamageTotal",
+      "stat": null,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ],
+    "stat_2": 0.10000000149011612,
+    "bonus_ad": 0.10000000149011612
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Duration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveBaseDamage": [
+     20.0,
+     75.0,
+     130.0,
+     185.0,
+     240.0,
+     295.0,
+     350.0
+    ],
+    "PassiveFallOffTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseResists": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "ResistsPerExtraTarget": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "MRMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SwingDamageBase": [
+     25.0,
+     100.0,
+     175.0,
+     250.0,
+     325.0,
+     400.0,
+     475.0
+    ],
+    "AoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "On-hit"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxR"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 110.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.0727,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaxRPassive",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    100.0,
+    90.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "OnHitDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     },
+     {
+      "name": "BaseArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.4000000059604645
+     },
+     {
+      "name": "BonusArmor",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.10000000149011612
+     },
+     {
+      "name": "SwingDamageTotal",
+      "stat": null,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ],
+    "stat_2": 0.10000000149011612,
+    "bonus_ad": 0.10000000149011612
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Duration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveBaseDamage": [
+     20.0,
+     75.0,
+     130.0,
+     185.0,
+     240.0,
+     295.0,
+     350.0
+    ],
+    "PassiveFallOffTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseResists": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "ResistsPerExtraTarget": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "MRMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SwingDamageBase": [
+     25.0,
+     100.0,
+     175.0,
+     250.0,
+     325.0,
+     400.0,
+     475.0
+    ],
+    "AoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Passive",
+    "On-hit"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxR"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 110.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.0727,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxRPassiveAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7423
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "On-hit"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxRAbility/JaxRPassiveAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.392,
+    "behavior": "Spell4Attack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.392,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JaxW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_None": 0.6000000238418579,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxWAbility/JaxW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.319,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 3.0
+   },
+   "cast_time_seconds": 0.319,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JaxW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_None": 0.6000000238418579,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxWAbility/JaxW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.319,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 3.0
+   },
+   "cast_time_seconds": 0.319,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "JaxW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_None": 0.6000000238418579,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxWAbility/JaxW"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.319,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 3.0
+   },
+   "cast_time_seconds": 0.319,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "JaxW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "stat_None": 0.6000000238418579,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 0.6000000238418579
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "Damage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "StructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Jax/Spells/JaxWAbility/JaxW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.319,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 3.0
+   },
+   "cast_time_seconds": 0.319,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "JaxWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23210
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{24874095}"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "Spell2Attack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ }
+]

@@ -1,0 +1,4288 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     175.0
+    ],
+    "effect_2": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "effect_3": [
+     4.5,
+     4.0,
+     3.5,
+     3.0,
+     2.5,
+     2.0,
+     2.0
+    ],
+    "effect_4": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "effect_5": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "effect_7": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQ"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KindredQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.2,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     175.0
+    ],
+    "effect_2": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "effect_3": [
+     4.5,
+     4.0,
+     3.5,
+     3.0,
+     2.5,
+     2.0,
+     2.0
+    ],
+    "effect_4": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "effect_5": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "effect_7": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KindredQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.2,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KindredQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     175.0
+    ],
+    "effect_2": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "effect_3": [
+     4.5,
+     4.0,
+     3.5,
+     3.0,
+     2.5,
+     2.0,
+     2.0
+    ],
+    "effect_4": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "effect_5": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "effect_7": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KindredQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.2,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     175.0
+    ],
+    "effect_2": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "effect_3": [
+     4.5,
+     4.0,
+     3.5,
+     3.0,
+     2.5,
+     2.0,
+     2.0
+    ],
+    "effect_4": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "effect_5": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "effect_7": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KindredQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.2,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KindredQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     175.0
+    ],
+    "effect_2": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "effect_3": [
+     4.5,
+     4.0,
+     3.5,
+     3.0,
+     2.5,
+     2.0,
+     2.0
+    ],
+    "effect_4": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "effect_5": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "effect_7": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KindredQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.2,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredQASBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQASBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWCloneBuffVisible",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWCloneBuffVisible"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWCloneBuffVisible",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWCloneBuffVisible"
+   ],
+   "evidence": "name:clone"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KindredW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 19.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "effect_1": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_2": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_3": [
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5
+    ],
+    "effect_4": [
+     25.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "effect_5": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "effect_6": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_7": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 19.0,
+   "cooldown_seconds_max_rank": 14.0,
+   "cast_time_seconds": 0.38,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 19.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "effect_1": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_2": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_3": [
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5
+    ],
+    "effect_4": [
+     25.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "effect_5": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "effect_6": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_7": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 19.0,
+   "cooldown_seconds_max_rank": 14.0,
+   "cast_time_seconds": 0.38,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 19.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "effect_1": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_2": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_3": [
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5,
+     8.5
+    ],
+    "effect_4": [
+     25.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "effect_5": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "effect_6": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_7": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 19.0,
+   "cooldown_seconds_max_rank": 14.0,
+   "cast_time_seconds": 0.38,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWChargePassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWChargePassiveBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KindredWPassiveHealMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "missile_speed": 1300.0
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWPassiveHealMissile"
+   ],
+   "evidence": "name:heal"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredWPassiveHealMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.033,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty3",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty3",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty1"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackBounty1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty1"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredBasicAttackBounty1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackBounty1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackBounty1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.lockout",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredMonsterBountyLockout",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6282,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "missile_speed": 1600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control",
+    "Dash"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredMonsterBountyLockout"
+   ],
+   "evidence": "name:lockout"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredMonsterBountyLockout",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredMonsterBountyLockout",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredMarkoftheKindredSpell",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 60.0,
+   "cooldown_rank_max": 60.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 4106,
+   "cooldown": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredMarkoftheKindredSpell"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredMarkoftheKindredSpell",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 60.0,
+   "cooldown_seconds_max_rank": 60.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredMarkoftheKindredTimer",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredMarkoftheKindredTimer"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredFakeCastTimeSpell",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 14346,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_1": [
+     20.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0,
+     260.0
+    ],
+    "effect_2": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "effect_3": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_4": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRAbility/KindredFakeCastTimeSpell"
+   ],
+   "evidence": "name:casttime"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredFakeCastTimeSpell",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cooldown_seconds_max_rank": 1.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredRNoDeathBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    70.0,
+    85.0,
+    100.0,
+    0.0,
+    0.0,
+    15.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     5.0,
+     12.0,
+     19.0,
+     26.0,
+     0.0,
+     0.0,
+     7.0
+    ],
+    "effect_1": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     10.0,
+     24.0,
+     38.0,
+     52.0,
+     0.0,
+     0.0,
+     14.0
+    ],
+    "effect_3": [
+     15.0,
+     36.0,
+     57.0,
+     78.0,
+     0.0,
+     0.0,
+     21.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRAbility/KindredRNoDeathBuff"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredRNoDeathBuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.672,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KindredR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 120.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     225.0,
+     225.0,
+     300.0,
+     375.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     530.0,
+     530.0,
+     530.0,
+     530.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRAbility/KindredR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.672,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KindredR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 120.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     225.0,
+     225.0,
+     300.0,
+     375.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     530.0,
+     530.0,
+     530.0,
+     530.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRAbility/KindredR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.672,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 120.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     225.0,
+     225.0,
+     300.0,
+     375.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     530.0,
+     530.0,
+     530.0,
+     530.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRAbility/KindredR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.672,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredEWolfMissileWorkaroundBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 170.0,
+   "cooldown_rank_max": 10.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    170.0,
+    150.0,
+    130.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    150.0,
+    200.0,
+    80.0,
+    80.0,
+    130.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEWrapperAbility/KindredEWolfMissileWorkaroundBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredEWolfMissileWorkaroundBuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 170.0,
+   "cooldown_seconds_max_rank": 10.0,
+   "cast_time_seconds": 0.595,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 170.0,
+   "cooldown_rank_max": 10.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    170.0,
+    150.0,
+    130.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    150.0,
+    200.0,
+    80.0,
+    80.0,
+    130.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEWrapperAbility/KindredESlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredESlow",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 170.0,
+   "cooldown_seconds_max_rank": 10.0,
+   "cast_time_seconds": 0.595,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredEFinalAttackBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 170.0,
+   "cooldown_rank_max": 10.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    170.0,
+    150.0,
+    130.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    150.0,
+    200.0,
+    80.0,
+    80.0,
+    130.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEWrapperAbility/KindredEFinalAttackBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredEFinalAttackBuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 170.0,
+   "cooldown_seconds_max_rank": 10.0,
+   "cast_time_seconds": 0.595,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KindredCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredCritAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackOverrideLightbombFinal",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "missile_speed": 1400.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackOverrideLightbombFinal"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackOverrideLightbombFinal",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackOverrideLightbombFinal",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttackOverrideLightbombFinal",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "missile_speed": 1400.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttackOverrideLightbombFinal"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttackOverrideLightbombFinal",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttackOverrideLightbombFinal",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredRecallReturnBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredRecallReturnBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredFakeCastTimeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredFakeCastTimeBuff"
+   ],
+   "evidence": "name:casttime"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredFakeCastTimeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredFakeCastTimeBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KindredBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KindredBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "kindred Passive (Wolf)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Wolf"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {},
+  "analysis_note": "wiki-only atom: v1 provenance has empty binary list (source=wiki-map, evidence=wiki-map); no SpellObject exists in the parsed CharacterRecord, so numeric spine/states/cycle are intentionally empty (no fabricated values)."
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissile"
+   ],
+   "inherited_from": "KindredQ",
+   "evidence": "inherited:KindredQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissile"
+   ],
+   "inherited_from": "KindredQ",
+   "evidence": "inherited:KindredQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KindredQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissile"
+   ],
+   "inherited_from": "KindredQ",
+   "evidence": "inherited:KindredQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissile"
+   ],
+   "inherited_from": "KindredQ",
+   "evidence": "inherited:KindredQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KindredQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissile"
+   ],
+   "inherited_from": "KindredQ",
+   "evidence": "inherited:KindredQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredQMissileMinor",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dance of Arrows: fires an arrow at up to 3 nearby visible enemies"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredQAbility/KindredQMissileMinor"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredQMissileMinor",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredQMissileMinor",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.135,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Wolf's Frenzy passive: generates Hunter's Vigor stacks while travelling and on-attack, up to 100"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWSpellPassive"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredWSpellPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 19.0,
+   "cooldown_seconds_max_rank": 14.0,
+   "cast_time_seconds": 0.38,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KindredWMaim",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Wolf attacks maim enemies within the zone, slowing them"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWMaim"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack-duration-refresh",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredERefresher",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    170.0,
+    150.0,
+    130.0,
+    110.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    150.0,
+    200.0,
+    80.0,
+    80.0,
+    130.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mounting Dread: basic attacks against the marked target refresh the mark duration, stacking up to 3"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEAbility/KindredERefresher"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredERefresher",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 170.0,
+   "cooldown_seconds_max_rank": 10.0,
+   "cast_time_seconds": 0.595,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredEWolfMissile",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mounting Dread: Wolf attacks the marked target, applying stacks"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEAbility/KindredEWolfMissile"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredEWolfMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredEWolfMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredECharge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mounting Dread: mark stacks accumulate on the target before the final attack"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEAbility/KindredECharge"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KindredE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "effect_1": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "effect_2": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "effect_3": [
+     10.0,
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "effect_4": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "effect_5": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_7": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_8": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mounting Dread: fires a shot at the target enemy"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEAbility/KindredE"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredLegendPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mark of the Kindred: takedowns against hunted targets collect stacks granting bonus range/attack speed"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredLegendPassive"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredESpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "effect_1": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "effect_2": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "effect_3": [
+     10.0,
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "effect_4": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "effect_5": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_7": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_8": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "missile_speed": 1600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mounting Dread: fires a shot that slows the target and marks them for 4 seconds"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEAbility/KindredESpellPassive"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KindredESpellPassive",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KindredESpellPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "setup"
+  }
+ }
+]

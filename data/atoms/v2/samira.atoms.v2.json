@@ -1,0 +1,3953 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6,
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "DashSpeed": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.227273,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6,
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "DashSpeed": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.227273,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6,
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "DashSpeed": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "AttackSpeedDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.227273,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.9,
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BaseMSBonus": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "LifestealMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionDamageMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.9,
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BaseMSBonus": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "LifestealMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionDamageMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.9,
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BaseMSBonus": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "LifestealMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionDamageMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    -5.0,
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.9,
+    "QADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     -5.0,
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "CritDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LifestealMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "QADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_seconds": 2.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    -5.0,
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.9,
+    "QADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     -5.0,
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "CritDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LifestealMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "QADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_seconds": 2.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraQBufferedSword",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    19.0,
+    16.0,
+    13.0,
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0,
+    240.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamage": [
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQBufferedSword"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SamiraCritAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraCritAttackMelee"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "DashSpeed": [
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "DashSpeed": [
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "BonusAttackSpeed": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "DashSpeed": [
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0,
+     2050.0
+    ],
+    "DashTotalDistance": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    30.0,
+    30.0,
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "duration": null,
+   "ratios": {
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 30.0,
+   "cooldown_max_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    30.0,
+    30.0,
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "duration": null,
+   "ratios": {
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 30.0,
+   "cooldown_max_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    30.0,
+    30.0,
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "duration": null,
+   "ratios": {
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "SlashDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 30.0,
+   "cooldown_max_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_ProjectileDestruction"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "SwordRange": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "VisualBonusRange": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "DurationTOOLTIP": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SamiraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.taunt",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraTauntMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 1.1
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     -5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0
+    ],
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDRefundUrf": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeed": [
+     0.30000001192092896,
+     0.44999998807907104,
+     0.6000000238418579,
+     0.75,
+     0.8999999761581421,
+     1.0499999523162842,
+     1.2000000476837158
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_seconds": 3.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraTauntMissile"
+   ],
+   "evidence": "name:taunt"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "coefficient": 1.2
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15018
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "coefficient": 1.2
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15018
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "coefficient": 1.2
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15018
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQSword",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    19.0,
+    16.0,
+    13.0,
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0,
+    240.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamage": [
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8193
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Flourish"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQSword"
+   ],
+   "evidence": "calc:DamageCalc (melee slash of Flourish)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQGun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 1.1
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     -5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0
+    ],
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDRefundUrf": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeed": [
+     0.30000001192092896,
+     0.44999998807907104,
+     0.6000000238418579,
+     0.75,
+     0.8999999761581421,
+     1.0499999523162842,
+     1.2000000476837158
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_seconds": 3.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Flourish"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQGun"
+   ],
+   "evidence": "calc:Damage (ranged shot of Flourish)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "DurationTOOLTIP": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "effect_amounts": {
+    "SwordRange": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "VisualBonusRange": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "DurationTOOLTIP": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Dash"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
+   ],
+   "evidence": "calc:QueenMaxDashRange (passive dash toward attack range)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "DurationTOOLTIP": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "effect_amounts": {
+    "SwordRange": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "VisualBonusRange": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "DurationTOOLTIP": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
+   ],
+   "evidence": "calc:BonusMeleeDamage/EmpoweredMeleeDamageTooltip (bonus damage after movement)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack",
+    "Daredevil Impulse"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAttack"
+   ],
+   "evidence": "name:basicattack (passive-empowered attack)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPJuggle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0,
+    30.0
+   ],
+   "duration": null,
+   "ratios": {
+    "Duration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Duration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "NumShots": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RecastLockout": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "RangeCheck": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "PercentDamageAmpToMinions": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "BaseDamage": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPJuggle"
+   ],
+   "evidence": "calc:DamagePerBullet/TotalDamage (juggle hit)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPSwordJuggle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0,
+    30.0
+   ],
+   "duration": null,
+   "ratios": {
+    "Duration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Duration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "NumShots": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RecastLockout": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "RangeCheck": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "PercentDamageAmpToMinions": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "BaseDamage": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPSwordJuggle"
+   ],
+   "evidence": "calc:DamagePerBullet/TotalDamage (sword juggle)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPMissile"
+   ],
+   "evidence": "name:missile (juggled bullet)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPMissileOffhand",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPMissileOffhand"
+   ],
+   "evidence": "name:missile (off-hand juggled bullet)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraPassiveCombo",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "SwordRange": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Stack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveCombo"
+   ],
+   "evidence": "name:combo + calc:QueenMaxDashRange (Style combo tracking)"
+  }
+ }
+]

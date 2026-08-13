@@ -1,0 +1,3529 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 6154,
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    25.0,
+    60.0,
+    95.0,
+    130.0,
+    165.0,
+    200.0,
+    235.0
+   ],
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.25,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "{0858a9eb}"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraEDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 7183,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "ConeAngle": [
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0
+    ],
+    "StunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowAmount": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "UpgradedConeAngle": [
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0
+    ],
+    "BaseDamage": [
+     25.0,
+     60.0,
+     95.0,
+     130.0,
+     165.0,
+     200.0,
+     235.0
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage": [
+    25.0,
+    60.0,
+    95.0,
+    130.0,
+    165.0,
+    200.0,
+    235.0
+   ],
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.25,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank_seconds": 15.0,
+   "uptime_fraction": 0.0833,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "ConeAngle": [
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0
+    ],
+    "StunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowAmount": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "UpgradedConeAngle": [
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0
+    ],
+    "BaseDamage": [
+     25.0,
+     60.0,
+     95.0,
+     130.0,
+     165.0,
+     200.0,
+     235.0
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage": [
+    25.0,
+    60.0,
+    95.0,
+    130.0,
+    165.0,
+    200.0,
+    235.0
+   ],
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.25,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank_seconds": 15.0,
+   "uptime_fraction": 0.0833,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraE"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "ConeAngle": [
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0
+    ],
+    "StunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowAmount": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "UpgradedConeAngle": [
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0
+    ],
+    "BaseDamage": [
+     25.0,
+     60.0,
+     95.0,
+     130.0,
+     165.0,
+     200.0,
+     235.0
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage": [
+    25.0,
+    60.0,
+    95.0,
+    130.0,
+    165.0,
+    200.0,
+    235.0
+   ],
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.25,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank_seconds": 15.0,
+   "uptime_fraction": 0.0833,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "ConeAngle": [
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0,
+     56.0
+    ],
+    "StunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "UpgradedSlowAmount": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "UpgradedConeAngle": [
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0
+    ],
+    "BaseDamage": [
+     25.0,
+     60.0,
+     95.0,
+     130.0,
+     165.0,
+     200.0,
+     235.0
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage": [
+    25.0,
+    60.0,
+    95.0,
+    130.0,
+    165.0,
+    200.0,
+    235.0
+   ],
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.25,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank_seconds": 15.0,
+   "uptime_fraction": 0.0833,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraE5",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank_seconds": 15.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraE5"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveWUpgrade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{3863a054}"
+   ],
+   "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveEUpgrade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{39bb964e}"
+   ],
+   "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveRUpgrade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{3a360415}"
+   ],
+   "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveCapstoneBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{6e774827}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveQUpgrade1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{eea8ae19}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveQUpgrade1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{eea8ae19}"
+   ],
+   "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{f240f35d}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassiveStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 1,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "{f7324a86}"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "DamagePerSphere": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "MaxSpheresToUse": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "UpgradeExecuteThreshold": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "QHastePerRank": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "TOOLTIPONLYTotalQHaste": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MinSpheresToUse": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "APRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "affects_type_flags": 4106,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_rank_seconds": 60.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraRAbility/SyndraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "SyndraR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "DamagePerSphere": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "MaxSpheresToUse": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "UpgradeExecuteThreshold": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "QHastePerRank": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "TOOLTIPONLYTotalQHaste": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MinSpheresToUse": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "APRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "affects_type_flags": 4106,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_rank_seconds": 60.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraRAbility/SyndraR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "Upgrade1MaxAmmo": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Upgrade2MaxAmmo": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SphereDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BaseDamage": [
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0,
+     265.0
+    ]
+   },
+   "damage": [
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0,
+    265.0
+   ],
+   "calculation_coefficients": [
+    0.699999988079071
+   ],
+   "affects_type_flags": 1029,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraQAbility/SyndraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "Upgrade1MaxAmmo": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Upgrade2MaxAmmo": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SphereDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BaseDamage": [
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0,
+     265.0
+    ]
+   },
+   "damage": [
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0,
+    265.0
+   ],
+   "calculation_coefficients": [
+    0.699999988079071
+   ],
+   "affects_type_flags": 1029,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraQAbility/SyndraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "Upgrade1MaxAmmo": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Upgrade2MaxAmmo": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SphereDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BaseDamage": [
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0,
+     265.0
+    ]
+   },
+   "damage": [
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0,
+    265.0
+   ],
+   "calculation_coefficients": [
+    0.699999988079071
+   ],
+   "affects_type_flags": 1029,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraQAbility/SyndraQ"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraQUpgrade",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "Upgrade1MaxAmmo": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseDamage": [
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0,
+     265.0
+    ]
+   },
+   "damage": [
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0,
+    265.0
+   ],
+   "calculation_coefficients": [
+    0.699999988079071
+   ],
+   "affects_type_flags": 1029,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.25,
+   "cooldown_max_rank_seconds": 1.25,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{cece3675}"
+   ],
+   "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SyndraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_time_seconds": 0.33500000834465027,
+   "effect_amounts": {},
+   "affects_type_flags": 7375,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33500000834465027,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": 0.33500000834465027,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SyndraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_time_seconds": 0.33500000834465027,
+   "effect_amounts": {},
+   "affects_type_flags": 7375,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33500000834465027,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": 0.33500000834465027,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {
+    "BaseSlow": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "ExtraSpherePickupRadius": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ]
+   },
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    0.6499999761581421,
+    0.019999999552965164
+   ],
+   "affects_type_flags": 7375,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 8.0,
+   "uptime_fraction": 0.125,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraWAbility/SyndraW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {
+    "BaseSlow": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "ExtraSpherePickupRadius": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ]
+   },
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    0.6499999761581421,
+    0.019999999552965164
+   ],
+   "affects_type_flags": 7375,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 8.0,
+   "uptime_fraction": 0.125,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraWAbility/SyndraW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraWDebuff",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 7183,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 8.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraWAbility/SyndraWDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraRSpread1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23567,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraRSpread1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SyndraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 7375,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SyndraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 7375,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SyndraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 7375,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile3"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile3"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraEMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile3"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraEMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile3"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile2"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile2"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraEMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile2"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraEMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraEAbility/SyndraEMissile2"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{d6e34809}"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{d6e34809}"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SyndraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{d6e34809}"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SyndraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 23759,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{d6e34809}"
+   ],
+   "inherited_from": "SyndraE",
+   "evidence": "inherited:SyndraE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "MarkDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "Q1UpgradeThreshold": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "WUpgradeThreshold": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "EUpgradeThreshold": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "RUpgradeThreshold": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "CapstoneAPPerc": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "MaxStackAmount": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ],
+    "StackPerSiege": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveMarkCooldown": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveStacksPerLevel": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0
+   ]
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Transcendent",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraPassiveAbility/SyndraPassive"
+   ],
+   "evidence": "wiki-map: passive collects Splinters of Wrath, stacking up to 120"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SyndraPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "MarkDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "Q1UpgradeThreshold": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "WUpgradeThreshold": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "EUpgradeThreshold": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "RUpgradeThreshold": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "CapstoneAPPerc": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "MaxStackAmount": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ],
+    "StackPerSiege": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveMarkCooldown": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PassiveStacksPerLevel": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0
+   ]
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Transcendent",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraPassiveAbility/SyndraPassive"
+   ],
+   "evidence": "wiki-map: collected Splinters enhance each ability at thresholds"
+  }
+ }
+]

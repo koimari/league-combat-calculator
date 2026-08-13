@@ -1,0 +1,2312 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 15.625,
+    "behavior": "EnchantedCrystalArrow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AshePassiveSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AshePassiveSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EnchantedCrystalArrowSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "EnchantedCrystalArrowSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrowSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 15.625,
+    "behavior": "EnchantedCrystalArrow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "Volley",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    14.5,
+    11.0,
+    7.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    75.0
+   ],
+   "damage": [
+    3.0,
+    5.0,
+    7.0,
+    9.0,
+    11.0,
+    13.0,
+    15.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     3.0,
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.6652,
+    "behavior": "Volley"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/Volley"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VolleyAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.8,
+    "behavior": "VolleyAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
+   ],
+   "inherited_from": "Volley",
+   "evidence": "inherited:Volley"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VolleyCenterAttack",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.8,
+    "behavior": "VolleyCenterAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyCenterAttack"
+   ],
+   "evidence": "wiki W: volley of arrows in a cone, each arrow damages first enemy hit"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VolleyRightAttack",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.8,
+    "behavior": "VolleyRightAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyRightAttack"
+   ],
+   "evidence": "wiki W: volley of arrows in a cone, each arrow damages first enemy hit"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.24,
+    "behavior": "AsheBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.24,
+    "behavior": "AsheBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.critical-chance",
+  "family": "damage",
+  "behavior": "AsheCritChance",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AsheCritChance"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritChance"
+   ],
+   "evidence": "name:critchance"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AsheCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.24,
+    "behavior": "AsheCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AsheCritChance",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AsheCritChance"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritChance"
+   ],
+   "evidence": "name:critchance"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AshePassive",
+  "trigger": "on_attack",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AshePassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AshePassiveAbility/AshePassive"
+   ],
+   "evidence": "wiki P: basic attacks deal bonus physical damage scaling with crit; crits deal no extra"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AsheQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [],
+   "mana_cost": [
+    30.0
+   ],
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.25,
+    "mCoefficient2": 1.25
+   },
+   "effect_amounts": {
+    "effect_0": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_2": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     60.0
+    ],
+    "effect_6": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_7": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_8": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AsheQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    15.0,
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 2.0,
+    "mCoefficient2": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "effect_1": [
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 10.0,
+    "behavior": "AsheQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 15.625,
+    "behavior": "EnchantedCrystalArrow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Volley",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    14.5,
+    11.0,
+    7.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    75.0
+   ],
+   "damage": [
+    3.0,
+    5.0,
+    7.0,
+    9.0,
+    11.0,
+    13.0,
+    15.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     3.0,
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.6652,
+    "behavior": "Volley"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/Volley"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VolleyAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.8,
+    "behavior": "VolleyAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
+   ],
+   "inherited_from": "Volley",
+   "evidence": "inherited:Volley"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.on-attack",
+  "family": "damage",
+  "behavior": "AsheQAttackNoOnHit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    15.0,
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 2.0,
+    "mCoefficient2": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "effect_1": [
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 10.0,
+    "behavior": "AsheQAttackNoOnHit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttackNoOnHit"
+   ],
+   "evidence": "name:onattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "AsheQAttackNoOnHit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    15.0,
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 2.0,
+    "mCoefficient2": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "effect_1": [
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 10.0,
+    "behavior": "AsheQAttackNoOnHit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttackNoOnHit"
+   ],
+   "evidence": "name:onhit"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.24,
+    "behavior": "AsheBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.24,
+    "behavior": "AsheBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneAsheAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1400.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    45.0,
+    85.0,
+    125.0,
+    165.0,
+    205.0,
+    245.0,
+    285.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0,
+     285.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.56,
+    "behavior": "ItemHurricaneAsheAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/ItemHurricaneAsheAttack"
+   ],
+   "evidence": "name:item"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "AsheQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [],
+   "mana_cost": [
+    30.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.25,
+    "mCoefficient2": 1.25
+   },
+   "effect_amounts": {
+    "effect_0": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_2": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     60.0
+    ],
+    "effect_6": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_7": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_8": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AsheQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 2.0,
+    "mCoefficient2": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "effect_1": [
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 10.0,
+    "behavior": "AsheQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheSpiritOfTheHawk",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.75
+   },
+   "effect_amounts": {
+    "effect_0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_1": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "effect_2": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 16384
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 17.8571,
+    "behavior": "AsheSpiritOfTheHawk"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheSpiritOfTheHawkAbility/AsheSpiritOfTheHawk"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [],
+   "mana_cost": [
+    30.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.25,
+    "mCoefficient2": 1.25
+   },
+   "effect_amounts": {
+    "effect_0": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_2": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     60.0
+    ],
+    "effect_6": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_7": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_8": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AsheQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 2.0,
+    "mCoefficient2": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "effect_1": [
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 10.0,
+    "behavior": "AsheQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheQBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AsheQBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AshePassiveNeutralDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AshePassiveNeutralDebuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveNeutralDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheEVisionMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AsheEVisionMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{93b9a272}"
+   ],
+   "evidence": "name:mark"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "AsheEVisionMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AsheEVisionMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "{93b9a272}"
+   ],
+   "evidence": "name:vision"
+  },
+  "resolution_status": "resolved"
+ }
+]

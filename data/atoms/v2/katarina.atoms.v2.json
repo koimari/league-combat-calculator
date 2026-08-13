@@ -1,0 +1,1755 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    60.0,
+    45.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    12.5,
+    25.0,
+    37.5,
+    50.0,
+    62.5,
+    75.0,
+    87.5
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": null,
+   "tick_rate": 6.0,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 75.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0333,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    60.0,
+    45.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    12.5,
+    25.0,
+    37.5,
+    50.0,
+    62.5,
+    75.0,
+    87.5
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": null,
+   "tick_rate": 6.0,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 75.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0333,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    60.0,
+    45.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    12.5,
+    25.0,
+    37.5,
+    50.0,
+    62.5,
+    75.0,
+    87.5
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": null,
+   "tick_rate": 6.0,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 75.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0333,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    60.0,
+    45.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    12.5,
+    25.0,
+    37.5,
+    50.0,
+    62.5,
+    75.0,
+    87.5
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": null,
+   "tick_rate": 6.0,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 75.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0333,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMark"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    80.0,
+    115.0,
+    150.0,
+    185.0,
+    220.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 1600.0
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    80.0,
+    115.0,
+    150.0,
+    185.0,
+    220.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 1600.0
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaE"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cooldown_max_rank": 1.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KatarinaE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cooldown_max_rank": 1.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaEDagger",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaEDagger"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cooldown_max_rank": 1.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KatarinaEDagger",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaEDagger"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cooldown_max_rank": 1.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KatarinaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 2400.0
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 2400.0
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 2400.0
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 2400.0
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMis"
+   ],
+   "inherited_from": "KatarinaQ",
+   "evidence": "inherited:KatarinaQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMis"
+   ],
+   "inherited_from": "KatarinaQ",
+   "evidence": "inherited:KatarinaQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "interaction.cooldown-reset",
+  "family": "interaction",
+  "behavior": "KatarinaPassive",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    340.0,
+    340.0,
+    340.0,
+    340.0,
+    340.0,
+    340.0,
+    340.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "bonus_ad": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Voracity",
+    "Cooldown reduction"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaPassiveAbility/KatarinaPassive"
+   ],
+   "evidence": "P: champion takedown reduces ability cooldowns"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "reset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaRTrigger",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    11100.0,
+    11100.0,
+    11100.0,
+    11100.0,
+    11100.0,
+    11100.0,
+    11100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Death Lotus",
+    "Grievous Wounds"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRTrigger"
+   ],
+   "evidence": "R: Death Lotus applies Grievous Wounds (healing reduction)"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaQDaggerArc",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Bouncing Blade",
+    "Dagger"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc2",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc3",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc4"
+   ],
+   "evidence": "Q: dagger drops at the final bounce target"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaWDaggerArc",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Dagger"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaWDaggerArc"
+   ],
+   "evidence": "W: dagger tossed into the air lands at the caster"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Movement speed",
+    "Ghost"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaW"
+   ],
+   "evidence": "W: brief ghosting and movement speed burst"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaWHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaWHaste"
+   ],
+   "evidence": "W dagger pickup grants bonus movement speed"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaDaggerPickupPBAoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2048
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dagger",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaPassiveAbility/KatarinaDaggerPickupPBAoE"
+   ],
+   "evidence": "dagger pickup spin deals AoE magic damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ }
+]

@@ -1,0 +1,3843 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 125.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    125.0,
+    125.0,
+    105.0,
+    85.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": 85.0,
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "BaseMissileDamage": [
+     50.0,
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "BaseZoneDamage": [
+     50.0,
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "CCDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowAmount": [
+     0.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ZoneDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "CooldownAmount": [
+     0.0,
+     0.5,
+     1.0,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    50.0,
+    125.0,
+    200.0,
+    275.0,
+    350.0,
+    425.0,
+    500.0
+   ],
+   "ratios": {
+    "CCDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ZoneDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 125.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 0.02,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 1000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaRAbility/IreliaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 125.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    125.0,
+    125.0,
+    105.0,
+    85.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": 85.0,
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "BaseMissileDamage": [
+     50.0,
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "BaseZoneDamage": [
+     50.0,
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "CCDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowAmount": [
+     0.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ZoneDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "CooldownAmount": [
+     0.0,
+     0.5,
+     1.0,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    50.0,
+    125.0,
+    200.0,
+    275.0,
+    350.0,
+    425.0,
+    500.0
+   ],
+   "ratios": {
+    "CCDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ZoneDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "IreliaR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 125.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 0.02,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 1000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaRAbility/IreliaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.disarm",
+  "family": "crowd-control-mobility",
+  "behavior": "IreliaRDisarm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IreliaRDisarm",
+    "atoms": [
+     "crowd-control-mobility.disarm"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaRAbility/IreliaRDisarm"
+   ],
+   "evidence": "name:disarm"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IreliaPassiveStacksMax",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaPassiveAbility/IreliaPassiveStacksMax"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IreliaPassiveStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IreliaPassiveStacks",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaPassiveAbility/IreliaPassiveStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IreliaMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IreliaMark",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IreliaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0,
+     270.0
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "RevTime": [
+     0.0,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "CDBetweenCast": [
+     0.0,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxRange": [
+     0.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0
+    ],
+    "MinRange": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "damage": [
+    30.0,
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0,
+    270.0
+   ],
+   "ratios": {
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "IreliaE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0469,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0,
+     270.0
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "RevTime": [
+     0.0,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "CDBetweenCast": [
+     0.0,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxRange": [
+     0.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0
+    ],
+    "MinRange": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "damage": [
+    30.0,
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0,
+    270.0
+   ],
+   "ratios": {
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0469,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0,
+     270.0
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "RevTime": [
+     0.0,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "CDBetweenCast": [
+     0.0,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxRange": [
+     0.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0,
+     775.0
+    ],
+    "MinRange": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "damage": [
+    30.0,
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0,
+    270.0
+   ],
+   "ratios": {
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BuffDuration": [
+     0.0,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MarkDuration": [
+     0.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "IreliaE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0469,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 25000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "data_values": {
+    "BasePhysicalDR": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MinDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChargeTimeForMax": [
+     0.0,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MRReductionAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "ratios": {
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    0.0,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "channel_duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 1.5,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 775.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "data_values": {
+    "BasePhysicalDR": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MinDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChargeTimeForMax": [
+     0.0,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MRReductionAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "ratios": {
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    0.0,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "channel_duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 1.5,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "IreliaW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 775.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "IreliaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cooldown_max_rank": 10.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "data_values": {
+    "BasePhysicalDR": [
+     0.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MinDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChargeTimeForMax": [
+     0.0,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MRReductionAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "ratios": {
+    "MaxDuration": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MaxBonusRatio": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    0.0,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "channel_duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 1.5,
+    "behavior": "IreliaW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "IreliaW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 775.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "IreliaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "IreliaCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IreliaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {},
+   "missile_speed": 467.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "IreliaBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 100.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IreliaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {},
+   "missile_speed": 467.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "IreliaBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 100.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "IreliaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "HealTADCoefficient": [
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645
+    ]
+   },
+   "damage": [
+    -15.0,
+    5.0,
+    25.0,
+    45.0,
+    65.0,
+    85.0,
+    105.0
+   ],
+   "ratios": {
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaQAbility/IreliaQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IreliaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "HealTADCoefficient": [
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645
+    ]
+   },
+   "damage": [
+    -15.0,
+    5.0,
+    25.0,
+    45.0,
+    65.0,
+    85.0,
+    105.0
+   ],
+   "ratios": {
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 600.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaQAbility/IreliaQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "HealTADCoefficient": [
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645
+    ]
+   },
+   "damage": [
+    -15.0,
+    5.0,
+    25.0,
+    45.0,
+    65.0,
+    85.0,
+    105.0
+   ],
+   "ratios": {
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 600.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaQAbility/IreliaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "IreliaQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "HealTADCoefficient": [
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645
+    ]
+   },
+   "damage": [
+    -15.0,
+    5.0,
+    25.0,
+    45.0,
+    65.0,
+    85.0,
+    105.0
+   ],
+   "ratios": {
+    "DashSpeedBonus": [
+     0.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaQ",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain",
+   "range": 600.0
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaQAbility/IreliaQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IreliaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {},
+   "missile_speed": 467.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 100.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IreliaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {},
+   "missile_speed": 467.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 100.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaR2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaR2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaR2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaRAbility/IreliaR2"
+   ],
+   "evidence": "inherited:IreliaR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaR2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cooldown_max_rank": 5.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "IreliaR2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaR2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaRAbility/IreliaR2"
+   ],
+   "evidence": "inherited:IreliaR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IreliaE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE2"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE2"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaE2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaE2"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IreliaEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaEMissile"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaEMissile"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IreliaEMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaEAbility/IreliaEMissile"
+   ],
+   "evidence": "inherited:IreliaE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IreliaW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown_max_rank": 3.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 775.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW2"
+   ],
+   "evidence": "inherited:IreliaW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IreliaW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown_max_rank": 3.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 775.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW2"
+   ],
+   "evidence": "inherited:IreliaW"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "IreliaW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 10.0,
+   "range": 775.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown_max_rank": 3.0,
+   "cast_range": [
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0,
+    775.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IreliaW2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 775.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaW2"
+   ],
+   "evidence": "inherited:IreliaW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "IreliaPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitStructureMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "OnHitBaseDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "OnHitPerLevel": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "ratios": {
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "stacks_cap": 4.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IreliaPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "IreliaPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ionian Fervor",
+    "At maximum stacks Irelia's basic attacks are empowered to deal bonus magic damage on-hit (10-61 + 20% bonus AD), reduced to 50% against structures"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaPassiveAbility/IreliaPassive"
+   ],
+   "evidence": "name:IreliaPassive; datavalues MaxStacks=4 BuffDuration=6 OnHitStructureMod=0.5"
+  }
+ },
+ {
+  "atom_id": "damage.resistance-mitigation",
+  "family": "damage",
+  "behavior": "IreliaWDefense",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IreliaWDefense",
+    "atoms": [
+     "damage.resistance-mitigation"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Defiant Dance",
+    "While channeling, reduces incoming physical damage by 40-70% and magic damage by 20-35% (level + AP scaled)"
+   ],
+   "binary": [
+    "Characters/Irelia/Spells/IreliaWAbility/IreliaWDefense"
+   ],
+   "evidence": "name:IreliaWDefense"
+  }
+ }
+]

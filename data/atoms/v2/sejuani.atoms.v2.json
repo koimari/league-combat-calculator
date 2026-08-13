@@ -1,0 +1,3926 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    125.0,
+    150.0,
+    175.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.4,
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     125.0,
+     150.0,
+     175.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowAmount": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "EmpoweredBaseDamage": [
+     0.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     30.0
+    ],
+    "ZoneSlowAmount": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_seconds": 90.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.008333,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniRAbility/SejuaniR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    125.0,
+    150.0,
+    175.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.4,
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     125.0,
+     150.0,
+     175.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowAmount": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "EmpoweredBaseDamage": [
+     0.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     30.0
+    ],
+    "ZoneSlowAmount": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_seconds": 90.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.008333,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniRAbility/SejuaniR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    125.0,
+    150.0,
+    175.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.4,
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     125.0,
+     150.0,
+     175.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BaseStunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ZoneDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ExplosionSlowAmount": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "ExplosionSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "EmpoweredStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "EmpoweredBaseDamage": [
+     0.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     30.0
+    ],
+    "ZoneSlowAmount": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_seconds": 90.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.008333,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniRAbility/SejuaniR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    5.0,
+    55.0,
+    105.0,
+    155.0,
+    205.0,
+    255.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "PerChampionCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "BaseDamage": [
+     5.0,
+     55.0,
+     105.0,
+     155.0,
+     205.0,
+     255.0,
+     305.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AuraRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.5,
+   "cooldown_max_seconds": 1.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.666667,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniEAbility/SejuaniE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    5.0,
+    55.0,
+    105.0,
+    155.0,
+    205.0,
+    255.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "PerChampionCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "BaseDamage": [
+     5.0,
+     55.0,
+     105.0,
+     155.0,
+     205.0,
+     255.0,
+     305.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AuraRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.5,
+   "cooldown_max_seconds": 1.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.666667,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniEAbility/SejuaniE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SejuaniE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    5.0,
+    55.0,
+    105.0,
+    155.0,
+    205.0,
+    255.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "PerChampionCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "BaseDamage": [
+     5.0,
+     55.0,
+     105.0,
+     155.0,
+     205.0,
+     255.0,
+     305.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AuraRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.5,
+   "cooldown_max_seconds": 1.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.666667,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniEAbility/SejuaniE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    5.0,
+    55.0,
+    105.0,
+    155.0,
+    205.0,
+    255.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "effect_amounts": {
+    "PerChampionCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "BaseDamage": [
+     5.0,
+     55.0,
+     105.0,
+     155.0,
+     205.0,
+     255.0,
+     305.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AuraRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.5,
+   "cooldown_max_seconds": 1.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.666667,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniEAbility/SejuaniE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniEPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EpicMonsterCap": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusArmorBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BonusMRBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "PercentHPDamageBase": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Sejuani/Spells/SejuaniPassiveAbility/SejuaniPassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{5e275ef5}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniEMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{8200d591}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniEMarkerMax",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{c2978695}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SejuaniBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SejuaniBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "duration": null,
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatioOne": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioTwo": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HPRatioOne": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "HPRatioTwo": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "effect_amounts": {
+    "SlowAmount": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamageOne": [
+     -5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0
+    ],
+    "BaseDamageTwo": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "APRatioOne": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioTwo": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HPRatioOne": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "HPRatioTwo": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniWAbility/SejuaniW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "duration": null,
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatioOne": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioTwo": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HPRatioOne": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "HPRatioTwo": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "effect_amounts": {
+    "SlowAmount": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamageOne": [
+     -5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0
+    ],
+    "BaseDamageTwo": [
+     -15.0,
+     5.0,
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0
+    ],
+    "APRatioOne": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioTwo": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HPRatioOne": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "HPRatioTwo": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniWAbility/SejuaniW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SejuaniCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.5,
+    15.0,
+    13.5,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxTravelDistance": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ],
+    "DashSpeed": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cooldown_max_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.027778,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniQAbility/SejuaniQ"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.5,
+    15.0,
+    13.5,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxTravelDistance": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ],
+    "DashSpeed": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cooldown_max_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.027778,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniQAbility/SejuaniQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.5,
+    15.0,
+    13.5,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxTravelDistance": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ],
+    "DashSpeed": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cooldown_max_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.027778,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniQAbility/SejuaniQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.5,
+    15.0,
+    13.5,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxTravelDistance": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ],
+    "DashSpeed": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cooldown_max_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.027778,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniQAbility/SejuaniQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.5,
+    15.0,
+    13.5,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxTravelDistance": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ],
+    "DashSpeed": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "KnockupDurationTOOLTIPONLY": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cooldown_max_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.027778,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniQAbility/SejuaniQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{0ef0ac75}"
+   ],
+   "inherited_from": "SejuaniR",
+   "evidence": "inherited:SejuaniR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{0ef0ac75}"
+   ],
+   "inherited_from": "SejuaniR",
+   "evidence": "inherited:SejuaniR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{0ef0ac75}"
+   ],
+   "inherited_from": "SejuaniR",
+   "evidence": "inherited:SejuaniR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SejuaniE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{328fd7b3}"
+   ],
+   "inherited_from": "SejuaniE",
+   "evidence": "inherited:SejuaniE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SejuaniE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{328fd7b3}"
+   ],
+   "inherited_from": "SejuaniE",
+   "evidence": "inherited:SejuaniE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SejuaniE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{328fd7b3}"
+   ],
+   "inherited_from": "SejuaniE",
+   "evidence": "inherited:SejuaniE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{328fd7b3}"
+   ],
+   "inherited_from": "SejuaniE",
+   "evidence": "inherited:SejuaniE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EpicMonsterCap": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusArmorBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BonusMRBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "PercentHPDamageBase": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Frost Armor",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniPassiveAbility/SejuaniPassive"
+   ],
+   "evidence": "calc:TotalArmorTooltip/TotalMRTooltip/FrostArmorOOC (Frost Armor defensive buff)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SejuaniPassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612
+   ],
+   "duration": null,
+   "ratios": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EpicMonsterCap": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusArmorBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BonusMRBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "PercentHPDamageBase": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Frost Armor",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniPassiveAbility/SejuaniPassive"
+   ],
+   "evidence": "calc:PercentHPDamage (Frost Armor break damage)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniPassiveDefense",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Frost Armor",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sejuani/Spells/SejuaniPassiveDefense"
+   ],
+   "evidence": "name:defense (armor/MR from Frost Armor)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniEPassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "FrostArmorDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EpicMonsterCap": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "BonusArmorRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusMRRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BonusArmorBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BonusMRBase": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "PercentHPDamageBase": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Sejuani/Spells/SejuaniPassiveAbility/SejuaniPassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Permafrost",
+    "Stack"
+   ],
+   "binary": [
+    "{7a53274c}"
+   ],
+   "evidence": "name:passive (Frost mark application from basic attacks/abilities)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SejuaniEPassiveMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Permafrost",
+    "Stack"
+   ],
+   "binary": [
+    "{859d7934}"
+   ],
+   "evidence": "name:missile (Frost mark missile)"
+  }
+ }
+]

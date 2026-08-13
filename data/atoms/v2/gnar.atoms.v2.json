@@ -1,0 +1,5678 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "GnarW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.4286,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarW"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "GnarW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.4286,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "GnarWProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarWProc",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarWProc",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarWProc"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarWBuff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarWBuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarWBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    90.0,
+    60.0,
+    30.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    90.0,
+    60.0,
+    30.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarR"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    90.0,
+    60.0,
+    30.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    90.0,
+    60.0,
+    30.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarRKnockback",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarRKnockback",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarRKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarRKnockback",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarRKnockback",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarRKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarRKnockbackCC",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarRKnockbackCC",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarRKnockbackCC",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarRKnockbackCC"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarRKnockbackCC",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "RHyperMovementSpeedPercent": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "RCCDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "RAoESize": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "RKnockbackDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RSlowPercent": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "RWallHitDamageMultiplier": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarRKnockbackCC",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.25,
+    "behavior": "GnarRKnockbackCC",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarRAbility/GnarRKnockbackCC"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.5,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.5,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.1143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.5,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.5,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.1143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarQSlow",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQSlow",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarFuryGeneration",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarFuryGeneration",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarFuryGeneration",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarFuryGeneration"
+   ],
+   "evidence": "name:fury"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarTransformSoon",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarTransformSoon",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarTransformSoon",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarPassiveAbility/GnarTransformSoon"
+   ],
+   "evidence": "name:transform"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarTransformTired",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarTransformTired",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarTransformTired",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarPassiveAbility/GnarTransformTired"
+   ],
+   "evidence": "name:transform"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarTransform",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarTransform",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarTransform",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarPassiveAbility/GnarTransform"
+   ],
+   "evidence": "name:transform"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarBigW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.567,
+    "behavior": "GnarBigW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.567,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigWAbility/GnarBigW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarBigW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.567,
+    "behavior": "GnarBigW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.567,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigWAbility/GnarBigW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarBigW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.567,
+    "behavior": "GnarBigW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.567,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigWAbility/GnarBigW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GnarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GnarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GnarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GnarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarBigQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.5,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MegaBaseDamage": [
+     0.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarBigQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarBigQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.5,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.1143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigQAbility/GnarBigQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarBigQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.5,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MegaBaseDamage": [
+     0.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "GnarBigQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarBigQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.5,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": 0.1143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigQAbility/GnarBigQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarStun",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarStun",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarBigE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarBigE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigEAbility/GnarBigE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarBigE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarBigE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigEAbility/GnarBigE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarBigE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarBigE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigEAbility/GnarBigE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarBigE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarBigE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarBigE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigEAbility/GnarBigE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GnarCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarCritAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarCritAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MinibAS": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "MiniASDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MiniDamage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0
+    ],
+    "MiniRange": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "MiniBounceRange": [
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0
+    ],
+    "MoveSpeedMod": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MegaDamage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "MegaRange": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "MegaSlowAoE": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaDamageAoE": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "TravelTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23615
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 6.0,
+    "behavior": "GnarE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": 0.2449,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarEAbility/GnarE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MinibAS": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "MiniASDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MiniDamage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0
+    ],
+    "MiniRange": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "MiniBounceRange": [
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0
+    ],
+    "MoveSpeedMod": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MegaDamage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "MegaRange": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "MegaSlowAoE": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaDamageAoE": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "TravelTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23615
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 0.5,
+    "behavior": "GnarE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": 0.0204,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarEAbility/GnarE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.5,
+    22.0,
+    19.5,
+    17.0,
+    14.5,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MinibAS": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "MiniASDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MiniDamage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0
+    ],
+    "MiniRange": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "MiniBounceRange": [
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0
+    ],
+    "MoveSpeedMod": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MegaDamage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "MegaRange": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "MegaSlowAoE": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaDamageAoE": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "TravelTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23615
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.695,
+    "behavior": "GnarE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 6.0,
+    "behavior": "GnarE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.5,
+   "cast_time_seconds": 0.695,
+   "uptime_fraction": 0.2449,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarEAbility/GnarE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GnarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "GnarCritAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarFuryHigh",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarFuryHigh",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarFuryHigh",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarFuryHigh"
+   ],
+   "evidence": "name:fury"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "gnar Passive (Rage Gene)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "gnar Passive (Rage Gene)",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless",
+    "Rage Gene"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GnarWHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarWHit",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarWHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarWHit"
+   ],
+   "inherited_from": "GnarW",
+   "evidence": "inherited:GnarW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarWHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     0.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0
+    ],
+    "MiniPercentHPDamage": [
+     0.03999999910593033,
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645
+    ],
+    "MiniHasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MiniMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "MiniMonsterCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MegaBaseDamage": [
+     15.0,
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0
+    ],
+    "MegaStunDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MegaLength": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "MegaWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MiniMaxStacks": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarWHit",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "GnarWHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarWAbility/GnarWHit"
+   ],
+   "inherited_from": "GnarW",
+   "evidence": "inherited:GnarW"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "GnarQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQMissile"
+   ],
+   "inherited_from": "GnarQ",
+   "evidence": "inherited:GnarQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0,
+    1125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "GnarQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQMissile"
+   ],
+   "inherited_from": "GnarQ",
+   "evidence": "inherited:GnarQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarQMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "GnarQMissileReturn",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQMissileReturn",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1818,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQMissileReturn"
+   ],
+   "inherited_from": "GnarQ",
+   "evidence": "inherited:GnarQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarQMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MiniBaseDamage": [
+     5.0,
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355
+    ],
+    "MiniSubsequentMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MiniCDRefund": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MiniReturnRange": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "MegaBaseDamage": [
+     45.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MegaSlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "GnarQMissileReturn",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarQMissileReturn",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1818,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarQAbility/GnarQMissileReturn"
+   ],
+   "inherited_from": "GnarQ",
+   "evidence": "inherited:GnarQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GnarBigQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MegaBaseDamage": [
+     0.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "GnarBigQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarBigQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigQAbility/GnarBigQMissile"
+   ],
+   "inherited_from": "GnarBigQ",
+   "evidence": "inherited:GnarBigQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GnarBigQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MegaBaseDamage": [
+     0.0,
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0
+    ],
+    "MegaPickupAndLolipopRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaBoulderLifetime": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MegaCDRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "MegaAoERadius": [
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0,
+     280.0
+    ],
+    "MegaSlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "GnarBigQMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "GnarBigQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarBigQAbility/GnarBigQMissile"
+   ],
+   "inherited_from": "GnarBigQ",
+   "evidence": "inherited:GnarBigQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarPassive",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GnarPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless",
+    "Transform"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarPassiveAbility/GnarPassive"
+   ],
+   "evidence": "name:rage-gene"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GnarEAttackSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "MinibAS": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "MiniASDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MiniDamage": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0
+    ],
+    "MiniRange": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "MiniBounceRange": [
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0,
+     525.0
+    ],
+    "MoveSpeedMod": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MegaDamage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0
+    ],
+    "MegaRange": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "MegaSlowAoE": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MegaDamageAoE": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "TravelTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "GnarEAttackSpeed",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": 6.0,
+    "behavior": "GnarEAttackSpeed",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Gnar/Spells/GnarEAbility/GnarEAttackSpeed"
+   ],
+   "evidence": "name:attackspeed"
+  }
+ }
+]

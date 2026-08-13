@@ -1,0 +1,4209 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceAccelerationGate",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "2": [
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0
+    ],
+    "3": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "4": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "data_values": {
+    "MovementSpeed": [
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ShockBlastAmp": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "HasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "GateWidth": [
+     0.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ],
+    "GateVisionSegments": [
+     0.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ranged_spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1600.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 16.0,
+    "rank_max": 16.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceAccelerationGate",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "2": [
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0,
+     33.0
+    ],
+    "3": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "4": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "data_values": {
+    "MovementSpeed": [
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ShockBlastAmp": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "HasteDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "GateWidth": [
+     0.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ],
+    "GateVisionSegments": [
+     0.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ranged_spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1600.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 16.0,
+    "rank_max": 16.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=347.79998779296875"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=347.79998779296875"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=347.79998779296875"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=347.79998779296875"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JayceCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "Crit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceHyperCharge",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.600000381469727,
+    13.0,
+    11.399999618530273,
+    9.800000190734863,
+    8.199999809265137,
+    6.599999904632568,
+    5.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    0.6200000047683716,
+    0.699999988079071,
+    0.7799999713897705,
+    0.8600000143051147,
+    0.9399999976158142,
+    1.0199999809265137,
+    1.100000023841858
+   ],
+   "duration": [
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "1": [
+     0.0,
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0
+    ],
+    "2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "3": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ]
+   },
+   "data_values": {
+    "DamagePerc": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ],
+    "NumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Duration": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ],
+    "PercentIncreasedAS": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperCharge"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.600000381469727,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.2466,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "JayceHyperCharge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.600000381469727,
+    13.0,
+    11.399999618530273,
+    9.800000190734863,
+    8.199999809265137,
+    6.599999904632568,
+    5.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "1": [
+     0.0,
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0
+    ],
+    "2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "3": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ]
+   },
+   "data_values": {
+    "DamagePerc": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ],
+    "NumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Duration": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ],
+    "PercentIncreasedAS": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperCharge"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.600000381469727,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.2466,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceHyperCharge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.600000381469727,
+    13.0,
+    11.399999618530273,
+    9.800000190734863,
+    8.199999809265137,
+    6.599999904632568,
+    5.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "1": [
+     0.0,
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0
+    ],
+    "2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "3": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ]
+   },
+   "data_values": {
+    "DamagePerc": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ],
+    "NumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Duration": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ],
+    "PercentIncreasedAS": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperCharge"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.600000381469727,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.2466,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceHyperCharge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.600000381469727,
+    13.0,
+    11.399999618530273,
+    9.800000190734863,
+    8.199999809265137,
+    6.599999904632568,
+    5.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684,
+    3.5999999046325684
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "1": [
+     0.0,
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0
+    ],
+    "2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "3": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ]
+   },
+   "data_values": {
+    "DamagePerc": [
+     0.6200000047683716,
+     0.699999988079071,
+     0.7799999713897705,
+     0.8600000143051147,
+     0.9399999976158142,
+     1.0199999809265137,
+     1.100000023841858
+    ],
+    "NumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Duration": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ],
+    "PercentIncreasedAS": [
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684,
+     3.5999999046325684
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperCharge"
+   ],
+   "evidence": "name:charge"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.600000381469727,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.2466,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceHyperChargeRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperChargeRangedAttack"
+   ],
+   "evidence": "name:ranged"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "ranged_attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceHyperChargeRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceHyperChargeAbility/JayceHyperChargeRangedAttack"
+   ],
+   "evidence": "name:charge"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "ranged_attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceIsMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "{b12aa05d}"
+   ],
+   "evidence": "name:melee"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "JaycePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "FlatMovementSpeed": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "MovementSpeedDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Passive"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaycePassiveMeleeAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    12.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     0.0
+    ],
+    "1": [
+     5.0,
+     8.0,
+     11.0,
+     14.0,
+     17.0,
+     20.0,
+     0.0
+    ],
+    "2": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ]
+   },
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveMeleeAttack"
+   ],
+   "evidence": "name:melee"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Crit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaycePassiveRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveRangedAttack"
+   ],
+   "evidence": "name:ranged"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.12,
+    "behavior": "ranged_attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2000.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.12,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaycePassiveShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Armor reduction",
+    "Magic resistance reduction"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveShred"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedAttack"
+   ],
+   "evidence": "name:ranged"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.12,
+    "behavior": "ranged_attack1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.12,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedAttack2"
+   ],
+   "evidence": "name:ranged"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.12,
+    "behavior": "ranged_attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.12,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JayceRangedCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.12,
+    "behavior": "ranged_crit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.12,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    485.6000061035156,
+    284.6000061035156
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedCritAttack"
+   ],
+   "evidence": "name:ranged"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.12,
+    "behavior": "ranged_crit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.12,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRunSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRunSpeed"
+   ]
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceShockBlast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    39.0,
+    80.0,
+    121.0,
+    162.0,
+    203.0,
+    244.0,
+    285.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     10.0,
+     25.0,
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     39.0,
+     80.0,
+     121.0,
+     162.0,
+     203.0,
+     244.0,
+     285.0
+    ],
+    "ADRatio": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "EmpowerMultiplier": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "MonsterBonusDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ranged_spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1200.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceShockBlast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    39.0,
+    80.0,
+    121.0,
+    162.0,
+    203.0,
+    244.0,
+    285.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     10.0,
+     25.0,
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     39.0,
+     80.0,
+     121.0,
+     162.0,
+     203.0,
+     244.0,
+     285.0
+    ],
+    "ADRatio": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "EmpowerMultiplier": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "MonsterBonusDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ranged_spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1200.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceShockBlastMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     0.0
+    ],
+    "1": [
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     0.0
+    ]
+   },
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
+   ],
+   "inherited_from": "JayceShockBlast",
+   "evidence": "inherited:JayceShockBlast"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 11.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceShockBlastMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     0.0
+    ],
+    "1": [
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     0.0
+    ]
+   },
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
+   ],
+   "inherited_from": "JayceShockBlast",
+   "evidence": "inherited:JayceShockBlast"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 11.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceShockBlastWallMis",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     0.0
+    ],
+    "1": [
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     0.0
+    ]
+   },
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastWallMis"
+   ],
+   "evidence": "name:wall"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2350.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 11.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceStanceHtG",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "stat_2": 0.07500000298023224,
+    "bonus_ad": 0.07500000298023224,
+    "_raw_calcs": [
+     {
+      "name": "Resists",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.07500000298023224
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "RangedFormRangeIncrease": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShredDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ADRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStanceHtGAbility/JayceStanceHtG"
+   ],
+   "evidence": "tag:Trait_Transformation"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceStaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    320.0,
+    380.0,
+    440.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "ManaGain": [
+     13.0,
+     15.0,
+     17.0,
+     19.0,
+     21.0,
+     23.0,
+     25.0
+    ],
+    "BaseDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0,
+     440.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.264,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.264,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceStaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    320.0,
+    380.0,
+    440.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "ManaGain": [
+     13.0,
+     15.0,
+     17.0,
+     19.0,
+     21.0,
+     23.0,
+     25.0
+    ],
+    "BaseDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0,
+     440.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.264,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.264,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "JayceStaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0,
+    285.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    320.0,
+    380.0,
+    440.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "stat_None": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": null,
+      "formula": null,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "ManaGain": [
+     13.0,
+     15.0,
+     17.0,
+     19.0,
+     21.0,
+     23.0,
+     25.0
+    ],
+    "BaseDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0,
+     440.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+   ],
+   "evidence": "tag:Trait_DoT"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.264,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.264,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-attack",
+  "family": "damage",
+  "behavior": "JayceStaticFieldPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "On-attack"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticFieldPassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": [
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355
+   ],
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "FlatDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "MonsterCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "PercHPDamage": [
+     0.052000001072883606,
+     0.07999999821186066,
+     0.1080000028014183,
+     0.13600000739097595,
+     0.164000004529953,
+     0.19200000166893005,
+     0.2199999988079071
+    ],
+    "KnockbackDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "KnockbackDuration": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 20.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": [
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355
+   ],
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "FlatDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "MonsterCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "PercHPDamage": [
+     0.052000001072883606,
+     0.07999999821186066,
+     0.1080000028014183,
+     0.13600000739097595,
+     0.164000004529953,
+     0.19200000166893005,
+     0.2199999988079071
+    ],
+    "KnockbackDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "KnockbackDuration": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 20.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0
+   ],
+   "cast_range": [
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0,
+    240.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": [
+    0.052000001072883606,
+    0.07999999821186066,
+    0.1080000028014183,
+    0.13600000739097595,
+    0.164000004529953,
+    0.19200000166893005,
+    0.2199999988079071
+   ],
+   "duration": [
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355,
+    0.3499999940395355
+   ],
+   "ratios": {
+    "stat_2": 1.0,
+    "bonus_ad": 1.0,
+    "_raw_calcs": [
+     {
+      "name": "FlatDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.0
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "MonsterCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "PercHPDamage": [
+     0.052000001072883606,
+     0.07999999821186066,
+     0.1080000028014183,
+     0.13600000739097595,
+     0.164000004529953,
+     0.19200000166893005,
+     0.2199999988079071
+    ],
+    "KnockbackDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "KnockbackDuration": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 20.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceToTheSkies",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "stat_2": 1.350000023841858,
+    "bonus_ad": 1.350000023841858,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.350000023841858
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ],
+    "Slow": [
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MonsterBonusDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceToTheSkiesAbility/JayceToTheSkies"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 18.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceToTheSkies",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    260.0,
+    310.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "stat_2": 1.350000023841858,
+    "bonus_ad": 1.350000023841858,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.350000023841858
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ],
+    "Slow": [
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MonsterBonusDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceToTheSkiesAbility/JayceToTheSkies"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 18.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceToTheSkies",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    260.0,
+    310.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "stat_2": 1.350000023841858,
+    "bonus_ad": 1.350000023841858,
+    "_raw_calcs": [
+     {
+      "name": "Damage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.350000023841858
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ],
+    "Slow": [
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MonsterBonusDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceToTheSkiesAbility/JayceToTheSkies"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 18.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ }
+]

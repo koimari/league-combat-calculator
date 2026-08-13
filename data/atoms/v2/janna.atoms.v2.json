@@ -1,0 +1,2839 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JannaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {},
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.467,
+    "behavior": "JannaCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JannaCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.467,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/JannaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ReapTheWhirlwind",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 100.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown_max_rank": 100.0,
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "HealBasePerSecond": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 725.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/ReapTheWhirlwindAbility/ReapTheWhirlwind"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ReapTheWhirlwind",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 100.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown_max_rank": 100.0,
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "HealBasePerSecond": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 725.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/ReapTheWhirlwindAbility/ReapTheWhirlwind"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ReapTheWhirlwind",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 100.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown_max_rank": 100.0,
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "HealBasePerSecond": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 725.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/ReapTheWhirlwindAbility/ReapTheWhirlwind"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ReapTheWhirlwind",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 100.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown_max_rank": 100.0,
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "HealBasePerSecond": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain",
+   "range": 725.0
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/ReapTheWhirlwindAbility/ReapTheWhirlwind"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ReapTheWhirlwind",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 100.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown_max_rank": 100.0,
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "HealBasePerSecond": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ReapTheWhirlwind",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 725.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/ReapTheWhirlwindAbility/ReapTheWhirlwind"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EyeOfTheStorm",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 12.0,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 65,
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    12.0
+   ],
+   "cooldown_max_rank": 12.0,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "data_values": {
+    "ECDRefundforCC": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EmpowerDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "EmpowerPercent": null,
+    "DecayGracePeriod": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseShield": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ShieldAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "BonusAD": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "ADAPRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "EmpowerDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ShieldAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "BonusAD": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "ADAPRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.116,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.116,
+   "uptime_fraction": 0.3125,
+   "reset_on": [],
+   "tempo_class": "sustain",
+   "range": 800.0
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/EyeOfTheStormAbility/EyeOfTheStorm"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EyeOfTheStorm",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 12.0,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 65,
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    12.0
+   ],
+   "cooldown_max_rank": 12.0,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "data_values": {
+    "ECDRefundforCC": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EmpowerDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "EmpowerPercent": null,
+    "DecayGracePeriod": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseShield": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ShieldAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "BonusAD": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "ADAPRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "EmpowerDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ShieldAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "BonusAD": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "ADAPRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.116,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "EyeOfTheStorm",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.116,
+   "uptime_fraction": 0.3125,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/EyeOfTheStormAbility/EyeOfTheStorm"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "HowlingGale",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cooldown_max_rank": 14.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    90.0,
+    95.0,
+    100.0,
+    105.0,
+    110.0,
+    110.0
+   ],
+   "data_values": {
+    "MissileTravelTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MinDamage": [
+     20.0,
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0
+    ],
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ChargeDistancePercent": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BaseKnockup": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ChargeKnockup": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    20.0,
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0
+   ],
+   "ratios": {
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/HowlingGaleAbility/HowlingGale"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HowlingGale",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cooldown_max_rank": 14.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    90.0,
+    95.0,
+    100.0,
+    105.0,
+    110.0,
+    110.0
+   ],
+   "data_values": {
+    "MissileTravelTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MinDamage": [
+     20.0,
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0
+    ],
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ChargeDistancePercent": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BaseKnockup": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ChargeKnockup": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    20.0,
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0
+   ],
+   "ratios": {
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/HowlingGaleAbility/HowlingGale"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HowlingGale",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cooldown_max_rank": 14.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    90.0,
+    95.0,
+    100.0,
+    105.0,
+    110.0,
+    110.0
+   ],
+   "data_values": {
+    "MissileTravelTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MinDamage": [
+     20.0,
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0
+    ],
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ChargeDistancePercent": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BaseKnockup": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ChargeKnockup": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    20.0,
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0
+   ],
+   "ratios": {
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/HowlingGaleAbility/HowlingGale"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HowlingGale",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cooldown_max_rank": 14.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    90.0,
+    95.0,
+    100.0,
+    105.0,
+    110.0,
+    110.0
+   ],
+   "data_values": {
+    "MissileTravelTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseRange": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MinDamage": [
+     20.0,
+     55.0,
+     90.0,
+     125.0,
+     160.0,
+     195.0,
+     230.0
+    ],
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "ChargeDistancePercent": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BaseKnockup": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ChargeKnockup": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    20.0,
+    55.0,
+    90.0,
+    125.0,
+    160.0,
+    195.0,
+    230.0
+   ],
+   "ratios": {
+    "MinimumRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "BonusRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MaxDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "HowlingGale",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 25000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/HowlingGaleAbility/HowlingGale"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "HowlingGale_URF",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 30.0,
+   "cooldown_rank_max": 20.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "cooldown": [
+    30.0,
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    20.0
+   ],
+   "cooldown_max_rank": 20.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    90.0,
+    105.0,
+    120.0,
+    135.0,
+    150.0,
+    165.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "HowlingGale_URF",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "HowlingGale_URF",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 30.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/HowlingGaleAbility/HowlingGale_URF"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SowTheWind",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 6.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cooldown_max_rank": 6.0,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "data_values": {
+    "MSPercent": [
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355
+    ],
+    "BaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     16.0,
+     20.0,
+     24.0,
+     28.0,
+     32.0,
+     36.0,
+     40.0
+    ],
+    "MSAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "damage": [
+    25.0,
+    55.0,
+    85.0,
+    115.0,
+    145.0,
+    175.0,
+    205.0
+   ],
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MSAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SowTheWind",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SowTheWind",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SowTheWind",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "SowTheWind",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "SowTheWind",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/SowTheWindAbility/SowTheWind"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JannaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {},
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JannaBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JannaBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/JannaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JannaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {},
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JannaBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JannaBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/JannaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JannaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {},
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/JannaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JannaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {},
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "JannaBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 550.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/JannaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "TailwindSelf",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "data_values": {
+    "MSPercentAlly": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ],
+    "MSPercentSelf": null,
+    "MSBonusMagicDamage": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "damage": [
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896
+   ],
+   "ratios": {
+    "MSBonusMagicDamage": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TailwindSelf",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TailwindSelf",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 1200.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Tailwind",
+    "Janna grants 6% bonus movement speed to nearby allied champions facing in the direction of her location"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/TailwindSelfAbility/TailwindSelf"
+   ],
+   "evidence": "name:TailwindSelf; datavalue MSPercentAlly=0.06"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "TailwindSelf",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "data_values": {
+    "MSPercentAlly": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ],
+    "MSPercentSelf": null,
+    "MSBonusMagicDamage": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "damage": [
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896,
+    0.30000001192092896
+   ],
+   "ratios": {
+    "MSBonusMagicDamage": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TailwindSelf",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TailwindSelf",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 1200.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Tailwind",
+    "Janna's basic attacks on-hit deal bonus magic damage equal to 30% of her bonus movement speed"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/TailwindSelfAbility/TailwindSelf"
+   ],
+   "evidence": "name:TailwindSelf; datavalue MSBonusMagicDamage=0.3"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "Zephyr",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Zephyr",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Zephyr",
+    "Active: sends an air elemental at the target enemy, slowing them for 2 seconds, capped at 99%"
+   ],
+   "binary": [
+    "Characters/Janna/Spells/SowTheWindAbility/Zephyr"
+   ],
+   "evidence": "name:Zephyr"
+  }
+ }
+]

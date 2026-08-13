@@ -1,0 +1,3389 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "AuroraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1,
+    1.15,
+    1.3,
+    1.45,
+    1.6
+   ],
+   "ratios": {
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Invisibility Duration": {
+      "values": [
+       [
+        1,
+        1.15,
+        1.3,
+        1.45,
+        1.6
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Bonus Movement Speed": {
+      "values": [
+       [
+        20,
+        25,
+        30,
+        35,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1800.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraW",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 22.0,
+    "rank_max": 19.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraWAbility/AuroraW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.speed-buff",
+  "family": "crowd-control-mobility",
+  "behavior": "AuroraWMS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1,
+    1.15,
+    1.3,
+    1.45,
+    1.6
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {
+     "Invisibility Duration": {
+      "values": [
+       [
+        1,
+        1.15,
+        1.3,
+        1.45,
+        1.6
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Bonus Movement Speed": {
+      "values": [
+       [
+        20,
+        25,
+        30,
+        35,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Across the Veil: Realm Hopper \u2014 ghosted and gains bonus movement speed for 4 seconds (MoveSpeedCalc/BonusMSCalc calcs)"
+   ],
+   "binary": [
+    "{8ea20d6a}"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        70,
+        70,
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "AuroraE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Minimum Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Maximum Magic Damage": {
+      "values": [
+       [
+        67.5,
+        105,
+        142.5,
+        180,
+        217.5
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Minimum Magic Damage": {
+      "values": [
+       [
+        9,
+        14,
+        19,
+        24,
+        29
+       ],
+       [
+        8,
+        8,
+        8,
+        8,
+        8
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Maximum Magic Damage": {
+      "values": [
+       [
+        13.5,
+        21,
+        28.5,
+        36,
+        43.5
+       ],
+       [
+        12,
+        12,
+        12,
+        12,
+        12
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "rank_max": 7.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Minimum Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Maximum Magic Damage": {
+      "values": [
+       [
+        67.5,
+        105,
+        142.5,
+        180,
+        217.5
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Minimum Magic Damage": {
+      "values": [
+       [
+        9,
+        14,
+        19,
+        24,
+        29
+       ],
+       [
+        8,
+        8,
+        8,
+        8,
+        8
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Maximum Magic Damage": {
+      "values": [
+       [
+        13.5,
+        21,
+        28.5,
+        36,
+        43.5
+       ],
+       [
+        12,
+        12,
+        12,
+        12,
+        12
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "AuroraQReturnMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{fe565ec8}"
+   ],
+   "inherited_from": "AuroraQ",
+   "evidence": "inherited:AuroraQ"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    175.0,
+    275.0,
+    375.0
+   ],
+   "duration": [
+    3.5,
+    4.25,
+    5
+   ],
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        175,
+        275,
+        375
+       ],
+       [
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Realm Hopper Duration": {
+      "values": [
+       [
+        3.5,
+        4.25,
+        5
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Rift Duration": {
+      "values": [
+       [
+        1.75,
+        2.5,
+        3.25
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Slow Duration": {
+      "values": [
+       [
+        1.5,
+        1.75,
+        2
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    175.0,
+    275.0,
+    375.0
+   ],
+   "duration": [
+    3.5,
+    4.25,
+    5
+   ],
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        175,
+        275,
+        375
+       ],
+       [
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Realm Hopper Duration": {
+      "values": [
+       [
+        3.5,
+        4.25,
+        5
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Rift Duration": {
+      "values": [
+       [
+        1.75,
+        2.5,
+        3.25
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Slow Duration": {
+      "values": [
+       [
+        1.5,
+        1.75,
+        2
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{36b6a65c}"
+   ],
+   "inherited_from": "AuroraR",
+   "evidence": "inherited:AuroraR"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1750.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{5c9deb39}"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1750.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AuroraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1750.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        70,
+        70,
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "AuroraE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Minimum Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Maximum Magic Damage": {
+      "values": [
+       [
+        67.5,
+        105,
+        142.5,
+        180,
+        217.5
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Minimum Magic Damage": {
+      "values": [
+       [
+        9,
+        14,
+        19,
+        24,
+        29
+       ],
+       [
+        8,
+        8,
+        8,
+        8,
+        8
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Maximum Magic Damage": {
+      "values": [
+       [
+        13.5,
+        21,
+        28.5,
+        36,
+        43.5
+       ],
+       [
+        12,
+        12,
+        12,
+        12,
+        12
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "rank_max": 7.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Minimum Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Maximum Magic Damage": {
+      "values": [
+       [
+        67.5,
+        105,
+        142.5,
+        180,
+        217.5
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Minimum Magic Damage": {
+      "values": [
+       [
+        9,
+        14,
+        19,
+        24,
+        29
+       ],
+       [
+        8,
+        8,
+        8,
+        8,
+        8
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Maximum Magic Damage": {
+      "values": [
+       [
+        13.5,
+        21,
+        28.5,
+        36,
+        43.5
+       ],
+       [
+        12,
+        12,
+        12,
+        12,
+        12
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "AuroraQReturnMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{fe565ec8}"
+   ],
+   "inherited_from": "AuroraQ",
+   "evidence": "inherited:AuroraQ"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    175.0,
+    275.0,
+    375.0
+   ],
+   "duration": [
+    3.5,
+    4.25,
+    5
+   ],
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        175,
+        275,
+        375
+       ],
+       [
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Realm Hopper Duration": {
+      "values": [
+       [
+        3.5,
+        4.25,
+        5
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Rift Duration": {
+      "values": [
+       [
+        1.75,
+        2.5,
+        3.25
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Slow Duration": {
+      "values": [
+       [
+        1.5,
+        1.75,
+        2
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    175.0,
+    275.0,
+    375.0
+   ],
+   "duration": [
+    3.5,
+    4.25,
+    5
+   ],
+   "ratios": {
+    "ap": [
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        175,
+        275,
+        375
+       ],
+       [
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Realm Hopper Duration": {
+      "values": [
+       [
+        3.5,
+        4.25,
+        5
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Rift Duration": {
+      "values": [
+       [
+        1.75,
+        2.5,
+        3.25
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Slow Duration": {
+      "values": [
+       [
+        1.5,
+        1.75,
+        2
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{36b6a65c}"
+   ],
+   "inherited_from": "AuroraR",
+   "evidence": "inherited:AuroraR"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.missile",
+  "family": "damage",
+  "behavior": "AuroraQRecast",
+  "trigger": "on_recast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Minimum Magic Damage": {
+      "values": [
+       [
+        45,
+        70,
+        95,
+        120,
+        145
+       ],
+       [
+        40,
+        40,
+        40,
+        40,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Maximum Magic Damage": {
+      "values": [
+       [
+        67.5,
+        105,
+        142.5,
+        180,
+        217.5
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Minimum Magic Damage": {
+      "values": [
+       [
+        9,
+        14,
+        19,
+        24,
+        29
+       ],
+       [
+        8,
+        8,
+        8,
+        8,
+        8
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Subsequent Bolt Maximum Magic Damage": {
+      "values": [
+       [
+        13.5,
+        21,
+        28.5,
+        36,
+        43.5
+       ],
+       [
+        12,
+        12,
+        12,
+        12,
+        12
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1800.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraQRecast",
+    "atoms": [
+     "damage.missile"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "AuroraQRecast",
+    "atoms": [
+     "damage.missile"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Twofold Hex recast: expunges the curse, returning bolts deal magic damage (Trait_FreeRecast)"
+   ],
+   "binary": [
+    "{55293a74}"
+   ]
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "AuroraPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    100.0,
+    110.0,
+    120.0,
+    130.0,
+    140.0,
+    150.0,
+    160.0,
+    170.0,
+    180.0,
+    190.0,
+    200.0,
+    210.0,
+    220.0,
+    230.0,
+    240.0,
+    250.0,
+    260.0,
+    270.0,
+    280.0,
+    290.0,
+    300.0,
+    310.0,
+    320.0,
+    330.0,
+    340.0,
+    350.0,
+    360.0,
+    370.0,
+    380.0,
+    390.0,
+    400.0,
+    410.0,
+    420.0,
+    430.0,
+    440.0,
+    450.0,
+    460.0,
+    470.0,
+    480.0,
+    490.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     8.0
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Bonus Damage": {
+      "values": [
+       [
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270,
+        280,
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Heal": {
+      "values": [
+       [
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40,
+        44,
+        48,
+        52,
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        92,
+        96,
+        100,
+        104,
+        108,
+        112,
+        116,
+        120,
+        124,
+        128,
+        132,
+        136,
+        140,
+        144,
+        148,
+        152,
+        156,
+        160,
+        164,
+        168
+       ],
+       [
+        8.0
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Spirit Abjuration: third stack consumes all to deal bonus magic damage equal to 1% (+2.7% per 100 AP) of max health (ProcDamage calc)"
+   ],
+   "binary": [
+    "{55fe4142}"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1750.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{5c9deb39}"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1750.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "heal.self",
+  "family": "heal-shield",
+  "behavior": "AuroraPassive",
+  "trigger": "on_tick",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap": [
+     8.0
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Bonus Damage": {
+      "values": [
+       [
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270,
+        280,
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Heal": {
+      "values": [
+       [
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40,
+        44,
+        48,
+        52,
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        92,
+        96,
+        100,
+        104,
+        108,
+        112,
+        116,
+        120,
+        124,
+        128,
+        132,
+        136,
+        140,
+        144,
+        148,
+        152,
+        156,
+        160,
+        164,
+        168
+       ],
+       [
+        8.0
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Spirit Abjuration: for each active Spirit, Aurora is healed every second; up to 4 Spirits (HealCalc calc)"
+   ],
+   "binary": [
+    "{55fe4142}"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "interaction.zone-end",
+  "family": "interaction",
+  "behavior": "AuroraRRecast",
+  "trigger": "on_recast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    175.0,
+    275.0,
+    375.0
+   ],
+   "duration": [
+    3.5,
+    4.25,
+    5
+   ],
+   "ratios": {
+    "coefficient": 0.30000001192092896,
+    "ap": [
+     70,
+     70,
+     70
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        175,
+        275,
+        375
+       ],
+       [
+        70,
+        70,
+        70
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Realm Hopper Duration": {
+      "values": [
+       [
+        3.5,
+        4.25,
+        5
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Rift Duration": {
+      "values": [
+       [
+        1.75,
+        2.5,
+        3.25
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Slow Duration": {
+      "values": [
+       [
+        1.5,
+        1.75,
+        2
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1800.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraRRecast",
+    "atoms": [
+     "interaction.zone-end"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "AuroraRRecast",
+    "atoms": [
+     "interaction.zone-end"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Between Worlds recast: closes the rift prematurely; no damage or crowd control"
+   ],
+   "binary": [
+    "{f84a9cce}"
+   ]
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "AuroraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1,
+    1.15,
+    1.3,
+    1.45,
+    1.6
+   ],
+   "ratios": {
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Invisibility Duration": {
+      "values": [
+       [
+        1,
+        1.15,
+        1.3,
+        1.45,
+        1.6
+       ]
+      ],
+      "units": [
+       [
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds",
+        " seconds"
+       ]
+      ]
+     },
+     "Bonus Movement Speed": {
+      "values": [
+       [
+        20,
+        25,
+        30,
+        35,
+        40
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1800.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AuroraW",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 22.0,
+    "rank_max": 19.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraWAbility/AuroraW"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ }
+]

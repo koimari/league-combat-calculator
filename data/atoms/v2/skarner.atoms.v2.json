@@ -1,0 +1,4318 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SkarnerW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "InitialShieldRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowEffect": [
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224
+    ],
+    "values": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "castRangeDisplayOverride": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "mana": [
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SkarnerW"
+   },
+   {
+    "state": "impact",
+    "duration": 2.5,
+    "behavior": "SkarnerW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "uptime_fraction": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Shield",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerWAbility/SkarnerW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SkarnerW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "InitialShieldRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowEffect": [
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224
+    ],
+    "values": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "castRangeDisplayOverride": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "mana": [
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SkarnerW"
+   },
+   {
+    "state": "impact",
+    "duration": 2.5,
+    "behavior": "SkarnerW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "uptime_fraction": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Shield",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerWAbility/SkarnerW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SkarnerW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "InitialShieldRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowEffect": [
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224
+    ],
+    "values": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "castRangeDisplayOverride": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "mana": [
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SkarnerW"
+   },
+   {
+    "state": "impact",
+    "duration": 2.5,
+    "behavior": "SkarnerW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "uptime_fraction": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Shield",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerWAbility/SkarnerW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SkarnerWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "InitialShieldRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowEffect": [
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224,
+     -0.20000000298023224
+    ],
+    "values": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "castRangeDisplayOverride": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "mana": [
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SkarnerWShield"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "SkarnerWShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "uptime_fraction": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Shield",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerWAbility/SkarnerW"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SkarnerR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SpeedBoostDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BackwardOffset": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "HitboxStartHalfWidth": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "HitboxEndHalfWidth": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "HoldDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SpeedBoostAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DropDistance": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "values": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "mPerLevelValues": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "SkarnerR"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "SkarnerR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    90.0
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": 0.0125,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Target_Directional",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerRAbility/SkarnerR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SkarnerR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SpeedBoostDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BackwardOffset": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "HitboxStartHalfWidth": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "HitboxEndHalfWidth": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "HoldDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SpeedBoostAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DropDistance": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "values": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "mPerLevelValues": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "SkarnerR"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "SkarnerR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    90.0
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": 0.0125,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Target_Directional",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerRAbility/SkarnerR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SkarnerR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SpeedBoostDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BackwardOffset": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "HitboxStartHalfWidth": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "HitboxEndHalfWidth": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "HoldDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SpeedBoostAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DropDistance": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "values": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "mPerLevelValues": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "SkarnerR"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "SkarnerR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    90.0
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": 0.0125,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Target_Directional",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerRAbility/SkarnerR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SkarnerEStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "cooldown": [
+    23.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "damage": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "duration": [
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858
+   ],
+   "ratios": {
+    "ChargeDuration": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "Acceleration": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "StunDuration": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "ADRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "PinDamageRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "InitialSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "GrabHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "GrabHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "WallRevealRadius": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "WallWarningRadius": [
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0
+    ],
+    "GrabbedMoveSpeedBonus": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MinGrabbedSpeed": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "DistancePostGrab": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "PinBaseDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "VictimOffsetIncrease": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "RefundPercent": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinimumQRenew": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "InitialHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "InitialHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "SecondHitboxDelay": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "SecondHitboxRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "SecondHitboxOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "FinalHitboxDelay": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "values": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "value": [
+     14.0,
+     14.0,
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0
+    ],
+    "mana": [
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     70.0
+    ],
+    "mPerLevelValues": [
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 1.100000023841858,
+    "behavior": "SkarnerEStun"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    23.0,
+    18.0
+   ],
+   "uptime_fraction": 0.0478,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Low_Damage"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerEAbility/SkarnerE"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SkarnerE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "cooldown": [
+    23.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "damage": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "duration": [
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858
+   ],
+   "ratios": {
+    "ChargeDuration": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "Acceleration": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "StunDuration": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "ADRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "PinDamageRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "InitialSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "GrabHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "GrabHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "WallRevealRadius": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "WallWarningRadius": [
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0
+    ],
+    "GrabbedMoveSpeedBonus": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MinGrabbedSpeed": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "DistancePostGrab": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "PinBaseDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "VictimOffsetIncrease": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "RefundPercent": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinimumQRenew": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "InitialHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "InitialHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "SecondHitboxDelay": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "SecondHitboxRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "SecondHitboxOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "FinalHitboxDelay": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "values": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "value": [
+     14.0,
+     14.0,
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0
+    ],
+    "mana": [
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     70.0
+    ],
+    "mPerLevelValues": [
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 1.100000023841858,
+    "behavior": "SkarnerE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    23.0,
+    18.0
+   ],
+   "uptime_fraction": 0.0478,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Low_Damage"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerEAbility/SkarnerE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SkarnerQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cooldown": [
+    8.0,
+    8.0,
+    6.75,
+    5.5,
+    4.25,
+    3.0,
+    3.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "RockHoldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BonusHealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "ADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "effect_amounts": {
+    "AttackRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BaseDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxHPPercent": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "SlowPercent": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MonsterDamageCap": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "AttackRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "TurretDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "values": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "mana": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "SkarnerQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "uptime_fraction": 0.125,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQAbility/SkarnerQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SkarnerQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cooldown": [
+    8.0,
+    8.0,
+    6.75,
+    5.5,
+    4.25,
+    3.0,
+    3.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "RockHoldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BonusHealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "ADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "effect_amounts": {
+    "AttackRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BaseDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxHPPercent": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "SlowPercent": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MonsterDamageCap": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "AttackRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "TurretDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "values": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "mana": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "SkarnerQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "uptime_fraction": 0.125,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQAbility/SkarnerQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "SkarnerQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cooldown": [
+    8.0,
+    8.0,
+    6.75,
+    5.5,
+    4.25,
+    3.0,
+    3.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "RockHoldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BonusHealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "ADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "effect_amounts": {
+    "AttackRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BaseDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxHPPercent": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "SlowPercent": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MonsterDamageCap": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "AttackRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "TurretDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "values": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "mana": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "SkarnerQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "uptime_fraction": 0.125,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQAbility/SkarnerQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SkarnerQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cooldown": [
+    8.0,
+    8.0,
+    6.75,
+    5.5,
+    4.25,
+    3.0,
+    3.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "RockHoldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BonusHealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "ADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "effect_amounts": {
+    "AttackRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BaseDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxHPPercent": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "SlowPercent": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MonsterDamageCap": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "AttackRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "TurretDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "values": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "mana": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "SkarnerQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "uptime_fraction": 0.125,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQAbility/SkarnerQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SkarnerCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SkarnerCritAttack"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_notes": [
+   "no binary spell data located"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SkarnerBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SkarnerBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "no binary spell data located"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SkarnerBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SkarnerBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "no binary spell data located"
+  ]
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SkarnerPassiveDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "StacksToTriggerPassive": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SkarnerPassiveDot"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerPassiveAbility/SkarnerPassive"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "SkarnerPassiveDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "StacksToTriggerPassive": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SkarnerPassiveDot"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerPassiveAbility/SkarnerPassive"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SkarnerPassiveDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "StacksToTriggerPassive": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SkarnerPassiveDot"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerPassiveAbility/SkarnerPassive"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SkarnerBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {
+    "castRadius": [
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SkarnerBasicAttack"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SkarnerBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {
+    "castRadius": [
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SkarnerBasicAttack"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.suppression",
+  "family": "crowd-control-mobility",
+  "behavior": "ImpaleSuppress",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SpeedBoostDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BackwardOffset": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "HitboxStartHalfWidth": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "HitboxEndHalfWidth": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "HoldDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SpeedBoostAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DropDistance": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "values": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "mPerLevelValues": [
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0,
+     120.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "ImpaleSuppress"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "ImpaleSuppress"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    90.0
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": 0.0125,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Target_Directional",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Impale"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerRAbility/SkarnerR"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.suppression",
+  "family": "crowd-control-mobility",
+  "behavior": "IxtalsImpactGrab",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "cooldown": [
+    23.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "damage": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "duration": [
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858,
+    1.100000023841858
+   ],
+   "ratios": {
+    "ChargeDuration": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "Acceleration": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "StunDuration": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "ADRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "PinDamageRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "InitialSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "GrabHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "GrabHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "WallRevealRadius": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "WallWarningRadius": [
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0,
+     1750.0
+    ],
+    "GrabbedMoveSpeedBonus": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MinGrabbedSpeed": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ],
+    "DistancePostGrab": [
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0,
+     675.0
+    ],
+    "PinBaseDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "VictimOffsetIncrease": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "RefundPercent": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinimumQRenew": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "InitialHitboxRadius": [
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0,
+     160.0
+    ],
+    "InitialHitboxOffset": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ],
+    "SecondHitboxDelay": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "SecondHitboxRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "SecondHitboxOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "FinalHitboxDelay": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "values": [
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "value": [
+     14.0,
+     14.0,
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0
+    ],
+    "mana": [
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     70.0
+    ],
+    "mPerLevelValues": [
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 1.100000023841858,
+    "behavior": "IxtalsImpactGrab"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    23.0,
+    18.0
+   ],
+   "uptime_fraction": 0.0478,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Low_Damage"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ixtal's Impact"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerEAbility/SkarnerE"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ShatteredEarthSlow",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cooldown": [
+    8.0,
+    8.0,
+    6.75,
+    5.5,
+    4.25,
+    3.0,
+    3.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "RockHoldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BonusHealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "ADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "effect_amounts": {
+    "AttackRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BaseDamage": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "MaxHPPercent": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "SlowPercent": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MonsterDamageCap": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "AttackRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "TurretDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "values": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "mana": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "ShatteredEarthSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "uptime_fraction": 0.125,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shattered Earth"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQAbility/SkarnerQ"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Quaking",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "StacksToTriggerPassive": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 4.0,
+    "behavior": "Quaking"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Threads of Vibration"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerPassiveAbility/SkarnerPassive"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShatteredEarthEmpoweredAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {
+    "castRadius": [
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0,
+     385.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 5327,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShatteredEarthEmpoweredAttack"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shattered Earth",
+    "Upheaval"
+   ],
+   "binary": [
+    "Characters/Skarner/Spells/SkarnerQFirstClawEmpower",
+    "Characters/Skarner/Spells/SkarnerQSecondClawEmpower",
+    "Characters/Skarner/Spells/SkarnerQRockThrow",
+    "Characters/Skarner/Spells/SkarnerQRockAttack",
+    "Characters/Skarner/Spells/SkarnerQClawAttack",
+    "Characters/Skarner/Spells/SkarnerTurretAttack"
+   ],
+   "evidence": "manual:wiki-q:ShatteredEarth/Upheaval"
+  },
+  "_notes": [
+   "unresolved binary targets: ['Characters/Skarner/Spells/SkarnerQFirstClawEmpower', 'Characters/Skarner/Spells/SkarnerQSecondClawEmpower', 'Characters/Skarner/Spells/SkarnerQRockThrow', 'Characters/Skarner/Spells/SkarnerQRockAttack', 'Characters/Skarner/Spells/SkarnerQClawAttack']"
+  ]
+ }
+]

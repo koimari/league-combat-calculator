@@ -1,0 +1,2936 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "FiddleSticksCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.367
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.367,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.367,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "VampPercentage": [
+     17.5,
+     25.0,
+     32.5,
+     40.0,
+     47.5,
+     55.0,
+     62.5
+    ],
+    "DrainDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DrainLeashRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "PercentMultiplier": [
+     0.0949999988079071,
+     0.11999999731779099,
+     0.14499999582767487,
+     0.17000000178813934,
+     0.19499999284744263,
+     0.2199999988079071,
+     0.24500000476837158
+    ],
+    "PercentForTooltip": [
+     9.5,
+     12.0,
+     14.5,
+     17.0,
+     19.5,
+     22.0,
+     24.5
+    ],
+    "MonsterDamageMod": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MonsterHealingMod": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealingMod": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MonsterMaxDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "cast_time_seconds": 0.675
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.675,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.675,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksWAbility/FiddleSticksW"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FiddleSticksW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "VampPercentage": [
+     17.5,
+     25.0,
+     32.5,
+     40.0,
+     47.5,
+     55.0,
+     62.5
+    ],
+    "DrainDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DrainLeashRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "PercentMultiplier": [
+     0.0949999988079071,
+     0.11999999731779099,
+     0.14499999582767487,
+     0.17000000178813934,
+     0.19499999284744263,
+     0.2199999988079071,
+     0.24500000476837158
+    ],
+    "PercentForTooltip": [
+     9.5,
+     12.0,
+     14.5,
+     17.0,
+     19.5,
+     22.0,
+     24.5
+    ],
+    "MonsterDamageMod": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MonsterHealingMod": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealingMod": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MonsterMaxDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "cast_time_seconds": 0.675
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.675,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.675,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksWAbility/FiddleSticksW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "VampPercentage": [
+     17.5,
+     25.0,
+     32.5,
+     40.0,
+     47.5,
+     55.0,
+     62.5
+    ],
+    "DrainDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DrainLeashRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "PercentMultiplier": [
+     0.0949999988079071,
+     0.11999999731779099,
+     0.14499999582767487,
+     0.17000000178813934,
+     0.19499999284744263,
+     0.2199999988079071,
+     0.24500000476837158
+    ],
+    "PercentForTooltip": [
+     9.5,
+     12.0,
+     14.5,
+     17.0,
+     19.5,
+     22.0,
+     24.5
+    ],
+    "MonsterDamageMod": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MonsterHealingMod": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealingMod": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MonsterMaxDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "cast_time_seconds": 0.675
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.675,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.675,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksWAbility/FiddleSticksW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FiddleSticksW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "VampPercentage": [
+     17.5,
+     25.0,
+     32.5,
+     40.0,
+     47.5,
+     55.0,
+     62.5
+    ],
+    "DrainDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DrainLeashRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "PercentMultiplier": [
+     0.0949999988079071,
+     0.11999999731779099,
+     0.14499999582767487,
+     0.17000000178813934,
+     0.19499999284744263,
+     0.2199999988079071,
+     0.24500000476837158
+    ],
+    "PercentForTooltip": [
+     9.5,
+     12.0,
+     14.5,
+     17.0,
+     19.5,
+     22.0,
+     24.5
+    ],
+    "MonsterDamageMod": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MonsterHealingMod": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealingMod": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MonsterMaxDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "cast_time_seconds": 0.675
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.675,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.675,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksWAbility/FiddleSticksW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "FiddleSticksW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "VampPercentage": [
+     17.5,
+     25.0,
+     32.5,
+     40.0,
+     47.5,
+     55.0,
+     62.5
+    ],
+    "DrainDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DrainLeashRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "PercentMultiplier": [
+     0.0949999988079071,
+     0.11999999731779099,
+     0.14499999582767487,
+     0.17000000178813934,
+     0.19499999284744263,
+     0.2199999988079071,
+     0.24500000476837158
+    ],
+    "PercentForTooltip": [
+     9.5,
+     12.0,
+     14.5,
+     17.0,
+     19.5,
+     22.0,
+     24.5
+    ],
+    "MonsterDamageMod": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MonsterHealingMod": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealingMod": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MonsterMaxDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "cast_time_seconds": 0.675
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.675,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.675,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksWAbility/FiddleSticksW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FiddleSticksTerrifyBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksTerrifyBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 13.0,
+   "range": 575.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    16.0,
+    15.0,
+    14.5,
+    14.0,
+    13.5,
+    13.0,
+    12.5
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "MaxHealthDamage": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "FearDuration": [
+     1.0,
+     1.2000000476837158,
+     1.399999976158142,
+     1.600000023841858,
+     1.7999999523162842,
+     2.0,
+     2.200000047683716
+    ],
+    "MinimumDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   },
+   "cast_time_seconds": 0.633
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.633,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.633,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 13.0,
+   "range": 575.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    16.0,
+    15.0,
+    14.5,
+    14.0,
+    13.5,
+    13.0,
+    12.5
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "MaxHealthDamage": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "FearDuration": [
+     1.0,
+     1.2000000476837158,
+     1.399999976158142,
+     1.600000023841858,
+     1.7999999523162842,
+     2.0,
+     2.200000047683716
+    ],
+    "MinimumDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   },
+   "cast_time_seconds": 0.633
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.633,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.633,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.333,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.333,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.367
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.367,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.367,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.367
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.367,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.367,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.367
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.367,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.367,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.367
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.367,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.367,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5135,
+   "cooldown": [
+    140.0,
+    140.0,
+    110.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelTime": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "APRatio": 0.5
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 5.0,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.0357,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksRAbility/FiddleSticksR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5135,
+   "cooldown": [
+    140.0,
+    140.0,
+    110.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelTime": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "APRatio": 0.5
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 5.0,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.0357,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksRAbility/FiddleSticksR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FiddleSticksR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5135,
+   "cooldown": [
+    140.0,
+    140.0,
+    110.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelTime": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "APRatio": 0.5
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 5.0,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.0357,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksRAbility/FiddleSticksR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5135,
+   "cooldown": [
+    140.0,
+    140.0,
+    110.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelTime": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "APRatio": 0.5
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 5.0,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.0357,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksRAbility/FiddleSticksR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FiddleSticksR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5135,
+   "cooldown": [
+    140.0,
+    140.0,
+    110.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "DamagePerSecond": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelTime": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "APRatio": 0.5
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 5.0,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": 0.0357,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksRAbility/FiddleSticksR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.333,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FiddleSticksBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_time_seconds": 0.333
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.333,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FiddleSticksE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 850.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SlowAmount": [
+     -0.25,
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929
+    ],
+    "EmpoweredSlowAmount": [
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579,
+     -0.6499999761581421,
+     -0.699999988079071,
+     -0.75
+    ],
+    "CastRange": [
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0
+    ],
+    "SilenceDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "cast_time_seconds": 0.213
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.213,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.213,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksEAbility/FiddleSticksE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 850.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SlowAmount": [
+     -0.25,
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929
+    ],
+    "EmpoweredSlowAmount": [
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579,
+     -0.6499999761581421,
+     -0.699999988079071,
+     -0.75
+    ],
+    "CastRange": [
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0
+    ],
+    "SilenceDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "cast_time_seconds": 0.213
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.213,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.213,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksEAbility/FiddleSticksE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "vision-economy.ward",
+  "family": "vision-economy",
+  "behavior": "FiddleSticksPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ward",
+    "Effigy",
+    "A Harmless Scarecrow"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksPassiveAbility/FiddleSticksPassive"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FiddleSticksPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "channel_seconds": 2.0,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Transform",
+    "Effigy",
+    "A Harmless Scarecrow"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksPassiveAbility/FiddleSticksPassive"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksQPassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Fear",
+    "Terrify"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQPassive"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksQMissileFear",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 6794,
+   "cast_time_seconds": 0.25
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Fear",
+    "Terrify"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileFear"
+   ],
+   "evidence": "inherited:FiddleSticksQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksQMissileFear",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 6794,
+   "cast_time_seconds": 0.25
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Terrify"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileFear"
+   ],
+   "evidence": "inherited:FiddleSticksQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FiddleSticksQMissileNoFear",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "cast_range": [
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0
+   ],
+   "affects_type_flags": 6154,
+   "cast_time_seconds": 0.5
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.5,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Terrify"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileNoFear"
+   ],
+   "evidence": "inherited:FiddleSticksQ"
+  }
+ }
+]

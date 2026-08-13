@@ -1,0 +1,2851 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RumbleShieldBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap": 0.30000001192092896,
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "amount_0": [
+     60.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "amount_1": [
+     10.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     30.0
+    ],
+    "amount_2": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "amount_4": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "amount_5": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleShieldBuff"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleShieldBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleShieldAbility/RumbleShieldBuff"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleShieldBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap": 0.30000001192092896,
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "amount_0": [
+     60.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "amount_1": [
+     10.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     30.0
+    ],
+    "amount_2": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "amount_4": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "amount_5": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleShieldBuff"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleShieldBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleShieldAbility/RumbleShieldBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RumbleShield",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap": 0.30000001192092896,
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "amount_0": [
+     60.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "amount_1": [
+     10.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     30.0
+    ],
+    "amount_2": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "amount_4": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "amount_5": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleShield"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleShieldAbility/RumbleShield"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap": 0.30000001192092896,
+    "coefficient": 0.30000001192092896
+   },
+   "effect_amounts": {
+    "amount_0": [
+     60.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "amount_1": [
+     10.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     30.0
+    ],
+    "amount_2": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "amount_4": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "amount_5": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleShield"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleShieldAbility/RumbleShield"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RumbleBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RumbleBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RumbleFlameThrower",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "ap": 1.0499999523162842
+   },
+   "effect_amounts": {},
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23759
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrower"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleFlameThrower",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "ap": 1.0499999523162842
+   },
+   "effect_amounts": {},
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23759
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrower"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "RumbleFlameThrower",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "ap": 1.0499999523162842
+   },
+   "effect_amounts": {},
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23759
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleFlameThrower"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrower"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RumbleGrenadeSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenadeSlow"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenadeSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cooldown_max_rank": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 8.0,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleGrenade",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenade"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenade"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cooldown_max_rank": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 8.0,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenade"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleGrenade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenade"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenade"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cooldown_max_rank": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 8.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenade"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleDangerZoneBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleDangerZoneBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleDangerZoneBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RumbleCarpetBomb",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    105.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cooldown_max_rank": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.03461538461538462,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBomb"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleCarpetBomb",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    105.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cooldown_max_rank": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.03461538461538462,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBomb"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "RumbleCarpetBomb",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    105.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBomb"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cooldown_max_rank": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.03461538461538462,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBomb"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RumbleCarpetBombSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    105.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0,
+    1700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBombSlow"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBombSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cooldown_max_rank": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.03461538461538462,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBombSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.heat",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleHeatSystem",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleHeatSystem"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleHeatSystemAbility/RumbleHeatSystem"
+   ],
+   "evidence": "name:heat"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RumbleCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RumbleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RumbleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleGrenadeMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 1.2000000476837158
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.3333333333333333,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeMissile"
+   ],
+   "inherited_from": "RumbleGrenade",
+   "evidence": "inherited:RumbleGrenade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleGrenadeMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 1.2000000476837158
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.3333333333333333,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeMissile"
+   ],
+   "inherited_from": "RumbleGrenade",
+   "evidence": "inherited:RumbleGrenade"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RumbleCarpetBombMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBombMissile"
+   ],
+   "inherited_from": "RumbleCarpetBomb",
+   "evidence": "inherited:RumbleCarpetBomb"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleCarpetBombMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBombMissile"
+   ],
+   "inherited_from": "RumbleCarpetBomb",
+   "evidence": "inherited:RumbleCarpetBomb"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "RumbleCarpetBombMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "duration": [
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5,
+    4.5
+   ],
+   "ratios": {
+    "coefficient": 0.5
+   },
+   "effect_amounts": {
+    "amount_5": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleCarpetBombMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleCarpetBombAbility/RumbleCarpetBombMissile"
+   ],
+   "inherited_from": "RumbleCarpetBomb",
+   "evidence": "inherited:RumbleCarpetBomb"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleFlameThrowerSpray",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "coefficient": 0.5,
+    "ap": 1.0499999523162842
+   },
+   "effect_amounts": {},
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleFlameThrowerSpray"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleFlameThrowerSpray"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Flamespitter",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrowerSpray"
+   ],
+   "evidence": "inherited:RumbleFlameThrower; per-tick cone damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleFlameThrowerSpraySuper",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "coefficient": 0.5,
+    "ap": 1.0499999523162842
+   },
+   "effect_amounts": {},
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleFlameThrowerSpraySuper"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleFlameThrowerSpraySuper"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Flamespitter",
+    "Danger Zone",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrowerSpraySuper"
+   ],
+   "evidence": "inherited:RumbleFlameThrower; Danger Zone empowered spray"
+  }
+ },
+ {
+  "atom_id": "damage.resistance-mitigation",
+  "family": "damage",
+  "behavior": "RumbleGrenadeShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenadeShred"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenadeShred"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cooldown_max_rank": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 8.0,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Electro Harpoon",
+    "magic resistance reduction"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeShred"
+   ],
+   "evidence": "buff_desc_RumbleGrenadeShred; stacks additively"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RumbleGrenadeMissileDangerZone",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    55.0,
+    80.0,
+    105.0,
+    130.0,
+    155.0,
+    180.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "coefficient": 1.2000000476837158
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissileDangerZone"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleGrenadeMissileDangerZone"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.3333333333333333,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Electro Harpoon",
+    "Danger Zone",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeMissileDangerZone"
+   ],
+   "evidence": "inherited:RumbleGrenade; Danger Zone empowered harpoon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleOverheat",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleOverheat"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Junkyard Titan",
+    "Overheated"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleOverheat"
+   ],
+   "evidence": "game_buff_tooltip_RumbleOverheat; overheat form at 100 heat"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RumbleOverheatAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleOverheatAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleOverheatAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Junkyard Titan",
+    "empowered attacks deal bonus magic damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleOverheatAttack"
+   ],
+   "evidence": "name:basicattack; overheat empowered"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RumbleOverheatAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RumbleOverheatAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RumbleOverheatAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Junkyard Titan",
+    "empowered attacks deal bonus magic damage"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleOverheatAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ }
+]

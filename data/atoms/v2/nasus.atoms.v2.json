@@ -1,0 +1,1986 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NasusQStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQStacks",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NasusQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    7.5,
+    6.5,
+    5.5,
+    4.5,
+    3.5,
+    2.5
+   ],
+   "cast_range": [
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.485,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.5,
+    "rank_max": 2.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NasusQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    7.5,
+    6.5,
+    5.5,
+    4.5,
+    3.5,
+    2.5
+   ],
+   "cast_range": [
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.485,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.5,
+    "rank_max": 2.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NasusQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    7.5,
+    6.5,
+    5.5,
+    4.5,
+    3.5,
+    2.5
+   ],
+   "cast_range": [
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.485,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQ",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.5,
+    "rank_max": 2.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NasusQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    7.5,
+    6.5,
+    5.5,
+    4.5,
+    3.5,
+    2.5
+   ],
+   "cast_range": [
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0,
+    255.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.485,
+    "behavior": "NasusQ",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQ",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 8.5,
+    "rank_max": 2.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NasusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "NasusBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NasusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "NasusBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NasusE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    16.0,
+    22.0,
+    28.0,
+    34.0,
+    34.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusEAbility/NasusE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NasusE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    16.0,
+    22.0,
+    28.0,
+    34.0,
+    34.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusEAbility/NasusE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NasusE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    16.0,
+    22.0,
+    28.0,
+    34.0,
+    34.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusE",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusEAbility/NasusE"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NasusR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.414,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusRAbility/NasusR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NasusR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    255.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.414,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusRAbility/NasusR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NasusR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.414,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusRAbility/NasusR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "NasusR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.414,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.execute"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.execute"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusRAbility/NasusR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NasusR",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NasusR",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusRAbility/NasusR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NasusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "NasusBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NasusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "NasusBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NasusCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "NasusCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NasusQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQAttack"
+   ],
+   "inherited_from": "NasusQ",
+   "evidence": "inherited:NasusQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NasusQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQAttack"
+   ],
+   "inherited_from": "NasusQ",
+   "evidence": "inherited:NasusQ"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NasusQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQAttack"
+   ],
+   "inherited_from": "NasusQ",
+   "evidence": "inherited:NasusQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NasusQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusQAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusQAbility/NasusQAttack"
+   ],
+   "inherited_from": "NasusQ",
+   "evidence": "inherited:NasusQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.life-steal",
+  "family": "heal-shield",
+  "behavior": "NasusPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusPassive",
+    "atoms": [
+     "heal-shield.life-steal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Life steal"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusPassiveAbility/NasusPassive"
+   ],
+   "evidence": "wiki:P Soul Eater - innate 12/18/24% life steal (based on level)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NasusW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.494,
+    "behavior": "NasusW",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusW",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 16.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusWAbility/NasusW"
+   ],
+   "evidence": "wiki:W Wither - 35% slow, increasing over 5s"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cripple",
+  "family": "crowd-control-mobility",
+  "behavior": "NasusW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.494,
+    "behavior": "NasusW",
+    "atoms": [
+     "crowd-control-mobility.cripple"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NasusW",
+    "atoms": [
+     "crowd-control-mobility.cripple"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 16.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed slow"
+   ],
+   "binary": [
+    "Characters/Nasus/Spells/NasusWAbility/NasusW"
+   ],
+   "evidence": "wiki:W Wither - cripples attack speed by 75% of the slow"
+  }
+ }
+]

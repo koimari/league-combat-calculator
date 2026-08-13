@@ -1,0 +1,2025 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.601,
+    "behavior": "TeemoW"
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "TeemoW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.601,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoWAbility/TeemoW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "TeemoWPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TeemoWPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Move Quick"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoWAbility/TeemoWPassive",
+    "Characters/Teemo/Spells/TeemoWAbility/TeemoWPassiveCooldown",
+    "{a6e2eb54}"
+   ],
+   "evidence": "refined:wiki-description+leveling (passive bonus MS 12-28% after 5s out of combat)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TeemoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoR"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoRAbility/TeemoR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TeemoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoR"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoRAbility/TeemoR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "TeemoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoR"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoRAbility/TeemoR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoR"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoRAbility/TeemoR"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoR"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoRAbility/TeemoR"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "TeemoRDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoRDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "{51a365a3}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "TeemoRDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoRDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{51a365a3}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoRDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoRDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{51a365a3}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoRTrap",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "TeemoRTrap"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{cde85647}"
+   ],
+   "evidence": "name:trap"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TeemoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    6.0,
+    12.0,
+    18.0,
+    24.0,
+    30.0,
+    36.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      0.0,
+      6.0,
+      12.0,
+      18.0,
+      24.0,
+      30.0,
+      36.0
+     ],
+     [
+      -5.0,
+      9.0,
+      23.0,
+      37.0,
+      51.0,
+      65.0,
+      79.0
+     ]
+    ]
+   },
+   "tick_rate": 0.02500000037252903,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoE"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoEAbility/TeemoE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "TeemoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    6.0,
+    12.0,
+    18.0,
+    24.0,
+    30.0,
+    36.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      0.0,
+      6.0,
+      12.0,
+      18.0,
+      24.0,
+      30.0,
+      36.0
+     ],
+     [
+      -5.0,
+      9.0,
+      23.0,
+      37.0,
+      51.0,
+      65.0,
+      79.0
+     ]
+    ]
+   },
+   "tick_rate": 0.02500000037252903,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoE"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TeemoE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoEAbility/TeemoE",
+    "Characters/Teemo/Spells/TeemoEAbility/TeemoEShared"
+   ],
+   "evidence": "tag:Trait_DoT; refined:TeemoEShared shared poison buff"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "TeemoEDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoEDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "{a4dd13df}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "TeemoEDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoEDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{a4dd13df}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoEDot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoEDot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{a4dd13df}"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TeemoECrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.361,
+    "behavior": "TeemoECrit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.361,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{c82ad54c}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TeemoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0,
+    680.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0
+   ],
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      35.0,
+      80.0,
+      125.0,
+      170.0,
+      215.0,
+      260.0,
+      305.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.493,
+    "behavior": "TeemoQ"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "TeemoQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.493,
+   "uptime_fraction": 0.2857,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoQAbility/TeemoQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "TeemoPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "TeemoPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "{5a629d30}"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoPStealthBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoPStealthBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{818b50bd}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "TeemoPStealthBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoPStealthBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "{818b50bd}"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TeemoPAttackSpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TeemoPAttackSpeedBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{8c6c59f1}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TeemoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TeemoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TeemoCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.361,
+    "behavior": "TeemoCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.361,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Teemo/Spells/TeemoCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "teemo Passive (Noxious Trap)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    750.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    75.0,
+    55.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      75.0,
+      200.0,
+      325.0,
+      450.0,
+      575.0,
+      700.0,
+      825.0
+     ]
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": 2.0,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "teemo Passive (Noxious Trap)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.25,
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": 16.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Noxious Trap"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TeemoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6314
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoEAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{7daaa1b4}"
+   ],
+   "inherited_from": "TeemoE",
+   "evidence": "inherited:TeemoE"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "TeemoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6314
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "TeemoEAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.333,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "{7daaa1b4}"
+   ],
+   "inherited_from": "TeemoE",
+   "evidence": "inherited:TeemoE"
+  }
+ }
+]

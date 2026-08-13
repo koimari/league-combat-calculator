@@ -1,0 +1,2272 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EvelynnQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "effect_amounts": {
+    "MissileBaseDamage": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "BonusDamageBase": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "HateSpikeBaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "BonusDamageAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "CooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HateSpikeAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "QStackCount": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EvelynnQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "effect_amounts": {
+    "MissileBaseDamage": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "BonusDamageBase": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "HateSpikeBaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "BonusDamageAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "CooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HateSpikeAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "QStackCount": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ",
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQLineMissile"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EvelynnQDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EvelynnQDebuffCircleMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQDebuffCircleMissile"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EvelynnWApplyMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1300.0,
+    1400.0,
+    1500.0,
+    1600.0,
+    1200.0
+   ],
+   "cast_time": [
+    0.15
+   ],
+   "affects_type_flags": 2050
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnWApplyMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.charm",
+  "family": "crowd-control-mobility",
+  "behavior": "EvelynnW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1300.0,
+    1400.0,
+    1500.0,
+    1600.0,
+    1200.0
+   ],
+   "cast_time": [
+    0.15
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    200.0,
+    250.0,
+    300.0,
+    350.0,
+    400.0,
+    450.0,
+    500.0
+   ],
+   "duration": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25,
+    2.5
+   ],
+   "effect_amounts": {
+    "MonsterDamage": [
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0,
+     450.0,
+     500.0
+    ],
+    "CharmDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "ShredDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SlowDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MonsterCharm": [
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75,
+     4.0,
+     4.25
+    ],
+    "MRShred": [
+     0.325,
+     0.35,
+     0.375,
+     0.4,
+     0.425,
+     0.45,
+     0.475
+    ],
+    "SlowAmount": [
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45
+    ],
+    "primary": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": 0.0667,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnW"
+   ],
+   "evidence": "Allure curse resolves into Charm on proc (wiki W; vocab crowd-control-mobility.charm)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "EvelynnR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.35
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "CritMultiplier": [
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4
+    ],
+    "PassiveReset": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "primary": [
+     0.0,
+     125.0,
+     250.0,
+     375.0,
+     500.0,
+     650.0,
+     775.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.75
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnRAbility/EvelynnR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "EvelynnR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.35
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "CritMultiplier": [
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4
+    ],
+    "PassiveReset": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "primary": [
+     0.0,
+     125.0,
+     250.0,
+     375.0,
+     500.0,
+     650.0,
+     775.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.75
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnRAbility/EvelynnR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EvelynnR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.35
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "CritMultiplier": [
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4
+    ],
+    "PassiveReset": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "primary": [
+     0.0,
+     125.0,
+     250.0,
+     375.0,
+     500.0,
+     650.0,
+     775.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.75
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnRAbility/EvelynnR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EvelynnR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.35
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "CritMultiplier": [
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4,
+     2.4
+    ],
+    "PassiveReset": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "primary": [
+     0.0,
+     125.0,
+     250.0,
+     375.0,
+     500.0,
+     650.0,
+     775.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.75
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.35,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.35,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnRAbility/EvelynnR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EvelynnE2Dash",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    10.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    400.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnE2Dash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EvelynnE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "EmpoweredDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "SpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BasePercentHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EmpoweredPercentHealth": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MonsterCap": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "SpeedAmount": [
+     0.25,
+     0.3,
+     0.35,
+     0.4,
+     0.45,
+     0.5,
+     0.55
+    ]
+   },
+   "ratios": {
+    "stat": 0.025
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EvelynnE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "EmpoweredDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "SpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BasePercentHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EmpoweredPercentHealth": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MonsterCap": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "SpeedAmount": [
+     0.25,
+     0.3,
+     0.35,
+     0.4,
+     0.45,
+     0.5,
+     0.55
+    ]
+   },
+   "ratios": {
+    "stat": 0.025
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "EvelynnStealthRing",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "effect_amounts": {
+    "DemonShadeTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StealthDropTimer": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "ratios": {
+    "stat": 2.5
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnStealthRing",
+    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassive",
+    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassiveDelay",
+    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassiveDemonCloak"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EvelynnBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "EvelynnCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EvelynnQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 6346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ2"
+   ],
+   "inherited_from": "EvelynnQ",
+   "evidence": "inherited:EvelynnQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EvelynnQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 6346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ2"
+   ],
+   "inherited_from": "EvelynnQ",
+   "evidence": "inherited:EvelynnQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.charm",
+  "family": "crowd-control-mobility",
+  "behavior": "EvelynnWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 2050
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnWMissile"
+   ],
+   "inherited_from": "EvelynnW",
+   "evidence": "Allure curse resolves into Charm on proc (wiki W; vocab crowd-control-mobility.charm)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EvelynnE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_time": [
+    0.15
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "primary": [
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnE2"
+   ],
+   "inherited_from": "EvelynnE",
+   "evidence": "inherited:EvelynnE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EvelynnE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_time": [
+    0.15
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "primary": [
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnE2"
+   ],
+   "inherited_from": "EvelynnE",
+   "evidence": "inherited:EvelynnE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EvelynnWShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 2050
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnWShred"
+   ],
+   "evidence": "Allure magic-resist shred after charm (binary buff object EvelynnWShred)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EvelynnEHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_time": [
+    0.15
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "primary": [
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.15,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.15,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed"
+   ],
+   "binary": [
+    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnEHaste"
+   ],
+   "evidence": "Whiplash attack-speed haste buff (binary buff object EvelynnEHaste)"
+  }
+ }
+]

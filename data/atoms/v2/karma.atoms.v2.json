@@ -1,0 +1,2939 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KarmaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KarmaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KarmaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KarmaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KarmaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarmaMantra",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    40.0,
+    40.0,
+    38.0,
+    36.0,
+    34.0,
+    34.0,
+    34.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "QBonusAPRatio": 0.30000001192092896,
+    "QDetonationAPRatio": 0.5,
+    "RQSlowDuration": 1.5,
+    "RWHealRatio": 0.009999999776482582,
+    "EBonusShieldRatio": 0.44999998807907104,
+    "RESharedRatio": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "QBonusDamage": [
+     -20.0,
+     40.0,
+     100.0,
+     160.0,
+     220.0,
+     280.0,
+     340.0
+    ],
+    "QBonusAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "QDetonationDamage": [
+     -50.0,
+     40.0,
+     130.0,
+     220.0,
+     310.0,
+     400.0,
+     490.0
+    ],
+    "QDetonationAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "RQSlow": [
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5
+    ],
+    "RQSlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RWBonusRoot": [
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75
+    ],
+    "RWBaseHeal": [
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0
+    ],
+    "RWHealRatio": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "EBonusShield": [
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0
+    ],
+    "EBonusShieldRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "REMoveSpeed": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "RESharedRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "calculations": {
+    "RQImpactDamage": [
+     "QBonusDamage",
+     "QBonusAPRatio"
+    ],
+    "RQFieldDamage": [
+     "QDetonationDamage",
+     "QDetonationAPRatio"
+    ],
+    "REBonusShield": [
+     "EBonusShield",
+     "EBonusShieldRatio"
+    ],
+    "RWHealAmount": [
+     "RWBaseHeal",
+     "RWHealRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaMantra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 40.0,
+    "rank_max": 34.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaMantraAbility/KarmaMantra"
+   ],
+   "evidence": "tag:Trait_Transformation"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarmaMantra",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    40.0,
+    40.0,
+    38.0,
+    36.0,
+    34.0,
+    34.0,
+    34.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "QBonusAPRatio": 0.30000001192092896,
+    "QDetonationAPRatio": 0.5,
+    "RQSlowDuration": 1.5,
+    "RWHealRatio": 0.009999999776482582,
+    "EBonusShieldRatio": 0.44999998807907104,
+    "RESharedRatio": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "QBonusDamage": [
+     -20.0,
+     40.0,
+     100.0,
+     160.0,
+     220.0,
+     280.0,
+     340.0
+    ],
+    "QBonusAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "QDetonationDamage": [
+     -50.0,
+     40.0,
+     130.0,
+     220.0,
+     310.0,
+     400.0,
+     490.0
+    ],
+    "QDetonationAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "RQSlow": [
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5,
+     -0.5
+    ],
+    "RQSlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RWBonusRoot": [
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75
+    ],
+    "RWBaseHeal": [
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0,
+     17.0
+    ],
+    "RWHealRatio": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "EBonusShield": [
+     5.0,
+     45.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0
+    ],
+    "EBonusShieldRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "REMoveSpeed": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "RESharedRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "calculations": {
+    "RQImpactDamage": [
+     "QBonusDamage",
+     "QBonusAPRatio"
+    ],
+    "RQFieldDamage": [
+     "QDetonationDamage",
+     "QDetonationAPRatio"
+    ],
+    "REBonusShield": [
+     "EBonusShield",
+     "EBonusShieldRatio"
+    ],
+    "RWHealAmount": [
+     "RWBaseHeal",
+     "RWHealRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaMantra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 40.0,
+    "rank_max": 34.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaMantraAbility/KarmaMantra"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarmaPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "effect_amounts": null,
+   "data_values": {
+    "BasicAttackMantraRefund": null
+   },
+   "calculations": {
+    "SpellMantraRefund": [
+     null
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cooldown reduction",
+    "Ability resource"
+   ],
+   "binary": [
+    "KarmaPassive"
+   ],
+   "evidence": "manual: Gathering Fire reduces Mantra cooldown on damaging ability hits (wiki P)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarmaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_time": null,
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    260.0,
+    310.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "SlowDuration": 1.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "calculations": {
+    "{087bc3ca}": [
+     null
+    ],
+    "{5d5198eb}": [
+     null
+    ],
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarmaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    80.0
+   ],
+   "cast_time": null,
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    260.0,
+    310.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "SlowDuration": 1.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "calculations": {
+    "{087bc3ca}": [
+     null
+    ],
+    "{5d5198eb}": [
+     null
+    ],
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarmaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KarmaQMissileMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQMissile"
+   ],
+   "inherited_from": "KarmaQ",
+   "evidence": "inherited:KarmaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarmaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KarmaQMissileMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQMissile"
+   ],
+   "inherited_from": "KarmaQ",
+   "evidence": "inherited:KarmaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarmaQMissileMantra",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KarmaQMissileMantraMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQMissileMantra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQMissile"
+   ],
+   "evidence": "manual: Mantra Soulflare larger bolt magic damage (wiki Q Soulflare)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaQMissileMantraSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KarmaQMissileMantraSlowMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQMissileMantraSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQMissileMantraSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaQMissileSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KarmaQMissileSlowMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaQMissileSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaQAbility/KarmaQMissileSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarmaSolKimShield",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldRatio": 0.6000000238418579,
+    "ShieldDuration": 2.5,
+    "MoveSpeedDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseShield": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "ShieldRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MoveSpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "calculations": {
+    "TotalShield": [
+     "BaseShield",
+     "ShieldRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSolKimShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSolKimShieldAbility/KarmaSolKimShield"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KarmaSolKimShield",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldRatio": 0.6000000238418579,
+    "ShieldDuration": 2.5,
+    "MoveSpeedDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseShield": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "ShieldRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MoveSpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "calculations": {
+    "TotalShield": [
+     "BaseShield",
+     "ShieldRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSolKimShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSolKimShieldAbility/KarmaSolKimShield"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarmaSolKimShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldRatio": 0.6000000238418579,
+    "ShieldDuration": 2.5,
+    "MoveSpeedDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseShield": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "ShieldRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MoveSpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "calculations": {
+    "TotalShield": [
+     "BaseShield",
+     "ShieldRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSolKimShield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSolKimShieldAbility/KarmaSolKimShield"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KarmaSolKimShieldLocket",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "effect_1": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "effect_2": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "effect_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSolKimShieldLocket"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSolKimShieldAbility/KarmaSolKimShieldLocket"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaSpiritBind",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.44999998807907104,
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6146,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "APRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "LeashBreakRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ]
+   },
+   "calculations": {
+    "InitialDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarmaSpiritBind"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSpiritBind"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBind"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarmaSpiritBind",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.44999998807907104,
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6146,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "APRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "LeashBreakRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ]
+   },
+   "calculations": {
+    "InitialDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarmaSpiritBind"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSpiritBind"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBind"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KarmaSpiritBind",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.44999998807907104,
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": 2.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6146,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "APRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "TetherDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "LeashBreakRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ]
+   },
+   "calculations": {
+    "InitialDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarmaSpiritBind"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSpiritBind"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBind"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaSpiritBindRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaSpiritBindRoot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBindRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaWBeam",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaWBeam"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Root"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBindRoot"
+   ],
+   "evidence": "manual: W tether roots on completion; Mantra increases duration (wiki W Focused Resolve/Renewal)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "KarmaWBeamMantra",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarmaWBeamMantra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Root"
+   ],
+   "binary": [
+    "Characters/Karma/Spells/KarmaSpiritBindAbility/KarmaSpiritBindRoot"
+   ],
+   "evidence": "manual: W tether roots on completion; Mantra increases duration (wiki W Focused Resolve/Renewal)"
+  }
+ }
+]

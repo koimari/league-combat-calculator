@@ -1,0 +1,3998 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQKnockback",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQKnockback",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQKnockback"
+   ],
+   "evidence": "name:knockback",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQKnockback",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQKnockback",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQKnockback"
+   ],
+   "evidence": "name:knockback",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ViR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    115.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "RStunDuration": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "RBaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SecondaryTargetDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SecondaryTargetKnockbackDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "SecondaryTargetStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SecondaryTargetKnockbackDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "RBonusADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRAbility/ViR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ViR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    115.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "RStunDuration": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "RBaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SecondaryTargetDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SecondaryTargetKnockbackDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "SecondaryTargetStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SecondaryTargetKnockbackDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "RBonusADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRAbility/ViR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ViR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    115.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "RStunDuration": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "RBaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SecondaryTargetDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SecondaryTargetKnockbackDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "SecondaryTargetStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SecondaryTargetKnockbackDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "RBonusADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRAbility/ViR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ViR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    115.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RBaseSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "RStunDuration": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "RBaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SecondaryTargetDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SecondaryTargetKnockbackDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "SecondaryTargetStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SecondaryTargetKnockbackDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "RBonusADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRAbility/ViR"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:Trait_KnockBack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:Trait_Strike",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ViQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "KnockbackDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "MaxDamageMult": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MinionDamageMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinDashRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "ExtraDashRangeAtMaxCharge": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "DashWallCheating": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ADRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "CanceledRefundTime": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ManaRefundPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SelfSlow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ChargeDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "VFXChargeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQAbility/ViQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViPassiveBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViPassiveBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViPassiveBuff"
+   ],
+   "evidence": "name:buff",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ViE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ad": 1.100000023841858
+   },
+   "effect_amounts": {
+    "ADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamage": [
+     -10.0,
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0
+    ],
+    "UnnamedEffectAmount0": null,
+    "BonusRange": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "AttackBuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StaticCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "max_rank": 1.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViEAbility/ViE"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ViE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ad": 1.100000023841858
+   },
+   "effect_amounts": {
+    "ADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamage": [
+     -10.0,
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0
+    ],
+    "UnnamedEffectAmount0": null,
+    "BonusRange": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "AttackBuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StaticCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "max_rank": 1.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViEAbility/ViE"
+   ],
+   "evidence": "tag:Trait_Strike",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ViE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ad": 1.100000023841858
+   },
+   "effect_amounts": {
+    "ADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamage": [
+     -10.0,
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0
+    ],
+    "UnnamedEffectAmount0": null,
+    "BonusRange": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "AttackBuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StaticCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "max_rank": 1.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViEAbility/ViE"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ViE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ad": 1.100000023841858
+   },
+   "effect_amounts": {
+    "ADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamage": [
+     -10.0,
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0
+    ],
+    "UnnamedEffectAmount0": null,
+    "BonusRange": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "AttackBuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StaticCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "max_rank": 1.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViEAbility/ViE"
+   ],
+   "evidence": "tag:Trait_AttackReset",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ad": 1.100000023841858
+   },
+   "effect_amounts": {
+    "ADRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamage": [
+     -10.0,
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0
+    ],
+    "UnnamedEffectAmount0": null,
+    "BonusRange": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "AttackBuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StaticCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViE",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "max_rank": 1.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViEAbility/ViE"
+   ],
+   "evidence": "tag:Trait_Ammo",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "ViRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViRKnockback",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViRKnockback",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRKnockback"
+   ],
+   "evidence": "name:knockback",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ViRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViRKnockback",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViRKnockback",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViRKnockback"
+   ],
+   "evidence": "name:knockback",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViWMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViWMarker",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViWMarker",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViWMarker"
+   ],
+   "evidence": "name:mark",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ViQDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViQDash",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViQDash",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViQDash"
+   ],
+   "evidence": "name:dash",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ViCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViCritAttack"
+   ],
+   "evidence": "rule:crit",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "ViWProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViWProc",
+    "atoms": [
+     "damage.proc"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViWProc",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViWProc"
+   ],
+   "evidence": "name:proc",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ViBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack3"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ViBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack3"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ViBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack2"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ViBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack2"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViWBuff"
+   ],
+   "evidence": "name:buff",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ViW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "ADCoefficient": [
+     0.03500000014901161,
+     0.03500000014901161,
+     0.03500000014901161,
+     0.03500000014901161,
+     0.03500000014901161,
+     0.03500000014901161,
+     0.03500000014901161
+    ],
+    "MaxHealthDamage": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "SharedBuffsDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AttackSpeed": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "ShredAmount": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "MonsterDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MarkerBuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "StacksBeforeEffect": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViWAbility/ViW"
+   ],
+   "evidence": "tag:Trait_Low_Damage",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ViBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ViBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ViBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ViPassive",
+  "trigger": "on_ability_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "ShieldDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "CDReductionOn3Hit": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ViPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ViPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blast Shield"
+   ],
+   "binary": [
+    "Characters/Vi/Spells/ViPassiveAbility/ViPassive"
+   ],
+   "evidence": "wiki P: next ability hit grants a shield equal to 12% max health for 3 seconds",
+   "spine_source": "mSpell"
+  }
+ }
+]

@@ -1,0 +1,2784 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DoubleStrikeStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiPassiveAbility/DoubleStrikeStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MasterYiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MasterYiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MasterYiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MasterYiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrikeMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrikeMissileReturn"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrikeMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrikeMissileReturn"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrike",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_ChannelSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrike"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrike",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_ChannelSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrike"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrike",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_ChannelSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrike"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AlphaStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "ratios": {
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_ChannelSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrike"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AlphaStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "ratios": {
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_ChannelSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrike"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrikeMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrikeMissile"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AlphaStrikeMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "SubsequentHitMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "BonusMonsterDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "AttackDamageRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "BonusCritDamageRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseBasicAttackCDR": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AlphaStrikeBounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseOnHitMultiplier": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell"
+   ],
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.231,
+    "behavior": "vanish, untargetable"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "marks nearest visible un-marked enemy within 600 units, recurring every 0.231s, up to 4 bounces"
+   },
+   {
+    "state": "recast",
+    "duration": 0.165,
+    "behavior": "reappear 75 units in target direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "detonate marks: physical damage + on-hits (75%); later marks on same target 25% damage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 1.087,
+   "uptime_fraction": null,
+   "reset_on": [
+    "basic attacks reduce current cooldown by 1s (BaseBasicAttackCDR)"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/AlphaStrikeAbility/AlphaStrikeMissile"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "Meditate",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_range": null,
+   "tick_rate": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseHeal": [
+     120.0,
+     200.0,
+     280.0,
+     360.0,
+     440.0,
+     520.0
+    ],
+    "HealDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MaxMissingHealthPercent": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReduction": [
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421,
+     0.550000011920929,
+     0.574999988079071
+    ],
+    "DamageReductionTowerMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseManaCost": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "PercentManaCostPerSecond": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ],
+    "InitialExtraDR": [
+     0.25,
+     0.22499999403953552,
+     0.20000000298023224,
+     0.17499999701976776,
+     0.15000000596046448,
+     0.125
+    ],
+    "InitialExtraDRDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DRLinger": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_ChannelSpell",
+    "Trait_AttackReset",
+    "Trait_ActiveHeal",
+    "Trait_Parry"
+   ],
+   "reset_on": [
+    "resets basic attack timer; grants one Double Strike stack per second"
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 4.0,
+    "behavior": "heal every 0.5s (TickFrequency), up to 4s"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "damage reduction lingers 0.5s after channel (DRLinger)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "resets basic attack timer; grants one Double Strike stack per second"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MeditateAbility/Meditate"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "Meditate",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "heal": [
+    120.0,
+    200.0,
+    280.0,
+    360.0,
+    440.0,
+    520.0
+   ],
+   "ratios": {
+    "MaxMissingHealthPercent": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cooldown": null,
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_range": null,
+   "tick_rate": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseHeal": [
+     120.0,
+     200.0,
+     280.0,
+     360.0,
+     440.0,
+     520.0
+    ],
+    "HealDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MaxMissingHealthPercent": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "TickFrequency": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReduction": [
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421,
+     0.550000011920929,
+     0.574999988079071
+    ],
+    "DamageReductionTowerMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseManaCost": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "PercentManaCostPerSecond": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ],
+    "InitialExtraDR": [
+     0.25,
+     0.22499999403953552,
+     0.20000000298023224,
+     0.17499999701976776,
+     0.15000000596046448,
+     0.125
+    ],
+    "InitialExtraDRDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DRLinger": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_ChannelSpell",
+    "Trait_AttackReset",
+    "Trait_ActiveHeal",
+    "Trait_Parry"
+   ],
+   "reset_on": [
+    "resets basic attack timer; grants one Double Strike stack per second"
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 4.0,
+    "behavior": "heal every 0.5s (TickFrequency), up to 4s"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "damage reduction lingers 0.5s after channel (DRLinger)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "resets basic attack timer; grants one Double Strike stack per second"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MeditateAbility/Meditate"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "WujuStyleSuperCharged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "true",
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "LegacySwordVFXDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_Melee_SmallWindup"
+   ],
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "damage": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "bonus true damage on-hit for 5s (Duration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/WujuStyleAbility/WujuStyleSuperCharged"
+   ],
+   "evidence": "name:charged"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WujuStyleSuperCharged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "true",
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "LegacySwordVFXDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_Melee_SmallWindup"
+   ],
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "damage": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "bonus true damage on-hit for 5s (Duration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/WujuStyleAbility/WujuStyleSuperCharged"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "WujuStyle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "true",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "LegacySwordVFXDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_Melee_SmallWindup"
+   ],
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "bonus true damage on-hit for 5s (Duration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/WujuStyleAbility/WujuStyle"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "WujuStyle",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "true",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "LegacySwordVFXDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_Melee_SmallWindup"
+   ],
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "bonus true damage on-hit for 5s (Duration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/WujuStyleAbility/WujuStyle"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WujuStyle",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "true",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "LegacySwordVFXDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_Melee_SmallWindup"
+   ],
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "damage": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "bonus true damage on-hit for 5s (Duration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refreshed by Alpha Strike hits while active"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/WujuStyleAbility/WujuStyle"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Highlander",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "RDuration": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "RASBonus": [
+     25.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0
+    ],
+    "RMSBonus": [
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "RKillAssistExtension": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "RCooldownRefund": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_AttackBuff_Duration"
+   ],
+   "reset_on": [
+    "takedown: +7s duration; passive takedown cooldown refund 70%"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 7.0,
+    "behavior": "ghosting, bonus attack speed (RASBonus 5-125), bonus move speed (RMSBonus 25-85), slow/cripple immunity"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "takedown extends duration by 7s (RKillAssistExtension); passive: takedown reduces basic ability cooldowns by 70% (RCooldownRefund)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown: +7s duration; passive takedown cooldown refund 70%"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/HighlanderAbility/Highlander"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MasterYiCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MasterYiDoubleStrike",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "On-hit",
+    "Double Strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiPassiveAbility/MasterYiDoubleStrike",
+    "Characters/MasterYi/Spells/MasterYiPassiveAbility/DoubleStrike"
+   ],
+   "evidence": "refined: every 4th basic attack strikes twice and applies on-hit effects"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DoubleStrike",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/MasterYiPassiveAbility/DoubleStrike"
+   ],
+   "evidence": "refined: ready-state buff before the double strike"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack-duration-refresh",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HighlanderSpellPassive",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "effect_amounts": {},
+   "spell_tags": [],
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "stacks on basic-attack on-hit, cap 3, 4s refresh window"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "empowered second strike: 50% AD physical damage, applies on-hits"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "second strike retargets if primary dies"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stack-transform-summon-resource.buff"
+  ],
+  "provenance": {
+   "wiki": [
+    "Takedown",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/MasterYi/Spells/HighlanderAbility/HighlanderSpellPassive"
+   ],
+   "evidence": "refined: takedowns refresh Highlander's duration"
+  }
+ }
+]

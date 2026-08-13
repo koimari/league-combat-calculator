@@ -1,0 +1,2237 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "WildCards",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.75,
+    5.5,
+    5.25,
+    5.0,
+    5.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    15.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     15.0,
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/WildCardsAbility/WildCards"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/WildCardsAbility/WildCards",
+  "_spine_source": "root/Characters/TwistedFate/Spells/WildCardsAbility/WildCards",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "BaseDamage",
+    "BonusADRatio"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "BonusADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "WildCards",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.75,
+    5.5,
+    5.25,
+    5.0,
+    5.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    15.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     15.0,
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WildCards",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank_seconds": 5.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/WildCardsAbility/WildCards"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/WildCardsAbility/WildCards",
+  "_spine_source": "root/Characters/TwistedFate/Spells/WildCardsAbility/WildCards",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "BaseDamage",
+    "BonusADRatio"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "BonusADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TwistedFateCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateCritAttack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateCritAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "Gate",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Gate",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Gate",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "Gate",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/DestinyAbility/Gate"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/DestinyAbility/Gate",
+  "_spine_source": "root/Characters/TwistedFate/Spells/DestinyAbility/Gate",
+  "_binary_evidence": {
+   "spell_tags": [
+    "PositiveEffect_Teleport",
+    "Trait_Ultimate",
+    "Trait_FreeRecast"
+   ],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack4",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack4",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack4",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack4",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack3",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack3",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack3",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack3",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack2",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack2",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CardmasterStack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0,
+    190.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "AttackSpeedBonus": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "Damage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "TowerEffectiveness": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "CardmasterStack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_PassiveSlot"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "AttackSpeedBonus",
+    "BonusADRatio",
+    "Damage",
+    "TowerEffectiveness"
+   ],
+   "calculations": {
+    "BonusDamage": [
+     "Damage",
+     "BonusADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "CardmasterStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0,
+    190.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "AttackSpeedBonus": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "Damage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "TowerEffectiveness": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "CardmasterStack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_PassiveSlot"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "AttackSpeedBonus",
+    "BonusADRatio",
+    "Damage",
+    "TowerEffectiveness"
+   ],
+   "calculations": {
+    "BonusDamage": [
+     "Damage",
+     "BonusADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CardmasterStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0,
+    190.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "AttackSpeedBonus": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "Damage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BonusADRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "TowerEffectiveness": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "CardmasterStack",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack"
+   ],
+   "evidence": "name:stack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/CardmasterStackAbility/CardmasterStack",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_PassiveSlot"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "AttackSpeedBonus",
+    "BonusADRatio",
+    "Damage",
+    "TowerEffectiveness"
+   ],
+   "calculations": {
+    "BonusDamage": [
+     "Damage",
+     "BonusADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "SecondSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "GoldRatioMinCherry": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "GoldRatioMaxCherry": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "effect_amounts": {
+    "GoldRatioMinCherry": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "GoldRatioMaxCherry": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "GameModeInteger": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SecondSight",
+    "atoms": [
+     "vision-economy.sight"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SecondSight",
+    "atoms": [
+     "vision-economy.sight"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/SecondSightAbility/SecondSight"
+   ],
+   "evidence": "name:sight"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/SecondSightAbility/SecondSight",
+  "_spine_source": "root/Characters/TwistedFate/Spells/SecondSightAbility/SecondSight",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "GameModeInteger",
+    "GoldRatioMaxCherry",
+    "GoldRatioMinCherry"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwistedFateBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwistedFateBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/TwistedFateBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack",
+  "_spine_source": "root/Characters/TwistedFate/Spells/TwistedFateBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "Pick a Card",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BlueBase": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "RedBase": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "GoldBase": [
+     7.5,
+     15.0,
+     22.5,
+     30.0,
+     37.5,
+     45.0,
+     52.5
+    ],
+    "BlueCritMultiplier": [
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071
+    ],
+    "RedCritMultiplier": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "GoldCritMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ttBlueAP": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ttRedAP": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "ttGoldAP": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ttAD": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pick a Card"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/PickACardAbility/PickACard"
+   ],
+   "evidence": "wiki: Gold Card stuns the target for 1-2 seconds"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_spine_source": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_DamageAbility",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_Strike",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "BlueBase",
+    "BlueCritMultiplier",
+    "GoldBase",
+    "GoldCritMultiplier",
+    "RedBase",
+    "RedCritMultiplier",
+    "ttAD",
+    "ttBlueAP",
+    "ttGoldAP",
+    "ttRedAP"
+   ],
+   "calculations": {
+    "BlueDamage": [
+     "BlueBase"
+    ],
+    "RedDamage": [
+     "RedBase"
+    ],
+    "GoldDamage": [
+     "GoldBase"
+    ],
+    "ttBlueDamage": [],
+    "ttRedDamage": [],
+    "ttGoldDamage": []
+   }
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "Pick a Card",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BlueBase": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "RedBase": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "GoldBase": [
+     7.5,
+     15.0,
+     22.5,
+     30.0,
+     37.5,
+     45.0,
+     52.5
+    ],
+    "BlueCritMultiplier": [
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071
+    ],
+    "RedCritMultiplier": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "GoldCritMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ttBlueAP": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ttRedAP": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "ttGoldAP": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ttAD": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pick a Card"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/PickACardAbility/PickACard"
+   ],
+   "evidence": "wiki: Red Card slows all targets hit by 30-50% for 2.5 seconds"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_spine_source": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_DamageAbility",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_Strike",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "BlueBase",
+    "BlueCritMultiplier",
+    "GoldBase",
+    "GoldCritMultiplier",
+    "RedBase",
+    "RedCritMultiplier",
+    "ttAD",
+    "ttBlueAP",
+    "ttGoldAP",
+    "ttRedAP"
+   ],
+   "calculations": {
+    "BlueDamage": [
+     "BlueBase"
+    ],
+    "RedDamage": [
+     "RedBase"
+    ],
+    "GoldDamage": [
+     "GoldBase"
+    ],
+    "ttBlueDamage": [],
+    "ttRedDamage": [],
+    "ttGoldDamage": []
+   }
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Pick a Card",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BlueBase": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "RedBase": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "GoldBase": [
+     7.5,
+     15.0,
+     22.5,
+     30.0,
+     37.5,
+     45.0,
+     52.5
+    ],
+    "BlueCritMultiplier": [
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071,
+     0.574999988079071
+    ],
+    "RedCritMultiplier": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "GoldCritMultiplier": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ttBlueAP": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ttRedAP": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "ttGoldAP": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ttAD": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "stack-transform-summon-resource.mana"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "stack-transform-summon-resource.mana"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "Pick a Card",
+    "atoms": [
+     "stack-transform-summon-resource.mana"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cooldown_max_rank_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pick a Card"
+   ],
+   "binary": [
+    "Characters/TwistedFate/Spells/PickACardAbility/PickACard"
+   ],
+   "evidence": "wiki: Blue Card restores 70-150 mana on hit"
+  },
+  "_spell_object": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_spine_source": "root/Characters/TwistedFate/Spells/PickACardAbility/PickACard",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_DamageAbility",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_Strike",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "BlueBase",
+    "BlueCritMultiplier",
+    "GoldBase",
+    "GoldCritMultiplier",
+    "RedBase",
+    "RedCritMultiplier",
+    "ttAD",
+    "ttBlueAP",
+    "ttGoldAP",
+    "ttRedAP"
+   ],
+   "calculations": {
+    "BlueDamage": [
+     "BlueBase"
+    ],
+    "RedDamage": [
+     "RedBase"
+    ],
+    "GoldDamage": [
+     "GoldBase"
+    ],
+    "ttBlueDamage": [],
+    "ttRedDamage": [],
+    "ttGoldDamage": []
+   }
+  }
+ }
+]

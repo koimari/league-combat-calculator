@@ -1,0 +1,3256 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankPassiveHaste",
+  "trigger": "on_proc",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Trial by Fire"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveHaste"
+   ],
+   "evidence": "wiki:P-bonus-movement-speed"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankRSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "damage": [
+    20.0,
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "BaseHealth": [
+     0.9
+    ]
+   },
+   "effect_amounts": {
+    "BaseHeal": [
+     20.0,
+     45.0,
+     70.0,
+     95.0,
+     120.0,
+     145.0,
+     170.0
+    ],
+    "PercentHeal": [
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0
+    ],
+    "BuffDuration_unused": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "HasteAmount": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "SteroidAmount_unused": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 24.0,
+    "behavior": "GangplankW",
+    "atoms": [
+     "crowd-control-mobility.stasis"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0104,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankWAbility/GangplankW"
+   ],
+   "evidence": "tag:SpecialCase_StasisLocked"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    4.0,
+    4.0,
+    5.0,
+    5.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "BarrelSlow": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "MaxBarrels": [
+     3.0,
+     3.0,
+     3.0,
+     4.0,
+     4.0,
+     5.0,
+     5.0
+    ],
+    "DebuffDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BonusDamageToChampions": [
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0,
+     175.0
+    ],
+    "BarrelDuration": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BarrelBaseDecay": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BarrelEnemyGoldBounty": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MinionDamagePercentage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "CooldownBetweenBarrels": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BarrelArmorPenetration": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GangplankEBarrelActive",
+  "trigger": "on_detonate",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Powder Keg"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEBarrelActive"
+   ],
+   "evidence": "wiki:E-keg-explosion-physical-damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GangplankR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "OneWaveDamage": [
+     0.1
+    ],
+    "DeathsDaughterDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "DamagePerWave": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "DeathsDaughterBaseDamage": [
+     30.0,
+     120.0,
+     210.0,
+     300.0,
+     390.0,
+     480.0,
+     570.0
+    ],
+    "RaiseMoraleHaste": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "ZoneDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "CannonDelay": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "CannonInterval": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DeathsDaughterSlow": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DeathsDaughterSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RaiseMoraleHasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TotalWavesTooltip": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0031,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GangplankBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "gangplankbasicattack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GangplankCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "gangplankcritattack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GangplankQProceedCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 6186
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 4.5,
+    "behavior": "GangplankQWrapper",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceed",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceedCrit",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceedCrit"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    4.0,
+    4.0,
+    5.0,
+    5.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "BarrelSlow": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "MaxBarrels": [
+     3.0,
+     3.0,
+     3.0,
+     4.0,
+     4.0,
+     5.0,
+     5.0
+    ],
+    "DebuffDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BonusDamageToChampions": [
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0,
+     175.0
+    ],
+    "BarrelDuration": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BarrelBaseDecay": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BarrelEnemyGoldBounty": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MinionDamagePercentage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "CooldownBetweenBarrels": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BarrelArmorPenetration": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GangplankEBarrelFuseMissile",
+  "trigger": "on_detonate",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0
+   ],
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Powder Keg"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEBarrelFuseMissile"
+   ],
+   "evidence": "wiki:E-keg-fuse-missile"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GangplankR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "OneWaveDamage": [
+     0.1
+    ],
+    "DeathsDaughterDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "DamagePerWave": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "DeathsDaughterBaseDamage": [
+     30.0,
+     120.0,
+     210.0,
+     300.0,
+     390.0,
+     480.0,
+     570.0
+    ],
+    "RaiseMoraleHaste": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "ZoneDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "CannonDelay": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "CannonInterval": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DeathsDaughterSlow": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DeathsDaughterSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RaiseMoraleHasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TotalWavesTooltip": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0031,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GangplankPassiveAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "true"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Trial by Fire"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttack"
+   ],
+   "evidence": "wiki:P-burn-true-damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GangplankPassiveAttackDOT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "true"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GangplankR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "OneWaveDamage": [
+     0.1
+    ],
+    "DeathsDaughterDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "DamagePerWave": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "DeathsDaughterBaseDamage": [
+     30.0,
+     120.0,
+     210.0,
+     300.0,
+     390.0,
+     480.0,
+     570.0
+    ],
+    "RaiseMoraleHaste": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "ZoneDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "CannonDelay": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "CannonInterval": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DeathsDaughterSlow": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DeathsDaughterSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RaiseMoraleHasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TotalWavesTooltip": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0031,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "GangplankQProceed",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 6186
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 4.5,
+    "behavior": "GangplankQWrapper",
+    "atoms": [
+     "damage.proc"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceed",
+    "atoms": [
+     "damage.proc"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceedCrit",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceed"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "GangplankQProceedCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 6186
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 4.5,
+    "behavior": "GangplankQWrapper",
+    "atoms": [
+     "damage.proc"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceed",
+    "atoms": [
+     "damage.proc"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankQProceedCrit",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceedCrit"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GangplankBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "gangplankbasicattack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "GangplankPassiveAttackDOT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "true"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "GangplankW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "damage": [
+    20.0,
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "BaseHealth": [
+     0.9
+    ]
+   },
+   "effect_amounts": {
+    "BaseHeal": [
+     20.0,
+     45.0,
+     70.0,
+     95.0,
+     120.0,
+     145.0,
+     170.0
+    ],
+    "PercentHeal": [
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0
+    ],
+    "BuffDuration_unused": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "HasteAmount": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "SteroidAmount_unused": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 24.0,
+    "behavior": "GangplankW",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0104,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankWAbility/GangplankW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "gangplank Passive (Remove Scurvy (W))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Remove Scurvy (W)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    4.0,
+    4.0,
+    5.0,
+    5.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "BarrelSlow": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "MaxBarrels": [
+     3.0,
+     3.0,
+     3.0,
+     4.0,
+     4.0,
+     5.0,
+     5.0
+    ],
+    "DebuffDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BonusDamageToChampions": [
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0,
+     175.0
+    ],
+    "BarrelDuration": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BarrelBaseDecay": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BarrelEnemyGoldBounty": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MinionDamagePercentage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "CooldownBetweenBarrels": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BarrelArmorPenetration": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "Cooldown": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "MoveSpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "DoTDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TurretDamageMult": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Trial by Fire"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassive"
+   ],
+   "evidence": "wiki:P-empowered-attack-ready"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankPassiveAttackCD",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Trial by Fire"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackCD"
+   ],
+   "evidence": "wiki:P-internal-cooldown-tracker"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankRWithRaiseMorale",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0,
+    30000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "OneWaveDamage": [
+     0.1
+    ],
+    "DeathsDaughterDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "DamagePerWave": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "DeathsDaughterBaseDamage": [
+     30.0,
+     120.0,
+     210.0,
+     300.0,
+     390.0,
+     480.0,
+     570.0
+    ],
+    "RaiseMoraleHaste": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "ZoneDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "CannonDelay": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "CannonInterval": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DeathsDaughterSlow": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DeathsDaughterSlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RaiseMoraleHasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TotalWavesTooltip": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0031,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRWithRaiseMorale"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankPassiveAttackDOT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "true"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassive",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackCD",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveAttackDOT",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GangplankPassiveHaste",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankEShred",
+  "trigger": "on_detonate",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Powder Keg"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEShred"
+   ],
+   "evidence": "wiki:E-keg-armor-shred"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankBilgewaterToken",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Parrrley"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankQAbility/GangplankBilgewaterToken"
+   ],
+   "evidence": "wiki:Q-silver-serpents"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankESpellPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "ChampionBonusDamage": [
+     80.0,
+     80.0,
+     105.0,
+     130.0,
+     155.0,
+     180.0,
+     205.0
+    ],
+    "SlowAmount": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GangplankE",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEBarrelActive",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GangplankESpellPassive",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GangplankEBarrelFuseMissile",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankEShred",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankESlow",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Powder Keg"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankESpellPassive"
+   ],
+   "evidence": "wiki:E-passive-keg-empower"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankRSpeed",
+  "trigger": "on_upgrade",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankR",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 160.0,
+    "behavior": "GangplankRWithRaiseMorale",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSpeed",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GangplankRSlow",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cannon Barrage",
+    "Fire at Will"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRSpeed"
+   ],
+   "evidence": "wiki:R-Fire-at-Will-upgrade-barrage-speed"
+  }
+ }
+]

@@ -1,0 +1,3281 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AmbessaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{0366f9b1}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttackChained2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{23355e23}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttackChained2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{23355e23}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttackChained1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{24355fb6}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttackChained1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{24355fb6}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaBasicAttackChained1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{24355fb6}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{3f885789}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{3f885789}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{634963c1}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AmbessaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{634963c1}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AmbessaCritAttackChained2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{c09c7273}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AmbessaCritAttackChained1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{c19c7406}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaCritAttackChained1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{c19c7406}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AmbessaCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 4234
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{de1ac939}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaPassiveDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{6dfeb97a}"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AmbessaQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Damage_1_Min_Ratio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Swap_Static_Cooldown": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Damage_1_Percent": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "Damage_2_Base": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "Damage_2_Percent": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "Damage_2_Min_Ratio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Damage_1_BAD_Ratio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "Damage_2_BAD_Ratio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast-window"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaQAbility/AmbessaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "Damage_1_Min_Ratio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Swap_Static_Cooldown": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Damage_1_Percent": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "Damage_2_Base": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "Damage_2_Percent": [
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421
+    ],
+    "Damage_2_Min_Ratio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Damage_1_BAD_Ratio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "Damage_2_BAD_Ratio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast-window"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaQAbility/AmbessaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.suppression",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaRSuppressionDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "{6a23e673}"
+   ],
+   "evidence": "name:suppression"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaRSuppressionDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{6a23e673}"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaRBuffSuppressing",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{84c6e77c}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Stun_Duration": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Armor_Penetration": [
+     0.0,
+     0.10000000149011612,
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579
+    ],
+    "Omnivamp": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "Omnivamp_LifeStealScaling": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Omnivamp_MinionMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "Omnivamp_MonsterMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaRAbility/AmbessaR"
+   ],
+   "evidence": "tag:Trait_CCImmune"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Stun_Duration": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Armor_Penetration": [
+     0.0,
+     0.10000000149011612,
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579
+    ],
+    "Omnivamp": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "Omnivamp_LifeStealScaling": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Omnivamp_MinionMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "Omnivamp_MonsterMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaRAbility/AmbessaR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Stun_Duration": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Armor_Penetration": [
+     0.0,
+     0.10000000149011612,
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579
+    ],
+    "Omnivamp": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "Omnivamp_LifeStealScaling": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Omnivamp_MinionMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "Omnivamp_MonsterMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaRAbility/AmbessaR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Stun_Duration": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Armor_Penetration": [
+     0.0,
+     0.10000000149011612,
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579
+    ],
+    "Omnivamp": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "Omnivamp_LifeStealScaling": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Omnivamp_MinionMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "Omnivamp_MonsterMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaRAbility/AmbessaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "AmbessaWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{8eb7957f}"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AmbessaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DamageADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Dash_Delay": [
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552
+    ],
+    "Shield_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HighDamageMultiplier": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaWAbility/AmbessaW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DamageADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Dash_Delay": [
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552
+    ],
+    "Shield_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HighDamageMultiplier": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaWAbility/AmbessaW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "AmbessaW",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DamageADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Dash_Delay": [
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552
+    ],
+    "Shield_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HighDamageMultiplier": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.033,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaWAbility/AmbessaW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "AmbessaW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DamageADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Dash_Delay": [
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552,
+     0.22499999403953552
+    ],
+    "Shield_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HighDamageMultiplier": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaWAbility/AmbessaW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AmbessaESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{91cebd6f}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AmbessaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Slow_Amount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaEAbility/AmbessaE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "Slow_Amount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ambessa/Spells/AmbessaEAbility/AmbessaE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaLoreBuffKill",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{e0c413bf}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaLoreBuffKilledByMel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f1a0ac27}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ambessa Passive (R (Public Execution heal))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "R (Public Execution heal)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AmbessaQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{fc33e1bc}"
+   ],
+   "inherited_from": "AmbessaQ",
+   "evidence": "inherited:AmbessaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{fc33e1bc}"
+   ],
+   "inherited_from": "AmbessaQ",
+   "evidence": "inherited:AmbessaQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AmbessaQ1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{ff33e675}"
+   ],
+   "inherited_from": "AmbessaQ",
+   "evidence": "inherited:AmbessaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaQ1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "damage_type": "physical",
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{ff33e675}"
+   ],
+   "inherited_from": "AmbessaQ",
+   "evidence": "inherited:AmbessaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AmbessaPassiveAttackEmpower",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "physical"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect-application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Passive (Drakehound's Step): after dashing, next basic attack within 4s is empowered, dealing bonus physical damage"
+   ],
+   "binary": [
+    "{14a1d4d5}"
+   ],
+   "evidence": "passive empowered attack (wiki P description + binary SpellObject)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AmbessaRPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Stun_Duration": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Armor_Penetration": [
+     0.0,
+     0.10000000149011612,
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579
+    ],
+    "Omnivamp": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "Omnivamp_LifeStealScaling": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Omnivamp_MinionMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "Omnivamp_MonsterMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast-animation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.4,
+   "uptime_fraction": 0.007,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "R (Public Execution) passive: gains armor penetration against enemies"
+   ],
+   "binary": [
+    "{99426203}"
+   ],
+   "evidence": "armor penetration buff (wiki R passive + binary SpellObject)"
+  }
+ }
+]

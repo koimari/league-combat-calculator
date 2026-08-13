@@ -1,0 +1,1782 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AnniePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnniePassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnniePassiveAbility/AnniePassive"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AnnieE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [
+    800.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnnieE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieEAbility/AnnieE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AnnieR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "AnnieR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieRAbility/AnnieR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "Incinerate",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    70.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Incinerate"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Incinerate"
+   ],
+   "evidence": "wiki W: releases fire in a cone dealing magic damage"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AnnieBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.5189,
+    "behavior": "AnnieBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AnnieBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.5189,
+    "behavior": "AnnieBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AnnieCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.5189,
+    "behavior": "AnnieCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AnnieE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [
+    800.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnnieE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieEAbility/AnnieE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AnnieQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    625.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.4464,
+    "behavior": "AnnieQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieQAbility/AnnieQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AnnieR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "AnnieR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieRAbility/AnnieR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AnnieW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    70.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.8500000238418579
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AnnieW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieWAbility/AnnieW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Disintegrate",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    625.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [
+    45.0,
+    80.0,
+    115.0,
+    150.0,
+    185.0,
+    220.0,
+    255.0
+   ],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.800000011920929
+   },
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.4464,
+    "behavior": "Disintegrate"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Disintegrate"
+   ],
+   "evidence": "wiki Q: hurls a fireball at the target enemy dealing magic damage"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "AnnieR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "AnnieR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieRAbility/AnnieR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "Infernal_Guardian",
+  "trigger": "on_aura",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Infernal_Guardian"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Infernal_Guardian"
+   ],
+   "evidence": "wiki R: Tibbers aura burns nearby enemies (summoned pet)"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "behavior": "AnnieRPen",
+  "trigger": "on_passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnnieRPen"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "{29e499e2}"
+   ],
+   "evidence": "wiki R: passive - Annie gains magic penetration"
+  },
+  "resolution_status": "binary_object_not_located"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AnnieBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.5189,
+    "behavior": "AnnieBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AnnieBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.5189,
+    "behavior": "AnnieBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "AnnieE",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [
+    800.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnnieE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieEAbility/AnnieE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "MoltenShieldTibbersBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "MoltenShieldTibbersBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/MoltenShieldTibbersBuff"
+   ],
+   "evidence": "name:shield"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "Molten_Shield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Molten_Shield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Molten_Shield"
+   ],
+   "evidence": "name:shield"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Pyromania_Marker",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Pyromania_Marker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Pyromania_Marker"
+   ],
+   "evidence": "name:pyromania"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnnieE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [
+    800.0
+   ],
+   "mana_cost": [
+    60.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AnnieE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieEAbility/AnnieE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnnieESpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AnnieESpeedBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieEAbility/AnnieESpeedBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EmpoweredTibbers",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "EmpoweredTibbers"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/EmpoweredTibbers"
+   ],
+   "evidence": "wiki R recast: Tibbers enrages with attack-speed buff"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MoltenShieldTibbersBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "MoltenShieldTibbersBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/MoltenShieldTibbersBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Pyromania_Marker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Pyromania_Marker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/Pyromania_Marker"
+   ],
+   "evidence": "name:mark"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnniePassivePrimed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AnniePassivePrimed"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Community Dragon champion cache"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnniePassiveAbility/AnniePassivePrimed"
+   ],
+   "evidence": "wiki P: at 4 Pyromania stacks Annie is Energized (primed stun)"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnniePassiveStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AnniePassiveStack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnniePassiveAbility/AnniePassiveStack"
+   ],
+   "evidence": "name:stack"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnnieR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    115.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": [
+    100.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "AnnieR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieRAbility/AnnieR"
+   ],
+   "evidence": "tag:Trait_Pet"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "annie Passive (Tibbers)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "annie Passive (Tibbers)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Tibbers"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "resolution_status": "binary_object_not_located"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnnieUpgradeActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AnnieUpgradeActive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieUpgradeActive"
+   ],
+   "evidence": "name:upgrade"
+  },
+  "resolution_status": "resolved"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AnnieUpgradeInactive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    null,
+    null
+   ],
+   "cast_range": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AnnieUpgradeInactive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Annie/Spells/AnnieUpgradeInactive"
+   ],
+   "evidence": "name:upgrade"
+  },
+  "resolution_status": "resolved"
+ }
+]

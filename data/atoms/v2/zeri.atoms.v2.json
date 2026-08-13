@@ -1,0 +1,3184 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ZeriPShieldMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0
+   ],
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriPassiveAbility/ZeriPShieldMissile"
+   ],
+   "evidence": "name:shield",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ZeriPassiveShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0
+   ],
+   "affects_type_flags": 13327
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriPassiveAbility/ZeriPassiveShield"
+   ],
+   "evidence": "name:shield",
+   "v2_notes": "missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZeriPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "ShieldDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "HastePercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "EnergizedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "PercentShieldSteal": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "ChampHitHasteDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriPassiveAbility/ZeriPassive"
+   ],
+   "evidence": "tag:Trait_Strike",
+   "v2_notes": "missing cooldown; missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZeriQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    18.0,
+    22.0,
+    26.0,
+    30.0,
+    34.0,
+    38.0,
+    42.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "ActiveADRatio": 1.0
+   },
+   "effect_amounts": {
+    "MinCooldown": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeedCap": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExcessAttackSpeedToADMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "ActiveADRatio": [
+     1.0,
+     1.0199999809265137,
+     1.0399999618530273,
+     1.059999942779541,
+     1.0800000429153442,
+     1.100000023841858,
+     1.1200000047683716
+    ],
+    "NumberOfMissiles": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "EnergizedMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "SlowPercent": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "ActivePercentDamageToTowers": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxPercentHealthToMonsters": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "ChargePerAttack": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "ChargeDistanceMultiplier": [
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "ZeriQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    18.0,
+    22.0,
+    26.0,
+    30.0,
+    34.0,
+    38.0,
+    42.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "ActiveADRatio": 1.0
+   },
+   "effect_amounts": {
+    "MinCooldown": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeedCap": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExcessAttackSpeedToADMult": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "ActiveADRatio": [
+     1.0,
+     1.0199999809265137,
+     1.0399999618530273,
+     1.059999942779541,
+     1.0800000429153442,
+     1.100000023841858,
+     1.1200000047683716
+    ],
+    "NumberOfMissiles": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "EnergizedMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "SlowPercent": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "ActivePercentDamageToTowers": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxPercentHealthToMonsters": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "ChargePerAttack": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "ChargeDistanceMultiplier": [
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903,
+     0.02500000037252903
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQ"
+   ],
+   "evidence": "rule:execute",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZeriQBasicAttackSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{c1a959c9}"
+   ],
+   "evidence": "name:slow",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttackSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{c1a959c9}"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttackSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{c1a959c9}"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttackEmpowered",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQBasicAttackEmpowered"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZeriQBasicAttackEmpowered",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQBasicAttackEmpowered"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZeriW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "duration": [
+    0.25,
+    0.30000001192092896,
+    0.3499999940395355,
+    0.4000000059604645,
+    0.44999998807907104,
+    0.5,
+    0.550000011920929
+   ],
+   "ratios": {
+    "ADRatio": 1.2000000476837158,
+    "APRatio": 0.5
+   },
+   "effect_amounts": {
+    "Damage": [
+     -10.0,
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "ADRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "CriticalEffectiveness": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowPercent": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "WallBeamRange": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BeamWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "BeamCastTime": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "MinCastTime": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "ASpeedCastTimeScalarPerHundrethSecond": [
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869
+    ],
+    "BaseCastTime": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.55,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=3300.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.55,
+   "uptime_fraction": 0.1667,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriWAbility/ZeriW"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZeriW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "duration": [
+    0.25,
+    0.30000001192092896,
+    0.3499999940395355,
+    0.4000000059604645,
+    0.44999998807907104,
+    0.5,
+    0.550000011920929
+   ],
+   "ratios": {
+    "ADRatio": 1.2000000476837158,
+    "APRatio": 0.5
+   },
+   "effect_amounts": {
+    "Damage": [
+     -10.0,
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "ADRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "CriticalEffectiveness": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowPercent": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "WallBeamRange": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BeamWidth": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "BeamCastTime": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "MinCastTime": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "ASpeedCastTimeScalarPerHundrethSecond": [
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869,
+     0.09000000357627869
+    ],
+    "BaseCastTime": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.55,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=3300.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.55,
+   "uptime_fraction": 0.1667,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriWAbility/ZeriW"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZeriBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZeriBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=8000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZeriRStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriRAbility/ZeriRStacks"
+   ],
+   "evidence": "name:stack",
+   "v2_notes": "missing cooldown; missing cast_range; missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZeriR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    80.0,
+    80.0,
+    75.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "ChainADRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0
+    ],
+    "DurationIncreasePerHit": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxHyperchargeDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseASPercent": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MSPercent": [
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873
+    ],
+    "RDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusMagicDamage": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "ActiveDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "NovaRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ],
+    "StacksPerHit": null,
+    "MaxChainTargets": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BaseBonusMS": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ChainADRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=779.9000244140625"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 80.0,
+    "max_rank": 70.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0625,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriRAbility/ZeriR"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZeriR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    80.0,
+    80.0,
+    75.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "ChainADRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0
+    ],
+    "DurationIncreasePerHit": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxHyperchargeDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseASPercent": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MSPercent": [
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873
+    ],
+    "RDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusMagicDamage": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "ActiveDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "NovaRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ],
+    "StacksPerHit": null,
+    "MaxChainTargets": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BaseBonusMS": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ChainADRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=779.9000244140625"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 80.0,
+    "max_rank": 70.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0625,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriRAbility/ZeriR"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZeriR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    80.0,
+    80.0,
+    75.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "ChainADRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "StackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0,
+     100000.0
+    ],
+    "DurationIncreasePerHit": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxHyperchargeDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "BaseASPercent": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MSPercent": [
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873,
+     0.014999999664723873
+    ],
+    "RDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusMagicDamage": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "ActiveDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "NovaRange": [
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0,
+     825.0
+    ],
+    "StacksPerHit": null,
+    "MaxChainTargets": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BaseBonusMS": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ChainADRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=779.9000244140625"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 80.0,
+    "max_rank": 70.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0625,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriRAbility/ZeriR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZeriE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "BonusAPRatio": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "MaxDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MaxDistanceOverWalls": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "BuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "NumberOfPierceShots": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PenDamagePercent": [
+     0.75,
+     0.800000011920929,
+     0.8500000238418579,
+     0.8999999761581421,
+     0.949999988079071,
+     1.0,
+     1.0499999523162842
+    ],
+    "CDReductionPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ShortHopAnimCutoff": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "MediumHopAnimCutoff": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "RevealRangeOverWalls": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BonusDamageBase": [
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0,
+     30.0,
+     32.0
+    ],
+    "BonusAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "IndicatorRevealTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "CritScalingMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CritCDReductionPerHit": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDReductionModNonChamp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 18.0
+   },
+   "uptime_fraction": 0.2083,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriEAbility/ZeriE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZeriE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "BonusAPRatio": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "MaxDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MaxDistanceOverWalls": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "BuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "NumberOfPierceShots": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PenDamagePercent": [
+     0.75,
+     0.800000011920929,
+     0.8500000238418579,
+     0.8999999761581421,
+     0.949999988079071,
+     1.0,
+     1.0499999523162842
+    ],
+    "CDReductionPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ShortHopAnimCutoff": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "MediumHopAnimCutoff": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "RevealRangeOverWalls": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BonusDamageBase": [
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0,
+     30.0,
+     32.0
+    ],
+    "BonusAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "IndicatorRevealTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "CritScalingMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CritCDReductionPerHit": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDReductionModNonChamp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 18.0
+   },
+   "uptime_fraction": 0.2083,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriEAbility/ZeriE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZeriE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "BonusAPRatio": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "MaxDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MaxDistanceOverWalls": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "BuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "NumberOfPierceShots": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PenDamagePercent": [
+     0.75,
+     0.800000011920929,
+     0.8500000238418579,
+     0.8999999761581421,
+     0.949999988079071,
+     1.0,
+     1.0499999523162842
+    ],
+    "CDReductionPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ShortHopAnimCutoff": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "MediumHopAnimCutoff": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "RevealRangeOverWalls": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BonusDamageBase": [
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0,
+     30.0,
+     32.0
+    ],
+    "BonusAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "IndicatorRevealTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "CritScalingMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CritCDReductionPerHit": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDReductionModNonChamp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 18.0
+   },
+   "uptime_fraction": 0.2083,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriEAbility/ZeriE"
+   ],
+   "evidence": "tag:Trait_AttackReset",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZeriE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "BonusAPRatio": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "MaxDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MaxDistanceOverWalls": [
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0,
+     3000.0
+    ],
+    "BuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "NumberOfPierceShots": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PenDamagePercent": [
+     0.75,
+     0.800000011920929,
+     0.8500000238418579,
+     0.8999999761581421,
+     0.949999988079071,
+     1.0,
+     1.0499999523162842
+    ],
+    "CDReductionPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "ShortHopAnimCutoff": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "MediumHopAnimCutoff": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "RevealRangeOverWalls": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BonusDamageBase": [
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0,
+     30.0,
+     32.0
+    ],
+    "BonusAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "IndicatorRevealTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "CritScalingMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CritCDReductionPerHit": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDReductionModNonChamp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 15567
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 18.0
+   },
+   "uptime_fraction": 0.2083,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriEAbility/ZeriE"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZeriQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "effect_amounts": {
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDRefundUrf": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeed": [
+     0.30000001192092896,
+     0.44999998807907104,
+     0.6000000238418579,
+     0.75,
+     0.8999999761581421,
+     1.0499999523162842,
+     1.2000000476837158
+    ]
+   },
+   "affects_type_flags": 6826
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQMis"
+   ],
+   "inherited_from": "ZeriQ",
+   "evidence": "inherited:ZeriQ",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "ZeriQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "effect_amounts": {
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDRefundUrf": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeed": [
+     0.30000001192092896,
+     0.44999998807907104,
+     0.6000000238418579,
+     0.75,
+     0.8999999761581421,
+     1.0499999523162842,
+     1.2000000476837158
+    ]
+   },
+   "affects_type_flags": 6826
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQAbility/ZeriQMis"
+   ],
+   "inherited_from": "ZeriQ",
+   "evidence": "inherited:ZeriQ",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZeriPassiveHaste",
+  "trigger": "on_move",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0,
+    80000.0
+   ],
+   "affects_type_flags": 13327
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Living Battery"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriPassiveHaste"
+   ],
+   "evidence": "refined:wiki-p",
+   "v2_notes": "matched by buff name; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZeriESpecialRounds",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Spark Surge"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriESpecialRounds"
+   ],
+   "evidence": "refined:wiki-e",
+   "v2_notes": "matched by buff name; missing cooldown; missing cast_range; missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZeriQMisEmpowered",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "damage": [
+    -5.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0
+   ],
+   "effect_amounts": {
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CDRefundUrf": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AttackSpeed": [
+     0.30000001192092896,
+     0.44999998807907104,
+     0.6000000238418579,
+     0.75,
+     0.8999999761581421,
+     1.0499999523162842,
+     1.2000000476837158
+    ]
+   },
+   "affects_type_flags": 6826
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Spark Surge"
+   ],
+   "binary": [
+    "Characters/Zeri/Spells/ZeriQMisEmpowered"
+   ],
+   "evidence": "refined:wiki-e",
+   "v2_notes": "matched by buff name; missing mana_cost"
+  }
+ }
+]

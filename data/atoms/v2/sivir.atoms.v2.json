@@ -1,0 +1,4971 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SivirCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "damage": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirCritAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    70.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "FallOffRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "CritRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "FallOffMinimum": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "QAttackSpeedCastReductionPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "QBaseCastTime": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "QAttackSpeedCastReductionMax": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "values": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "value": [
+     14.0,
+     14.0,
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0
+    ],
+    "castRangeDisplayOverride": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "castRadius": [
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     70.0
+    ],
+    "mPerLevelValues": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQ"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SivirQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirQAbility/SivirQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SivirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    70.0
+   ],
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "ratios": {
+    "ADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "FallOffRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "CritRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "APRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "FallOffMinimum": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "QAttackSpeedCastReductionPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "QBaseCastTime": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "QAttackSpeedCastReductionMax": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "values": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "value": [
+     14.0,
+     14.0,
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0
+    ],
+    "castRangeDisplayOverride": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "castRadius": [
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     70.0
+    ],
+    "mPerLevelValues": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQ"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SivirQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_DamageAbility",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirQAbility/SivirQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "Spell_Shield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    25.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealRatio": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "SpellShieldDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HealAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "value": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "values": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Spell_Shield"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Spell_Shield"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    25.0,
+    10.0
+   ],
+   "binary_tags": [
+    "Trait_CCImmune"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirEAbility/SivirE"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    90.0,
+    90.0,
+    10.0
+   ],
+   "damage": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "MaxMSDuration": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0
+    ],
+    "UltDuration": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "DamagedMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "effect_amounts": {
+    "HuntAttackSpeed": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "MaxMS": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinMS": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "AuraRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "BuffExtension": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "AttackCooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "castRadius": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirR"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirR"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SivirR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRAbility/SivirR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": [
+   "unnamed array {210f9ec0} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    90.0,
+    90.0,
+    10.0
+   ],
+   "damage": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "MaxMSDuration": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0
+    ],
+    "UltDuration": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "DamagedMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "effect_amounts": {
+    "HuntAttackSpeed": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "MaxMS": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinMS": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "AuraRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "BuffExtension": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "AttackCooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "castRadius": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirR"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirR"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SivirR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRAbility/SivirR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "_notes": [
+   "unnamed array {210f9ec0} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirRASBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    90.0,
+    90.0,
+    10.0
+   ],
+   "damage": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "MaxMSDuration": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0
+    ],
+    "UltDuration": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "DamagedMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "effect_amounts": {
+    "HuntAttackSpeed": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "MaxMS": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinMS": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "AuraRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "BuffExtension": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "AttackCooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "castRadius": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirRASBuff"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirRASBuff"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirRASBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRAbility/SivirR"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {210f9ec0} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirPizzaStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirPizzaStacks"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirPizzaStacks"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SivirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "damage": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirBasicAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SivirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "damage": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirBasicAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirW"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SivirW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirW"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SivirW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirW"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SivirW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirW"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "BounceADRatio": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "effect_amounts": {
+    "BounceAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxBounces": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "RicochetAttackSpeed": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinionDamageMod": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "values": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirW"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "SivirW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    12.0
+   ],
+   "uptime_fraction": 0.3333,
+   "binary_tags": [
+    "Trait_AttackReset",
+    "Trait_DamageAbility",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAbility/SivirW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SpellShieldSpellImmunity",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    25.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealRatio": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "SpellShieldDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HealAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "value": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "values": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SpellShieldSpellImmunity"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SpellShieldSpellImmunity"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    25.0,
+    10.0
+   ],
+   "binary_tags": [
+    "Trait_CCImmune"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirEAbility/SivirE"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "SivirE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    25.0,
+    24.0,
+    22.5,
+    21.0,
+    19.5,
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealRatio": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "SpellShieldDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "HealAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "value": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "values": [
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421,
+     0.699999988079071,
+     0.75,
+     0.800000011920929,
+     0.8500000238418579
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirE"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "SivirE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    25.0,
+    10.0
+   ],
+   "binary_tags": [
+    "Trait_CCImmune"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirEAbility/SivirE"
+   ],
+   "evidence": "tag:Trait_CCImmune"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SivirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "damage": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirBasicAttack2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SivirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "damage": [
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5,
+    387.5
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirBasicAttack2"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirWMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0
+   ],
+   "effect_amounts": {
+    "value": [
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0
+    ],
+    "values": [
+     8.0,
+     7.0,
+     6.0,
+     5.0,
+     4.0,
+     3.0,
+     3.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "mFloatVarsDecimals": [
+     0.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "mana": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWMarker"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    3.0
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWMarker"
+   ],
+   "evidence": "name:mark"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirRPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    90.0,
+    90.0,
+    10.0
+   ],
+   "damage": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "MaxMSDuration": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0
+    ],
+    "UltDuration": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "DamagedMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "effect_amounts": {
+    "HuntAttackSpeed": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "MaxMS": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinMS": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "AuraRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "BuffExtension": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "AttackCooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "castRadius": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirRPassiveBuff"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirRPassiveBuff"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirRPassiveBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRAbility/SivirR"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {210f9ec0} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirQMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    35.0,
+    55.0,
+    75.0,
+    95.0,
+    115.0,
+    135.0,
+    155.0
+   ],
+   "effect_amounts": {
+    "value": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    "values": [
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0
+    ],
+    "castRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "mPerLevelValues": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQMissileReturn"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirQMissileReturn"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    11.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirQMissileReturn",
+    "Characters/Sivir/Spells/SivirQMissileReturnDead"
+   ],
+   "inherited_from": "SivirQ",
+   "evidence": "inherited:SivirQ"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SivirQMissileReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    35.0,
+    55.0,
+    75.0,
+    95.0,
+    115.0,
+    135.0,
+    155.0
+   ],
+   "effect_amounts": {
+    "value": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    "values": [
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0
+    ],
+    "castRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "mPerLevelValues": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQMissileReturn"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirQMissileReturn"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    11.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirQMissileReturn",
+    "Characters/Sivir/Spells/SivirQMissileReturnDead"
+   ],
+   "inherited_from": "SivirQ",
+   "evidence": "inherited:SivirQ"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "damage": [
+    45.0,
+    100.0,
+    155.0,
+    210.0,
+    265.0,
+    320.0,
+    375.0
+   ],
+   "effect_amounts": {
+    "value": [
+     45.0,
+     100.0,
+     155.0,
+     210.0,
+     265.0,
+     320.0,
+     375.0
+    ],
+    "values": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "castRadius": [
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875
+    ],
+    "mPerLevelValues": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirQMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQMissile"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirQMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    9.0
+   ],
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{35ad7475}"
+   ],
+   "inherited_from": "SivirQ",
+   "evidence": "inherited:SivirQ"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SivirQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "damage": [
+    45.0,
+    100.0,
+    155.0,
+    210.0,
+    265.0,
+    320.0,
+    375.0
+   ],
+   "effect_amounts": {
+    "value": [
+     45.0,
+     100.0,
+     155.0,
+     210.0,
+     265.0,
+     320.0,
+     375.0
+    ],
+    "values": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "castRadius": [
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875,
+     299.29998779296875
+    ],
+    "mPerLevelValues": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "SivirQMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirQMissile"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirQMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    9.0
+   ],
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{35ad7475}"
+   ],
+   "inherited_from": "SivirQ",
+   "evidence": "inherited:SivirQ"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context",
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttack"
+   ],
+   "inherited_from": "SivirW",
+   "evidence": "inherited:SivirW"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SivirWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttack"
+   ],
+   "inherited_from": "SivirW",
+   "evidence": "inherited:SivirW"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SivirWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttack"
+   ],
+   "inherited_from": "SivirW",
+   "evidence": "inherited:SivirW"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SivirWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttack"
+   ],
+   "inherited_from": "SivirW",
+   "evidence": "inherited:SivirW"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6826,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirWAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttack"
+   ],
+   "inherited_from": "SivirW",
+   "evidence": "inherited:SivirW"
+  },
+  "_notes": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SivirRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "effect_amounts": {
+    "value": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "values": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "castRadius": [
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirRMissile"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirRMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    4.0,
+    4.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRMissile"
+   ],
+   "inherited_from": "SivirR",
+   "evidence": "inherited:SivirR"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SivirRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "effect_amounts": {
+    "value": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "values": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "castRadius": [
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0,
+     710.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "SivirRMissile"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "SivirRMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    4.0,
+    4.0
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRMissile"
+   ],
+   "inherited_from": "SivirR",
+   "evidence": "inherited:SivirR"
+  },
+  "_notes": [
+   "unnamed array mEffectAmount left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "FleetOfFoot",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "ratios": {
+    "HasteDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "values": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": null,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FleetOfFoot"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Fleet of Foot"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirPassiveAbility/SivirPassive",
+    "Characters/Sivir/Spells/SivirPassiveSpeed"
+   ],
+   "evidence": "manual:wiki-passive:FleetOfFoot"
+  },
+  "_notes": [
+   "unnamed array {0e1136d1} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "OnTheHunt",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    90.0,
+    90.0,
+    10.0
+   ],
+   "damage": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "MaxMSDuration": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0
+    ],
+    "UltDuration": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "DamagedMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "effect_amounts": {
+    "HuntAttackSpeed": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "MaxMS": [
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104
+    ],
+    "MinMS": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "AuraRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "BuffExtension": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "AttackCooldownRefund": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "values": [
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869,
+     0.10000000149011612
+    ],
+    "castRadius": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "mana": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "OnTheHunt"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "OnTheHunt"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "OnTheHunt"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "binary_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On the Hunt"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirRAbility/SivirR"
+   ],
+   "evidence": "behavior-matched-via-wiki-ability-name"
+  },
+  "_notes": [
+   "unnamed array {210f9ec0} left in effect context"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RicochetBounce",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "effect_amounts": {
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "castRadius": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "mana_cost": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RicochetBounce"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "RicochetBounce"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ricochet"
+   ],
+   "binary": [
+    "Characters/Sivir/Spells/SivirWAttackBounce"
+   ],
+   "evidence": "manual:wiki-w:RicochetBounce"
+  },
+  "_notes": []
+ }
+]

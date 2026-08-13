@@ -1,0 +1,3781 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZacCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacCritAttack"
+   ],
+   "evidence": "rule:crit",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "Bounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TimeBetweenBounces": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamageBounce": [
+     50.0,
+     120.0,
+     190.0,
+     260.0,
+     330.0,
+     400.0,
+     470.0
+    ],
+    "DamageReductionBounce": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockbackDistance": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BeginningMS": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EndingMS": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BounceAPRatioTooltip": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": 0.0083,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRAbility/ZacR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "Bounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TimeBetweenBounces": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamageBounce": [
+     50.0,
+     120.0,
+     190.0,
+     260.0,
+     330.0,
+     400.0,
+     470.0
+    ],
+    "DamageReductionBounce": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockbackDistance": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BeginningMS": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EndingMS": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BounceAPRatioTooltip": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": 0.0083,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRAbility/ZacR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "Bounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TimeBetweenBounces": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamageBounce": [
+     50.0,
+     120.0,
+     190.0,
+     260.0,
+     330.0,
+     400.0,
+     470.0
+    ],
+    "DamageReductionBounce": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockbackDistance": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BeginningMS": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EndingMS": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BounceAPRatioTooltip": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": 0.0083,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRAbility/ZacR"
+   ],
+   "evidence": "tag:Trait_KnockBack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZacR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "Bounces": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TimeBetweenBounces": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamageBounce": [
+     50.0,
+     120.0,
+     190.0,
+     260.0,
+     330.0,
+     400.0,
+     470.0
+    ],
+    "DamageReductionBounce": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockbackDistance": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "BeginningMS": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "EndingMS": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BounceAPRatioTooltip": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": 0.0083,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRAbility/ZacR"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZacW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "damage": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0
+   ],
+   "effect_amounts": {
+    "APRatioToPercentDamage": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "BaseMaxHealthDamage": [
+     0.029999999329447746,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ],
+    "HealthPercentTooltip": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "PercentHealthDamage": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ],
+    "RefundOnBlobPickup": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxMinionDamage": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 5.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacWAbility/ZacW"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZacW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "damage": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0
+   ],
+   "effect_amounts": {
+    "APRatioToPercentDamage": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "BaseMaxHealthDamage": [
+     0.029999999329447746,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ],
+    "HealthPercentTooltip": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "PercentHealthDamage": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ],
+    "RefundOnBlobPickup": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MaxMinionDamage": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 5.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacWAbility/ZacW"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ZacQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 6831
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.33,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{45a34608}"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZacQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 6831
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.33,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{45a34608}"
+   ],
+   "evidence": "tag:Trait_AttackReset",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645
+   ],
+   "ratios": {
+    "APRatio": 0.30000001192092896,
+    "HealthRatio": 0.029999999329447746
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "HPCost": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "MissileRange": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "TetherDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TetherFalloffDistance": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ],
+    "MaxSlamDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "YankDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "CollisionAoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast_or_replace"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.33,
+   "uptime_fraction": 0.1786,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacQAbility/ZacQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZacQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645
+   ],
+   "ratios": {
+    "APRatio": 0.30000001192092896,
+    "HealthRatio": 0.029999999329447746
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "HPCost": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "MissileRange": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "TetherDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TetherFalloffDistance": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ],
+    "MaxSlamDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "YankDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "CollisionAoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast_or_replace"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.33,
+   "uptime_fraction": 0.1786,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacQAbility/ZacQ"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZacQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645
+   ],
+   "ratios": {
+    "APRatio": 0.30000001192092896,
+    "HealthRatio": 0.029999999329447746
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "HPCost": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "MissileRange": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "TetherDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TetherFalloffDistance": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ],
+    "MaxSlamDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "YankDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "CollisionAoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast_or_replace"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.33,
+   "uptime_fraction": 0.1786,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacQAbility/ZacQ"
+   ],
+   "evidence": "tag:Trait_Strike",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZacQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645
+   ],
+   "ratios": {
+    "APRatio": 0.30000001192092896,
+    "HealthRatio": 0.029999999329447746
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "HPCost": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "MissileRange": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "TetherDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TetherFalloffDistance": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ],
+    "MaxSlamDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "YankDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "CollisionAoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast_or_replace"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.33,
+   "uptime_fraction": 0.1786,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacQAbility/ZacQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZacQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": [
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645,
+    -0.4000000059604645
+   ],
+   "ratios": {
+    "APRatio": 0.30000001192092896,
+    "HealthRatio": 0.029999999329447746
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealthRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "HPCost": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "MissileRange": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "SlowAmount": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "TetherDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "TetherFalloffDistance": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ],
+    "MaxSlamDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "YankDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "CollisionAoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.33,
+    "behavior": "cast_time"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recast_or_replace"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "strike/hit"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.33,
+   "uptime_fraction": 0.1786,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacQAbility/ZacQ"
+   ],
+   "evidence": "tag:Trait_AttackReset",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "duration": [
+    0.800000011920929,
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "MaxRange": [
+     1050.0,
+     1200.0,
+     1350.0,
+     1500.0,
+     1650.0,
+     1800.0,
+     1950.0
+    ],
+    "ChannelTime": [
+     0.800000011920929,
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142
+    ],
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinimumSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MaximumSpeed": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "DistanceToSpeedRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ],
+    "VFXWarningTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 11.0417,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEAbility/ZacE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "duration": [
+    0.800000011920929,
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "MaxRange": [
+     1050.0,
+     1200.0,
+     1350.0,
+     1500.0,
+     1650.0,
+     1800.0,
+     1950.0
+    ],
+    "ChannelTime": [
+     0.800000011920929,
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142
+    ],
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinimumSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MaximumSpeed": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "DistanceToSpeedRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ],
+    "VFXWarningTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 11.0417,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEAbility/ZacE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZacE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "duration": [
+    0.800000011920929,
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "MaxRange": [
+     1050.0,
+     1200.0,
+     1350.0,
+     1500.0,
+     1650.0,
+     1800.0,
+     1950.0
+    ],
+    "ChannelTime": [
+     0.800000011920929,
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142
+    ],
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinimumSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MaximumSpeed": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "DistanceToSpeedRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ],
+    "VFXWarningTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 11.0417,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEAbility/ZacE"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZacE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "duration": [
+    0.800000011920929,
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "HPCost": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ],
+    "MaxRange": [
+     1050.0,
+     1200.0,
+     1350.0,
+     1500.0,
+     1650.0,
+     1800.0,
+     1950.0
+    ],
+    "ChannelTime": [
+     0.800000011920929,
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142
+    ],
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinimumSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MaximumSpeed": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "DistanceToSpeedRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ],
+    "VFXWarningTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 24.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 11.0417,
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEAbility/ZacE"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "v2_notes": "missing mana_cost"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacEHitStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "effect_amounts": {
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ]
+   },
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "engage",
+   "uptime_fraction": 0.0208
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEHitStun"
+   ],
+   "evidence": "name:stun",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacRKnockup",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "effect_amounts": {
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SlowAmount": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SlowDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "engage",
+   "uptime_fraction": 0.0083
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRKnockup"
+   ],
+   "evidence": "name:knockup",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZacBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacBasicAttack2"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZacBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacBasicAttack2"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZacBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZacBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1000.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacBasicAttack"
+   ],
+   "evidence": "name:basicattack",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "zac Passive (Cell Division)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing",
+    "Cell Division"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map",
+   "ghost": "removed-kit-leftover",
+   "v2_notes": "passive buff; numbers not exposed in bin"
+  },
+  "relations": [],
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "passive"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain",
+   "reset_on": [],
+   "cooldown_seconds": null
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{6771dc74}"
+   ],
+   "inherited_from": "ZacQ",
+   "evidence": "inherited:ZacQ",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZacQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{6771dc74}"
+   ],
+   "inherited_from": "ZacQ",
+   "evidence": "inherited:ZacQ",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZacQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{6771dc74}"
+   ],
+   "inherited_from": "ZacQ",
+   "evidence": "inherited:ZacQ",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZacQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{6771dc74}"
+   ],
+   "inherited_from": "ZacQ",
+   "evidence": "inherited:ZacQ",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZacQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0,
+    951.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=2800.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{6771dc74}"
+   ],
+   "inherited_from": "ZacQ",
+   "evidence": "inherited:ZacQ",
+   "v2_notes": "missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZacPassiveSpawnChunk",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ]
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cell Division"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacPassiveSpawnChunk"
+   ],
+   "evidence": "refined:wiki-goo",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZacWCDRMath",
+  "trigger": "on_pickup",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "damage": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0
+   ],
+   "effect_amounts": {
+    "BaseMaxHealthDamage": [
+     0.029999999329447746,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ],
+    "HealthPercentTooltip": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "PercentHealthDamage": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066,
+     0.09000000357627869
+    ]
+   },
+   "duration": [
+    0.029999999329447746,
+    0.03999999910593033,
+    0.05000000074505806,
+    0.05999999865889549,
+    0.07000000029802322,
+    0.07999999821186066,
+    0.09000000357627869
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup",
+   "uptime_fraction": 0.006
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstable Matter"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacWCDRMath"
+   ],
+   "evidence": "refined:wiki-w-cdr",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZacEMove",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "damage": [
+    60.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    240.0
+   ],
+   "effect_amounts": {
+    "MinimumStun": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "KnockupRadius": [
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0,
+     265.0
+    ]
+   },
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "ratios": {
+    "DistanceToSpeedRatio": 0.6000000238418579
+   },
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility",
+   "uptime_fraction": 0.0208
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Elastic Slingshot"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacEMove"
+   ],
+   "evidence": "refined:wiki-e",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage; recovered by ability-token scan"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZacSizeScale",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cell Division"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacSizeScale"
+   ],
+   "evidence": "refined:wiki-p",
+   "v2_notes": "matched by buff name; buff object: numeric spine via keyword datavalues only; missing cooldown; missing cast_range; missing mana_cost; missing damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ZacPassiveChunkDrop",
+  "trigger": "on_pickup",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "effect_amounts": {
+    "ReviveCooldown": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 300.0,
+    "max_rank": 300.0
+   },
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cell Division"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacPassiveChunkDrop"
+   ],
+   "evidence": "refined:wiki-goo-heal",
+   "v2_notes": "matched by buff name; missing cast_range; missing mana_cost; missing damage"
+  }
+ }
+]

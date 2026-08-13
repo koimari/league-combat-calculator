@@ -1,0 +1,4817 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Death_Defied",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Death_Defied"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Transform",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDeathDefiedAbility/KarthusDeathDefiedBuff"
+   ],
+   "evidence": "manual: P zombie state; untargetable, immune to CC, can cast (wiki P Death Defied)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Death_Defied_Buff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Death_Defied_Buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDeathDefiedAbility/Death_Defied_Buff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KarthusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KarthusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KarthusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KarthusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KarthusCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KarthusCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusCritAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarthusDeathDefied",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "PassiveDuration": 7.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "PassiveDuration": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ]
+   },
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDeathDefied"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Transform",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDeathDefiedAbility/KarthusDeathDefiedBuff"
+   ],
+   "evidence": "manual: P zombie state; untargetable, immune to CC, can cast (wiki P Death Defied)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarthusDeathDefiedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "PassiveDuration": 7.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "PassiveDuration": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ]
+   },
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDeathDefiedBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDeathDefiedAbility/KarthusDeathDefiedBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusDefile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatioPerSecond": 0.20000000298023224,
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": {
+    "DamagePerSecond": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "APRatioPerSecond": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "ManaRestoreOnKill": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ]
+   },
+   "calculations": {
+    "TotalDPS": [
+     "DamagePerSecond",
+     "APRatioPerSecond"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusDefile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatioPerSecond": 0.20000000298023224,
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": {
+    "DamagePerSecond": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "APRatioPerSecond": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "ManaRestoreOnKill": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ]
+   },
+   "calculations": {
+    "TotalDPS": [
+     "DamagePerSecond",
+     "APRatioPerSecond"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KarthusDefile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatioPerSecond": 0.20000000298023224,
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": {
+    "DamagePerSecond": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "APRatioPerSecond": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "ManaRestoreOnKill": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ]
+   },
+   "calculations": {
+    "TotalDPS": [
+     "DamagePerSecond",
+     "APRatioPerSecond"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarthusDefile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "APRatioPerSecond": 0.20000000298023224,
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": {
+    "DamagePerSecond": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "APRatioPerSecond": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "ManaRestoreOnKill": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ]
+   },
+   "calculations": {
+    "TotalDPS": [
+     "DamagePerSecond",
+     "APRatioPerSecond"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile"
+   ],
+   "evidence": "tag:Trait_Toggle"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusDefile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     13.0,
+     20.0,
+     27.0,
+     34.0,
+     41.0,
+     48.0,
+     55.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile2"
+   ],
+   "inherited_from": "KarthusDefile",
+   "evidence": "inherited:KarthusDefile"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusDefile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     13.0,
+     20.0,
+     27.0,
+     34.0,
+     41.0,
+     48.0,
+     55.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile2"
+   ],
+   "inherited_from": "KarthusDefile",
+   "evidence": "inherited:KarthusDefile"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KarthusDefile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    10.0,
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     13.0,
+     20.0,
+     27.0,
+     34.0,
+     41.0,
+     48.0,
+     55.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile2"
+   ],
+   "inherited_from": "KarthusDefile",
+   "evidence": "inherited:KarthusDefile"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarthusDefile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    30.0,
+    42.0,
+    54.0,
+    66.0,
+    78.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.20000000298023224
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "effect_1": [
+     13.0,
+     20.0,
+     27.0,
+     34.0,
+     41.0,
+     48.0,
+     55.0
+    ],
+    "effect_2": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusDefile2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefile2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.5,
+    "rank_max": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusDefileAbility/KarthusDefile2"
+   ],
+   "inherited_from": "KarthusDefile",
+   "evidence": "inherited:KarthusDefile"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KarthusDefilePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusDefilePassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mana",
+    "Ability resource"
+   ],
+   "binary": [
+    "KarthusDefilePassive"
+   ],
+   "evidence": "manual: E passive restores mana on kill (wiki E Defile)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KarthusFallenOne",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    200.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 200.0,
+    "rank_max": 200.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusFallenOne",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    200.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 200.0,
+    "rank_max": 200.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusFallenOne",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    200.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 200.0,
+    "rank_max": 200.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KarthusFallenOne2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    220.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    180.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    150.0,
+    175.0,
+    200.0,
+    0.0,
+    0.0,
+    25.0
+   ],
+   "cast_time": 0.25,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.75
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     100.0,
+     250.0,
+     400.0,
+     550.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "effect_1": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 220.0,
+    "rank_max": 180.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne2"
+   ],
+   "inherited_from": "KarthusFallenOne",
+   "evidence": "inherited:KarthusFallenOne"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusFallenOne2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    220.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    180.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    150.0,
+    175.0,
+    200.0,
+    0.0,
+    0.0,
+    25.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    100.0,
+    250.0,
+    400.0,
+    550.0,
+    0.0,
+    0.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.75
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     100.0,
+     250.0,
+     400.0,
+     550.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "effect_1": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 220.0,
+    "rank_max": 180.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne2"
+   ],
+   "inherited_from": "KarthusFallenOne",
+   "evidence": "inherited:KarthusFallenOne"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusFallenOne2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    220.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    180.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    150.0,
+    175.0,
+    200.0,
+    0.0,
+    0.0,
+    25.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    100.0,
+    250.0,
+    400.0,
+    550.0,
+    0.0,
+    0.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.75
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     100.0,
+     250.0,
+     400.0,
+     550.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "effect_1": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOne2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOne2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 220.0,
+    "rank_max": 180.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne2"
+   ],
+   "inherited_from": "KarthusFallenOne",
+   "evidence": "inherited:KarthusFallenOne"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusFallenOneExtra",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    200.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOneExtra"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOneExtra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 200.0,
+    "rank_max": 200.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne"
+   ],
+   "evidence": "variant of KarthusFallenOne (R Requiem magic damage)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusFallenOneExtra2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    180.0,
+    180.0,
+    200.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.699999988079071,
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusFallenOneExtra2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusFallenOneExtra2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 200.0,
+    "rank_max": 200.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusFallenOneAbility/KarthusFallenOne"
+   ],
+   "evidence": "variant of KarthusFallenOne (R Requiem magic damage)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWaste",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWaste"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWaste"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWaste2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWaste2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWaste2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusLayWasteA1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteA1"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteA1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteA1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteA1"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteA1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteA2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteA2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteA2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteA3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteA3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteA3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteDeadA1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteDeadA1"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteDeadA1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteDeadA2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteDeadA2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteDeadA2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteDeadA3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteDeadA3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteDeadA3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KarthusLayWasteExtra",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    21.0,
+    40.0,
+    59.0,
+    78.0,
+    97.0,
+    116.0,
+    135.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": 0.3499999940395355,
+    "mCoefficient": 0.3499999940395355
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     45.0,
+     65.0,
+     85.0,
+     105.0,
+     125.0,
+     145.0
+    ]
+   },
+   "data_values": {
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     21.0,
+     40.0,
+     59.0,
+     78.0,
+     97.0,
+     116.0,
+     135.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "calculations": {
+    "QDamage": [
+     "BaseDamage",
+     "APRatio"
+    ]
+   },
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusLayWasteExtra"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusLayWasteExtra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusLayWasteA1Ability/KarthusLayWasteA1"
+   ],
+   "evidence": "variant of KarthusLayWasteA1 (Q Lay Waste magic damage, incl. death-state casts)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusWallOfPain",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "duration": null,
+   "ratios": {
+    "WallDuration": 5.0,
+    "DebuffDuration": 5.0,
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_1": [
+     700.0,
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0
+    ],
+    "effect_2": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "data_values": {
+    "MagicResistShred": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "TT_WallWidth": [
+     700.0,
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0
+    ],
+    "SlowPercent": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "WallDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DebuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusWallOfPain"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusWallOfPain"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 15.0,
+    "rank_max": 15.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/KarthusWallOfPain"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KarthusWallOfPain2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_1": [
+     700.0,
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0
+    ],
+    "effect_2": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KarthusWallOfPain2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusWallOfPain2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 15.0,
+    "rank_max": 15.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/KarthusWallOfPain2"
+   ],
+   "inherited_from": "KarthusWallOfPain",
+   "evidence": "inherited:KarthusWallOfPain"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KarthusWallOfPainExtra2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0
+    ],
+    "effect_1": [
+     700.0,
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0
+    ],
+    "effect_2": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusWallOfPainExtra2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 22.0,
+    "rank_max": 22.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/Wall_of_Pain_Slow"
+   ],
+   "evidence": "variant of Wall_of_Pain_Slow (W wall slows enemies)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KarthusWallofPainExtra",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0
+    ],
+    "effect_1": [
+     700.0,
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0
+    ],
+    "effect_2": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KarthusWallofPainExtra"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 22.0,
+    "rank_max": 22.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/Wall_of_Pain_Slow"
+   ],
+   "evidence": "variant of Wall_of_Pain_Slow (W wall slows enemies)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "Wall_of_Pain",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Wall_of_Pain"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/Wall_of_Pain_Slow"
+   ],
+   "evidence": "variant of Wall_of_Pain_Slow (W wall slows enemies)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "Wall_of_Pain_Slow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Wall_of_Pain_Slow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Karthus/Spells/KarthusWallOfPainAbility/Wall_of_Pain_Slow"
+   ],
+   "evidence": "name:slow"
+  }
+ }
+]

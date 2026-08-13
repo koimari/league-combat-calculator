@@ -1,0 +1,5541 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    130.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "coefficient2": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.4000000059604645,
+    "behavior": "LilliaR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.4000000059604645,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaRAbility/LilliaR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LilliaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    130.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "coefficient2": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.4000000059604645,
+    "behavior": "LilliaR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.4000000059604645,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaRAbility/LilliaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LilliaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    130.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "coefficient2": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": {
+    "DrowsyDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SleepDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ImpactDamage": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "BreakDamageBase": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "InitialSlow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "_effect_{0e1136d1}": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.4000000059604645,
+    "behavior": "LilliaR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.4000000059604645,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaRAbility/LilliaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.sleep",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaRSleep",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LilliaRSleep",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaRAbility/LilliaRSleep"
+   ],
+   "evidence": "name:sleep"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LilliaE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BounceRange": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "ImpactDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "ImpactRangeCheck": [
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0
+    ],
+    "HitboxWidth": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "HitboxLength": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "AnimCutoffRange": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ]
+   },
+   "data_values": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BounceRange": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "ImpactDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "ImpactRangeCheck": [
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0
+    ],
+    "HitboxWidth": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "HitboxLength": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "AnimCutoffRange": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "_effect_{210f9ec0}": [
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.3499999940395355,
+    "behavior": "LilliaE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaEAbility/LilliaE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LilliaE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BounceRange": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "ImpactDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "ImpactRangeCheck": [
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0
+    ],
+    "HitboxWidth": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "HitboxLength": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "AnimCutoffRange": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ]
+   },
+   "data_values": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BounceRange": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "ImpactDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "ImpactRangeCheck": [
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0,
+     115.0
+    ],
+    "HitboxWidth": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "HitboxLength": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "AnimCutoffRange": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "_effect_{210f9ec0}": [
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.3499999940395355,
+    "behavior": "LilliaE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaEAbility/LilliaE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaESpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "coefficient2": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ]
+   },
+   "effect_amounts": {
+    "DodgeDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSAmount": [
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "data_values": {
+    "DodgeDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSAmount": [
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LilliaESpellPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaEAbility/LilliaESpellPassive"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "LilliaPDoT",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "data_values": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "AttackSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MoveSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaPDoT",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaPAbility/LilliaPDoT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "LilliaPDoT",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "data_values": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "AttackSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MoveSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaPDoT",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaPAbility/LilliaPDoT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LilliaPDoT",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "data_values": {
+    "MonsterHealingMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamageFlat": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "MultipleHealMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "LowHealthThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotDamagePercent": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ],
+    "BaseHealPercentConversion": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DotTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "AttackSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MoveSpeedSlow": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaPDoT",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaPAbility/LilliaPDoT"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LilliaP",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "effect_amounts": {
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamagePercent": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DotTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MonsterHealingPercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ChampionHealingPercent": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "LargeMonsterHealMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SmallMonsterHealMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MultiHealMod": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "data_values": {
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DotDamagePercent": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DotTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MonsterHealingPercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ChampionHealingPercent": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "LargeMonsterHealMod": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SmallMonsterHealMod": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MultiHealMod": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaP",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaPAbility/LilliaP"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "LilliaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LilliaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    6.0,
+    5.5,
+    5.0,
+    4.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "damage": [
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0,
+    75.0,
+    85.0
+   ],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "MinimumRadius": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "MaximumRadius": [
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0
+    ],
+    "FlatDamageBase": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "FlatDamageTrue": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "MinionDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceDuration": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "PranceMaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PranceFalloffTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "MinimumRadius": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "MaximumRadius": [
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0
+    ],
+    "FlatDamageBase": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "FlatDamageTrue": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "MinionDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceDuration": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "PranceMaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PranceFalloffTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceBonusPerStack": [
+     0.019999999552965164,
+     0.029999999329447746,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "_effect_{0e1136d1}": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "_effect_{210f9ec0}": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "LilliaQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaQAbility/LilliaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LilliaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    6.0,
+    5.5,
+    5.0,
+    4.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "damage": [
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0,
+    75.0,
+    85.0
+   ],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "MinimumRadius": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "MaximumRadius": [
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0
+    ],
+    "FlatDamageBase": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "FlatDamageTrue": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "MinionDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceDuration": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "PranceMaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PranceFalloffTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "MinimumRadius": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "MaximumRadius": [
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0,
+     485.0
+    ],
+    "FlatDamageBase": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "FlatDamageTrue": [
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0,
+     75.0,
+     85.0
+    ],
+    "MinionDamageMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceDuration": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "PranceMaxStacks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PranceFalloffTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PranceBonusPerStack": [
+     0.019999999552965164,
+     0.029999999329447746,
+     0.03999999910593033,
+     0.05000000074505806,
+     0.05999999865889549,
+     0.07000000029802322,
+     0.07999999821186066
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "_effect_{0e1136d1}": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "_effect_{210f9ec0}": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "LilliaQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaQAbility/LilliaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaQSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "coefficient2": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ]
+   },
+   "effect_amounts": {
+    "DodgeDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSAmount": [
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "data_values": {
+    "DodgeDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MSAmount": [
+     0.20000000298023224,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LilliaQSpellPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaQAbility/LilliaQSpellPassive"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaPranceStack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "coefficient2": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaPranceStack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaQAbility/LilliaPranceStack"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LilliaPranceStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "coefficient2": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaPranceStack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaQAbility/LilliaPranceStack"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "data_values": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "SweetSpotRadius": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ],
+    "SweetSpotBonus": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AnimRangeCutoff": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaWAbility/LilliaW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "data_values": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "SweetSpotRadius": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ],
+    "SweetSpotBonus": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AnimRangeCutoff": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaWAbility/LilliaW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LilliaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0,
+    180.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "data_values": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "SweetSpotRadius": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ],
+    "SweetSpotBonus": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AnimRangeCutoff": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaWAbility/LilliaW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LilliaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0,
+    180.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "data_values": {
+    "FlatDamageBase": [
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0
+    ],
+    "MaximumDistance": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ],
+    "MaxSpeed": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinimumDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "LandingOffset": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaximumCastTime": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinimumCastTime": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MinimumRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "SweetSpotRadius": [
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0,
+     65.0
+    ],
+    "SweetSpotBonus": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AnimRangeCutoff": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "MinionDamageMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaWAbility/LilliaW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LilliaBasicAttack1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LilliaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LilliaBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LilliaRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LilliaRSpellPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lillia",
+    "Crowd control",
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaRAbility/LilliaRSpellPassive"
+   ],
+   "evidence": "wiki:Lilting Lullaby renders dream-dusted enemies drowsy (10% slow) for 1.5s before sleep"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "LilliaERollingMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "coefficient2": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LilliaERollingMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lillia",
+    "Sight (Vision / Fog of War)"
+   ],
+   "binary": [
+    "Characters/Lillia/Spells/LilliaEAbility/LilliaERollingMissile"
+   ],
+   "evidence": "wiki:Swirlseed reveals enemies hit for 2 seconds"
+  }
+ }
+]

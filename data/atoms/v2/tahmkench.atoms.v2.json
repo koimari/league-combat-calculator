@@ -1,0 +1,2902 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    46.0,
+    42.0,
+    38.0,
+    34.0,
+    30.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "PercentHealthHealing": [
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421,
+     0.07000000029802322,
+     0.07500000298023224
+    ],
+    "BaseHeal": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ]
+   },
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    1.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.5,
+   "cooldown_max_rank_seconds": 4.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchQAbility/TahmKenchQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TahmKenchQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    46.0,
+    42.0,
+    38.0,
+    34.0,
+    30.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "PercentHealthHealing": [
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421,
+     0.07000000029802322,
+     0.07500000298023224
+    ],
+    "BaseHeal": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ]
+   },
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    1.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.5,
+   "cooldown_max_rank_seconds": 4.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.2,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchQAbility/TahmKenchQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TahmKenchQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    46.0,
+    42.0,
+    38.0,
+    34.0,
+    30.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "PercentHealthHealing": [
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421,
+     0.07000000029802322,
+     0.07500000298023224
+    ],
+    "BaseHeal": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ]
+   },
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    1.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.5,
+   "cooldown_max_rank_seconds": 4.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.2,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchQAbility/TahmKenchQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchQStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    46.0,
+    42.0,
+    38.0,
+    34.0,
+    30.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "PercentHealthHealing": [
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421,
+     0.07000000029802322,
+     0.07500000298023224
+    ],
+    "BaseHeal": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ]
+   },
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    1.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.5,
+   "cooldown_max_rank_seconds": 4.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchQAbility/TahmKenchQStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    46.0,
+    42.0,
+    38.0,
+    34.0,
+    30.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "PercentHealthHealing": [
+     0.04500000178813934,
+     0.05000000074505806,
+     0.054999999701976776,
+     0.05999999865889549,
+     0.06499999761581421,
+     0.07000000029802322,
+     0.07500000298023224
+    ],
+    "BaseHeal": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ]
+   },
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "calculation_coefficients": [
+    1.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.5,
+   "cooldown_max_rank_seconds": 4.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchQAbility/TahmKenchQSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    900.0,
+    1000.0,
+    1050.0,
+    1100.0,
+    1150.0,
+    1200.0,
+    1250.0
+   ],
+   "mana_cost": [
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0,
+    135.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockUpDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AoEDelayFromChannelStart": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TotalTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChannelTime": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnemyWarningDelayFromChannelStart": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampRefund": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ]
+   },
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "calculation_coefficients": [
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchWAbility/TahmKenchW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    900.0,
+    1000.0,
+    1050.0,
+    1100.0,
+    1150.0,
+    1200.0,
+    1250.0
+   ],
+   "mana_cost": [
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0,
+    135.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockUpDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AoEDelayFromChannelStart": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TotalTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChannelTime": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnemyWarningDelayFromChannelStart": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampRefund": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ]
+   },
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "calculation_coefficients": [
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchWAbility/TahmKenchW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    900.0,
+    1000.0,
+    1050.0,
+    1100.0,
+    1150.0,
+    1200.0,
+    1250.0
+   ],
+   "mana_cost": [
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0,
+    135.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockUpDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AoEDelayFromChannelStart": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TotalTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChannelTime": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnemyWarningDelayFromChannelStart": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampRefund": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ]
+   },
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "calculation_coefficients": [
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchWAbility/TahmKenchW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TahmKenchW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    900.0,
+    1000.0,
+    1050.0,
+    1100.0,
+    1150.0,
+    1200.0,
+    1250.0
+   ],
+   "mana_cost": [
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0,
+    135.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockUpDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AoEDelayFromChannelStart": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TotalTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChannelTime": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnemyWarningDelayFromChannelStart": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampRefund": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ]
+   },
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "calculation_coefficients": [
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchWAbility/TahmKenchW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "TahmKenchRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {},
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    -50.0,
+    100.0,
+    250.0,
+    400.0,
+    550.0,
+    700.0,
+    850.0
+   ],
+   "calculation_coefficients": [
+    0.000699999975040555,
+    1.0
+   ],
+   "affects_type_flags": 16387,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 16387,
+   "damage_type": "magic"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "TahmKenchEShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "OOCTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "GreyHealthRatio": [
+     0.07000000029802322,
+     0.15000000596046448,
+     0.23000000417232513,
+     0.3100000023841858,
+     0.38999998569488525,
+     0.4699999988079071,
+     0.550000011920929
+    ],
+    "MaxHPHealRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "GreyHealthRatioEnhanced": [
+     0.4000000059604645,
+     0.41999998688697815,
+     0.4399999976158142,
+     0.46000000834465027,
+     0.47999998927116394,
+     0.5,
+     0.5199999809265137
+    ],
+    "EnhancedThreshold": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ThresholdRadius": [
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "12": 3.0
+   },
+   "calculation_coefficients": [
+    3.0
+   ],
+   "affects_type_flags": 8192,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.8333,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchEAbility/TahmKenchEShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "TahmKenchE",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "OOCTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "GreyHealthRatio": [
+     0.07000000029802322,
+     0.15000000596046448,
+     0.23000000417232513,
+     0.3100000023841858,
+     0.38999998569488525,
+     0.4699999988079071,
+     0.550000011920929
+    ],
+    "MaxHPHealRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "GreyHealthRatioEnhanced": [
+     0.4000000059604645,
+     0.41999998688697815,
+     0.4399999976158142,
+     0.46000000834465027,
+     0.47999998927116394,
+     0.5,
+     0.5199999809265137
+    ],
+    "EnhancedThreshold": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ThresholdRadius": [
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "12": 3.0
+   },
+   "calculation_coefficients": [
+    3.0
+   ],
+   "affects_type_flags": 8192,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.8333,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchEAbility/TahmKenchE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TahmKenchE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "OOCTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "GreyHealthRatio": [
+     0.07000000029802322,
+     0.15000000596046448,
+     0.23000000417232513,
+     0.3100000023841858,
+     0.38999998569488525,
+     0.4699999988079071,
+     0.550000011920929
+    ],
+    "MaxHPHealRatio": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "GreyHealthRatioEnhanced": [
+     0.4000000059604645,
+     0.41999998688697815,
+     0.4399999976158142,
+     0.46000000834465027,
+     0.47999998927116394,
+     0.5,
+     0.5199999809265137
+    ],
+    "EnhancedThreshold": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ThresholdRadius": [
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0,
+     2400.0
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "12": 3.0
+   },
+   "calculation_coefficients": [
+    3.0
+   ],
+   "affects_type_flags": 8192,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank_seconds": 3.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.8333,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchEAbility/TahmKenchE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TahmKenchCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TahmKenchBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchR2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 16387,
+   "damage_type": "magic"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchR2"
+   ],
+   "inherited_from": "TahmKenchR",
+   "evidence": "inherited:TahmKenchR"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TahmKenchPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PerStackDecayTimer": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatioPer100BonusHP": [
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks_cap": 3.0,
+   "ratios": {
+    "12": 0.03999999910593033
+   },
+   "calculation_coefficients": [
+    0.03999999910593033
+   ],
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "An Acquired Taste",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
+   ],
+   "evidence": "wiki-map: basic attacks apply a stack of An Acquired Taste"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TahmKenchPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PerStackDecayTimer": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatioPer100BonusHP": [
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks_cap": 3.0,
+   "ratios": {
+    "12": 0.03999999910593033
+   },
+   "calculation_coefficients": [
+    0.03999999910593033
+   ],
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "An Acquired Taste",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
+   ],
+   "evidence": "wiki-map: stacks up to 3; consumed by Q and W"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TahmKenchPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PerStackDecayTimer": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatioPer100BonusHP": [
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515,
+     0.012500000186264515
+    ]
+   },
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks_cap": 3.0,
+   "ratios": {
+    "12": 0.03999999910593033
+   },
+   "calculation_coefficients": [
+    0.03999999910593033
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "An Acquired Taste",
+    "Damage",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
+   ],
+   "evidence": "wiki-map: on-hit bonus magic damage based on level and bonus health"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchWKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    900.0,
+    1000.0,
+    1050.0,
+    1100.0,
+    1150.0,
+    1200.0,
+    1250.0
+   ],
+   "mana_cost": [
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0,
+    135.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockUpDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "AoEDelayFromChannelStart": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TotalTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChannelTime": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnemyWarningDelayFromChannelStart": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampRefund": [
+     0.375,
+     0.4000000059604645,
+     0.42500001192092896,
+     0.44999998807907104,
+     0.4749999940395355,
+     0.5,
+     0.5249999761581421
+    ]
+   },
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "calculation_coefficients": [
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Abyssal Dive",
+    "Crowd control"
+   ],
+   "binary": [
+    "{cca5cdac}"
+   ],
+   "evidence": "binary name: TahmKenchWKnockUp; wiki: W emerges and knocks up enemies at target location"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "TahmKenchRTargetAlly",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Devour",
+    "Shield"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRTargetAlly"
+   ],
+   "evidence": "wiki-map: ally Devour grants a shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchRTargetEnemy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Devour",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRTargetEnemy"
+   ],
+   "evidence": "wiki-map: enemy Devour suppresses (target untargetable and displacement immune)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TahmKenchRSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {},
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    -50.0,
+    100.0,
+    250.0,
+    400.0,
+    550.0,
+    700.0,
+    850.0
+   ],
+   "calculation_coefficients": [
+    0.000699999975040555,
+    1.0
+   ],
+   "affects_type_flags": 16387,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{848936b1}"
+   ],
+   "evidence": "binary name: TahmKenchRSpeed; movement-speed buff while carrying a swallowed target"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TahmKenchR2TargetSpit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 8192,
+   "damage_type": "magic"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Regurgitate",
+    "Damage",
+    "Magic damage"
+   ],
+   "binary": [
+    "{c4984ac3}"
+   ],
+   "evidence": "binary name: TahmKenchR2TargetSpit; wiki: Regurgitate deals magic damage to spat-out enemy"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TahmKenchNautical",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "effect_amounts": {},
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    -50.0,
+    100.0,
+    250.0,
+    400.0,
+    550.0,
+    700.0,
+    850.0
+   ],
+   "calculation_coefficients": [
+    0.000699999975040555,
+    1.0
+   ],
+   "affects_type_flags": 16387,
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks_cap": 3.0,
+   "ratios": {
+    "12": 3.0
+   },
+   "cast_time_seconds": 0.25,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/TahmKench/Spells/TahmKenchNautical"
+   ],
+   "evidence": "binary: SpellObject with mBuff present; exact buff effect unverified"
+  }
+ }
+]

@@ -1,0 +1,4493 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernWMissile1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {}
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernWMissile1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernWMissile1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{29140f63}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cooldown_max_rank": 0.5,
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "data_values": {
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AllyBuffDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "AllyBaseDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "RevealDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "MaxBrushDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "BrushRadius": [
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0
+    ],
+    "BrushSpacing": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage": [
+    12.5,
+    20.0,
+    27.5,
+    35.0,
+    42.5,
+    50.0,
+    57.5
+   ],
+   "ratios": {
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AllyBuffDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RevealDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "MaxBrushDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 90.0,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 1000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernWAbility/IvernW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cooldown_max_rank": 0.5,
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "data_values": {
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AllyBuffDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "AllyBaseDamage": [
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0
+    ],
+    "RevealDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "MaxBrushDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "BrushRadius": [
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0,
+     190.0
+    ],
+    "BrushSpacing": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage": [
+    12.5,
+    20.0,
+    27.5,
+    35.0,
+    42.5,
+    50.0,
+    57.5
+   ],
+   "ratios": {
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AllyBuffDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RevealDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "MaxBrushDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1600.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 90.0,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 1000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernWAbility/IvernW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IvernR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    150.0,
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    100.0,
+    90.0
+   ],
+   "cooldown_max_rank": 90.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MSOnSpawn": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "DROnSpawn": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyAS": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DaisyAD": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "DaisyAoeDR": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveBaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShockwaveCD": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "IvernR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IvernR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    150.0,
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    100.0,
+    90.0
+   ],
+   "cooldown_max_rank": 90.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MSOnSpawn": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "DROnSpawn": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyAS": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DaisyAD": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "DaisyAoeDR": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveBaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShockwaveCD": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    150.0,
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    100.0,
+    90.0
+   ],
+   "cooldown_max_rank": 90.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MSOnSpawn": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "DROnSpawn": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyAS": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DaisyAD": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "DaisyAoeDR": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveBaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShockwaveCD": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "range": 25000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    150.0,
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    100.0,
+    90.0
+   ],
+   "cooldown_max_rank": 90.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MSOnSpawn": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "DROnSpawn": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyAS": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DaisyAD": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "DaisyAoeDR": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveBaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShockwaveCD": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "IvernR",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernR",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "IvernR",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 25000.0
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernR"
+   ],
+   "evidence": "tag:Trait_Pet"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IvernQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cooldown_max_rank": 9.0,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "data_values": {
+    "DashSpeed": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BaseDamage": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "ratios": {
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "duration": [
+    1.5,
+    1.600000023841858,
+    1.7000000476837158,
+    1.7999999523162842,
+    1.899999976158142,
+    2.0,
+    2.0999999046325684
+   ],
+   "missile_speed": 1300.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "IvernQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "IvernQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 1150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernQAbility/IvernQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cooldown_max_rank": 9.0,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "data_values": {
+    "DashSpeed": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ],
+    "BaseDamage": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "ratios": {
+    "RootDuration": [
+     1.5,
+     1.600000023841858,
+     1.7000000476837158,
+     1.7999999523162842,
+     1.899999976158142,
+     2.0,
+     2.0999999046325684
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "duration": [
+    1.5,
+    1.600000023841858,
+    1.7000000476837158,
+    1.7999999523162842,
+    1.899999976158142,
+    2.0,
+    2.0999999046325684
+   ],
+   "missile_speed": 1300.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "IvernQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "IvernQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 1150.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernQAbility/IvernQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IvernE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1025,
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cooldown_max_rank": 6.0,
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "data_values": {
+    "BaseShield": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseDamage": [
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "damage": [
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernEAbility/IvernE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1025,
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cooldown_max_rank": 6.0,
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "data_values": {
+    "BaseShield": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseDamage": [
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "damage": [
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "IvernE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "poke",
+   "range": 750.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernEAbility/IvernE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "IvernE",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1025,
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cooldown_max_rank": 6.0,
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "data_values": {
+    "BaseShield": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseDamage": [
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "damage": [
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernE",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "IvernE",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "sustain",
+   "range": 750.0
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernEAbility/IvernE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1025,
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cooldown_max_rank": 6.0,
+   "cast_range": [
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0,
+    750.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "data_values": {
+    "BaseShield": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseDamage": [
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "damage": [
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "missile_speed": 20.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "IvernE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "IvernE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1667,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernEAbility/IvernE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IvernBasicAttackRanged2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IvernBasicAttackRanged2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernBasicAttackRanged2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "stack-transform-summon-resource.ranged-melee-reclassification"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "stack-transform-summon-resource.ranged-melee-reclassification"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged2",
+    "atoms": [
+     "stack-transform-summon-resource.ranged-melee-reclassification"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged2"
+   ],
+   "evidence": "name:ranged"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IvernBasicAttackRanged",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IvernBasicAttackRanged",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernBasicAttackRanged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "data_values": {},
+   "missile_speed": 2000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "stack-transform-summon-resource.ranged-melee-reclassification"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttackRanged",
+    "atoms": [
+     "stack-transform-summon-resource.ranged-melee-reclassification"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttackRanged"
+   ],
+   "evidence": "name:ranged"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "IvernBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": 150.0,
+   "damage_type": null,
+   "affects_type_flags": 6827,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {},
+   "missile_speed": 4000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.258,
+    "behavior": "IvernBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.258,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 150.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ivern Passive (Daisy)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    140.0,
+    130.0,
+    120.0,
+    110.0,
+    100.0,
+    90.0
+   ],
+   "cooldown_rank1": 150.0,
+   "cooldown_max_rank": 90.0,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "data_values": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MSOnSpawn": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "DROnSpawn": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyAS": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DaisyAD": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "DaisyAoeDR": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveBaseDamage": [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShockwaveCD": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "SpawnBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DaisyDuration": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ],
+    "ShockwaveCCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "duration": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "ivern Passive (Daisy)",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ivern Passive (Daisy)",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ivern Passive (Daisy)",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 45.0,
+    "behavior": "ivern Passive (Daisy)",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 150.0,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": 0.3,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Daisy"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernR"
+   ],
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 3000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{128f9cc0}"
+   ],
+   "evidence": "inherited:IvernW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 3000.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernWMissile",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "{128f9cc0}"
+   ],
+   "evidence": "inherited:IvernW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "IvernRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "data_values": {},
+   "missile_speed": 1400.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernRMissile"
+   ],
+   "evidence": "inherited:IvernR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "IvernRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "data_values": {},
+   "missile_speed": 1400.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernRMissile"
+   ],
+   "evidence": "inherited:IvernR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "IvernRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "data_values": {},
+   "missile_speed": 1400.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "range": 800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernRMissile"
+   ],
+   "evidence": "inherited:IvernR"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "data_values": {},
+   "missile_speed": 1400.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IvernRMissile",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "range": 800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernRMissile"
+   ],
+   "evidence": "inherited:IvernR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "IvernQRecast",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cooldown_max_rank": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {},
+   "missile_speed": 1200.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.172,
+    "behavior": "IvernQRecast",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "IvernQRecast",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "IvernQRecast",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "IvernQRecast",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.172,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 25000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Rootcaller",
+    "Ivern can recast Rootcaller to dash to the rooted target; allies can also dash to it"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernQAbility/IvernQRecast"
+   ],
+   "evidence": "name:IvernQRecast"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "IvernWPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "data_values": {}
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Brushmaker",
+    "Active grows a patch of brush that grants sight of the area within and around it for 8 seconds"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/{9473e5ed}"
+   ],
+   "evidence": "name:IvernWPassive"
+  }
+ },
+ {
+  "atom_id": "vision-economy.jungle-experience",
+  "family": "vision-economy",
+  "behavior": "IvernP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "data_values": {
+    "LevelForBuffShare": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PickupDuration": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "KrugExperience": [
+     58.0,
+     58.0,
+     58.0,
+     58.0,
+     58.0,
+     58.0,
+     58.0
+    ],
+    "KrugGold": [
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0,
+     84.0
+    ],
+    "ModeSpeedOverride": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ratios": {
+    "PickupDuration": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "duration": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 60.0,
+    "behavior": "IvernP",
+    "atoms": [
+     "vision-economy.jungle-experience"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "range": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Friend of the Forest",
+    "The grove matures over 40-1 seconds; freeing the camp grants Ivern the full gold and full experience bounties (grove channel: cannot attack non-epic monsters)"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernPAbility/IvernP"
+   ],
+   "evidence": "name:IvernP/IvernPCollection/IvernPApplication"
+  }
+ }
+]

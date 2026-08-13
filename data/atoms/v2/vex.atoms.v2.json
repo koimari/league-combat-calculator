@@ -1,0 +1,2683 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VexCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{61b6e0c3}"
+   ],
+   "evidence": "rule:crit",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VexBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{7fd5aa7b}"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VexBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{7fd5aa7b}"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VexBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{819ae44b}"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VexBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{819ae44b}"
+   ],
+   "evidence": "name:basicattack",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "VexR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2500.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "R2Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TakedownWindow": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "ResetWindow": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "crowd-control-mobility.cc-immunity"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "crowd-control-mobility.cc-immunity"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 100.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR"
+   ],
+   "evidence": "tag:Trait_CCImmune",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VexR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2500.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "R2Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TakedownWindow": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "ResetWindow": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 100.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2500.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "R2Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TakedownWindow": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "ResetWindow": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VexR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 140.0,
+    "max_rank": 100.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.flee",
+  "family": "crowd-control-mobility",
+  "behavior": "VexPFear",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexPFear",
+    "atoms": [
+     "crowd-control-mobility.flee"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexPFear",
+    "atoms": [
+     "crowd-control-mobility.flee"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexPFear"
+   ],
+   "evidence": "name:fear",
+   "spine_source": "object"
+  }
+ },
+ {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "VexPCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexPCooldown",
+    "atoms": [
+     "damage.tag-activespell"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexPCooldown",
+    "atoms": [
+     "damage.tag-activespell"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexPCooldown"
+   ],
+   "evidence": "name:cooldown",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VexP",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap": 0.25
+   },
+   "effect_amounts": {
+    "GloomDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MaxDoomCD": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "DashListenerRange": [
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0,
+     1600.0
+    ],
+    "DashLockoutTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "GloomCDChamp": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "GloomCDNonChamp": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "FearSlowPercentMax": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "FearedMinionSpeed": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "EFearedMinionSpeed": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FearSlowPercentMin": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "RangeOfMaxFearSlow": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "RangeOfMinFearSlow": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "APRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexP",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexP",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexPAbility/VexP"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VexW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "ShieldAmount": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "AOERadius": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "BonusAOERadiusVsDashes": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DamageAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 17.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexWAbility/VexW"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "ShieldAmount": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "AOERadius": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "BonusAOERadiusVsDashes": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DamageAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 17.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexWAbility/VexW"
+   ],
+   "evidence": "tag:Trait_Low_Damage",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "VexW",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0,
+    475.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "ShieldAmount": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "AOERadius": [
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0,
+     475.0
+    ],
+    "BonusAOERadiusVsDashes": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "DamageAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VexW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 17.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexWAbility/VexW"
+   ],
+   "evidence": "tag:Trait_Shield",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VexE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StartingRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "RadiusGrowthRate": [
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "MaxRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "GloomCDChampTooltip": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "GloomCDNonChampTooltip": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexEAbility/VexE"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "SlowAmount": [
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "StartingRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "RadiusGrowthRate": [
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0,
+     13.0
+    ],
+    "APRatio": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "MaxRadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "GloomCDChampTooltip": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "GloomCDNonChampTooltip": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 12.0,
+    "max_rank": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexEAbility/VexE"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VexQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.699999988079071
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.0,
+    "max_rank": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexQAbility/VexQ"
+   ],
+   "evidence": "tag:Trait_AoE",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.699999988079071
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    "APRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "area-effect",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.0,
+    "max_rank": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexQAbility/VexQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "VexR2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.cc-immunity"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.cc-immunity"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.cc-immunity"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR2"
+   ],
+   "inherited_from": "VexR",
+   "evidence": "inherited:VexR",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VexR2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR2"
+   ],
+   "inherited_from": "VexR",
+   "evidence": "inherited:VexR",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexR2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "RecastDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRAbility/VexR2"
+   ],
+   "inherited_from": "VexR",
+   "evidence": "inherited:VexR",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VexPGloom",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexPGloom",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexPGloom",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gloom"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexPGloom"
+   ],
+   "evidence": "wiki P: abilities apply Gloom; basic attacks on Gloomed targets deal bonus magic damage and reduce cooldowns",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VexPGloomAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexPGloomAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexPGloomAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gloom"
+   ],
+   "binary": [
+    "VexPGloomAttack",
+    "VexPGloomAttackMissile"
+   ],
+   "evidence": "wiki P: abilities apply Gloom; basic attacks on Gloomed targets deal bonus magic damage and reduce cooldowns",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VexRTarget",
+  "trigger": "on_effect",
+  "target_policy": "enemy_champion",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexRTarget",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VexRTarget",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shadow Surge"
+   ],
+   "binary": [
+    "Characters/Vex/Spells/VexRTarget"
+   ],
+   "evidence": "wiki R: recast dashes to the marked target",
+   "spine_source": "mSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "VexR2",
+  "trigger": "on_recast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VexR2",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": null,
+    "max_rank": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shadow Surge"
+   ],
+   "binary": [
+    "VexRSpellPassive"
+   ],
+   "evidence": "wiki R: recast dashes to the marked target",
+   "spine_source": "object"
+  }
+ }
+]

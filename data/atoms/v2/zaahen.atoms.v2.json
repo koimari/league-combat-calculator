@@ -1,0 +1,3329 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZaahenPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{0679696e}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZaahenPassiveRevive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveRevive",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveReviveReady",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveReviveCooldown",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "{d21ae14a}"
+   ],
+   "evidence": "name:revive",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-gated-transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZaahenPassiveResourceTimer",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveResourceTimer",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Gnar",
+    "Buff"
+   ],
+   "binary": [
+    "{d88a1424}"
+   ],
+   "evidence": "name:resource"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZaahenPassiveReviveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenPassiveReviveCooldown",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "{ec8aa7db}"
+   ],
+   "evidence": "name:revive",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZaahenQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenQAbility/ZaahenQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZaahenQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenQAbility/ZaahenQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ZaahenQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenQAbility/ZaahenQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ZaahenQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenQAbility/ZaahenQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZaahenQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenQAbility/ZaahenQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ZaahenQ2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{85ed8107}"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZaahenQ2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 14336,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{85ed8107}"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenQKnockup",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQKnockup",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "{cb1cfc0c}"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenE",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 12.0,
+   "missile_speed": 0.0,
+   "affects_type_flags": 22543,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.5,
+     9.0,
+     8.5,
+     8.0,
+     8.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenE",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenEAbility/ZaahenE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 12.0,
+   "missile_speed": 0.0,
+   "affects_type_flags": 22543,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.5,
+     9.0,
+     8.5,
+     8.0,
+     8.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenE",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenEAbility/ZaahenE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZaahenE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 12.0,
+   "missile_speed": 0.0,
+   "affects_type_flags": 22543,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.5,
+     9.0,
+     8.5,
+     8.0,
+     8.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenE",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenEAbility/ZaahenE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZaahenE",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 12.0,
+   "missile_speed": 0.0,
+   "affects_type_flags": 22543,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     10.0,
+     9.5,
+     9.0,
+     8.5,
+     8.0,
+     8.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenE",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.0
+   },
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenEAbility/ZaahenE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZaahenCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 7.360000133514404,
+   "missile_speed": 0.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenCritAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.245,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "ZaahenR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    65.0,
+    60.0,
+    20.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 8700.0,
+   "affects_type_flags": 17431,
+   "effect_amounts": {
+    "Cooldown": [
+     110.0,
+     110.0,
+     95.0,
+     80.0,
+     65.0,
+     60.0,
+     20.0
+    ],
+    "{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 110.0,
+    "max_rank": 20.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRAbility/ZaahenR"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZaahenW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 7.5,
+   "missile_speed": 1600.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     14.0,
+     14.0,
+     13.5,
+     13.0,
+     12.5,
+     12.0,
+     11.5
+    ],
+    "{0e1136d1}": [
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0
+    ],
+    "{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenW",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenWAbility/ZaahenW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZaahenW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 7.5,
+   "missile_speed": 1600.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     14.0,
+     14.0,
+     13.5,
+     13.0,
+     12.5,
+     12.0,
+     11.5
+    ],
+    "{0e1136d1}": [
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0
+    ],
+    "{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenW",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenWAbility/ZaahenW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZaahenW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 7.5,
+   "missile_speed": 1600.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     14.0,
+     14.0,
+     13.5,
+     13.0,
+     12.5,
+     12.0,
+     11.5
+    ],
+    "{0e1136d1}": [
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0,
+     850.0
+    ],
+    "{210f9ec0}": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenW",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "max_rank": 11.0
+   },
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenWAbility/ZaahenW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack3",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack3",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZaahenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenBasicAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ZaahenQ2Attack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ2Attack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{5b7c946f}"
+   ],
+   "inherited_from": "ZaahenQ2",
+   "evidence": "inherited:ZaahenQ2"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZaahenQ2Attack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQ2Attack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{5b7c946f}"
+   ],
+   "inherited_from": "ZaahenQ2",
+   "evidence": "inherited:ZaahenQ2"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZaahenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{6d860387}"
+   ],
+   "inherited_from": "ZaahenQ",
+   "evidence": "inherited:ZaahenQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZaahenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{6d860387}"
+   ],
+   "inherited_from": "ZaahenQ",
+   "evidence": "inherited:ZaahenQ"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ZaahenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{6d860387}"
+   ],
+   "inherited_from": "ZaahenQ",
+   "evidence": "inherited:ZaahenQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ZaahenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{6d860387}"
+   ],
+   "inherited_from": "ZaahenQ",
+   "evidence": "inherited:ZaahenQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "ZaahenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.100000381469727,
+   "missile_speed": 20.0,
+   "affects_type_flags": 5327,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ZaahenQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.27,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{6d860387}"
+   ],
+   "inherited_from": "ZaahenQ",
+   "evidence": "inherited:ZaahenQ"
+  }
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "behavior": "ZaahenRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "ZaahenRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Grim Deliverance"
+   ],
+   "binary": [
+    "Characters/Zaahen/Spells/ZaahenRSpellPassive"
+   ],
+   "evidence": "R passive: Zaahen gains armor penetration"
+  }
+ }
+]

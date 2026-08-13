@@ -1,0 +1,2218 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "BlitzcrankCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.824999809265137,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 49.400001525878906,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/BlitzcrankCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.825,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.824999809265137,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "PowerFist",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "affects_type_flags": 9221,
+   "ratios": {
+    "stat_2": 3.75,
+    "stat_None": 1.5
+   },
+   "effect_amounts": {
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ccduration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_frame": 5.264999866485596,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFist"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 5.264999866485596,
+   "uptime_fraction": 0.143,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "PowerFist",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "affects_type_flags": 9221,
+   "ratios": {
+    "stat_2": 3.75,
+    "stat_None": 1.5
+   },
+   "effect_amounts": {
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ccduration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_frame": 5.264999866485596,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFist"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 5.264999866485596,
+   "uptime_fraction": 0.143,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PowerFist",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "affects_type_flags": 9221,
+   "ratios": {
+    "stat_2": 3.75,
+    "stat_None": 1.5
+   },
+   "effect_amounts": {
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ccduration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_frame": 5.264999866485596,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFist"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 5.264999866485596,
+   "uptime_fraction": 0.143,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "PowerFist",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "affects_type_flags": 9221,
+   "ratios": {
+    "stat_2": 3.75,
+    "stat_None": 1.5
+   },
+   "effect_amounts": {
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ccduration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_frame": 5.264999866485596,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFist"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 5.264999866485596,
+   "uptime_fraction": 0.143,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "PowerFist",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "affects_type_flags": 9221,
+   "ratios": {
+    "stat_2": 3.75,
+    "stat_None": 1.5
+   },
+   "effect_amounts": {
+    "CCDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "ccduration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_frame": 5.264999866485596,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFist"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 5.264999866485596,
+   "uptime_fraction": 0.143,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "PowerFistSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "StaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    60.0,
+    40.0,
+    20.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    150.0,
+    150.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "ratios": {
+    "stat_None": 0.02
+   },
+   "effect_amounts": {
+    "PassiveBaseDamage": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0
+    ],
+    "ZapCountdown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ActiveRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "ActiveBaseDamage": [
+     150.0,
+     275.0,
+     400.0,
+     525.0,
+     650.0,
+     775.0,
+     900.0
+    ],
+    "SilenceDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "PassiveAPRatio": [
+     0.2,
+     0.3,
+     0.4,
+     0.5,
+     0.6,
+     0.7,
+     0.8
+    ],
+    "ActiveAPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveManaRatio": [
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05
+    ]
+   },
+   "missile_speed": 347.79998779296875,
+   "cast_frame": 10.050000190734863,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/StaticFieldAbility/StaticField"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.05,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.050000190734863,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "StaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    60.0,
+    40.0,
+    20.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    150.0,
+    150.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "ratios": {
+    "stat_None": 0.02
+   },
+   "effect_amounts": {
+    "PassiveBaseDamage": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0
+    ],
+    "ZapCountdown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ActiveRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "ActiveBaseDamage": [
+     150.0,
+     275.0,
+     400.0,
+     525.0,
+     650.0,
+     775.0,
+     900.0
+    ],
+    "SilenceDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "PassiveAPRatio": [
+     0.2,
+     0.3,
+     0.4,
+     0.5,
+     0.6,
+     0.7,
+     0.8
+    ],
+    "ActiveAPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveManaRatio": [
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05
+    ]
+   },
+   "missile_speed": 347.79998779296875,
+   "cast_frame": 10.050000190734863,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": "magic"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/StaticFieldAbility/StaticField"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.05,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.050000190734863,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BlitzcrankBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 49.400001525878906,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/BlitzcrankBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BlitzcrankBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 49.400001525878906,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/BlitzcrankBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RocketGrab",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "BaseDamage": [
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0,
+     360.0
+    ],
+    "LolipopLength": [
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0
+    ],
+    "APRatio": [
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2
+    ]
+   },
+   "missile_speed": 1800.0,
+   "cooldown_rank1": 21.0,
+   "cooldown_rank_max": 16.0,
+   "range": 10000.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/RocketGrabAbility/RocketGrab"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 21.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RocketGrab",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "BaseDamage": [
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0,
+     360.0
+    ],
+    "LolipopLength": [
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0,
+     70.0
+    ],
+    "APRatio": [
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2,
+     1.2
+    ]
+   },
+   "missile_speed": 1800.0,
+   "cooldown_rank1": 21.0,
+   "cooldown_rank_max": 16.0,
+   "range": 10000.0,
+   "damage_type": "magic"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/RocketGrabAbility/RocketGrab"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 21.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Overdrive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "MoveSpeedMod": [
+     0.55,
+     0.6,
+     0.65,
+     0.7,
+     0.75,
+     0.8,
+     0.85
+    ],
+    "AttackSpeedMod": [
+     0.2,
+     0.3,
+     0.4,
+     0.5,
+     0.6,
+     0.7,
+     0.8
+    ],
+    "Duration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MoveSpeedModReduction": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MoveSpeedModMin": [
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1
+    ],
+    "MoveSpeedModMinTime": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "PercentHealthDamage": [
+     0.01,
+     0.01,
+     0.01,
+     0.01,
+     0.01,
+     0.01,
+     0.01
+    ]
+   },
+   "missile_speed": 20.0,
+   "cast_frame": 5.394999980926514,
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 15.0,
+   "range": 1.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/OverdriveAbility/Overdrive"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.395,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": 5.394999980926514,
+   "uptime_fraction": 0.333,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ManaBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/ManaBarrierIconAbility/ManaBarrier"
+   ],
+   "evidence": "name:barrier"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ManaBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mana",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/ManaBarrierIconAbility/ManaBarrier"
+   ],
+   "evidence": "name:mana"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ManaBarrierCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/ManaBarrierIconAbility/ManaBarrierCooldown"
+   ],
+   "evidence": "name:barrier"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ManaBarrierCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mana",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/ManaBarrierIconAbility/ManaBarrierCooldown"
+   ],
+   "evidence": "name:mana"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BlitzcrankBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 49.400001525878906,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/BlitzcrankBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BlitzcrankBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 49.400001525878906,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/BlitzcrankBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "PowerFistAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistAttack"
+   ],
+   "inherited_from": "PowerFist",
+   "evidence": "inherited:PowerFist"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "PowerFistAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistAttack"
+   ],
+   "inherited_from": "PowerFist",
+   "evidence": "inherited:PowerFist"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PowerFistAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistAttack"
+   ],
+   "inherited_from": "PowerFist",
+   "evidence": "inherited:PowerFist"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "PowerFistAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistAttack"
+   ],
+   "inherited_from": "PowerFist",
+   "evidence": "inherited:PowerFist"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "PowerFistAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "affects_type_flags": 8143,
+   "cast_frame": 12.960000038146973,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 300.0,
+   "damage_type": "physical"
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/PowerFistAbility/PowerFistAttack"
+   ],
+   "inherited_from": "PowerFist",
+   "evidence": "inherited:PowerFist"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.96,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.960000038146973,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RocketGrabMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    23.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 1800.0,
+   "cast_frame": 7.5,
+   "cooldown_rank1": 21.0,
+   "cooldown_rank_max": 16.0,
+   "range": 10000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/RocketGrabAbility/RocketGrabMissile"
+   ],
+   "inherited_from": "RocketGrab",
+   "evidence": "inherited:RocketGrab"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 23.0,
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RocketGrabMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    23.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0,
+    1080.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 1800.0,
+   "cast_frame": 7.5,
+   "cooldown_rank1": 21.0,
+   "cooldown_rank_max": 16.0,
+   "range": 10000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Blitzcrank/Spells/RocketGrabAbility/RocketGrabMissile"
+   ],
+   "inherited_from": "RocketGrab",
+   "evidence": "inherited:RocketGrab"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 23.0,
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ }
+]
