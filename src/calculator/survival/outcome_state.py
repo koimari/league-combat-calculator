@@ -44,6 +44,7 @@ from ..ability_spec import Measured, Quantity, Starved, StructuralZero
 __all__ = [
     "Adjustment",
     "AdjustmentReason",
+    "DuplicateApplied",
     "OUTCOME_FIELDS",
     "Outcome",
     "OutcomeLedger",
@@ -98,6 +99,35 @@ class OutcomeRewritten(RuntimeError):
         self.field = field
         self.old = old
         self.new = new
+
+
+class DuplicateApplied(RuntimeError):
+    """Two producers claimed the same applied contribution (D-62).
+
+    "A sum may never mix views" forbids adding a pair-engine preview to a
+    coupled delivery.  It does **not** forbid two *deliveries* of one
+    mechanic to one subject on one event, which is the other half of the
+    double count and the shape keeping ``_apply_command_amp`` alive beside a
+    new coupled pricer would have: both contributions ``APPLIED``, both
+    real, one of them counted twice with no symptom.
+
+    So the ledger refuses at the second write.  The key is the criterion's
+    own -- ``(mechanic, subject, event_id)`` -- read off the action as its
+    packet source, its subject slot and its interned event slot.
+    """
+
+    def __init__(self, key: tuple[Any, ...], first: int, second: int) -> None:
+        """Name the contribution and both slots that claimed it."""
+        mechanic, subject, event = key
+        super().__init__(
+            f"two applied contributions for mechanic {mechanic!r} on subject "
+            f"{subject} at event {event}: action slots {first} and {second}. "
+            "At most one applied contribution exists per "
+            "(mechanic, subject, event_id) across all producers (D-62)"
+        )
+        self.key = key
+        self.first = first
+        self.second = second
 
 
 class UnwrittenAdjustment(RuntimeError):
@@ -186,6 +216,7 @@ class OutcomeLedger:
     __slots__ = (
         "annotating",
         "records_annotations",
+        "_applied_by",
         "_fields",
         "_adjustments",
         "_status",
@@ -214,6 +245,7 @@ class OutcomeLedger:
         self._fields: dict[int, dict[str, Any]] = {}
         self._adjustments: dict[int, list[Adjustment]] = {}
         self._status: dict[int, str] = {}
+        self._applied_by: dict[tuple[Any, ...], int] = {}
 
     # -- observation -------------------------------------------------------
     def write(self, action: SurvivalAction, **fields: Any) -> None:
@@ -228,7 +260,22 @@ class OutcomeLedger:
                 continue
             if field in recorded:
                 raise OutcomeRewritten(slot, field, recorded[field], value)
+            if field == "applied":
+                self._claim_applied(action, slot)
             recorded[field] = value
+
+    def _claim_applied(self, action: SurvivalAction, slot: int) -> None:
+        """Record this slot as the one applied contribution for its key.
+
+        D-62's uniqueness, enforced where the contribution is written rather
+        than checked afterwards: a second producer of an applied number for
+        one ``(mechanic, subject, event_id)`` is a double count, and a double
+        count that raises is one nobody has to notice.
+        """
+        key = (action.source_key, action.subject, action.event_slot)
+        first = self._applied_by.setdefault(key, slot)
+        if first != slot:
+            raise DuplicateApplied(key, first, slot)
 
     def annotate(self, action: SurvivalAction, **fields: Any) -> None:
         """Diagnostics.  An outcome is a number, so these are dropped."""
@@ -384,6 +431,16 @@ class OutcomeLedger:
             for field in OUTCOME_FIELDS
             if field != "skipped_reason"
         }
+
+    def applied_contributions(self) -> Mapping[tuple[Any, ...], int]:
+        """Every ``(mechanic, subject, event_id)`` that produced an applied
+        number, mapped to the one action slot that produced it.
+
+        Returned so the property is readable as well as enforced: a
+        uniqueness rule whose only evidence is the absence of an exception is
+        a rule nobody can count.
+        """
+        return dict(self._applied_by)
 
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""

@@ -296,3 +296,95 @@ def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() 
         ability_spec.quantity_sum(
             (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
         )
+
+
+class TestAtMostOneAppliedContribution:
+    """D-62's other half, and the half a write-once field does not cover.
+
+    Write-once is keyed by ``(slot, field)``: it stops one transition
+    answering the same question twice and says nothing about a *second
+    producer*.  Two engines each delivering an applied number for one
+    mechanic on one subject at one event are two different slots, both
+    legitimate write-once writes, and one mechanic counted twice -- which is
+    the arrangement keeping a legacy amp alive beside a new coupled pricer
+    would create.
+    """
+
+    @staticmethod
+    def contribution(slot: int, *, source: str, subject: int, event: int):
+        """One applied delivery, addressed by the criterion's own key."""
+        return SurvivalAction(
+            kind=ActionKind.DAMAGE,
+            aidx=slot,
+            subject=subject,
+            source_key=source,
+            event_slot=event,
+        )
+
+    def test_one_contribution_per_key_is_recorded(self) -> None:
+        ledger = outcome_state.OutcomeLedger()
+        ledger.write(
+            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
+        )
+        assert ledger.applied_contributions() == {("mandate", 1, 7): 0}
+
+    def test_a_second_producer_of_the_same_contribution_raises(self) -> None:
+        """Two slots, one (mechanic, subject, event_id): a double count."""
+        ledger = outcome_state.OutcomeLedger()
+        ledger.write(
+            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
+        )
+        with pytest.raises(outcome_state.DuplicateApplied) as raised:
+            ledger.write(
+                self.contribution(3, source="mandate", subject=1, event=7),
+                applied_amount=40.0,
+            )
+        assert raised.value.key == ("mandate", 1, 7)
+        assert (raised.value.first, raised.value.second) == (0, 3)
+
+    def test_the_same_mechanic_on_a_second_subject_is_not_a_duplicate(self) -> None:
+        """Imperial Mandate arms two allies; that is two contributions."""
+        ledger = outcome_state.OutcomeLedger()
+        ledger.write(
+            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
+        )
+        ledger.write(
+            self.contribution(1, source="mandate", subject=2, event=7), damage=40.0
+        )
+        assert len(ledger.applied_contributions()) == 2
+
+    def test_the_same_subject_on_a_second_event_is_not_a_duplicate(self) -> None:
+        ledger = outcome_state.OutcomeLedger()
+        ledger.write(
+            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
+        )
+        ledger.write(
+            self.contribution(1, source="mandate", subject=1, event=8), damage=40.0
+        )
+        assert len(ledger.applied_contributions()) == 2
+
+    def test_a_second_mechanic_on_one_event_is_not_a_duplicate(self) -> None:
+        ledger = outcome_state.OutcomeLedger()
+        ledger.write(
+            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
+        )
+        ledger.write(
+            self.contribution(1, source="abyssal", subject=1, event=7), damage=40.0
+        )
+        assert len(ledger.applied_contributions()) == 2
+
+    def test_one_slot_writing_two_applied_aliases_is_a_rewrite_not_a_duplicate(
+        self,
+    ) -> None:
+        """The write-once rule still owns the one-slot case, by its own name."""
+        ledger = outcome_state.OutcomeLedger()
+        packet = self.contribution(0, source="mandate", subject=1, event=7)
+        ledger.write(packet, damage=40.0)
+        with pytest.raises(outcome_state.OutcomeRewritten):
+            ledger.write(packet, applied_amount=40.0)
+
+    def test_a_refusal_claims_no_contribution(self) -> None:
+        """A skipped transition delivered nothing, so it claims no key."""
+        ledger = outcome_state.OutcomeLedger()
+        ledger.skip(self.contribution(0, source="mandate", subject=1, event=7), "gated")
+        assert ledger.applied_contributions() == {}

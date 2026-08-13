@@ -699,3 +699,145 @@ def test_a_discarded_row_is_identical_to_a_recorded_one() -> None:
     recorded = survival.survival_leaves(program, result, LeafWriter(), paths)
     discarded = survival.survival_leaves(program, result, DISCARD, paths)
     assert recorded == discarded
+
+
+# ---------------------------------------------------------------------------
+# Criterion 4 — one tag per number, and a fold that refuses to mix them
+# ---------------------------------------------------------------------------
+
+
+def test_a_block_states_what_its_numbers_mean_rather_than_defaulting() -> None:
+    """The tag was a parameter default on every write, which is not a claim.
+
+    ``put``/``measured``/``optional_measured`` each carried
+    ``tag: ViewTag = ViewTag.APPLIED``, so "every serialized field carries
+    exactly one ViewTag" was true of a constant nobody had to state.  A block
+    is the unit a projection lane applies to, so the tag is stated once where
+    the block is opened and no leaf can acquire one by omission.
+    """
+    import inspect
+
+    from src.calculator.program.views import LeafBlock
+
+    for method in ("put", "measured", "optional_measured"):
+        assert "tag" not in inspect.signature(getattr(LeafBlock, method)).parameters
+
+
+def test_a_theoretical_block_tags_every_leaf_it_writes() -> None:
+    """Including the nested ones: a sub-block inherits its parent's meaning."""
+    writer = LeafWriter()
+    row: dict[str, object] = {}
+    block = writer.block(row, "preview", ViewTag.THEORETICAL)
+    block.measured("amount", 12.0)
+    block.structure("inner", {"nested": 3.0})
+    entries = writer.entries()
+    assert entries["preview.amount"]["view_tag"] == "theoretical"
+    assert entries["preview.inner.nested"]["view_tag"] == "theoretical"
+
+
+def test_two_quantities_meaning_the_same_thing_fold() -> None:
+    from src.calculator.program.build import Tagged, fold_tagged
+
+    parts = [
+        Tagged(Measured(amount=1.5), ViewTag.APPLIED),
+        Tagged(Measured(amount=2.5), ViewTag.APPLIED),
+    ]
+    assert fold_tagged(parts) == Tagged(Measured(amount=4.0), ViewTag.APPLIED)
+
+
+def test_folding_two_views_is_a_construction_error() -> None:
+    """Criterion 4: unrepresentable rather than merely tested for."""
+    from src.calculator.program.build import MixedViewFold, Tagged
+
+    applied = Tagged(Measured(amount=1.0), ViewTag.APPLIED)
+    preview = Tagged(Measured(amount=1.0), ViewTag.THEORETICAL)
+    with pytest.raises(MixedViewFold) as raised:
+        _ = applied + preview
+    assert (raised.value.left, raised.value.right) == (
+        ViewTag.APPLIED,
+        ViewTag.THEORETICAL,
+    )
+
+
+def test_a_fold_carries_the_disposition_as_well_as_the_view() -> None:
+    """Both properties survive a sum, because both can be lost in one."""
+    from src.calculator.program.build import Tagged, fold_tagged
+
+    total = fold_tagged(
+        [
+            Tagged(Measured(amount=1.0), ViewTag.APPLIED),
+            Tagged(Withheld(receipts=("coverage refused",)), ViewTag.APPLIED),
+            Tagged(StructuralZero(reason="declared inapplicable"), ViewTag.APPLIED),
+        ]
+    )
+    assert isinstance(total.quantity, Withheld)
+    assert total.tag is ViewTag.APPLIED
+
+
+def test_a_fold_over_nothing_is_not_a_measured_zero() -> None:
+    """An empty total has no view to carry, and inventing one is the bug."""
+    from src.calculator.program.build import fold_tagged
+
+    with pytest.raises(ValueError, match="not a measured zero"):
+        fold_tagged([])
+
+
+def test_the_registry_answers_what_a_mechanics_number_means() -> None:
+    """``tag_for`` is one total function with live readers.
+
+    It had none: nothing in ``src/`` called it, so "exactly one tag per
+    ``(mechanic, EngineLane)``" was a docstring on an unused method while the
+    pair-preview join read ``view_tags`` directly.  Both readers go through
+    it now, so a second answer to "what does this number mean" would have to
+    be a second implementation rather than a second expression.
+    """
+    from src.calculator.item_behavior import EngineLane
+    from src.calculator.program import build
+
+    declared = build.declared_view_tags()
+    assert declared, "a registry projection with nothing in it proves nothing"
+    previews = {
+        mechanic
+        for mechanic, tags in declared.items()
+        if EngineLane.PAIR_ENGINE in tags
+        and build.tag_for(tags, EngineLane.PAIR_ENGINE) is ViewTag.THEORETICAL
+    }
+    assert previews <= build.pair_preview_mechanics()
+    assert previews
+
+
+def test_a_lane_nobody_declared_a_tag_for_raises() -> None:
+    """Answering APPLIED there is how a preview joins a coupled total."""
+    from src.calculator.item_behavior import EngineLane
+    from src.calculator.program import build
+
+    with pytest.raises(KeyError, match="no view tag is declared"):
+        build.tag_for({}, EngineLane.PAIR_ENGINE)
+
+
+def test_one_mechanic_may_not_declare_two_meanings_for_one_lane() -> None:
+    """The merge raises rather than taking whichever row was iterated last."""
+    from types import MappingProxyType
+
+    from src.calculator.program import build
+    from src.calculator.trigger_stream import Engine
+
+    halves = {
+        "pair": SimpleNamespace(
+            mechanic="clashing",
+            view_tags=MappingProxyType({Engine.PAIR: ViewTag.THEORETICAL}),
+        ),
+        "walk": SimpleNamespace(
+            mechanic="clashing",
+            view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
+        ),
+    }
+    original = build.CAPABILITIES
+    build.declared_view_tags.cache_clear()
+    try:
+        build.CAPABILITIES = halves
+        with pytest.raises(ValueError, match="two declared meanings"):
+            build.declared_view_tags()
+    finally:
+        build.CAPABILITIES = original
+        build.declared_view_tags.cache_clear()

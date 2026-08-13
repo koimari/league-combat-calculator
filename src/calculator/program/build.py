@@ -25,7 +25,7 @@ grow a fourth by accident.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -41,6 +41,7 @@ from ..trigger_stream import (
     HolderStacking,
     packet_source_literal,
 )
+from ..ability_spec import Quantity
 from .views import ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
@@ -59,6 +60,98 @@ class Projection(Enum):
 
     SCORE = "score"
     RECEIPT = "receipt"
+
+
+class MixedViewFold(TypeError):
+    """Two numbers meaning different things were added together.
+
+    A ``TypeError`` and not a ``ValueError``, because the operands are not
+    the same *kind* of number: one is what the coupled walk delivered and the
+    other is what a single pair fight would have produced.  Their sum is not
+    a wrong total, it is not a total.
+    """
+
+    def __init__(self, left: ViewTag, right: ViewTag) -> None:
+        """Name both meanings, because the fix depends on which is wrong."""
+        super().__init__(
+            f"a {left.value} quantity may not be folded with a {right.value} "
+            "one; a sum may never mix views (D-62)"
+        )
+        self.left = left
+        self.right = right
+
+
+@dataclass(frozen=True, slots=True)
+class Tagged:
+    """A quantity and what it means — the only thing a fold may add.
+
+    ``Quantity.__add__`` (D-72) propagates *dispositions* through a sum: a
+    withheld member makes the total withheld, a structural zero folds as
+    zero.  It says nothing about views, because a disposition answers "did a
+    rule produce this" and a tag answers "which engine's answer is it".  Both
+    have to survive a sum, and the second is the one Imperial Mandate got
+    wrong: the pair engine's preview and the coupled walk's delivery are both
+    ``MEASURED``, both real, and adding them counts the mechanic twice.
+
+    So the tag rides the quantity through the algebra, and a fold of two
+    different tags raises rather than producing a number.  That is what
+    "folding differently-tagged sources is a construction error" means:
+    unrepresentable, not merely tested for.
+    """
+
+    quantity: Quantity
+    tag: ViewTag
+
+    def __add__(self, other: object) -> "Tagged":
+        """Fold two quantities that mean the same thing, or refuse."""
+        if not isinstance(other, Tagged):
+            return NotImplemented
+        if other.tag is not self.tag:
+            raise MixedViewFold(self.tag, other.tag)
+        return Tagged(quantity=self.quantity + other.quantity, tag=self.tag)
+
+
+def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
+    """Add every part, propagating both the disposition and the view.
+
+    Raises:
+        MixedViewFold: two parts carry different tags.
+        ValueError: there are no parts.  An empty fold has no view to carry,
+            and answering ``Measured(0.0)`` would invent one -- which is the
+            zero-versus-absent confusion the whole campaign is about, at the
+            aggregate.
+    """
+    total: Tagged | None = None
+    for part in parts:
+        total = part if total is None else total + part
+    if total is None:
+        raise ValueError(
+            "an empty fold has no view tag to carry; a total over nothing is "
+            "not a measured zero"
+        )
+    return total
+
+
+def tag_for(view_tags: Mapping[EngineLane, ViewTag], lane: EngineLane) -> ViewTag:
+    """What a declared mechanic's number means in *lane*, or a named refusal.
+
+    D-62's lookup, as one total function.  It raises rather than defaulting:
+    a lane nobody declared a tag for is a lane whose numbers have no declared
+    meaning, and answering ``APPLIED`` there is precisely how a pair-authored
+    preview gets summed into a coupled total with no symptom.
+
+    Module-level, and both readers go through it -- :meth:`MechanicView.
+    tag_for` for a compiled program and :func:`declared_view_tags` for the
+    live registry -- because a second implementation of "what does this
+    number mean" is a second answer waiting to differ from the first.
+    """
+    try:
+        return view_tags[lane]
+    except KeyError:
+        raise KeyError(
+            f"no view tag is declared for {lane.value}; a number with no "
+            "declared meaning may not be folded into a total"
+        ) from None
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,18 +175,12 @@ class MechanicView:
     def tag_for(self, lane: EngineLane) -> ViewTag:
         """What this mechanic's number means in *lane*, or a named refusal.
 
-        Raises rather than defaulting: a lane nobody declared a tag for is a
-        lane whose numbers have no declared meaning, and answering
-        ``APPLIED`` there is precisely how a pair-authored preview gets
-        summed into a coupled total with no symptom (D-62).
+        Delegates to the module-level :func:`tag_for` so there is exactly one
+        implementation of D-62's lookup.  Two would be two answers to "what
+        does this number mean", which is the question the rule exists to have
+        one answer to.
         """
-        try:
-            return self.view_tags[lane]
-        except KeyError:
-            raise KeyError(
-                f"no view tag is declared for {lane.value}; a number with no "
-                "declared meaning may not be folded into a total"
-            ) from None
+        return tag_for(self.view_tags, lane)
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,11 +239,52 @@ class CapabilityView:
         return tuple(
             (mechanic, lane)
             for mechanic, view in sorted(self.mechanics.items())
-            for lane, declared in sorted(
-                view.view_tags.items(), key=lambda e: e[0].value
-            )
-            if declared is tag
+            for lane in sorted(view.view_tags, key=lambda member: member.value)
+            if view.tag_for(lane) is tag
         )
+
+
+#: How one declared engine half widens into the lanes that read its numbers.
+#: A pair half is read by the pair engine; a walk half is read by both walks,
+#: which is the widening ``program/`` owns -- the bus may not name
+#: ``EngineLane`` at all, because that enum's home opens ``data/`` at import
+#: and the bus is a leaf that may not (D-35).
+_LANES_OF: Mapping[Engine, tuple[EngineLane, ...]] = MappingProxyType(
+    {
+        Engine.PAIR: (EngineLane.PAIR_ENGINE,),
+        Engine.WALK: (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK),
+    }
+)
+
+
+@cache
+def declared_view_tags() -> Mapping[MechanicId, Mapping[EngineLane, ViewTag]]:
+    """The live registry's tags, per mechanic, widened to the reading lanes.
+
+    A mechanic's two engine halves are two capability rows and one answer:
+    the tags merge into a single ``(lane -> tag)`` mapping, which is what
+    makes :func:`tag_for` *total* over the lanes a mechanic is read by rather
+    than a lookup into whichever half a caller happened to hold.  Two rows
+    declaring the same ``(mechanic, lane)`` differently raise here, at the
+    first read, instead of resolving to whichever was iterated last.
+
+    Cached because the registry is frozen at import.
+    """
+    tags: dict[MechanicId, dict[EngineLane, ViewTag]] = {}
+    for capability in CAPABILITIES.values():
+        declared = tags.setdefault(MechanicId(capability.mechanic), {})
+        for engine, tag in capability.view_tags.items():
+            for lane in _LANES_OF[engine]:
+                if declared.setdefault(lane, tag) is not tag:
+                    raise ValueError(
+                        f"{capability.mechanic!r} declares two tags for "
+                        f"{lane.value}: {declared[lane].value} and "
+                        f"{tag.value}; a number with two declared meanings "
+                        "may not be folded into a total"
+                    )
+    return MappingProxyType(
+        {mechanic: MappingProxyType(declared) for mechanic, declared in tags.items()}
+    )
 
 
 @cache
@@ -175,14 +303,14 @@ def pair_preview_mechanics() -> frozenset[str]:
     renamed to the other.
     """
     previewed: set[str] = set()
-    for capability in CAPABILITIES.values():
-        if capability.view_tags.get(Engine.PAIR) is not ViewTag.THEORETICAL:
+    for mechanic, declared in declared_view_tags().items():
+        if EngineLane.PAIR_ENGINE not in declared:
             continue
-        previewed.add(capability.mechanic)
+        if tag_for(declared, EngineLane.PAIR_ENGINE) is not ViewTag.THEORETICAL:
+            continue
+        previewed.add(str(mechanic))
         previewed.update(
-            walk.mechanic
-            for walk in CAPABILITIES.values()
-            if walk.pair_of == capability.mechanic
+            walk.mechanic for walk in CAPABILITIES.values() if walk.pair_of == mechanic
         )
     return frozenset(previewed)
 
@@ -530,6 +658,11 @@ def route_policy_of(event: PairEvent) -> RoutePolicy:
 
 __all__ = [
     "CapabilityView",
+    "MixedViewFold",
+    "Tagged",
+    "declared_view_tags",
+    "fold_tagged",
+    "tag_for",
     "DerivationCycle",
     "MechanicView",
     "PairProgram",

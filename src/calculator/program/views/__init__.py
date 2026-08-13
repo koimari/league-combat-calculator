@@ -139,10 +139,14 @@ class LeafBlock:
     there, which is the drift the single writer exists to make impossible.
     """
 
-    __slots__ = ("_dot", "_prefix", "_records", "_set", "_target", "_writer")
+    __slots__ = ("_dot", "_prefix", "_records", "_set", "_tag", "_target", "_writer")
 
     def __init__(
-        self, writer: "LeafWriter", target: MutableMapping[str, object], prefix: str
+        self,
+        writer: "LeafWriter",
+        target: MutableMapping[str, object],
+        prefix: str,
+        tag: ViewTag,
     ) -> None:
         """Bind one target mapping to the path prefix its keys hang under.
 
@@ -161,17 +165,26 @@ class LeafBlock:
         self._target = target
         self._prefix = prefix
         self._dot = f"{prefix}." if prefix else ""
+        self._tag = tag
         self._records = writer.records
         self._set = target.__setitem__
 
-    def put(self, key: str, quantity: Quantity, tag: ViewTag = ViewTag.APPLIED) -> None:
+    def put(self, key: str, quantity: Quantity) -> None:
         """Serialize one leaf into the block and record its entry.
 
         A withheld quantity writes no key at all.  The entry lands either way,
         which is the asymmetry that lets a consumer tell "refused, and here is
         why" from "this payload has no such field".
+
+        The tag is the block's.  It used to default to ``APPLIED`` on every
+        write, which made "every serialized field carries exactly one
+        ``ViewTag``" true of a constant rather than of anything anybody
+        declared -- a map recording what the writer's signature said instead
+        of what the view meant.  A block is the unit a projection lane
+        applies to, so the tag is stated once, where the block is opened, and
+        no leaf can acquire one by omission.
         """
-        out = serialize_leaf(f"{self._dot}{key}", quantity, tag)
+        out = serialize_leaf(f"{self._dot}{key}", quantity, self._tag)
         # pylint: disable-next=protected-access
         self._writer._record(out)
         if out.present:
@@ -184,7 +197,7 @@ class LeafBlock:
         nested leaf's map key is still the path a reader would walk to reach
         it.
         """
-        return LeafBlock(self._writer, target, f"{self._dot}{key}")
+        return LeafBlock(self._writer, target, f"{self._dot}{key}", self._tag)
 
     def structure(self, key: str, value: object) -> None:
         """Publish a nested object or list, naming every quantity inside it.
@@ -221,7 +234,7 @@ class LeafBlock:
         """One nested value, rebuilt with every float written as a leaf."""
         if isinstance(value, Mapping):
             out: dict[str, object] = {}
-            block = LeafBlock(self._writer, out, path)
+            block = LeafBlock(self._writer, out, path, self._tag)
             for key, member in value.items():
                 block.publish(key, member)
             return out
@@ -242,9 +255,7 @@ class LeafBlock:
         """
         self._set(key, value)
 
-    def optional_measured(
-        self, key: str, value: float | None, tag: ViewTag = ViewTag.APPLIED
-    ) -> None:
+    def optional_measured(self, key: str, value: float | None) -> None:
         """A number the walk may not have: published as ``null``, with no entry.
 
         An actor who did not die has no death time, which is a different
@@ -256,9 +267,9 @@ class LeafBlock:
         if value is None:
             self._set(key, None)
             return
-        self.measured(key, value, tag)
+        self.measured(key, value)
 
-    def measured(self, key: str, value: float, tag: ViewTag = ViewTag.APPLIED) -> None:
+    def measured(self, key: str, value: float) -> None:
         """``put`` for the overwhelmingly common case: a rule produced this.
 
         Spelled out rather than defaulted into ``put`` so that wrapping a
@@ -278,7 +289,7 @@ class LeafBlock:
         if not self._records:
             self._set(key, float(value))
             return
-        self.put(key, Measured(amount=float(value)), tag)
+        self.put(key, Measured(amount=float(value)))
 
 
 class LeafWriter:
@@ -307,9 +318,22 @@ class LeafWriter:
         """Start with an empty map; a payload with no leaves has no entries."""
         self._entries: dict[str, dict[str, object]] = {}
 
-    def block(self, target: MutableMapping[str, object], prefix: str) -> LeafBlock:
-        """A binder for one sub-object of the payload at ``prefix``."""
-        return LeafBlock(self, target, prefix)
+    def block(
+        self,
+        target: MutableMapping[str, object],
+        prefix: str,
+        tag: ViewTag = ViewTag.APPLIED,
+    ) -> LeafBlock:
+        """A binder for one sub-object of the payload at ``prefix``.
+
+        ``tag`` is what the numbers in this block *mean*, and it defaults to
+        ``APPLIED`` here and nowhere else: the five views project the coupled
+        walk, which is what applied means, and a lane whose numbers are a
+        pair-engine preview opens its block saying ``THEORETICAL``.  Stating
+        it once per block rather than once per leaf is what stops a tag being
+        acquired by forgetting to pass one.
+        """
+        return LeafBlock(self, target, prefix, tag)
 
     def _record(self, out: LeafOut) -> None:
         """File one serialized leaf's entry; the block writes the value."""

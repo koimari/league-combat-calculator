@@ -55,14 +55,17 @@ def tdd_leaves(
     """
     fold = result.objective
     block: dict[str, Any] = {}
-    leaf = writer.block(block, "objective")
+    # The block says what its numbers mean, once.  Every aggregate here is
+    # what the coupled walk delivered against the roster; a pair-authored
+    # preview is THEORETICAL and D-62 forbids folding one into a coupled
+    # total, so none reaches this block at all.
+    leaf = writer.block(block, "objective", ViewTag.APPLIED)
     leaf.measured(
         "main_team_damage_before_death",
         round_field(
             "objective.main_team_damage_before_death",
             fold.main_team_damage_before_death,
         ),
-        ViewTag.APPLIED,
     )
     leaf.measured(
         "enemy_team_damage_before_death",
@@ -70,7 +73,6 @@ def tdd_leaves(
             "objective.enemy_team_damage_before_death",
             fold.enemy_team_damage_before_death,
         ),
-        ViewTag.APPLIED,
     )
     leaf.raw("surviving_main_team", int(fold.surviving_main_team))
     leaf.raw("focus_participant_id", program.focus)
@@ -79,13 +81,11 @@ def tdd_leaves(
         round_field(
             "objective.focus_damage_before_death", fold.focus_damage_before_death
         ),
-        ViewTag.APPLIED,
     )
     leaf.structure("focus_survival", rows.get(program.focus))
     leaf.measured(
         "focus_support_value",
         round_field("objective.focus_support_value", fold.focus_support_value),
-        ViewTag.APPLIED,
     )
     leaf.structure(
         "focus_utility_outcomes", result.utility_by_actor.get(program.focus, {})
@@ -93,31 +93,26 @@ def tdd_leaves(
     leaf.measured(
         "focus_healing",
         round_field("objective.focus_healing", fold.focus_healing),
-        ViewTag.APPLIED,
     )
     leaf.measured(
         "main_team_effective_health",
         round_field(
             "objective.main_team_effective_health", fold.main_team_effective_health
         ),
-        ViewTag.APPLIED,
     )
     leaf.measured(
         "enemy_team_effective_health",
         round_field(
             "objective.enemy_team_effective_health", fold.enemy_team_effective_health
         ),
-        ViewTag.APPLIED,
     )
     leaf.measured(
         "total_support_value",
         round_field("objective.total_support_value", fold.total_support_value),
-        ViewTag.APPLIED,
     )
     leaf.measured(
         "total_healing_reduced",
         round_field("objective.total_healing_reduced", fold.total_healing_reduced),
-        ViewTag.APPLIED,
     )
     return block
 
