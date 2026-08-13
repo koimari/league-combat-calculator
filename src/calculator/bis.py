@@ -27,6 +27,7 @@ from .optimizer import (
     optimizer_supported_items,
 )
 from .pipeline import DEFAULT_FIGHT_DURATION
+from .program.views import LeafWriter
 from .participant_timeline import build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
@@ -550,6 +551,35 @@ def _bis_coverage_receipt(
 # The public interface stays deliberately small; the internal orchestration
 # mirrors one candidate through every coverage and scoring gate.
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def _bis_dispositions(
+    certified: list[dict], partial: list[dict]
+) -> dict[str, dict[str, object]]:
+    """The payload's parallel ``dispositions`` map, keyed by leaf path.
+
+    The two score leaves are re-written through the one writer at their final
+    ranked index -- assigning an existing key keeps its position, so the
+    published row is byte-identical and the entry is produced beside it by
+    ``serialize_leaf`` rather than by a second pass over the payload.  The
+    survival entries the combat receipt produced ride along on each row and
+    are re-keyed to the path the leaf now lives at; nothing here produces an
+    entry for a leaf it did not also write.
+    """
+    writer = LeafWriter()
+    entries: dict[str, dict[str, object]] = {}
+    for block_name, rows in (
+        ("candidates", certified),
+        ("partial_candidates", partial),
+    ):
+        for index, row in enumerate(rows):
+            prefix = f"{block_name}[{index}]"
+            leaf = writer.block(row, prefix)
+            leaf.measured("score", row["score"])
+            leaf.measured("objective_value", row["objective_value"])
+            for path, entry in row.pop("_survival_dispositions", {}).items():
+                entries[f"{prefix}.survival.{path}"] = entry
+    return {**writer.entries(), **entries}
+
+
 def bis_payload(data: Mapping[str, object]) -> dict:
     """Rank one slot and return the complete JSON-safe BIS receipt."""
     request = parse_scenario_request(data, deterministic=True, parse_crossover=False)
@@ -702,6 +732,7 @@ def bis_payload(data: Mapping[str, object]) -> dict:
                     )
                 )
                 continue
+            survival_prefix = f"participants.survival.{focus_id}."
             objective = combat["objective"]
             focus = next(
                 row
@@ -718,6 +749,17 @@ def bis_payload(data: Mapping[str, object]) -> dict:
             )
             ranked.append(
                 {
+                    # Every entry the combat receipt produced for the focus
+                    # participant's survival row, carried with the row that
+                    # embeds it.  Re-keyed (not re-produced) below: the
+                    # entry came out of ``serialize_leaf`` beside the leaf
+                    # it describes, and BIS only moves both to the path the
+                    # leaf now lives at.
+                    "_survival_dispositions": {
+                        path[len(survival_prefix) :]: entry
+                        for path, entry in combat.get("dispositions", {}).items()
+                        if path.startswith(survival_prefix)
+                    },
                     "name": candidate["name"],
                     "icon": https_icon(candidate.get("icon", "")),
                     "score": round(score, 1),
@@ -769,6 +811,7 @@ def bis_payload(data: Mapping[str, object]) -> dict:
     coverage_receipt, target_note, timing_excluded = _bis_coverage_receipt(
         certified, partial, withheld, target_filtered
     )
+    dispositions = _bis_dispositions(certified, partial)
     return {
         "objective": objective_meta,
         "defensive_effects": {
@@ -794,4 +837,5 @@ def bis_payload(data: Mapping[str, object]) -> dict:
         "target_coverage_filtered": len(target_filtered),
         "target_coverage_note": target_note,
         "timing_excluded_candidate_count": len(timing_excluded),
+        "dispositions": dispositions,
     }

@@ -408,7 +408,21 @@ def _priced(entry):
         key: {name: value for name, value in fight.items() if name != "rotation"}
         for key, fight in entry["fights"].items()
     }
-    return _without_coverage_prose({**entry, "fights": fights})
+    # ``dispositions`` is Phase 4 S9's parallel map: one entry per published
+    # leaf, saying whether a rule produced that number.  It is a receipt
+    # *about* the numbers rather than one of them, and it did not exist when
+    # this baseline was captured, so it joins the prose this comparison
+    # excludes.  Its own coverage is asserted in
+    # ``tests/test_payload_dispositions.py``, two-way, against a live run.
+    combat = {
+        name: value
+        for name, value in entry.get("combat", {}).items()
+        if name != "dispositions"
+    }
+    trimmed = {**entry, "fights": fights}
+    if "combat" in entry:
+        trimmed["combat"] = combat
+    return _without_coverage_prose(trimmed)
 
 
 _PIN_SPLINTERS = (39, 60, 120)

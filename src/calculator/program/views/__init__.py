@@ -32,13 +32,20 @@ that reach *further*, and a module that imports nothing cannot.
 
 from __future__ import annotations
 
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from enum import Enum
 
 from ...ability_spec import Disposition, Measured, Quantity, StructuralZero, Withheld
 
-__all__ = ["LeafBlock", "LeafOut", "LeafWriter", "ViewTag", "serialize_leaf"]
+__all__ = [
+    "DISCARD",
+    "LeafBlock",
+    "LeafOut",
+    "LeafWriter",
+    "serialize_leaf",
+    "ViewTag",
+]
 
 
 class ViewTag(Enum):
@@ -155,6 +162,77 @@ class LeafBlock:
         if out.present:
             self._target[key] = out.value
 
+    def nested(self, target: MutableMapping[str, object], key: str) -> "LeafBlock":
+        """A block for a sub-object of this one, at ``prefix.key``.
+
+        The path grows with the payload rather than being respelled, so a
+        nested leaf's map key is still the path a reader would walk to reach
+        it.
+        """
+        return LeafBlock(self._writer, target, f"{self._prefix}.{key}")
+
+    def structure(self, key: str, value: object) -> None:
+        """Publish a nested object or list, naming every quantity inside it.
+
+        A receipt sub-object -- an armed multiplier, a resistance-reduction
+        list, a per-source damage row -- holds real numbers, and a number
+        inside a nested block is no less a published leaf than one at the top.
+        Walking it here is what keeps "every published quantity is named" true
+        of the shapes a payload nests rather than only of the ones it
+        flattens; every float found is written through the same
+        :func:`serialize_leaf`, at the path a reader would walk to reach it.
+        """
+        self._target[key] = self._walk(value, f"{self._prefix}.{key}")
+
+    def _walk(self, value: object, path: str) -> object:
+        """One nested value, rebuilt with every float written as a leaf."""
+        if isinstance(value, Mapping):
+            out: dict[str, object] = {}
+            block = LeafBlock(self._writer, out, path)
+            for key, member in value.items():
+                (
+                    block.structure(key, member)
+                    if isinstance(member, (Mapping, list, tuple))
+                    else (
+                        block.measured(key, member)
+                        if isinstance(member, float) and not isinstance(member, bool)
+                        else block.raw(key, member)
+                    )
+                )
+            return out
+        if isinstance(value, (list, tuple)):
+            return [
+                self._walk(member, f"{path}[{index}]")
+                for index, member in enumerate(value)
+            ]
+        return value
+
+    def raw(self, key: str, value: object) -> None:
+        """Publish a non-numeric leaf: a label, a flag, a list, an id.
+
+        No entry, deliberately.  The ``dispositions`` map answers "is this
+        number one a rule produced", and a string has no answer to give; an
+        entry for one would make the map's own key set stop meaning "the
+        payload's numbers".
+        """
+        self._target[key] = value
+
+    def optional_measured(
+        self, key: str, value: float | None, tag: ViewTag = ViewTag.APPLIED
+    ) -> None:
+        """A number the walk may not have: published as ``null``, with no entry.
+
+        An actor who did not die has no death time, which is a different
+        published answer from dying at t=0 -- and the row's own
+        ``survived_window`` is that answer's receipt.  ``null`` is not a
+        number, so it carries no disposition and the payload-schema test
+        reads it as absent rather than as a leaf missing its entry.
+        """
+        if value is None:
+            self._target[key] = None
+            return
+        self.measured(key, value, tag)
+
     def measured(self, key: str, value: float, tag: ViewTag = ViewTag.APPLIED) -> None:
         """``put`` for the overwhelmingly common case: a rule produced this.
 
@@ -209,3 +287,32 @@ class LeafWriter:
             for path, entry in self._entries.items()
             if entry["disposition"] == Disposition.WITHHELD.value
         )
+
+
+class _DiscardingWriter(LeafWriter):
+    """The writer for rows nobody serializes.
+
+    The optimizer evaluates thousands of candidates per search and never shows
+    one to anybody: its score rows exist to be compared and thrown away.
+    Building a ``dispositions`` map for each of them would put a few hundred
+    dict entries per evaluation on the hot path, which the phase's allocation
+    gate measures and refuses -- and it would be a map describing a payload
+    that is never a payload.
+
+    Discarding is a *stated* choice rather than an omission, which is the
+    point of it being a named object: a leaf written through this writer is
+    still born in :func:`serialize_leaf`, so the rows are identical to the
+    published ones, and the only thing that does not happen is the recording.
+    """
+
+    __slots__ = ()
+
+    def _record(self, out: LeafOut) -> None:
+        """Record nothing; the caller has already said nobody will read it."""
+
+    def entries(self) -> dict[str, dict[str, object]]:
+        """Always empty -- and a payload that published this would say so."""
+        return {}
+
+
+DISCARD = _DiscardingWriter()

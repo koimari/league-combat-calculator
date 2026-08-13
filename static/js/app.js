@@ -191,6 +191,32 @@ const eventTime = (event) => {
   return Number.isFinite(time) ? time : null;
 };
 const percent = (value) => `${value.toFixed(value < 10 ? 1 : 0)}%`;
+// Phase 4 S9's one budgeted UI change: how a *withheld* leaf renders.
+//
+// A payload publishes numbers plus a parallel `dispositions` map keyed by leaf
+// path. Measured and structurally-zero leaves are unchanged bare numbers and
+// every renderer below reads them exactly as before. A WITHHELD leaf is
+// different in kind: coverage refused to model it, so the payload carries no
+// number for it at all and the map carries the receipts instead.
+//
+// Rendering that as a blank, a 0 or a NaN is the failure this whole campaign
+// is named after — a number nobody computed made indistinguishable from one
+// computed as zero. So it renders as a named refusal, in one place, and every
+// caller reaches it through `leafText`.
+const withheldMarker = (entry) => {
+  const receipts = (entry && entry.receipts) || [];
+  const why = receipts.length ? receipts.join("; ") : "no receipt was published";
+  return `<span class="leaf-withheld" title="${escapeHtml(why)}">withheld</span>`;
+};
+// One published leaf, rendered: the number when there is one, the named
+// refusal when the model declined to produce one.
+const leafText = (value, path, dispositions, format = fmt) => {
+  const entry = dispositions ? dispositions[path] : null;
+  if (entry && entry.disposition === "WITHHELD") return withheldMarker(entry);
+  if (value == null) return withheldMarker(entry);
+  return escapeHtml(format(value));
+};
+
 const plural = (count, singular, pluralForm = `${singular}s`) => count === 1 ? singular : pluralForm;
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
 

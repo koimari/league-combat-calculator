@@ -26,11 +26,14 @@ from __future__ import annotations
 from typing import Any
 
 from ..precision import round_field
+from . import LeafWriter
 
-__all__ = ["breakdown"]
+__all__ = ["breakdown", "breakdown_leaves"]
 
 
-def breakdown(program: Any, result: Any) -> list[dict[str, Any]]:
+def breakdown_leaves(
+    program: Any, result: Any, writer: LeafWriter, prefix: str = "breakdown"
+) -> list[dict[str, Any]]:
     """Project the walk into the published per-attacker rows.
 
     ``result.outcomes`` is index-aligned with ``program.actors``.  The
@@ -53,29 +56,47 @@ def breakdown(program: Any, result: Any) -> list[dict[str, Any]]:
             "participant behind it is a number about nobody"
         )
     rows: list[dict[str, Any]] = []
-    for outcome in result.outcomes:
-        row: dict[str, Any] = {
-            "participant_id": outcome.participant_id,
-            "team": outcome.team,
-            "champion": outcome.champion,
-            "total_damage": round_field("total_damage", outcome.total_damage),
-            "sources": list(outcome.sources),
-            "outgoing_damage_before_death": round_field(
-                "outgoing_damage_before_death", outcome.total_damage
-            ),
-            "incoming_damage": round_field("incoming_damage", outcome.incoming_damage),
-            "health_damage": outcome.health_damage,
-            "shield_absorbed": outcome.shield_absorbed,
-            "effective_health": outcome.effective_health,
-            "healing_received": outcome.healing_received,
-            "healing_reduced": outcome.healing_reduced,
-            "support_shield_received": outcome.support_shield_received,
-            "support_value": round_field("support_value", outcome.support_value),
-            "healing_output": round_field("healing_output", outcome.healing_output),
-        }
+    for index, outcome in enumerate(result.outcomes):
+        row: dict[str, Any] = {}
+        leaf = writer.block(row, f"{prefix}[{index}]")
+        leaf.raw("participant_id", outcome.participant_id)
+        leaf.raw("team", outcome.team)
+        leaf.raw("champion", outcome.champion)
+        leaf.measured("total_damage", round_field("total_damage", outcome.total_damage))
+        leaf.structure("sources", list(outcome.sources))
+        leaf.measured(
+            "outgoing_damage_before_death",
+            round_field("outgoing_damage_before_death", outcome.total_damage),
+        )
+        leaf.measured(
+            "incoming_damage",
+            round_field("incoming_damage", outcome.incoming_damage),
+        )
+        leaf.measured("health_damage", outcome.health_damage)
+        leaf.measured("shield_absorbed", outcome.shield_absorbed)
+        leaf.measured("effective_health", outcome.effective_health)
+        leaf.measured("healing_received", outcome.healing_received)
+        leaf.measured("healing_reduced", outcome.healing_reduced)
+        leaf.measured("support_shield_received", outcome.support_shield_received)
+        leaf.measured(
+            "support_value", round_field("support_value", outcome.support_value)
+        )
+        leaf.measured(
+            "healing_output", round_field("healing_output", outcome.healing_output)
+        )
         if outcome.utility_outcomes is not None:
-            row["utility_outcomes"] = outcome.utility_outcomes
-        row["survived_window"] = bool(outcome.survived_window)
-        row["death_time"] = outcome.death_time
+            leaf.raw("utility_outcomes", outcome.utility_outcomes)
+        leaf.raw("survived_window", bool(outcome.survived_window))
+        leaf.optional_measured("death_time", outcome.death_time)
         rows.append(row)
     return rows
+
+
+def breakdown(program: Any, result: Any) -> list[dict[str, Any]]:
+    """The published rows on their own, for a caller that wants only them.
+
+    The payload views call :func:`breakdown_leaves` with the payload's own
+    writer, because one payload carries one ``dispositions`` map.  This is the
+    view's front door and the shape criterion 3 checks.
+    """
+    return breakdown_leaves(program, result, LeafWriter())

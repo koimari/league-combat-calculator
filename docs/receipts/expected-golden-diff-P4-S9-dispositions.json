@@ -1,0 +1,72 @@
+{
+  "slice": "P4-S9-dispositions",
+  "dated": "2026-08-13",
+  "decisions": [
+    "D-63 \u2014 CAPABILITY_SCHEMA_VERSION takes 4: the published payload gained the dispositions map.",
+    "D-72 \u2014 serialize_leaf is the only producer of a payload leaf and of that leaf's entry.",
+    "R-17/D-97 \u2014 landed against the committed coupled baseline plus this allowlist; the baseline is re-captured at the phase boundary, never here.",
+    "R-20 \u2014 S9 is a pure stage, so its declared count is 0 for moved numbers; every occurrence below is a schema addition and none is a moved value."
+  ],
+  "change": {
+    "one_sentence": "Every payload that publishes a number now publishes a parallel dispositions map beside it, keyed by leaf path, saying whether a rule produced that number.",
+    "site": "src/calculator/program/views/__init__.py::serialize_leaf, consumed by the five views",
+    "wire_shape": "MEASURED and STRUCTURAL_ZERO leaves are unchanged bare numbers; a WITHHELD leaf is absent from the payload while its entry remains, carrying the receipts."
+  },
+  "qualifying_population": {
+    "enumerated_before_the_src_edit": false,
+    "why": "R-20's second half. The count is a property of the coupled scenario set rather than of the change: the map is one new leaf per captured combat receipt, so the population is exactly the scenarios in scripts/golden_coupled_baseline.json that carry a combat block. That set is committed and was read from it.",
+    "enumerated_from": "scripts/golden_coupled_baseline.json (committed)",
+    "rule": "One leaf per scenario carrying a combat block; leaf_report treats the whole map as one leaf rather than recursing into it, so no scenario contributes more than one.",
+    "size": 10
+  },
+  "expected_qualifying_occurrences": 10,
+  "measured": {
+    "pair_golden": "zero diffs \u2014 the map is coupled-path output and golden enters through pipeline.run_fight (D-93).",
+    "coupled_golden_total_diffs": 142,
+    "coupled_golden_diffs_this_slice_adds": 10,
+    "numeric_leaves_moved": 0,
+    "transition": "absent_to_value on every one \u2014 a block that did not exist at capture, not a number that changed"
+  },
+  "oracle_pass": {
+    "status": "NOT_OWED_NO_OLD_VALUE",
+    "why": "R-19 asks an independent investigator to adjudicate between an old and a new value. Every occurrence below is absent_to_value on a newly published schema block: there is no old value to adjudicate and no arithmetic to reproduce from cached wiki text. The occurrences are declared here so the orchestrator's pass has its population and can record the same finding rather than discovering it.",
+    "numeric_evidence": "tests/test_payload_dispositions.py asserts the map's key set equals the payload's published quantities, both directions, against a live run \u2014 the non-golden numeric gate this slice cites (D-93)."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 \u2014 no baseline moves inside this commit"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/catalyst_roster/combat/dispositions",
+      "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions",
+      "/coupled_scenarios/dream_maker_roster/combat/dispositions",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_120/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_39/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_60/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_120/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_39/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_60/combat/dispositions"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ]
+  },
+  "qualifying_occurrences": [
+    "/coupled_scenarios/catalyst_roster/combat/dispositions",
+    "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions",
+    "/coupled_scenarios/dream_maker_roster/combat/dispositions",
+    "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions",
+    "/coupled_scenarios/syndra_custom_order_120/combat/dispositions",
+    "/coupled_scenarios/syndra_custom_order_39/combat/dispositions",
+    "/coupled_scenarios/syndra_custom_order_60/combat/dispositions",
+    "/coupled_scenarios/syndra_derived_order_120/combat/dispositions",
+    "/coupled_scenarios/syndra_derived_order_39/combat/dispositions",
+    "/coupled_scenarios/syndra_derived_order_60/combat/dispositions"
+  ]
+}

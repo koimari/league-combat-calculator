@@ -507,7 +507,7 @@ def test_a_fold_that_lost_a_participant_raises_rather_than_publishing_short() ->
         )
 
 
-def test_the_score_payload_is_the_four_keys_a_candidate_is_scored_from() -> None:
+def test_the_score_payload_is_the_keys_a_candidate_is_scored_from() -> None:
     """One projection, so score mode and receipt mode cannot disagree."""
     payload = score.score(
         roster_program([_actor()]),
@@ -548,3 +548,61 @@ def test_the_score_view_publishes_the_roster_identity_not_the_folded_one() -> No
     )
     assert payload["participants"][0]["champion"] == "Syndra"
     assert payload["breakdown"][0]["champion"] == ""
+
+
+def test_the_score_payload_carries_no_dispositions_map() -> None:
+    """It is compared and thrown away; nobody ever serializes one.
+
+    The published score surfaces build their own map over the leaves they
+    publish.  Building one per candidate would put a few hundred dict entries
+    on the optimizer's hot path -- which the phase's allocation gate measures
+    and refuses -- to describe a payload that is never a payload.
+    """
+    payload = score.score(
+        roster_program([_actor()]), _result([_state()], outcomes=(_outcome(),))
+    )
+    assert "dispositions" not in payload
+
+
+# ---------------------------------------------------------------------------
+# The UI's one budgeted change — a withheld leaf renders as a named refusal
+# ---------------------------------------------------------------------------
+
+APP_JS = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js"
+
+
+def test_the_ui_has_one_shared_withheld_marker_and_one_leaf_reader() -> None:
+    """S9's one budgeted UI change, pinned as one.
+
+    Two helpers and no third: a second place that decided how a refusal looks
+    is a second place that could decide it looks like a blank.
+    """
+    source = APP_JS.read_text(encoding="utf-8")
+    assert source.count("const withheldMarker = ") == 1
+    assert source.count("const leafText = ") == 1
+
+
+def test_a_withheld_leaf_never_renders_as_a_blank_a_zero_or_a_nan() -> None:
+    """The failure this campaign is named after, at the last inch of it."""
+    source = APP_JS.read_text(encoding="utf-8")
+    start = source.index("const withheldMarker = ")
+    body = source[start : source.index("function invalidateOptimization", start)]
+    assert 'disposition === "WITHHELD"' in body
+    assert "withheld" in body
+    # The reader falls through to the marker when the payload carries no
+    # number, which is exactly the absent-with-a-receipt case.
+    assert "if (value == null) return withheldMarker(entry);" in body
+
+
+def test_a_measured_leaf_still_renders_as_the_bare_number() -> None:
+    """Unchanged rendering of measured leaves, pinned by test (criterion 5).
+
+    The formatter is the payload's own bare number put through the same
+    ``fmt`` every stat card already used; the disposition map changes what a
+    *refusal* looks like and nothing about what a number looks like.
+    """
+    source = APP_JS.read_text(encoding="utf-8")
+    start = source.index("const leafText = ")
+    body = source[start : source.index("function invalidateOptimization", start)]
+    assert "format = fmt" in body
+    assert "return escapeHtml(format(value));" in body

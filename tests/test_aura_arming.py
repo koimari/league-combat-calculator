@@ -198,5 +198,5 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         # C4 took 2 for this phase list; 3.8's coverage flip took 3 for a
         # different payload, so the seven names are still C4's and the
         # version is one past it.
-        assert CAPABILITY_SCHEMA_VERSION == 3
+        assert CAPABILITY_SCHEMA_VERSION == 4
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

@@ -28,7 +28,7 @@ from typing import Any
 
 from ..precision import round_field
 from . import LeafWriter, ViewTag
-from .survival import survival
+from .survival import survival_leaves
 
 __all__ = ["tdd", "tdd_leaves"]
 
@@ -41,7 +41,7 @@ def tdd_leaves(program: Any, result: Any, writer: LeafWriter) -> dict[str, Any]:
     block: the writer is the payload's, the leaves are this view's.
     """
     fold = result.objective
-    rows = survival(program, result)
+    rows = survival_leaves(program, result, writer, "participants.survival")
     block: dict[str, Any] = {}
     leaf = writer.block(block, "objective")
     leaf.measured(

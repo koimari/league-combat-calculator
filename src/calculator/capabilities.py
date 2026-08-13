@@ -37,12 +37,17 @@ from .survival.actions import TransitionRank, public_phase
 # flip changed the serialized coverage payload: ``blocked`` became
 # ``withheld`` (D-23's spelling for a refusal that carries a receipt and no
 # number), and every status and reason is now computed from declarations
-# rather than read out of a hand registry.  The next value is Phase 4's S9 and
-# belongs to no commit before it.
+# rather than read out of a hand registry.  4 is Phase 4's S9: every payload
+# that publishes a number now publishes a parallel ``dispositions`` map beside
+# it, keyed by leaf path, whose entries carry the leaf's ``Disposition`` and
+# its ``ViewTag``.  Measured and structurally-zero leaves are unchanged bare
+# numbers; a withheld leaf is *absent* from the payload while its entry
+# remains, carrying the receipts.  S6's rank split was asserted payload-
+# neutral, so it took no value and S9 takes 4 rather than 5 (D-63).
 #
 # The version moves for a change to the *published payload* and for nothing
 # else, so a derivation edit that comes out byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 3
+CAPABILITY_SCHEMA_VERSION = 4
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in

@@ -26,8 +26,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .breakdown import breakdown
-from .survival import survival
+from . import DISCARD
+from .breakdown import breakdown_leaves
+from .survival import survival_leaves
 
 __all__ = ["score"]
 
@@ -39,7 +40,13 @@ def score(program: Any, result: Any) -> dict[str, Any]:
     compiled score path reproduces the receipt walk's numbers" a statement
     about one function rather than about two that have to be compared.
     """
-    rows = survival(program, result)
+    # No ``dispositions`` map: this payload is compared and thrown away
+    # thousands of times per search and is never serialized to anybody.  The
+    # published score surfaces -- ``/api/bis`` and ``/api/optimize`` -- build
+    # their own map over the leaves they actually publish.  ``DISCARD`` says
+    # that in one word instead of leaving it to a reader to notice.
+    writer = DISCARD
+    rows = survival_leaves(program, result, writer, "participants.survival")
     return {
         "duration": float(result.duration),
         "participants": [
@@ -52,6 +59,6 @@ def score(program: Any, result: Any) -> dict[str, Any]:
             }
             for actor in program.actors
         ],
-        "breakdown": breakdown(program, result),
+        "breakdown": breakdown_leaves(program, result, writer),
         "timeline_coverage": result.timeline_coverage,
     }
