@@ -64,8 +64,7 @@ from src.calculator.item_support_effects import producer_item
 # this one line carries the disable rather than the whole block.
 from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
     CAPABILITIES,
-    CROSS_PARTICIPANT_AUTHORITIES,
-    Engine,
+    cross_participant_packet_source,
 )
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -936,18 +935,19 @@ def _exact_totals(entry):
 def cross_participant_producers():
     """Every packet source that modifies another participant's damage.
 
-    Read from ``trigger_stream.CAPABILITIES`` (R-12), never typed: a walk
-    half whose declared ``authority`` is one of the cross-participant members
-    is a producer, and its ``packet_source`` is the literal a scenario has to
-    equip the owner of.  A seventh producer therefore joins this set on the
-    commit that declares it, and fails capture until a scenario covers it.
+    Read from ``trigger_stream.CAPABILITIES`` (R-12), never typed, and read
+    through the registry's own ``cross_participant_packet_source`` so that
+    "modifies another participant's damage" is decided in one place (D-07,
+    Amendment C) rather than re-spelled here as a pair of conditions this
+    instrument would then own a second copy of.  Each member is the literal a
+    scenario has to equip the owner of, so a seventh producer joins this set
+    on the commit that declares it and fails capture until a scenario covers
+    it.
     """
     return frozenset(
-        capability.packet_source
+        source
         for capability in CAPABILITIES.values()
-        if capability.engine is Engine.WALK
-        and capability.authority in CROSS_PARTICIPANT_AUTHORITIES
-        and capability.packet_source is not None
+        if (source := cross_participant_packet_source(capability)) is not None
     )
 
 

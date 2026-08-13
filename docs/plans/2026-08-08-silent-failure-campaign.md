@@ -79,7 +79,7 @@ list.
 | `black_cleaver.carve` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` — **H1** | The stack ledger is a roster fact; the Cesàro approximation stays pair-side as `THEORETICAL` and may not move in a refactor (`docs/math-foundations.md` §2.3) | 4 |
 | `bloodletters_curse.vile_decay` | Same as Carve — **H1** | Identical shape, magic/ability-gated | 4 |
 | `horizon_focus.hypershot` | `PAIR_ONLY`, declared | Exclusion set is a pair-local rotation fact; ship it first as the amp-kernel canary, expected no-op | 3/4 |
-| `shadowflame.cinderbloom` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` | A `LivePredicate`, never a window; the bonus becomes a rider on its triggering event, and the Liandry reprice is extracted in a prior slice | 4, last |
+| `shadowflame.cinderbloom` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` | A `LivePredicate`, never a window; the bonus becomes a rider on its triggering event, and the Liandry reprice is extracted in a prior slice. Its walk half is **rider-delivered** under Amendment C above — a `RiderDelivery` stamp, no `packet_source` — and its `Subject` is the holder, so it is **not** a cross-participant producer and the ruled producer count does not move when it is declared | 4, last |
 | `force_of_nature.steadfast` | `COUPLED_AUTHORITATIVE` — the stack ledger reads **any roster attacker's** magic damage and CC into the holder (`survival/transitions.py::update_combat_state` keys on `action.attacker`), a roster input under the rule three lines above; the earlier `PAIR_ONLY` reading contradicted both that rule and C5's own receipt-walk blast radius, and is retired | D-08's predicate widening is unchanged. The pair engine's `defensive_effects` DefenseSource schedule is **a distinct surface, not a preview of the coupled number** — it feeds the single-attacker TDD estimate, which is never a score or BIS input, asserted once, structurally. No Phase 4 tagging work exists for this mechanic and none is created here | 0B |
 
 ### Contradictions this revision resolves
@@ -112,6 +112,34 @@ list.
 | D-12 | Repeat-Command stacking ships as a sentinel in 0B and a policy (`merge=EXTEND`) in Phase 3; the sentinel's failure message names D-12. | A correction with no reachable fixture is a declaration wearing a correction's clothes. |
 | D-13 | The expiry boundary is characterized in Phase 0 and declared `OPEN_CLOSED` for all dual-sided mechanics in Phase 3. | Reachable only on exact float equality today; unifying it in Phase 0 would be an unfixtured change. |
 | D-14 | `support_value` unit mixing is pinned by a characterization test and excluded from every coverage expectation. **H3.** | A product decision about the utility objective, not a defect with an oracle. |
+
+> **Amendment C — 2026-08-13, D-07's structural half.** Phase 4's S7 lane measured a contradiction
+> between two live rules and refused to resolve it from an implementation lane, which is the correct
+> refusal; the ruling is recorded here because a phase document may not amend a decision it does not
+> own. Both rules are quoted from the tree the lane measured: `trigger_stream._validate_pairing`
+> requires a `PAIRED` walk half to carry a `packet_source` — *"the walk half's packet is what the pair
+> half is paired against"* — and `golden_snapshot.cross_participant_producers` treats **any** walk row
+> carrying one under a cross-participant `Authority` as a producer of the set this table's D-07 row
+> rules and criterion 3 pins. Shadowflame's Cinderbloom is ruled a rider on its triggering event and
+> therefore authors no packet, while its declared `Subject` is `HOLDER` — *"it amplifies the holder's
+> own magic and true damage on a predicate about the target's live health"* — so satisfying the first
+> rule would have enrolled it in the second and edited a ruled count to satisfy a validator.
+> **Ruling:** the **structure** is amended, keyed on D-07's own semantic — *every packet modifying
+> ANOTHER participant's damage*. A `PAIRED` walk half may be **rider-delivered**: its delivery
+> reference is the rider stamp (`pair_preview_of` / the `AmpBonus` source, carried as
+> `trigger_stream.RiderDelivery`) rather than a packet source, implemented **within `trigger_stream`'s
+> existing fields** — Phase 4's exactly-two-fields rule on `MechanicCapability` stands and no new
+> required field is added there. The cross-participant producer derivation moves onto the
+> modifies-another-participant semantic, in one home
+> (`trigger_stream.cross_participant_packet_source`, which both the packet builder and the baseline
+> instrument read): a rider amplifies the event it rides and that event belongs to its own holder, so
+> Cinderbloom is **not** a member and D-07's ruled producer count and criterion 3 stand untouched.
+> Gated both directions — a rider-delivered `PAIRED` half constructs, and a `PAIRED` half carrying
+> neither a packet source nor a rider stamp still fails validation — and the structural commit is
+> zero-diff on both baselines. What this unblocks it does not land: the Shadowflame authority move is
+> still owed, and the slice that lands it owes the bench-population enumeration before its first `src/`
+> edit (R-20's second half), because the lane measured the coupled-golden population as empty for a
+> stated reason while the bench population is not.
 
 ### D-20 … D-26 — where a failure lands ([Phase 1](phase-1-coverage-evidence.md))
 

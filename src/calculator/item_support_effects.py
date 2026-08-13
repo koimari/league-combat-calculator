@@ -27,13 +27,12 @@ from .ability_spec import (
 # import is ``ability_spec``, so this edge adds no cycle.
 from .trigger_stream import (
     CAPABILITIES,
-    CROSS_PARTICIPANT_AUTHORITIES,
     RAW_STREAMS,
     CcClass,
-    Engine,
     Trigger,
     TriggerKind,
     authored_triggers,
+    cross_participant_packet_source,
     streams_for,
     tuple_incapable_items,
 )
@@ -1405,24 +1404,25 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
 def _declared_authorities() -> Mapping[str, Authority]:
     """Every declared cross-participant packet source and its owning engine.
 
-    The key is the walk packet's ``source`` literal — ``packet_source`` on
-    the capability — and the value the ``Authority`` that capability
-    declares.  ``CROSS_PARTICIPANT_AUTHORITIES`` is the bus's own reading of
-    which members mean "a second engine can see this mechanic", so the three
-    members are named there and nowhere else.
+    The key is the walk packet's ``source`` literal and the value the
+    ``Authority`` that capability declares.  Which halves qualify is
+    ``trigger_stream.cross_participant_packet_source``'s answer and not this
+    module's: D-07's semantic is *every packet modifying another
+    participant's damage*, and a half that delivers a rider onto its own
+    holder's event modifies nobody else's (Amendment C).  Naming the
+    condition in one place is what stops the baseline instrument and this
+    table disagreeing about who the producers are.
 
     Cached because ``_packet`` consults it on every cross-participant packet
     it builds and the stack-ledger producers build one per damage event.
     """
     return MappingProxyType(
         {
-            capability.packet_source: capability.authority
+            source: capability.authority
             for capability in sorted(
                 CAPABILITIES.values(), key=lambda cap: cap.mechanic
             )
-            if capability.engine is Engine.WALK
-            and capability.authority in CROSS_PARTICIPANT_AUTHORITIES
-            and capability.packet_source is not None
+            if (source := cross_participant_packet_source(capability)) is not None
         }
     )
 

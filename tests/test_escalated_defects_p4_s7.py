@@ -2,9 +2,9 @@
 
 S7 declares seven authority moves and lands four.  Three of those four
 landed here; Shadowflame did not, because its coupled half delivers its
-number as a rider on an existing event and the capability registry has no
-shape that can say so.  The second entry is a plan/tree divergence a landed
-move took deliberately.
+number as a rider on an existing event and the capability registry had no
+shape that could say so.  The second entry is a plan/tree divergence a
+landed move took deliberately.
 
 Neither belongs in a commit body: a commit body is absorbed by the next
 baseline re-capture, and an escalation that only a reader can find is the
@@ -13,6 +13,13 @@ joined to a **reproducer** — a live property of the tree that is true while
 the defect stands and false once it is fixed — and this file goes red when
 one of them stops reproducing.  That is how an entry gets closed
 deliberately rather than quietly.
+
+Closing is itself a gated act.  An entry moves to ``retired[]`` only when a
+ruling recorded in the umbrella resolves its contradiction, and the test
+that reproduced it is **inverted rather than deleted**: it now asserts the
+resolved property, so a regression that re-opens the defect turns this file
+red from the other direction.  A deleted test would leave a retired entry
+saying something nothing checks, which is the failure mode one file down.
 """
 
 from __future__ import annotations
@@ -25,20 +32,34 @@ import pytest
 from src.calculator import trigger_stream as ts
 from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.item_behavior import Subject
+from tests.test_trigger_stream import RULED_CROSS_PARTICIPANT_PRODUCERS
 
 ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P4-S7.json"
 
 REQUIRED = ("id", "dated", "raised_by", "what", "reproducer")
+REQUIRED_TO_RETIRE = ("retired_on", "resolved_by", "resolution")
+
+
+def _ledger():
+    return json.loads(RECEIPT.read_text(encoding="utf-8"))
 
 
 def _entries():
-    return json.loads(RECEIPT.read_text(encoding="utf-8"))["defects"]
+    return _ledger()["defects"]
+
+
+def _retired():
+    return _ledger()["retired"]
+
+
+def _retired_entry(entry_id):
+    return next(entry for entry in _retired() if entry["id"] == entry_id)
 
 
 def test_the_ledger_is_not_empty_and_every_entry_is_complete():
     """A ledger nobody has to fill in is a ledger that says nothing."""
-    entries = _entries()
+    entries = _entries() + _retired()
     assert entries, "the escalation ledger is empty"
     for entry in entries:
         for field in REQUIRED:
@@ -46,22 +67,38 @@ def test_the_ledger_is_not_empty_and_every_entry_is_complete():
         assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
 
 
+def test_a_retired_entry_names_the_ruling_that_closed_it():
+    """Retirement is a recorded ruling, not a deletion.
+
+    An entry that could be closed by editing this file is an entry the
+    campaign cannot trust; every retired one names the umbrella amendment
+    that resolved it and what that amendment left open.
+    """
+    for entry in _retired():
+        for field in REQUIRED_TO_RETIRE:
+            assert entry.get(field), f"{entry['id']} retires without {field}"
+        assert "umbrella" in entry["resolved_by"] or "campaign" in entry["resolved_by"]
+
+
 def test_the_ledger_names_the_slice_and_this_gate():
-    body = json.loads(RECEIPT.read_text(encoding="utf-8"))
+    body = _ledger()
     assert body["slice"] == "P4-S7"
     assert body["gate"] == "tests/test_escalated_defects_p4_s7.py"
 
 
-def test_shadowflames_walk_half_still_has_no_declarable_shape():
-    """The first entry's reproducer, as two live properties of the tree.
+def test_shadowflames_walk_half_now_has_a_declarable_shape():
+    """The first entry's reproducer, inverted by Amendment C.
 
-    A ``PAIRED`` walk half must carry a ``packet_source``; a walk row that
-    carries one with a cross-participant authority *is* a cross-participant
-    producer, and D-07 rules that set at six.  Cinderbloom's declared
-    subject is the holder, so it modifies no other participant's damage and
-    cannot honestly join that set.  While both halves of that hold, the
-    move has no shape — and the moment either stops holding, this test goes
-    red and the entry is closed on purpose.
+    What the escalation measured was a contradiction between two rules: a
+    ``PAIRED`` walk half had to carry a ``packet_source``, and a walk row
+    carrying one under a cross-participant authority *was* a producer of the
+    set D-07 rules at six.  Cinderbloom's subject is the holder, so joining
+    that set would have been a ruled count edited to satisfy a validator.
+
+    The amendment resolves it by keying delivery and authorship separately:
+    a rider stamp is a delivery reference, and only a *packet* delivery makes
+    a half a cross-participant producer.  Both halves are asserted here —
+    the shape exists, and the count it was protecting did not move.
     """
     rule = next(
         rule
@@ -70,7 +107,34 @@ def test_shadowflames_walk_half_still_has_no_declarable_shape():
     )
     assert rule.payload.subject is Subject.HOLDER
 
-    paired = ts.MechanicCapability(
+    rider = ts.MechanicCapability(
+        mechanic="shadowflame.cinderbloom_probe",
+        owner=ts.ItemOwner("Shadowflame"),
+        engine=ts.Engine.WALK,
+        reads=frozenset(),
+        needs=frozenset(),
+        authority=ts.Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        pairing=ts.Pairing.PAIRED,
+        pair_of="shadowflame.cinderbloom",
+        divergence_ref=None,
+        impl="survival.transitions.apply_action",
+        packet_source=ts.RiderDelivery("Shadowflame — Cinderbloom"),
+        view_tags=ts.MappingProxyType({ts.Engine.WALK: ts.ViewTag.APPLIED}),
+        holder_stacking=ts.HolderStacking.PER_HOLDER,
+    )
+    ts._validate_pairing(rider.mechanic, rider)
+    assert ts.cross_participant_packet_source(rider) is None
+    assert _retired_entry("shadowflame_walk_half_has_no_declarable_shape")
+
+
+def test_a_paired_half_delivering_nothing_at_all_is_still_rejected():
+    """The half of the old shape that had to survive the amendment.
+
+    Widening a field to admit a second kind of delivery is one edit away
+    from admitting no delivery at all, and that would retire the escalation
+    by deleting the rule it was about.
+    """
+    undelivered = ts.MechanicCapability(
         mechanic="shadowflame.cinderbloom_probe",
         owner=ts.ItemOwner("Shadowflame"),
         engine=ts.Engine.WALK,
@@ -85,33 +149,23 @@ def test_shadowflames_walk_half_still_has_no_declarable_shape():
         view_tags=ts.MappingProxyType({ts.Engine.WALK: ts.ViewTag.APPLIED}),
         holder_stacking=ts.HolderStacking.PER_HOLDER,
     )
-    with pytest.raises(ts.TriggerRegistryError, match="declares no packet_source"):
-        ts._validate_pairing(paired.mechanic, paired)
+    with pytest.raises(ts.TriggerRegistryError, match="names no delivery"):
+        ts._validate_pairing(undelivered.mechanic, undelivered)
 
 
 def test_the_cross_participant_producer_set_is_still_the_ruled_six():
-    """The other half of the same reproducer, and D-07's own count.
+    """The count the escalation argued from, re-asserted after the amendment.
 
-    A ``packet_source`` on that row would satisfy the validator and put
-    Cinderbloom in this set, which is the ruled six ``damage_modifier``
-    producers.  Pinned here rather than only in the golden instrument
-    because the escalation's argument *is* this number.
+    Pinned here as well as beside the derivation because this entry's whole
+    argument *is* this number: a resolution that moved it would have
+    resolved nothing.
     """
     producers = {
-        capability.packet_source
+        source
         for capability in ts.CAPABILITIES.values()
-        if capability.engine is ts.Engine.WALK
-        and capability.authority in ts.CROSS_PARTICIPANT_AUTHORITIES
-        and capability.packet_source is not None
+        if (source := ts.cross_participant_packet_source(capability)) is not None
     }
-    assert producers == {
-        "Abyssal Mask — Unmake",
-        "Black Cleaver — Carve",
-        "Bloodletter's Curse — Vile Decay",
-        "Bloodsong — Expose Weakness",
-        "Dream Maker — Blue Dream Bubble",
-        "Imperial Mandate — Command",
-    }
+    assert producers == RULED_CROSS_PARTICIPANT_PRODUCERS
 
 
 def test_bloodsongs_landed_authority_is_the_constructible_one():

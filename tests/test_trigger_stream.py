@@ -882,8 +882,14 @@ def test_a_paired_capability_pointing_at_a_walk_half_is_rejected(monkeypatch):
         ts._validate_registry()
 
 
-def test_a_paired_capability_with_no_packet_source_is_rejected(monkeypatch):
-    """``PAIRED ⇒ packet_source`` — the packet is what the halves share."""
+def test_a_paired_capability_naming_no_delivery_is_rejected(monkeypatch):
+    """``PAIRED ⇒ a delivery reference`` — the half the pair half is paired against.
+
+    The negative direction of Amendment C, and the one that had to survive
+    it: widening the field to admit a rider must not turn "declares nothing"
+    into a legal declaration.  Neither a packet source nor a rider stamp is
+    still a paired half nobody can find.
+    """
     broken = dict(ts.CAPABILITIES)
     broken["synthetic.mechanic"] = _capability(
         pairing=ts.Pairing.PAIRED,
@@ -892,7 +898,49 @@ def test_a_paired_capability_with_no_packet_source_is_rejected(monkeypatch):
     )
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="no packet_source"):
+    with pytest.raises(ts.TriggerRegistryError, match="names no delivery"):
+        ts._validate_registry()
+
+
+def test_a_rider_delivered_paired_half_is_a_legal_declaration(monkeypatch):
+    """The positive direction of Amendment C: a rider is a delivery.
+
+    Shadowflame's Cinderbloom hands the walk an ``AmpBonus`` rider on its
+    own triggering event rather than a packet, and before this amendment the
+    registry had no shape that could say so — a ``PAIRED`` walk half had to
+    carry a ``packet_source``, so the only constructible declaration was one
+    that lied about what the mechanic does.  A stamp is a delivery
+    reference, and this is the test that it constructs.
+    """
+    rider = _capability(
+        mechanic="synthetic.rider",
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        pairing=ts.Pairing.PAIRED,
+        pair_of="abyssal_mask.magic_amp",
+        packet_source=ts.RiderDelivery("Synthetic — Rider"),
+        holder_stacking=ts.HolderStacking.PER_HOLDER,
+    )
+    declared = {**ts.CAPABILITIES, rider.mechanic: rider}
+    monkeypatch.setattr(ts, "CAPABILITIES", declared)
+    monkeypatch.setattr(ts, "_DECLARATIONS", tuple(declared.values()))
+    ts._validate_registry()
+
+    assert ts.delivery_reference(rider) == "Synthetic — Rider"
+    assert ts.packet_source_literal(rider) is None
+
+
+def test_a_rider_delivery_naming_nothing_is_rejected(monkeypatch):
+    """R-05's red for the amendment's own branch.
+
+    An empty stamp is the rider-side spelling of the packet with no source:
+    a delivery reference nobody can grep for is a number no reader can trace
+    back to the mechanic that authored it.
+    """
+    broken = dict(ts.CAPABILITIES)
+    broken["synthetic.mechanic"] = _capability(packet_source=ts.RiderDelivery("  "))
+    monkeypatch.setattr(ts, "CAPABILITIES", broken)
+    monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
+    with pytest.raises(ts.TriggerRegistryError, match="empty stamp"):
         ts._validate_registry()
 
 
@@ -1050,7 +1098,9 @@ def name_guarded_impls(
     for capability in capabilities.values():
         if not isinstance(capability.owner, ts.ItemOwner):
             continue
-        if capability.engine is not ts.Engine.WALK or capability.packet_source is None:
+        if capability.engine is not ts.Engine.WALK:
+            continue
+        if ts.packet_source_literal(capability) is None:
             continue
         declared.setdefault(capability.impl, set()).add(capability.owner.name)
     return {
@@ -1371,9 +1421,10 @@ def pairing_defects(
         if capability.pairing is not ts.Pairing.PAIRED:
             continue
         text = sources.get(_impl_path(capability.impl), "")
-        if capability.packet_source not in text:
+        delivery = ts.delivery_reference(capability)
+        if delivery not in text:
             defects.append(
-                f"{mechanic}: packet_source {capability.packet_source!r} is "
+                f"{mechanic}: delivery reference {delivery!r} is "
                 f"absent from {capability.impl}"
             )
         partner = capabilities.get(capability.pair_of or "")
@@ -1560,6 +1611,64 @@ def test_a9_has_a_permanent_injection_seam():
 # ---------------------------------------------------------------------------
 # The R-12 producer source, and D-25's single boundary
 # ---------------------------------------------------------------------------
+
+
+# D-07's producer set, by name and not only by count: umbrella criterion 3
+# reads "six, not five", and the count alone cannot tell a seventh producer
+# from a swapped one.  Pinned here, beside the derivation, because this is
+# the number the Shadowflame escalation argued from and the one Amendment C
+# keeps standing.
+RULED_CROSS_PARTICIPANT_PRODUCERS = frozenset(
+    {
+        "Abyssal Mask — Unmake",
+        "Black Cleaver — Carve",
+        "Bloodletter's Curse — Vile Decay",
+        "Bloodsong — Expose Weakness",
+        "Dream Maker — Blue Dream Bubble",
+        "Imperial Mandate — Command",
+    }
+)
+
+
+def test_the_cross_participant_producers_are_the_ruled_six():
+    """Every packet modifying another participant's damage, enumerated."""
+    from scripts.golden_snapshot import cross_participant_producers
+
+    assert cross_participant_producers() == RULED_CROSS_PARTICIPANT_PRODUCERS
+
+
+def test_a_rider_delivered_half_is_not_a_cross_participant_producer(monkeypatch):
+    """Amendment C's other half — D-07 keys on the semantic, not the field.
+
+    A rider amplifies the event it rides, and that event belongs to its own
+    holder, so a rider-delivered half modifies no *other* participant's
+    damage.  Were the producer set keyed on "a walk half with a
+    cross-participant authority carrying anything in ``packet_source``",
+    declaring Shadowflame's Cinderbloom would move a ruled count in order to
+    satisfy a validator — which is a plan being edited by an implementation
+    detail.  A packet-delivered half with the same authority still joins,
+    which is what stops this being a hole rather than a distinction.
+    """
+    import scripts.golden_snapshot as gs
+
+    rider = _capability(
+        mechanic="synthetic.rider",
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        pairing=ts.Pairing.PAIRED,
+        pair_of="abyssal_mask.magic_amp",
+        packet_source=ts.RiderDelivery("Synthetic — Rider"),
+        holder_stacking=ts.HolderStacking.PER_HOLDER,
+    )
+    assert ts.cross_participant_packet_source(rider) is None
+    monkeypatch.setattr(gs, "CAPABILITIES", {**ts.CAPABILITIES, rider.mechanic: rider})
+    assert gs.cross_participant_producers() == RULED_CROSS_PARTICIPANT_PRODUCERS
+
+    packeted = _capability(
+        mechanic="synthetic.packeted",
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        packet_source="Synthetic — Packet",
+    )
+    assert ts.cross_participant_packet_source(packeted) == "Synthetic — Packet"
 
 
 def test_the_coupled_producer_source_reads_the_capability_registry():

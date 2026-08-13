@@ -76,16 +76,20 @@ __all__ = [
     "Pairing",
     "ProjectionStarvation",
     "RAW_STREAMS",
+    "RiderDelivery",
     "RuneOwner",
     "Stream",
     "Trigger",
     "TriggerKind",
     "TriggerRegistryError",
     "authored_triggers",
+    "cross_participant_packet_source",
+    "delivery_reference",
     "enriched_view_items",
     "event_triggers",
     "holders_in",
     "is_immobilizing_event",
+    "packet_source_literal",
     "pair_outcome_items",
     "streams_for",
     "tuple_incapable_items",
@@ -244,15 +248,17 @@ _CONTROL_CLASSES = frozenset(
 # view; needing either is what puts a holder in ``enriched_view_items``.
 _ENRICHED_FIELDS = frozenset({Field.EVENT_ID, Field.TARGET_ID})
 
-# The three ``Authority`` members a mechanic declares only when it modifies
-# some *other* participant's damage.  ``COUPLED_AUTHORITATIVE`` is the
-# ordinary statement that the walk owns its own packet; the three below each
-# additionally say a second engine can see the same mechanic, which is the
-# property that makes a mechanic a cross-participant producer.  A walk half
-# declaring one of these and carrying a ``packet_source`` is therefore a
-# producer the coupled golden baseline must hold a scenario for (R-12), and
-# this constant is where that reading lives — the baseline instrument reads
-# CAPABILITIES through it rather than re-spelling the three members.
+# The three ``Authority`` members a mechanic declares only when a second
+# engine can see the mechanic.  ``COUPLED_AUTHORITATIVE`` is the ordinary
+# statement that the walk owns its own packet; the three below each
+# additionally say the pair engine sees it too.  Declaring one is *necessary*
+# for a cross-participant producer and not sufficient — the sufficient
+# reading is :func:`cross_participant_packet_source`, which additionally
+# requires the half to deliver a packet, because a rider-delivered half
+# amplifies its own holder's event and modifies nobody else's damage
+# (D-07, Amendment C).  A producer is one the coupled golden baseline must
+# hold a scenario for (R-12), and the instrument reads CAPABILITIES through
+# that function rather than re-spelling either condition.
 CROSS_PARTICIPANT_AUTHORITIES = frozenset(
     {
         Authority.SPLIT,
@@ -472,6 +478,39 @@ class DivergenceReceipt:
 DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType({})
 
 
+@dataclass(frozen=True, slots=True)
+class RiderDelivery:
+    """A walk half that delivers its number as a rider, not as a packet.
+
+    Most walk halves hand the walk a support packet naming the participant
+    whose damage they modify, and that packet's ``source`` literal is how
+    every consumer finds it.  A few do not.  Shadowflame's Cinderbloom is an
+    ``AmpBonus`` **rider stamped onto its own triggering damage event** and
+    read before absorption, which is the phase's ruling and the whole fix for
+    a spell-shielded or post-death trigger still emitting a bonus: a rider
+    dies with its host.  A rider is not a packet, so such a half authors
+    none.
+
+    It still has a *delivery reference* — the rider stamp
+    (``pair_preview_of`` on the pair side, the ``AmpBonus`` source on the
+    walk side) — and that is what this type carries.  Declaring it as its own
+    type inside the same field is what keeps two rules true at once:
+    ``PAIRED`` still implies "name the delivery your pair half is paired
+    against", and the cross-participant producer set stays keyed on D-07's
+    own semantic — *every packet modifying another participant's damage* —
+    rather than on "carries something in this field".  A rider amplifies the
+    event it rides, and that event belongs to its own holder, so a
+    rider-delivered half modifies no other participant's damage and is not a
+    producer (:func:`cross_participant_packet_source`).
+
+    Amendment C to D-07, 2026-08-13, recorded in the campaign umbrella.
+    """
+
+    #: The literal a rider's rows carry, verbatim — the counterpart of a
+    #: packet's ``source`` and, like it, the string a reader greps for.
+    stamp: str
+
+
 # Thirteen fields: Phase 2's eleven plus the two Phase 4 writes here.  A
 # declaration record is exactly as wide as the facts it declares.
 @dataclass(frozen=True, slots=True)
@@ -508,8 +547,17 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
         divergence_ref: a :data:`DIVERGENCES` key.  Required exactly when
             ``pairing is UNPAIRED_KNOWN_DEFECT``.
         impl: the dotted path of the function that implements this half.
-        packet_source: the walk packet's ``source`` string, verbatim, or
-            ``None`` for a half that emits no packet.
+        packet_source: this half's **delivery reference** — the walk packet's
+            ``source`` string verbatim for a packet-delivered half, a
+            :class:`RiderDelivery` naming the rider stamp for a half whose
+            number rides an event the walk already carries, and ``None`` for
+            a half that delivers neither.  Read it through
+            :func:`packet_source_literal`, :func:`delivery_reference` or
+            :func:`cross_participant_packet_source` rather than directly:
+            each names one of the three different questions the field is
+            asked, and answering them by an ``is not None`` test is what let
+            "carries something here" stand in for "modifies another
+            participant's damage" (D-07, Amendment C).
         view_tags: what this half's numbers *mean*, keyed by the engine that
             produces them — ``APPLIED`` for a number the coupled walk
             delivered, ``THEORETICAL`` for a pair-engine preview of one
@@ -536,9 +584,56 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
     pair_of: str | None
     divergence_ref: str | None
     impl: str
-    packet_source: str | None
+    packet_source: str | RiderDelivery | None
     view_tags: Mapping[Engine, ViewTag]
     holder_stacking: HolderStacking | None
+
+
+def packet_source_literal(capability: MechanicCapability) -> str | None:
+    """The ``source`` literal this half's packets carry, or ``None``.
+
+    ``None`` twice over: for a half that emits nothing, and for a
+    rider-delivered one, whose number arrives stamped on an event somebody
+    else authored and is therefore findable under no packet source.
+    """
+    source = capability.packet_source
+    return source if isinstance(source, str) else None
+
+
+def delivery_reference(capability: MechanicCapability) -> str | None:
+    """The literal this half's number arrives under — packet or rider.
+
+    The one reading that treats the two deliveries alike, and the one
+    ``PAIRED`` asks: a paired walk half has to name *some* delivery for its
+    pair half to be paired against, and this is that name.
+    """
+    source = capability.packet_source
+    return source.stamp if isinstance(source, RiderDelivery) else source
+
+
+def cross_participant_packet_source(capability: MechanicCapability) -> str | None:
+    """The packet through which this half modifies ANOTHER participant's damage.
+
+    D-07's semantic with one home (Amendment C): the producer set is a
+    filter over this function rather than a hand list, so a seventh producer
+    joins it on the commit that declares one.  Three conditions, each of
+    which drops a half that modifies no other participant's damage — a pair
+    half authors no walk packet; an authority outside
+    :data:`CROSS_PARTICIPANT_AUTHORITIES` says no second engine sees the
+    mechanic; and a rider-delivered half amplifies the event it rides, which
+    belongs to its own holder.
+
+    That third condition is the amendment.  Keying the set on "a walk half
+    with a cross-participant authority that carries *anything* in
+    ``packet_source``" would enrol Shadowflame's Cinderbloom — whose subject
+    is the holder — the moment its walk half is declared, and a ruled count
+    would have moved to satisfy a validator.
+    """
+    if capability.engine is not Engine.WALK:
+        return None
+    if capability.authority not in CROSS_PARTICIPANT_AUTHORITIES:
+        return None
+    return packet_source_literal(capability)
 
 
 _SUPPORT_IMPL = "item_support_effects.derive_item_support_effects"
@@ -1089,7 +1184,8 @@ def _validate_registry() -> None:
 
     Structural only, and no file is read (D-35): slug shape, unique ids,
     ``pair_of`` resolving to an ``Engine.PAIR`` capability, ``PAIRED``
-    implying a ``packet_source``, ``UNPAIRED_KNOWN_DEFECT`` implying a
+    implying a delivery reference — a ``packet_source`` or a
+    ``RiderDelivery`` — ``UNPAIRED_KNOWN_DEFECT`` implying a
     ``divergence_ref`` that resolves in :data:`DIVERGENCES`, a takedown
     reader needing a target id, and Phase 4's two fields — one view tag for
     the engine this half runs on, and a ``HolderStacking`` exactly where the
@@ -1114,6 +1210,14 @@ def _validate_registry() -> None:
             raise TriggerRegistryError(
                 f"{mechanic} declares impl={capability.impl!r}, which is not a "
                 "dotted path to the function implementing it"
+            )
+        if isinstance(capability.packet_source, RiderDelivery) and not (
+            capability.packet_source.stamp.strip()
+        ):
+            raise TriggerRegistryError(
+                f"{mechanic} declares a RiderDelivery with an empty stamp; a "
+                "rider naming nothing is a number no reader can trace back to "
+                "the mechanic that authored it"
             )
         _validate_pairing(mechanic, capability)
         _validate_view_semantics(mechanic, capability)
@@ -1200,10 +1304,11 @@ def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
                 f"{mechanic} pairs with {capability.pair_of!r}, which is not a "
                 "declared Engine.PAIR capability"
             )
-        if capability.packet_source is None:
+        if delivery_reference(capability) is None:
             raise TriggerRegistryError(
-                f"{mechanic} is PAIRED and declares no packet_source; the "
-                "walk half's packet is what the pair half is paired against"
+                f"{mechanic} is PAIRED and names no delivery — neither a "
+                "packet_source nor a RiderDelivery; the walk half's delivery "
+                "is what the pair half is paired against"
             )
     elif capability.pair_of is not None:
         raise TriggerRegistryError(

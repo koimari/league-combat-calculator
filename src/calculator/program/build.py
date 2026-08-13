@@ -35,7 +35,12 @@ from types import MappingProxyType
 
 from ..item_behavior import Compilable, Compilability, EngineLane
 from ..survival.actions import TransitionRank
-from ..trigger_stream import CAPABILITIES, Engine, HolderStacking
+from ..trigger_stream import (
+    CAPABILITIES,
+    Engine,
+    HolderStacking,
+    packet_source_literal,
+)
 from .views import ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
@@ -192,20 +197,23 @@ def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
     under a key nothing recognises.  Only dual-sided halves appear, because
     only they declare a :class:`~..trigger_stream.HolderStacking`, and a
     packet whose source is absent from this mapping is admitted without a
-    dedupe key ever being built.
+    dedupe key ever being built.  The key is read through
+    ``packet_source_literal``, so a rider-delivered half — which arms nothing
+    and carries a stamp rather than a packet source — stays out by the shape
+    of its declaration instead of by a coincidence of dict typing.
 
     Cached because the composition asks once per support packet and the
     registry is frozen at import.
     """
     return MappingProxyType(
         {
-            capability.packet_source: (
+            source: (
                 MechanicId(capability.mechanic),
                 capability.holder_stacking,
             )
             for capability in CAPABILITIES.values()
             if capability.holder_stacking is not None
-            and capability.packet_source is not None
+            and (source := packet_source_literal(capability)) is not None
         }
     )
 
