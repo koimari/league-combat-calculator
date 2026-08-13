@@ -23,22 +23,42 @@ Mandate is per-holder, and a signature that could only express the aura key
 would silently drop a second Mandate holder's contribution — the incident's
 own shape, mandated by a rule.
 
+:func:`live_amp_riders` is the third, and the one this package's docstring
+calls the coupled-lane interpreter of Phase 3's ``delta_amp`` declarations.
+It answers one question — which of a holder's declared amplifiers cannot be
+resolved to a number before the walk runs — and hands each of them to the
+kernel as a :class:`~..survival.actions.LiveAmp` value the walk evaluates by
+tag.  It is derived from the declarations rather than keyed on a slot name,
+so a second live-predicate amp joins the walk on the commit that declares
+one.
+
 **What is not here.**  ``modifier_events`` — the compiler from Phase 3's
 declared ``DeltaAmpRule`` to armed :class:`~.events.DamageModifier` events —
-is Phase 4 S7's, landing with the authority moves that give it something to
-interpret.  Naming it here with an empty body would be a declaration that
+is a separate compiler for the amps that *do* resolve to a number up front,
+and no authority move has needed it yet: Bloodsong's arrives through
+``item_support_effects``' own packets and Shadowflame's is a rider, not a
+packet.  Naming it here with an empty body would be a declaration that
 outruns its implementation, which is the failure this campaign exists to
 remove; the sentence is the marker instead.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
 from ..ability_spec import AttackClass, DamageClass
-from ..item_behavior import EngineLane
+from ..interpreters import delta_amp
+from ..item_behavior import (
+    AMP_CHAIN_ORDER,
+    Comparison,
+    EngineLane,
+    LivePredicate,
+    Probe,
+    Subject,
+)
+from ..survival.actions import LiveAmp, LiveProbe
 from ..trigger_stream import HolderStacking
 from .identity import MechanicId, PIdx
 
@@ -224,12 +244,151 @@ class ArmingLedger:
         return ArmingDrop(mechanic=mechanic, stacking=stacking, first_holder=first)
 
 
+# The one live probe the kernel can read, joined to the one declaration
+# shape that means it.  A pair, not a lookup with a fallback: a probe or a
+# comparison absent from here is a rule the walk cannot price, and the join
+# below raises instead of returning a rider that quietly amplifies nothing.
+_KERNEL_PROBES: Mapping[tuple[Probe, Comparison], LiveProbe] = {
+    (Probe.TARGET_HEALTH_FRACTION, Comparison.LT): LiveProbe.HEALTH_BELOW_RATIO,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class LiveAmpRider:
+    """One holder's live amplifier, ready to ride that holder's own packets.
+
+    Two parts, because the walk asks two different questions of it.
+    :attr:`amp` is what the kernel evaluates at the instant of the hit;
+    :attr:`damage_types` is what the *composition* asks before stamping it,
+    since a rule that crits magic and true damage has no business riding a
+    physical packet and the kernel should never be handed one to decline.
+    """
+
+    amp: LiveAmp
+    damage_types: frozenset[str]
+
+    def rides(self, damage_type: str) -> bool:
+        """Whether this amplifier's declared typing admits *damage_type*."""
+        return damage_type in self.damage_types
+
+
+def live_amp_riders(
+    owners: Sequence[str],
+    *,
+    level: int,
+    fight_duration_seconds: float,
+    target_bonus_health: float,
+    holder_is_melee: bool,
+) -> tuple[LiveAmpRider, ...]:
+    """Every live-predicate amplifier *owners* declare, as kernel riders.
+
+    The coupled-lane interpreter of a ``delta_amp`` rule whose activation is
+    a :class:`~..item_behavior.LivePredicate`.  Such a rule is the one shape
+    the pair engine can only answer for a single attacker: its predicate
+    reads a pool that exists solely inside a simulation, and in a roster
+    that pool is under everyone's fire.  So the *threshold* and the
+    *fraction* are compiled here, from the same declaration and the same
+    resolved fields the pair engine reads, and the *reading* is left to the
+    walk.
+
+    Derived, never keyed on a slot name: every chain slot is asked, and a
+    rule qualifies by declaring a live predicate rather than by being
+    Cinderbloom.  Three refusals rather than three silent skips —
+
+    * a probe or comparison the kernel has no tag for,
+    * a subject other than the holder, since a rider rides its own holder's
+      event and a rule about somebody else's damage would ride the wrong
+      one,
+    * a rule whose declaration compiles no threshold or fraction, which
+      :class:`~..interpreters.delta_amp.AmpSlot` already raises for —
+
+    because an amplifier the interpreter declined to build is a rule that
+    did not run, and this campaign exists because one of those was
+    indistinguishable from a bonus of zero.
+    """
+    riders: list[LiveAmpRider] = []
+    for slot_name in AMP_CHAIN_ORDER:
+        slot = delta_amp.resolve_slot(
+            owners,
+            slot_name,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=target_bonus_health,
+            holder_is_melee=holder_is_melee,
+        )
+        if slot is None:
+            continue
+        for index, rule in enumerate(slot.rules):
+            activation = rule.payload.activation
+            if not isinstance(activation, LivePredicate):
+                continue
+            riders.append(_rider_for(slot, rule, index, activation))
+    return tuple(riders)
+
+
+def live_amp_for(riders: Sequence[LiveAmpRider], damage_type: str) -> LiveAmp | None:
+    """The one live amplifier that rides a packet of *damage_type*.
+
+    ``None`` is the ordinary answer and means no holder declared one for
+    this class of damage.  Two claimants raise: a packet carries one rider
+    field, so a second amplifier would have to be dropped, and dropping it
+    silently is this campaign's own failure at the moment the number is
+    born.  How two live amps compose is a modelling ruling nobody has made,
+    and the raise is what makes somebody make it.
+    """
+    claiming = [rider for rider in riders if rider.rides(damage_type)]
+    if not claiming:
+        return None
+    if len(claiming) > 1:
+        raise ValueError(
+            "two live amplifiers claim one "
+            f"{damage_type} packet ("
+            + ", ".join(rider.amp.mechanic for rider in claiming)
+            + "); a packet carries one rider, and how two of them compose is "
+            "undeclared"
+        )
+    return claiming[0].amp
+
+
+def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRider:
+    """One declared live predicate, as the value the kernel evaluates."""
+    probe = _KERNEL_PROBES.get((activation.probe, activation.cmp))
+    if probe is None:
+        raise ValueError(
+            f"{rule.mechanic_id} declares a live predicate the walk cannot "
+            f"read ({activation.probe.value} {activation.cmp.value}); the "
+            "kernel evaluates by tag, and a declaration with no tag is a "
+            "rule that would not run rather than an amplifier of zero"
+        )
+    if rule.payload.subject is not Subject.HOLDER:
+        raise ValueError(
+            f"{rule.mechanic_id} declares subject "
+            f"{rule.payload.subject.value} and rides its holder's own "
+            "damage events; a rider amplifies the event it rides, so a "
+            "subject naming somebody else would amplify the wrong packets"
+        )
+    return LiveAmpRider(
+        amp=LiveAmp(
+            probe=probe,
+            threshold=slot.value(delta_amp.LIVE_THRESHOLD_FIELD, index),
+            fraction=slot.value(delta_amp.AMP_FRACTION_FIELD, index),
+            mechanic=rule.mechanic_id,
+        ),
+        damage_types=frozenset(
+            damage_class.value for damage_class in rule.payload.typing.damage_classes
+        ),
+    )
+
+
 __all__ = [
     "AppliesTo",
     "ArmKey",
     "ArmingDrop",
     "ArmingLedger",
     "HolderStacking",
+    "LiveAmpRider",
     "Provenance",
     "arm_key",
+    "live_amp_for",
+    "live_amp_riders",
 ]

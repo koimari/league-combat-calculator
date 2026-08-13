@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tarfile
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from types import MappingProxyType, SimpleNamespace
 
@@ -28,8 +29,9 @@ import pytest
 
 from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator import trigger_stream as ts
-from src.calculator.item_behavior import AllyProducer, RuleFamily
+from src.calculator.item_behavior import AllyProducer, LivePredicate, RuleFamily
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
@@ -1407,6 +1409,48 @@ def test_a7_has_a_permanent_injection_seam():
 # ---------------------------------------------------------------------------
 
 
+def _delivery_defects(
+    mechanic: str,
+    capability: ts.MechanicCapability,
+    sources: Mapping[str, str],
+) -> tuple[str, ...]:
+    """One paired half's delivery reference, resolved against what delivers it.
+
+    Two deliveries, two resolutions, and the second is not a weaker version
+    of the first.  A packet-delivered half names a ``source`` literal, and
+    the check is that the literal is really in the builder's source — the
+    incident's own failure was a claim about code that nothing read the code
+    to confirm.  A rider-delivered half names no packet and therefore has no
+    literal to grep for: its stamp is the mechanic id its rule carries and
+    its rows publish, so it resolves against the **declaration**, which must
+    hold a rule of that id whose activation is a live predicate.  That is
+    what makes a stamp deliverable, and a stamp naming no such rule is the
+    same defect one layer over.
+    """
+    delivery = ts.delivery_reference(capability)
+    if isinstance(capability.packet_source, ts.RiderDelivery):
+        owner = getattr(capability.owner, "name", "")
+        declared = [
+            rule
+            for rule in behavior_rules(owner)
+            if rule.mechanic_id == delivery
+            and isinstance(rule.payload.activation, LivePredicate)
+        ]
+        if not declared:
+            return (
+                f"{mechanic}: rider stamp {delivery!r} names no declared "
+                f"live-predicate rule of {owner!r}",
+            )
+        return ()
+    text = sources.get(_impl_path(capability.impl), "")
+    if delivery not in text:
+        return (
+            f"{mechanic}: delivery reference {delivery!r} is "
+            f"absent from {capability.impl}",
+        )
+    return ()
+
+
 def pairing_defects(
     capabilities: Mapping[str, ts.MechanicCapability] | None = None,
     sources: Mapping[str, str] | None = None,
@@ -1420,13 +1464,7 @@ def pairing_defects(
             defects.append(f"{mechanic}: unpaired known defect is not empty (D-92)")
         if capability.pairing is not ts.Pairing.PAIRED:
             continue
-        text = sources.get(_impl_path(capability.impl), "")
-        delivery = ts.delivery_reference(capability)
-        if delivery not in text:
-            defects.append(
-                f"{mechanic}: delivery reference {delivery!r} is "
-                f"absent from {capability.impl}"
-            )
+        defects.extend(_delivery_defects(mechanic, capability, sources))
         partner = capabilities.get(capability.pair_of or "")
         if partner is None:
             defects.append(f"{mechanic}: pair_of resolves to no capability")
@@ -2687,13 +2725,20 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
 
 
 def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
-    """The five, by name, with the value each one declares.
+    """The six, by name, with the value each one declares.
 
     Pinned rather than derived: D-66's whole point is that the answer is a
     per-mechanic fact, so a test that recomputed it from some property of the
     row would be the second answer the field exists to prevent.  Abyssal Mask
-    is the aura; the other four are per-holder pools, and two of those four
-    carry an unanswered ``[H]`` id rather than a ruling.
+    is the aura; the other five are per-holder, and two of those five carry
+    an unanswered ``[H]`` id rather than a ruling.
+
+    Shadowflame's Cinderbloom is per-holder for a reason worth stating,
+    because it is the one row that arms nothing: its bonus rides its own
+    holder's damage events, so two holders amplify two disjoint sets of
+    packets and their contributions can never be the same one counted twice.
+    ``PER_HOLDER`` is that fact declared, not a default it fell through to —
+    the field has none.
     """
     declared = {
         mechanic: capability.holder_stacking.value
@@ -2706,7 +2751,23 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "bloodletters_curse.vile_decay": "per_holder",
         "bloodsong.expose_weakness": "per_holder",
         "imperial_mandate.command": "per_holder",
+        "shadowflame.cinderbloom": "per_holder",
     }
+
+
+def test_a_rider_stamp_naming_no_live_predicate_rule_is_a_pairing_defect():
+    """A8's rider branch has a red it can reproduce on demand.
+
+    A rider-delivered half is resolved against the declaration rather than
+    against a source literal, and a resolution that could not fail would be
+    the "prose nothing checks" shape one layer over.
+    """
+    landed = ts.CAPABILITIES["shadowflame.cinderbloom"]
+    misstamped = replace(landed, packet_source=ts.RiderDelivery("shadowflame.ashes"))
+    defects = pairing_defects(
+        {**ts.CAPABILITIES, "shadowflame.cinderbloom": misstamped}
+    )
+    assert any("names no declared live-predicate rule" in defect for defect in defects)
 
 
 def test_the_three_held_authority_moves_name_their_blocking_human_decision():

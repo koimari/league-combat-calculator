@@ -25,7 +25,12 @@ import pytest
 from src import app as app_module
 from src.calculator.program.amp import ArmingLedger, arm_key
 from src.calculator.program.build import arming_stacking
-from src.calculator.trigger_stream import CAPABILITIES, HolderStacking
+from src.calculator.trigger_stream import (
+    CAPABILITIES,
+    HolderStacking,
+    RiderDelivery,
+    packet_source_literal,
+)
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 
@@ -37,27 +42,74 @@ FIRST_HOLDER = 1
 SECOND_HOLDER = 2
 
 
-def _dual_sided() -> tuple[tuple[str, str, HolderStacking], ...]:
-    """Every mechanic carrying a stacking declaration, from the registry.
+def _arming() -> tuple[tuple[str, str, HolderStacking], ...]:
+    """Every mechanic that both declares a stacking and arms a packet.
 
     Read rather than listed: criterion 10 asks for one test per dual-sided
-    mechanic, and a hand list would silently stop covering the sixth one the
+    mechanic, and a hand list would silently stop covering the next one the
     day somebody declares it.
+
+    The filter is ``packet_source_literal`` and not "carries something in
+    ``packet_source``", because the arming question is only ever asked of a
+    half that arms.  A **rider-delivered** half authors no packet and arms
+    nothing — its bonus rides an event its own holder already produced — so
+    it has no arming key, and :func:`_rider_delivered` covers it instead.
+    Handing it a ``RiderDelivery`` as if it were a packet source would test
+    the ledger against a key ``src/`` never builds.
     """
     return tuple(
-        (capability.mechanic, capability.packet_source, capability.holder_stacking)
+        (capability.mechanic, source, capability.holder_stacking)
         for capability in sorted(CAPABILITIES.values(), key=lambda cap: cap.mechanic)
         if capability.holder_stacking is not None
-        and capability.packet_source is not None
+        and (source := packet_source_literal(capability)) is not None
+    )
+
+
+def _rider_delivered() -> tuple[tuple[str, HolderStacking], ...]:
+    """Every dual-sided mechanic whose walk half delivers a rider, not a packet."""
+    return tuple(
+        (capability.mechanic, capability.holder_stacking)
+        for capability in sorted(CAPABILITIES.values(), key=lambda cap: cap.mechanic)
+        if capability.holder_stacking is not None
+        and isinstance(capability.packet_source, RiderDelivery)
     )
 
 
 def test_every_dual_sided_mechanic_is_covered_here():
-    """A vacuous parametrisation would make the two tests below pass by emptiness."""
-    assert len(_dual_sided()) == 5
+    """A vacuous parametrisation would make the tests below pass by emptiness.
+
+    Six dual-sided mechanics: five arm packets and one delivers a rider, and
+    the two counts are asserted separately so a mechanic silently changing
+    which kind it is shows up here rather than as a test that stopped
+    running.
+    """
+    assert len(_arming()) == 5
+    assert len(_rider_delivered()) == 1
+    assert len(_arming()) + len(_rider_delivered()) == len(
+        [cap for cap in CAPABILITIES.values() if cap.holder_stacking is not None]
+    )
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _dual_sided())
+@pytest.mark.parametrize("mechanic, stacking", _rider_delivered())
+def test_a_rider_delivered_mechanic_declares_stacking_and_arms_nothing(
+    mechanic, stacking
+):
+    """The sixth mechanic's answer to the same question, in its own shape.
+
+    Shadowflame's Cinderbloom amplifies its **own holder's** damage events,
+    so two holders amplify two disjoint sets of packets and their
+    contributions can never be the same one counted twice.  ``PER_HOLDER``
+    is that fact declared rather than a default it fell through to — the
+    field has none — and the ledger is deliberately never asked, because a
+    dedupe key for a mechanic that arms nothing would be an answer to a
+    question the declaration does not pose.
+    """
+    assert stacking is HolderStacking.PER_HOLDER
+    armed = {declared for declared, _ in arming_stacking().values()}
+    assert mechanic not in armed
+
+
+@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
 def test_a_second_holder_arms_exactly_what_the_mechanic_declares(
     mechanic, packet_source, stacking
 ):
@@ -83,7 +135,7 @@ def test_a_second_holder_arms_exactly_what_the_mechanic_declares(
         assert second is None, mechanic
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _dual_sided())
+@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
 def test_the_key_shape_is_the_declaration_and_nothing_else(
     mechanic, packet_source, stacking
 ):
@@ -102,7 +154,7 @@ def test_the_key_shape_is_the_declaration_and_nothing_else(
     assert key == expected
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _dual_sided())
+@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
 def test_one_holder_re_arming_over_time_is_never_a_duplicate(
     mechanic, packet_source, stacking
 ):

@@ -425,6 +425,7 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
         "Source",
         "event:1",
         0,
+        None,
     )
     assert action.phase is TransitionRank.DAMAGE
     assert SurvivalAction().phase is TransitionRank.DAMAGE

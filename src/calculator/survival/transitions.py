@@ -50,6 +50,7 @@ from .actions import (
     EVENT_SLOTS,
     NO_SLOT,
     ActionKind,
+    LiveProbe,
     SurvivalAction,
     TransitionRank,
     attack_class_of,
@@ -1297,7 +1298,63 @@ def _apply_live_packet_chain(
                 state["incoming_damage_cooldown_until"],
                 action.time + state["incoming_damage_cooldown"],
             )
+    if action.live_amp is not None and action.kind in _DAMAGE_KINDS:
+        amount = _apply_live_amp(ctx, action, state, amount)
     return amount
+
+
+def _apply_live_amp(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    amount: float,
+) -> float:
+    """Price a live-predicate amplifier on this packet, before absorption.
+
+    Last in the chain, which is the ruling: the predicate reads the
+    subject's health as it stands *before* this packet is absorbed, and
+    the bonus amplifies the packet as everything else in the chain has
+    already left it.  A rider, not an event — so it never arrives at a
+    subject its host did not reach: a spell-shielded, state-blocked or
+    post-death packet never enters the damage branch at all, and the bonus
+    dies with it because it is a field on the packet rather than a
+    transition of its own.
+
+    The tag carries the meaning (:class:`~.actions.LiveProbe`).  An
+    unrecognised probe raises rather than declining to amplify, because a
+    kernel that quietly skipped an amplifier it did not recognise is a
+    number the model never computed wearing a measured zero's clothes.
+    """
+    live = action.live_amp
+    if live.probe is not LiveProbe.HEALTH_BELOW_RATIO:
+        raise ValueError(
+            f"{live.mechanic} rides a {live.probe!r} the walk cannot read; "
+            "the kernel evaluates a live amplifier by tag and a tag it does "
+            "not know is a rule that did not run, never a bonus of zero"
+        )
+    pools = state["pools"]
+    if not pools.health < pools.max_health * live.threshold:
+        return amount
+    bonus = amount * live.fraction
+    # Unrounded, both of them: rounding is presentation and its one home is
+    # ``program/precision`` (D-71).  The receipt projection rounds what it
+    # publishes, and the kernel's own rounding-site count is frontier
+    # counter 6, which this stage may not push up.
+    ctx.ledger.write(action, live_amp_bonus=bonus, live_amp_source=live.mechanic)
+    if ctx.records_annotations:
+        ctx.ledger.annotate(
+            action,
+            live_amp={
+                "mechanic": live.mechanic,
+                "fraction": live.fraction,
+                "threshold": live.threshold,
+                "health_ratio": (
+                    pools.health / pools.max_health if pools.max_health else 0.0
+                ),
+                "bonus": bonus,
+            },
+        )
+    return amount + bonus
 
 
 def _modifier_applies(modifier: Mapping[str, Any], action: SurvivalAction) -> bool:

@@ -643,7 +643,7 @@ _KNIGHTS_VOW_IMPL = "item_support_effects.schedule_knights_vow"
 def _walk_item(  # pylint: disable=too-many-arguments
     mechanic: str,
     item: str,
-    packet_source: str,
+    packet_source: str | RiderDelivery,
     *,
     holder_stacking: HolderStacking | None,
     reads: frozenset[Stream] = frozenset(),
@@ -664,6 +664,14 @@ def _walk_item(  # pylint: disable=too-many-arguments
     number the coupled walk delivered rather than previewed.  A row that
     differs states its difference at the call site, which is what makes the
     table readable as a table.
+
+    ``packet_source`` is the half's **delivery reference**, and it is a
+    :class:`RiderDelivery` for the one walk half that authors no packet:
+    Shadowflame's Cinderbloom arrives stamped on the damage event it
+    amplifies (Amendment C to D-07).  Same field, because a paired half
+    still has to name the delivery its pair half is paired against; a
+    different type, because only a *packet* can modify another
+    participant's damage and the producer derivation reads the difference.
 
     ``holder_stacking`` is the one argument with no default at all, because
     it is the one whose majority answer would be a guess.  "Does a second
@@ -801,6 +809,40 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         pairing=Pairing.PAIRED,
         pair_of="bloodsong.expose_weakness_preview",
+    ),
+    # Phase 4 S7's fourth authority move, and the last of the four that land.
+    # Cinderbloom's predicate reads the target's health *at the instant of
+    # the hit*, under a whole roster's fire — a roster input, so the walk is
+    # the smallest engine that can see every input the rule reads and it owns
+    # the mechanic.  The pair engine's lump-sum row is what one attacker
+    # alone would have earned against a full-health target, which is a real
+    # answer to a different question, so it survives as a ``THEORETICAL``
+    # preview and is dropped from every roster total.
+    #
+    # This is the one walk half that authors **no packet**.  The bonus is a
+    # rider on its own triggering damage event, read before absorption, and a
+    # rider dies with its host: a spell-shielded, state-blocked or post-death
+    # trigger emits none without anything having to cancel one.  So its
+    # delivery reference is a ``RiderDelivery`` stamp (Amendment C to D-07),
+    # and because a rider amplifies the event it rides — its holder's own —
+    # it modifies no other participant's damage and joins no cross-participant
+    # producer set.
+    #
+    # ``PER_HOLDER`` for a mechanic that arms nothing is the honest reading
+    # rather than a formality: two Shadowflame holders each amplify their own
+    # packets, so their contributions can never be the same one counted
+    # twice, and that is exactly what the declaration says.  ``reads`` is
+    # empty because the rider consumes no authored row ledger — it consumes
+    # the walk's own live pools, which no bus stream carries.
+    _walk_item(
+        "shadowflame.cinderbloom",
+        "Shadowflame",
+        RiderDelivery("shadowflame.cinderbloom"),
+        holder_stacking=HolderStacking.PER_HOLDER,
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        pairing=Pairing.PAIRED,
+        pair_of="shadowflame.cinderbloom_preview",
+        impl="survival.transitions._apply_live_amp",
     ),
     # H1 — Carve's move to coupled-authoritative-with-preview is human-owned
     # and unanswered, so this row states the blocking id instead of a guessed
@@ -1035,10 +1077,11 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         view_tag=ViewTag.APPLIED,
     ),
     _pair_half(
-        "shadowflame.cinderbloom",
+        "shadowflame.cinderbloom_preview",
         ItemOwner("Shadowflame"),
         "damage._add_shadowflame_cinderbloom",
         authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        view_tag=ViewTag.THEORETICAL,
     ),
     # Axiom Arc's takedown is a scenario state receipt and Defy is live state
     # inside the walk, so neither reads the takedown stream.  Both are

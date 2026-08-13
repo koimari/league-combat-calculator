@@ -98,7 +98,12 @@ from .survival import (
 # registry validation, so the edge costs module objects and nothing else --
 # but it is the reason S4's vocabulary commit could say "nothing in src/
 # imports them yet" and the next commit could not.
-from .program.amp import ArmingLedger
+from .program.amp import (
+    ArmingLedger,
+    LiveAmpRider,
+    live_amp_for,
+    live_amp_riders,
+)
 from .program.build import arming_stacking, pair_preview_sources
 from .program.compile import (
     WalkCompiler,
@@ -178,12 +183,13 @@ def _ability_instance_for_event(
     )
 
 
-def _pair_packet(
+def _pair_packet(  # pylint: disable=too-many-arguments
     result: Mapping[str, Any],
     attacker_id: str,
     defender_id: str,
     defender_index: int = 0,
     champion_data: Mapping[str, Any] | None = None,
+    live_amps: Sequence[LiveAmpRider] = (),
 ) -> dict[str, Any]:
     """Enrich one pair fight's events exactly once.
 
@@ -206,6 +212,13 @@ def _pair_packet(
     damage event as the same ``grievous_duration``/``_wound_source`` receipt
     the survival walks consume — one event interface for item, reactive, and
     champion wounds.
+
+    ``live_amps`` are the attacker's declared live-predicate amplifiers
+    (:func:`~.program.amp.live_amp_riders`).  They ride the attacker's own
+    damage events, which is why they are stamped here rather than authored
+    as events of their own: the bonus must die with its host, so a packet a
+    spell shield or a death stops carries no bonus without anything having
+    to cancel one.
     """
     events: list[dict[str, Any]] = []
     cast_timeline = result.get("cast_timeline", [])
@@ -289,6 +302,10 @@ def _pair_packet(
             enriched["targeting"] = dict(source_row["targeting"])
         for baseline_key, baseline in baseline_fields:
             enriched[baseline_key] = baseline
+        if live_amps:
+            live_amp = live_amp_for(live_amps, str(event.get("damage_type", "")))
+            if live_amp is not None:
+                enriched["_live_amp"] = live_amp
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)),
             TransitionRank.DAMAGE,
@@ -376,6 +393,28 @@ def _pair_packet(
             if isinstance(entry, Mapping) and source not in previewed
         },
     }
+
+
+def _live_amps_of(
+    attacker: Combatant, defender: Combatant, params: FightParams
+) -> tuple[LiveAmpRider, ...]:
+    """The live-predicate amplifiers *attacker*'s build declares, resolved.
+
+    One reader of :func:`~.program.amp.live_amp_riders`, so every
+    composition site resolves them from the same three inputs: the
+    attacker's own owners and level, and the defender's bonus health, which
+    is the pool a magnitude may be declared per hundred of.  The defender is
+    an argument for exactly that reason — the rider is a fact about one
+    pair, not about the attacker alone, and a call site that could not see
+    the target would have to guess a value for it.
+    """
+    return live_amp_riders(
+        [str(item.get("name", "")) for item in attacker.items],
+        level=attacker.level,
+        fight_duration_seconds=params.fight_duration_seconds,
+        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
+        holder_is_melee=bool(attacker.stats.get("is_melee")),
+    )
 
 
 def _without_pair_previews(
@@ -2522,6 +2561,7 @@ def _context_setup(
                 defender.participant_id,
                 defender_index,
                 champion_data=attacker.champion_data,
+                live_amps=_live_amps_of(attacker, defender, params),
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -2643,6 +2683,7 @@ def _build_signature_panel(
                 attacker.participant_id,
                 "main",
                 champion_data=attacker.champion_data,
+                live_amps=_live_amps_of(attacker, main, params),
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -2818,6 +2859,7 @@ def _score_with_search_context(
             context.pair_id_strings[defender.participant_id],
             defender_index,
             champion_wounds=main_champion_wounds,
+            live_amps=_live_amps_of(main, defender, params),
         )
     if first_result is not None:
         # The item support scan reads per-event target/id fields that only
@@ -3346,6 +3388,7 @@ def build_participant_timeline(
                         defender.participant_id,
                         defender_index,
                         champion_data=attacker.champion_data,
+                        live_amps=_live_amps_of(attacker, defender, params),
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet
@@ -3952,6 +3995,21 @@ def build_participant_timeline(
                 **(
                     {"threshold_health_triggered": True}
                     if event.get("threshold_health_triggered")
+                    else {}
+                ),
+                # A live-predicate amplifier that rode this packet.  It is
+                # published because the bonus is folded into the host row's
+                # damage rather than filed as a source of its own, and a
+                # number with no rule beside it is exactly what this campaign
+                # exists to stop shipping.
+                **(
+                    {
+                        "live_amp": {
+                            "mechanic": str(event["live_amp_source"]),
+                            "bonus": round(float(event["live_amp_bonus"]), 1),
+                        }
+                    }
+                    if event.get("live_amp_source")
                     else {}
                 ),
                 **(

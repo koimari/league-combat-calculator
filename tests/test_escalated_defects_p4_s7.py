@@ -109,6 +109,12 @@ def test_shadowflames_walk_half_now_has_a_declarable_shape():
     )
     assert rule.payload.subject is Subject.HOLDER
 
+    # The live declaration, since S7's fourth authority move landed it: the
+    # walk half exists, is rider-delivered, and is not a producer.
+    landed = ts.CAPABILITIES["shadowflame.cinderbloom"]
+    assert isinstance(landed.packet_source, ts.RiderDelivery)
+    assert ts.cross_participant_packet_source(landed) is None
+
     rider = ts.MechanicCapability(
         mechanic="shadowflame.cinderbloom_probe",
         owner=ts.ItemOwner("Shadowflame"),
@@ -117,7 +123,7 @@ def test_shadowflames_walk_half_now_has_a_declarable_shape():
         needs=frozenset(),
         authority=ts.Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         pairing=ts.Pairing.PAIRED,
-        pair_of="shadowflame.cinderbloom",
+        pair_of="shadowflame.cinderbloom_preview",
         divergence_ref=None,
         impl="survival.transitions.apply_action",
         packet_source=ts.RiderDelivery("Shadowflame — Cinderbloom"),
@@ -144,7 +150,7 @@ def test_a_paired_half_delivering_nothing_at_all_is_still_rejected():
         needs=frozenset(),
         authority=ts.Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         pairing=ts.Pairing.PAIRED,
-        pair_of="shadowflame.cinderbloom",
+        pair_of="shadowflame.cinderbloom_preview",
         divergence_ref=None,
         impl="survival.transitions.apply_action",
         packet_source=None,

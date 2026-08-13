@@ -222,6 +222,51 @@ _DAMAGE_KINDS = frozenset(
 
 
 # ---------------------------------------------------------------------------
+# Live amplification — the one amp whose pool exists only inside the walk
+# ---------------------------------------------------------------------------
+
+
+class LiveProbe(Enum):
+    """Which live pool a kernel-side amplifier reads, as a tag.
+
+    Every other amplifier in the tree resolves to a number before the first
+    event exists.  One does not: Shadowflame's Cinderbloom reads the
+    *target's health at the instant of the hit*, under fire from a whole
+    roster, so its threshold compiles and its reading arrives event by
+    event.
+
+    A tag rather than a predicate object, and a tag declared **here** rather
+    than imported, because ``program/`` may name ``survival/`` types and
+    never the reverse.  The kernel branches on the member and the meaning is
+    the member's own: ``HEALTH_BELOW_RATIO`` is "the subject's current health
+    is strictly below ``ratio`` times its maximum", which is exactly the
+    ``LivePredicate(TARGET_HEALTH_FRACTION, LT)`` the declaration carries.
+    :func:`~..program.amp.live_amp_riders` is where the two are joined, and
+    it refuses any other probe or comparison rather than approximating one.
+    """
+
+    HEALTH_BELOW_RATIO = "health_below_ratio"
+
+
+class LiveAmp(NamedTuple):
+    """An amplification the walk can only price at the moment of the hit.
+
+    It rides its host damage action rather than standing as an event of its
+    own, and that is the whole mechanic: a rider dies with its host, so a
+    spell-shielded, state-blocked or post-death trigger emits no bonus with
+    nothing having to cancel it.  ``fraction`` is the sourced ratio the
+    declaration compiled (0.2 for a 120% crit), never a multiplier, so a
+    zero bonus is a measured zero and not a neutral 1.0 nobody can tell from
+    an unarmed one.
+    """
+
+    probe: LiveProbe
+    threshold: float
+    fraction: float
+    mechanic: str
+
+
+# ---------------------------------------------------------------------------
 # Event reference slots — the kernel's four references, as integers
 # ---------------------------------------------------------------------------
 
@@ -354,6 +399,11 @@ class SurvivalAction(NamedTuple):
     grievous: Any = None
     wound: tuple | None = None
     reactive: bool = False
+    # A live-predicate amplifier riding this packet, read before absorption
+    # (``transitions._apply_live_packet_chain``).  ``None`` is "no holder
+    # declared one for this packet" — an answer, not a neutral multiplier,
+    # which is why the field is a value and not a float defaulting to 1.0.
+    live_amp: LiveAmp | None = None
     execute_threshold_ratio: float = 0.0
     execute_source: str = ""
     deferred: bool = False
@@ -556,6 +606,7 @@ _I_SOURCE_KEY = _INDEX("source_key")
 _I_SOURCE = _INDEX("source")
 _I_EVENT_SLOT = _INDEX("event_slot")
 _I_SEQUENCE = _INDEX("sequence")
+_I_LIVE_AMP = _INDEX("live_amp")
 
 
 def compiled_damage_action(
@@ -575,15 +626,22 @@ def compiled_damage_action(
     source: str,
     event_slot: int,
     sequence: Any,
+    live_amp: LiveAmp | None,
 ) -> SurvivalAction:
     """Build a compiler damage action without keyword-default parsing.
 
-    Exactly ``SurvivalAction(**those sixteen fields)``: every other field
+    Exactly ``SurvivalAction(**those seventeen fields)``: every other field
     keeps its class default, ``reactive=False`` and the phase included.
     The phase is the load-bearing one — this function has no ``_I_PHASE``
     because the class default *is* ``TransitionRank.DAMAGE``, which is what the
     compiler would pass for a damage packet anyway.  Read the rank at
     :class:`SurvivalAction`, not here.
+
+    ``live_amp`` has no default, and that is deliberate for the one field
+    here whose neutral value is indistinguishable from an unasked question:
+    a compiler that forgot to pass it would score a build whose
+    amplification it silently dropped, which is the incident.  Every call
+    site states it, ``None`` included.
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
@@ -602,6 +660,7 @@ def compiled_damage_action(
     row[_I_SOURCE] = source
     row[_I_EVENT_SLOT] = event_slot
     row[_I_SEQUENCE] = sequence
+    row[_I_LIVE_AMP] = live_amp
     return tuple.__new__(SurvivalAction, row)
 
 
@@ -843,6 +902,8 @@ __all__ = [
     "ActionKind",
     "EVENT_SLOTS",
     "EventSlots",
+    "LiveAmp",
+    "LiveProbe",
     "NO_SLOT",
     "SUPPORT_RANK_KEY",
     "SurvivalAction",

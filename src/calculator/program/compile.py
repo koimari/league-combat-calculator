@@ -50,7 +50,7 @@ that builds the walk compiles what the walk may not reach and hands it over.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
@@ -81,6 +81,7 @@ from ..survival.compile import (
 )
 from ..trigger_stream import is_immobilizing_event
 from . import events as ev
+from .amp import LiveAmpRider, live_amp_for
 from .build import Program, Projection, pair_preview_sources
 from .caches import program_fingerprint, roster_fingerprint
 from .identity import event_id_text
@@ -216,6 +217,11 @@ def action_from_event(
         # refactor's.
         immobilized=is_immobilizing_event(event) or bool(get("crowd_control")),
         cc_kind=cc_kind,
+        # The live-predicate amplifier the composition stamped on this
+        # packet, if its holder declared one that rides this damage class.
+        # ``None`` is "nobody declared one", which the kernel tells apart
+        # from a bonus that measured zero.
+        live_amp=get("_live_amp"),
         baseline_effective_armor=(
             float(baseline_armor) if baseline_armor is not None else None
         ),
@@ -463,6 +469,7 @@ class WalkCompiler:
                     source=str(event.get("source", event.get("source_key", ""))),
                     event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
                     sequence=event.get("sequence"),
+                    live_amp=event.get("_live_amp"),
                 )
             )
             if time_value <= duration:
@@ -582,6 +589,7 @@ class WalkCompiler:
         id_strings: list[str],
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
+        live_amps: Sequence[LiveAmpRider] = (),
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -609,6 +617,15 @@ class WalkCompiler:
         :func:`~.build.pair_preview_sources` join, because the surface that
         picks the optimizer's winner is the worst place for the two paths to
         disagree.
+
+        ``live_amps`` is the same claim one field over.  The attacker's
+        declared live-predicate amplifiers ride their own damage packets and
+        the kernel prices them at the instant of the hit; score mode skips
+        the enrichment that carries them on the receipt path, so the caller
+        hands them over here instead.  The default is empty because most
+        holders declare none — never because a caller may leave it out and
+        have the amplification quietly vanish, which is why the two stamping
+        sites read the same :func:`~.amp.live_amp_for`.
         """
         previewed = pair_preview_sources(result.get("breakdown") or {})
         order_a, order_b = participant_order(attacker_id)
@@ -698,6 +715,7 @@ class WalkCompiler:
                         source_key,
                         slot_of(event_id),
                         key[3],
+                        live_amp_for(live_amps, row[2]),
                     )
                 )
                 if time_value <= duration:
@@ -793,6 +811,7 @@ class WalkCompiler:
                     source,
                     slot_of(event_id),
                     sequence,
+                    live_amp_for(live_amps, damage_type),
                 )
             )
             if time_value <= duration:

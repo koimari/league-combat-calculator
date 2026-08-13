@@ -9387,6 +9387,16 @@ def _add_shadowflame_cinderbloom(
             # Keep those bonus timestamps for precision certification without
             # replaying the bonus as a second shield-resolution damage source.
             "timeline_events": bonus_events,
+            # Which mechanic this row is the pair engine's reading of, taken
+            # from the rule the slot resolved rather than spelled again here.
+            # Phase 4 S7 settled which engine owns Cinderbloom — the walk,
+            # because the predicate reads the target's health under a whole
+            # roster's fire — so this row is the honest one-attacker preview
+            # and the roster composition reads the stamp and drops it.  The
+            # pair fight's own receipt publishes it unchanged: that surface
+            # is the single-attacker question, where the preview is the
+            # answer.
+            "pair_preview_of": cinderbloom.rules[0].mechanic_id,
             **_damage_type_fields(bonus_by_type),
         }
         state.total_damage += shadowflame_bonus

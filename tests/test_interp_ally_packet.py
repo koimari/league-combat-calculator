@@ -47,11 +47,18 @@ class TestTheProducerVocabularyIsBoundToPhaseTwo:
 
     @staticmethod
     def _packet_capabilities() -> frozenset[str]:
+        """Walk halves that emit a *packet* an ally producer could author.
+
+        ``packet_source_literal`` rather than "carries something in
+        ``packet_source``": a rider-delivered half authors no packet at all,
+        so no ally producer can name it and requiring one would demand a
+        producer for a mechanic that emits nothing.
+        """
         return frozenset(
             capability.mechanic
             for capability in ts.CAPABILITIES.values()
             if capability.engine is ts.Engine.WALK
-            and capability.packet_source is not None
+            and ts.packet_source_literal(capability) is not None
         )
 
     def test_every_producer_names_a_declared_walk_capability(self) -> None:
