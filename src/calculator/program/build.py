@@ -265,6 +265,21 @@ def build_program(
     defender, because routing is the step that turns "the defender of this
     fight" into an index and the pair program deliberately does not know one.
 
+    ``caps`` is **taken and not yet read**, exactly as :func:`pair_program`
+    takes it: this builder routes and ranks authored events, and the
+    capability-driven work — the fan-out of what a declared mechanic arms
+    beside a hit, and the refusal of a mechanic nobody declared — is S7's.
+    Saying so here rather than only at the discard: this module's own header
+    calls :class:`CapabilityView` the package's only reader of the registry
+    and describes what it refuses, which reads as if the entry point
+    consulted it.  It does not, and an inert check that reads as a live one
+    is worth one sentence.  The parameter stays because a signature that
+    grew it later would make every call site S7's problem too, and
+    ``caches.CACHES['program']`` declares it inert with a test that varies it
+    and asserts the program does not move — so the day it starts reaching
+    the value, the declaration goes red rather than this docstring going
+    quietly stale.
+
     The events come out in authored order and are **not** sorted here: the
     walk's total order is the eight-element sort key the compiler builds, and
     sorting twice by two rules is how two engines end up disagreeing about
