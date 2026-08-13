@@ -1,0 +1,60 @@
+{
+  "receipt_id": "oracle-S9-leaf7",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree limited to `git archive HEAD data docs/math-foundations.md`)",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": "<dispositions map: leaf path -> {disposition, view_tag}>",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-s9",
+    "contents": [
+      "data/ (champions.json, items.json, runes.json, atoms/, bin/, champion-audit/, item-atoms/, practice-corpus/, wiki/, wiki-atoms/, worklists/, staleness.json, economics-sourced.json, onhit-matrix.json, README.md)",
+      "docs/math-foundations.md (523 lines)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "goal": "Derive the correct value of the `combat/dispositions` leaf from cached wiki text under data/ and/or a quoted formula in docs/math-foundations.md.",
+    "steps": [
+      "1. Characterized the leaf. The new value is not a scalar combat quantity: it is a mapping from other golden leaf paths to a record {disposition, view_tag}. It therefore asserts no damage, stat, resistance, timing, or gold number. Any oracle check must find, in the permitted sources, a rule that fixes (a) which leaf paths are covered and (b) what disposition/view_tag each one takes.",
+      "2. Vocabulary search over the entire export. `grep -ric 'disposition'` across data/ and docs/math-foundations.md returns zero hits in every file. `grep -ric 'view_tag'` likewise returns zero hits. The same search for 'coupled_scenario', 'derived_order', and 'syndra_derived_order_39' also returns zero hits.",
+      "3. Checked the two places in the export where scenario-shaped records live. `data/practice-corpus/scenarios.json` holds 22 entries with schema {id, tier, sha, setup, expected, practice_tool_steps} (e.g. `cp21-ziggs-outer-blast`); no entry is named `syndra_derived_order_39`, and the schema has no disposition/view_tag field. `data/worklists/*` (E2-E9, F0-F3, P0-P7 task files) contain no disposition vocabulary either.",
+      "4. Checked the champion cache for the scenario's champion. `data/champions.json` contains `Syndra` (id 134) with keys [id, key, name, title, fullName, icon, resource, attackType, adaptiveType, stats, positions, roles, attributeRatings, abilities, releaseDate, releasePatch, patchLastChanged, price]. The wiki cache carries no per-leaf annotation concept at all - nothing in it can determine a dispositions map.",
+      "5. Checked the formula authority. docs/math-foundations.md enumerates every modeling family the engine instantiates (Section 1 expected damage/renewal counting, Section 2 resistance and penetration, Section 3 BIS optimization, Section 4 variance/confidence, Section 5 the formula-audit table of 22 engine families). Every row of the Section 5 table maps an engine function to a mathematical identity and an EXACT/APPROX verdict. No row, and no section, defines a per-leaf 'disposition' or 'view_tag'. The document's own vocabulary for leaf-level classification is EXACT / APPROX applied to *formula families*, not to golden leaf paths, and it names no field written into a snapshot.",
+      "6. Conclusion of the derivation. There is no expression, table, or wiki string in the permitted evidence tree from which the value of this leaf can be computed. The leaf is snapshot-harness annotation metadata (how each leaf should be classified/displayed), whose ground truth lives in engine/harness code that this runbook forbids reading. An independent numeric oracle cannot produce the map, and cannot falsify it, because the map makes no physical claim."
+    ],
+    "computed_value": "not derivable from the permitted sources - the leaf carries no physical quantity",
+    "physical_claim_check": "The change is purely additive (absent -> annotation map). It introduces no combat number, and no combat-number leaf in this scenario is implicated by it. Nothing in the new value contradicts any wiki value in data/ or any identity in docs/math-foundations.md; equally, nothing in the sources requires the leaf to be absent, so the old state cannot be defended as 'correct' either."
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Section 5 legend (lines 450-454)",
+      "quote": "Legend: **EXACT** = instantiates the identity exactly under the deterministic model; **APPROX** = documented approximation (never silently presented as exact). All game-rule claims were cross-checked against the League Wiki (armor/penetration, movement speed, crit, grievous wounds, executes).",
+      "why": "This is the document's only leaf-classification vocabulary, and it classifies formula families, not golden leaf paths. It defines no `disposition` or `view_tag` value set."
+    },
+    {
+      "source": "docs/math-foundations.md, input contract (lines 6-9)",
+      "quote": "Input contract: deterministic combat outcomes derived from the League Wiki cache (`data/champions.json`, `data/items.json`) and game files. Every number below traces to a wiki/game source.",
+      "why": "Fixes the oracle's scope to numbers traceable to wiki/game sources. A dispositions map is not such a number."
+    },
+    {
+      "source": "data/README.md, item source fields table",
+      "quote": "`passives[].branches`, `active[].branches` | Wiki `description`, `description2`, ... | The **complete** text of one effect; replaces the old single `effects` string, which truncated multi-branch passives",
+      "why": "Enumerates every field the cache carries. No annotation/disposition field exists anywhere in the cached wiki schema."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json, `purpose`",
+      "quote": "Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log).",
+      "why": "The only scenario registry in the permitted tree; 22 scenarios, none named `syndra_derived_order_39`, and its schema {id, tier, sha, setup, expected, practice_tool_steps} has no disposition/view_tag field."
+    },
+    {
+      "source": "grep over the whole export",
+      "quote": "grep -ric 'disposition' . -> 0 hits in every file; grep -ric 'view_tag' . -> 0 hits in every file; grep -rin 'coupled_scenario|derived_order|syndra_derived_order_39' -> 0 hits",
+      "why": "Direct evidence that the permitted sources are silent on this leaf."
+    }
+  ],
+  "verdict": "new_value_correct",
+  "verdict_caveat": "This is a not-oracle-checkable leaf, reported at the closest available enum value. The verdict means: the added value asserts no physical quantity and contradicts nothing in data/ or docs/math-foundations.md, and the change alters no combat number. It does NOT mean an independent computation reproduced the map's contents - the permitted evidence tree contains no rule that fixes them. Verifying the map's coverage and its per-leaf disposition/view_tag values requires reading the snapshot harness, which R-18/R-19 forbids; that check must be assigned to a reviewer with source access.",
+  "committed": false
+}

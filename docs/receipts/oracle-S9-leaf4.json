@@ -1,0 +1,119 @@
+{
+  "receipt_id": "oracle-S9-leaf4",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "generated_at": "2026-08-13",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": "<dispositions map: leaf path -> {disposition, view_tag}>",
+  "verdict": "new_value_correct",
+  "verdict_scope": "Existence/shape verdict only. The concrete map contents were not supplied to this oracle and cannot be reconstructed from the permitted evidence; this receipt certifies that adding a disposition/view_tag classification layer to the combat subtree is the state the permitted sources support, NOT that every individual entry in the map is correct.",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle_s9",
+    "contents_read": [
+      "docs/math-foundations.md (full, 523 lines)",
+      "data/ (full recursive listing; targeted greps; data/champions.json Syndra record)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_classify_the_leaf": {
+      "finding": "The leaf carries no game-mechanics quantity. Its stated type is a map from leaf path to {disposition, view_tag} -- i.e. metadata that labels OTHER leaves of the same snapshot. It states no damage, stat, resistance, cooldown or gold number.",
+      "consequence": "No wiki value and no formula in docs/math-foundations.md can be arithmetically compared against it. There is no number to recompute; the checkable question is whether a disposition layer SHOULD be present on a coupled-scenario combat subtree."
+    },
+    "step_2_vocabulary_search_in_permitted_sources": {
+      "command": "grep -rli '<term>' data/ docs/math-foundations.md",
+      "results": {
+        "disposition": 0,
+        "view_tag": 0,
+        "viewtag": 0,
+        "view-tag": 0
+      },
+      "finding": "The disposition/view_tag vocabulary is defined nowhere in the cached wiki data or in the math foundations document. It is engine-side presentation/classification vocabulary, defined in code that this oracle is forbidden to read.",
+      "consequence": "The map's per-entry contents are NOT oracle-checkable from data/ + docs/math-foundations.md. Neither <absent> nor the new map can be arithmetically falsified."
+    },
+    "step_3_scenario_definition_search": {
+      "command": "grep -rn 'custom_order|syndra_custom' data/",
+      "results": "0 hits",
+      "finding": "Scenario 'syndra_custom_order_39' is not defined anywhere under data/. Scenario definitions and the golden snapshot itself live under scripts/, which is outside the permitted evidence tree. The concrete before/after map therefore could not be inspected even in principle from this tree."
+    },
+    "step_4_normative_test_from_math_foundations": {
+      "question": "Do the permitted sources take a position on whether engine outputs must carry disclosure labels alongside the number?",
+      "finding": "Yes, and the position is explicit and repeated. docs/math-foundations.md establishes that the engine's output is a bare point estimate that 'claims nothing' on its own (Sec. 0 and Sec. 4), and that every approximation and every unmodeled mechanic must be DISCLOSED rather than silently folded into the number (Sec. 4, Sec. 5 legend, Audit conclusion).",
+      "derivation": "A per-leaf {disposition, view_tag} map is precisely a machine-readable instantiation of that mandated disclosure: it attaches to each combat leaf the standing (exact / approximate / disclosed-boundary) that Sec. 5's audit table assigns in prose, and a view tag governing how it may be surfaced. Under the document's own rule, a combat subtree that emits numbers with NO disposition labels is the state the audit calls out as unacceptable ('never silently presented as exact'); a subtree that emits them WITH labels is the state the audit demands.",
+      "conclusion": "Direction of change is supported. Presence of the map dominates absence."
+    },
+    "step_5_scenario_specific_corroboration": {
+      "question": "Does the Syndra scenario in particular contain leaves whose sourcing genuinely needs a disposition label, or would a disposition map be vacuous decoration here?",
+      "method": "Read the cached wiki record data/champions.json -> 'Syndra' -> abilities, dumping every leveling row's modifier (values, units) pairs.",
+      "observed_rows": {
+        "Q Dark Sphere / Magic Damage": "values [90,125,160,195,230] units ['','','','',''] + [70,...] units ['% AP',...]  -- clean",
+        "W Force of Will / Magic Damage": "values [70,100,130,160,190] units ['','','','',''] + [65,...] units ['% AP',...]  -- clean",
+        "W Force of Will / Bonus True Damage": "values [8.4,12,15.6,19.2,22.8] units ['  2','  2','  2','  2','  2'] + [9.2,9.8,10.4,11,11.6] units ['% AP',...] + [1.14,1.14,1.14,1.14,1.14] units ['% AP',...]  -- DEGRADED",
+        "W Force of Will / Total Mixed Damage": "values [78.4,112,145.6,179.2,212.8] units ['  2','  2','  2','  2','  2'] + [74.2,74.8,75.4,76,76.6] units ['% AP',...] + [1.14,...] units ['% AP',...]  -- DEGRADED",
+        "E Scatter the Weak / Magic Damage": "values [60,95,130,165,200] units ['','','','',''] + [60,...] units ['% AP',...]  -- clean",
+        "R Unleashed Power / Magic Damage per Sphere": "values [80,120,160] + [20,...] '% AP'  -- clean",
+        "R Unleashed Power / Minimum Magic Damage": "values [240,360,480] + [60,...] '% AP'  -- clean",
+        "R Unleashed Power / Maximum Magic Damage": "values [560,840,1120] + [140,...] '% AP'  -- clean"
+      },
+      "finding": "Syndra's W carries a genuinely half-parsed pair of rows: the 'Bonus True Damage' and 'Total Mixed Damage' modifiers come back with the junk unit string '  2' instead of a real unit, plus a stray un-attributable 1.14 % AP term. This is the same known-degraded signature the project documents elsewhere (values survive, units come back unusable, so the value cannot be attributed by the generic path).",
+      "arithmetic_cross_check": "The degraded rows are internally consistent with the clean ones: Total Mixed = Magic + Bonus True at each rank. Rank 1: 70 + 8.4 = 78.4 (matches); rank 3: 130 + 15.6 = 145.6 (matches); rank 5: 190 + 22.8 = 212.8 (matches). AP terms likewise: 65 + 9.2 = 74.2 (rank 1), 65 + 11.6 = 76.6 (rank 5), matching the cached Total row. So the VALUES are trustworthy while the UNITS are not -- exactly the situation a disposition label exists to record.",
+      "conclusion": "For this scenario the disposition layer is not decorative. Syndra's combat leaves descend in part from wiki rows whose sourcing is provably degraded, so an unlabeled combat subtree here would be presenting a number without the standing the audit requires it to carry."
+    },
+    "step_6_ruling_out_the_other_two_verdicts": {
+      "old_value_correct": "Rejected. Would require positive evidence that the combat subtree ought to carry no disposition labels. The permitted sources say the opposite (step 4), and this specific scenario has degraded upstream rows (step 5).",
+      "both_wrong": "Rejected. Would require showing the emitted map is itself incorrect. The map contents are not available to this oracle and its vocabulary is undefined in the permitted tree (steps 2-3), so no such showing is possible; asserting it would be unfounded.",
+      "new_value_correct": "Accepted, at the scope stated in verdict_scope. The new leaf adds a non-numeric disclosure layer that (a) cannot contradict any cached wiki value because it asserts no number, (b) is the direction docs/math-foundations.md explicitly mandates, and (c) is substantively warranted for this scenario given Syndra W's degraded cached parse."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md",
+      "section": "4. Variance and confidence",
+      "quote": "Model error: unmodeled mechanics (champions without named modules, coarse event ordering, vision boundaries such as Pyke's out-of-vision grey-health consume) fail closed or are disclosed; the number is only as good as the reviewed module set.",
+      "used_for": "Establishes that non-exact standing must be disclosed alongside the number, not absorbed into it."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "section": "5. Formula-audit table (legend)",
+      "quote": "Legend: EXACT = instantiates the identity exactly under the deterministic model; APPROX = documented approximation (never silently presented as exact).",
+      "used_for": "Defines a two-valued disposition vocabulary over engine outputs in prose; a per-leaf disposition map is its machine-readable form."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "section": "5. Audit conclusion",
+      "quote": "The approximations found are all documented in code (burn GCD estimate, BC stack constant, Terminus pen average, R single-cast, DoT even-split, stat rounding, prefix double-on-hit attribution) -- none is silently presented as exact.",
+      "used_for": "The normative rule the added leaf implements at snapshot level."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "section": "0. Semantics of the deterministic single number",
+      "quote": "T = E[ D | model, config ]      (point estimate under the expectation heuristic) ... It is *not* a sample from a distribution, and it is *not* a confidence statement (Section 4).",
+      "used_for": "Confirms the bare combat number carries no self-describing standing, so the standing must be carried by adjacent metadata."
+    },
+    {
+      "source": "data/champions.json",
+      "path": "Syndra -> abilities -> W 'Force of Will' -> effects[].leveling[] 'Bonus True Damage' / 'Total Mixed Damage'",
+      "quote": "modifiers: values [8.4, 12, 15.6, 19.2, 22.8] with units ['  2','  2','  2','  2','  2']; values [9.2, 9.8, 10.4, 11, 11.6] with units ['% AP', ...]; values [1.14, 1.14, 1.14, 1.14, 1.14] with units ['% AP', ...]",
+      "used_for": "Scenario-specific proof that Syndra's cached rows include a degraded parse (junk units, stray unattributed term) whose values are nonetheless arithmetically consistent (70+8.4=78.4, 190+22.8=212.8), i.e. a leaf that genuinely needs a disposition rather than a bare number."
+    },
+    {
+      "source": "negative evidence: data/ and docs/math-foundations.md",
+      "quote": "grep -rli for 'disposition', 'view_tag', 'viewtag', 'view-tag' -> 0 files each; grep -rn for 'custom_order|syndra_custom' -> 0 hits",
+      "used_for": "Bounds the verdict: the map's per-entry contents and the scenario definition are outside the permitted evidence, so only the existence/direction of the leaf is certifiable here."
+    }
+  ],
+
+  "limitations": [
+    "The concrete dispositions map was described to this oracle only by type, not by contents; no entry-by-entry check was possible.",
+    "The disposition and view_tag enumerations are defined in engine code outside the permitted evidence tree, so their admissible values were not validated.",
+    "This leaf is metadata, not a game quantity; no wiki arithmetic can confirm or refute it directly. The verdict rests on the normative rule quoted from docs/math-foundations.md plus the scenario-specific sourcing evidence in data/champions.json.",
+    "Recommendation for a follow-up oracle with snapshot access: verify that every combat leaf descending from Syndra W ('Bonus True Damage' / 'Total Mixed Damage') carries a non-exact disposition, since those cached rows have unusable units."
+  ],
+
+  "committed": false
+}

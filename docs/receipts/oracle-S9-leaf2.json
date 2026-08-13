@@ -1,0 +1,109 @@
+{
+  "receipt_id": "oracle-S9-leaf2",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-13",
+  "scenario": "dream_maker_roster",
+  "leaf_path": "/coupled_scenarios/dream_maker_roster/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": "<dispositions map: leaf path -> {disposition, view_tag}>",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-s9",
+    "isolation_confirmed": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never read. Only data/ and docs/math-foundations.md from the export were consulted."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> item 3870 \"Dream Maker\" -> passives[0].branches[0] (cached League Wiki text)",
+      "quote": "Every 8 seconds, you gain a ''Blue Dream Bubble'' and a ''Purple Dream Bubble''. Granting a {{tip|heal}} or {{tip|shield}} to an allied champion ''(excluding yourself)'' causes you to grant both of your ''Dream Bubbles'' to them, empowering them for 3 seconds. The ''Blue Bubble'' reduces the damage of the next attack or spell they receive from non-{{tip|minions}} by {{pp|50 to 194 for 13|1;7 to 18|type=your level}} and the ''Purple Bubble'' grants them {{as|{{pp|40 to 160 for 13|1;7 to 18|type=your level}} '''bonus''' magic damage}} on their next damaging attack or ability, with the latter reduced to {{fd|33.3}}% for [[area of effect]] damage against non-champions."
+    },
+    {
+      "source": "data/items.json -> item 3870 -> active[0] \"Ward\"",
+      "quote": "Consumes a charge to place a {{tip|Stealth Ward}} at the target location, which grants {{tip|sight}} of the surrounding area. Charges refill upon visiting the shop."
+    },
+    {
+      "source": "data/items.json -> item 3870 -> stats",
+      "quote": "health.flat = 200.0, goldPer10.flat = 9.0, healthRegen.percent = 75.0, manaRegen.percent = 75.0; all offensive stats 0.0"
+    },
+    {
+      "source": "data/item-atoms/3870.json (atom decomposition of the same item)",
+      "quote": "atoms include heal-shield.heal, heal-shield.health-regeneration, damage.magic, damage.on-hit (relations: stack-transform-summon-resource.stack, damage.damage-instance), damage.on-attack, crowd-control-mobility.nearsight, stack-transform-summon-resource.{trap,ward-unit,mana,ammo}"
+    },
+    {
+      "source": "docs/math-foundations.md Section 1.3 (Order statistics, quantiles and hitting times for executes)",
+      "quote": "The engine prices the threshold as a display row and does *not* add execute damage to totals (`_add_execute_display`) - the kill boundary is documented, not double-counted."
+    },
+    {
+      "source": "docs/math-foundations.md Section 1.3 (Pyke R)",
+      "quote": "The module prices the sourced *non-execute* damage row (50% of the threshold) and documents the threshold ... as a boundary rather than damage."
+    },
+    {
+      "source": "docs/math-foundations.md Section 4 (Variance and confidence -> Model error)",
+      "quote": "unmodeled mechanics (champions without named modules, coarse event ordering, vision boundaries such as Pyke's out-of-vision grey-health consume) fail closed or are disclosed; the number is only as good as the reviewed module set."
+    },
+    {
+      "source": "docs/math-foundations.md Section 5, formula-audit table, Grey health row",
+      "quote": "Out-of-vision consume (Pyke) is a vision boundary, documented not authored"
+    },
+    {
+      "source": "docs/math-foundations.md Section 5, legend",
+      "quote": "**APPROX** = documented approximation (never silently presented as exact)."
+    },
+    {
+      "source": "data/items.json, corroborating sibling support items using the identical level-template family",
+      "quote": "Distinct {{pp|...}} instances present in the cache: '40 to 160 for 13|1;7 to 18', '50 to 194 for 13|1;7 to 18', '50 to 230 for 13|1;7 to 18'. No 'for 18' variant exists in the cache."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_level_template_decoding": {
+      "template": "{{pp|LO to HI for 13|1;7 to 18|type=your level}}",
+      "level_set": "level 1, then levels 7,8,...,18 -> 1 + 12 = 13 distinct values, matching the literal 'for 13'",
+      "interpolation": "linear across the 13 steps: step = (HI - LO) / 12",
+      "cross_check": "All three sibling instances in the cache divide evenly by 12: (194-50)/12 = 12 exactly, (160-40)/12 = 10 exactly, (230-50)/12 = 15 exactly. Exact integer steps across three independent items confirm the 13-value / 12-step reading."
+    },
+    "step_2_blue_bubble_damage_reduction_by_holder_level": {
+      "1": 50.0, "2-6": 50.0,
+      "7": 62.0, "8": 74.0, "9": 86.0, "10": 98.0, "11": 110.0, "12": 122.0,
+      "13": 134.0, "14": 146.0, "15": 158.0, "16": 170.0, "17": 182.0, "18": 194.0,
+      "applies_to": "the NEXT attack or spell the EMPOWERED ALLY receives from non-minions; it is an incoming-damage reduction on the ally, not damage dealt by anyone"
+    },
+    "step_3_purple_bubble_bonus_magic_damage_by_holder_level": {
+      "1": 40.0, "2-6": 40.0,
+      "7": 50.0, "8": 60.0, "9": 70.0, "10": 80.0, "11": 90.0, "12": 100.0,
+      "13": 110.0, "14": 120.0, "15": 130.0, "16": 140.0, "17": 150.0, "18": 160.0,
+      "aoe_vs_non_champion_subcase": "multiplied by 33.3%: 40 -> 13.32 at level 1, 160 -> 53.28 at level 18",
+      "applies_to": "the EMPOWERED ALLY's next damaging attack or ability; the damage instance belongs to the ally, while the magnitude is scaled by the Dream Maker HOLDER's level"
+    },
+    "step_4_what_the_leaf_must_encode": [
+      "The wiki text forces a dream_maker_roster combat tree to contain leaves of at least three structurally different kinds, all scaled by the holder's level but resolving on different actors and different sides of the damage equation:",
+      "(a) holder-own damage leaves - the Dream Maker holder's own attacks/abilities. Dream Maker itself contributes ZERO offensive stats (all offensive stat fields are 0.0), so its contribution to (a) is nil.",
+      "(b) ally-transferred OFFENSIVE leaves - the Purple Bubble's 40-160 bonus magic damage, which lands on an ALLY's next damaging attack or ability and is explicitly '(excluding yourself)'. Summing this into the holder's own damage total would attribute an ally's damage instance to the holder; summing it into the roster total once per bubble AND once per empowered ally would double-count it. It also carries a conditional sub-magnitude (33.3% for AoE vs non-champions) that is only correct under a stated view.",
+      "(c) ally-received DEFENSIVE leaves - the Blue Bubble's 50-194 reduction, which has the opposite sign from a damage leaf. Reading it as damage is a sign error; reading it as the holder's mitigation is an actor error.",
+      "A bare numeric tree with no per-leaf annotation cannot distinguish (a) from (b) from (c). A map leaf_path -> {disposition, view_tag} is exactly the structure that resolves both axes: 'disposition' fixes whether a leaf is counted / display-only / withheld, and 'view_tag' fixes whose view (holder vs empowered ally, champion vs non-champion target) the magnitude is valid under.",
+      "This is not a new convention; it is the convention docs/math-foundations.md already states the engine holds itself to. Section 1.3 prices the execute threshold as 'a display row' that 'does not add execute damage to totals ... documented, not double-counted'; the Pyke R row prices the sourced damage and documents the threshold 'as a boundary rather than damage'; Section 4 requires that unmodeled mechanics 'fail closed or are disclosed'; the Section 5 legend requires that an approximation is 'never silently presented as exact'. Every one of those is a per-leaf disposition claim carried alongside a number.",
+      "Dream Maker is the case where that discipline becomes load-bearing rather than documentary, because its entire combat payload is transferred to another actor. Under the old value (<absent>) the roster tree carries the Purple Bubble's 40-160 and the Blue Bubble's 50-194 with no recorded actor, sign, or counted/not-counted status - precisely the silent presentation the quoted sections forbid."
+    ]
+  },
+
+  "verification_scope_and_limits": {
+    "checkable": [
+      "That the scenario's combat tree contains leaves requiring distinct disposition and distinct view attribution - established from the cached Dream Maker wiki text above.",
+      "That per-leaf disposition/view annotation is the engine's own documented discipline - established from four independent passages of docs/math-foundations.md.",
+      "The numeric magnitudes those leaves carry (Blue 50-194, Purple 40-160, AoE sub-case 33.3%) - computed above from the cached template and cross-checked against two sibling items."
+    ],
+    "not_checkable": [
+      "The per-entry contents of the map. Neither data/ nor docs/math-foundations.md defines the 'disposition' or 'view_tag' vocabularies - greps for 'disposition' and 'view_tag' across the entire exported evidence tree return zero hits. The new value was also supplied to this oracle only as a shape, not as concrete entries.",
+      "Therefore this leaf carries no game-derived number of its own and cannot be numerically reproduced from the permitted sources. The verification below is structural, and is stated as such rather than overclaimed."
+    ]
+  },
+
+  "verdict_reasoning": {
+    "against_old_value": "<absent> leaves the Purple Bubble's ally-transferred bonus magic damage and the Blue Bubble's ally-received damage reduction sitting in the combat tree with no recorded actor, sign, or counted-status. Given the wiki text's explicit '(excluding yourself)' transfer, that is an unresolved double-count/sign hazard, and it is the exact silent-presentation failure that Section 1.3, Section 4 and the Section 5 legend rule out.",
+    "for_new_value": "A leaf_path -> {disposition, view_tag} map is the minimal structure that discharges both the actor axis and the counted/display axis the sourced text creates, and it matches the discipline the engine already documents for execute rows, Pyke R thresholds, grey-health vision boundaries and APPROX rows.",
+    "why_not_both_wrong": "No evidence in the permitted sources contradicts the new value. Absence of a definition for the vocabulary is not evidence of error, and asserting both_wrong would require positive evidence the map is wrong, which I do not have.",
+    "confidence": "Directionally high that the annotation belongs and that <absent> is inadequate; the per-entry contents remain unverified for the reasons in verification_scope_and_limits."
+  }
+}

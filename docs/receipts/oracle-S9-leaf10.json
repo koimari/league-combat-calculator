@@ -1,0 +1,77 @@
+{
+  "receipt_id": "oracle-S9-leaf10",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "<snapshot metadata>",
+  "leaf_path": "/metadata/fingerprint/leaves",
+  "old_value": 14256,
+  "new_value": 20584,
+  "verdict": "new_value_correct",
+  "confidence": "structural / self-consistency only — NOT an independent numeric derivation",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-S9",
+    "read": ["data/** (full tree)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "classification_of_the_leaf": "This leaf is not a game quantity. Under scenario '<snapshot metadata>' the path /metadata/fingerprint/leaves is a self-describing structural count: the number of numeric leaves the golden snapshot document itself contains. It has no champion, item, rune, or resistance semantics, and therefore no wiki text and no closed-form damage identity can produce it.",
+    "searches_run_over_the_permitted_evidence": [
+      "grep -n -i 'fingerprint|leaves|leaf|snapshot' docs/math-foundations.md -> 2 hits, both unrelated (line 293 'penetration then leaves the...', line 428 'The golden snapshot (scripts/golden_snapshot.py) ... pin point estimates'). Neither defines a leaf count.",
+      "grep -rn -i 'fingerprint' data/ -> ZERO hits.",
+      "grep -rn '\"leaves\"' data/ -> ZERO hits (as a JSON key).",
+      "grep -rn 'golden_snapshot|golden_baseline|leaf_count|leaves' data/ docs/ -> only prose uses of the English word 'leaves' inside wiki ability text (Gnar, Camille, Hwei, ...) and one audit line 'Golden gate | golden_snapshot.py compare: identical'. No structural definition, no scenario roster, no leaf schema.",
+      "data/practice-corpus/scenarios.json inspected: keys are schema_version, purpose, verified_tiers, scenarios, receipts. This is the E-series validation corpus, not the golden snapshot's scenario set, and it carries no leaf count.",
+      "data/README.md read in full: describes the champion/item/rune cache and item source fields only."
+    ],
+    "conclusion_from_the_search": "There is NO source in the permitted evidence tree (cached wiki text under data/, or any quoted formula in docs/math-foundations.md) from which 14256 or 20584 can be derived, bounded, or falsified. The quantity that would let me recompute it -- the golden baseline document and the snapshot generator that walks it -- lives in scripts/, which this runbook forbids me to open. I did not open it.",
+
+    "what_can_be_established_without_that_source": [
+      "1. Tautology of the field. A 'leaves' count emitted inside the snapshot's own fingerprint block is definitionally equal to the number of leaves present in the tree it is emitted with. Its correctness condition is internal (does it match the document it ships in?), never external (does it match the game?). No game-truth oracle can adjudicate it.",
+      "2. The old value is provably stale for the current tree. The leaf value itself moved. Since the field counts the tree, a moved value is direct evidence the counted tree changed. If the current tree really holds 20584 leaves, then 14256 describes a tree that no longer exists, so 'old_value_correct' is ruled out on the current snapshot regardless of anything else.",
+      "3. Magnitude of the structural change: 20584 - 14256 = 6328 leaves added, i.e. +44.388...%. Arithmetic: 6328 / 14256 = 0.4438832772166106.",
+      "4. Shape of the change (weak signal, reported not relied on): 14256 = 2^4 * 3^4 * 11, a highly composite count consistent with a near-uniform scenarios x fields-per-scenario grid; 20584 = 2^3 * 31 * 83 and the delta 6328 = 2^3 * 7 * 113 are not grid-shaped. That is consistent with heterogeneous rows/fields being added (new scenarios with differing field counts, or new per-scenario sub-objects) rather than a clean multiple of the old per-scenario width. It is equally consistent with several unrelated additions. This does NOT establish correctness either way; it is recorded so the reviewer can sanity-check it against the actual change.",
+      "5. A +44% leaf-count jump is not the signature of a numeric behavior fix (which moves values, leaving the leaf count fixed). It is the signature of scope growth: added scenarios or added emitted fields. Whether that growth was intended is answerable only from the diff/plan, which this runbook forbids me to read."
+    ],
+
+    "verdict_reasoning": "Mapping onto the required enum: 'old_value_correct' is eliminated by point 2 -- the field counts its own document, and the document demonstrably changed. 'both_wrong' requires positive evidence that 20584 miscounts the current tree; I have none, and I am barred from the only artifact that could supply it. That leaves 'new_value_correct', which I report with the explicit caveat that it rests on the self-consistency argument above and on the absence of any contradicting evidence, NOT on an independent recomputation from game data. Treat this leaf as UNFALSIFIABLE BY THIS ORACLE.",
+
+    "reviewer_action_required": "This leaf must not be counted as oracle-corroborated. To actually verify it, someone permitted to read scripts/golden_baseline.json should recount the numeric leaves of the new baseline and confirm the total equals 20584, and separately confirm that the 6328-leaf expansion is the intended scope of the change rather than accidental emission of extra fields. The fingerprint's purpose is to make exactly that scope growth visible, so a change to it is a prompt to check intent, not evidence of a defect."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, line 428 (Section 4, Variance and confidence)",
+      "quote": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "relevance": "The only mention of the golden snapshot in the permitted docs. It establishes the snapshot's role but says nothing about a fingerprint or a leaf count, so it cannot source this leaf."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "All game-rule claims were cross-checked against the League Wiki (armor/penetration, movement speed, crit, grievous wounds, executes).",
+      "relevance": "Enumerates the doc's audited quantities. Snapshot metadata / fingerprint leaf counts are absent from the table, confirming this leaf is outside the doc's scope."
+    },
+    {
+      "source": "data/README.md",
+      "quote": "The calculator's champion/item data cache -- the single source the app reads.",
+      "relevance": "Defines data/ as game-data cache only. Confirms the permitted evidence tree contains game facts, not snapshot structure metadata."
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md, line 39",
+      "quote": "| Golden gate | \u2014 | `golden_snapshot.py compare`: **identical** | \u2713 |",
+      "relevance": "Only reference under data/ to the golden gate; records a pass/fail outcome, carries no leaf count."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json (top-level keys)",
+      "quote": "schema_version, purpose, verified_tiers, scenarios, receipts",
+      "relevance": "Checked as the only scenario roster in the permitted tree; it is the E-series validation corpus, not the golden snapshot's scenario set, and carries no fingerprint or leaf count."
+    },
+    {
+      "source": "negative result (exhaustive)",
+      "quote": "grep -rn -i 'fingerprint' data/ -> 0 hits; grep -rn '\"leaves\"' data/ -> 0 hits",
+      "relevance": "Establishes that no cached wiki text constrains this leaf. This negative result is the substantive finding of the receipt."
+    }
+  ],
+
+  "committed": false
+}
