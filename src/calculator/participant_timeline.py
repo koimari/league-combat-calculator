@@ -123,8 +123,10 @@ from .program.compile import (
     pair_resistance_baselines,
     revive_candidate_actions,
 )
+from .program.views import breakdown as _breakdown_view
+from .program.views import score as _score_view
 from .program.views import survival as _survival_view
-from .program.walk import walk as _walk
+from .program.walk import AttackerOutcome, walk as _walk
 from .work_counters import Rung, WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
@@ -1801,8 +1803,15 @@ def _simulate_survival(
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
     typed_actions: Mapping[int, SurvivalAction] | None = None,
-) -> dict[str, dict[str, Any]]:
+) -> "WalkResult":
     """Resolve damage, shields, healing, and death for every participant.
+
+    Returns the frozen :class:`~.program.walk.WalkResult` rather than the
+    published rows.  The rows are a *projection* of that result and the
+    survival view is the one thing that makes them, so a composition that
+    took rows here could not also hand its walk to the other four views --
+    which is how the score path and the receipt path came to assemble two
+    payloads from two shapes of the same walk.
 
     ``annotate=False`` skips the per-event diagnostic fields that only the
     serialized public receipt reads (pair/live damage, overkill, healing
@@ -2431,8 +2440,7 @@ def _simulate_survival(
     # Both now enter through ``program.walk.walk`` -- one call site in
     # ``src/``, so "one walk per pass" is a number a counter reads rather
     # than two composition bodies agreeing by hand (criterion 1).
-    program = roster_program(combatant_list)
-    return _survival_view.survival(program, _walk(actions, ctx))
+    return _walk(actions, ctx)
 
 
 class CoupledSearchContext:
@@ -3231,22 +3239,21 @@ def _score_with_search_context(
         regeneration_windows=_regeneration_windows(all_actors),
         venom_profiles=venom_packs,
     )
+    base = context.base_compiler
+    coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
     program = roster_program(all_actors)
-    walk_result = _walk(actions, ctx)
+    walk_result = _walk(actions, ctx).projected(
+        grey_health=grey_summary or None,
+        timeline_coverage=combine_timeline_coverages(
+            coverage_reports,
+            target_count=len(coverage_reports),
+        ),
+    )
     rows_by_id = _survival_view.survival(program, walk_result)
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
-    if grey_summary.get("source"):
-        survival_rows[0]["grey_health_stored"] = round(
-            float(grey_summary.get("grey_health_stored", 0.0)), 6
-        )
-        survival_rows[0]["grey_health_consumed"] = round(
-            float(grey_summary.get("grey_health_consumed", 0.0)), 6
-        )
-        survival_rows[0]["grey_health_source"] = str(grey_summary["source"])
 
     count = len(all_actors)
-    base = context.base_compiler
     support_value, healing_output = accumulate_support_values(
         applied,
         fresh.support_entries,
@@ -3254,81 +3261,93 @@ def _score_with_search_context(
         panel.sig.support_entries,
         count,
     )
-
-    public_breakdown = []
-    sig_damage_order = panel.sig.damage_order
-    base_damage_order = base.damage_order
-    fresh_damage_order = fresh.damage_order
-    fresh_thorns_order = fresh.thorns_order
-    base_thorns_order = base.thorns_order
     totals = accumulate_damage_totals(
         survival_rows,
         applied,
-        sig_damage_order=sig_damage_order,
-        base_damage_order=base_damage_order,
-        fresh_damage_order=fresh_damage_order,
-        fresh_thorns_order=fresh_thorns_order,
-        base_thorns_order=base_thorns_order,
+        sig_damage_order=panel.sig.damage_order,
+        base_damage_order=base.damage_order,
+        fresh_damage_order=fresh.damage_order,
+        fresh_thorns_order=fresh.thorns_order,
+        base_thorns_order=base.thorns_order,
         count=count,
     )
-    for index, actor in enumerate(all_actors):
-        # Per-attacker float-sum order replays the legacy outgoing list:
-        # pair fights in defender order (enemies hit the main first, then
-        # allies), then thorns in strike order (fresh strikes precede the
-        # roster's).  One running total over the ordered parts keeps the
-        # exact same addition sequence without building a concat list.
-        # A dead attacker's total also replays the legacy cutoff against
-        # its ROUNDED death time: the walk applies an attacker's own
-        # event at the exact death instant, but the legacy sum excludes
-        # it whenever the true death time rounds down past it.
-        total = totals[index]
-        actor_survival = survival_rows[index]
-        public_breakdown.append(
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "total_damage": round(float(total), 1),
-                "sources": [],
-                "outgoing_damage_before_death": round(float(total), 1),
-                "incoming_damage": round(
-                    float(actor_survival.get("health_damage", 0.0))
-                    + float(actor_survival.get("shield_absorbed", 0.0)),
-                    1,
-                ),
-                "health_damage": actor_survival.get("health_damage", 0.0),
-                "shield_absorbed": actor_survival.get("shield_absorbed", 0.0),
-                "effective_health": actor_survival.get("effective_health", 0.0),
-                "healing_received": actor_survival.get("healing_received", 0.0),
-                "healing_reduced": actor_survival.get("healing_reduced", 0.0),
-                "support_shield_received": actor_survival.get(
-                    "support_shield_received", 0.0
-                ),
-                "support_value": round(support_value[index], 1),
-                "healing_output": round(healing_output[index], 1),
-                "survived_window": bool(actor_survival.get("survived_window")),
-                "death_time": actor_survival.get("death_time"),
-            }
-        )
-    coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
-    return {
-        "duration": float(duration),
-        "participants": [
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "level": actor.level,
-                "survival": survival_rows[index],
-            }
-            for index, actor in enumerate(all_actors)
-        ],
-        "breakdown": public_breakdown,
-        "timeline_coverage": combine_timeline_coverages(
-            coverage_reports,
-            target_count=len(coverage_reports),
+    # Per-attacker float-sum order replays the legacy outgoing list: pair
+    # fights in defender order (enemies hit the main first, then allies),
+    # then thorns in strike order (fresh strikes precede the roster's).
+    # One running total over the ordered parts keeps the exact same
+    # addition sequence without building a concat list.  A dead attacker's
+    # total also replays the legacy cutoff against its ROUNDED death time:
+    # the walk applies an attacker's own event at the exact death instant,
+    # but the legacy sum excludes it whenever the true death time rounds
+    # down past it.
+    return _score_view.score(
+        program,
+        walk_result.projected(
+            outcomes=[
+                _attacker_outcome(
+                    {
+                        "participant_id": actor.participant_id,
+                        "team": actor.team,
+                        "champion": actor.champion_data.get("name", ""),
+                    },
+                    totals[index],
+                    survival_rows[index],
+                    support_value[index],
+                    healing_output[index],
+                )
+                for index, actor in enumerate(all_actors)
+            ]
         ),
-    }
+    )
+
+
+def _attacker_outcome(
+    identity: Mapping[str, Any],
+    total_damage: float,
+    survival_row: Mapping[str, Any],
+    support_value: float,
+    healing_output: float,
+    *,
+    sources: Sequence[Mapping[str, Any]] = (),
+    utility_outcomes: Mapping[str, Any] | None = None,
+) -> AttackerOutcome:
+    """Fold one attacker's published numbers, once, for both paths.
+
+    The two composition paths reach these numbers differently — the compiled
+    score path off the score ledger's parallel arrays, the receipt path off
+    its annotated event streams — and this is where both stop being
+    ingredients and become the answer a view publishes.  ``incoming_damage``
+    is summed *here* rather than in the breakdown view for exactly that
+    reason: a view that adds is a view that can disagree with the walk it
+    claims to project.
+
+    ``identity`` is the published participant/team/champion triple, taken
+    from whatever the caller's own breakdown row carries.  It is a parameter
+    rather than a roster read because the receipt path fills those strings
+    inside its attacker loop and leaves them empty for a participant who
+    dealt no damage -- a preserved defect this stage may relocate but, being
+    pure, may not correct.
+    """
+    return AttackerOutcome(
+        participant_id=str(identity.get("participant_id", "")),
+        team=str(identity.get("team", "")),
+        champion=str(identity.get("champion", "")),
+        total_damage=float(total_damage),
+        incoming_damage=float(survival_row.get("health_damage", 0.0))
+        + float(survival_row.get("shield_absorbed", 0.0)),
+        health_damage=survival_row.get("health_damage", 0.0),
+        shield_absorbed=survival_row.get("shield_absorbed", 0.0),
+        effective_health=survival_row.get("effective_health", 0.0),
+        healing_received=survival_row.get("healing_received", 0.0),
+        healing_reduced=survival_row.get("healing_reduced", 0.0),
+        support_shield_received=survival_row.get("support_shield_received", 0.0),
+        support_value=float(support_value),
+        healing_output=float(healing_output),
+        survived_window=bool(survival_row.get("survived_window")),
+        death_time=survival_row.get("death_time"),
+        sources=tuple(sources),
+        utility_outcomes=utility_outcomes,
+    )
 
 
 def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
@@ -3932,7 +3951,8 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             if receipt is not None and receipt > 0.0:
                 event["grey_health_stored"] = round(receipt, 6)
 
-    survival = _simulate_survival(
+    program = roster_program(all_actors, focus=focus_participant_id)
+    walk_result = _simulate_survival(
         all_actors,
         incoming,
         healing,
@@ -3941,15 +3961,14 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         annotate=include_receipt,
         receipt_events=outgoing if include_receipt else None,
         typed_actions=typed_actions,
+    ).projected(
+        grey_health=grey_summary or None,
+        timeline_coverage=combine_timeline_coverages(
+            coverage_reports,
+            target_count=len(coverage_reports),
+        ),
     )
-    if grey_summary.get("source"):
-        survival["main"]["grey_health_stored"] = round(
-            float(grey_summary.get("grey_health_stored", 0.0)), 6
-        )
-        survival["main"]["grey_health_consumed"] = round(
-            float(grey_summary.get("grey_health_consumed", 0.0)), 6
-        )
-        survival["main"]["grey_health_source"] = str(grey_summary["source"])
+    survival = _survival_view.survival(program, walk_result)
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
         death_time = survival[actor.participant_id]["death_time"]
@@ -3989,7 +4008,6 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         )
         for actor in all_actors
     }
-    public_breakdown = []
     support_by_attacker: dict[str, float] = defaultdict(float)
     healing_by_attacker: dict[str, float] = defaultdict(float)
     for events in support_effects.values():
@@ -4001,70 +4019,43 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             support_by_attacker[attacker_id] += applied
             if event.get("kind") == "heal":
                 healing_by_attacker[attacker_id] += applied
-    for actor in all_actors:
-        row = breakdown.get(actor.participant_id) or {
-            "participant_id": actor.participant_id,
-            "team": actor.team,
-            "champion": actor.champion_data.get("name", ""),
-            "total_damage": 0.0,
-            "sources": {},
-        }
-        actor_survival = survival[actor.participant_id]
-        public_breakdown.append(
-            {
-                **row,
-                "total_damage": round(float(row.get("total_damage", 0.0)), 1),
-                "sources": list(row.get("sources", {}).values()),
-                "outgoing_damage_before_death": round(
-                    float(row.get("total_damage", 0.0)), 1
+    walk_result = walk_result.projected(
+        outcomes=[
+            _attacker_outcome(
+                breakdown.get(actor.participant_id)
+                or {
+                    "participant_id": actor.participant_id,
+                    "team": actor.team,
+                    "champion": actor.champion_data.get("name", ""),
+                },
+                float(
+                    (breakdown.get(actor.participant_id) or {}).get("total_damage", 0.0)
                 ),
-                "incoming_damage": round(
-                    float(actor_survival.get("health_damage", 0.0))
-                    + float(actor_survival.get("shield_absorbed", 0.0)),
-                    1,
+                survival[actor.participant_id],
+                support_by_attacker[actor.participant_id],
+                healing_by_attacker[actor.participant_id],
+                sources=list(
+                    (breakdown.get(actor.participant_id) or {})
+                    .get("sources", {})
+                    .values()
                 ),
-                "health_damage": actor_survival.get("health_damage", 0.0),
-                "shield_absorbed": actor_survival.get("shield_absorbed", 0.0),
-                "effective_health": actor_survival.get("effective_health", 0.0),
-                "healing_received": actor_survival.get("healing_received", 0.0),
-                "healing_reduced": actor_survival.get("healing_reduced", 0.0),
-                "support_shield_received": actor_survival.get(
-                    "support_shield_received", 0.0
+                utility_outcomes=(
+                    utility_by_actor[actor.participant_id] if include_receipt else None
                 ),
-                "support_value": round(support_by_attacker[actor.participant_id], 1),
-                "healing_output": round(healing_by_attacker[actor.participant_id], 1),
-                **(
-                    {"utility_outcomes": utility_by_actor[actor.participant_id]}
-                    if include_receipt
-                    else {}
-                ),
-                "survived_window": bool(actor_survival.get("survived_window")),
-                "death_time": actor_survival.get("death_time"),
-            }
-        )
+            )
+            for actor in all_actors
+        ]
+    )
+    public_breakdown = _breakdown_view.breakdown(program, walk_result)
     if not include_receipt:
         # Optimizer scoring reads only the survival rows, the per-actor
         # damage breakdown, and the ordering receipt.  Skip the public
         # event/healing/support serialization for the thousands of candidate
-        # evaluations that never show a timeline to anyone.
-        return {
-            "duration": float(params.fight_duration_seconds),
-            "participants": [
-                {
-                    "participant_id": actor.participant_id,
-                    "team": actor.team,
-                    "champion": actor.champion_data.get("name", ""),
-                    "level": actor.level,
-                    "survival": survival[actor.participant_id],
-                }
-                for actor in all_actors
-            ],
-            "breakdown": public_breakdown,
-            "timeline_coverage": combine_timeline_coverages(
-                coverage_reports,
-                target_count=len(coverage_reports),
-            ),
-        }
+        # evaluations that never show a timeline to anyone.  It is the *same*
+        # projection the compiled score path returns, which is what makes
+        # "score mode and receipt mode agree" a property of the layering
+        # rather than of two assemblies kept in step by hand.
+        return _score_view.score(program, walk_result)
 
     focus_row = next(
         (

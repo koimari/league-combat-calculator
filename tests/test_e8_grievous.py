@@ -22,6 +22,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.healing_reduction import (
@@ -39,6 +41,20 @@ from src.calculator.participant_timeline import (
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
+
+
+def _simulated_rows(combatants, *args, **kwargs):
+    """The published survival rows for one simulated walk.
+
+    ``_simulate_survival`` returns the frozen walk result from S9 on, because
+    the composition hands that one result to five views.  These tests read the
+    published rows, so they project it through the survival view exactly as
+    the composition does.
+    """
+    return _survival_view(
+        _roster_program(combatants),
+        _simulate_survival(combatants, *args, **kwargs),
+    )
 
 
 def _dummy_combatant(
@@ -157,7 +173,7 @@ def test_item_grievous_wounds_oblivion_orb_three_second_window_expiry():
     orb = get_item_by_name("Oblivion Orb")
     source = _dummy_combatant("source", "main", items=[orb])
     target = _dummy_combatant("target", "enemy", health=300.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -382,7 +398,7 @@ def test_serpents_fang_venom_cuts_shield_at_grant_time_melee():
     item = get_item_by_name("Serpent's Fang")
     source = _dummy_combatant("source", "main", items=[item], is_melee=True)
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -421,7 +437,7 @@ def test_serpents_fang_venom_cuts_shield_at_grant_time_ranged():
     item = get_item_by_name("Serpent's Fang")
     source = _dummy_combatant("source", "main", items=[item], is_melee=False)
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -458,7 +474,7 @@ def test_serpents_fang_venom_expires_after_three_seconds():
     item = get_item_by_name("Serpent's Fang")
     source = _dummy_combatant("source", "main", items=[item], is_melee=True)
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -495,7 +511,7 @@ def test_serpents_fang_venom_requires_the_item():
     """Without Serpent's Fang, shields the target gains are not cut."""
     source = _dummy_combatant("source", "main")
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [

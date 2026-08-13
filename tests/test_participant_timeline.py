@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.defensive_effects import resolve_starting_defenses
@@ -40,6 +42,20 @@ from src.calculator.survival import (
     finalize_states,
     run_survival_walk,
 )
+
+
+def _simulated_rows(combatants, *args, **kwargs):
+    """The published survival rows for one simulated walk.
+
+    ``_simulate_survival`` returns the frozen walk result from S9 on, because
+    the composition hands that one result to five views.  These tests read the
+    published rows, so they project it through the survival view exactly as
+    the composition does.
+    """
+    return _survival_view(
+        _roster_program(combatants),
+        _simulate_survival(combatants, *args, **kwargs),
+    )
 
 
 def test_roster_actor_without_cast_order_uses_module_default_not_main_override():
@@ -2436,7 +2452,7 @@ def _dummy_combatant(
 def test_simulator_amplifies_authored_support_shields_for_spirit_visage():
     source = _dummy_combatant("source", "ally")
     target = _dummy_combatant("target", "main", healing_received_multiplier=1.25)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {"target": []},
         {},
@@ -2460,7 +2476,7 @@ def test_simulator_amplifies_authored_support_shields_for_spirit_visage():
 def test_simulator_orders_same_timestamp_events_without_comparing_payloads():
     target = _dummy_combatant("target", "enemy")
     source = _dummy_combatant("source", "main")
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2493,7 +2509,7 @@ def test_simulator_scores_only_applied_support_and_healing_amounts():
     source = _dummy_combatant("source", "main")
     target = _dummy_combatant("target", "ally")
     dead_target = _dummy_combatant("dead", "ally", health=50.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target, dead_target],
         {
             "dead": [
@@ -2550,7 +2566,7 @@ def test_simulator_applies_sourced_grievous_wounds_to_healing_in_event_order():
         defenses=source.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2631,7 +2647,7 @@ def test_grievous_sources_reset_for_a_new_proc_after_expiry():
         defenses=second.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=300.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [first, second, target],
         {
             "target": [
@@ -2691,7 +2707,7 @@ def test_overlapping_grievous_sources_share_one_sourced_reduction_window():
         defenses=source.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2803,7 +2819,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert thorns_events[0]["_wound_until"] == 3.0
     assert thorns_events[0] in outgoing["target"]
 
-    result = _simulate_survival(
+    result = _simulated_rows(
         [striker, wearer],
         incoming,
         {
@@ -2879,7 +2895,7 @@ def test_thorns_from_a_skipped_strike_never_fires():
     outgoing = {"source": list(incoming["target"]), "target": []}
     _schedule_thorns_events([striker, wearer], incoming, outgoing)
 
-    result = _simulate_survival([striker, wearer], incoming, {}, {}, 10.0)
+    result = _simulated_rows([striker, wearer], incoming, {}, {}, 10.0)
     assert result["target"]["survived_window"] is False
     # Only the killing blow's thorns lands: 10 magic vs 100 MR = 5.
     assert result["source"]["damage_taken"] == 5.0
@@ -2888,7 +2904,7 @@ def test_thorns_from_a_skipped_strike_never_fires():
 def test_survival_walk_applies_explicit_deferred_damage_in_equal_ticks():
     source = _dummy_combatant("source", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2956,7 +2972,7 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
         ],
     }
     healing = {}
-    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+    result = _simulated_rows([holder, enemy], incoming, healing, {}, 5.0)
 
     assert result["main"]["damage_deferral_fraction"] == pytest.approx(0.30)
     assert result["main"]["damage_deferral_cleared"] == pytest.approx(15.0)
@@ -3012,7 +3028,7 @@ def test_maw_lifeline_enables_post_trigger_omnivamp():
             }
         ],
     }
-    result = _simulate_survival([holder, enemy], incoming, {}, {}, 2.0)
+    result = _simulated_rows([holder, enemy], incoming, {}, {}, 2.0)
     assert result["main"]["threshold_shield_triggered"] is True
     assert result["main"]["healing_received"] == pytest.approx(2.0)
 
@@ -3033,7 +3049,7 @@ def test_immortal_path_below_half_amplifies_non_vamp_recovery():
         ),
     )
     enemy = _dummy_combatant("enemy", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, enemy],
         {
             "main": [
@@ -3113,7 +3129,7 @@ def test_deaths_dance_defy_starts_heal_at_delayed_takedown_once():
         ],
     }
     healing = {}
-    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+    result = _simulated_rows([holder, enemy], incoming, healing, {}, 5.0)
 
     defy_heals = [
         event for event in healing["main"] if event["source"] == "Death's Dance (Defy)"
@@ -3168,7 +3184,7 @@ def test_eclipse_self_shield_is_triggered_and_expires_in_order():
             }
         ],
     }
-    result = _simulate_survival([source, target], incoming, {}, support, 4.0)
+    result = _simulated_rows([source, target], incoming, {}, support, 4.0)
 
     assert result["source"]["support_shield_received"] == pytest.approx(80.0)
     assert result["source"]["support_shield_expired"] == pytest.approx(80.0)
@@ -3192,7 +3208,7 @@ def test_deferred_ticks_are_mirrored_into_the_public_outgoing_receipt():
         "deferred_ticks": 3,
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -3218,7 +3234,7 @@ def test_survival_walk_redirects_an_authored_damage_fraction_to_holder():
     source = _dummy_combatant("source", "enemy", health=100.0)
     protected = _dummy_combatant("protected", "main", health=100.0)
     holder = _dummy_combatant("holder", "main", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, protected, holder],
         {
             "protected": [
@@ -3276,7 +3292,7 @@ def test_knights_vow_redirect_reprices_pre_mitigation_damage_for_holder_resistan
         "redirect_holder_health_ratio": 0.30,
         "_baseline_effective_armor": 0.0,
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, protected, holder],
         {"protected": [event]},
         {},
@@ -3321,7 +3337,7 @@ def test_knights_vow_cancels_redirect_when_holder_falls_below_health_gate():
             }
         ],
     }
-    result = _simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
+    result = _simulated_rows([source, protected, holder], incoming, {}, {}, 10.0)
     assert result["protected"]["health_damage"] == pytest.approx(40.0)
     assert result["holder"]["health_damage"] == pytest.approx(90.0)
 
@@ -3371,7 +3387,7 @@ def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
         "redirect_target": "holder",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, protected, holder],
         {"protected": [event]},
         {},
@@ -3393,7 +3409,7 @@ def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
 def test_survival_walk_blocks_stasis_damage_and_allows_explicit_revive():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=50.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3477,7 +3493,7 @@ def test_revive_after_fight_window_cannot_change_terminal_state():
             }
         ]
     }
-    result = _simulate_survival([source, target], damage, {}, support, 10.0)
+    result = _simulated_rows([source, target], damage, {}, support, 10.0)
     assert result["target"]["first_death_time"] == 1.0
     assert result["target"]["revived"] is False
     assert result["target"]["terminal_phase"] == "dead"
@@ -3497,7 +3513,7 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
         "_event_id": "late-damage",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -3525,7 +3541,7 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
         "sequence": 0,
         "_event_id": "collector",
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {"target": [execute_event]},
         {},
@@ -3560,7 +3576,7 @@ def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
             threshold_shield_damage_type="all",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3606,7 +3622,7 @@ def test_threshold_shield_stays_armed_past_duration_until_matching_type_hit():
             threshold_shield_damage_type="magic",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3649,7 +3665,7 @@ def test_threshold_shield_triggers_on_late_matching_type_hit_and_expires_after_d
             threshold_shield_damage_type="magic",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3700,7 +3716,7 @@ def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
         "_event_id": "lifeline-receipt",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target], {"target": [event]}, {}, {}, 10.0, receipt_events=outgoing
     )
     assert event["threshold_shield_triggered"] is True
@@ -3777,7 +3793,7 @@ def test_authored_reactive_packet_with_wrong_trigger_is_ignored():
 def test_spell_shield_consumes_one_authored_ability_but_not_auto_attack():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3870,7 +3886,7 @@ def test_opening_annul_from_item_blocks_first_canonical_ability():
             "_event_id": "auto",
         },
     ]
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["damage_taken"] == 20.0
     assert result["target"]["spell_shield_used"] is True
@@ -3892,7 +3908,7 @@ def test_spell_shield_block_receipt_preserves_authored_source():
         "_event_id": "spell-source",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -3916,7 +3932,7 @@ def test_spell_shield_block_receipt_preserves_authored_source():
 def test_stasis_blocks_the_stasis_holder_outgoing_packet_until_expiry():
     holder = _dummy_combatant("holder", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, target],
         {
             "target": [
@@ -3962,7 +3978,7 @@ def test_stasis_blocks_the_stasis_holder_outgoing_packet_until_expiry():
 def test_stasis_receipt_carries_authored_source_and_start_time():
     holder = _dummy_combatant("holder", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, target],
         {},
         {},
@@ -4020,7 +4036,7 @@ def test_force_of_nature_stacks_and_reprices_the_maximum_stack_packet():
         for index in range(8)
     ]
 
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["force_of_nature"]["stacks"] == 8
     assert result["target"]["force_of_nature"]["dynamic_bonus_magic_resistance"] == 70.0
@@ -4074,7 +4090,7 @@ def test_jaksho_multiplies_bonus_resistances_after_five_combat_seconds():
         },
     ]
 
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["jaksho"]["stacks"] == 5
     assert result["target"]["jaksho"]["dynamic_bonus_magic_resistance"] == 18.0
@@ -4123,7 +4139,7 @@ def test_explicit_time_stop_input_starts_stasis_and_blocks_until_expiry():
         ]
     }
 
-    result = _simulate_survival([source, target], incoming, {}, {}, 5.0)
+    result = _simulated_rows([source, target], incoming, {}, {}, 5.0)
 
     assert result["target"]["damage_taken"] == pytest.approx(30.0)
     assert result["target"]["stasis_until"] == pytest.approx(2.5)
@@ -4138,7 +4154,7 @@ def test_invulnerability_and_untargetability_receipts_expose_expiry_boundaries()
             {"time": 1.0, "kind": "untargetable", "duration": 2.0},
         ]
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder],
         {},
         {},
@@ -4166,7 +4182,7 @@ def test_healing_receipt_separates_applied_amount_from_overheal():
             }
         ]
     }
-    result = _simulate_survival([source, target], {}, healing, {}, 10.0)
+    result = _simulated_rows([source, target], {}, healing, {}, 10.0)
     assert result["target"]["healing_received"] == 0.0
     assert result["target"]["overhealing"] == 50.0
     assert healing["target"][0]["overheal"] == 50.0
@@ -4210,7 +4226,7 @@ def test_grievous_window_expiry_clears_stale_source_composition():
             }
         ]
     }
-    result = _simulate_survival([early, late, target], incoming, healing, {}, 10.0)
+    result = _simulated_rows([early, late, target], incoming, healing, {}, 10.0)
     assert result["target"]["healing_received"] == 6.0
     assert result["target"]["healing_reduction_events"][-1]["sources"] == ["Late Wound"]
 
@@ -4230,7 +4246,7 @@ def test_authored_temporary_health_support_expires_and_clamps_health():
             }
         ]
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4274,7 +4290,7 @@ def test_heal_overflow_can_become_temporary_health_and_expires():
             }
         ]
     }
-    result = _simulate_survival([source, target], {"target": []}, healing, {}, 5.0)
+    result = _simulated_rows([source, target], {"target": []}, healing, {}, 5.0)
     event = healing["target"][0]
     assert result["target"]["healing_received"] == 0.0
     assert result["target"]["overhealing"] == 0.0
@@ -4702,7 +4718,7 @@ def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
         "target": "target",
         "_event_id": "magic-hit",
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4752,7 +4768,7 @@ def test_celestial_opposition_reduction_lingers_two_seconds():
     }
     second = {**first, "time": 1.0, "_event_id": "second"}
     third = {**first, "time": 3.1, "_event_id": "third"}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [first, second, third]},
         {},
@@ -4800,7 +4816,7 @@ def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_s
         "attacker": "target",
         "target": "target",
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target], {"target": [damage]}, {"target": [heal]}, {}, 10.0
     )
 

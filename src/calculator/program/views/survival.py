@@ -94,6 +94,7 @@ def survival(program: Any, result: Any) -> dict[str, dict[str, Any]]:
     states = result.states
     combatants = program.actors
     rows: dict[str, dict[str, Any]] = {}
+    grey = result.grey_health
     for index, state in enumerate(states):
         participant_id = combatants[index].participant_id
         pools = state["pools"]
@@ -217,4 +218,19 @@ def survival(program: Any, result: Any) -> dict[str, dict[str, Any]]:
                 "defy_heal_received", state["defy_heal_received"]
             ),
         }
+        if index == 0 and grey is not None and grey.get("source"):
+            # Grey health is the main champion's stored-then-consumed pool
+            # (Mordekaiser), published on its own row.  Both composition
+            # paths patched these three keys onto the row after projecting
+            # it, in two copies that had to agree; the walk now carries the
+            # summary and the projection publishes it once.  It is appended
+            # rather than declared in the literal above because the key's
+            # *absence* is the statement for every roster without one.
+            rows[participant_id]["grey_health_stored"] = round_field(
+                "grey_health_stored", float(grey.get("grey_health_stored", 0.0))
+            )
+            rows[participant_id]["grey_health_consumed"] = round_field(
+                "grey_health_consumed", float(grey.get("grey_health_consumed", 0.0))
+            )
+            rows[participant_id]["grey_health_source"] = str(grey["source"])
     return rows

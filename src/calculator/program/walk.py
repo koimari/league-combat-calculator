@@ -61,12 +61,21 @@ class AttackerOutcome:
     receipt path sums its annotated event streams.  Naming the *result* is
     what lets one view serve both without unifying two numerically distinct
     folds inside a stage labelled pure.
+
+    The three identity strings are here rather than read off ``Program`` for
+    one measured reason, and it is a **preserved defect**: the receipt path
+    fills a breakdown row's identity inside its attacker loop, so a
+    participant who dealt no damage in the window is published with an empty
+    ``champion`` and an empty ``team``.  Reading identity off the roster
+    instead would quietly *fix* that -- and this stage is pure, so it may
+    relocate the decision but not revise it.  The published strings are
+    therefore whatever the composition folded, and correcting them is its own
+    slice with its own baseline move.
     """
 
     participant_id: str
     team: str
     champion: str
-    level: int
     total_damage: float
     incoming_damage: float
     health_damage: float
@@ -94,11 +103,11 @@ class WalkResult:
     reconstructions of it.  ``rung`` rides along because "which engine priced
     this" is a property of the result and not of the caller's memory of it.
 
-    ``outcomes`` is the per-participant fold the composition made after the
-    kernel returned, empty until it does.  It is on the result rather than
-    passed beside it because a view takes exactly ``(Program, WalkResult)``,
-    and a number a view publishes that reached it by some other route is a
-    number no counter can trace to this walk.
+    ``outcomes``, ``grey_health`` and ``timeline_coverage`` are the folds the
+    composition made after the kernel returned, empty until it does.  They are
+    on the result rather than passed beside it because a view takes exactly
+    ``(Program, WalkResult)``, and a number a view publishes that reached it
+    by some other route is a number no counter can trace to this walk.
     """
 
     actions: tuple[SurvivalAction, ...]
@@ -107,20 +116,40 @@ class WalkResult:
     rung: Rung
     duration: float = 0.0
     outcomes: tuple[AttackerOutcome, ...] = ()
+    grey_health: Mapping[str, Any] | None = None
+    timeline_coverage: Mapping[str, Any] | None = None
 
     def action_count(self) -> int:
         """How many transitions this walk consumed — the one-walk counter."""
         return len(self.actions)
 
-    def with_outcomes(self, outcomes: Sequence[AttackerOutcome]) -> "WalkResult":
-        """The same walk, carrying the fold the composition derived from it.
+    def projected(
+        self,
+        *,
+        outcomes: Sequence[AttackerOutcome] | None = None,
+        grey_health: Mapping[str, Any] | None = None,
+        timeline_coverage: Mapping[str, Any] | None = None,
+    ) -> "WalkResult":
+        """The same walk, carrying a fold the composition derived from it.
 
         A new record rather than a mutation: the result is frozen because a
         view that could write to it would be a sixth producer of numbers
         wearing a projection's name, and a fold that could edit it in place
         would be the same thing one step earlier.
+
+        Every argument defaults to "unchanged" rather than to "cleared", so a
+        caller adding one fold cannot silently drop another.
         """
-        return replace(self, outcomes=tuple(outcomes))
+        return replace(
+            self,
+            outcomes=self.outcomes if outcomes is None else tuple(outcomes),
+            grey_health=self.grey_health if grey_health is None else grey_health,
+            timeline_coverage=(
+                self.timeline_coverage
+                if timeline_coverage is None
+                else timeline_coverage
+            ),
+        )
 
 
 def walk(

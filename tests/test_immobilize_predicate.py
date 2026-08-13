@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator import survival
 from src.calculator.ability_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 from src.calculator.data_fetcher import get_item_by_name
@@ -41,6 +43,20 @@ FORCE_IMMOBILIZE_STACKS = int(
 FORCE_MAX_STACKS = int(required_effect_value("Force of Nature", "steadfast_max_stacks"))
 
 SURVIVAL_MODULES = tuple(sorted(Path(survival.__file__).parent.rglob("*.py")))
+
+
+def _simulated_rows(combatants, *args, **kwargs):
+    """The published survival rows for one simulated walk.
+
+    ``_simulate_survival`` returns the frozen walk result from S9 on, because
+    the composition hands that one result to five views.  These tests read the
+    published rows, so they project it through the survival view exactly as
+    the composition does.
+    """
+    return _survival_view(
+        _roster_program(combatants),
+        _simulate_survival(combatants, *args, **kwargs),
+    )
 
 
 def _force_of_nature_target() -> Combatant:
@@ -104,7 +120,7 @@ def _one_magic_cast(**markers) -> dict:
 
 def _stacks_after_one_cast(**markers) -> tuple[int, dict]:
     """Steadfast's stack count and its receipt row after one marked cast."""
-    result = _simulate_survival(
+    result = _simulated_rows(
         [_attacker(), _force_of_nature_target()],
         {"target": [_one_magic_cast(**markers)]},
         {},

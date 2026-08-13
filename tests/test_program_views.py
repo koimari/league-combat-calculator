@@ -3,7 +3,7 @@
 This file is the front door for every module under ``program/views/`` and it
 **binds each one as a symbol** — ``from src.calculator.program.views import
 survival`` — because a package import backs the package and nothing inside
-it.  As the remaining four views land they are added to that import, which is
+it.  As the remaining views land they are added to that import, which is
 what keeps the derived front-door registry honest about all five rather than
 about one mention of a directory.
 
@@ -26,11 +26,13 @@ from src.calculator import ability_spec
 from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
 from src.calculator.program import precision
 from src.calculator.program.build import roster_program
-from src.calculator.program.walk import WalkResult
+from src.calculator.program.walk import AttackerOutcome, WalkResult
 from src.calculator.program.rung import CompiledFast
 from src.calculator.program.views import (
     LeafWriter,
     ViewTag,
+    breakdown,
+    score,
     serialize_leaf,
     survival,
 )
@@ -116,10 +118,10 @@ def _combatant(**defenses: object) -> SimpleNamespace:
     )
 
 
-def _result(states: list[dict[str, object]]) -> WalkResult:
+def _result(states: list[dict[str, object]], **fields: object) -> WalkResult:
     """A finished walk carrying only the states the projection reads."""
     return WalkResult(
-        actions=(), states=tuple(states), coverage=(), rung=CompiledFast()
+        actions=(), states=tuple(states), coverage=(), rung=CompiledFast(), **fields
     )
 
 
@@ -146,12 +148,21 @@ def test_every_published_number_carries_its_declared_precision() -> None:
     unchanged — which is only true if the projection used that precision in
     the first place.
     """
-    row = _row(
-        healing_received=123.456789,
-        venom_until=1.23456789,
-        death_time=4.567891,
-    )
-    for field, digits in precision.ROUNDING.items():
+    states = [
+        _state(healing_received=123.456789, venom_until=1.23456789, death_time=4.567891)
+    ]
+    row = survival.survival(
+        roster_program([_combatant()]),
+        _result(
+            states,
+            grey_health={
+                "source": "Mordekaiser",
+                "grey_health_stored": 12.3456789,
+                "grey_health_consumed": 3.21987654,
+            },
+        ),
+    )["target"]
+    for field, digits in precision.ROUNDING_BY_VIEW["survival"].items():
         if "." in field:
             block, leaf = field.split(".")
             value = row[block][leaf]
@@ -375,3 +386,163 @@ def test_the_writer_preserves_the_order_the_view_spells() -> None:
     for index, name in enumerate(("alpha", "beta", "gamma")):
         block.measured(name, float(index))
     assert list(row) == ["alpha", "beta", "gamma"]
+
+
+# ---------------------------------------------------------------------------
+# breakdown and score — the two views S9's assembly deletion moved into
+# ---------------------------------------------------------------------------
+
+
+def _actor(participant_id: str = "main", team: str = "main", champion: str = "Syndra"):
+    """One roster member, carrying only what the two views read off it."""
+    return SimpleNamespace(
+        participant_id=participant_id,
+        team=team,
+        level=13,
+        champion_data={"name": champion},
+        defenses=SimpleNamespace(damage_deferral_fraction=0.0),
+    )
+
+
+def _outcome(**overrides: object) -> AttackerOutcome:
+    """One attacker's folded numbers, at rest unless a test moves them."""
+    fields: dict[str, object] = {
+        "participant_id": "main",
+        "team": "main",
+        "champion": "Syndra",
+        "total_damage": 1234.56,
+        "incoming_damage": 750.0,
+        "health_damage": 750.0,
+        "shield_absorbed": 0.0,
+        "effective_health": 1000.0,
+        "healing_received": 0.0,
+        "healing_reduced": 0.0,
+        "support_shield_received": 0.0,
+        "support_value": 12.34,
+        "healing_output": 0.0,
+        "survived_window": True,
+        "death_time": None,
+    }
+    fields.update(overrides)
+    return AttackerOutcome(**fields)  # type: ignore[arg-type]
+
+
+def test_the_breakdown_row_key_order_is_the_published_order() -> None:
+    """The order two composition tails produced by hand, now produced once."""
+    rows = breakdown.breakdown(
+        roster_program([_actor()]), _result([_state()], outcomes=(_outcome(),))
+    )
+    assert list(rows[0]) == [
+        "participant_id",
+        "team",
+        "champion",
+        "total_damage",
+        "sources",
+        "outgoing_damage_before_death",
+        "incoming_damage",
+        "health_damage",
+        "shield_absorbed",
+        "effective_health",
+        "healing_received",
+        "healing_reduced",
+        "support_shield_received",
+        "support_value",
+        "healing_output",
+        "survived_window",
+        "death_time",
+    ]
+
+
+def test_the_breakdown_rounds_only_at_declared_precisions() -> None:
+    """Every published number is its leaf re-rounded, never re-derived."""
+    rows = breakdown.breakdown(
+        roster_program([_actor()]), _result([_state()], outcomes=(_outcome(),))
+    )
+    assert rows[0]["total_damage"] == 1234.6
+    assert rows[0]["outgoing_damage_before_death"] == 1234.6
+    assert rows[0]["incoming_damage"] == 750.0
+    assert rows[0]["support_value"] == 12.3
+
+
+def test_a_utility_receipt_is_absent_rather_than_empty_when_there_is_none() -> None:
+    """The optimizer's score subset displays no timeline, so it carries none.
+
+    Absence is the statement: an empty dict would be a receipt claiming the
+    participant had no utility outcomes, which is a different answer from
+    "this payload does not publish utility outcomes at all".
+    """
+    program = roster_program([_actor()])
+    without = breakdown.breakdown(program, _result([_state()], outcomes=(_outcome(),)))
+    with_receipt = breakdown.breakdown(
+        program,
+        _result([_state()], outcomes=(_outcome(utility_outcomes={"movement": 1.0}),)),
+    )
+    assert "utility_outcomes" not in without[0]
+    assert with_receipt[0]["utility_outcomes"] == {"movement": 1.0}
+
+
+def test_the_breakdown_publishes_the_identity_the_composition_folded() -> None:
+    """A preserved defect, pinned so a later slice has to mean to change it.
+
+    The receipt path fills a row's identity inside its attacker loop, so a
+    participant who dealt no damage is published with an empty champion.  A
+    pure stage relocates that decision; it does not correct it.
+    """
+    rows = breakdown.breakdown(
+        roster_program([_actor()]),
+        _result([_state()], outcomes=(_outcome(champion="", team=""),)),
+    )
+    assert rows[0]["champion"] == ""
+    assert rows[0]["team"] == ""
+
+
+def test_a_fold_that_lost_a_participant_raises_rather_than_publishing_short() -> None:
+    """A breakdown row with no participant behind it is a number about nobody."""
+    with pytest.raises(ValueError):
+        breakdown.breakdown(
+            roster_program([_actor(), _actor("ally", "ally", "Lulu")]),
+            _result([_state(), _state()], outcomes=(_outcome(),)),
+        )
+
+
+def test_the_score_payload_is_the_four_keys_a_candidate_is_scored_from() -> None:
+    """One projection, so score mode and receipt mode cannot disagree."""
+    payload = score.score(
+        roster_program([_actor()]),
+        _result(
+            [_state()],
+            duration=12.0,
+            outcomes=(_outcome(),),
+            timeline_coverage={"complete": True},
+        ),
+    )
+    assert list(payload) == [
+        "duration",
+        "participants",
+        "breakdown",
+        "timeline_coverage",
+    ]
+    assert payload["duration"] == 12.0
+    assert payload["timeline_coverage"] == {"complete": True}
+    assert list(payload["participants"][0]) == [
+        "participant_id",
+        "team",
+        "champion",
+        "level",
+        "survival",
+    ]
+
+
+def test_the_score_view_publishes_the_roster_identity_not_the_folded_one() -> None:
+    """The participants block always read the roster; only breakdown did not.
+
+    Two identity sources in one payload is exactly the kind of divergence
+    this phase exists to make visible, so it is pinned rather than tidied:
+    tidying it moves published output.
+    """
+    payload = score.score(
+        roster_program([_actor()]),
+        _result([_state()], outcomes=(_outcome(champion=""),)),
+    )
+    assert payload["participants"][0]["champion"] == "Syndra"
+    assert payload["breakdown"][0]["champion"] == ""

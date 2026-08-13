@@ -50,6 +50,7 @@ from types import MappingProxyType
 __all__ = [
     "CutoffPolicy",
     "ROUNDING",
+    "ROUNDING_BY_VIEW",
     "damage_cutoff",
     "digits_for",
     "round_field",
@@ -68,7 +69,7 @@ __all__ = [
 # revise it, and the two published precisions (1 for a health-scale
 # magnitude, 3 for a timestamp, 6 for a ratio or factor) are a convention
 # this registry now makes visible rather than one it invents.
-_ROUNDING: dict[str, int] = {
+_SURVIVAL_ROUNDING: dict[str, int] = {
     # magnitudes on the health scale
     "max_health": 1,
     "ending_health": 1,
@@ -112,9 +113,43 @@ _ROUNDING: dict[str, int] = {
     # ratios and factors
     "ending_health_ratio": 6,
     "venom_factor": 6,
+    "grey_health_stored": 6,
+    "grey_health_consumed": 6,
 }
 
-ROUNDING: Mapping[str, int] = MappingProxyType(_ROUNDING)
+# The breakdown view's own leaves.  A second table rather than more rows in
+# the first, because "which view publishes this leaf" is a question the
+# registry should answer: the survival table is a transcription of what the
+# kernel did, and a leaf added to it by a reader who only meant to publish a
+# breakdown number would silently join the survival row's pinned key order.
+_BREAKDOWN_ROUNDING: dict[str, int] = {
+    "total_damage": 1,
+    "outgoing_damage_before_death": 1,
+    "incoming_damage": 1,
+    "support_value": 1,
+    "healing_output": 1,
+}
+
+ROUNDING_BY_VIEW: Mapping[str, Mapping[str, int]] = MappingProxyType(
+    {
+        "survival": MappingProxyType(_SURVIVAL_ROUNDING),
+        "breakdown": MappingProxyType(_BREAKDOWN_ROUNDING),
+    }
+)
+
+# One flat lookup for :func:`digits_for`, asserted disjoint at import: two
+# views declaring one leaf name at two precisions would make the flat answer
+# depend on merge order, which is a coin toss wearing a registry's name.
+_COLLISIONS = set(_SURVIVAL_ROUNDING) & set(_BREAKDOWN_ROUNDING)
+if _COLLISIONS:  # pragma: no cover - a declaration defect, not a runtime one
+    raise ValueError(
+        "two views declare a precision for the same leaf: "
+        + ", ".join(sorted(_COLLISIONS))
+    )
+
+ROUNDING: Mapping[str, int] = MappingProxyType(
+    {**_SURVIVAL_ROUNDING, **_BREAKDOWN_ROUNDING}
+)
 
 
 class UnregisteredField(KeyError):
@@ -138,7 +173,7 @@ def digits_for(field: str) -> int:
         UnregisteredField: *field* has no declared precision.
     """
     try:
-        return _ROUNDING[field]
+        return ROUNDING[field]
     except KeyError:
         raise UnregisteredField(
             f"{field!r} has no declared precision; add it to "
