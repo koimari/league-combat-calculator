@@ -474,6 +474,20 @@
       "captured_at_commit": "c232e95",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "S5's own R-28 baseline, captured on the S4 tip before S5's first src/ edit. The counters, residual, winner and score are byte-identical to the S1, S2, S3 and S4 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 0.3% below S4's 3346.0 ms, which is repeat noise on one machine. R-28 gates allocation at S4 alone, so S5 declares wall and nothing else."
+    },
+    "P4-S6": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3380.1,
+      "repeats_ms": [
+        3404.2,
+        3438.9,
+        3380.1
+      ],
+      "ratchet_ceiling_ms": 3718.1,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "4b21f49",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "S6's own R-28 baseline, captured on the S5 tip before S6's first src/ edit. The counters, residual, winner and score are byte-identical to the S1 through S5 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 1.3% above S5's 3335.8 ms, which is repeat noise on one machine. R-28 gates allocation at S4 alone, so S6 declares wall and nothing else. S6 is a semantic stage, so the counters, winner and score above are also the row-8 values it predicts unchanged: its two reordering sites are pure arming-order moves at one timestamp, and a move in any of them is an unexpected occurrence that stops the slice rather than a budget overrun."
     }
   },
   "tests": {
