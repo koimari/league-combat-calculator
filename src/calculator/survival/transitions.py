@@ -1008,13 +1008,68 @@ def _apply_damage_modifier(
         "mr_reduction_percent": action.mr_reduction_percent,
         "resistance_type": action.resistance_type,
         "holder": action.holder,
+        "armed_by": action.attacker,
         "damage_classes": damage_classes,
         "attack_classes": attack_classes,
     }
-    state["active_damage_modifiers"].append(modifier)
+    replaced = _refresh_live_modifier(state["active_damage_modifiers"], modifier)
+    if replaced is None:
+        state["active_damage_modifiers"].append(modifier)
+    else:
+        ctx.ledger.write(action, refresh=replaced)
     if not persistent:
         ctx.ledger.write(action, expires_at=round(action.time + action.duration, 3))
     ctx.ledger.write(action, applied_amount=round(action.amount, 6))
+
+
+def _refresh_live_modifier(
+    armed: list[dict[str, Any]], modifier: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    """Refresh one holder's live modifier in place, or ``None`` if it is new.
+
+    **One holder's one mechanic on one subject is one debuff.**  A second
+    trigger refreshes the window the first opened; it does not arm a second
+    copy beside it.  Bloodsong's Expose Weakness is a 4-second window on a
+    1.5-second cooldown, so an eight-second fight arms it three times with
+    overlapping windows, and every packet inside an overlap was multiplied
+    by ``1.08`` *twice* — a double count with no symptom, because
+    ``_apply_cross_participant_modifiers`` writes ``support_damage_multiplier``
+    once per applying modifier and the receipt therefore published the last
+    factor rather than the product.  The pair-side reading never had the
+    defect: ``interpreters.delta_amp.windows`` already unions overlapping
+    windows, so this is the walk being taught what the other engine says.
+
+    Identity is ``(source, armed_by)`` and ``armed_by`` is the roster slot
+    that *authored* the packet — deliberately not ``holder``, which is the
+    owner skip's slot and is ``-1`` for exactly the coupled-authoritative
+    mechanics that need this most.  Two **different** holders keep their two
+    modifiers, because whether they should is
+    :class:`~...trigger_stream.HolderStacking`'s question and D-66's
+    ``ArmingLedger`` is the one place it is answered.
+
+    The surviving window is the later expiry, which is what the pair engine's
+    union does and what ``WindowMerge.EXTEND`` names: a refresh never
+    truncates a window a longer earlier trigger opened.
+
+    The replaced expiry is published unrounded.  Rounding is presentation and
+    its home is ``program/``'s precision registry (D-71), which ``survival/``
+    may not import; a ``round`` here would be a seventy-sixth kernel opinion
+    on a counter the migration frontier holds non-increasing.
+    """
+    for index, live in enumerate(armed):
+        if (
+            live["source"] != modifier["source"]
+            or live["armed_by"] != modifier["armed_by"]
+        ):
+            continue
+        previous = float(live["until"])
+        armed[index] = {**modifier, "until": max(previous, float(modifier["until"]))}
+        return {
+            "reason": "refresh",
+            "source": str(modifier["source"]),
+            "previous_expires_at": previous if math.isfinite(previous) else None,
+        }
+    return None
 
 
 def _apply_utility(

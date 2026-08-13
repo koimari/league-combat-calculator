@@ -102,6 +102,12 @@ ARMED_MODIFIER_FIELDS = frozenset(
         "mr_reduction_percent",
         "resistance_type",
         "holder",
+        # The roster slot that *authored* the packet, which is what the
+        # re-arm rule folds on: a second trigger from one holder refreshes
+        # the window the first opened.  It is not a precondition — nothing
+        # reads it at application time, only at arming time — so the claim
+        # this sentinel makes about what is absent is unchanged.
+        "armed_by",
         "damage_classes",
         "attack_classes",
     }
