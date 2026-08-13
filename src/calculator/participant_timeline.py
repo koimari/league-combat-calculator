@@ -81,9 +81,7 @@ from .survival import (
     action_key as _action_key,
     build_states,
     coalesce_darius_q_heals,
-    finalize_states,
     resolve_grievous as _grievous_pack,
-    run_survival_walk,
     support_transition_rank,
 )
 
@@ -104,7 +102,12 @@ from .program.amp import (
     live_amp_for,
     live_amp_riders,
 )
-from .program.build import ParamPatch, arming_stacking, pair_preview_sources
+from .program.build import (
+    ParamPatch,
+    arming_stacking,
+    pair_preview_sources,
+    roster_program,
+)
 from .program.dependency import (
     CrossPassDependency,
     IncompleteDependency,
@@ -120,7 +123,8 @@ from .program.compile import (
     pair_resistance_baselines,
     revive_candidate_actions,
 )
-from .program.views.survival import survival_rows as _survival_rows
+from .program.views import survival as _survival_view
+from .program.walk import walk as _walk
 from .work_counters import Rung, WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
@@ -2424,9 +2428,11 @@ def _simulate_survival(
     # adapter (annotating events, scheduling walk-authored recovery); the
     # optimizer score path drives the identical kernel through
     # ``ScoreLedger`` with no annotations and parallel-array accumulation.
-    run_survival_walk(actions, ctx)
-    finalize_states(states_list, duration)
-    return _survival_rows(states_list, combatant_list)
+    # Both now enter through ``program.walk.walk`` -- one call site in
+    # ``src/``, so "one walk per pass" is a number a counter reads rather
+    # than two composition bodies agreeing by hand (criterion 1).
+    program = roster_program(combatant_list)
+    return _survival_view.survival(program, _walk(actions, ctx))
 
 
 class CoupledSearchContext:
@@ -3225,9 +3231,9 @@ def _score_with_search_context(
         regeneration_windows=_regeneration_windows(all_actors),
         venom_profiles=venom_packs,
     )
-    run_survival_walk(actions, ctx)
-    finalize_states(states, duration)
-    rows_by_id = _survival_rows(states, all_actors)
+    program = roster_program(all_actors)
+    walk_result = _walk(actions, ctx)
+    rows_by_id = _survival_view.survival(program, walk_result)
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
     if grey_summary.get("source"):

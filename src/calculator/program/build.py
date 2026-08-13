@@ -287,16 +287,77 @@ class Program:
     dependency rebuilds the program: two passes are two programs, and a
     cache that could not tell them apart would serve pass 1's compiled
     actions for pass 2 and discard the patch that caused it.
+
+    ``actors`` is the roster those participant ids stand for, index-aligned
+    with ``participants`` and validated as such.  It exists because S9's five
+    views take exactly ``(Program, WalkResult)``: what happened and to whom is
+    the program's question, and "whom" is a champion at a level holding items,
+    not only a string.  Two id lists that could disagree would be the same
+    kept-in-step-by-hand arrangement one layer down, so there is one list and
+    the other is derived from it at construction.  It defaults to empty for
+    the compile-time programs :func:`build_program` produces, which route by
+    index and never publish a row.
     """
 
     participants: tuple[str, ...]
     events: tuple[RoutedEvent, ...]
     pass_index: int = 0
     patch: ParamPatch | None = None
+    actors: tuple[Any, ...] = ()
+    focus: str = ""
+
+    def __post_init__(self) -> None:
+        """A roster that disagrees with its own id list is not one."""
+        if self.actors and len(self.actors) != len(self.participants):
+            raise ValueError(
+                "program actors and participants must be index-aligned: "
+                f"{len(self.actors)} actors against {len(self.participants)} ids"
+            )
+        for index, actor in enumerate(self.actors):
+            if actor.participant_id != self.participants[index]:
+                raise ValueError(
+                    "program actor "
+                    f"{actor.participant_id!r} sits at slot {index}, which the "
+                    f"participant list calls {self.participants[index]!r}"
+                )
 
     def roster_size(self) -> int:
         """How many participants the program's roster indices are bounded by."""
         return len(self.participants)
+
+
+def roster_program(
+    actors: Sequence[Any],
+    *,
+    pass_index: int = 0,
+    patch: ParamPatch | None = None,
+    focus: str = "",
+) -> Program:
+    """The program one composition pass walks, named by its roster.
+
+    The events are empty and that emptiness is a **statement**, not an
+    omission: at S9 the composition still authors its transitions as engine
+    packets and compiles them straight to ``SurvivalAction`` through
+    ``WalkCompiler``, so the logical event list for those passes does not
+    exist yet.  Migration frontier counter 5 is exactly the measure of that
+    remaining span, and it is driven down by the constructor work, not by
+    fabricating a list here that no compiler produced.
+
+    Filling ``events`` with a reconstruction would be worse than leaving it
+    empty, which is why this constructor exists rather than a call site
+    passing ``events=()`` by hand: a reconstructed event list is a second
+    authoring of the fight, and two authorings that can disagree is the
+    failure mode the whole phase is about.  The views read the roster and the
+    walk result and never ``program.events``, pinned by their own test.
+    """
+    return Program(
+        participants=tuple(str(actor.participant_id) for actor in actors),
+        events=(),
+        pass_index=pass_index,
+        patch=patch,
+        actors=tuple(actors),
+        focus=focus,
+    )
 
 
 class DerivationCycle(ValueError):
@@ -478,5 +539,6 @@ __all__ = [
     "build_program",
     "derivation_order",
     "pair_program",
+    "roster_program",
     "route_policy_of",
 ]

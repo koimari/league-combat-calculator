@@ -134,6 +134,18 @@ _PROGRAM_FIELD_MOVES: dict[str, Any] = {
     "patch": None,
 }
 
+# The two fields the compiler never reads.  ``actors`` and ``focus`` exist so
+# the five views take exactly ``(Program, WalkResult)``: they name *whom* a
+# published row is about and which participant the receipt is focused on, and
+# ``compile_program`` reads neither -- it stages payloads onto roster indices.
+# Naming them here rather than widening the key is the honest half of the same
+# discipline ``('program', 'caps')`` follows: a field in a cache key that the
+# value does not read makes every request a miss, and a field the value *does*
+# read that is missing from the key is a wrong answer.  The behavioural half is
+# the test below, which varies both and asserts the compiled actions do not
+# move.
+_PUBLICATION_ONLY_PROGRAM_FIELDS = frozenset({"actors", "focus"})
+
 
 class Actor:
     """A stand-in for a combatant: an identity plus a mutable stat dict."""
@@ -412,12 +424,35 @@ class TestTheDeclaredKeyCoversWhatTheValueReads:
         program = _sample_program()
         base = program_compile.program_key(program, Projection.SCORE)
         for field in dataclasses.fields(Program):
+            if field.name in _PUBLICATION_ONLY_PROGRAM_FIELDS:
+                continue
             moved = dataclasses.replace(
                 program, **{field.name: _PROGRAM_FIELD_MOVES[field.name]}
             )
             assert (
                 program_compile.program_key(moved, Projection.SCORE) != base
             ), field.name
+
+    def test_the_publication_fields_do_not_reach_the_compiled_actions(self) -> None:
+        """``_PUBLICATION_ONLY_PROGRAM_FIELDS``'s behavioural half.
+
+        ``actors`` and ``focus`` are read by the views and by nothing under
+        the compiler, so they are excluded from the key above.  That is a
+        claim about the value, and this is the test that makes it one: the
+        same program compiled with and without a roster and a focus produces
+        the identical action tuple.
+        """
+        program = _sample_program()
+        published = dataclasses.replace(
+            program,
+            actors=tuple(
+                Actor(participant_id) for participant_id in program.participants
+            ),
+            focus="main",
+        )
+        assert program_compile.compile_program(
+            published, projection=Projection.SCORE
+        ) == program_compile.compile_program(program, projection=Projection.SCORE)
 
     def test_a_data_refresh_moves_the_key(self, monkeypatch) -> None:
         """``DATA_VERSION`` is declared by every cache; here it is also true."""

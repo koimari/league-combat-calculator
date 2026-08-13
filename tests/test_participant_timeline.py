@@ -25,7 +25,9 @@ from src.calculator.participant_timeline import (
     _simulate_survival,
     build_participant_timeline,
 )
-from src.calculator.program.views.survival import survival_rows
+from src.calculator.program.build import roster_program
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,
@@ -4344,9 +4346,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         # compiled them" cannot be the same context.
         regeneration_windows=(None,) * len(combatants),
     )
-    run_survival_walk([action], ctx)
-    finalize_states(states, 5.0)
-    rows = survival_rows(states, combatants)
+    rows = survival(roster_program(combatants), run_one_walk([action], ctx))
     assert ledger.applied == [0.0]
     assert rows["target"]["temporary_health_received"] == 50.0
     assert rows["target"]["temporary_health_expired_at"] == 2.0

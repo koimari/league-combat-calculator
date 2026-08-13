@@ -13,24 +13,24 @@ count now comes from :mod:`program.precision`, so the count of ``round(``
 under ``survival/`` falls by 38 (migration frontier counter 6) and no future
 reader has to hunt a literal to learn what precision a published field has.
 
-The walk's raw state is the input, because at S3 the walk still owns state:
-S4 gives this view the ``(Program, WalkResult)`` signature the phase's five
-views share, and S9 gives it the ``dispositions`` map.  It re-runs no
-arithmetic that the kernel did not already do -- the two sums below
+S9 gives it the ``(Program, WalkResult)`` signature the phase's five views
+share: the roster comes off the program and the final state off the result,
+which is what makes "score mode and receipt mode agree" a fact about the
+inputs rather than about two callers passing matching arguments.  It re-runs
+no arithmetic that the kernel did not already do -- the two sums below
 (``remaining_shield`` and ``effective_health``) are the two the kernel itself
 performed here, moved rather than introduced, and they are named in the
-phase's view-purity criterion as the thing S4 must relocate into the walk
-result rather than something this stage may quietly keep.
+phase's view-purity criterion as the thing still owed to the walk result
+rather than something this stage may quietly keep.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
 from ..precision import round_field
 
-__all__ = ["survival_rows"]
+__all__ = ["survival"]
 
 
 def _optional_time(field: str, value: float | None) -> float | None:
@@ -77,16 +77,23 @@ def _combat_state_blocks(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def survival_rows(
-    states: Sequence[dict[str, Any]], combatants: Sequence[Any]
-) -> dict[str, dict[str, Any]]:
+def survival(program: Any, result: Any) -> dict[str, dict[str, Any]]:
     """Project the walk's final state into one published row per participant.
 
     Shared row shape for both adapters: the score adapter builds the same
     rows from the same state and adds the per-event ``recipient`` prefix
     itself (the rows here carry it).
+
+    ``program`` supplies the roster and ``result`` the state the walk left,
+    which is the whole of this view's input surface -- criterion 3's "each
+    view's inputs are exactly ``Program`` and ``WalkResult``".  The roster is
+    read off ``program.actors`` and never off the result, because a
+    participant is a champion at a level holding items and the walk records
+    only what happened to it.
     """
-    result: dict[str, dict[str, Any]] = {}
+    states = result.states
+    combatants = program.actors
+    rows: dict[str, dict[str, Any]] = {}
     for index, state in enumerate(states):
         participant_id = combatants[index].participant_id
         pools = state["pools"]
@@ -95,7 +102,7 @@ def survival_rows(
         )
         threshold_shield = pools.threshold_shield
         threshold_health = pools.threshold_health
-        result[participant_id] = {
+        rows[participant_id] = {
             "max_health": round_field("max_health", pools.max_health),
             "ending_health": round_field("ending_health", pools.health),
             "ending_health_ratio": round_field(
@@ -210,4 +217,4 @@ def survival_rows(
                 "defy_heal_received", state["defy_heal_received"]
             ),
         }
-    return result
+    return rows

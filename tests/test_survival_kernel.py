@@ -693,7 +693,9 @@ def test_receipt_and_score_adapters_share_one_kernel():
 
     from src.calculator.participant_timeline import Combatant
     from src.calculator.program.compile import action_from_event
-    from src.calculator.program.views.survival import survival_rows
+    from src.calculator.program.build import roster_program
+    from src.calculator.program.views.survival import survival
+    from src.calculator.program.walk import walk as run_one_walk
     from src.calculator.survival import (
         EVENT_SLOTS,
         ActionKind,
@@ -781,7 +783,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             ledger=ledger,
             regeneration_windows=(None,),
         )
-        run_survival_walk(
+        result = run_one_walk(
             (
                 actions
                 if ledger_cls is ScoreLedger
@@ -789,8 +791,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             ),
             ctx,
         )
-        finalize_states(states, 5.0)
-        return survival_rows(states, [combatant])["target"]
+        return survival(roster_program([combatant]), result)["target"]
 
     receipt_row = _walk(ReceiptLedger, annotate=False)
     score_row = _walk(ScoreLedger, annotate=False)

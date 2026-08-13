@@ -25,6 +25,9 @@ import pytest
 from src.calculator import ability_spec
 from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
 from src.calculator.program import precision
+from src.calculator.program.build import roster_program
+from src.calculator.program.walk import WalkResult
+from src.calculator.program.rung import CompiledFast
 from src.calculator.program.views import (
     LeafWriter,
     ViewTag,
@@ -113,20 +116,26 @@ def _combatant(**defenses: object) -> SimpleNamespace:
     )
 
 
+def _result(states: list[dict[str, object]]) -> WalkResult:
+    """A finished walk carrying only the states the projection reads."""
+    return WalkResult(
+        actions=(), states=tuple(states), coverage=(), rung=CompiledFast()
+    )
+
+
 def _row(**overrides: object) -> dict[str, object]:
     """The published row for one at-rest participant."""
-    return survival.survival_rows([_state(**overrides)], [_combatant()])["target"]
+    states = [_state(**overrides)]
+    return survival.survival(roster_program([_combatant()]), _result(states))["target"]
 
 
 def test_the_projection_publishes_one_row_per_participant() -> None:
     """Keyed by participant id, in roster order."""
-    rows = survival.survival_rows(
-        [_state(), _state()],
-        [
-            _combatant(),
-            SimpleNamespace(participant_id="ally", defenses=_combatant().defenses),
-        ],
-    )
+    combatants = [
+        _combatant(),
+        SimpleNamespace(participant_id="ally", defenses=_combatant().defenses),
+    ]
+    rows = survival.survival(roster_program(combatants), _result([_state(), _state()]))
     assert list(rows) == ["target", "ally"]
 
 
