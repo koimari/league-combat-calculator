@@ -66,7 +66,6 @@ from .compile import (
 )
 from .receipt_state import (
     ReceiptLedger,
-    assemble_survival_rows,
     build_state,
     build_states,
 )
@@ -99,7 +98,6 @@ __all__ = [
     "accumulate_damage_totals",
     "accumulate_support_values",
     "action_key",
-    "assemble_survival_rows",
     "build_state",
     "build_states",
     "champion_wound_tuple",

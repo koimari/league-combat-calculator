@@ -14,7 +14,6 @@
       "kernel_ast_calls_by_file": {
         "calculator/survival/accumulate.py": 1,
         "calculator/survival/compile.py": 6,
-        "calculator/survival/receipt_state.py": 38,
         "calculator/survival/score_state.py": 0,
         "calculator/survival/transitions.py": 72
       },
@@ -22,15 +21,14 @@
       "kernel_by_file": {
         "calculator/survival/accumulate.py": 1,
         "calculator/survival/compile.py": 6,
-        "calculator/survival/receipt_state.py": 38,
         "calculator/survival/score_state.py": 1,
         "calculator/survival/transitions.py": 72
       },
-      "kernel_value": 118,
+      "kernel_value": 80,
       "program_by_file": {},
       "program_target": 0,
       "program_value": 0,
-      "what": "textual round( occurrences outside the precision registry: 0 within program/, a non-increasing ratchet within survival/"
+      "what": "round outside the precision registry: 0 call expressions within program/, a non-increasing textual ratchet within survival/"
     },
     "counter_7": {
       "by_file": {

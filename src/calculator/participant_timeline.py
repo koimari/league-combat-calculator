@@ -80,7 +80,6 @@ from .survival import (
     accumulate_damage_totals,
     accumulate_support_values,
     action_key as _action_key,
-    assemble_survival_rows,
     build_states,
     coalesce_darius_q_heals,
     finalize_states,
@@ -90,6 +89,7 @@ from .survival import (
     support_transition_rank,
     survival_action_from_event,
 )
+from .program.views.survival import survival_rows as _survival_rows
 from .work_counters import Rung, WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
@@ -2165,7 +2165,7 @@ def _simulate_survival(
     # ``ScoreLedger`` with no annotations and parallel-array accumulation.
     run_survival_walk(actions, ctx)
     finalize_states(states_list, duration)
-    return assemble_survival_rows(states_list, combatant_list)
+    return _survival_rows(states_list, combatant_list)
 
 
 class CoupledSearchContext:
@@ -2947,7 +2947,7 @@ def _score_with_search_context(
     )
     run_survival_walk(actions, ctx)
     finalize_states(states, duration)
-    rows_by_id = assemble_survival_rows(states, all_actors)
+    rows_by_id = _survival_rows(states, all_actors)
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
     if grey_summary.get("source"):

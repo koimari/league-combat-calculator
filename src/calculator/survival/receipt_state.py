@@ -358,10 +358,12 @@ class ReceiptLedger:
         return self.damage_event_status.get(action.trigger_slot) == "applied"
 
     def mark_applied(self, action: SurvivalAction) -> None:
+        """Mark this action's event applied, so its dependants may fire."""
         if action.event_slot != NO_SLOT:
             self.damage_event_status[action.event_slot] = "applied"
 
     def mark_blocked(self, action: SurvivalAction) -> None:
+        """Mark this action's event blocked, so its dependants fail closed."""
         if action.event_slot != NO_SLOT:
             self.damage_event_status[action.event_slot] = "blocked"
 
@@ -395,160 +397,8 @@ class ReceiptLedger:
         self.actions.insert(insertion, action)
 
 
-def assemble_survival_rows(
-    states: Sequence[dict[str, Any]], combatants: Sequence[Any]
-) -> dict[str, dict[str, Any]]:
-    """Assemble the receipt survival rows from canonical state.
-
-    Shared row shape for both adapters: the score adapter builds the same
-    rows from the same state and adds the per-event ``recipient`` prefix
-    itself (the receipt adapter's rows carry it here).
-    """
-    result: dict[str, dict[str, Any]] = {}
-    for index, state in enumerate(states):
-        participant_id = combatants[index].participant_id
-        pools = state["pools"]
-        remaining_shields = sum(
-            (pools.magic_shield, pools.physical_shield, pools.general_shield)
-        )
-        threshold_shield = pools.threshold_shield
-        threshold_health = pools.threshold_health
-        result[participant_id] = {
-            "max_health": round(pools.max_health, 1),
-            "ending_health": round(pools.health, 1),
-            "ending_health_ratio": round(
-                (pools.health / pools.max_health if pools.max_health > 0.0 else 0.0),
-                6,
-            ),
-            "damage_taken": round(pools.damage_taken, 1),
-            "overkill": round(pools.overkill, 1),
-            "health_damage": round(pools.health_damage, 1),
-            "shield_absorbed": round(pools.shield_absorbed, 1),
-            "healing_received": round(state["healing_received"], 1),
-            "overhealing": round(state["overhealing"], 1),
-            "healing_reduced": round(state["healing_reduced"], 1),
-            "support_shield_received": round(state["support_shield_received"], 1),
-            "support_shield_expired": round(pools.shield_expired, 1),
-            "temporary_health_received": round(state["temporary_health_received"], 1),
-            "temporary_health_until": round(state["temporary_health_until"], 3),
-            "temporary_health_expired_at": state["temporary_health_expired_at"],
-            "temporary_health_source": state["temporary_health_source"],
-            "effective_health": round(
-                pools.max_health
-                + state["starting_shield"]
-                + state["support_shield_received"]
-                - pools.shield_expired
-                + state["healing_received"],
-                1,
-            ),
-            "remaining_shield": round(remaining_shields, 1),
-            "starting_shield": round(state["starting_shield"], 1),
-            "healing_reduction_until": round(state["healing_reduction_until"], 3),
-            "healing_reduction_sources": sorted(state["healing_reduction_sources"]),
-            "healing_reduction_events": [
-                {"recipient": participant_id, **event}
-                for event in state["healing_reduction_events"]
-            ],
-            "venom_until": round(state["venom_until"], 3),
-            "venom_factor": round(pools.venom_factor, 6),
-            "venom_events": [
-                {"recipient": participant_id, **event}
-                for event in state["venom_events"]
-            ],
-            "survived_window": state["death_time"] is None,
-            "death_time": (
-                round(state["death_time"], 3)
-                if state["death_time"] is not None
-                else None
-            ),
-            "first_death_time": (
-                round(state["first_death_time"], 3)
-                if state["first_death_time"] is not None
-                else None
-            ),
-            "revived": bool(state["revived"]),
-            "revive_time": (
-                round(state["revive_time"], 3)
-                if state["revive_time"] is not None
-                else None
-            ),
-            "revive_health_restored": round(state["revive_health_restored"], 1),
-            "revive_source": state["revive_source"],
-            "terminal_phase": state["terminal_phase"],
-            "execute_time": (
-                round(state["execute_time"], 3)
-                if state["execute_time"] is not None
-                else None
-            ),
-            "execute_source": state["execute_source"],
-            "stasis_until": round(state["stasis_until"], 3),
-            "stasis_started_at": state["stasis_started_at"],
-            "stasis_source": state["stasis_source"],
-            "invulnerable_until": round(state["invulnerable_until"], 3),
-            "untargetable_until": round(state["untargetable_until"], 3),
-            "spell_shield_used": bool(state["spell_shield_used"]),
-            "spell_shield_source": state["spell_shield_source"],
-            "spell_shield_until": (
-                None
-                if state["spell_shield_until"] == float("inf")
-                else round(state["spell_shield_until"], 3)
-            ),
-            "force_of_nature": {
-                "stacks": int(state["force_stacks"]),
-                "stacks_until": round(state["force_stacks_until"], 3),
-                "events": list(state["force_stack_events"]),
-                "dynamic_bonus_magic_resistance": round(
-                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
-                    3,
-                ),
-            },
-            "jaksho": {
-                "stacks": int(state["jaksho_stacks"]),
-                "events": list(state["jaksho_stack_events"]),
-                "dynamic_bonus_armor": round(
-                    float(state.get("dynamic_bonus_armor", 0.0) or 0.0), 3
-                ),
-                "dynamic_bonus_magic_resistance": round(
-                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
-                    3,
-                ),
-            },
-            "threshold_shield_triggered": bool(
-                threshold_shield is not None and threshold_shield.triggered
-            ),
-            "threshold_shield_expired_at": (
-                threshold_shield.expired_at if threshold_shield is not None else None
-            ),
-            "threshold_health_triggered": bool(
-                threshold_health is not None and threshold_health.triggered
-            ),
-            "damage_deferral_fraction": round(
-                float(
-                    getattr(
-                        combatants[index].defenses,
-                        "damage_deferral_fraction",
-                        0.0,
-                    )
-                    or 0.0
-                ),
-                3,
-            ),
-            "damage_deferral_pending": round(state["damage_deferral_pending"], 1),
-            "damage_deferral_cleared": round(state["damage_deferral_cleared"], 1),
-            "defy_triggered": bool(state["defy_triggered"]),
-            "defy_trigger_time": (
-                round(state["defy_trigger_time"], 3)
-                if state["defy_trigger_time"] is not None
-                else None
-            ),
-            "defy_heal_received": round(state["defy_heal_received"], 1),
-        }
-    return result
-
-
 __all__ = [
     "ReceiptLedger",
-    "assemble_survival_rows",
     "build_state",
     "build_states",
 ]

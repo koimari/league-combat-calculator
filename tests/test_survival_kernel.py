@@ -692,6 +692,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
     from types import SimpleNamespace
 
     from src.calculator.participant_timeline import Combatant
+    from src.calculator.program.views.survival import survival_rows
     from src.calculator.survival import (
         EVENT_SLOTS,
         ActionKind,
@@ -700,7 +701,6 @@ def test_receipt_and_score_adapters_share_one_kernel():
         SurvivalAction,
         TransitionContext,
         TransitionRank,
-        assemble_survival_rows,
         build_states,
         finalize_states,
         run_survival_walk,
@@ -788,7 +788,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             ctx,
         )
         finalize_states(states, 5.0)
-        return assemble_survival_rows(states, [combatant])["target"]
+        return survival_rows(states, [combatant])["target"]
 
     receipt_row = _walk(ReceiptLedger, annotate=False)
     score_row = _walk(ScoreLedger, annotate=False)

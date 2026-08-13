@@ -37,15 +37,25 @@ Counter definitions
     projection; gating the kernel at zero instead would force
     ``survival/ -> program/`` and invert this phase's one-way dependency.
 
-    The counting rule is **textual occurrences of** ``round(`` **in the file's
-    source text**, which is the rule that reproduces D-71's declared 118
-    (transitions 72, receipt_state 38, compile 6, accumulate 1, score_state 1).
-    One of those 118 is prose — ``score_state.py``'s comment explaining why
-    the score ledger pays for no rounding — so the receipt records the AST
-    call count per file *beside* the textual one.  Recording both is what
-    stops a comment edit from being sold as progress and stops a reader from
-    having to guess which rule produced the plan's number: the gate compares
-    both, so either moving is a diff somebody has to explain.
+    **The two populations are counted by different rules, deliberately,
+    because they are asked different questions.**
+
+    The kernel side answers "has the declared 118 come down?", so it counts
+    **textual occurrences of** ``round(`` **in the file's source text** —
+    the rule that reproduces D-71's figure exactly (transitions 72,
+    receipt_state 38, compile 6, accumulate 1, score_state 1).  One of those
+    118 is prose: ``score_state.py``'s comment explaining why the score
+    ledger pays for no rounding.  Counting calls instead would read 117
+    against a plan that says 118, and counting text is also what stops a
+    comment deletion from being sold as progress — so the receipt records
+    the AST call count per file *beside* the textual one and the gate
+    compares both, which makes either moving a diff somebody explains.
+
+    The ``program/`` side answers a different question — "does anything in
+    this package round?" — so it counts **``round`` call expressions**.  A
+    module that *names* the function it is forbidden to call is
+    documentation, and a gate at zero that a docstring can trip is a gate
+    people route around by not writing the docstring.
 
 ``Counter 7`` — ``id()``-keyed caches whose key is not derived from the
 served value.
@@ -180,7 +190,7 @@ class FrontierReport:
     counter_5_sites: tuple[Site, ...] = ()
     round_text: dict[str, int] = field(default_factory=dict)
     round_calls: dict[str, int] = field(default_factory=dict)
-    program_round_text: dict[str, int] = field(default_factory=dict)
+    program_round_calls: dict[str, int] = field(default_factory=dict)
     counter_7_sites: tuple[Site, ...] = ()
     counter_7_out_of_scope: dict[str, int] = field(default_factory=dict)
 
@@ -196,8 +206,8 @@ class FrontierReport:
 
     @property
     def counter_6_program(self) -> int:
-        """Textual ``round(`` occurrences under ``program/``, registry aside."""
-        return sum(self.program_round_text.values())
+        """``round`` call expressions under ``program/``, registry aside."""
+        return sum(self.program_round_calls.values())
 
     @property
     def counter_7(self) -> int:
@@ -251,9 +261,9 @@ def scan() -> FrontierReport:
                 report.round_text[repo] = count
                 report.round_calls[repo] = len(_construction_sites(tree, repo, "round"))
         elif repo.startswith("calculator/program/") and repo != COUNTER_6_REGISTRY:
-            count = text.count("round(")
-            if count:
-                report.program_round_text[repo] = count
+            calls = len(_construction_sites(tree, repo, "round"))
+            if calls:
+                report.program_round_calls[repo] = calls
     report.counter_5_sites = tuple(counter_5)
 
     counter_7: list[Site] = []
@@ -298,8 +308,9 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
             },
             "counter_6": {
                 "what": (
-                    "textual round( occurrences outside the precision registry: "
-                    "0 within program/, a non-increasing ratchet within survival/"
+                    "round outside the precision registry: 0 call expressions "
+                    "within program/, a non-increasing textual ratchet "
+                    "within survival/"
                 ),
                 "kernel_value": report.counter_6_kernel,
                 "kernel_baseline": COUNTER_6_KERNEL_BASELINE,
@@ -307,7 +318,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
                 "program_target": 0,
                 "kernel_by_file": dict(sorted(report.round_text.items())),
                 "kernel_ast_calls_by_file": dict(sorted(report.round_calls.items())),
-                "program_by_file": dict(sorted(report.program_round_text.items())),
+                "program_by_file": dict(sorted(report.program_round_calls.items())),
             },
             "counter_7": {
                 "what": (
