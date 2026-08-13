@@ -496,7 +496,6 @@ def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arg
     same record from the same fields.
     """
     return LedgerInputs(
-        champion_name=str(champion_data.get("name", "")),
         self_heal_rule=self_heal_rule_owner(str(champion_data.get("name", ""))),
         item_names=tuple(str(item.get("name", "")) for item in items),
         stats=fight_stats,

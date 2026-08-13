@@ -192,10 +192,12 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     typed owner by ``healing.self_heal_rule_owner`` rather than as a name
     this module checks against a set — the registry that knows which
     champions declare a rule is the registry that should say so, and it
-    imports the champion package, which this leaf must not.
+    imports the champion package, which this leaf must not.  It is also the
+    only champion fact here: a bare ``champion_name`` beside it would be a
+    field with no reader, and this campaign's whole subject is declarations
+    nothing reads.
     """
 
-    champion_name: str
     self_heal_rule: ChampionSlotOwner | None
     item_names: tuple[str, ...]
     stats: Mapping[str, Any]
