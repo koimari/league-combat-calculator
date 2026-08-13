@@ -531,15 +531,17 @@ def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
     compiled-vs-receipt equivalence suite could ever see it.
 
     The file is ``program/compile.py`` since Phase 4 S4 moved the one
-    constructor there, and the count is five rather than four because that
-    stage's ``compile_program`` writes a fifth: the guard seeing it is the
-    point, since a program-built action assembling its own key is exactly
-    where a bare rank would next appear.
+    constructor there, and the count is four: the two hot loops plus the two
+    the relocated builders carry.  It was briefly five, because S4's
+    ``compile_program`` assembled its own key -- the phase's declared entry
+    point being exactly where a bare rank would next appear.  That one now
+    calls ``action_key``, which is the stronger version of this guard: a key
+    that is never rebuilt cannot fold its rank the wrong way.
     """
     compile_py = PROGRAM / "compile.py"
     rules = _population_rules(_population())
     tuples = _sort_key_tuples(ast.parse(compile_py.read_text(encoding="utf-8")), rules)
-    assert len(tuples) == 5
+    assert len(tuples) == 4
     for tup, slot in tuples:
         assert _folds_to_slot(tup.elts[1], rules.bound), (slot, tup.elts[1].lineno)
 

@@ -1148,6 +1148,17 @@ def compile_program(
     receipt, exactly as the packet and engine-row paths do, so the caller
     falls back to the receipt walk instead of walking a program with a hole
     in it.
+
+    The sort key comes from :func:`~..survival.actions.action_key` and is not
+    rebuilt here.  This function is the phase's declared future entry point,
+    which makes it precisely where a fourth spelling of the eight-element key
+    would take root -- and the reason the one constructor exists is that the
+    receipt adapter and the score compiler each rebuilt that key by hand and
+    drifted apart on a field.  Its eighth element, the source label, is empty
+    for a program-built action because a routed payload carries no source
+    name today; it is empty *by the same rule that empties it everywhere
+    else* -- an absent key read through the one key function -- rather than
+    by a literal pinned at this call site.
     """
     actions: list[SurvivalAction] = []
     for aidx, event in enumerate(program.events):
@@ -1161,14 +1172,15 @@ def compile_program(
         text = event_id_text(event.id)
         actions.append(
             SurvivalAction(
-                sort_key=(
-                    float(event.time),
-                    ordering_slot(event.rank),
-                    int(event.sequence),
-                    *participant_order(program.participants[int(event.source)]),
-                    str(program.participants[int(event.subject)]),
-                    text,
-                    "",
+                sort_key=action_key(
+                    event.time,
+                    event.rank,
+                    program.participants[int(event.subject)],
+                    {
+                        "attacker": program.participants[int(event.source)],
+                        "sequence": event.sequence,
+                        "_event_id": text,
+                    },
                 ),
                 time=float(event.time),
                 phase=event.rank,

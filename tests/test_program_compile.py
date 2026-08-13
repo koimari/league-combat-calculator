@@ -29,9 +29,9 @@ from src.calculator.program.build import (
     build_program,
     pair_program,
 )
-from src.calculator.program.identity import EventId, PairOrigin
+from src.calculator.program.identity import EventId, PairOrigin, event_id_text
 from src.calculator.survival import compile as survival_compile
-from src.calculator.survival.actions import ActionKind, TransitionRank
+from src.calculator.survival.actions import ActionKind, TransitionRank, action_key
 
 ORIGIN = PairOrigin("main", "enemy:0")
 EMPTY_CAPS = CapabilityView(mechanics={})
@@ -269,3 +269,37 @@ class TestTheTriggerTimeToleranceHasOneHome:
         text = (root / "program" / "compile.py").read_text(encoding="utf-8")
         assert "trigger_time_key" in text
         assert "round(" not in text
+
+
+class TestTheProgramEntryPointUsesTheOneSortKey:
+    """No fourth spelling of the eight-element key (criterion 2, D-67).
+
+    ``compile_program`` is the declared future entry point, so it is where a
+    hand-rebuilt sort key would next take root -- and a hand-rebuilt sort key
+    is what let a float phase live at one adapter and a rank at the other for
+    three phases.  The key it emits is ``action_key``'s output, asserted
+    element for element rather than by reading the call.
+    """
+
+    def test_every_compiled_key_is_action_keys_own_output(self) -> None:
+        program = two_row_program()
+        actions = program_compile.compile_program(program, projection=Projection.SCORE)
+        for action, event in zip(actions, program.events):
+            text = event_id_text(event.id)
+            assert action.sort_key == action_key(
+                event.time,
+                event.rank,
+                program.participants[int(event.subject)],
+                {
+                    "attacker": program.participants[int(event.source)],
+                    "sequence": event.sequence,
+                    "_event_id": text,
+                },
+            )
+
+    def test_the_key_is_eight_elements_in_the_ruled_order(self) -> None:
+        """D-67's shape, pinned: ``participant_order`` contributes two."""
+        actions = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        assert all(len(action.sort_key) == 8 for action in actions)
