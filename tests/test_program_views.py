@@ -535,6 +535,7 @@ def test_the_score_payload_is_the_keys_a_candidate_is_scored_from() -> None:
         "participants",
         "breakdown",
         "timeline_coverage",
+        "dispositions",
     ]
     assert payload["duration"] == 12.0
     assert payload["timeline_coverage"] == {"complete": True}
@@ -562,18 +563,25 @@ def test_the_score_view_publishes_the_roster_identity_not_the_folded_one() -> No
     assert payload["breakdown"][0]["champion"] == ""
 
 
-def test_the_score_payload_carries_no_dispositions_map() -> None:
-    """It is compared and thrown away; nobody ever serializes one.
+def test_the_score_payload_names_every_number_in_it() -> None:
+    """A candidate's payload is a published payload the moment one is kept.
 
-    The published score surfaces build their own map over the leaves they
-    publish.  Building one per candidate would put a few hundred dict entries
-    on the optimizer's hot path -- which the phase's allocation gate measures
-    and refuses -- to describe a payload that is never a payload.
+    It carried no map at all on the grounds that nobody reads a candidate --
+    and three score-mode coupled scenarios snapshot 133 of its numbers each.
     """
     payload = score.score(
-        roster_program([_actor()]), _result([_state()], outcomes=(_outcome(),))
+        roster_program([_actor()]),
+        _result(
+            [_state()],
+            duration=12.0,
+            outcomes=(_outcome(),),
+            timeline_coverage={"complete": True},
+        ),
     )
-    assert "dispositions" not in payload
+    entries = payload["dispositions"]
+    assert entries["duration"]["disposition"] == "MEASURED"
+    assert "participants[0].survival.max_health" in entries
+    assert "breakdown[0].total_damage" in entries
 
 
 # ---------------------------------------------------------------------------

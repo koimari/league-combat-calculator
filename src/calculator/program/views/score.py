@@ -28,30 +28,45 @@ from typing import Any
 
 from ..build import Program
 from ..walk import WalkResult
-from . import DISCARD
+from . import LeafWriter
 from .breakdown import breakdown_leaves
 from .survival import participant_paths, survival_leaves
 
-__all__ = ["score"]
+__all__ = ["score", "score_leaves"]
 
 
-def score(program: Program, result: WalkResult) -> dict[str, Any]:
-    """Project one walk into the payload a candidate is scored from.
+def score_leaves(
+    program: Program, result: WalkResult, writer: LeafWriter
+) -> dict[str, Any]:
+    """The scoring payload, with every numeric leaf written through *writer*.
 
-    Both composition paths return exactly this, which is what makes "the
-    compiled score path reproduces the receipt walk's numbers" a statement
-    about one function rather than about two that have to be compared.
+    Split from :func:`score` exactly as the other four views split theirs,
+    and for a sharper reason.  The optimizer evaluates thousands of
+    candidates per search and shows none of them: a ``dispositions`` map per
+    evaluation is a few hundred dict entries on the hot path, measured at
+    +19.7% on the S4 allocation probe, which criterion 17 says is never to
+    be relaxed.  So that caller passes :data:`~. .DISCARD` and says why at
+    its own call site.
+
+    What it may not do is decide for everybody.  The view used to bind
+    ``DISCARD`` itself, on the grounds that nobody reads a candidate's
+    payload -- and three score-mode coupled scenarios snapshot 133 of its
+    numbers each, every one of them carrying no entry at all.  The front
+    door below is what a caller that keeps the payload gets, and it takes
+    the two inputs criterion 3 gives a view and nothing else.
     """
-    # No ``dispositions`` map: this payload is compared and thrown away
-    # thousands of times per search and is never serialized to anybody.  The
-    # published score surfaces -- ``/api/bis`` and ``/api/optimize`` -- build
-    # their own map over the leaves they actually publish.  ``DISCARD`` says
-    # that in one word instead of leaving it to a reader to notice.
-    writer = DISCARD
+    payload: dict[str, Any] = {}
+    root = writer.block(payload, "")
     rows = survival_leaves(program, result, writer, participant_paths(program))
-    return {
-        "duration": float(result.duration),
-        "participants": [
+    root.measured("duration", float(result.duration))
+    # The participant row carries no quantity of its own: an id, a team, a
+    # champion, an int level and the survival row whose leaves were written
+    # above at their own paths.  A block per participant would allocate one
+    # object per row per evaluation to make five ``raw`` calls, which write
+    # no entry by definition -- so the literal stays a literal.
+    root.raw(
+        "participants",
+        [
             {
                 "participant_id": actor.participant_id,
                 "team": actor.team,
@@ -61,6 +76,23 @@ def score(program: Program, result: WalkResult) -> dict[str, Any]:
             }
             for actor in program.actors
         ],
-        "breakdown": breakdown_leaves(program, result, writer),
-        "timeline_coverage": result.timeline_coverage,
-    }
+    )
+    root.raw("breakdown", breakdown_leaves(program, result, writer))
+    root.structure("timeline_coverage", result.timeline_coverage)
+    if writer.records:
+        payload["dispositions"] = writer.entries()
+    return payload
+
+
+def score(program: Program, result: WalkResult) -> dict[str, Any]:
+    """Project one walk into the payload a candidate is scored from.
+
+    Both composition paths return exactly this, which is what makes "the
+    compiled score path reproduces the receipt walk's numbers" a statement
+    about one function rather than about two that have to be compared.
+
+    This is the view's front door and the shape criterion 3 checks: exactly
+    ``(Program, WalkResult)`` in, published leaves out -- and, since S9's
+    coverage slice, the ``dispositions`` map naming every one of them.
+    """
+    return score_leaves(program, result, LeafWriter())

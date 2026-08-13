@@ -138,8 +138,8 @@ def _projections(name: str) -> list[tuple[str, dict, object, object]]:
     def spy(label, module, attribute):
         original = getattr(module, attribute)
 
-        def wrapped(program, result):
-            payload = original(program, result)
+        def wrapped(program, result, *rest):
+            payload = original(program, result, *rest)
             captured.append((label, payload, program, result))
             return payload
 
@@ -167,7 +167,7 @@ def _projections(name: str) -> list[tuple[str, dict, object, object]]:
     originals = {}
     for label, module, attribute in (
         ("receipt", receipt_view, "receipt"),
-        ("score", score_view, "score"),
+        ("score", score_view, "score_leaves"),
     ):
         originals[(module, attribute)], wrapped = spy(label, module, attribute)
         setattr(module, attribute, wrapped)

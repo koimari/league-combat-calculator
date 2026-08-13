@@ -288,6 +288,14 @@ def _evaluate_build_uncached(
                 # below, so they need the full receipt; total damage scores
                 # from the breakdown row and can take the scoring subset.
                 include_receipt=objective in ("physical_damage", "magic_damage"),
+                # Nobody reads this payload.  A search evaluates thousands of
+                # candidates and shows none of them, so the parallel
+                # dispositions map would be a few hundred dict entries per
+                # evaluation describing a payload that is compared and thrown
+                # away -- which the phase's allocation gate measures and
+                # refuses.  Said here, at the one call site it is true of,
+                # rather than assumed inside a view on every caller's behalf.
+                published=False,
                 # ``stats`` above used this exact configuration; the claim
                 # only holds when no external ally bonuses were folded in,
                 # because pair fights strip those.

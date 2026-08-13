@@ -124,6 +124,7 @@ from .program.compile import (
     revive_candidate_actions,
 )
 from .program.views import DISCARD as _DISCARD
+from .program.views import LeafWriter as _LeafWriter
 from .program.views import breakdown as _breakdown_view
 from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
@@ -2921,6 +2922,7 @@ def _score_with_search_context(
     pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
     context: CoupledSearchContext,
     reuse_main_stats: bool,
+    published: bool,
 ) -> dict[str, Any]:
     """Score one candidate through the compiled panel walk.
 
@@ -3322,7 +3324,7 @@ def _score_with_search_context(
     # the walk applies an attacker's own event at the exact death instant,
     # but the legacy sum excludes it whenever the true death time rounds
     # down past it.
-    return _score_view.score(
+    return _score_view.score_leaves(
         program,
         walk_result.projected(
             outcomes=[
@@ -3340,6 +3342,7 @@ def _score_with_search_context(
                 for index, actor in enumerate(all_actors)
             ]
         ),
+        _LeafWriter() if published else _DISCARD,
     )
 
 
@@ -3428,6 +3431,7 @@ def build_participant_timeline(
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
     search_context: CoupledSearchContext | None = None,
+    published: bool = True,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -3456,6 +3460,14 @@ def build_participant_timeline(
     False when the main stats came from a loadout whose role or options can
     differ from ``params`` (the roster BIS path).
 
+    ``published=False`` says nobody will read the payload this returns.  The
+    optimizer scores thousands of candidates and shows none of them, and a
+    ``dispositions`` map for a payload that is compared and thrown away is a
+    few hundred dict entries per evaluation on the hot path -- which the
+    phase's allocation gate measures and refuses.  It defaults to True so a
+    new caller gets the map, and the one caller that opts out says so at its
+    own call site rather than having the decision made for it inside a view.
+
     ``search_context`` opts scoring into the compiled panel walk: the
     optimizer creates one :class:`CoupledSearchContext` per search (fixed
     params and roster) and every score-mode evaluation then replays the
@@ -3482,6 +3494,7 @@ def build_participant_timeline(
             include_receipt=include_receipt,
             reuse_main_stats=reuse_main_stats,
             search_context=search_context,
+            published=published,
             patch=patch,
             pass_index=pass_index,
         )
@@ -3504,6 +3517,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     include_receipt: bool,
     reuse_main_stats: bool,
     search_context: CoupledSearchContext | None,
+    published: bool,
     patch: ParamPatch | None,
     pass_index: int,
 ) -> Any:
@@ -3547,6 +3561,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 pair_result_cache=pair_result_cache,
                 context=search_context,
                 reuse_main_stats=reuse_main_stats,
+                published=published,
             )
         except UncompilableActionError as exc:
             # A transition the score kernel cannot represent must never be
@@ -4099,7 +4114,9 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # projection the compiled score path returns, which is what makes
         # "score mode and receipt mode agree" a property of the layering
         # rather than of two assemblies kept in step by hand.
-        return _score_view.score(program, walk_result)
+        return _score_view.score_leaves(
+            program, walk_result, _LeafWriter() if published else _DISCARD
+        )
 
     focus_row = next(
         (

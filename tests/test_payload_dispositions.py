@@ -132,6 +132,54 @@ def _combat(name: str = "mandate_abyssal_curse_roster") -> Mapping:
     return snapshot.coupled_entry(scenario)["combat"]
 
 
+def _score_mode(scenario_name: str, *, published: bool) -> Mapping:
+    """One score-mode scenario's payload, with and without a reader."""
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.participant_timeline import (
+        CoupledSearchContext,
+        build_participant_timeline,
+    )
+    from src.calculator.scenario import parse_scenario_request, resolve_scenario
+    from src.calculator.stats import calculate_total_stats
+
+    snapshot = _golden_snapshot()
+    scenario = next(
+        item for item in snapshot.COUPLED_SCENARIOS if item.name == scenario_name
+    )
+    parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
+    resolved = resolve_scenario(parsed)
+    params = resolved.fight_params
+    stats = calculate_total_stats(
+        resolved.champion_data,
+        parsed.level,
+        list(resolved.items),
+        item_options=params.item_options,
+        role=params.role,
+        role_quest_complete=params.role_quest_complete,
+        external_stat_bonuses=params.ally_stat_bonuses,
+    )
+    return build_participant_timeline(
+        resolved.champion_data,
+        parsed.level,
+        list(resolved.items),
+        params,
+        main_stats=stats,
+        main_defenses=resolve_starting_defenses(
+            resolved.champion_data["name"],
+            parsed.level,
+            stats,
+            list(resolved.items),
+            item_options=params.item_options,
+        ),
+        enemies=list(resolved.enemies),
+        allies=list(resolved.allies),
+        include_receipt=False,
+        search_context=CoupledSearchContext(),
+        pair_result_cache={},
+        published=published,
+    )
+
+
 #: Every coupled scenario carrying a combat receipt, so the check runs over
 #: the payload shapes the baseline actually holds rather than over one.
 COMBAT_SCENARIOS = (
@@ -252,3 +300,34 @@ class TestTheTwoScoreServingPayloads:
         assert survival_entries
         for path in survival_entries:
             assert payload["dispositions"][path]["disposition"] in DISPOSITIONS
+
+
+class TestTheScoreModePayload:
+    """The score view's own payload, where a caller publishes one.
+
+    Its numbers were captured into the coupled baseline with **no**
+    ``dispositions`` key at all -- 133 leaves per scenario on a surface the
+    campaign snapshots and compares.  The view had decided for every caller
+    that nobody would read it, on the optimizer's behalf; the writer is the
+    caller's argument now, and the one caller that opts out is the one that
+    genuinely throws its payloads away.
+    """
+
+    @pytest.mark.parametrize(
+        "scenario",
+        ("score_plain_tuple", "score_event_view_holder", "score_event_scan_holder"),
+    )
+    def test_every_number_it_publishes_carries_exactly_one_entry(
+        self, scenario: str
+    ) -> None:
+        assert_covered(_combat(scenario))
+
+    def test_a_caller_that_throws_its_payload_away_still_builds_no_map(self) -> None:
+        """The opt-out is real, and it is the caller's word rather than the view's."""
+        discarded = _score_mode("score_plain_tuple", published=False)
+        published = _score_mode("score_plain_tuple", published=True)
+        assert "dispositions" not in discarded
+        assert published["dispositions"]
+        assert discarded == {
+            key: value for key, value in published.items() if key != "dispositions"
+        }
