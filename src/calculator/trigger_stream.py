@@ -181,6 +181,32 @@ class Pairing(Enum):
     UNPAIRED_KNOWN_DEFECT = "unpaired_known_defect"
 
 
+class HolderStacking(Enum):
+    """Whether a second holder of one mechanic arms a second modifier (D-66).
+
+    The two answers are genuinely different mechanics, not two spellings of
+    one.  Abyssal Mask's Unmake is an aura: two holders standing in range of
+    one enemy curse it once, so the arm-time dedupe key is
+    ``(subject, mechanic_id)`` and the second arming is dropped with a
+    ``dedupe`` receipt row.  Imperial Mandate's Command is a per-holder
+    pool: two Mandate holders each pay their own amplification, so the key
+    keeps the holder and neither contribution is dropped.
+
+    A single flat key would be the incident's own shape mandated by a rule —
+    a second holder's number silently vanishing — which is why this is a
+    required, defaultless declaration on every dual-sided mechanic rather
+    than a policy the arming code picks.
+
+    Declared here, beside :class:`Pairing` and :class:`Engine`, because it is
+    a field of the same registry: giving it a module of its own would cost
+    ``trigger_stream`` its single intra-package import for no reader's
+    benefit.  Phase 4 owns it; ``program.amp.arm_key`` is its one consumer.
+    """
+
+    IDEMPOTENT_AURA = "idempotent_aura"
+    PER_HOLDER = "per_holder"
+
+
 # The three streams whose rows are parsed off an engine result.  A holder
 # reading any of them cannot be handed the optimizer's positional 6-tuple
 # ledger, which is exactly what ``tuple_incapable_items`` projects.  Public
