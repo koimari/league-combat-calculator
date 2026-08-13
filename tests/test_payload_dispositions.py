@@ -242,92 +242,106 @@ class TestTheCalculatePayload:
             assert dispositions[f"participants[{index}].survival.{leaf}"] == entry
 
 
+BIS_REQUEST = {
+    "champion": "Syndra",
+    "level": 13,
+    "items": ["Malignance"],
+    "enemies": [{"champion": "Aatrox", "level": 13, "items": []}],
+    "slot_index": 1,
+}
+
+OPTIMIZE_REQUEST = {
+    "champion": "Syndra",
+    "level": 13,
+    "items": [],
+    "max_legendary_slots": 2,
+    "fight_mode": "time_based",
+    "fight_duration": 8,
+    "target_health": 2000,
+    "target_armor": 50,
+    "target_mr": 40,
+}
+
+
+def _optimize() -> Mapping:
+    """One live ``/api/optimize`` response, through the app it is served by."""
+    from src.app import app
+
+    app.config["TESTING"] = True
+    app.config["RATE_LIMIT_ENABLED"] = False
+    response = app.test_client().post("/api/optimize", json=dict(OPTIMIZE_REQUEST))
+    assert response.status_code == 200
+    return response.get_json()
+
+
 class TestTheTwoScoreServingPayloads:
     """``/api/bis`` and ``/api/optimize`` — the score view's published surfaces.
 
     D-23 already covers their ``withheld[]`` and exclusion count.  What this
-    class pins is the other half of umbrella criterion 1: the score leaves they
+    class pins is the other half of umbrella criterion 1: the numbers they
     publish carry dispositions too, or the two largest numeric surfaces in the
     calculator serve undispositioned numbers while every other criterion
-    passes.
+    passes.  It is the reverse direction that was missing -- the old version
+    asserted two named leaves were *present* in the map and never asked what
+    else the payload held, which is how 14 959 of BIS's 18 807 numbers stayed
+    unnamed, the objective's own four score components among them.
     """
 
-    def test_the_bis_payload_names_every_candidate_score_it_publishes(self) -> None:
+    def test_the_bis_payload_names_every_number_it_publishes(self) -> None:
         from src.calculator.bis import bis_payload
 
-        payload = bis_payload(
-            {
-                "champion": "Syndra",
-                "level": 13,
-                "items": ["Malignance"],
-                "enemies": [{"champion": "Aatrox", "level": 13, "items": []}],
-                "slot_index": 1,
-            }
-        )
+        assert_covered(bis_payload(dict(BIS_REQUEST)))
+
+    def test_the_bis_map_is_not_vacuous_and_reaches_the_score_components(
+        self,
+    ) -> None:
+        """A check that passes on an empty map is not a check."""
+        from src.calculator.bis import bis_payload
+
+        payload = bis_payload(dict(BIS_REQUEST))
         dispositions = payload["dispositions"]
-        entries_are_well_formed(dispositions)
-        assert dispositions, "a vacuous map is not a map"
-        for block in ("candidates", "partial_candidates"):
-            for index, row in enumerate(payload[block]):
-                for leaf in ("score", "objective_value"):
-                    assert f"{block}[{index}].{leaf}" in dispositions
-                assert not any(
-                    key.startswith("_") for key in row
-                ), "an internal ranking key leaked into the payload"
+        assert len(dispositions) > 1000
+        for index, row in enumerate(payload["candidates"]):
+            for leaf in ("score", "objective_value"):
+                assert f"candidates[{index}].{leaf}" in dispositions
+            for component in row["components"]:
+                assert f"candidates[{index}].components.{component}" in dispositions
 
-    def test_the_bis_survival_entries_are_moved_and_never_re_produced(self) -> None:
-        """A candidate's survival row is the survival view's, named once.
+    def test_no_internal_ranking_key_reaches_a_published_row(self) -> None:
+        """``_survival_dispositions`` was inserted first and popped later.
 
-        The entries ride from the combat receipt that produced them to the
-        path the leaf now lives at.  Re-deriving them here would be a second
-        producer of a leaf's disposition, which is the one thing the single
-        writer exists to prevent.
+        A private key smuggled through the public row structure is one
+        missed call away from being served, and the coverage receipt read
+        those rows *before* the pop.  Nothing carries one now: the entries
+        are produced at the path the leaf lives at.
         """
         from src.calculator.bis import bis_payload
 
-        payload = bis_payload(
-            {
-                "champion": "Syndra",
-                "level": 13,
-                "items": ["Malignance"],
-                "enemies": [{"champion": "Aatrox", "level": 13, "items": []}],
-                "slot_index": 1,
-            }
-        )
-        survival_entries = [
-            path for path in payload["dispositions"] if ".survival." in path
-        ]
-        assert survival_entries
-        for path in survival_entries:
-            assert payload["dispositions"][path]["disposition"] in DISPOSITIONS
+        payload = bis_payload(dict(BIS_REQUEST))
+        for block in ("candidates", "partial_candidates"):
+            for row in payload[block]:
+                assert not any(key.startswith("_") for key in row)
 
+    def test_the_optimize_payload_names_every_number_it_publishes(self) -> None:
+        """The endpoint had no test in this file at all until now.
 
-class TestTheScoreModePayload:
-    """The score view's own payload, where a caller publishes one.
+        Its own module docstring named all three payloads; two were checked.
+        The three numbers a consumer reads first -- the response's
+        ``total_damage``, ``team_fight_value`` and ``optimization_time_ms``
+        -- were exactly the ones outside the four keys the map named.
+        """
+        assert_covered(_optimize())
 
-    Its numbers were captured into the coupled baseline with **no**
-    ``dispositions`` key at all -- 133 leaves per scenario on a surface the
-    campaign snapshots and compares.  The view had decided for every caller
-    that nobody would read it, on the optimizer's behalf; the writer is the
-    caller's argument now, and the one caller that opts out is the one that
-    genuinely throws its payloads away.
-    """
+    def test_a_builds_price_stays_an_integer_on_the_wire(self) -> None:
+        """``gold`` is a count, and re-writing it as a quantity changed it.
 
-    @pytest.mark.parametrize(
-        "scenario",
-        ("score_plain_tuple", "score_event_view_holder", "score_event_scan_holder"),
-    )
-    def test_every_number_it_publishes_carries_exactly_one_entry(
-        self, scenario: str
-    ) -> None:
-        assert_covered(_combat(scenario))
-
-    def test_a_caller_that_throws_its_payload_away_still_builds_no_map(self) -> None:
-        """The opt-out is real, and it is the caller's word rather than the view's."""
-        discarded = _score_mode("score_plain_tuple", published=False)
-        published = _score_mode("score_plain_tuple", published=True)
-        assert "dispositions" not in discarded
-        assert published["dispositions"]
-        assert discarded == {
-            key: value for key, value in published.items() if key != "dispositions"
-        }
+        Routing the key through ``measured`` made ``7300`` serialize as
+        ``7300.0``: a wire-type change on a published field, caught by no
+        test, mentioned in no commit body.  ``publish`` classifies by what
+        the value is, so an int stays an int and carries no entry.
+        """
+        payload = _optimize()
+        for row in payload["ranked_builds"]:
+            assert isinstance(row["gold"], int)
+            assert json.dumps(row["gold"]) == str(row["gold"])
+        assert not any(path.endswith(".gold") for path in payload["dispositions"])

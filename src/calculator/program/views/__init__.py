@@ -199,21 +199,31 @@ class LeafBlock:
         """
         self._set(key, self._walk(value, f"{self._dot}{key}"))
 
+    def publish(self, key: str, value: object) -> None:
+        """One payload member, named by what it *is*.
+
+        A quantity gets a leaf and an entry, a nested shape is walked, and
+        anything else is a label.  It exists because a payload assembled
+        elsewhere -- a ranked BIS candidate, an optimize response -- is
+        published key by key without its assembler having to classify each
+        one, which is exactly the classification that gets a key wrong: a
+        row written through ``raw`` because nobody noticed it held floats is
+        how a hundred numbers reach a consumer with nothing said about them.
+        """
+        if isinstance(value, (Mapping, list, tuple)):
+            self.structure(key, value)
+        elif isinstance(value, float) and not isinstance(value, bool):
+            self.measured(key, value)
+        else:
+            self.raw(key, value)
+
     def _walk(self, value: object, path: str) -> object:
         """One nested value, rebuilt with every float written as a leaf."""
         if isinstance(value, Mapping):
             out: dict[str, object] = {}
             block = LeafBlock(self._writer, out, path)
             for key, member in value.items():
-                (
-                    block.structure(key, member)
-                    if isinstance(member, (Mapping, list, tuple))
-                    else (
-                        block.measured(key, member)
-                        if isinstance(member, float) and not isinstance(member, bool)
-                        else block.raw(key, member)
-                    )
-                )
+                block.publish(key, member)
             return out
         if isinstance(value, (list, tuple)):
             return [

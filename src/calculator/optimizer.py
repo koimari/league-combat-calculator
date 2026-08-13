@@ -1761,32 +1761,29 @@ def _plan_type(plan: Any) -> str:
     return "single_item"
 
 
-def _optimize_dispositions(
-    ranked_builds: list[dict],
-) -> dict[str, dict[str, object]]:
+def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, object]]:
     """The optimize payload's parallel ``dispositions`` map, keyed by leaf path.
 
-    Every published score leaf is re-written through the one writer at its
-    ranked index -- assigning an existing key keeps its position, so the row
-    is byte-identical and the entry is produced beside the leaf by
-    ``serialize_leaf`` rather than by a second pass over the payload.  The
-    winner's own leaves are the rank-0 row's, which is why the map names them
-    once and the payload's top-level copies read as that row's.
+    Every member of the finished payload is re-written through the one
+    writer at the path it lives at -- assigning an existing key keeps its
+    position, so each row is byte-identical and the entry is produced beside
+    the leaf by ``serialize_leaf`` rather than by a second pass over the
+    payload.
 
-    ``team_fight_value`` is ``None`` for a non-coupled objective and is
-    skipped rather than published as a measured zero: a scalar the objective
-    does not define is absent, not nought.
+    It walks the whole payload rather than four named keys on each ranked
+    row.  The version that named them left the response's own
+    ``total_damage``, ``team_fight_value`` and ``optimization_time_ms``
+    unnamed -- the three numbers a consumer reads first -- and, by writing
+    ``gold`` through ``measured``, changed it from ``7300`` to ``7300.0`` on
+    the wire.  ``publish`` classifies each member by what it is, so an int
+    stays an int and carries no entry: a build's price is a count of gold,
+    not a quantity a rule measured, and the payload-schema check reads ints
+    the same way.
     """
     writer = LeafWriter()
-    for index, row in enumerate(ranked_builds):
-        leaf = writer.block(row, f"ranked_builds[{index}]")
-        leaf.measured("total_damage", row["total_damage"])
-        if row.get("team_fight_value") is not None:
-            leaf.measured("team_fight_value", row["team_fight_value"])
-        if row.get("dps") is not None:
-            leaf.measured("dps", row["dps"])
-        if row.get("gold") is not None:
-            leaf.measured("gold", row["gold"])
+    root = writer.block(payload, "")
+    for key, value in list(payload.items()):
+        root.publish(key, value)
     return writer.entries()
 
 
@@ -2202,13 +2199,11 @@ def optimize_build(
         # coarse candidates were rejected above rather than silently ranked.
         certified_best = True
 
-    payload_dispositions = _optimize_dispositions(public_ranked)
-    return {
+    payload = {
         "items": legendary_names,
         "boots": boots_name,
         "total_damage": round(ranked[0][2], 1),
         "team_fight_value": round(ranked[0][2], 1) if coupled_objective else None,
-        "dispositions": payload_dispositions,
         "objective": objective,
         "max_legendary_slots": max_legendary_slots,
         "optimization_time_ms": round(elapsed * 1000, 1),
@@ -2262,3 +2257,5 @@ def optimize_build(
         "timeline_withheld_candidates": timeline_withheld_candidates,
         "gold_budget": gold_budget,
     }
+    payload["dispositions"] = _optimize_dispositions(payload)
+    return payload
