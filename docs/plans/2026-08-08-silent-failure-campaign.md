@@ -75,12 +75,32 @@ list.
 | `abyssal_mask.unmake` | `SPLIT` | Pair keeps `magic_amp` (golden pins it); 0B declares `owner`, `damage_classes={magic}`, `attack_classes`=all three and `AURA_ARM`. `HolderStacking.IDEMPOTENT_AURA` — the declaration that makes its dedupe key `(subject, mechanic_id)` (D-66) — lands with the field itself, which Phase 4 introduces; `MechanicCapability` does not exist at 0B | 0B, then 4 |
 | `dream_maker.blue_bubble` | `COUPLED_ONLY` — **settled in 0B** | Verified: no pair-engine pricer for Blue Dream Bubble exists in `src/`, so it declares no `owner`; `next_event_only` needs the `Consumption` axis, expressible in no contract as written | 0B declares, 3 models |
 | `imperial_mandate.command` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` | The pool is roster-wide; summed across N pair ledgers the pair number claims every defender was stunned. `_apply_command_amp` stays, tagged `THEORETICAL` — and D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)` rule is what keeps the surviving preview from becoming a second applied contribution. `HolderStacking` is H2-blocked and fails closed to `PER_HOLDER`, so a second Mandate holder is priced, not deduped away. Blocked on H2 | 4 |
-| `bloodsong.expose_weakness` | Freeze the divergence behind a `DivergenceReceipt`, then `COUPLED_AUTHORITATIVE` | Pair and walk are not numerically equivalent; never unify inside a slice labelled a pure refactor | 3 freezes, 4 corrects |
+| `bloodsong.expose_weakness` | Freeze the divergence behind a `DivergenceReceipt`, then `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` — **refreshed by Amendment D below**; the plain member is unconstructible while the pair pricer stands | Pair and walk are not numerically equivalent; never unify inside a slice labelled a pure refactor. The pair pricer `damage._add_expose_weakness` **survives on the merits** as a `ViewTag.THEORETICAL` preview, and D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)` uniqueness is the double-count guard; deleting it is **not scheduled in this campaign** | 3 freezes, 4 corrects |
 | `black_cleaver.carve` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` — **H1** | The stack ledger is a roster fact; the Cesàro approximation stays pair-side as `THEORETICAL` and may not move in a refactor (`docs/math-foundations.md` §2.3) | 4 |
 | `bloodletters_curse.vile_decay` | Same as Carve — **H1** | Identical shape, magic/ability-gated | 4 |
 | `horizon_focus.hypershot` | `PAIR_ONLY`, declared | Exclusion set is a pair-local rotation fact; ship it first as the amp-kernel canary, expected no-op | 3/4 |
 | `shadowflame.cinderbloom` | `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` | A `LivePredicate`, never a window; the bonus becomes a rider on its triggering event, and the Liandry reprice is extracted in a prior slice. Its walk half is **rider-delivered** under Amendment C above — a `RiderDelivery` stamp, no `packet_source` — and its `Subject` is the holder, so it is **not** a cross-participant producer and the ruled producer count does not move when it is declared | 4, last |
 | `force_of_nature.steadfast` | `COUPLED_AUTHORITATIVE` — the stack ledger reads **any roster attacker's** magic damage and CC into the holder (`survival/transitions.py::update_combat_state` keys on `action.attacker`), a roster input under the rule three lines above; the earlier `PAIR_ONLY` reading contradicted both that rule and C5's own receipt-walk blast radius, and is retired | D-08's predicate widening is unchanged. The pair engine's `defensive_effects` DefenseSource schedule is **a distinct surface, not a preview of the coupled number** — it feeds the single-attacker TDD estimate, which is never a score or BIS input, asserted once, structurally. No Phase 4 tagging work exists for this mechanic and none is created here | 0B |
+
+> **Amendment D — 2026-08-13, `bloodsong.expose_weakness`'s member.** The S7 lane landed
+> `COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW` where this table ruled `COUPLED_AUTHORITATIVE`, recorded
+> the divergence rather than absorbing it, and referred the choice up — correctly, because the two
+> ways out were "refresh the table" and "schedule the pair pricer for deletion", and an
+> implementation lane may pick neither. The measured reason the ruled member does not build:
+> *"`item_support_effects._check_cross_participant_authority` resolves a `damage_modifier` packet's
+> authority through `trigger_stream.CROSS_PARTICIPANT_AUTHORITIES`, whose three members are the ones
+> that say a second engine can see the mechanic. Bloodsong's pair pricer (`damage._add_expose_weakness`)
+> still exists — golden pins it and deleting it is a pair-engine change this slice does not make — so a
+> second engine does see it, and declaring otherwise makes the packet fail to build at runtime."*
+> **Ruling:** the table's entry is **refreshed to the constructible member**. The pair pricer survives
+> **on the merits** — the pair-engine golden pins it — as a `ViewTag.THEORETICAL` preview, which is the
+> same rev-2 pattern already ruled for Abyssal's `magic_amp` and Command's `_apply_command_amp`, with
+> D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)` uniqueness as the double-count guard rather
+> than deletion. The row's binding obligation is unchanged and was met: nothing was unified, one side
+> is named the answer and the other is tagged and excluded from every roster total. **Deleting the pair
+> pricer is explicitly NOT scheduled in this campaign** — it is an unbudgeted slice that would move the
+> pair golden, and no phase may adopt it by implication. Consequently the rev-1 retirement row below
+> reads **three** surviving pair-side halves rather than two; that row's own ruling is untouched.
 
 ### Contradictions this revision resolves
 
@@ -92,7 +112,7 @@ list.
 | Golden is the campaign's safety net | `golden_snapshot.py` calls only `pipeline.run_fight` — no roster, no coupled walk, no `score_only`, and it rounds to 2 dp | D-93. Golden proves no pair-engine leak and nothing else; the coupled baseline is built in Phase 0A |
 | Phase 5 rides on Phase 3's vocabulary | It does not — `cast_dependency.py` is a stdlib leaf and Phase 5's only shared file is a different function in `pipeline.py` | Phase 5 runs in parallel from the first barrier |
 | Shrinking the enriched-view set is inert | Fimbulwinter reads `_event_id`, which exists only on enriched rows; dropping it disarms a fail-closed raise | D-03. The enriched-view set is one member larger than the claim assumed; its membership is enumerated once, in Phase 2's `enriched_view_items` docstring |
-| **Rev 1's Phase 4 end state**: the pairing registry empties and is deleted, ending the `owner` handshake entirely | **Two pair-side halves survive on the merits** — `abyssal_mask.unmake` keeps `magic_amp` because golden pins it, and `_apply_command_amp` is kept as a `THEORETICAL` preview rather than deleted | **The end state is deliberately revised, not met**, and this row is that revision's retirement notice. `Pairing` keeps three members with `UNPAIRED_KNOWN_DEFECT` asserted empty (D-92), `SPLIT` stays legal wherever the authority rule's three conditions hold, and D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)` uniqueness test replaces deletion as the double-count guard. What rev 1 wanted from the deletion is carried by criterion 8 below and by Phase 4's criteria 1 and 4; no phase document may restate rev 1's wording as a live end state |
+| **Rev 1's Phase 4 end state**: the pairing registry empties and is deleted, ending the `owner` handshake entirely | **Three pair-side halves survive on the merits** — `abyssal_mask.unmake` keeps `magic_amp` because golden pins it, `_apply_command_amp` is kept as a `THEORETICAL` preview rather than deleted, and Amendment D keeps Bloodsong's `_add_expose_weakness` on exactly those terms | **The end state is deliberately revised, not met**, and this row is that revision's retirement notice. `Pairing` keeps three members with `UNPAIRED_KNOWN_DEFECT` asserted empty (D-92), `SPLIT` stays legal wherever the authority rule's three conditions hold, and D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)` uniqueness test replaces deletion as the double-count guard. What rev 1 wanted from the deletion is carried by criterion 8 below and by Phase 4's criteria 1 and 4; no phase document may restate rev 1's wording as a live end state |
 
 ### D-01 … D-14 — Phase 0 semantic corrections ([Phase 0](phase-0-gates-and-corrections.md))
 

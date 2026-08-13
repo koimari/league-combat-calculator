@@ -4,7 +4,9 @@ S7 declares seven authority moves and lands four.  Three of those four
 landed here; Shadowflame did not, because its coupled half delivers its
 number as a rider on an existing event and the capability registry had no
 shape that could say so.  The second entry is a plan/tree divergence a
-landed move took deliberately.
+landed move took deliberately.  Both have since been ruled — Amendments C
+and D in the campaign umbrella — and both are retired here, which is why
+every test below asserts a *resolved* property rather than a standing one.
 
 Neither belongs in a commit body: a commit body is absorbed by the next
 baseline re-capture, and an escalation that only a reader can find is the
@@ -168,18 +170,39 @@ def test_the_cross_participant_producer_set_is_still_the_ruled_six():
     assert producers == RULED_CROSS_PARTICIPANT_PRODUCERS
 
 
-def test_bloodsongs_landed_authority_is_the_constructible_one():
-    """The second entry's reproducer: the ruled member does not build.
+UMBRELLA = ROOT / "docs" / "plans" / "2026-08-08-silent-failure-campaign.md"
 
-    The umbrella rules ``COUPLED_AUTHORITATIVE``; the packet builder
-    resolves a ``damage_modifier``'s authority through the three members
-    that name a second engine, and Bloodsong's pair pricer still exists.
-    While that pricer stands, the ruled member is unconstructible and this
-    is the member that shipped.
+
+def _umbrella_authority_row(mechanic):
+    """The semantic-authority table's row for one mechanic, as written."""
+    return next(
+        line
+        for line in UMBRELLA.read_text(encoding="utf-8").splitlines()
+        if line.startswith(f"| `{mechanic}` |")
+    )
+
+
+def test_bloodsongs_authority_is_one_member_in_the_plan_and_in_the_tree():
+    """The second entry's reproducer, inverted by Amendment D.
+
+    What was escalated was a plan/tree divergence, not a defect in either:
+    the table ruled ``COUPLED_AUTHORITATIVE``, the packet builder resolves a
+    ``damage_modifier``'s authority through the three members that name a
+    second engine, and Bloodsong's pair pricer still exists — so the ruled
+    member was unconstructible and the slice landed the one that builds.
+
+    The amendment refreshed the table to that member and kept the pricer as
+    a declared preview.  What is asserted here is therefore agreement: the
+    row and the registry name one member.  The pricer is asserted alive too,
+    because it is the *reason* the row reads as it does — deleting it is
+    explicitly not scheduled, and if it ever goes, this is the row that has
+    to be re-read rather than quietly left standing.
     """
     walk = ts.CAPABILITIES["bloodsong.expose_weakness"]
     assert walk.authority is ts.Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW
+    assert walk.authority.name in _umbrella_authority_row("bloodsong.expose_weakness")
     assert ts.Authority.COUPLED_AUTHORITATIVE not in ts.CROSS_PARTICIPANT_AUTHORITIES
     from src.calculator.damage import _add_expose_weakness
 
     assert callable(_add_expose_weakness), "the pair pricer this entry is about"
+    assert _retired_entry("bloodsong_authority_member_differs_from_the_umbrella")

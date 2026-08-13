@@ -4,19 +4,23 @@
   "why_this_file_exists": "Phase 4 S7 declares seven authority moves and lands four: Hypershot, Abyssal Unmake, Bloodsong, Shadowflame. Three of the four landed. Shadowflame did not, and the reason was not effort or judgement but a declaration shape the campaign had not ruled: its walk half delivers its number as a rider on an existing damage event rather than as a packet, and no MechanicCapability shape could say that. The second entry is a plan/tree divergence a landed slice took deliberately and could not resolve from an implementation lane. Written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
   "how_an_entry_closes": "An entry moves from defects[] to retired[] only when its contradiction is resolved by a ruling recorded in the umbrella, and only together with the gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it, and a retired entry keeps its original what/why so the reader can see what was ruled and against what.",
   "gate": "tests/test_escalated_defects_p4_s7.py",
-  "defects": [
+  "defects": [],
+  "retired": [
     {
       "id": "bloodsong_authority_member_differs_from_the_umbrella",
       "dated": "2026-08-13",
+      "retired_on": "2026-08-13",
       "raised_by": "the S7 implementation lane, in the commit that landed the move",
       "what": "The umbrella's semantic-authority table rules bloodsong.expose_weakness COUPLED_AUTHORITATIVE. The slice landed COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW.",
       "why": "Plain COUPLED_AUTHORITATIVE is unconstructible for this mechanic. item_support_effects._check_cross_participant_authority resolves a damage_modifier packet's authority through trigger_stream.CROSS_PARTICIPANT_AUTHORITIES, whose three members are the ones that say a second engine can see the mechanic. Bloodsong's pair pricer (damage._add_expose_weakness) still exists — golden pins it and deleting it is a pair-engine change this slice does not make — so a second engine does see it, and declaring otherwise makes the packet fail to build at runtime.",
       "why_the_ruling_is_still_honoured": "The row's binding obligation is 'pair and walk are not numerically equivalent; never unify inside a slice labelled a pure refactor'. Nothing was unified: one side is named the answer, the other is tagged THEORETICAL and excluded from every roster total, and the slice is labelled semantic.",
       "for_the_umbrella_owner": "Either the table's member is refreshed to the constructible one, or the pair pricer is scheduled for deletion in a slice that owns damage.py and can move the pair golden. An implementation lane may not choose.",
-      "reproducer": "Set the walk half's authority to Authority.COUPLED_AUTHORITATIVE and run pytest tests/test_item_support_effects.py: every Bloodsong packet raises ValueError('Bloodsong — Expose Weakness modifies another participant's damage but names no Authority')."
-    }
-  ],
-  "retired": [
+      "reproducer": "Set the walk half's authority to Authority.COUPLED_AUTHORITATIVE and run pytest tests/test_item_support_effects.py: every Bloodsong packet raises ValueError('Bloodsong — Expose Weakness modifies another participant's damage but names no Authority').",
+      "resolved_by": "Amendment D, ruled by the orchestrator and recorded in docs/plans/2026-08-08-silent-failure-campaign.md beside the semantic-authority table.",
+      "resolution": "The umbrella's authority-table entry is refreshed to COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW — the constructible member and the one the slice landed. The pair pricer survives on the merits, because the pair-engine golden pins it, as a ViewTag.THEORETICAL preview: the same rev-2 pattern already ruled for Abyssal's magic_amp and Command's _apply_command_amp, with D-62's one-APPLIED-per-(mechanic, subject, event_id) uniqueness as the double-count guard rather than deletion. The row's binding obligation is unchanged and was met.",
+      "what_this_retirement_does_not_close": "Deleting the pair pricer is explicitly NOT scheduled in this campaign — it is an unbudgeted slice that would move the pair golden, and no phase may adopt it by implication. The entry retires because the plan and the tree now name one member, not because the divergence was implemented away.",
+      "reproducer_after_retirement": "Inverted, and asserted by the gate: the umbrella's authority row for bloodsong.expose_weakness and trigger_stream.CAPABILITIES name the same Authority member, and the pair pricer damage._add_expose_weakness is still importable — the fact that makes the plain member unconstructible and therefore the reason the row reads as it does."
+    },
     {
       "id": "shadowflame_walk_half_has_no_declarable_shape",
       "dated": "2026-08-13",
