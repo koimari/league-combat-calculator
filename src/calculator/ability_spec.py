@@ -15,9 +15,15 @@ has to re-spell a member as a bare string.  ``ZeroPolicy`` sits with them
 for the same reason: it is a ``Disposition`` and the receipt that goes
 with it, and both the champion entry builders and ``item_behavior``'s
 rule union declare one.
+
+``Quantity`` — ``Measured | StructuralZero | Withheld | Starved`` — sits
+beside ``Disposition`` for the same reason again, and turns it from a label
+into an algebra (D-72): ``Disposition`` survives as the union's tag
+projection, and the campaign's propagation rule for aggregates is
+``__add__`` on the type rather than a discipline each consumer maintains.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -75,6 +81,203 @@ class Disposition(Enum):
     STRUCTURAL_ZERO = "STRUCTURAL_ZERO"
     WITHHELD = "WITHHELD"
     STARVED = "STARVED"
+
+
+class WithheldHasNoValue(ValueError):
+    """A caller asked a withheld quantity for the number it refused to give.
+
+    Distinct from ``ProjectionStarvation`` on purpose.  A withheld leaf is a
+    *modelled* refusal — coverage declined to price the mechanic and named a
+    receipt — so the payload omits the number and publishes the receipt, and a
+    consumer reaching for the number anyway has misread the contract.  A
+    starved one is a programming error, which is why it raises the campaign's
+    one lazily-raised exception instead.
+    """
+
+
+def _projection_starvation() -> type[Exception]:
+    """``ProjectionStarvation``'s class, fetched at raise time.
+
+    Its home is ``trigger_stream`` (the campaign's shared-names table), and
+    ``trigger_stream`` imports *this* module — so a module-scope import here
+    would be a cycle, and would make the dependency-free vocabulary leaf
+    depend on the trigger bus.  A starved read is not a hot path (it raises),
+    so the deferred lookup costs nothing that matters and the exception keeps
+    its one home.
+    """
+    # pylint: disable-next=import-outside-toplevel,cyclic-import
+    from .trigger_stream import ProjectionStarvation
+
+    return ProjectionStarvation
+
+
+class _QuantityAlgebra:
+    """The fold shared by all four dispositions — the propagation row (D-72).
+
+    Subclasses are the four members of :data:`Quantity`; this class holds
+    nothing but ``__add__``, because propagation is arithmetic on the value
+    type rather than a behaviour every consumer re-implements.  A total is
+    also a leaf, and the natural implementation of a total contributes 0.0 for
+    a withheld member — the incident re-created at the aggregate, fully
+    compliant with every per-leaf rule.  Defining the fold here makes that
+    failure unrepresentable rather than merely tested for.
+    """
+
+    __slots__ = ()
+
+    def __add__(self, other: object) -> "Quantity":
+        """Fold two quantities; the clause order below is the ruling.
+
+        1. a ``Starved`` operand **raises**, because folding it is reading it,
+           and a withheld total that quietly swallowed a programming error is
+           the failure this campaign is named after;
+        2. otherwise any ``Withheld`` operand makes the sum ``Withheld``,
+           naming every receipt it swallowed, deduplicated, in first-seen
+           order;
+        3. otherwise both sides are ``Measured``/``StructuralZero`` and fold
+           to ``Measured`` of the two values, a structural zero contributing
+           0.0.
+
+        Clause 3 makes a sum of two structural zeros ``Measured(0.0)`` rather
+        than a third structural zero, deliberately: the *summation* is a rule
+        that ran over adequate inputs, the members' declarations are their own
+        receipts and not the total's, and ``StructuralZero`` carries one reason
+        with no way to merge two.
+        """
+        if not isinstance(other, _QuantityAlgebra):
+            return NotImplemented
+        operands = (self, other)
+        for operand in operands:
+            if isinstance(operand, Starved):
+                operand.read()
+        receipts: list[str] = []
+        for operand in operands:
+            if isinstance(operand, Withheld):
+                receipts.extend(
+                    receipt for receipt in operand.receipts if receipt not in receipts
+                )
+        if receipts:
+            return Withheld(receipts=tuple(receipts))
+        return Measured(amount=self.read() + other.read())
+
+    def read(self) -> float:
+        """The number this quantity stands for, or the refusal it stands for."""
+        raise NotImplementedError
+
+
+@dataclass(frozen=True, slots=True)
+class Measured(_QuantityAlgebra):
+    """A rule ran against adequate inputs and produced this value, zero included."""
+
+    amount: float
+
+    @property
+    def disposition(self) -> Disposition:
+        """This quantity's tag — ``Disposition`` as a projection (D-72)."""
+        return Disposition.MEASURED
+
+    def read(self) -> float:
+        """The number the rule produced."""
+        return float(self.amount)
+
+
+@dataclass(frozen=True, slots=True)
+class StructuralZero(_QuantityAlgebra):
+    """A declaration says the mechanic does not apply here; zero is the answer.
+
+    ``reason`` is the receipt and it is required: a structural zero without one
+    is an ordinary zero with a nicer name.
+    """
+
+    reason: str
+
+    def __post_init__(self) -> None:
+        """A declared zero with no declaration is not one."""
+        if not self.reason.strip():
+            raise ValueError("StructuralZero needs a reason; it is the receipt")
+
+    @property
+    def disposition(self) -> Disposition:
+        """This quantity's tag."""
+        return Disposition.STRUCTURAL_ZERO
+
+    def read(self) -> float:
+        """Zero — and the declaration above is why that is the answer."""
+        return 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class Withheld(_QuantityAlgebra):
+    """Coverage refused to model this: named receipts and **no number**.
+
+    ``receipts`` is a tuple rather than one string because a withheld total
+    names every withheld member it swallowed, which is the propagation row's
+    whole content.
+    """
+
+    receipts: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        """A refusal with no receipt is the blank this type exists to replace."""
+        if not self.receipts or not all(receipt.strip() for receipt in self.receipts):
+            raise ValueError("Withheld needs at least one non-empty receipt")
+
+    @property
+    def disposition(self) -> Disposition:
+        """This quantity's tag."""
+        return Disposition.WITHHELD
+
+    def read(self) -> float:
+        """Never: a withheld leaf carries receipts instead of a number."""
+        raise WithheldHasNoValue(
+            f"withheld quantity has no value; its receipts are {list(self.receipts)}"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Starved(_QuantityAlgebra):
+    """A projection could not answer the question a rule asked.
+
+    A programming error rather than a data condition: a consumer and a
+    projection disagree about what the projection can represent.  Reading it
+    raises ``ProjectionStarvation`` — lazily, on the *first read* rather than
+    at construction, so the failure surfaces where the question was asked
+    (D-25).  Exactly one handler catches it, at the request boundary in
+    ``src/app.py``.
+    """
+
+    field: str
+    producer: str
+    reason: str
+
+    @property
+    def disposition(self) -> Disposition:
+        """This quantity's tag.  Reading the tag is not reading the value."""
+        return Disposition.STARVED
+
+    def read(self) -> float:
+        """Never returns: the campaign's one lazily-raised failure."""
+        raise _projection_starvation()(self.field, self.producer, self.reason)
+
+
+# The four dispositions as a value type (D-72).  ``Disposition`` survives as
+# this union's tag projection rather than as a parallel annotation, which is
+# what makes "every leaf carries exactly one disposition" a property of the
+# type instead of a discipline maintained by tests.
+Quantity = Measured | StructuralZero | Withheld | Starved
+
+
+def quantity_sum(quantities: Iterable[Quantity]) -> Quantity:
+    """Fold a set of quantities through ``__add__``, propagation and all.
+
+    An empty fold is ``Measured(0.0)``: summing nothing is a rule that ran, and
+    the caller who had nothing to sum is the one who knows whether that is a
+    structural zero.
+    """
+    total: Quantity = Measured(amount=0.0)
+    for quantity in quantities:
+        total = total + quantity
+    return total
 
 
 @dataclass(frozen=True, slots=True)

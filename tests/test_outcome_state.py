@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import pytest
 
+from src.calculator import ability_spec, trigger_stream
+from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state
 from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
 
@@ -209,3 +211,88 @@ def test_the_ledger_answers_the_whole_kernel_adapter_protocol() -> None:
     ledger = outcome_state.OutcomeLedger()
     for name in protocol:
         assert hasattr(ledger, name), name
+
+
+# ---------------------------------------------------------------------------
+# Where a leaf is born: ledger reads wrapped as Quantity (D-72)
+# ---------------------------------------------------------------------------
+
+
+def test_a_written_field_reads_as_measured_wrapping_the_same_float() -> None:
+    """S3's purity claim, at the boundary: ``Measured`` wraps, it transforms not."""
+    ledger = outcome_state.OutcomeLedger()
+    ledger.write(action(0), damage=123.456789)
+    quantity = ledger.quantity(0, "applied")
+    assert quantity.disposition is Disposition.MEASURED
+    assert quantity.read() == ledger.get(0).applied == 123.456789
+
+
+def test_a_refused_transition_reads_as_a_structural_zero_carrying_its_reason() -> None:
+    """The walk said the mechanic does not apply; the reason is the receipt."""
+    ledger = outcome_state.OutcomeLedger()
+    ledger.skip(action(1), "target_dead")
+    quantity = ledger.quantity(1, "applied")
+    assert quantity.disposition is Disposition.STRUCTURAL_ZERO
+    assert quantity.reason == "target_dead"
+    assert quantity.read() == 0.0
+
+
+def test_a_field_with_no_write_and_no_refusal_reads_as_starved() -> None:
+    """The campaign's invariant where the leaf is born.
+
+    The ledger holds neither a number nor a refusal for this slot, so it
+    cannot say whether the rule ran -- and answering 0.0 would be exactly the
+    uncomputed number that looks computed.
+    """
+    ledger = outcome_state.OutcomeLedger()
+    quantity = ledger.quantity(2, "applied")
+    assert quantity.disposition is Disposition.STARVED
+    assert quantity.field == "applied"
+    with pytest.raises(trigger_stream.ProjectionStarvation):
+        quantity.read()
+
+
+def test_the_starved_read_is_lazy() -> None:
+    """Holding one costs nothing; reading one is the error (D-25)."""
+    ledger = outcome_state.OutcomeLedger()
+    held = [ledger.quantity(slot, "overkill") for slot in range(5)]
+    assert all(item.disposition is Disposition.STARVED for item in held)
+
+
+def test_quantities_answers_every_numeric_field_and_no_receipt_field() -> None:
+    """``skipped_reason`` is a receipt, not a number, so it has no quantity."""
+    ledger = outcome_state.OutcomeLedger()
+    ledger.write(action(3), damage=10.0, shield_absorbed=2.0)
+    quantities = ledger.quantities(3)
+    assert set(quantities) == {"applied", "absorbed", "to_health", "overkill"}
+    assert quantities["applied"].disposition is Disposition.MEASURED
+    assert quantities["to_health"].disposition is Disposition.STARVED
+    with pytest.raises(ValueError):
+        ledger.quantity(3, "skipped_reason")
+
+
+def test_an_unknown_field_cannot_be_asked_for() -> None:
+    """A typo must never become a fifth outcome that reads as starved."""
+    with pytest.raises(ValueError):
+        outcome_state.OutcomeLedger().quantity(0, "aplied")
+
+
+def test_a_total_over_a_refused_and_a_measured_member_is_measured() -> None:
+    """A structural zero contributes 0.0, which is the propagation row."""
+    ledger = outcome_state.OutcomeLedger()
+    ledger.write(action(0), damage=40.0)
+    ledger.skip(action(1), "spell_shield_blocked")
+    total = ability_spec.quantity_sum(
+        (ledger.quantity(0, "applied"), ledger.quantity(1, "applied"))
+    )
+    assert total == ability_spec.Measured(amount=40.0)
+
+
+def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() -> None:
+    """The incident at the aggregate, refused by the algebra rather than by review."""
+    ledger = outcome_state.OutcomeLedger()
+    ledger.write(action(0), damage=40.0)
+    with pytest.raises(trigger_stream.ProjectionStarvation):
+        ability_spec.quantity_sum(
+            (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
+        )

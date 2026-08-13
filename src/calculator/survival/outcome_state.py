@@ -39,6 +39,7 @@ from enum import Enum
 from typing import Any
 
 from .actions import NO_SLOT, SurvivalAction
+from ..ability_spec import Measured, Quantity, Starved, StructuralZero
 
 __all__ = [
     "Adjustment",
@@ -323,6 +324,66 @@ class OutcomeLedger:
             skipped_reason=recorded.get("skipped_reason"),
             adjustments=tuple(self._adjustments.get(action_slot, ())),
         )
+
+    def quantity(self, action_slot: int, field: str) -> Quantity:
+        """One outcome field as a :class:`Quantity` — where a leaf is born.
+
+        The kernel holds raw floats; this is the boundary at which a number
+        acquires a disposition (D-72), and the wrapping is pure: ``Measured``
+        wraps the float :meth:`get` would have returned, unchanged.
+
+        The three answers are the three things the ledger actually knows:
+
+        * a transition wrote the field, so a rule ran and produced it —
+          ``Measured``;
+        * the walk refused the transition and named a reason, so zero is the
+          answer and the reason is the receipt — ``StructuralZero``;
+        * no transition wrote it and none refused it, so this ledger cannot
+          answer the question at all — ``Starved``, which raises
+          ``ProjectionStarvation`` when somebody reads it rather than
+          returning a zero that would be indistinguishable from a computed
+          one.  That third case is the campaign's invariant, at the boundary
+          where the number is born.
+
+        Raises:
+            ValueError: *field* is not one of :data:`OUTCOME_FIELDS`.
+        """
+        if field not in OUTCOME_FIELDS or field == "skipped_reason":
+            raise ValueError(
+                f"{field!r} is not a numeric outcome field; one of "
+                f"{[name for name in OUTCOME_FIELDS if name != 'skipped_reason']} "
+                f"was expected"
+            )
+        recorded = self._fields.get(action_slot, {})
+        if field in recorded:
+            return Measured(amount=float(recorded[field] or 0.0))
+        skipped_reason = recorded.get("skipped_reason")
+        if skipped_reason is not None:
+            return StructuralZero(reason=str(skipped_reason))
+        return Starved(
+            field=field,
+            producer=f"action slot {action_slot}",
+            reason=(
+                "the outcome ledger holds no write and no refusal for this "
+                "slot, so it cannot say whether the rule ran"
+            ),
+        )
+
+    def quantities(self, action_slot: int) -> dict[str, Quantity]:
+        """Every numeric outcome field of one slot, each as a ``Quantity``.
+
+        Most transitions produce one or two of the four — a heal writes
+        ``applied`` and nothing else — so the rest come back ``Starved`` by
+        the rule above.  That is the point rather than a rough edge: the
+        ledger does not know which fields a given transition was supposed to
+        produce, the projection does, and a projection that asks for a number
+        no rule was ever going to write should hear about it.
+        """
+        return {
+            field: self.quantity(action_slot, field)
+            for field in OUTCOME_FIELDS
+            if field != "skipped_reason"
+        }
 
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""
