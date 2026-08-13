@@ -22,7 +22,7 @@ from src.calculator.program import identity
 
 ROOT = Path(__file__).parents[1]
 TIMELINE_PATH = ROOT / "src" / "calculator" / "participant_timeline.py"
-COMPILE_PATH = ROOT / "src" / "calculator" / "survival" / "compile.py"
+COMPILE_PATH = ROOT / "src" / "calculator" / "program" / "compile.py"
 
 
 class TestTheFourLegacyFormats:

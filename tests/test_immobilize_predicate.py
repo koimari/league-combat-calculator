@@ -24,7 +24,7 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_effects import required_effect_value
 from src.calculator.participant_timeline import Combatant, _simulate_survival
-from src.calculator.survival.actions import survival_action_from_event
+from src.calculator.program.compile import action_from_event
 
 # The literal C5 retired: the five kinds the walk itself decided were
 # immobilizing.  Pinned here, not read from the tree, because it is the
@@ -175,7 +175,7 @@ class TestTheTypedActionCarriesTheAnswer:
 
     @pytest.mark.parametrize("cc_kind", sorted(CC_KIND_VOCABULARY))
     def test_the_action_marks_exactly_the_immobilizing_vocabulary(self, cc_kind):
-        action = survival_action_from_event(
+        action = action_from_event(
             {"time": 0.0, "damage": 10.0, "damage_type": "magic", "cc_kind": cc_kind},
             0.0,
             0,
@@ -190,7 +190,7 @@ class TestTheTypedActionCarriesTheAnswer:
         test, so a module authoring ``" stun"`` armed Command and left
         Steadfast blind — the same divergence one character wide.
         """
-        action = survival_action_from_event(
+        action = action_from_event(
             {"time": 0.0, "damage": 10.0, "damage_type": "magic", "cc_kind": " Stun "},
             0.0,
             0,

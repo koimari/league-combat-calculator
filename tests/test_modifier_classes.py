@@ -10,12 +10,12 @@ both the reduction and the multiplier branch that were separately untyped.
 import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.program.compile import action_from_event
 from src.calculator.survival.actions import (
     SurvivalAction,
     attack_class_of,
     damage_class_of,
     declared_modifier_classes,
-    survival_action_from_event,
 )
 from src.calculator.survival.transitions import (
     _apply_damage_modifier,
@@ -121,16 +121,14 @@ class TestTheDeclarationIsRequired:
 
     def test_an_event_without_a_declaration_fails_closed_to_empty(self):
         """Absent metadata is the neutral value, never a guessed set."""
-        action = survival_action_from_event(
-            {"kind": "damage_modifier", "time": 0.0}, 1.0, 0, {}
-        )
+        action = action_from_event({"kind": "damage_modifier", "time": 0.0}, 1.0, 0, {})
         assert action.damage_classes == frozenset()
         assert action.attack_classes == frozenset()
 
     def test_an_event_declaring_strings_raises(self):
         """A spelling that looks like a class is the drift the enum retires."""
         with pytest.raises(TypeError, match="DamageClass members are required"):
-            survival_action_from_event(
+            action_from_event(
                 {"kind": "damage_modifier", "damage_classes": ["magic"]}, 1.0, 0, {}
             )
 
@@ -207,7 +205,7 @@ class TestTheHolderIsARosterSlot:
 
     def test_a_packet_owner_resolves_to_its_roster_slot(self):
         """The packet declares a participant id; the kernel stores the index."""
-        action = survival_action_from_event(
+        action = action_from_event(
             {"kind": "damage_modifier", "owner": "ally:Lulu"},
             1.0,
             0,
@@ -219,7 +217,7 @@ class TestTheHolderIsARosterSlot:
         """Byte-identical to the string compare: an unresolvable id matched
         nothing then and is ``-1`` now, which the predicate reads as
         "declares no holder"."""
-        action = survival_action_from_event(
+        action = action_from_event(
             {"kind": "damage_modifier", "owner": "enemy:Ghost"},
             1.0,
             0,

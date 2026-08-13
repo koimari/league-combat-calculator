@@ -33,13 +33,22 @@ from src.calculator.survival.actions import (
 
 ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
+PROGRAM = ROOT / "src" / "calculator" / "program"
 TIMELINE = ROOT / "src" / "calculator" / "participant_timeline.py"
 ITEM_SUPPORT = ROOT / "src" / "calculator" / "item_support_effects.py"
 
 
 def _population() -> tuple[Path, ...]:
-    """Every file a phase can be written in: the kernel plus the timeline."""
-    return (*sorted(SURVIVAL.glob("*.py")), TIMELINE)
+    """Every file a phase can be written in.
+
+    Three trees, not one: the kernel that consumes a rank, the timeline that
+    composes a walk, and ``program/`` — which is where the one
+    ``SurvivalAction`` constructor moved at Phase 4 S4, so a float written
+    into a phase slot would land there and nowhere else.  Scanning only the
+    kernel after that move would leave the guard pointed at a file the
+    construction had left.
+    """
+    return (*sorted(SURVIVAL.glob("*.py")), *sorted(PROGRAM.rglob("*.py")), TIMELINE)
 
 
 def test_the_ordering_fold_is_total_and_closed() -> None:
@@ -346,10 +355,10 @@ def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
     rules = _population_rules(_population())
     assert dict(rules.phase_arg) == {
         "SurvivalAction": 2,
-        "_classify_prefetched": 1,
+        "action_from_event": 1,
         "action_key": 1,
         "classify_event_kind": 1,
-        "survival_action_from_event": 1,
+        "classify_prefetched": 1,
     }
     assert dict(rules.sort_key_arg) == {
         "SurvivalAction": 0,
@@ -515,16 +524,22 @@ def test_the_action_carries_a_rank_and_not_a_float() -> None:
 def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
     """The hand-written sort keys consume the same fold.
 
-    ``compile.py`` writes ``action_key``'s output by hand for its two hot
-    loops, so element 1 must be an ``ordering_slot(...)`` — directly or
+    ``program/compile.py`` writes ``action_key``'s output by hand for its two
+    hot loops, so element 1 must be an ``ordering_slot(...)`` — directly or
     through one bound name.  A bare rank there would sort a reactive
     strike-back after a late barrier that ``action_key`` ties, and only the
     compiled-vs-receipt equivalence suite could ever see it.
+
+    The file is ``program/compile.py`` since Phase 4 S4 moved the one
+    constructor there, and the count is five rather than four because that
+    stage's ``compile_program`` writes a fifth: the guard seeing it is the
+    point, since a program-built action assembling its own key is exactly
+    where a bare rank would next appear.
     """
-    compile_py = SURVIVAL / "compile.py"
+    compile_py = PROGRAM / "compile.py"
     rules = _population_rules(_population())
     tuples = _sort_key_tuples(ast.parse(compile_py.read_text(encoding="utf-8")), rules)
-    assert len(tuples) == 4
+    assert len(tuples) == 5
     for tup, slot in tuples:
         assert _folds_to_slot(tup.elts[1], rules.bound), (slot, tup.elts[1].lineno)
 

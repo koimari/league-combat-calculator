@@ -74,9 +74,10 @@ runbook cites them by number, so the numbering is part of the contract.
   declaration order. **The projection is total**: the producer-less `TERMINAL` member is declared last
   and projects to `math.inf`, so the monotonicity assertion covers every member with no exception and
   the one rank no producer emits still has a defined float. **Every float-`phase` write consumes it in the same commit
-  (D-68), and the surface is six sites, not two**: `survival/compile.py:316` (the `phase` argument to
-  `action_key`), `:319`, `:865` (element 2 of the inline sort tuple at `:863-872`), `:874`, `:1011`
-  (`0.5`, thorns), and `participant_timeline.py:2767`. *Why: today's phases include -0.5 and 0.5, which
+  (D-68), and the surface is six sites, not two**: `program/compile.py:314` (the `phase` argument to
+  `action_key`), `:608`, `:837` (element 2 of an inline sort tuple), `:944`, `:1001`
+  (thorns), and `participant_timeline.py:2767` — the five compiler sites were spelled in
+  `survival/compile.py` when 0A repointed them and moved with the one constructor at Phase 4 S4. *Why: today's phases include -0.5 and 0.5, which
   no `IntEnum` member can hold, and only a non-decreasing many-to-one projection keeps 0A's ordering
   byte-identical; split across commits — or applied to two of six sites — the compiled path silently
   desyncs from the walk and only the equivalence suite can see it.*
@@ -146,8 +147,8 @@ is part of the contract. Expected qualifying occurrences (R-20) are stated per c
   the union variant (verified: drops Echoes of Helia) and the widened-tuple variant (leaves
   `_event_id`, both scans, and the crash). Solstice Sleigh is tuple-incapable and enters by
   derivation, not by a test pinning its `healthRegen` coincidence; Fimbulwinter stays because
-  `_event_id` exists only on enriched rows and dropping it disarms `compile.py:926`'s fail-closed
-  raise. *Why: smallest diff, no schema change — the fix is to make two gates name one predicate.*
+  `_event_id` exists only on enriched rows and dropping it disarms the fail-closed
+  `support_trigger_link` raise at `program/compile.py:914`. *Why: smallest diff, no schema change — the fix is to make two gates name one predicate.*
   **Expected qualifying occurrences: 0 on the three legacy bench scenarios, unbounded-but-enumerated
   on `syndra_mandate_3champ`, which is the only one authoring a `cc_kind`.**
 - **Starvation raises at one site, not per scanner, and the public path never reaches it:**
@@ -382,8 +383,9 @@ Each is separately falsifiable and separately revertible; the eleven shared gate
    R-07 forbids gating an instrument on the value it exists to measure. `--isolate` is the mode the
    committed fingerprints used.
 5. `TransitionRank` is the only phase vocabulary: no float `phase` or `_priority` literal survives
-   outside `legacy_phase` — the six migrated sites are `survival/compile.py:316, :319, :865, :874,
-   :1011` and `participant_timeline.py:2767` — the string `"_priority"` has zero occurrences in
+   outside `legacy_phase` — the six migrated sites are `program/compile.py:314, :608, :837, :944,
+   :1001` and `participant_timeline.py:2767`, the first five having moved out of
+   `survival/compile.py` with the one constructor at Phase 4 S4 — the string `"_priority"` has zero occurrences in
    `src/`, and a test asserts `legacy_phase` is total over the enum and non-decreasing over declaration
    order with **no member exempted**, `TERMINAL` included: it is declared last and returns `math.inf`,
    so a member added without a float, or added out of order, fails rather than falling through a

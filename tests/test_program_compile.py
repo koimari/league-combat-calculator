@@ -1,0 +1,203 @@
+"""Phase 4 S4 — the one constructor, and what it refuses.
+
+``program/compile`` is the front door for action construction.  Its claim is
+a location claim first — every ``SurvivalAction(...)`` expression in ``src/``
+is in this module, bar the one declared survivor, which
+``tests/test_program_structure.py`` asserts over the tree — and a
+fail-closed claim second: a program carrying a payload family the kernel
+cannot stage raises with a named receipt rather than compiling a hole.
+
+The behaviour of the two relocated builders is not re-tested here.  Their
+bodies are unchanged and are already pinned by the suites that pinned them
+before the move (``test_event_slots``, ``test_modifier_classes``,
+``test_issue_137``, ``test_survival_kernel``, ``test_participant_timeline``),
+and re-asserting them under a new name would be a second pin that can drift
+from the first.  What is new is what is tested.
+"""
+
+import pytest
+
+from src.calculator.program import compile as program_compile
+from src.calculator.program import events
+from src.calculator.program.build import (
+    CapabilityView,
+    Program,
+    Projection,
+    build_program,
+    pair_program,
+)
+from src.calculator.program.identity import EventId, PairOrigin
+from src.calculator.survival.actions import ActionKind, TransitionRank
+
+ORIGIN = PairOrigin("main", "enemy:0")
+EMPTY_CAPS = CapabilityView(mechanics={})
+
+
+def two_row_program() -> Program:
+    """A two-participant roster with two magic hits on the defender."""
+    result = {
+        "damage_events": [
+            {
+                "time": float(index),
+                "sequence": index,
+                "damage": 100.0 + index,
+                "damage_type": "magic",
+                "source_key": "q",
+            }
+            for index in range(2)
+        ]
+    }
+    pair = pair_program(result, ORIGIN, EMPTY_CAPS)
+    return build_program(("main", "enemy:0"), [(pair, 0, 1)], EMPTY_CAPS)
+
+
+def program_of(payload) -> Program:
+    """One routed event carrying *payload*, at the damage rank."""
+    event = events.RoutedEvent(
+        id=EventId(ORIGIN, 0),
+        subject=1,
+        source=0,
+        time=0.0,
+        sequence=0,
+        rank=TransitionRank.DAMAGE,
+        payload=payload,
+    )
+    return Program(participants=("main", "enemy:0"), events=(event,))
+
+
+class TestAProgramCompilesToActions:
+    """One routed event in, one kernel action out."""
+
+    def test_every_event_becomes_one_action(self) -> None:
+        actions = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        assert len(actions) == 2
+        assert [action.kind for action in actions] == [ActionKind.DAMAGE] * 2
+
+    def test_the_action_carries_the_engine_numbers_unchanged(self) -> None:
+        """The compiler places numbers; it does not re-price them."""
+        actions = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        assert [action.amount for action in actions] == [100.0, 101.0]
+        assert all(action.damage_type == "magic" for action in actions)
+
+    def test_the_sort_key_is_eight_elements_in_the_ruled_order(self) -> None:
+        """D-67: participant order contributes two, so the shape is eight."""
+        actions = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        for action in actions:
+            assert len(action.sort_key) == 8
+            assert action.sort_key[1] is TransitionRank.DAMAGE
+
+    def test_the_subject_and_source_are_roster_slots(self) -> None:
+        actions = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        assert {action.subject for action in actions} == {1}
+        assert {action.attacker for action in actions} == {0}
+
+
+class TestTheProjectionSelectsFieldsAndNotEvents:
+    """The incident's ordering, at the compiler rather than at the builder."""
+
+    def test_both_projections_compile_the_same_events(self) -> None:
+        program = two_row_program()
+        score = program_compile.compile_program(program, projection=Projection.SCORE)
+        receipt = program_compile.compile_program(
+            program, projection=Projection.RECEIPT
+        )
+        assert len(score) == len(receipt) == len(program.events)
+        assert [a.amount for a in score] == [a.amount for a in receipt]
+
+    def test_score_mode_carries_no_observation_dict(self) -> None:
+        """The optimizer never reads one, so the compiler never builds one."""
+        score = program_compile.compile_program(
+            two_row_program(), projection=Projection.SCORE
+        )
+        assert all(action.event is None for action in score)
+
+    def test_receipt_mode_carries_the_event_id_it_observes(self) -> None:
+        receipt = program_compile.compile_program(
+            two_row_program(), projection=Projection.RECEIPT
+        )
+        assert all(action.event is not None for action in receipt)
+
+
+class TestAnUnstageableFamilyFailsClosed:
+    """A hole in the program is a raise, never a neutral action."""
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            events.Revive(800.0),
+            events.CombatState("stasis", 2.0),
+            events.SpellShield(),
+            events.DamageModifier(1.07, frozenset(), frozenset()),
+            events.Utility("movement"),
+        ],
+    )
+    def test_the_family_raises_naming_itself(self, payload) -> None:
+        with pytest.raises(Exception) as caught:
+            program_compile.compile_program(
+                program_of(payload), projection=Projection.SCORE
+            )
+        assert type(payload).__name__ in caught.value.receipt
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            events.Damage(50.0, "magic"),
+            events.Recovery(30.0),
+            events.Barrier(40.0),
+            events.TemporaryHealth(25.0),
+        ],
+    )
+    def test_a_stageable_family_compiles(self, payload) -> None:
+        actions = program_compile.compile_program(
+            program_of(payload), projection=Projection.SCORE
+        )
+        assert len(actions) == 1
+
+
+class TestTheProgramCacheKeyIsAValue:
+    """Never an ``id()``: a mutated roster misses rather than serving."""
+
+    def test_two_projections_of_one_program_are_two_keys(self) -> None:
+        program = two_row_program()
+        assert program_compile.program_key(
+            program, Projection.SCORE
+        ) != program_compile.program_key(program, Projection.RECEIPT)
+
+    def test_two_passes_of_one_program_are_two_keys(self) -> None:
+        program = two_row_program()
+        second = Program(
+            participants=program.participants, events=program.events, pass_index=1
+        )
+        assert program_compile.program_key(
+            program, Projection.SCORE
+        ) != program_compile.program_key(second, Projection.SCORE)
+
+    def test_two_equal_programs_share_a_key(self) -> None:
+        assert program_compile.program_key(
+            two_row_program(), Projection.SCORE
+        ) == program_compile.program_key(two_row_program(), Projection.SCORE)
+
+
+class TestTheGreyHealthTickBuilder:
+    """The one action shape neither relocated builder produces."""
+
+    def test_it_arms_at_the_recovery_rank_on_the_main_slot(self) -> None:
+        action = program_compile.grey_health_heal_action(2.5, "Grey Health", 40.0, 0, 7)
+        assert action.phase is TransitionRank.RECOVERY
+        assert action.kind is ActionKind.HEAL
+        assert (action.subject, action.attacker, action.aidx) == (0, 0, 7)
+        assert action.amount == 40.0
+
+    def test_its_event_id_is_the_published_grey_shape(self) -> None:
+        from src.calculator.survival.actions import EVENT_SLOTS
+
+        action = program_compile.grey_health_heal_action(1.0, "Warmog", 10.0, 3, 0)
+        assert EVENT_SLOTS.text(action.event_slot) == "main:grey:Warmog:3"

@@ -32,9 +32,17 @@ def test_the_three_counters_reproduce_the_declared_baselines() -> None:
     its first commit; counter 7's baseline is measured by this script on its
     first run by rule, so what is asserted here is that it is positive — a
     counter whose target is 0 and whose baseline is 0 states nothing.
+
+    Counter 5 is asserted at its **target** rather than at its baseline
+    since Phase 4 S4 moved the eight remaining construction expressions into
+    ``program/compile.py``.  Asserting the baseline after that would be
+    asserting the tree had not been migrated, which is the opposite of what
+    the counter is for; the move itself is the diff in
+    ``docs/migration-frontier.json``, where the per-file tally went from
+    three files to one.
     """
     report = migration_frontier.scan()
-    assert report.counter_5 == 9
+    assert report.counter_5 == migration_frontier.COUNTER_5_TARGET
     assert report.counter_6_kernel <= migration_frontier.COUNTER_6_KERNEL_BASELINE
     assert report.counter_6_program == 0
     assert report.counter_7 > 0

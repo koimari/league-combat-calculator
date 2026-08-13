@@ -10,16 +10,10 @@ public timeline serializes and schedules walk-authored recovery packets.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .actions import (
-    NO_SLOT,
-    SurvivalAction,
-    TransitionRank,
-    action_key,
-    survival_action_from_event,
-)
+from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
 from .transitions import participant_pools
 from ..data_registry import data_version
 
@@ -283,6 +277,7 @@ class ReceiptLedger:
         "expanded_healing",
         "healing",
         "annotations_written",
+        "compile_event",
     )
 
     # Event writes always persist on this adapter; annotations only when
@@ -295,10 +290,23 @@ class ReceiptLedger:
         *,
         actions: list[SurvivalAction],
         index_of: Mapping[str, int],
+        compile_event: Callable[..., SurvivalAction],
         annotating: bool = True,
         expanded_healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
         healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
     ) -> None:
+        """The ledger, plus the builder it may not reach for itself.
+
+        ``compile_event`` is required with no default, and the reason is the
+        phase's one-way dependency: the one ``SurvivalAction`` constructor
+        lives in ``program/compile.py`` and ``survival/`` may not import
+        ``program/``, so the boundary that builds the walk hands the builder
+        over -- the same device ``build_state``'s below-half healing bonus
+        and ``TransitionContext``'s regeneration windows arrive by.  A
+        default would let a caller that forgot it schedule nothing and look
+        like a fight in which no trigger authored a heal.
+        """
+        self.compile_event = compile_event
         self.annotating = annotating
         self.records_annotations = annotating
         self.damage_event_status: dict[int, str] = {}
@@ -381,7 +389,7 @@ class ReceiptLedger:
             self.expanded_healing.setdefault(recipient_id, []).append(heal_event)
             if self.healing is not None:
                 self.healing[recipient_id] = self.expanded_healing[recipient_id]
-        action = survival_action_from_event(
+        action = self.compile_event(
             heal_event,
             TransitionRank.RECOVERY,
             self.index_of[recipient_id],

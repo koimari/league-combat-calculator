@@ -692,6 +692,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
     from types import SimpleNamespace
 
     from src.calculator.participant_timeline import Combatant
+    from src.calculator.program.compile import action_from_event
     from src.calculator.program.views.survival import survival_rows
     from src.calculator.survival import (
         EVENT_SLOTS,
@@ -767,6 +768,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             ledger = ledger_cls(
                 actions=[a._replace(event={}) for a in actions],
                 index_of={"target": 0},
+                compile_event=action_from_event,
                 annotating=annotate,
             )
         else:
@@ -810,11 +812,11 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
     no equality gate could see, because every ``LATE_BARRIER`` author in
     the tree today is excluded by one of the other three receipts.
     """
+    from src.calculator.program.compile import WalkCompiler
     from src.calculator.survival import (
         EVENT_SLOTS,
         SUPPORT_RANK_KEY,
         TransitionRank,
-        WalkCompiler,
         support_transition_rank,
     )
     from src.calculator.survival.actions import ordering_slot

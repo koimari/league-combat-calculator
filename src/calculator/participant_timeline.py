@@ -76,7 +76,6 @@ from .survival import (
     TransitionContext,
     TransitionRank,
     UncompilableActionError,
-    WalkCompiler,
     accumulate_damage_totals,
     accumulate_support_values,
     action_key as _action_key,
@@ -84,10 +83,18 @@ from .survival import (
     coalesce_darius_q_heals,
     finalize_states,
     resolve_grievous as _grievous_pack,
-    revive_candidate_actions,
     run_survival_walk,
     support_transition_rank,
-    survival_action_from_event,
+)
+
+# The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
+# both layers, so this module is where the logical builder and the kernel it
+# builds for meet; nothing under ``survival/`` reaches this way.
+from .program.compile import (
+    WalkCompiler,
+    action_from_event,
+    grey_health_heal_action,
+    revive_candidate_actions,
 )
 from .program.views.survival import survival_rows as _survival_rows
 from .work_counters import Rung, WorkCounterSink, record_rung
@@ -377,7 +384,7 @@ def _packet_typed_actions(
         subject = index_of.get(subject_id)
         if subject is None:
             continue
-        by_template[id(template)] = survival_action_from_event(
+        by_template[id(template)] = action_from_event(
             template,
             TransitionRank.DAMAGE,
             subject,
@@ -389,7 +396,7 @@ def _packet_typed_actions(
         subject = index_of.get(subject_id)
         if subject is None:
             continue
-        by_template[id(template)] = survival_action_from_event(
+        by_template[id(template)] = action_from_event(
             template,
             TransitionRank.RECOVERY,
             subject,
@@ -2071,7 +2078,7 @@ def _simulate_survival(
                 continue
             arm_rank = support_transition_rank(event)
             actions.append(
-                survival_action_from_event(
+                action_from_event(
                     event,
                     arm_rank,
                     index_of[participant_id],
@@ -2100,7 +2107,7 @@ def _simulate_survival(
                 else TransitionRank.DAMAGE
             )
             actions.append(
-                survival_action_from_event(
+                action_from_event(
                     event,
                     phase,
                     subject,
@@ -2116,7 +2123,7 @@ def _simulate_survival(
                 actions.append(cached._replace(event=event))
                 continue
             actions.append(
-                survival_action_from_event(
+                action_from_event(
                     event,
                     TransitionRank.RECOVERY,
                     subject,
@@ -2139,6 +2146,7 @@ def _simulate_survival(
     ledger = ReceiptLedger(
         actions=actions,
         index_of=index_of,
+        compile_event=action_from_event,
         annotating=annotate,
         expanded_healing=expanded_healing,
         healing=healing if isinstance(healing, MutableMapping) else None,
@@ -2500,7 +2508,7 @@ def _context_setup(
         actor_i = context.index_of[actor.participant_id]
         for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds):
             base.actions.append(
-                survival_action_from_event(
+                action_from_event(
                     event,
                     TransitionRank.RECOVERY,
                     actor_i,
@@ -2891,27 +2899,8 @@ def _score_with_search_context(
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
-            event_id = f"main:grey:{source}:{index}"
-            sort_key = _action_key(
-                float(heal_time),
-                TransitionRank.RECOVERY,
-                "main",
-                {"attacker": "main", "_event_id": event_id, "source": source},
-            )
             fresh.actions.append(
-                SurvivalAction(
-                    sort_key=sort_key,
-                    time=float(heal_time),
-                    phase=TransitionRank.RECOVERY,
-                    kind=ActionKind.HEAL,
-                    subject=0,
-                    attacker=0,
-                    aidx=aidx,
-                    amount=float(amount),
-                    source_key=str(source),
-                    source=str(source),
-                    event_slot=EVENT_SLOTS.slot(event_id),
-                )
+                grey_health_heal_action(heal_time, source, amount, index, aidx)
             )
 
     actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))

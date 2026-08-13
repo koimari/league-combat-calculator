@@ -122,7 +122,8 @@ registry projects the five hand-maintained holder name sets, so the two gates th
   **Fimbulwinter needs the enriched view** (D-03) — it carries a
   `_trigger_event_id` (`item_support_effects.py:645`), and dropping it strips the only
   trigger link any support author emits, the one the fail-closed
-  `support_trigger_link` raise at `survival/compile.py:938` exists to refuse.
+  `support_trigger_link` raise at `program/compile.py:914` exists to refuse
+  (`survival/compile.py`'s until Phase 4 S4 moved the one constructor).
 
   **Two locators and one verb corrected after the phase-2 sign-off, which found the
   `survival/compile.py` Shape row below undischarged** — flagged as a lane-authored

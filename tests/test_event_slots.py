@@ -15,12 +15,12 @@ holds no ``str | None`` reference field any more (criterion 6).
 import ast
 from pathlib import Path
 
+from src.calculator.program.compile import action_from_event
 from src.calculator.survival.actions import (
     EVENT_SLOTS,
     NO_SLOT,
     EventSlots,
     SurvivalAction,
-    survival_action_from_event,
 )
 
 ROOT = Path(__file__).parents[1]
@@ -129,7 +129,7 @@ class TestTheBuilderInternsWhatThePacketDeclares:
     """A pre-walk author writes id text; the kernel receives a slot."""
 
     def test_the_packet_id_and_its_trigger_resolve_to_slots(self) -> None:
-        action = survival_action_from_event(
+        action = action_from_event(
             {
                 "kind": "damage",
                 "_event_id": "main:enemy:0",
@@ -144,13 +144,13 @@ class TestTheBuilderInternsWhatThePacketDeclares:
         assert action.trigger_slot == action.event_slot
 
     def test_an_absent_reference_is_no_slot(self) -> None:
-        action = survival_action_from_event({"kind": "damage"}, 0.0, 0, {})
+        action = action_from_event({"kind": "damage"}, 0.0, 0, {})
         for field in SLOT_FIELDS:
             assert getattr(action, field) == NO_SLOT, field
 
     def test_the_deferral_batch_resolves_to_its_parent_packet(self) -> None:
         """The batch id *is* the parent packet's id, so it is that slot."""
-        action = survival_action_from_event(
+        action = action_from_event(
             {
                 "kind": "damage",
                 "_deferred": True,
@@ -172,7 +172,7 @@ class TestTheBuilderInternsWhatThePacketDeclares:
         is a real slot, which is why the builder tests it against ``None``
         rather than for truth.
         """
-        action = survival_action_from_event(
+        action = action_from_event(
             {"kind": "heal", "_defy_trigger_slot": 0}, 1.0, 0, {}
         )
         assert action.defy_trigger_slot == 0

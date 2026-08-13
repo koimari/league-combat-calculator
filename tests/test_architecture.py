@@ -77,13 +77,14 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
             "tests/test_app.py rather than through its own module"
         ),
     ),
-    "survival.receipt_state": FrontierEntry(
-        owning_phase="Phase 4",
-        reason=(
-            "re-exported by survival/__init__ and reached through it; Phase 4 "
-            "rebuilds it as a program view and owns its front door"
-        ),
-    ),
+    # `survival.receipt_state` left this frontier at Phase 4 S4, which is what
+    # a member closing looks like: the stage that gave `ReceiptLedger` its
+    # injected `compile_event` also gave the module an importing test module
+    # (`tests/test_program_structure.py`, the one-direction assertions), so the
+    # derivation stopped reporting it and the row had to go in the same commit.
+    # It is recorded here as a comment rather than silently deleted because the
+    # set is the receipt: a member that leaves without a sentence saying why is
+    # indistinguishable from a member somebody deleted to make a gate pass.
     "survival.score_state": FrontierEntry(
         owning_phase="Phase 4",
         reason=(

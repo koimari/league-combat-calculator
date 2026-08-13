@@ -4553,10 +4553,10 @@ def test_typed_action_reuse_survives_redirect_expansion():
 
 def test_packet_typed_actions_match_fresh_conversion():
     """The cached conversion is the per-event conversion: pairing a cached
-    action with its template must reproduce ``survival_action_from_event``
+    action with its template must reproduce ``action_from_event``
     field-for-field."""
     from src.calculator.participant_timeline import _packet_typed_actions
-    from src.calculator.survival import survival_action_from_event
+    from src.calculator.program.compile import action_from_event
 
     timeline = _coupled_fixture()
     cache: dict = {}
@@ -4569,7 +4569,7 @@ def test_packet_typed_actions_match_fresh_conversion():
             cached = typed.get(id(template))
             if cached is None:
                 continue
-            fresh = survival_action_from_event(
+            fresh = action_from_event(
                 template,
                 TransitionRank.DAMAGE,
                 index_of[str(template["target"])],
@@ -4582,7 +4582,7 @@ def test_packet_typed_actions_match_fresh_conversion():
             cached = typed.get(id(template))
             if cached is None:
                 continue
-            fresh = survival_action_from_event(
+            fresh = action_from_event(
                 template,
                 TransitionRank.RECOVERY,
                 index_of[str(template["attacker"])],

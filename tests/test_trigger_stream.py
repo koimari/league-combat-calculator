@@ -43,10 +43,9 @@ from src.calculator.item_support_effects import (
     _declared_authorities,
     derive_item_support_effects,
 )
-from src.calculator.survival.actions import survival_action_from_event
+from src.calculator.program.compile import WalkCompiler, action_from_event
 from src.calculator.survival.compile import (
     UncompilableActionError,
-    WalkCompiler,
     unrepresentable_template_receipt,
 )
 
@@ -874,7 +873,7 @@ CC_KIND_READERS = {
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
     "src/calculator/damage.py": frozenset({"add_declared_events"}),
-    "src/calculator/survival/actions.py": frozenset({"survival_action_from_event"}),
+    "src/calculator/program/compile.py": frozenset({"action_from_event"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
 }
 
@@ -2176,7 +2175,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         damage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        survival_action_from_event(row, 0.0, 0, {"enemy:Aatrox": 0})
+        action_from_event(row, 0.0, 0, {"enemy:Aatrox": 0})
     holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
