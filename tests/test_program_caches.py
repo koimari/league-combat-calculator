@@ -7,14 +7,25 @@ naming ``data_version`` so a patch-day refresh cannot leave a derived number
 cached behind it, and — the half a declaration alone never proves — that the
 declared key fields **cover every field the served value reads**.
 
-That last one is read off the two functions' own source rather than asserted
-about them.  Each declaration names its key function's parameters; for every
-key field that is also a parameter of the value's producer, every attribute
-the producer takes off it must be an attribute the key function takes off it
-too.  A field the compiler reads and the key ignores is an answer cached
-under inputs it no longer has, which is the ``id()`` failure reached by a
-shorter route — and it was live: ``program_key`` keyed on the roster and the
-pass while ``compile_program`` read the events.
+That last one is checked in two directions, because one of them was empty.
+
+The first reads the two functions' own source: for every key field that is
+also a parameter of the value's producer, every attribute the producer takes
+off it must be an attribute the key function takes off it too.  That caught a
+live defect — ``program_key`` keyed on the roster and the pass while
+``compile_program`` read the events — but it can only ever see parameters the
+two functions **share a name for**, and where they are written in two
+vocabularies it compares nothing and passes.  It did, for the ``program``
+cache, whose key function takes fingerprints and whose producer takes
+participants and pair fights.
+
+The second closes that: the population is the producer's whole signature.
+Every parameter is declared as determined by named key fields, or declared
+not to reach the value at all — and an empty declaration is pinned by a test
+that varies the parameter and asserts the value does not move, never by the
+declaration alone.  It was live too: ``build_program``'s ``patch`` is stored
+on the ``Program`` it returns and was in no key field, so two builds whose
+overrides differed were one entry for two unequal programs.
 """
 
 import ast
@@ -26,12 +37,14 @@ from typing import Any, Callable
 import pytest
 
 from src.calculator.data_registry import data_version
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 from src.calculator.program import build, caches
 from src.calculator.program import compile as program_compile
 from src.calculator.program.build import ParamPatch, Program, Projection
 from src.calculator.program.events import Damage, RoutedEvent
 from src.calculator.program.identity import EventId, PairOrigin
 from src.calculator.survival.actions import TransitionRank
+from src.calculator.trigger_stream import HolderStacking
 
 # Which function keys each declared cache, and which function produces the
 # value that cache serves.  A mapping in the test rather than a callable on
@@ -41,6 +54,37 @@ CACHE_FUNCTIONS: dict[str, tuple[Callable[..., Any], Callable[..., Any]]] = {
     "program": (caches.program_inputs_fingerprint, build.build_program),
     "compiled_actions": (program_compile.program_key, program_compile.compile_program),
 }
+
+# Every ``(cache, producer parameter)`` declared inert — an empty tuple in
+# ``producer_inputs``, meaning the parameter does not reach the served value.
+# Listed here rather than derived, so a new empty declaration fails
+# ``test_every_inert_input_has_a_behavioural_test`` until somebody writes the
+# test that varies it.  A claim about what a function ignores is the one
+# claim its own source cannot make.
+_INERT_PRODUCER_INPUTS = {("program", "caps")}
+
+# One engine result and two capability views, for the inertness pin below.
+_ENGINE_RESULT = {
+    "damage_events": [
+        {
+            "time": 0.0,
+            "sequence": 0,
+            "damage": 100.0,
+            "damage_type": "magic",
+            "source_key": "q",
+        }
+    ]
+}
+_CAPS = build.CapabilityView(mechanics={})
+_RICH_CAPS = build.CapabilityView(
+    mechanics={
+        "amp": build.MechanicView(
+            ReceiptOnly("no timed amp", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER),
+            {"amp": "APPLIED"},
+            HolderStacking.PER_HOLDER,
+        )
+    }
+)
 
 
 def _attribute_reads(function: Callable[..., Any], parameter: str) -> frozenset[str]:
@@ -134,11 +178,35 @@ class TestAKeyIsDerivedFromTheValue:
         assert caches.roster_fingerprint(("main",))[0] == data_version()
 
     def test_two_passes_are_two_program_keys(self) -> None:
-        """A patch that a cache could not see would be silently discarded."""
+        """Which pass, as a key component."""
         roster = caches.roster_fingerprint(("main",))
-        first = caches.program_inputs_fingerprint(roster, (), (), 0)
-        second = caches.program_inputs_fingerprint(roster, (), (), 1)
+        first = caches.program_inputs_fingerprint(roster, (), (), 0, None)
+        second = caches.program_inputs_fingerprint(roster, (), (), 1, None)
         assert first != second
+
+    def test_two_patches_are_two_program_inputs_keys(self) -> None:
+        """How the pass differs, as a key component — the half that was missing.
+
+        The pass index says *which* pass; the patch says how it differs, and
+        ``build_program`` stores it on the ``Program`` it returns.  Keyed on
+        the index alone, these two builds — same roster, same actors, same
+        params, same pass, different overrides — were one cache entry for two
+        unequal programs.
+        """
+        roster = caches.roster_fingerprint(("main",))
+        first = ParamPatch(overrides={"x": 1}, reason="pass 2")
+        second = ParamPatch(overrides={"x": 2}, reason="pass 2")
+        assert caches.program_inputs_fingerprint(roster, (), (), 1, first) != (
+            caches.program_inputs_fingerprint(roster, (), (), 1, second)
+        )
+
+    def test_no_patch_and_a_patch_are_two_program_inputs_keys(self) -> None:
+        """Pass 1 is not pass 2 wearing the same key."""
+        roster = caches.roster_fingerprint(("main",))
+        patch = ParamPatch(overrides={"x": 1}, reason="pass 2")
+        assert caches.program_inputs_fingerprint(roster, (), (), 1, None) != (
+            caches.program_inputs_fingerprint(roster, (), (), 1, patch)
+        )
 
     def test_two_patches_are_two_program_keys(self) -> None:
         """The patch is the only way pass 2 differs; a key blind to it serves
@@ -175,6 +243,7 @@ class TestEveryCacheDeclaresWhatStalesIt:
             caches.CacheDeclaration(
                 name="forgetful",
                 key_fields=("roster",),
+                producer_inputs={"roster": ("roster",)},
                 invalidated_by=frozenset({caches.Invalidator.ROSTER}),
             )
 
@@ -183,6 +252,32 @@ class TestEveryCacheDeclaresWhatStalesIt:
             caches.CacheDeclaration(
                 name="keyless",
                 key_fields=(),
+                producer_inputs={"roster": ()},
+                invalidated_by=frozenset({caches.Invalidator.DATA_VERSION}),
+            )
+
+    def test_a_declaration_with_no_producer_inputs_cannot_be_constructed(self) -> None:
+        """A declaration that cannot say what the value was computed from."""
+        with pytest.raises(ValueError, match="no producer inputs"):
+            caches.CacheDeclaration(
+                name="unsourced",
+                key_fields=("roster",),
+                producer_inputs={},
+                invalidated_by=frozenset({caches.Invalidator.DATA_VERSION}),
+            )
+
+    def test_an_input_derived_from_a_non_key_field_cannot_be_constructed(self) -> None:
+        """The ``patch`` defect, as a construction error.
+
+        A producer input declared to be determined by something the key does
+        not carry is an answer filed under inputs it no longer has — the
+        shape ``build_program``'s ``patch`` had before this landed.
+        """
+        with pytest.raises(ValueError, match="not among its key fields"):
+            caches.CacheDeclaration(
+                name="leaky",
+                key_fields=("roster",),
+                producer_inputs={"participants": ("roster",), "patch": ("patch",)},
                 invalidated_by=frozenset({caches.Invalidator.DATA_VERSION}),
             )
 
@@ -234,6 +329,77 @@ class TestTheDeclaredKeyCoversWhatTheValueReads:
     def test_the_producer_actually_reads_something(self) -> None:
         """A subset check over two empty sets would pass by reading nothing."""
         assert _attribute_reads(program_compile.compile_program, "program")
+
+    def test_the_attribute_comparison_is_vacuous_for_the_program_cache(self) -> None:
+        """Named, so the next reader does not mistake it for coverage.
+
+        ``program_inputs_fingerprint`` and ``build_program`` are written in
+        two vocabularies — fingerprints versus participants and pair fights —
+        and every name they do share is a scalar the producer stores rather
+        than reads.  So for this cache the comparison above is
+        ``frozenset()`` minus ``frozenset()`` and asserts nothing.  That is
+        not a bug in the comparison; it is its domain.  The tests below are
+        what covers this cache, and this one fails the day a shared parameter
+        acquires an attribute read — the day the comparison starts carrying
+        weight and somebody should re-read which check is doing the work.
+        """
+        key_function, producer = CACHE_FUNCTIONS["program"]
+        shared = set(inspect.signature(key_function).parameters) & set(
+            inspect.signature(producer).parameters
+        )
+        assert shared, "the two signatures share no name at all"
+        for parameter in shared:
+            assert not _attribute_reads(producer, parameter), parameter
+
+    def test_every_producer_parameter_is_declared(self) -> None:
+        """The direction the attribute comparison cannot have.
+
+        The population is the producer's **whole signature**, not the names
+        it happens to share with the key function.  ``build_program``'s
+        ``patch`` reached the served value — it is stored on the returned
+        ``Program`` — and appeared in no key field and in no declaration; two
+        builds whose overrides differed were one key for two unequal
+        programs.  A parameter added to a producer now arrives here.
+        """
+        for name, (_, producer) in CACHE_FUNCTIONS.items():
+            declared = set(caches.CACHES[name].producer_inputs)
+            assert declared == set(inspect.signature(producer).parameters), name
+
+    def test_every_declared_input_names_only_key_fields(self) -> None:
+        """Construction enforces it; this is the property stated over the live rows."""
+        for name, declaration in caches.CACHES.items():
+            for parameter, fields in declaration.producer_inputs.items():
+                assert set(fields) <= set(declaration.key_fields), (name, parameter)
+
+    def test_every_inert_input_has_a_behavioural_test(self) -> None:
+        """An empty tuple is the strong claim, so it may not be a bare claim.
+
+        ``()`` says a producer parameter does not reach the served value at
+        all.  Nothing in the source proves that, so each one is pinned by a
+        test that varies it and asserts the value does not move — and a new
+        empty declaration fails here until it has one.
+        """
+        inert = {
+            (name, parameter)
+            for name, declaration in caches.CACHES.items()
+            for parameter, fields in declaration.producer_inputs.items()
+            if not fields
+        }
+        assert inert == _INERT_PRODUCER_INPUTS
+
+    def test_the_capability_view_does_not_reach_the_built_program(self) -> None:
+        """``('program', 'caps')``'s behavioural half.
+
+        ``build_program`` takes the capability view and discards it — the
+        capability-driven fan-out is a later stage's — so it is declared
+        inert rather than mapped to a key field.  Two views, one program: the
+        day that stops being true, the declaration is wrong and this is what
+        says so.
+        """
+        pair = build.pair_program(_ENGINE_RESULT, PairOrigin("main", "enemy:1"), _CAPS)
+        empty = build.build_program(("main", "enemy:1"), [(pair, 0, 1)], _CAPS)
+        declared = build.build_program(("main", "enemy:1"), [(pair, 0, 1)], _RICH_CAPS)
+        assert empty == declared
 
     def test_every_program_field_moves_the_compiled_action_key(self) -> None:
         """Coverage stated over the value rather than over one call graph.
