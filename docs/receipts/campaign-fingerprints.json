@@ -446,6 +446,20 @@
       "captured_at_commit": "02ee3da",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "S3's own R-28 baseline, captured on the S2 tip before S3's first src/ edit. The counters, residual, winner and score are byte-identical to the S1 and S2 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 0.5% above S2's 3325.2 ms, which is repeat noise on one machine."
+    },
+    "P4-S4": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3346.0,
+      "repeats_ms": [
+        3363.8,
+        3346.0,
+        3347.6
+      ],
+      "ratchet_ceiling_ms": 3680.6,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "771c9dc",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "S4's own R-28 baseline, captured on the S3 tip before S4's first src/ edit. The counters, residual, winner and score are byte-identical to the S1, S2 and S3 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 0.2% above S3's 3340.6 ms, which is repeat noise on one machine. S4 is also the stage R-28 gates allocation at: alloc.cassiopeia_3champ re-reads 262196 bytes on this tip, the value 0A pinned, so the 15% margin this stage is judged against is computed off an unmoved number."
     }
   },
   "tests": {
