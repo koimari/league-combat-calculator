@@ -1,0 +1,60 @@
+{
+  "slice": "P4-S8-crosspass",
+  "status": "declared",
+  "stage": "P4-S8 — enabling: CrossPassDependency, Catalyst de-recursed",
+  "decisions": ["D-69", "D-70", "D-97", "D-101"],
+  "what_the_stage_does": {
+    "one_sentence": "Catalyst of Aeons' second pricing stops being a recursive call into `participant_timeline.build_participant_timeline` and becomes a bounded, declared two-pass drive through `program/dependency.run_passes`: one pass function, a `ParamPatch` between passes, `IncompleteDependency` in place of the untyped `ValueError`, and the caller's pair cache and search context carried into pass 2 instead of discarded.",
+    "why_it_is_enabling_and_not_semantic": "Phase 4's stage table calls S8 enabling and its criterion 8 says S8 declares 0. The mechanic's numbers do not move: pass 2 reads the same restore ledger it reads today, priced from the same inputs. What moves is the shape of the call — a walk that can call the thing that called it has no single invocation to count, which is what makes the S9 view layer unbuildable on top of it (D-70).",
+    "four_ruled_clauses": {
+      "program_rebuilt_per_pass_walk_never_re_entered": "`run_passes` calls one pass function once per pass and folds the result; the pass function returns either a finished composition or a `PassRequest` naming the dependency it could not answer. Zero recursive `build_participant_timeline` calls remain in src/ (criterion 13).",
+      "caches_and_search_context_live_across_passes": "Today the recursive call passes `search_context=None` and `pair_result_cache={}`, so pass 2 is a cold start whose pair fights are outside the work counters by construction. The driver hands pass 2 the caller's own cache and search context. That is only safe because the pair cache key gains the attacker's resource-restore signature in the preceding commit: a pass-1 packet priced with no restores and a pass-2 packet priced with restores now occupy different keys, so sharing the dict cannot serve a stale packet. For every roster that declares no mana-spent heal the new key component is a constant empty tuple and the cache behaves byte-identically.",
+      "incomplete_dependency_replaces_the_untyped_value_error": "`participant_timeline.py`'s `raise ValueError(\"... restore ledger is unavailable ...\")` becomes `IncompleteDependency`, carrying the declaration and the passes run. A caller could not previously tell \"this build needs another pass\" from \"this request is malformed\", and both arrived at `/api/calculate`'s `except ValueError` as a 400.",
+      "compilability_flips_only_on_a_pass_2_proof": "`ManaSpentHealRule`'s `Compilability` stays `ReceiptOnly` with its existing reason. No pass-2 compiled-equals-pass-2-receipt fixture exists, so nothing is flipped, and the compiled score path is now excluded from any patched pass by a named request-gate rung rather than by the accident of a null search context."
+    }
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "fingerprints_bench": "docs/receipts/campaign-fingerprints.json bench{}",
+    "rule": "R-17 / R-32 / D-97 — no baseline moves inside any commit of this stage; the code lands against the committed baselines plus this allowlist."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "declared_in": "docs/receipts/campaign-fingerprints.json wall.P4-S8, and this stage's first commit body",
+    "rule": "R-20. Phase 4's criterion 8 declares S8's count directly — `S8 declares 0` — so the number is stated rather than derived from a population. The populations below are enumerated anyway, because a stated zero that names nothing it is zero *out of* cannot tell a first occurrence from a scenario the instrument never reached.",
+    "golden": {
+      "size": 0,
+      "why": "scripts/golden_snapshot.py enters through pipeline.run_fight (R-11, D-93): one attacker into one defender, with no roster and no `build_participant_timeline` call at all. Every file this stage edits — participant_timeline.py's composition, program/dependency.py, program/rung.py's consumers — is unreachable from that entry point."
+    },
+    "coupled_golden": {
+      "size": 1,
+      "instrument": "scripts/golden_snapshot.py's COUPLED_SCENARIOS, read rather than typed: the members whose builds declare a mana-spent heal are the only ones whose composition can request a second pass.",
+      "members": [
+        {
+          "scenario": "catalyst_roster",
+          "equips": ["Catalyst of Aeons"],
+          "why": "The one scenario 0A added for exactly this path: Ahri holding Catalyst, two enemies and one ally, so the incoming champion ledger is non-empty and pass 1 derives a non-empty restore ledger."
+        }
+      ],
+      "the_other_twelve": "The remaining twelve declare no mana-spent heal, so `resource_restores` returns the empty tuple for every actor, no `PassRequest` is raised, and the driver returns pass 1's composition. They are still in the blast radius of the pair-cache key widening, which is why that lands as its own commit asserted zero-diff over all thirteen."
+    },
+    "bench": {
+      "size": 0,
+      "per_scenario": "0 for each of cassiopeia_3champ, cassiopeia_5champ, mundo_3champ and syndra_mandate_3champ",
+      "why": "None of the four bench builds equips Catalyst of Aeons — `grep -n Catalyst scripts/bench_coupled_optimizer.py` returns nothing — so pass 2 never runs and the pair-cache key gains a constant empty-tuple component. public_evaluations, measured_proposals, score_memo_misses, pair_run_fight_calls, the residual, the rung histogram, the winner and the score are all predicted unchanged, and a move in any of them is an unexpected occurrence that stops the stage rather than a budget overrun."
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": []
+  },
+  "falsifiers": {
+    "a_moved_catalyst_roster_leaf": "would mean pass 2 was priced from different inputs than the recursive repass — the stale-packet failure the cache-key widening exists to make unrepresentable — and falsifies the stage rather than earning an oracle receipt.",
+    "a_moved_bench_counter": "would mean the pair-cache key widening changed a hit rate on a roster holding no Catalyst, i.e. that the new key component is not constant where it was declared constant.",
+    "a_moved_winner_or_score": "would mean the compiled score lane started serving a patched pass, which is precisely the Compilability flip criterion 13 forbids without a pass-2 equivalence fixture."
+  }
+}
