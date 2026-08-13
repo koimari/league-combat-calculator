@@ -203,11 +203,16 @@ const percent = (value) => `${value.toFixed(value < 10 ? 1 : 0)}%`;
 // is named after — a number nobody computed made indistinguishable from one
 // computed as zero. So it renders as a named refusal, in one place, and every
 // caller reaches it through `leafText`.
-const withheldMarker = (entry) => {
+// Why a leaf carries no number, in one sentence. Separate from the markup
+// below because two surfaces need the same words in two shapes: a rendered
+// cell needs the marker, a title attribute and an accessible name need the
+// sentence. One place decides what it says; each caller decides how.
+const withheldReason = (entry) => {
   const receipts = (entry && entry.receipts) || [];
-  const why = receipts.length ? receipts.join("; ") : "no receipt was published";
-  return `<span class="leaf-withheld" title="${escapeHtml(why)}">withheld</span>`;
+  return receipts.length ? receipts.join("; ") : "no receipt was published";
 };
+const withheldMarker = (entry) =>
+  `<span class="leaf-withheld" title="${escapeHtml(withheldReason(entry))}">withheld</span>`;
 // One published leaf, rendered: the number when there is one, the named
 // refusal when the model declined to produce one.
 const leafText = (value, path, dispositions, format = fmt) => {
@@ -216,6 +221,18 @@ const leafText = (value, path, dispositions, format = fmt) => {
   if (value == null) return withheldMarker(entry);
   return escapeHtml(format(value));
 };
+// Where one participant's survival leaf lives in the combat payload, so a
+// renderer can ask the map about the number it is about to print. The
+// participants list and the map's `participants[i]` index are the same list.
+const survivalLeafPath = (index, leaf) => `participants[${index}].survival.${leaf}`;
+// Whether the payload refused to produce this leaf rather than measuring it.
+// A refused leaf is *absent*, so `?? 0` would read it as a computed zero —
+// which is the failure this whole campaign is named after, and the reason a
+// total over a refused member is refused too rather than quietly short.
+const leafWithheld = (path, dispositions) =>
+  Boolean(dispositions && dispositions[path] && dispositions[path].disposition === "WITHHELD");
+const withheldEntry = (paths, dispositions) =>
+  (dispositions && paths.map((path) => dispositions[path]).find((entry) => entry && entry.disposition === "WITHHELD")) || null;
 
 const plural = (count, singular, pluralForm = `${singular}s`) => count === 1 ? singular : pluralForm;
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
@@ -2879,11 +2896,23 @@ function enemyEffectiveHealth(result) {
 }
 
 function enemyHealthRemaining(result) {
-  const enemies = enemyParticipants(result);
-  if (!enemies.length) return "";
-  const ending = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.ending_health ?? 0)), 0);
+  const participants = result?.combat?.participants || [];
+  const dispositions = result?.combat?.dispositions || null;
+  const enemyIndexes = participants
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+  if (!enemyIndexes.length) return "";
+  // A total that reads one refused member as zero is a total that quietly
+  // counted a number nobody produced. If any enemy's ending health was
+  // withheld, the sum is withheld and says which receipt refused it.
+  const refused = withheldEntry(
+    enemyIndexes.map(({ index }) => survivalLeafPath(index, "ending_health")),
+    dispositions,
+  );
+  if (refused) return `alive · health withheld (${withheldReason(refused)})`;
+  const ending = enemyIndexes.reduce((sum, { row }) => sum + Math.max(0, Number(row.survival?.ending_health ?? 0)), 0);
   if (ending <= 0) return "";
-  const max = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.max_health ?? row.survival?.effective_health ?? 0)), 0);
+  const max = enemyIndexes.reduce((sum, { row }) => sum + Math.max(0, Number(row.survival?.max_health ?? row.survival?.effective_health ?? 0)), 0);
   const pct = max > 0 ? Math.round((ending / max) * 100) : null;
   return `alive · ${fmt(ending)} HP${pct != null ? ` (${pct}%)` : ""}`;
 }
@@ -3302,7 +3331,8 @@ function renderPrototypeResult(aResult = null, bResult = null) {
 
   // --- team-fight health ---------------------------------------------------
   const participants = prototypeParticipants(aResult);
-  $("healthRows").innerHTML = participants.map((person) => {
+  const healthDispositions = aResult?.combat?.dispositions || null;
+  $("healthRows").innerHTML = participants.map((person, personIndex) => {
     const survival = person.survival || {};
     const max = Number(survival.max_health || survival.effective_health || person.stats?.health || person.health || 0);
     const explicitHealth = survival.ending_health ?? survival.health_remaining ?? survival.current_health;
@@ -3313,9 +3343,21 @@ function renderPrototypeResult(aResult = null, bResult = null) {
       ? 0
       : explicitHealth != null ? Math.max(0, Number(explicitHealth)) : Math.max(0, max - incoming);
     const pct = max > 0 ? Math.max(0, Math.min(100, health / max * 100)) : 0;
-    const status = survival.survived_window === false ? "defeated" : max > 0 ? `${fmt(health)} · ${Math.round(pct)}%` : incoming > 0 ? `−${fmt(incoming)} dmg` : "alive";
+    // Every number in this line goes through `leafText`, so a leaf the model
+    // refused renders as a named refusal instead of the 0 that `?? 0` above
+    // would otherwise have printed as a measurement.
+    const healthPath = survivalLeafPath(personIndex, "ending_health");
+    const status = survival.survived_window === false
+      ? "defeated"
+      : leafWithheld(healthPath, healthDispositions)
+        ? leafText(null, healthPath, healthDispositions)
+        : max > 0
+          ? `${escapeHtml(fmt(health))} · ${Math.round(pct)}%`
+          : incoming > 0
+            ? `−${escapeHtml(fmt(incoming))} dmg`
+            : "alive";
     const enemy = person.team === "enemy" || String(person.participant_id || "").startsWith("enemy:");
-    return `<div class="health-row ${enemy ? "is-enemy" : ""}"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${escapeHtml(status)}</b></div>`;
+    return `<div class="health-row ${enemy ? "is-enemy" : ""}"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
   }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
   renderFightChart(aResult, bResult);
   const participantLabels = new Map((aResult?.combat?.participants || []).map((person) => [person.participant_id, person.champion || person.participant_id]));

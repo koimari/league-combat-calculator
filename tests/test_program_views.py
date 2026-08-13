@@ -17,6 +17,7 @@ initialiser, so its two rules are pinned here too, and S9 adds
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -628,6 +629,60 @@ def test_a_measured_leaf_still_renders_as_the_bare_number() -> None:
     assert "return escapeHtml(format(value));" in body
 
 
+def _js_call_sites(source: str, name: str) -> int:
+    """How many times *name* is invoked.
+
+    An arrow-function definition spells ``const name = (``, with the space
+    and the ``=`` between, so it does not match ``name(`` and needs no
+    subtracting -- and a subtraction that assumed it did is how this check
+    read one live call site as zero while it was being written.
+    """
+    return len(re.findall(rf"(?<![\w.]){re.escape(name)}\(", source))
+
+
+def test_the_refusal_helpers_are_reached_by_something_that_renders() -> None:
+    """A helper with no callers is a definition, not a rendering change.
+
+    ``withheldMarker`` and ``leafText`` shipped with zero call sites and no
+    ``.leaf-withheld`` rule: the payload could carry a refused leaf and the
+    page would still print the ``?? 0`` that stands in for it, which is the
+    exact failure the campaign is named after surviving the commit that
+    claimed to close it.
+    """
+    source = APP_JS.read_text(encoding="utf-8")
+    assert _js_call_sites(source, "leafText") >= 1
+    assert _js_call_sites(source, "withheldMarker") >= 1
+    assert _js_call_sites(source, "leafWithheld") >= 1
+    assert _js_call_sites(source, "survivalLeafPath") >= 1
+
+
+def test_a_refused_survival_leaf_is_not_read_as_a_zero() -> None:
+    """The two readers the verifier named, and the total over them.
+
+    ``Number(row.survival?.ending_health ?? 0)`` turns an absent leaf into a
+    measured zero.  Both the per-participant row and the enemy health total
+    ask the map first now, and a total with a refused member is refused
+    rather than quietly short by that member's amount.
+    """
+    source = APP_JS.read_text(encoding="utf-8")
+    start = source.index("function enemyHealthRemaining(")
+    body = source[start : source.index("function enemyOverkill(", start)]
+    assert "withheldEntry(" in body
+    assert "health withheld" in body
+    start = source.index('$("healthRows").innerHTML')
+    row = source[start : source.index("renderFightChart(", start)]
+    assert "leafWithheld(healthPath, healthDispositions)" in row
+    assert "leafText(null, healthPath, healthDispositions)" in row
+
+
+def test_the_page_has_a_rule_for_what_a_refusal_looks_like() -> None:
+    """A marker with no style is a word that reads as a value."""
+    css = (
+        Path(__file__).resolve().parent.parent / "static" / "css" / "style.css"
+    ).read_text(encoding="utf-8")
+    assert ".leaf-withheld {" in css
+
+
 def test_a_discarded_row_is_identical_to_a_recorded_one() -> None:
     """The fast branch is the same expression, not a second producer.
 
@@ -640,6 +695,7 @@ def test_a_discarded_row_is_identical_to_a_recorded_one() -> None:
     """
     program = roster_program([_combatant()])
     result = _result([_state(healing_received=123.456789, death_time=4.567891)])
-    recorded = survival.survival_leaves(program, result, LeafWriter(), "s")
-    discarded = survival.survival_leaves(program, result, DISCARD, "s")
+    paths = survival.participant_paths(program)
+    recorded = survival.survival_leaves(program, result, LeafWriter(), paths)
+    discarded = survival.survival_leaves(program, result, DISCARD, paths)
     assert recorded == discarded
