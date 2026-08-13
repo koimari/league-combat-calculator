@@ -30,9 +30,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from functools import cache
+from types import MappingProxyType
+
 from ..item_behavior import Compilable, Compilability, EngineLane
 from ..survival.actions import TransitionRank
-from ..trigger_stream import HolderStacking
+from ..trigger_stream import CAPABILITIES, HolderStacking
 from .views import ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
@@ -149,6 +152,34 @@ class CapabilityView:
             )
             if declared is tag
         )
+
+
+@cache
+def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
+    """Packet source -> the mechanic it arms, and how a second holder stacks.
+
+    Derived from the declaration rather than tabulated beside it: a walk
+    half's ``packet_source`` is the literal its packets carry, so a mechanic
+    that renames its packet stops resolving here instead of quietly arming
+    under a key nothing recognises.  Only dual-sided halves appear, because
+    only they declare a :class:`~..trigger_stream.HolderStacking`, and a
+    packet whose source is absent from this mapping is admitted without a
+    dedupe key ever being built.
+
+    Cached because the composition asks once per support packet and the
+    registry is frozen at import.
+    """
+    return MappingProxyType(
+        {
+            capability.packet_source: (
+                MechanicId(capability.mechanic),
+                capability.holder_stacking,
+            )
+            for capability in CAPABILITIES.values()
+            if capability.holder_stacking is not None
+            and capability.packet_source is not None
+        }
+    )
 
 
 @dataclass(frozen=True, slots=True)

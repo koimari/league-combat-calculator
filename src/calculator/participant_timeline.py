@@ -98,6 +98,8 @@ from .survival import (
 # registry validation, so the edge costs module objects and nothing else --
 # but it is the reason S4's vocabulary commit could say "nothing in src/
 # imports them yet" and the next commit could not.
+from .program.amp import ArmingLedger
+from .program.build import arming_stacking
 from .program.compile import (
     WalkCompiler,
     action_from_event,
@@ -2076,6 +2078,13 @@ def _simulate_survival(
             _append_ordered_heal(combatant.participant_id, event)
 
     actions: list[SurvivalAction] = []
+    # One ledger per composed fight: whether a second holder of one mechanic
+    # arms a second modifier on one subject is a per-mechanic declaration
+    # (D-66), and this is the single place ``src/`` asks it.  Abyssal Mask's
+    # Unmake is the live aura — two holders in range curse an enemy once —
+    # while every other dual-sided mechanic is a per-holder pool whose second
+    # holder must keep its own contribution.
+    arming = ArmingLedger(arming_stacking())
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):
             event.setdefault("_event_id", f"{participant_id}:support:{support_index}")
@@ -2083,6 +2092,20 @@ def _simulate_survival(
                 # Damage packets are mirrored into the normal incoming/outgoing
                 # ledgers below. Keep the support copy for the public receipt,
                 # but do not schedule the same object a second time here.
+                continue
+            dropped = arming.admit(
+                str(event.get("source", "")),
+                index_of[participant_id],
+                index_of.get(str(event.get("attacker", "")), -1),
+            )
+            if dropped is not None:
+                # The packet stays in the public receipt carrying its own
+                # reason and an applied amount of zero, because an arming
+                # that vanished is exactly the shape this campaign refuses:
+                # a reader must be able to tell "the aura was already up"
+                # from "nothing was ever armed here".
+                event["dedupe"] = dropped.receipt()
+                event["applied_amount"] = 0.0
                 continue
             arm_rank = support_transition_rank(event)
             actions.append(
@@ -4164,6 +4187,11 @@ def build_participant_timeline(
                 "applied_amount": round(
                     float(event.get("applied_amount", event.get("amount", 0.0))), 6
                 ),
+                # Present only on an arming a declared ``IDEMPOTENT_AURA``
+                # collapsed into an earlier holder's (D-66).  Absent
+                # everywhere else, so the key's presence *is* the statement
+                # and a zero applied amount never has to be interpreted.
+                **({"dedupe": event["dedupe"]} if event.get("dedupe") else {}),
                 "target_scope": event.get("target_scope", ""),
                 "target_policy": event.get("target_policy", ""),
                 **(

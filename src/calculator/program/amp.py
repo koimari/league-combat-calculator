@@ -33,6 +33,7 @@ remove; the sentence is the marker instead.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -145,9 +146,89 @@ def arm_key(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class ArmingDrop:
+    """One arming that collided with an earlier one, and why it was dropped.
+
+    A receipt, not a log line.  The campaign's invariant is that a number the
+    model did not compute must never be indistinguishable from one it
+    computed as zero, and an arming silently discarded on a collision is that
+    failure at the point where the number is *born*.  So the drop is a value
+    the composition publishes, carrying the holder that got there first.
+    """
+
+    mechanic: MechanicId
+    stacking: HolderStacking
+    first_holder: int
+
+    def receipt(self) -> dict[str, object]:
+        """The published row — one dropped arming, in its own words."""
+        return {
+            "reason": "dedupe",
+            "mechanic": str(self.mechanic),
+            "holder_stacking": self.stacking.value,
+            "first_holder": self.first_holder,
+        }
+
+
+class ArmingLedger:
+    """The one arming dedupe in ``src/``.
+
+    One instance per composed fight, holding every key that has already
+    armed.  A second one would be a second answer to "did this already arm?",
+    and the two would disagree on exactly the roster that has two holders —
+    which is the only roster where the question is asked at all.
+
+    The ledger decides nothing on its own: :func:`arm_key` decides, from the
+    mechanic's own :class:`~..trigger_stream.HolderStacking` declaration, and
+    a packet whose source names no dual-sided mechanic is admitted without a
+    key ever being built.  That asymmetry is deliberate — a mechanic with no
+    declared stacking has no arming-dedupe question, and inventing one for it
+    would be a policy where a declaration belongs.
+    """
+
+    def __init__(
+        self, stacking_of: Mapping[str, tuple[MechanicId, HolderStacking]]
+    ) -> None:
+        self._stacking_of = stacking_of
+        self._armed: dict[ArmKey, int] = {}
+
+    def admit(
+        self, packet_source: str, subject: PIdx, holder: PIdx
+    ) -> ArmingDrop | None:
+        """Whether this arming stands, or the receipt saying it did not.
+
+        ``None`` means it armed.  Returning the drop rather than raising is
+        the point: two Abyssal Mask holders cursing one enemy is a legal
+        roster and the second curse is genuinely redundant, so the answer is
+        a receipt, never an error and never a silence.
+
+        **A collision is only ever between two *holders*.**  A key already
+        held by the same holder is a *re-arm*, not a duplicate: Carve arms
+        one modifier per damage event and Expose Weakness one per spellblade
+        proc, and a ledger that collapsed those would be answering a
+        question — "may one holder arm this twice over time?" — that no
+        mechanic here declares.  ``PER_HOLDER`` keeps the holder in the key
+        precisely so its keys can never collide across holders, so this
+        clause is what makes the two declarations do the whole job between
+        them and leaves no third policy hiding in the ledger.
+        """
+        declared = self._stacking_of.get(packet_source)
+        if declared is None:
+            return None
+        mechanic, stacking = declared
+        key = arm_key(subject, mechanic, holder, stacking)
+        first = self._armed.setdefault(key, int(holder))
+        if first == int(holder):
+            return None
+        return ArmingDrop(mechanic=mechanic, stacking=stacking, first_holder=first)
+
+
 __all__ = [
     "AppliesTo",
     "ArmKey",
+    "ArmingDrop",
+    "ArmingLedger",
     "HolderStacking",
     "Provenance",
     "arm_key",
