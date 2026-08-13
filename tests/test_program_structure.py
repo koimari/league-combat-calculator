@@ -1,6 +1,6 @@
 """Phase 4's structural gates: one constructor, one direction, one budget.
 
-Three properties this phase claims about the *tree* rather than about any
+Four properties this phase claims about the *tree* rather than about any
 one module, each asserted here because none of them belongs to a module's
 own front door:
 
@@ -12,6 +12,9 @@ own front door:
 * **One allocation budget** (R-28, criterion 17).  S4 is the single stage
   the campaign gates allocation at, and the margin is read from
   ``campaign-fingerprints.json`` rather than from prose.
+* **View purity** (criterion 3).  No view, and no ``src/`` function a view
+  can call, performs arithmetic.  The resolver and its counting rule are
+  ``tests/view_purity.py``; the reading is here.
 
 The counters themselves live in ``scripts/migration_frontier.py`` and their
 receipt is diff-gated by ``tests/test_migration_frontier.py``; what is here
@@ -167,3 +170,80 @@ class TestTheAllocationBudget:
         ]
         assert recorded["margin"] == 0.15
         assert recorded["provenance"] == "VERIFIED"
+
+
+class TestViewPurity:
+    """Criterion 3's first clause: a view re-runs no arithmetic.
+
+    The check is deliberately not path-scoped -- the criterion says "nor any
+    ``src/`` function in a view's call graph", because a purity rule that
+    only walked ``program/views/`` is satisfied by moving the sum one import
+    away and calling it.  The counting rule, the resolver and its committed
+    boundary live in ``tests/view_purity.py``; what is here is the phase's
+    reading of them.
+    """
+
+    def test_no_view_nor_anything_it_calls_performs_arithmetic(self) -> None:
+        from tests.view_purity import impurities, report
+
+        sites = impurities()
+        assert not sites, "arithmetic reachable from a view:\n" + report(sites)
+
+    def test_the_walk_reaches_the_writer_the_registry_and_all_five_views(
+        self,
+    ) -> None:
+        """A purity check over an empty call graph is not a check."""
+        from tests.view_purity import call_graph
+
+        reachable, _ = call_graph()
+        assert {
+            ("program.views", "serialize_leaf"),
+            ("program.views", "measured"),
+            ("program.precision", "round_field"),
+            ("program.views.score", "score"),
+            ("program.views.breakdown", "breakdown"),
+            ("program.views.survival", "survival"),
+            ("program.views.tdd", "tdd"),
+            ("program.views.receipt", "receipt"),
+        } <= set(reachable)
+
+    def test_the_callees_the_walk_stops_at_are_the_committed_list(self) -> None:
+        """The boundary is enumerated, not whatever the resolver happened to miss."""
+        from tests.view_purity import UNRESOLVED_ALLOWED, call_graph
+
+        _, unresolved = call_graph()
+        assert unresolved == set(UNRESOLVED_ALLOWED)
+
+    def test_a_sum_inside_a_view_fails_the_check(self) -> None:
+        """R-05: the gate ships with a red it can reproduce on demand."""
+        from tests.view_purity import impurities
+
+        doctored = (SRC / "program" / "views" / "tdd.py").read_text(encoding="utf-8")
+        doctored = doctored.replace(
+            "    fold = result.objective",
+            "    fold = result.objective\n    _leaked = 1.0 + float(result.duration)",
+        )
+        sites = impurities({"program.views.tdd": doctored})
+        assert [site.what for site in sites] == ["Add"]
+        assert sites[0].module == "program.views.tdd"
+
+    def test_a_sum_one_import_away_from_a_view_fails_it_too(self) -> None:
+        """The clause the path-scoped version of this check cannot see."""
+        from tests.view_purity import impurities
+
+        doctored = (SRC / "program" / "precision.py").read_text(encoding="utf-8")
+        doctored = doctored.replace(
+            "def round_field(",
+            "def _view_math(a, b):\n    return a * b\n\n\ndef round_field(",
+        )
+        assert not impurities(
+            {"program.precision": doctored}
+        ), "an unreachable helper is not in the call graph"
+        doctored = doctored.replace(
+            "    return round(float(value), digits_for(field))",
+            "    return round(_view_math(float(value), 1.0), digits_for(field))",
+        )
+        sites = impurities({"program.precision": doctored})
+        assert [(site.module, site.what) for site in sites] == [
+            ("program.precision", "Mult")
+        ]
