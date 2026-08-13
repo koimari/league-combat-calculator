@@ -1,0 +1,67 @@
+{
+  "counters": {
+    "counter_5": {
+      "by_file": {
+        "calculator/participant_timeline.py": 1,
+        "calculator/survival/actions.py": 2,
+        "calculator/survival/compile.py": 6
+      },
+      "target": 1,
+      "value": 9,
+      "what": "SurvivalAction construction expressions outside calculator/program/compile.py"
+    },
+    "counter_6": {
+      "kernel_ast_calls_by_file": {
+        "calculator/survival/accumulate.py": 1,
+        "calculator/survival/compile.py": 6,
+        "calculator/survival/receipt_state.py": 38,
+        "calculator/survival/score_state.py": 0,
+        "calculator/survival/transitions.py": 72
+      },
+      "kernel_baseline": 118,
+      "kernel_by_file": {
+        "calculator/survival/accumulate.py": 1,
+        "calculator/survival/compile.py": 6,
+        "calculator/survival/receipt_state.py": 38,
+        "calculator/survival/score_state.py": 1,
+        "calculator/survival/transitions.py": 72
+      },
+      "kernel_value": 118,
+      "program_by_file": {},
+      "program_target": 0,
+      "program_value": 0,
+      "what": "textual round( occurrences outside the precision registry: 0 within program/, a non-increasing ratchet within survival/"
+    },
+    "counter_7": {
+      "by_file": {
+        "calculator/stats.py": 2,
+        "calculator/survival/receipt_state.py": 1
+      },
+      "target": 0,
+      "value": 3,
+      "what": "id()-keyed cache sites whose key is not derived from the served value, over survival, program, stats.py"
+    }
+  },
+  "exclusions": {
+    "counter_5_declared_survivor": {
+      "calculator/survival/actions.py": "the issue-#171 fast compiled-damage constructor: the declared performance fallback criterion 17 keeps if S4 cannot hold the allocation ratchet, so criteria 2 and 17 are mutually exclusive without it"
+    },
+    "counter_6_registry": "calculator/program/precision.py",
+    "counter_7_out_of_scope": {
+      "calculator/champions/engine.py": 3,
+      "calculator/champions/slotlib.py": 4
+    },
+    "counter_7_value_derived_cache_keys": {}
+  },
+  "preserved_defects": [
+    {
+      "declined_by": "P4-S6",
+      "name": "LATE_BARRIER",
+      "ruling": "docs/plans/phase-4-program-engine.md \u2014 LATE_BARRIER bullet",
+      "tracker_issue": null,
+      "what": "two shields ride the rank that resolves after damage while the ladder gives shields BARRIER_GRANT, so an Eclipse or Fimbulwinter barrier placed at a damage timestamp absorbs nothing at that timestamp",
+      "why": "Phase 0A preserved the ordering byte-identically under this name; correcting it moves numbers and S6's diff is bounded by prediction to the four reorderings criterion 8 names, which this is not"
+    }
+  ],
+  "schema_version": 1
+}
