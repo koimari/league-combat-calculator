@@ -234,7 +234,10 @@ def test_the_hypershot_slot_is_declared_and_holds_no_number() -> None:
     assert rule.payload.magnitude.value.registry == "ITEM_EFFECTS"
     assert rule.payload.magnitude.value.key == "amp"
     assert rule.receipt.url.endswith("Horizon_Focus")
-    assert "compiled score kernel" in rule.compilability.reason
+    # Since H5's stage the canary compiles: the one amp answer is
+    # ``Compilable`` and every amp rule declares that one symbol.
+    assert rule.compilability is catalog.AMP_COMPILABILITY
+    assert isinstance(rule.compilability, Compilable)
 
 
 def test_an_owner_in_both_registries_owes_two_declarations() -> None:
@@ -321,29 +324,51 @@ def test_every_refusal_scope_is_reached_by_a_live_declaration() -> None:
     A scope no declaration carries is a member that means nothing — the
     reader learns a distinction the tree does not make, which is how the
     single free-text reason came to stand for three unrelated refusals in the
-    first place.  All three members are live today: the ledger scope carries
-    the defences the walk authors, the template scope the support kinds the
-    kernel stages nothing of, and the amp scope D-101's population.
+    first place.  Two members are live: the ledger scope carries the defences
+    the walk authors and the template scope the support kinds the kernel
+    stages nothing of.
+
+    The third is live in a different sense and the difference is stated
+    rather than absorbed.  ``SCORE_KERNEL_DAMAGE_MODIFIER`` exists because a
+    flip needs a set it can name, and H5's stage flipped that set: its live
+    population is now **empty**, which is the stage having landed and not a
+    member nobody argued about.  Its declaration survives as the flip's
+    revert target (``COMPILED_KERNEL_CANNOT_AMP``), so the scope is still
+    carried by a ``ReceiptOnly`` a reader can go and look at — and the
+    emptiness is asserted here rather than left to be noticed, which is D-92's
+    own idiom read in the other direction.
     """
     reached = {refusal.scope for refusal in _live_refusals()}
-    assert reached == set(ReceiptScope)
+    assert reached == set(ReceiptScope) - {ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER}
+    assert (
+        catalog.COMPILED_KERNEL_CANNOT_AMP.scope
+        is ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+    )
 
 
-def test_the_amp_refusal_is_the_population_h5s_stage_flips() -> None:
-    """The scope earns its own member by being a set a later flip can name.
+def test_the_amp_flip_took_delta_amp_and_nothing_else() -> None:
+    """The scope earned its member by being a set a later flip could name.
 
-    H5 is SCOPED and its stage flips ``delta_amp`` to ``Compilable`` — and
-    nothing else.  If the amp scope held any other family, that flip would
-    silently take a mechanic nobody scoped with it.
+    H5's stage flipped ``delta_amp`` to ``Compilable`` — and nothing else.
+    The claim survives the flip by being read off the symbol the flip moved
+    rather than off the refusal it moved away from: if any other family had
+    declared ``AMP_COMPILABILITY``, the flip would have taken a mechanic
+    nobody scoped with it, and that is still the thing worth checking.
     """
     families = {
         rule.family
         for owner in sorted(catalog.rule_owners())
         for rule in catalog.behavior_rules(owner)
-        if isinstance(rule.compilability, ReceiptOnly)
-        and rule.compilability.scope is ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+        if rule.compilability is catalog.AMP_COMPILABILITY
     }
     assert families == {RuleFamily.DELTA_AMP}
+    # And no rule is left carrying the refusal the flip moved away from.
+    assert not [
+        rule
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if rule.compilability is catalog.COMPILED_KERNEL_CANNOT_AMP
+    ]
 
 
 # ── the ledger-scope refusals, derived by shape ───────────────────────────
@@ -459,24 +484,28 @@ def test_one_entry_declares_both_halves_of_a_health_state_passive() -> None:
     assert catalog.BELOW_HALF_HEALING_KEY in ITEM_EFFECTS["Immortal Path"]
 
 
-def test_the_two_halves_carry_two_scoped_refusals() -> None:
-    """One owner, two kernel refusals, and neither answers for the other.
+def test_the_two_halves_answer_in_two_scopes() -> None:
+    """One owner, two answers, and neither answers for the other.
 
-    The amp is refused by the score kernel's damage-modifier scope and the
-    healing bonus by the survival ledger's transition scope.  A fold over
-    both scopes would report an owner unstageable for a reason the asking
-    gate does not own, which is why :func:`compilability_for` takes the scope
-    it is answering for.
+    Immortal Path declares an amp and a healing bonus.  Since H5's stage the
+    amp compiles and the healing bonus is still refused by the survival
+    ledger's transition scope — which makes the point *better* than two
+    refusals did: a fold over both scopes would now report a compilable owner
+    as unstageable, or an unstageable one as compilable, depending on which
+    way it folded.  That is why :func:`compilability_for` takes the scope it
+    is answering for.
     """
     scopes = {
         rule.family: rule.compilability.scope
         for rule in catalog.behavior_rules("Immortal Path")
         if isinstance(rule.compilability, ReceiptOnly)
     }
-    assert scopes == {
-        RuleFamily.DELTA_AMP: ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
-        RuleFamily.SUSTAIN: ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    }
+    assert scopes == {RuleFamily.SUSTAIN: ReceiptScope.SURVIVAL_LEDGER_TRANSITION}
+    assert {
+        rule.family
+        for rule in catalog.behavior_rules("Immortal Path")
+        if isinstance(rule.compilability, Compilable)
+    } == {RuleFamily.DELTA_AMP}
 
 
 # ── a dropped signature key is a stop, not an un-declaration ──────────────

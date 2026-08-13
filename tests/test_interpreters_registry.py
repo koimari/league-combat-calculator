@@ -64,31 +64,25 @@ def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
     ) in interpreters.INTERPRETERS
 
 
-def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
-    """An amp's compiled lane is a named refusal until H5's stage flips it.
+def test_the_compiled_score_walk_gap_is_a_dated_route_and_not_a_zero() -> None:
+    """An amp's compiled lane is excused by a named route since H5's stage.
 
-    H5 is SCOPED, and the extension it scopes is a stage of its own after
-    Phase 4's S7; before that stage's flip the kernel still raises, so the
-    lane is a receipt rather than a zero (D-101).
+    H5 was SCOPED and its stage landed: the kernel stages a timed, typed
+    damage modifier, so every ``delta_amp`` rule is ``Compilable`` and the
+    per-rule receipt that used to excuse this lane is gone.  The lane still
+    has no interpreter of its own — the walk never reads an amp declaration —
+    so what stands between it and an unreceipted zero is the dated row naming
+    the two routes the number actually arrives by.  A gap excused by neither
+    cannot import (D-101's successor state, not its relaxation).
     """
-    assert (
-        RuleFamily.DELTA_AMP,
-        EngineLane.COMPILED_SCORE_WALK,
-    ) in interpreters.uninterpreted_pairs()
-    verdict = interpreters.compilability_for(
-        "Horizon Focus", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
-    )
-    assert isinstance(verdict, ReceiptOnly)
-    assert "compiled score kernel" in verdict.reason
-    # ...and the amp refusal answers only its own scope: asking the
-    # build-level gate's question about an amp holder must not fall a build
-    # back for a refusal that gate does not own.
-    assert isinstance(
-        interpreters.compilability_for(
-            "Horizon Focus", ReceiptScope.SURVIVAL_LEDGER_TRANSITION
-        ),
-        Compilable,
-    )
+    pair = (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK)
+    assert pair in interpreters.uninterpreted_pairs()
+    assert pair in interpreters.UNSERVED_LANE_RECEIPTS
+    assert interpreters.UNSERVED_LANE_RECEIPTS[pair].via == (EngineLane.PAIR_ENGINE,)
+    for scope in ReceiptScope:
+        assert isinstance(
+            interpreters.compilability_for("Horizon Focus", scope), Compilable
+        ), scope
 
 
 def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
@@ -442,14 +436,20 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
 
     Both halves are asserted on one stub: the same family and lane passes with
     a ``ReceiptOnly`` compilability and raises with a ``Compilable`` one, so
-    what is being tested is the receipt and not the pair.  ``delta_amp``'s
-    compiled lane is deliberately absent from the dated table for exactly this
-    reason, and that absence is asserted here rather than left to be noticed.
+    what is being tested is the receipt and not the pair.
+
+    Since H5's stage the live tree carries ``delta_amp``'s compiled lane in
+    the dated table — the flip made those rules compilable, so the per-rule
+    receipt that used to excuse the lane is gone and a route had to be named
+    for it instead.  That makes the narrowing below load-bearing rather than
+    incidental: the stub's table deliberately holds only the receipt-walk
+    row, so the compiled lane reaches the per-rule branch this test exists
+    for, which no live declaration reaches any more.
     """
     assert (
         RuleFamily.DELTA_AMP,
         EngineLane.COMPILED_SCORE_WALK,
-    ) not in interpreters.UNSERVED_LANE_RECEIPTS
+    ) in interpreters.UNSERVED_LANE_RECEIPTS
 
     _only_rule(
         monkeypatch,

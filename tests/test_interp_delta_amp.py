@@ -619,18 +619,28 @@ def test_the_two_amp_answers_are_a_real_delta() -> None:
     assert AMP_COMPILABILITY in (COMPILED_KERNEL_CANNOT_AMP, COMPILED_KERNEL_CAN_AMP)
 
 
-def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:
-    """ "Declared empty, fallback receipted" — the phase's compiled-lane claim.
+def test_the_compiled_lane_is_declared_served_rather_than_assumed() -> None:
+    """The successor to "declared empty, fallback receipted", after the flip.
 
-    Two halves, because either alone is the unstated absence the criterion
-    forbids: no interpreter serves ``delta_amp`` on the compiled lane, *and*
-    every amp holder's per-owner fold answers ``ReceiptOnly`` with that
-    reason rather than falling silent.
+    The claim the phase made was that the compiled lane's emptiness was
+    *declared* rather than merely absent.  H5's stage did not relax that; it
+    changed which declaration says so, and both halves are still asserted
+    because either alone is the unstated absence the criterion forbids.
+
+    Still no interpreter serves ``delta_amp`` on the compiled lane — the walk
+    never reads an amp declaration, and registering one would be a second
+    producer of a number the pair engine and the ``damage_modifier`` packet
+    already deliver.  What changed is the excuse: every amp holder's
+    per-owner fold now answers ``Compilable``, so the lane is excused by the
+    dated row naming those two routes instead of by a per-rule refusal, and
+    that row's presence is the second half here.
     """
-    assert (
-        RuleFamily.DELTA_AMP,
-        EngineLane.COMPILED_SCORE_WALK,
-    ) not in interpreters.INTERPRETERS
+    pair = (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK)
+    assert pair not in interpreters.INTERPRETERS
+    assert pair in interpreters.UNSERVED_LANE_RECEIPTS
+    assert "neither of them the rule" in (
+        interpreters.UNSERVED_LANE_RECEIPTS[pair].reason
+    )
     holders = sorted(
         {
             rule.owner
@@ -639,12 +649,12 @@ def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:
             if rule.family is RuleFamily.DELTA_AMP
         }
     )
+    assert holders, "no amp holder is declared, so this proves nothing"
     for holder in holders:
         verdict = interpreters.compilability_for(
             holder, ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
         )
-        assert isinstance(verdict, ReceiptOnly)
-        assert COMPILED_KERNEL_CANNOT_AMP.reason in verdict.reason
+        assert isinstance(verdict, Compilable), holder
 
 
 # ── the two per-part amps (3.7-r2) ────────────────────────────────────────

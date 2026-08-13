@@ -1336,7 +1336,7 @@ COMPILED_KERNEL_CAN_AMP = Compilable()
 # between the two: the exact population the flip moves, enumerated by
 # mechanic id, so the flip's blast radius is a committed set rather than a
 # consequence discovered afterwards.
-AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CANNOT_AMP
+AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CAN_AMP
 
 
 # ── compilers (D-52's ruled exception to "no callables in declarations") ──

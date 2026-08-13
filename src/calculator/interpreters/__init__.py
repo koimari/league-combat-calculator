@@ -388,18 +388,22 @@ _PROFILE_FED = (
     "resistances — so neither half arrives as the rule"
 )
 _PAIR_PRICED_OR_PACKET_FED = (
-    "the walk never reads an amp declaration: a holder-side amp reaches it "
-    "already priced, inside the pair engine's damage rows, and a "
-    "cross-participant one reaches it as the damage_modifier packet "
-    "item_support_effects emits, which survival/transitions stages as an "
+    "neither walk reads an amp declaration: a holder-side amp reaches it "
+    "already priced inside the pair engine's damage rows, and a cross-"
+    "participant one as the damage_modifier packet item_support_effects "
+    "emits, which survival/transitions stages as an "
     "ActionKind.DAMAGE_MODIFIER — two routes, neither of them the rule"
 )
 
-# One row per unserved pair a declaration reaches.  ``delta_amp`` on the
-# compiled lane is deliberately absent: every amp rule carries its own
-# ``ReceiptOnly`` (D-101), which is the stronger, per-rule form of this
-# receipt, and a row here would be the stale duplicate of it.
+# One row per unserved pair a declaration reaches.  ``delta_amp``'s compiled
+# lane was absent while every amp rule carried its own ``ReceiptOnly`` (the
+# stronger per-rule form, D-101) and could not have landed sooner, since D-92
+# refuses a row no declaration reaches; H5's stage flipped those rules, so
+# this row is now all that stands between that lane and an unreceipted zero.
 _ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
+_AMP_LANE = UnservedLane(
+    _PAIR_PRICED_OR_PACKET_FED, _ONE_KERNEL, (EngineLane.PAIR_ENGINE,)
+)
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
@@ -462,11 +466,8 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         retires_at=_ONE_KERNEL,
         via=(EngineLane.RECEIPT_WALK,),
     ),
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_PAIR_PRICED_OR_PACKET_FED,
-        retires_at=_ONE_KERNEL,
-        via=(EngineLane.PAIR_ENGINE,),
-    ),
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_LANE,
+    (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK): _AMP_LANE,
 }
 
 

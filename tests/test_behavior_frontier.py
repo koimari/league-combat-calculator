@@ -581,12 +581,21 @@ def test_counter_four_carries_the_reason_for_every_gap_it_counts() -> None:
     ``unreceipted`` is empty because ``validate_registrations`` refuses to
     import a tree holding a gap in neither population, which is asserted here
     by the second route rather than assumed from the first.
+
+    ``per_rule_receipted`` is empty since H5's stage, and its emptiness is
+    asserted rather than dropped: ``delta_amp``'s compiled lane was its only
+    member, the flip made those rules ``Compilable``, and the lane moved into
+    the dated table because a route still has to be named for it.  The
+    per-rule form is not retired — it is the branch a future ``ReceiptOnly``
+    would take, and ``tests/test_interpreters_registry.py`` drives it on a
+    stub so an empty population here is not an untested one.
     """
     receipts = behavior_frontier.build_receipt(behavior_frontier.scan())["counters"][
         "counter_4"
     ]["receipts"]
     assert receipts["unreceipted"] == []
-    assert receipts["per_rule_receipted"] == ["delta_amp/compiled_score_walk"]
+    assert receipts["per_rule_receipted"] == []
+    assert "delta_amp/compiled_score_walk" in receipts["dated"]
     assert set(receipts["dated"]) == {
         f"{family.value}/{lane.value}"
         for family, lane in interpreters.UNSERVED_LANE_RECEIPTS

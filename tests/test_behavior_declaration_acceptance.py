@@ -231,11 +231,15 @@ def test_the_receipt_walk_applies_the_aura_to_others_and_not_the_holder(
 def test_the_compiled_walk_matches_or_receipts_every_declaration(declared) -> None:
     """Clause 3: matched, or refused by name — never dropped.
 
-    All three answers are present, which is why three owners are worth having:
-    the lifeline is representable and folds to ``Compilable``; the amp is
-    D-101's categorical refusal; and the aura is the support kernel's own,
-    naming the packet kind it cannot stage.  A refusal that did not name the
-    kernel would be indistinguishable from an item nobody looked at.
+    Both answers are present, which is why the three owners are worth
+    having: the lifeline is representable and folds to ``Compilable`` in
+    every scope; the amp is representable too since H5's stage taught the
+    kernel a timed, typed damage modifier, and it is asserted against the
+    one symbol every amp declares so it cannot have become compilable by
+    some other route; and the aura is the support kernel's own refusal,
+    naming the packet kind it still cannot stage.  A refusal that did not
+    name the kernel would be indistinguishable from an item nobody looked
+    at.
     """
     amp, aura, lifeline = declared
     for scope in ReceiptScope:
@@ -244,8 +248,8 @@ def test_the_compiled_walk_matches_or_receipts_every_declaration(declared) -> No
     amp_verdict = interpreters.compilability_for(
         amp, ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
     )
-    assert isinstance(amp_verdict, ReceiptOnly)
-    assert amp_verdict.reason == catalog.COMPILED_KERNEL_CANNOT_AMP.reason
+    assert isinstance(amp_verdict, Compilable)
+    assert isinstance(catalog.AMP_COMPILABILITY, Compilable)
 
     aura_verdict = interpreters.compilability_for(
         aura, ReceiptScope.SUPPORT_TEMPLATE_SHAPE
