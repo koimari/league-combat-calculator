@@ -12,17 +12,33 @@ module answers which consumer.
 
 What it does export is :class:`ViewTag`, because a tag is a property of the
 *view* a number was produced for and the five views are what this package
-is.  It is declared in the package initialiser rather than in a module of
-its own so that the one intra-package import it costs its declaring reader
-(``trigger_stream``, which carries ``view_tags`` on every capability) buys a
-module with no imports at all.
+is -- and, from S9, :func:`serialize_leaf` and :class:`LeafWriter`, because
+every leaf the five views publish is born here or nowhere.
+
+`serialize_leaf` is **the only producer of a payload leaf and of that leaf's
+``dispositions`` entry** (D-72).  A bare JSON number cannot carry a field, so
+the wire shape is a sibling map keyed by leaf path; the reason that map
+cannot drift from the leaves is not a test but the fact that one function
+emits both in one call.  The payload-schema test's two-way key-set equality
+is a backstop behind that single writer, not the mechanism.
+
+The one import this module takes is ``ability_spec`` -- the campaign's
+dependency-free vocabulary leaf, which the declaring reader
+(``trigger_stream``) already imports for ``Authority``.  It is the single
+permitted reach and the views' own test pins it as such: the acyclicity
+argument that keeps ``ViewTag`` declarable here is an argument about modules
+that reach *further*, and a module that imports nothing cannot.
 """
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from dataclasses import dataclass
 from enum import Enum
 
-__all__ = ["ViewTag"]
+from ...ability_spec import Disposition, Measured, Quantity, StructuralZero, Withheld
+
+__all__ = ["LeafBlock", "LeafOut", "LeafWriter", "ViewTag", "serialize_leaf"]
 
 
 class ViewTag(Enum):
@@ -47,3 +63,149 @@ class ViewTag(Enum):
 
     THEORETICAL = "theoretical"
     APPLIED = "applied"
+
+
+@dataclass(frozen=True, slots=True)
+class LeafOut:
+    """One serialized leaf, beside the ``dispositions`` entry that names it.
+
+    ``present`` is the whole point of the record.  A ``MEASURED`` or
+    ``STRUCTURAL_ZERO`` leaf is a bare number in the payload and its entry
+    says which of the two it is; a ``WITHHELD`` leaf is **absent** from the
+    payload while its entry stays, carrying the receipts.  Returning a value
+    of ``None`` for the withheld case and leaving the caller to decide would
+    have made a serialized ``null`` one typo away, which is the blank this
+    campaign exists to stop shipping.
+    """
+
+    path: str
+    value: float | None
+    entry: dict[str, object]
+    present: bool
+
+
+def serialize_leaf(path: str, quantity: Quantity, tag: ViewTag) -> LeafOut:
+    """The only producer of a payload leaf **and** of its dispositions entry.
+
+    One call emits both, which is what makes the parallel map structurally
+    unable to drift from the leaves it describes: there is one writer, so
+    there is nothing to keep in step.
+
+    The four dispositions serialize as three shapes, because they answer three
+    different questions:
+
+    * ``MEASURED`` -- the number, and an entry saying a rule produced it.
+    * ``STRUCTURAL_ZERO`` -- ``0.0``, and an entry carrying the declaration
+      that makes zero the answer.  The reason is the receipt, so it is
+      published rather than folded away into a bare zero.
+    * ``WITHHELD`` -- **no number at all**, and an entry carrying every
+      receipt.  ``present`` is False and the payload key is never written.
+    * ``STARVED`` -- never reaches an entry: reading the quantity raises
+      ``ProjectionStarvation`` here, at the moment the projection was asked
+      for a number it cannot represent, and D-25's single handler at the
+      request boundary turns it into a named 500.
+    """
+    entry: dict[str, object] = {
+        "disposition": quantity.disposition.value,
+        "view_tag": tag.value,
+    }
+    if isinstance(quantity, Withheld):
+        entry["receipts"] = list(quantity.receipts)
+        return LeafOut(path=path, value=None, entry=entry, present=False)
+    if isinstance(quantity, StructuralZero):
+        entry["reason"] = quantity.reason
+    # Reading is what raises for a Starved quantity, so it happens before the
+    # entry is handed back rather than after: an entry for a leaf whose value
+    # blew up would be a receipt for a number nobody has.
+    return LeafOut(path=path, value=quantity.read(), entry=entry, present=True)
+
+
+class LeafBlock:
+    """One payload sub-object, and the leaf paths its keys live at.
+
+    A block binds a target mapping to a path prefix, which is what makes the
+    ``dispositions`` key and the payload key the *same* name by construction:
+    a leaf written as ``row["total_damage"]`` under prefix
+    ``breakdown.main`` can only be described at ``breakdown.main.
+    total_damage``.  Passing the path separately would have let a rename move
+    one and not the other -- the map describing a leaf that is no longer
+    there, which is the drift the single writer exists to make impossible.
+    """
+
+    __slots__ = ("_prefix", "_target", "_writer")
+
+    def __init__(
+        self, writer: "LeafWriter", target: MutableMapping[str, object], prefix: str
+    ) -> None:
+        """Bind one target mapping to the path prefix its keys hang under."""
+        self._writer = writer
+        self._target = target
+        self._prefix = prefix
+
+    def put(self, key: str, quantity: Quantity, tag: ViewTag = ViewTag.APPLIED) -> None:
+        """Serialize one leaf into the block and record its entry.
+
+        A withheld quantity writes no key at all.  The entry lands either way,
+        which is the asymmetry that lets a consumer tell "refused, and here is
+        why" from "this payload has no such field".
+        """
+        out = serialize_leaf(f"{self._prefix}.{key}", quantity, tag)
+        # pylint: disable-next=protected-access
+        self._writer._record(out)
+        if out.present:
+            self._target[key] = out.value
+
+    def measured(self, key: str, value: float, tag: ViewTag = ViewTag.APPLIED) -> None:
+        """``put`` for the overwhelmingly common case: a rule produced this.
+
+        Spelled out rather than defaulted into ``put`` so that wrapping a
+        number in ``Measured`` stays a thing a view *says*, and a leaf whose
+        disposition is anything else cannot be written by forgetting to.
+        """
+        self.put(key, Measured(amount=float(value)), tag)
+
+
+class LeafWriter:
+    """Builds one payload's leaves and its parallel ``dispositions`` map.
+
+    A thin accumulator over :func:`serialize_leaf` rather than a second
+    producer: every leaf it writes and every entry it records comes out of one
+    ``serialize_leaf`` call, so "one writer" survives having an ergonomic
+    front end.  Views use it because the alternative -- each view assembling a
+    dict literal and a map separately -- is precisely the two-things-kept-in-
+    step-by-hand arrangement the campaign exists to remove.
+
+    Leaves are written through :meth:`block`, which writes into the caller's
+    own mapping so the published key order stays the order the view spells;
+    that order is part of the serialized shape.
+    """
+
+    __slots__ = ("_entries",)
+
+    def __init__(self) -> None:
+        """Start with an empty map; a payload with no leaves has no entries."""
+        self._entries: dict[str, dict[str, object]] = {}
+
+    def block(self, target: MutableMapping[str, object], prefix: str) -> LeafBlock:
+        """A binder for one sub-object of the payload at ``prefix``."""
+        return LeafBlock(self, target, prefix)
+
+    def _record(self, out: LeafOut) -> None:
+        """File one serialized leaf's entry; the block writes the value."""
+        self._entries[out.path] = out.entry
+
+    def entries(self) -> dict[str, dict[str, object]]:
+        """The parallel ``dispositions`` map, keyed by leaf path."""
+        return dict(self._entries)
+
+    def paths(self) -> frozenset[str]:
+        """Every leaf path this writer has an entry for."""
+        return frozenset(self._entries)
+
+    def withheld_paths(self) -> frozenset[str]:
+        """The paths whose leaves are absent by refusal rather than by shape."""
+        return frozenset(
+            path
+            for path, entry in self._entries.items()
+            if entry["disposition"] == Disposition.WITHHELD.value
+        )

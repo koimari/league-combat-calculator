@@ -9,7 +9,9 @@ about one mention of a directory.
 
 At S3 there is one view: the end-of-walk survival projection, moved out of
 the kernel with its 38 digit counts.  S7 adds ``ViewTag`` to the package
-initialiser, so its two rules are pinned here too.
+initialiser, so its two rules are pinned here too, and S9 adds
+``serialize_leaf`` -- the one producer of a payload leaf and of that leaf's
+``dispositions`` entry.
 """
 
 from __future__ import annotations
@@ -20,8 +22,16 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator import ability_spec
+from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
 from src.calculator.program import precision
-from src.calculator.program.views import ViewTag, survival
+from src.calculator.program.views import (
+    LeafWriter,
+    ViewTag,
+    serialize_leaf,
+    survival,
+)
+from src.calculator.trigger_stream import ProjectionStarvation
 
 VIEWS_ROOT = Path(survival.__file__).resolve().parent
 
@@ -230,12 +240,18 @@ def test_the_view_tag_vocabulary_is_closed_at_two_members() -> None:
     assert [tag.name for tag in ViewTag] == ["THEORETICAL", "APPLIED"]
 
 
-def test_the_tag_vocabulary_module_imports_nothing_from_the_package() -> None:
+def test_the_tag_vocabulary_module_reaches_only_the_vocabulary_leaf() -> None:
     """It is a leaf, and ``trigger_stream``'s second import depends on it.
 
     The bus may name ``ViewTag`` only because this module reaches no further;
     an import added here would silently give the bus a transitive dependency
-    the acyclicity clause forbids.
+    the acyclicity clause forbids.  ``ability_spec`` is the single permitted
+    reach, and permitting it costs the argument nothing: it is the campaign's
+    dependency-free vocabulary leaf, ``trigger_stream`` already imports it for
+    ``Authority``, and S9's ``serialize_leaf`` is defined over ``Quantity``,
+    which lives there.  The check below is therefore two clauses rather than
+    one -- what this module may import, and that the one thing it imports
+    imports nothing back.
     """
     source = (VIEWS_ROOT / "__init__.py").read_text(encoding="utf-8")
     relative = {
@@ -243,4 +259,110 @@ def test_the_tag_vocabulary_module_imports_nothing_from_the_package() -> None:
         for node in ast.walk(ast.parse(source))
         if isinstance(node, ast.ImportFrom) and node.level
     }
-    assert relative == set()
+    assert relative == {"ability_spec"}
+    vocabulary = Path(ability_spec.__file__).read_text(encoding="utf-8")
+    assert {
+        node.module
+        for node in ast.walk(ast.parse(vocabulary))
+        if isinstance(node, ast.ImportFrom) and node.level and node.col_offset == 0
+    } == set()
+
+
+# ---------------------------------------------------------------------------
+# serialize_leaf — S9's one producer of a leaf and of its dispositions entry
+# ---------------------------------------------------------------------------
+
+
+def test_a_measured_leaf_is_a_bare_number_beside_an_entry_that_names_it() -> None:
+    """The common case, and the one the wire shape is designed around.
+
+    A bare JSON number cannot carry a field, so the disposition rides in a
+    sibling map -- which is what keeps every measured leaf byte-identical to
+    what clients already parse.
+    """
+    out = serialize_leaf(
+        "breakdown.main.total_damage", Measured(1234.5), ViewTag.APPLIED
+    )
+    assert out.present is True
+    assert out.value == 1234.5
+    assert out.entry == {"disposition": "MEASURED", "view_tag": "applied"}
+
+
+def test_a_structural_zero_publishes_the_zero_and_the_declaration() -> None:
+    """Zero is the answer, and the declaration is the receipt -- so both ship."""
+    out = serialize_leaf(
+        "breakdown.ally.support_value",
+        StructuralZero(reason="no support declaration on this roster"),
+        ViewTag.APPLIED,
+    )
+    assert out.present is True
+    assert out.value == 0.0
+    assert out.entry["disposition"] == "STRUCTURAL_ZERO"
+    assert out.entry["reason"] == "no support declaration on this roster"
+
+
+def test_a_withheld_leaf_has_no_number_and_its_entry_carries_the_receipts() -> None:
+    """The asymmetry the whole map exists for.
+
+    Absent-with-a-receipt is a different published answer from zero, and it is
+    the one this campaign was opened over.
+    """
+    out = serialize_leaf(
+        "breakdown.main.total_damage",
+        Withheld(receipts=("coverage: Nashor's Tooth on-hit is unmodelled",)),
+        ViewTag.APPLIED,
+    )
+    assert out.present is False
+    assert out.value is None
+    assert out.entry["disposition"] == "WITHHELD"
+    assert out.entry["receipts"] == ["coverage: Nashor's Tooth on-hit is unmodelled"]
+
+
+def test_a_starved_leaf_raises_rather_than_serializing_anything() -> None:
+    """D-25: the failure surfaces where the projection was asked the question."""
+    with pytest.raises(ProjectionStarvation):
+        serialize_leaf(
+            "survival.main.ending_health",
+            Starved(field="pools", producer="score ledger", reason="score projection"),
+            ViewTag.APPLIED,
+        )
+
+
+def test_a_theoretical_number_says_so_in_its_own_entry() -> None:
+    """One tag per serialized number, and never as a field on the number."""
+    out = serialize_leaf("tdd.main.theoretical", Measured(10.0), ViewTag.THEORETICAL)
+    assert out.entry["view_tag"] == "theoretical"
+
+
+def test_the_writer_puts_the_leaf_and_records_its_entry_in_one_call() -> None:
+    """One writer: the map and the leaves cannot drift because nothing keeps them."""
+    writer = LeafWriter()
+    row: dict[str, object] = {}
+    block = writer.block(row, "breakdown.main")
+    block.measured("total_damage", 12.0)
+    block.put("support_value", Withheld(receipts=("coverage: unmodelled",)))
+    assert row == {"total_damage": 12.0}
+    assert set(writer.entries()) == {
+        "breakdown.main.total_damage",
+        "breakdown.main.support_value",
+    }
+    assert writer.withheld_paths() == {"breakdown.main.support_value"}
+
+
+def test_a_leaf_path_is_its_payload_key_and_cannot_be_spelled_apart() -> None:
+    """The block binds prefix to target, so a rename moves both or neither."""
+    writer = LeafWriter()
+    row: dict[str, object] = {}
+    writer.block(row, "survival.main").measured("ending_health", 250.0)
+    assert list(row) == ["ending_health"]
+    assert writer.paths() == {"survival.main.ending_health"}
+
+
+def test_the_writer_preserves_the_order_the_view_spells() -> None:
+    """Key order is part of the published shape, so the writer never reorders."""
+    writer = LeafWriter()
+    row: dict[str, object] = {}
+    block = writer.block(row, "leaf")
+    for index, name in enumerate(("alpha", "beta", "gamma")):
+        block.measured(name, float(index))
+    assert list(row) == ["alpha", "beta", "gamma"]

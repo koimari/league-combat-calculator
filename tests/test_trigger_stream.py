@@ -793,6 +793,12 @@ def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
     behaviour registry would re-create exactly the condition the clause
     above forbids — silently, because the bus would keep importing one name
     from one module.  So the admissible import is pinned at its source.
+
+    S9's ``serialize_leaf`` is defined over ``Quantity`` and joins the list:
+    ``ability_spec`` is the campaign's dependency-free vocabulary leaf, which
+    the line above already admits as the bus's *own* first import, so
+    admitting it here reaches nothing the bus did not already reach.  The
+    stdlib members are the type annotations the serializer carries.
     """
     tree = ast.parse((SRC / "calculator/program/views/__init__.py").read_text("utf-8"))
     imported = {
@@ -802,7 +808,13 @@ def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
         for node in (node,)
         if getattr(node, "module", None) is not None
     }
-    assert imported <= {"__future__", "enum"}
+    assert imported <= {
+        "__future__",
+        "ability_spec",
+        "collections.abc",
+        "dataclasses",
+        "enum",
+    }
 
 
 # ---------------------------------------------------------------------------
