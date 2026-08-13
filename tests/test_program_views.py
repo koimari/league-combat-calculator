@@ -29,6 +29,7 @@ from src.calculator.program.build import roster_program
 from src.calculator.program.walk import AttackerOutcome, WalkResult
 from src.calculator.program.rung import CompiledFast
 from src.calculator.program.views import (
+    DISCARD,
     LeafWriter,
     ViewTag,
     breakdown,
@@ -606,3 +607,20 @@ def test_a_measured_leaf_still_renders_as_the_bare_number() -> None:
     body = source[start : source.index("function invalidateOptimization", start)]
     assert "format = fmt" in body
     assert "return escapeHtml(format(value));" in body
+
+
+def test_a_discarded_row_is_identical_to_a_recorded_one() -> None:
+    """The fast branch is the same expression, not a second producer.
+
+    ``serialize_leaf`` returns ``quantity.read()`` and ``Measured.read()`` is
+    ``float(self.amount)``, so the discarding branch's ``float(value)`` is
+    that expression with the two allocations only the recording path needs
+    taken out.  Pinned here because "provably the same" is worth one test,
+    and because the optimizer's rows and the receipt's rows differing would
+    be the score-versus-receipt divergence this phase exists to close.
+    """
+    program = roster_program([_combatant()])
+    result = _result([_state(healing_received=123.456789, death_time=4.567891)])
+    recorded = survival.survival_leaves(program, result, LeafWriter(), "s")
+    discarded = survival.survival_leaves(program, result, DISCARD, "s")
+    assert recorded == discarded

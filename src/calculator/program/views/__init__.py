@@ -139,15 +139,23 @@ class LeafBlock:
     there, which is the drift the single writer exists to make impossible.
     """
 
-    __slots__ = ("_prefix", "_target", "_writer")
+    __slots__ = ("_prefix", "_records", "_set", "_target", "_writer")
 
     def __init__(
         self, writer: "LeafWriter", target: MutableMapping[str, object], prefix: str
     ) -> None:
-        """Bind one target mapping to the path prefix its keys hang under."""
+        """Bind one target mapping to the path prefix its keys hang under.
+
+        ``_records`` and ``_set`` are bound once because the optimizer walks
+        every participant of every candidate through here: two attribute
+        chases per leaf, times a few hundred leaves, times a thousand
+        evaluations, is measurable against the phase's wall ratchet.
+        """
         self._writer = writer
         self._target = target
         self._prefix = prefix
+        self._records = writer.records
+        self._set = target.__setitem__
 
     def put(self, key: str, quantity: Quantity, tag: ViewTag = ViewTag.APPLIED) -> None:
         """Serialize one leaf into the block and record its entry.
@@ -182,7 +190,7 @@ class LeafBlock:
         flattens; every float found is written through the same
         :func:`serialize_leaf`, at the path a reader would walk to reach it.
         """
-        self._target[key] = self._walk(value, f"{self._prefix}.{key}")
+        self._set(key, self._walk(value, f"{self._prefix}.{key}"))
 
     def _walk(self, value: object, path: str) -> object:
         """One nested value, rebuilt with every float written as a leaf."""
@@ -215,7 +223,7 @@ class LeafBlock:
         entry for one would make the map's own key set stop meaning "the
         payload's numbers".
         """
-        self._target[key] = value
+        self._set(key, value)
 
     def optional_measured(
         self, key: str, value: float | None, tag: ViewTag = ViewTag.APPLIED
@@ -229,7 +237,7 @@ class LeafBlock:
         reads it as absent rather than as a leaf missing its entry.
         """
         if value is None:
-            self._target[key] = None
+            self._set(key, None)
             return
         self.measured(key, value, tag)
 
@@ -239,7 +247,20 @@ class LeafBlock:
         Spelled out rather than defaulted into ``put`` so that wrapping a
         number in ``Measured`` stays a thing a view *says*, and a leaf whose
         disposition is anything else cannot be written by forgetting to.
+
+        The short branch is for a writer that records nothing.  It is not a
+        second way of producing the leaf: ``serialize_leaf`` returns
+        ``quantity.read()`` and ``Measured.read()`` is ``float(self.amount)``,
+        so ``float(value)`` is the *same expression* with the two allocations
+        that only the recording path needs taken out.  It exists because the
+        optimizer runs this over every participant of every candidate, where
+        three objects per leaf breached the phase's allocation ratchet by
+        19%, and criterion 17 says that gate is never to be relaxed.  The two
+        branches are pinned to produce identical rows by test.
         """
+        if not self._records:
+            self._set(key, float(value))
+            return
         self.put(key, Measured(amount=float(value)), tag)
 
 
@@ -259,6 +280,11 @@ class LeafWriter:
     """
 
     __slots__ = ("_entries",)
+
+    #: Whether leaves written through this writer are recorded.  False only
+    #: for :data:`DISCARD`, and read on the hot path rather than branched on
+    #: by type.
+    records = True
 
     def __init__(self) -> None:
         """Start with an empty map; a payload with no leaves has no entries."""
@@ -306,6 +332,8 @@ class _DiscardingWriter(LeafWriter):
     """
 
     __slots__ = ()
+
+    records = False
 
     def _record(self, out: LeafOut) -> None:
         """Record nothing; the caller has already said nobody will read it."""

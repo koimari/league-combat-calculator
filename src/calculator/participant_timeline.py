@@ -123,6 +123,7 @@ from .program.compile import (
     pair_resistance_baselines,
     revive_candidate_actions,
 )
+from .program.views import DISCARD as _DISCARD
 from .program.views import breakdown as _breakdown_view
 from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
@@ -3250,7 +3251,13 @@ def _score_with_search_context(
             target_count=len(coverage_reports),
         ),
     )
-    rows_by_id = _survival_view.survival(program, walk_result)
+    # ``DISCARD``: these rows are the composition's own working copy.  The
+    # score view re-projects them for the payload it returns and the receipt
+    # view for the one it returns; recording a third map here would be a
+    # map describing rows nobody serializes, on the optimizer's hot path.
+    rows_by_id = _survival_view.survival_leaves(
+        program, walk_result, _DISCARD, "participants.survival"
+    )
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
 
@@ -3969,7 +3976,9 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             target_count=len(coverage_reports),
         ),
     )
-    survival = _survival_view.survival(program, walk_result)
+    survival = _survival_view.survival_leaves(
+        program, walk_result, _DISCARD, "participants.survival"
+    )
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
         death_time = survival[actor.participant_id]["death_time"]
