@@ -1,0 +1,45 @@
+{
+  "slice": "P4-S7-score-previews",
+  "status": "population enumerated before the slice's first src/ edit; the measured block is written by the landing commit",
+  "decisions": ["D-62", "D-97"],
+  "correction": {
+    "what": "The roster composition drops a THEORETICAL pair-engine row and its authored events on the receipt path (participant_timeline._pair_packet) and does not drop them on the score path (program.compile.WalkCompiler.add_engine_result, which compiles the candidate main's fresh pair fights straight from the engine rows).",
+    "why_it_matters": "add_engine_result documents itself as 'equivalent to _pair_packet + add_packet'. It is not, since the Bloodsong move: a preview the receipt walk excludes is summed by the compiled score walk, so the optimizer scores a build against a number the receipt walk says is a preview of one the walk already owns. That is D-62's double count, present on exactly the surface that picks the winner.",
+    "why_it_is_inert_today": "Only bloodsong.expose_weakness_preview carries ViewTag.THEORETICAL at HEAD, and no bench scenario proposes Bloodsong on any candidate (measured: 0 of 1306 / 1015 / 688 / 782). No committed score-mode coupled scenario equips it either. The correction is therefore expected to move nothing, and it lands as its own commit so the Shadowflame move's diff is Shadowflame's alone (R-30).",
+    "why_it_lands_before_shadowflame": "Shadowflame IS proposed on every bench scenario, so the moment its pair half is tagged THEORETICAL this gap stops being inert. Landing the mechanism first is what keeps the two diffs attributable."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 - no baseline moves inside the landing commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "enumerated_at_commit": "2853376",
+    "rule": "A leaf can move only where a composed fight's attacker holds an item whose pair half is declared ViewTag.THEORETICAL, on the score path. At HEAD that is Bloodsong alone.",
+    "coupled_golden": {
+      "size": 0,
+      "why": "Three committed coupled scenarios run in score mode - score_plain_tuple (Luden's Echo), score_event_view_holder (Luden's Echo, Imperial Mandate) and score_event_scan_holder (Luden's Echo, Black Cleaver). None equips Bloodsong. cleaver_bloodsong_roster is the one scenario that does and it is a receipt-mode scenario, which already takes _pair_packet's exclusion.",
+      "golden": 0
+    },
+    "bench": {
+      "size": 0,
+      "instrument": "scripts/bench_coupled_optimizer.py's SCENARIOS with optimizer._evaluate_build counting candidates holding Bloodsong.",
+      "measured_at_commit": "2853376",
+      "per_scenario": {
+        "cassiopeia_3champ": {"proposals": 1306, "proposals_holding_bloodsong": 0},
+        "cassiopeia_5champ": {"proposals": 1015, "proposals_holding_bloodsong": 0},
+        "mundo_3champ": {"proposals": 688, "proposals_holding_bloodsong": 0},
+        "syndra_mandate_3champ": {"proposals": 782, "proposals_holding_bloodsong": 0}
+      }
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": []
+  },
+  "measured": {
+    "status": "not yet measured - this file is the pre-edit half of the receipt"
+  }
+}

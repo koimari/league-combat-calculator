@@ -1,0 +1,80 @@
+{
+  "slice": "P4-S7-shadowflame",
+  "status": "population enumerated before the slice's first src/ edit; the measured block is written by the landing commit",
+  "decisions": ["D-62", "D-66", "D-72", "D-97", "D-101"],
+  "authority_move": {
+    "mechanic": "shadowflame.cinderbloom",
+    "was": "one PAIR half, COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW, with no walk half at all - the pair engine's lump-sum bonus row travelled into every roster total as if it had been delivered there",
+    "now": "a PAIR preview half (shadowflame.cinderbloom_preview, ViewTag.THEORETICAL) and a rider-delivered PAIRED walk half (shadowflame.cinderbloom, RiderDelivery)",
+    "position": "fourth and last of Phase 4 S7's four landing authority moves",
+    "why": "Cinderbloom's predicate reads the target's live health under a whole roster's fire. That is a roster input, so under the campaign's authority rule the walk is the smallest engine that can see every input the rule reads. The pair engine's reading - the bonus a single attacker alone would have earned against a full-health target - is the honest one-attacker figure and survives as a declared THEORETICAL preview.",
+    "unblocked_by": "Amendment C to D-07, recorded in the umbrella beside D-07: a PAIRED walk half may be rider-delivered, and the cross-participant producer derivation keys on trigger_stream.cross_participant_packet_source so a rider that amplifies its own holder's event is not a seventh producer."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 - no baseline moves inside the landing commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "enumerated_at_commit": "2853376",
+    "rule": "R-20's second half. The occurrence count is not readable off the pre-change tree by inspection, so the population is enumerated from committed artifacts - scripts/golden_snapshot.py's COUPLED_SCENARIOS and scripts/bench_coupled_optimizer.py's SCENARIOS - and its membership bounds what may qualify. An occurrence outside it stops the slice.",
+    "coupled_golden": {
+      "size": 0,
+      "why_zero_is_a_measurement_and_not_an_assumption": "Six of the thirteen committed coupled scenarios equip Shadowflame (the six Syndra pins; SYNDRA_PIN_ITEMS holds it). In all six the request carries no enemies at all - _syndra_pin_request declares only an ally Syndra against a manual 10000 HP target - so the composed coupled fight holds no enemy participant, both breakdown rows total 0.0, and no subject exists whose live health could satisfy a predicate about a target's health. The remaining seven scenarios equip Shadowflame on no participant. The pair snapshot is untouched by a walk-side rider: this slice changes no pair-engine number, only which of them the roster composes.",
+      "scenarios_that_equip_shadowflame": [
+        "syndra_custom_order_0",
+        "syndra_derived_order_0",
+        "syndra_custom_order_3",
+        "syndra_derived_order_3",
+        "syndra_custom_order_7",
+        "syndra_derived_order_7"
+      ],
+      "scenarios_that_do_not": 7,
+      "golden": 0
+    },
+    "bench": {
+      "size": 4,
+      "instrument": "scripts/bench_coupled_optimizer.py's SCENARIOS, each posted to /api/optimize at the time-budget ceiling with optimizer._evaluate_build counting the candidates whose item list holds Shadowflame. Every candidate any regime proposes arrives at that function (R-24), so the count is the proposal population and not a sample.",
+      "measured_at_commit": "2853376",
+      "rule": "A walk-side Cinderbloom can move a bench reading only where the optimizer proposes a build holding Shadowflame and the composed roster holds an enemy participant whose live health the predicate can read. All four bench scenarios satisfy both halves, so the population is four and not three.",
+      "prose_figure_this_measurement_replaces": "docs/receipts/escalated-defects-P4-S7.json says 'the three enemy-bearing bench scenarios'. Measured, it is four: every bench scenario carries enemies and every one of them proposes Shadowflame. The prose figure had no producing instrument, which is why R-20 asks for an enumeration rather than a restatement.",
+      "per_scenario": {
+        "cassiopeia_3champ": {
+          "enemies": ["Alistar", "Dr. Mundo"],
+          "proposals": 1306,
+          "proposals_holding_shadowflame": 402,
+          "winner_holds_shadowflame": false
+        },
+        "cassiopeia_5champ": {
+          "enemies": ["Alistar", "Dr. Mundo", "Vayne"],
+          "proposals": 1015,
+          "proposals_holding_shadowflame": 10,
+          "winner_holds_shadowflame": false
+        },
+        "mundo_3champ": {
+          "enemies": ["Cassiopeia", "Vayne"],
+          "proposals": 688,
+          "proposals_holding_shadowflame": 6,
+          "winner_holds_shadowflame": false
+        },
+        "syndra_mandate_3champ": {
+          "enemies": ["Alistar", "Dr. Mundo"],
+          "proposals": 782,
+          "proposals_holding_shadowflame": 8,
+          "winner_holds_shadowflame": false
+        }
+      },
+      "what_this_bounds": "R-01 row 8 reports counters, residual, rung histogram, winner and score. No bench winner holds Shadowflame, so a score move on a Shadowflame-holding candidate changes the published winner and score only if it lifts such a candidate past the incumbent. That is the prediction the landing commit measures; a winner change in a scenario outside these four would be an occurrence outside the population and stops the slice."
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "note": "Filled by the landing commit. The prediction standing here before the edit is that both lists stay empty, because the coupled-golden population is 0."
+  },
+  "measured": {
+    "status": "not yet measured - this file is the pre-edit half of the receipt"
+  }
+}
