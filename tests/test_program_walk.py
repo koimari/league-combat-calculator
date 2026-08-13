@@ -118,3 +118,66 @@ class TestTheResultIsFrozen:
         result = walk_module.walk([damage_action(5.0)], ctx)
         assert isinstance(result.states, tuple)
         assert len(result.states) == 1
+
+
+class TestTheWalkFoldsWhatItsStateImplies:
+    """The three numbers the survival view used to add for itself.
+
+    Criterion 3 forbids a view performing arithmetic on ledger values, and
+    ``remaining_shield``, ``ending_health_ratio`` and ``effective_health``
+    were three sums the projection ran over the settled pools.  They belong
+    to the walk that settled them: what a view receives has to be a leaf, or
+    the projection is a second producer of the number it claims to project.
+    """
+
+    def test_every_settled_state_is_folded(self) -> None:
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(30.0)], ctx)
+        assert len(result.survival) == len(result.states)
+
+    def test_the_ending_health_ratio_is_the_settled_pools_own(self) -> None:
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(30.0)], ctx)
+        pools = result.states[0]["pools"]
+        assert result.survival[0].ending_health_ratio == pools.health / pools.max_health
+
+    def test_a_participant_with_no_maximum_health_reads_zero_not_a_raise(self) -> None:
+        """Division by a zero pool is the one guarded case, and it stays."""
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(0.0)], ctx)
+        result.states[0]["pools"].max_health = 0.0
+        assert walk_module.survival_folds(result.states)[0].ending_health_ratio == 0.0
+
+    def test_the_remaining_shield_is_the_three_pools_summed(self) -> None:
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(0.0)], ctx)
+        pools = result.states[0]["pools"]
+        pools.magic_shield, pools.physical_shield, pools.general_shield = (
+            1.5,
+            2.25,
+            4.0,
+        )
+        assert walk_module.survival_folds(result.states)[0].remaining_shield == 7.75
+
+    def test_the_effective_health_keeps_its_five_terms_in_order(self) -> None:
+        """Float addition is not associative: a re-spelled sum is a new number."""
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(0.0)], ctx)
+        state = result.states[0]
+        pools = state["pools"]
+        pools.max_health, pools.shield_expired = 0.1, 0.3
+        state["starting_shield"] = 0.2
+        state["support_shield_received"] = 0.4
+        state["healing_received"] = 0.5
+        assert walk_module.survival_folds([state])[0].effective_health == (
+            0.1 + 0.2 + 0.4 - 0.3 + 0.5
+        )
+
+    def test_the_fold_is_the_walks_and_not_a_projection_a_caller_hands_back(
+        self,
+    ) -> None:
+        """``projected`` names the folds a composition may supply; not this one."""
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(5.0)], ctx)
+        with pytest.raises(TypeError, match="declares no fold named survival"):
+            result.projected(survival=())

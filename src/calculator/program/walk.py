@@ -94,6 +94,62 @@ class AttackerOutcome:
 
 
 @dataclass(frozen=True, slots=True)
+class SurvivalFold:
+    """The three numbers one participant's settled state *implies*.
+
+    The kernel stores three shield pools, a health and a max health; the
+    published survival row wants their sum, their ratio and the five-term
+    effective health.  Those three additions were being performed by the
+    survival view, on ledger values, which is exactly what criterion 3
+    forbids: a view that adds is a second producer of the number it claims to
+    project, and a projection that can disagree with its walk is the
+    incident's own shape one layer up.
+
+    They are folded here instead, at the moment the walk settles, so what
+    reaches the view is a leaf rather than three ingredients.  Nothing about
+    the arithmetic changes -- the expressions below are the view's own,
+    moved: ``remaining_shield`` keeps ``sum`` over the three-tuple and
+    ``effective_health`` keeps its five terms in their original order,
+    because float addition is not associative and a re-spelled sum is a
+    changed number.
+    """
+
+    remaining_shield: float
+    ending_health_ratio: float
+    effective_health: float
+
+
+def survival_folds(states: Sequence[Any]) -> tuple[SurvivalFold, ...]:
+    """One :class:`SurvivalFold` per settled participant state, in walk order.
+
+    Exported rather than inlined into :func:`walk` so a caller assembling a
+    result by hand -- a fixture, a second composition -- folds through the
+    same expression the walk does instead of writing a fourth copy of it.
+    """
+    folds: list[SurvivalFold] = []
+    for state in states:
+        pools = state["pools"]
+        folds.append(
+            SurvivalFold(
+                remaining_shield=sum(
+                    (pools.magic_shield, pools.physical_shield, pools.general_shield)
+                ),
+                ending_health_ratio=(
+                    pools.health / pools.max_health if pools.max_health > 0.0 else 0.0
+                ),
+                effective_health=(
+                    pools.max_health
+                    + state["starting_shield"]
+                    + state["support_shield_received"]
+                    - pools.shield_expired
+                    + state["healing_received"]
+                ),
+            )
+        )
+    return tuple(folds)
+
+
+@dataclass(frozen=True, slots=True)
 class ObjectiveFold:
     """The ten aggregates the objective block publishes, summed once.
 
@@ -140,6 +196,7 @@ class WalkResult:
     coverage: tuple
     rung: Rung
     duration: float = 0.0
+    survival: tuple[SurvivalFold, ...] = ()
     outcomes: tuple[AttackerOutcome, ...] = ()
     grey_health: Mapping[str, Any] | None = None
     timeline_coverage: Mapping[str, Any] | None = None
@@ -189,10 +246,13 @@ def walk(
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.
 
-    The body is one call, one settlement and one record: this function adds
-    no arithmetic, no reordering and no filtering, because anything it added
+    The body is one call, one settlement, one fold and one record: this
+    function adds no reordering and no filtering, because anything it added
     would be a second engine growing inside the seam that exists to stop
-    there being one.  The sort order is the compiler's eight-element key,
+    there being one.  The one fold is :func:`survival_folds`, and it is here
+    rather than in the view for the reason criterion 3 names: three sums the
+    settled state implies belong to the walk that settled it, so what a
+    projection receives is a leaf.  The sort order is the compiler's eight-element key,
     already applied by the caller — sorting again here by a second rule is
     how two engines end up disagreeing about simultaneous events.
 
@@ -210,6 +270,7 @@ def walk(
         coverage=tuple(coverage),
         rung=rung,
         duration=float(ctx.duration),
+        survival=survival_folds(ctx.states),
     )
 
 
@@ -220,7 +281,8 @@ def walk(
 _FOLD_FIELDS = frozenset(
     field.name
     for field in fields(WalkResult)
-    if field.name not in {"actions", "states", "coverage", "rung", "duration"}
+    if field.name
+    not in {"actions", "states", "coverage", "rung", "duration", "survival"}
 )
 
 # The folds that are sequences.  Frozen means frozen: a list handed in here
@@ -230,4 +292,11 @@ _SEQUENCE_FOLDS = frozenset(
     {"outcomes", "damage_events", "healing_events", "support_events"}
 )
 
-__all__ = ["AttackerOutcome", "ObjectiveFold", "WalkResult", "walk"]
+__all__ = [
+    "AttackerOutcome",
+    "ObjectiveFold",
+    "SurvivalFold",
+    "WalkResult",
+    "survival_folds",
+    "walk",
+]

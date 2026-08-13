@@ -26,7 +26,7 @@ from src.calculator import ability_spec
 from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
 from src.calculator.program import precision
 from src.calculator.program.build import roster_program
-from src.calculator.program.walk import AttackerOutcome, WalkResult
+from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
 from src.calculator.program.rung import CompiledFast
 from src.calculator.program.views import (
     DISCARD,
@@ -122,9 +122,20 @@ def _combatant(**defenses: object) -> SimpleNamespace:
 
 
 def _result(states: list[dict[str, object]], **fields: object) -> WalkResult:
-    """A finished walk carrying only the states the projection reads."""
+    """A finished walk carrying only the states the projection reads.
+
+    The survival fold comes from ``survival_folds`` rather than from a
+    literal, because a fixture that spelled those three numbers itself would
+    be the second producer criterion 3 exists to forbid, wearing a test's
+    clothes.
+    """
     return WalkResult(
-        actions=(), states=tuple(states), coverage=(), rung=CompiledFast(), **fields
+        actions=(),
+        states=tuple(states),
+        coverage=(),
+        rung=CompiledFast(),
+        survival=survival_folds(states),
+        **fields,
     )
 
 

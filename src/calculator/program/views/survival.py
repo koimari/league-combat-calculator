@@ -17,11 +17,11 @@ S9 gives it the ``(Program, WalkResult)`` signature the phase's five views
 share: the roster comes off the program and the final state off the result,
 which is what makes "score mode and receipt mode agree" a fact about the
 inputs rather than about two callers passing matching arguments.  It re-runs
-no arithmetic that the kernel did not already do -- the two sums below
-(``remaining_shield`` and ``effective_health``) are the two the kernel itself
-performed here, moved rather than introduced, and they are named in the
-phase's view-purity criterion as the thing still owed to the walk result
-rather than something this stage may quietly keep.
+no arithmetic at all: the three numbers the settled state *implies* --
+``remaining_shield``, ``ending_health_ratio`` and ``effective_health`` -- are
+folded by :func:`~..walk.survival_folds` at the moment the walk settles and
+arrive here as leaves.  Every number below is therefore something a rule
+already computed, re-rounded at its declared precision and published.
 """
 
 from __future__ import annotations
@@ -109,14 +109,19 @@ def survival_leaves(
     """
     states = result.states
     combatants = program.actors
+    folds = result.survival
+    if len(folds) != len(states):
+        raise ValueError(
+            f"the walk settled {len(states)} states and folded {len(folds)} "
+            "survival rows; a published row whose numbers the walk did not "
+            "fold is a number this projection would have to invent"
+        )
     rows: dict[str, dict[str, Any]] = {}
     grey = result.grey_health
     for index, state in enumerate(states):
         participant_id = combatants[index].participant_id
         pools = state["pools"]
-        remaining_shields = sum(
-            (pools.magic_shield, pools.physical_shield, pools.general_shield)
-        )
+        fold = folds[index]
         threshold_shield = pools.threshold_shield
         threshold_health = pools.threshold_health
         row: dict[str, Any] = {}
@@ -126,10 +131,7 @@ def survival_leaves(
         leaf.measured("ending_health", round_field("ending_health", pools.health))
         leaf.measured(
             "ending_health_ratio",
-            round_field(
-                "ending_health_ratio",
-                pools.health / pools.max_health if pools.max_health > 0.0 else 0.0,
-            ),
+            round_field("ending_health_ratio", fold.ending_health_ratio),
         )
         leaf.measured("damage_taken", round_field("damage_taken", pools.damage_taken))
         leaf.measured("overkill", round_field("overkill", pools.overkill))
@@ -169,17 +171,11 @@ def survival_leaves(
         leaf.raw("temporary_health_source", state["temporary_health_source"])
         leaf.measured(
             "effective_health",
-            round_field(
-                "effective_health",
-                pools.max_health
-                + state["starting_shield"]
-                + state["support_shield_received"]
-                - pools.shield_expired
-                + state["healing_received"],
-            ),
+            round_field("effective_health", fold.effective_health),
         )
         leaf.measured(
-            "remaining_shield", round_field("remaining_shield", remaining_shields)
+            "remaining_shield",
+            round_field("remaining_shield", fold.remaining_shield),
         )
         leaf.measured(
             "starting_shield", round_field("starting_shield", state["starting_shield"])
