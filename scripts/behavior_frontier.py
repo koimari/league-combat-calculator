@@ -268,9 +268,10 @@ CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
             "the utility lane's authored evidence: the module and symbol a "
             "utility outcome is delivered by"
         ),
-        "_SPLIT_MECHANICS": (
-            "the evidence member naming the mechanic a split claim's two halves "
-            "belong to, resolved against the pairing registry"
+        "_DUAL_SIDED_MECHANICS": (
+            "the evidence member naming the mechanic a dual-sided claim's two "
+            "halves belong to, and the handshake policy its packet declares, "
+            "both resolved against the pairing registry"
         ),
         "_RULE_CLAIMS": (
             "one claim per precedence rung, for the five rungs whose membership "

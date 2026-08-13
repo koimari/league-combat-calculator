@@ -455,40 +455,21 @@ class DivergenceReceipt:
     issue_ref: int
 
 
-# The campaign's one live divergence.  ``issue_ref`` is the umbrella coverage
-# issue (#40, ``item_coverage``'s release gate), because no child issue owns
-# this reconciliation: the umbrella's authority table schedules it as Phase
-# 4's, alongside Command.
-DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType(
-    {
-        "bloodsong.expose_weakness": DivergenceReceipt(
-            ref="bloodsong.expose_weakness",
-            mechanic="bloodsong.expose_weakness",
-            pair_reading=(
-                "One amp of the holder's whole running total, less the chain "
-                "that armed the buff — the first ability cast, the first "
-                "attack that consumed it, and the first empowered proc — "
-                "filed as one coarse breakdown row carrying no authored "
-                "events, and applied once for the whole fight regardless of "
-                "how many times the spellblade procs "
-                "(damage._add_expose_weakness; declared as "
-                "ExcludeTrigger(BASIC_ATTACK_HIT, TRIGGER_SEQUENCE) over "
-                "Pool.COARSE_ROW)."
-            ),
-            walk_reading=(
-                "One timed damage_modifier packet per Bloodsong spellblade "
-                "proc, armed for expose_weakness_duration seconds with "
-                "expose_weakness_cooldown between arms, pricing every roster "
-                "attacker's packets that land inside a live window and "
-                "skipping the holder through the owner handshake "
-                "(item_support_effects.derive_item_support_effects)."
-            ),
-            source_url="https://wiki.leagueoflegends.com/en-us/Bloodsong",
-            revision_id=4028002,
-            issue_ref=40,
-        )
-    }
-)
+# **Empty, and that is the end state.**  The campaign's one live divergence
+# was Bloodsong's Expose Weakness: the pair engine amplified one coarse row
+# once for the whole fight while the walk armed a timed modifier per
+# spellblade proc, and the two were frozen behind a reviewed receipt until an
+# engine could be named authoritative.  Phase 4 S7 named one -- the walk,
+# because the pool of amplified damage is every roster attacker's damage
+# inside a live window -- and the pair reading became a declared
+# ``THEORETICAL`` preview instead of a rival answer.  A receipt records a
+# disagreement *nobody has adjudicated*; once one side is the answer, keeping
+# it would be filing a settled question as an open one.
+#
+# The type stays and this mapping is asserted empty (D-92).  The next
+# divergence has to be a typed entry pointing at a receipt, never a silent
+# omission.
+DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType({})
 
 
 # Thirteen fields: Phase 2's eleven plus the two Phase 4 writes here.  A
@@ -705,6 +686,14 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pairing=Pairing.PAIRED,
         pair_of="abyssal_mask.magic_amp",
     ),
+    # Phase 4 S7's third authority move, and the one that retires the
+    # campaign's only ``DivergenceReceipt``.  The amplified pool is every
+    # attacker's damage inside a live window, which is a roster input, so the
+    # walk owns the mechanic outright and prices the holder's own packets
+    # too — there is no longer a pair-local half to skip, which is why this
+    # row carries no ``owner``.  The pair engine's coarse row survives as a
+    # declared ``THEORETICAL`` preview: correct as a one-attacker figure,
+    # excluded from every roster total.
     _walk_item(
         "bloodsong.expose_weakness",
         "Bloodsong",
@@ -714,10 +703,9 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         needs=frozenset(
             {Field.TIME, Field.TARGET_ID, Field.EVENT_ID, Field.SOURCE_KEY}
         ),
-        authority=Authority.SPLIT,
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         pairing=Pairing.PAIRED,
         pair_of="bloodsong.expose_weakness_preview",
-        divergence_ref="bloodsong.expose_weakness",
     ),
     # H1 — Carve's move to coupled-authoritative-with-preview is human-owned
     # and unanswered, so this row states the blocking id instead of a guessed
@@ -915,7 +903,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "bloodsong.expose_weakness_preview",
         ItemOwner("Bloodsong"),
         "damage._add_expose_weakness",
-        authority=Authority.SPLIT,
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        view_tag=ViewTag.THEORETICAL,
     ),
     _pair_half(
         "black_cleaver.armor_reduction",

@@ -1099,6 +1099,17 @@ def _owner_declaring_sites(
     return found, declares_owner
 
 
+# The two authorities that describe a mechanic with two declared halves.
+# ``SPLIT`` says the halves are disjoint and the walk skips the holder;
+# ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW`` says the walk owns the number
+# and the pair half is a preview of it.  ``COUPLED_ONLY`` is deliberately not
+# here: it names a second engine that has no pricer at all, so there is no
+# second half for a dual-sided claim to point at.
+_DUAL_SIDED_AUTHORITIES = frozenset(
+    {"SPLIT", "COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW"}
+)
+
+
 def resolve_paired_sides(
     sides: PairedSides, claim: Claim, ctx: ResolverContext
 ) -> None:
@@ -1106,11 +1117,18 @@ def resolve_paired_sides(
 
     The incident shipped with one half present and a hand list that agreed
     with it, so nothing here reads a name list: the capability registry is the
-    authority, ``authority`` has to be ``SPLIT``, ``pair_of`` has to name a
-    capability on the *other* engine owned by the same holder, and exactly one
-    walk half may claim that pair half — the back edge, which the pair half
-    cannot carry itself because ``pair_of`` is required only where ``pairing
-    is PAIRED``.
+    authority, ``pair_of`` has to name a capability on the *other* engine
+    owned by the same holder, and exactly one walk half may claim that pair
+    half — the back edge, which the pair half cannot carry itself because
+    ``pair_of`` is required only where ``pairing is PAIRED``.
+
+    Two authorities describe a mechanic with two declared halves, and both
+    are accepted here: ``SPLIT``, where the halves are disjoint and the walk
+    skips the holder, and ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW``, where
+    the walk owns the number and the pair half survives as a declared
+    preview.  Which of the two a claim describes is not free — the
+    ``owner_policy`` below is checked against the packet's own ``owner=``,
+    so a claim that named the wrong shape still fails.
     """
     capabilities = _capabilities(sides, claim, ctx)
     walk = capabilities.get(sides.mechanic)
@@ -1118,12 +1136,13 @@ def resolve_paired_sides(
         raise _unresolved(
             claim, sides, f"{sides.mechanic!r} is not a declared capability"
         )
-    if walk.authority.name != "SPLIT":
+    if walk.authority.name not in _DUAL_SIDED_AUTHORITIES:
         raise _unresolved(
             claim,
             sides,
-            f"{sides.mechanic} declares authority {walk.authority.name}, not "
-            "SPLIT; a dual-sided claim may not describe a single-engine mechanic",
+            f"{sides.mechanic} declares authority {walk.authority.name}, which "
+            "names no second engine; a dual-sided claim may not describe a "
+            "single-engine mechanic",
         )
     if walk.pair_of is None:
         raise _unresolved(
@@ -1164,11 +1183,21 @@ def _resolve_pair_half(
     capabilities: Mapping[str, Any],
 ) -> None:
     """The pair half is the other engine's, the same holder's, and only ours."""
-    if pair.authority.name != "SPLIT":
+    if pair.authority.name not in _DUAL_SIDED_AUTHORITIES:
         raise _unresolved(
             claim,
             sides,
-            f"{walk.pair_of} declares authority {pair.authority.name}, not SPLIT",
+            f"{walk.pair_of} declares authority {pair.authority.name}, which "
+            "names no second engine",
+        )
+    if pair.authority.name != walk.authority.name:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{sides.mechanic} declares {walk.authority.name} and "
+            f"{walk.pair_of} declares {pair.authority.name}; one mechanic has "
+            "one authority, and two halves disagreeing about it is the "
+            "divergence this campaign retired",
         )
     if pair.engine is walk.engine:
         raise _unresolved(

@@ -9401,11 +9401,19 @@ def _add_expose_weakness(
 
     This is the **pair engine's reading** of the mechanic, and the walk's is
     different: it arms a timed modifier per proc, on a cooldown, for every
-    roster attacker.  The two are not numerically equivalent and this slice
-    does not unify them — ``trigger_stream.DIVERGENCES`` carries the reviewed
-    receipt naming both readings, and Phase 4 reconciles them.  What is
-    declared here is the exclusion (the chain that armed the buff) and the
-    rate, which used to be a comparison and a compiled field respectively.
+    roster attacker.  Phase 4 S7 settled which of the two is the answer — the
+    walk's, because the pool of amplified damage is a roster fact — and this
+    row is now a declared *preview*: the honest one-attacker-versus-one-
+    defender figure, published in the pair fight's own receipt and excluded
+    from everything the roster composes.  The row says which mechanic it
+    previews and ``trigger_stream`` says that mechanic's pair number is
+    ``THEORETICAL``; neither statement alone demotes it, which is why the
+    number here is unchanged and the ``DivergenceReceipt`` that froze the
+    disagreement is retired rather than re-worded.
+
+    What is declared here is the exclusion (the chain that armed the buff)
+    and the rate, which used to be a comparison and a compiled field
+    respectively.
     """
     if not (spellblade.item and spellblade.procs > 0):
         return
@@ -9443,6 +9451,11 @@ def _add_expose_weakness(
         "amplifier": slot.multiplier,
         "total_damage": expose_bonus,
         "damage_type": "mixed",
+        # Which mechanic this row is the pair engine's reading of, taken from
+        # the rule the slot resolved rather than spelled again here.  The
+        # roster composition reads it; the pair receipt publishes the row
+        # regardless.
+        "pair_preview_of": slot.rules[0].mechanic_id,
     }
     state.total_damage += expose_bonus
 

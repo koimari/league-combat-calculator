@@ -28,6 +28,7 @@ from .coverage_evidence import (
     CoverageClaimError,
     EffectKey,
     Evidence,
+    OwnerPolicy,
     OptionSchema,
     PacketSource,
     PairedSides,
@@ -1550,15 +1551,23 @@ _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
     ),
 }
 
-# The five mechanics Phase 2 declares ``SPLIT``, by holder.  The claim names the
-# mechanic and the handshake; the registry is what says both halves exist and
-# pair back, which is the check the incident's hand list could not perform.
-_SPLIT_MECHANICS: Mapping[str, str] = {
-    "Abyssal Mask": "abyssal_mask.unmake",
-    "Black Cleaver": "black_cleaver.carve",
-    "Bloodletter's Curse": "bloodletters_curse.vile_decay",
-    "Bloodsong": "bloodsong.expose_weakness",
-    "Imperial Mandate": "imperial_mandate.command",
+# The five dual-sided mechanics, by holder, each with the handshake its
+# packet declares.  The claim names the mechanic and the policy; the registry
+# is what says both halves exist and pair back, which is the check the
+# incident's hand list could not perform.  Authored rather than derived: a
+# claim computed from the registry it describes would make the resolution
+# check tautological, which is the failure this module exists to catch.
+#
+# Four are ``SPLIT`` and skip the holder, whose own pair engine prices him.
+# Bloodsong is not: Phase 4 S7 gave the walk the whole mechanic — the pool of
+# amplified damage is every roster attacker's — so the packet carries no
+# ``owner`` and the holder is priced by the walk like everybody else.
+_DUAL_SIDED_MECHANICS: Mapping[str, tuple[str, OwnerPolicy]] = {
+    "Abyssal Mask": ("abyssal_mask.unmake", "owner_skips_holder"),
+    "Black Cleaver": ("black_cleaver.carve", "owner_skips_holder"),
+    "Bloodletter's Curse": ("bloodletters_curse.vile_decay", "owner_skips_holder"),
+    "Bloodsong": ("bloodsong.expose_weakness", "holder_priced_by_walk"),
+    "Imperial Mandate": ("imperial_mandate.command", "owner_skips_holder"),
 }
 
 # Which of an item's claims carries its tracked review issues.
@@ -1828,10 +1837,10 @@ def _utility_claim(item: str) -> Claim:
 def _support_packet_claim(item: str) -> Claim:
     """One holder's walk packets, its builder, and its dual-sided handshake."""
     impl, packets, node_id = _SUPPORT_PACKET_CLAIMS[item]
-    mechanic = _SPLIT_MECHANICS.get(item)
+    declared = _DUAL_SIDED_MECHANICS.get(item)
     sides = (
-        (PairedSides(mechanic=mechanic, owner_policy="owner_skips_holder"),)
-        if mechanic
+        (PairedSides(mechanic=declared[0], owner_policy=declared[1]),)
+        if declared
         else ()
     )
     return Claim(

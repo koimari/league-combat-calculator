@@ -1005,7 +1005,7 @@ def test_every_split_capability_resolves_as_a_paired_mechanic() -> None:
         ),
         (
             PairedSides(mechanic="cull.reap", owner_policy="owner_skips_holder"),
-            "not SPLIT",
+            "names no second engine",
         ),
         (
             PairedSides(

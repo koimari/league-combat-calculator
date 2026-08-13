@@ -465,11 +465,11 @@
       "containers": {
         "calculator/item_coverage.py": {
           "_ATTACKER_STATE_HOMES": "the attacker lane's authored claims: where a modelled state actually comes from, resolved against the symbol it names",
+          "_DUAL_SIDED_MECHANICS": "the evidence member naming the mechanic a dual-sided claim's two halves belong to, and the handshake policy its packet declares, both resolved against the pairing registry",
           "_ISSUE_REF_ONLY_ITEMS": "the two items whose only claim carrier is their tracked review, authored so the ref rides a claim instead of being published by nothing",
           "_REVIEW_ISSUE_REFS": "criterion 14's own blessed survivor: tracked review issues per item, routed onto a claim at import.  An issue reference states no coverage, so it is not the prose counter 2 is named for",
           "_RULE_CLAIMS": "one claim per precedence rung, for the five rungs whose membership is recomputed from data/ and therefore cannot carry a per-item claim",
           "_SOURCE_REFS": "the wiki revision each claim's evidence was read from; a claim with no source is the sentence this phase deletes, so the table is mandated rather than retirable",
-          "_SPLIT_MECHANICS": "the evidence member naming the mechanic a split claim's two halves belong to, resolved against the pairing registry",
           "_SUPPORT_PACKET_CLAIMS": "the support-packet lane's authored claims, each quoting the packet source the totality check reads back",
           "_TARGET_CERTIFIED_IMPLS": "the target lane's certified half, same shape and same resolution",
           "_TARGET_MODELED_IMPLS": "the target lane's authored claims, each naming the implementation the resolver resolves it against",
@@ -480,11 +480,11 @@
       "sites_by_container": {
         "calculator/item_coverage.py": {
           "_ATTACKER_STATE_HOMES": 19,
+          "_DUAL_SIDED_MECHANICS": 5,
           "_ISSUE_REF_ONLY_ITEMS": 3,
           "_REVIEW_ISSUE_REFS": 22,
           "_RULE_CLAIMS": 6,
           "_SOURCE_REFS": 59,
-          "_SPLIT_MECHANICS": 5,
           "_SUPPORT_PACKET_CLAIMS": 18,
           "_TARGET_CERTIFIED_IMPLS": 9,
           "_TARGET_MODELED_IMPLS": 41,

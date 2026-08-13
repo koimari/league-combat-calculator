@@ -741,13 +741,16 @@ def derive_item_support_effects(
                     # declared explicitly rather than left to an empty set.
                     damage_classes=frozenset(DamageClass),
                     attack_classes=frozenset(AttackClass),
-                    # The pair engine prices the holder's own Expose Weakness
-                    # on a schedule that is not the walk's; the umbrella
-                    # freezes that divergence in Phase 3 and moves this row to
-                    # COUPLED_AUTHORITATIVE in Phase 4.  Until then the owner
-                    # skip is what keeps the two halves from summing.
-                    authority=Authority.SPLIT,
-                    owner=attacker.participant_id,
+                    # Phase 4 S7 settled which engine owns this: the walk.
+                    # The amplified pool is every roster attacker's damage
+                    # inside a live window, which is a roster input, so there
+                    # is no pair-local half for the walk to skip and this
+                    # packet carries no ``owner`` — the holder's own damage is
+                    # amplified here like everyone else's.  The pair engine's
+                    # coarse row survives as a declared THEORETICAL preview,
+                    # published in the pair fight's own receipt and kept out
+                    # of every roster total.
+                    authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
                     trigger_event_id=event.event_id or None,
                 )
             )

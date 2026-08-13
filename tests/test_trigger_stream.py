@@ -1388,26 +1388,43 @@ def pairing_defects(
 
 
 def test_a8_every_pairing_claim_holds_against_source():
-    """A8 — empty defect set, and the escape hatch itself is empty.
+    """A8 — empty defect set, and both escape hatches empty.
 
-    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch D-92 pins empty, and it is
-    still empty: one half missing is a different statement from two halves
-    disagreeing.  Phase 3 froze Bloodsong's disagreement as the campaign's
-    one :class:`DivergenceReceipt` — both halves declared, both reachable,
-    and the reviewed fact that they do not compute the same number — which is
-    why the receipt hangs off a ``PAIRED`` row and Phase 4 retires it.
+    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch D-92 pins empty: one half
+    missing is a different statement from two halves disagreeing.  Phase 3
+    froze Bloodsong's disagreement as the campaign's one
+    :class:`DivergenceReceipt`, and Phase 4 S7 retired it by naming an
+    authority — the walk — so the pair reading became a declared
+    ``THEORETICAL`` preview rather than a rival answer.  ``DIVERGENCES`` is
+    therefore empty too, and no row points at a receipt.
+
+    Empty is the end state, not a hole: the type survives, and the next
+    divergence has to be a typed entry pointing at a receipt.
     """
     assert pairing_defects() == ()
-    assert sorted(ts.DIVERGENCES) == ["bloodsong.expose_weakness"]
-    receipt = ts.DIVERGENCES["bloodsong.expose_weakness"]
-    assert receipt.mechanic in ts.CAPABILITIES
-    assert receipt.pair_reading and receipt.walk_reading
-    assert receipt.pair_reading != receipt.walk_reading
-    assert receipt.source_url.startswith("https://")
-    assert receipt.revision_id > 0
-    assert (
-        ts.CAPABILITIES[receipt.mechanic].divergence_ref == receipt.ref
-    ), "a receipt nothing points at is prose"
+    assert dict(ts.DIVERGENCES) == {}
+    assert [
+        mechanic
+        for mechanic, capability in ts.CAPABILITIES.items()
+        if capability.divergence_ref is not None
+    ] == []
+
+
+def test_a_divergence_reference_that_resolves_in_nothing_is_still_rejected():
+    """The retired receipt's gate outlives the receipt.
+
+    ``DIVERGENCES`` being empty must not make ``divergence_ref`` a field that
+    accepts anything — an empty registry that validates every reference is
+    the shape of a check that cannot fail.
+    """
+    capability = _capability(
+        pairing=ts.Pairing.PAIRED,
+        pair_of="abyssal_mask.magic_amp",
+        divergence_ref="bloodsong.expose_weakness",
+        holder_stacking=ts.HolderStacking.PER_HOLDER,
+    )
+    with pytest.raises(ts.TriggerRegistryError, match="resolves in no"):
+        ts._validate_pairing(capability.mechanic, capability)
 
 
 def test_a8_has_a_permanent_injection_seam():

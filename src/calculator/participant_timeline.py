@@ -99,7 +99,7 @@ from .survival import (
 # but it is the reason S4's vocabulary commit could say "nothing in src/
 # imports them yet" and the next commit could not.
 from .program.amp import ArmingLedger
-from .program.build import arming_stacking
+from .program.build import arming_stacking, pair_preview_mechanics
 from .program.compile import (
     WalkCompiler,
     action_from_event,
@@ -216,6 +216,13 @@ def _pair_packet(
     result_breakdown = result.get("breakdown", {})
     if not isinstance(result_breakdown, Mapping):
         result_breakdown = {}
+    # A pair-engine row the registry declares THEORETICAL is a preview of a
+    # number the coupled walk owns.  It stays in the pair fight's own
+    # receipt, where it is the honest single-attacker answer, and it is kept
+    # out of everything the roster composes — otherwise the walk's number and
+    # the preview of it are both in one total, which is a double count with
+    # no symptom (D-62).
+    previewed = _pair_preview_sources(result_breakdown)
     champion_wounds = (
         champion_grievous_wound_sources(champion_data)
         if champion_data is not None
@@ -247,6 +254,11 @@ def _pair_packet(
                 "event-id numbering"
             )
         source_key = str(event.get("source_key", ""))
+        if source_key in previewed:
+            # ``continue`` rather than a filtered list: ``index`` is the
+            # per-pair event id, and re-numbering the survivors would move
+            # every public id downstream of the first preview.
+            continue
         time_key = round(float(event.get("time", 0.0)), 9)
         enriched = {
             **event,
@@ -344,7 +356,7 @@ def _pair_packet(
         )
         heals.append(enriched_heal)
     return {
-        "result": result,
+        "result": _without_pair_previews(result, result_breakdown, previewed),
         "events": events,
         "heals": heals,
         # Display-name rows for the attacker breakdown; never mutated (the
@@ -361,7 +373,56 @@ def _pair_packet(
                 ),
             }
             for source, entry in result_breakdown.items()
-            if isinstance(entry, Mapping)
+            if isinstance(entry, Mapping) and source not in previewed
+        },
+    }
+
+
+def _pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """Which of one pair fight's breakdown rows are previews, not deliveries.
+
+    The join has two declared halves and this is where they meet: the pair
+    engine stamps each row it authors with the mechanic that rule belongs to
+    (``pair_preview_of``), and the capability registry says whether that
+    mechanic's pair-lane number is ``THEORETICAL``.  Neither half can decide
+    it alone, which is the point — a row that simply stopped being summed
+    would be an engine quietly demoting its own number.
+    """
+    previews = pair_preview_mechanics()
+    if not previews:
+        return frozenset()
+    return frozenset(
+        source
+        for source, entry in result_breakdown.items()
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
+    )
+
+
+def _without_pair_previews(
+    result: Mapping[str, Any],
+    result_breakdown: Mapping[str, Any],
+    previewed: frozenset[str],
+) -> Mapping[str, Any]:
+    """The pair result as the roster composes it — previews removed.
+
+    A shallow copy, and only when there is something to remove: the original
+    object is what the per-pair ``fights`` receipt publishes, and that is the
+    one surface where the preview *is* the answer.  Returning a modified copy
+    rather than mutating is what keeps those two readings from becoming one.
+    """
+    if not previewed:
+        return result
+    removed = sum(
+        float(result_breakdown[source].get("total_damage", 0.0) or 0.0)
+        for source in previewed
+    )
+    return {
+        **result,
+        "total_damage": float(result.get("total_damage", 0.0)) - removed,
+        "breakdown": {
+            source: entry
+            for source, entry in result_breakdown.items()
+            if source not in previewed
         },
     }
 

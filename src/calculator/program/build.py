@@ -35,7 +35,7 @@ from types import MappingProxyType
 
 from ..item_behavior import Compilable, Compilability, EngineLane
 from ..survival.actions import TransitionRank
-from ..trigger_stream import CAPABILITIES, HolderStacking
+from ..trigger_stream import CAPABILITIES, Engine, HolderStacking
 from .views import ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
@@ -152,6 +152,34 @@ class CapabilityView:
             )
             if declared is tag
         )
+
+
+@cache
+def pair_preview_mechanics() -> frozenset[str]:
+    """Mechanics whose pair-engine number is a preview, never a delivery.
+
+    A ``THEORETICAL`` pair half is what one attacker-versus-one-defender
+    fight *would* have produced.  The coupled walk owns the real number, so
+    summing the preview into a roster total is a double count with no
+    symptom — the exact shape D-62 exists to forbid.
+
+    Both spellings of the mechanic are in the set: the pair half's own id and
+    the walk half that names it through ``pair_of``.  The pair engine stamps
+    its rows with whichever id its declared rule carries, and a join that
+    only knew one of the two would silently stop excluding the day a rule was
+    renamed to the other.
+    """
+    previewed: set[str] = set()
+    for capability in CAPABILITIES.values():
+        if capability.view_tags.get(Engine.PAIR) is not ViewTag.THEORETICAL:
+            continue
+        previewed.add(capability.mechanic)
+        previewed.update(
+            walk.mechanic
+            for walk in CAPABILITIES.values()
+            if walk.pair_of == capability.mechanic
+        )
+    return frozenset(previewed)
 
 
 @cache

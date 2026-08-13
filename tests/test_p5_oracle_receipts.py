@@ -171,30 +171,36 @@ def unallowlisted(diff_paths, allowlisted):
     return tuple(sorted(set(diff_paths) - set(allowlisted) - set(DISOWNED_COUNTERS)))
 
 
-# Coverage-prose leaves another phase's allowlist claims.  The clause below
-# is about a **computed number** moving, and these carry none: Phase 3's 3.8
-# coverage flip regenerated every ``item_coverage[].reason`` string in the
-# utility-outcomes payload, which reaches the coupled snapshot as a
-# ``text_change`` and nothing else.  Read from that slice's own receipt rather
-# than listed here, so the exemption cannot outlive the diffs it covers.
-def _prose_leaves_another_slice_claims():
-    """Coupled leaves the 3.8 coverage-flip allowlist declares, if committed."""
-    receipt = RECEIPTS / "expected-golden-diff-3.8-coverage-flip.json"
-    if not receipt.exists():
-        return frozenset()
-    data = json.loads(receipt.read_text(encoding="utf-8"))
-    return frozenset(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+# Leaves some *other* phase's allowlist claims.  The clause below is Phase
+# 5's own: its retirement moves no computed number, so every leaf it moves is
+# inside a ``rotation`` receipt object.  That says nothing about what other
+# phases may move, and it was written when Phase 5's were the only standing
+# diffs — Phase 3's 3.8 coverage flip already contributed regenerated
+# ``item_coverage[].reason`` strings, and Phase 4 S7's authority moves
+# contribute declared number moves.  So the exemption is every non-P5
+# committed allowlist, read from the receipts rather than listed here, and
+# the clause keeps meaning exactly what Phase 5 claims: *this phase* moved
+# nothing outside a rotation object.
+def _leaves_other_slices_claim():
+    """Coupled leaves any committed non-P5 allowlist declares."""
+    claimed: set[str] = set()
+    for receipt in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
+        if receipt.name.startswith("expected-golden-diff-P5-"):
+            continue
+        data = json.loads(receipt.read_text(encoding="utf-8"))
+        claimed.update(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+    return frozenset(claimed)
 
 
 def outside_a_rotation_receipt(diff_paths):
     """Every differing leaf that is not inside a ``rotation`` object.
 
-    Less the two disowned counters, and less the coverage-prose leaves 3.8
-    claims: this clause exists to catch a *number* moving, and a regenerated
-    reason string is not one.  A damage, timeline, stat or combat leaf still
-    lands here, which is what the negative test below drives.
+    Less the two disowned counters, and less the leaves another phase's
+    allowlist claims: this clause is Phase 5's claim about Phase 5's diffs.
+    A damage, timeline, stat or combat leaf *no committed allowlist declares*
+    still lands here, which is what the negative test below drives.
     """
-    exempt = set(DISOWNED_COUNTERS) | _prose_leaves_another_slice_claims()
+    exempt = set(DISOWNED_COUNTERS) | _leaves_other_slices_claim()
     return tuple(
         sorted(
             path
@@ -241,20 +247,28 @@ class TestTheCoupledCompareIsFullyAllowlisted:
         assert outside_a_rotation_receipt(_live_coupled_diffs() + (moved,)) == (moved,)
 
     def test_the_allowlists_are_not_stale(self) -> None:
-        """Every P5 allowlist path still moves — until the re-capture.
+        """Every P5 allowlist path still moves — until P5's re-capture.
 
         A path that stopped moving is an allowlist entry excusing a diff
         that no longer exists, which is how an allowlist grows into a
-        blanket.  After the phase-boundary re-capture the compare is empty
-        and this clause retires with it.
+        blanket.
+
+        The retirement condition is *P5's own* re-capture, not an empty
+        compare.  The original spelling retired on the global compare being
+        empty, which held only while Phase 5's diffs were the only standing
+        ones; the moment a later phase landed a declared move the clause
+        woke up and demanded Phase 5's long-re-captured paths still differ.
+        So the guard reads Phase 5's own paths: none of them moving is the
+        re-capture having happened, and it is exactly then that this clause
+        has nothing left to say.
         """
         differing = set(_live_coupled_diffs())
-        if not differing:
-            return
         declared: set[str] = set()
         for path in sorted(RECEIPTS.glob("expected-golden-diff-P5-*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             declared.update(data["expected_diff_paths"]["coupled_golden"])
+        if not declared & differing:
+            return
         assert sorted(declared - differing) == []
 
     def test_the_pair_baseline_is_identical(self) -> None:
