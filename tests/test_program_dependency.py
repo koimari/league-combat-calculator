@@ -1,10 +1,16 @@
-"""Phase 4 S4 — a second pricing is a second pass, declared and bounded.
+"""Phase 4 S4/S8 — a second pricing is a second pass, declared and bounded.
 
 ``program/dependency`` is the front door for cross-pass work.  What it has to
 buy over the recursive path is boundedness and a type: a dependency declares
 how many passes it needs, a pass budget that runs out raises
 :class:`IncompleteDependency` rather than the untyped ``ValueError`` a caller
 cannot tell from a malformed build, and passes are shared rather than summed.
+
+S4 landed the declaration; S8 lands :func:`~.dependency.run_passes`, the
+driver that consumes it, and the properties asserted of the driver are the
+four D-70 rules: one call per pass, never a call from inside a pass, the
+later pass differing from its predecessor only by a :class:`ParamPatch`, and
+a budget that runs out raising rather than recursing.
 """
 
 import pytest
@@ -90,3 +96,87 @@ class TestTheFailureIsTypedRatherThanUntyped:
 
     def test_it_is_not_a_bare_value_error(self) -> None:
         assert not issubclass(dependency.IncompleteDependency, ValueError)
+
+    def test_a_detail_rides_along_without_replacing_the_declaration(self) -> None:
+        error = dependency.IncompleteDependency(
+            CATALYST, 1, detail="ally:Lulu exposes no finite pre-mitigation damage"
+        )
+        assert error.dependency is CATALYST
+        assert "catalyst_pool" in str(error)
+        assert "ally:Lulu" in str(error)
+
+
+def _finishes(answer: str):
+    """A pass function that never asks for another pass."""
+    return lambda index, patch: answer
+
+
+class TestTheDriverRunsEachPassOnceAndNeverFromInsideOne:
+    """D-70's shape: rebuilt per pass, and the walk is never re-entered."""
+
+    def test_one_pass_is_enough_when_nothing_is_requested(self) -> None:
+        seen: list[tuple[int, object]] = []
+
+        def run_pass(index, patch):
+            seen.append((index, patch))
+            return "composed"
+
+        assert dependency.run_passes(run_pass, (CATALYST,)) == "composed"
+        assert seen == [(1, None)]
+
+    def test_a_request_buys_exactly_one_more_pass(self) -> None:
+        seen: list[tuple[int, object]] = []
+
+        def run_pass(index, patch):
+            seen.append((index, patch))
+            if index == 1:
+                return dependency.PassRequest(CATALYST, 375.0)
+            return "composed"
+
+        assert dependency.run_passes(run_pass, (CATALYST,)) == "composed"
+        assert [index for index, _ in seen] == [1, 2]
+
+    def test_the_second_pass_differs_only_by_the_patch(self) -> None:
+        patches: list[object] = []
+
+        def run_pass(index, patch):
+            patches.append(patch)
+            if index == 1:
+                return dependency.PassRequest(CATALYST, 375.0)
+            return "composed"
+
+        dependency.run_passes(run_pass, (CATALYST,))
+        assert patches[0] is None
+        assert patches[1].overrides == {"catalyst_pool": 375.0}
+        assert "pass 2 of 2" in patches[1].reason
+
+
+class TestTheBudgetRaisesRatherThanRecursing:
+    """The whole point of a bound is that running out is an event."""
+
+    def test_a_pass_that_keeps_asking_exhausts_the_budget(self) -> None:
+        calls: list[int] = []
+
+        def run_pass(index, patch):
+            calls.append(index)
+            return dependency.PassRequest(CATALYST, float(index))
+
+        with pytest.raises(dependency.IncompleteDependency) as raised:
+            dependency.run_passes(run_pass, (CATALYST,))
+        assert calls == [1, 2]
+        assert raised.value.passes_run == 2
+        assert raised.value.dependency is CATALYST
+
+    def test_an_undeclared_request_is_refused_by_name(self) -> None:
+        """A roster that declared nothing gets one pass, and says so."""
+        with pytest.raises(dependency.IncompleteDependency) as raised:
+            dependency.run_passes(
+                lambda index, patch: dependency.PassRequest(CATALYST, 1.0), ()
+            )
+        assert raised.value.passes_run == 1
+        assert "declares no" in str(raised.value)
+
+    def test_the_driver_returns_the_pass_result_untouched(self) -> None:
+        """The driver folds passes; it does not fold numbers."""
+        sentinel = object()
+        assert dependency.run_passes(_finishes(sentinel), (CATALYST,)) is sentinel
