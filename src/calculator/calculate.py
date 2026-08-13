@@ -16,7 +16,7 @@ from .defensive_effects import resolve_starting_defenses
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
 from .pipeline import ONE_ROTATION_DURATION, run_fight
-from .program.views import LeafWriter
+from .program.views import LeafWriter, name_every_number
 from .public_response import (
     aggregate_public_results,
     public_engine_mode,
@@ -257,7 +257,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
 _BLOCKS_CARRYING_THEIR_OWN_MAP = frozenset({"combat"})
 
 
-def _name_every_number(response: dict) -> None:
+def _name_the_response(response: dict) -> None:
     """Give the response its own ``dispositions`` map, keyed by leaf path.
 
     The endpoint's headline ``total_damage``, all ninety-odd
@@ -272,22 +272,13 @@ def _name_every_number(response: dict) -> None:
     so the entry is produced beside its leaf by ``serialize_leaf`` rather
     than by a second pass describing numbers it did not write.
 
-    Two consequences are worth stating rather than discovering.  ``publish``
-    classifies each member by what it *is*, so an int stays an int and
-    carries no entry (a level, a rotation count and an ordinal are not
-    quantities a rule measured); and every nested container is rebuilt as it
-    is re-written -- a nested mapping becomes a fresh dict, a sequence a
-    fresh list -- assigned back over the key it came from, so values, key
-    order and positions are preserved while the objects are not the same
-    objects.  A tuple would come back as a list, which is what it already
-    serialized as.
+    The pass itself, and the two properties of it worth stating, belong to
+    ``name_every_number`` -- the one function all three served payloads are
+    named by.  What is this module's to say is which block it skips and why.
     """
-    writer = LeafWriter()
-    root = writer.block(response, "")
-    for key, value in list(response.items()):
-        if key not in _BLOCKS_CARRYING_THEIR_OWN_MAP:
-            root.publish(key, value)
-    response["dispositions"] = writer.entries()
+    response["dispositions"] = name_every_number(
+        response, LeafWriter(), skip=_BLOCKS_CARRYING_THEIR_OWN_MAP
+    )
 
 
 def calculate_payload(data: Mapping[str, object]) -> dict:
@@ -295,5 +286,5 @@ def calculate_payload(data: Mapping[str, object]) -> dict:
     request = parse_scenario_request(data)
     resolved = resolve_scenario(request)
     response = _calculate_resolved(request, resolved)
-    _name_every_number(response)
+    _name_the_response(response)
     return response

@@ -32,7 +32,7 @@ that reach *further*, and a module that imports nothing cannot.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Container, Mapping, MutableMapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -43,6 +43,7 @@ __all__ = [
     "LeafBlock",
     "LeafOut",
     "LeafWriter",
+    "name_every_number",
     "serialize_leaf",
     "ViewTag",
 ]
@@ -412,3 +413,41 @@ class _DiscardingWriter(LeafWriter):
 
 
 DISCARD = _DiscardingWriter()
+
+
+def name_every_number(
+    payload: MutableMapping[str, object],
+    writer: LeafWriter,
+    *,
+    skip: Container[str] = (),
+) -> dict[str, dict[str, object]]:
+    """Re-write a finished payload through *writer* and return its map.
+
+    The three payloads a consumer is handed -- ``/api/calculate``'s response,
+    ``/api/bis``'s ranking and ``/api/optimize``'s -- are assembled key by key
+    by their own module and then named here, in one pass, at the paths their
+    leaves live at.  It was the same eight lines in all three modules, which
+    is three places for "what counts as a published number" to be answered
+    and two of them to stop agreeing.
+
+    Two properties of the pass, stated once here rather than three times or
+    nowhere:
+
+    * every nested container is **rebuilt** as it is re-written -- a nested
+      mapping becomes a fresh dict, a sequence a fresh list -- and assigned
+      back over the key it came from.  Values, key order and positions are
+      preserved; the objects are not the same objects, and a tuple comes back
+      as the list it already serialized as.
+    * ``publish`` classifies each member by what it *is*, so an int stays an
+      int and carries no entry: a build's price and a champion's rounded
+      health are counts, not quantities a rule measured.
+
+    ``skip`` names the top-level blocks that carry a parallel map of their
+    own; their leaves are covered there and describing them twice would give
+    one number two entries.
+    """
+    root = writer.block(payload, "")
+    for key, value in list(payload.items()):
+        if key not in skip:
+            root.publish(key, value)
+    return writer.entries()

@@ -325,7 +325,7 @@ class TestTheWholeCalculateResponse:
         not allowed to be.  ``gold``-style ints stay ints, which is what
         keeps them out of the map.
         """
-        from src.calculator.calculate import _name_every_number, calculate_payload
+        from src.calculator.calculate import _name_the_response, calculate_payload
 
         payload = calculate_payload(dict(CALCULATE_REQUEST))
         before = json.dumps(
@@ -335,7 +335,7 @@ class TestTheWholeCalculateResponse:
         rewritten = {
             key: value for key, value in payload.items() if key != "dispositions"
         }
-        _name_every_number(rewritten)
+        _name_the_response(rewritten)
         rewritten.pop("dispositions")
         assert json.dumps(rewritten, sort_keys=False) == before
 

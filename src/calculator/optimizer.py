@@ -39,7 +39,7 @@ from .loadout_rules import (
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
-from .program.views import LeafWriter
+from .program.views import LeafWriter, name_every_number
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
@@ -1780,11 +1780,7 @@ def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, objec
     not a quantity a rule measured, and the payload-schema check reads ints
     the same way.
     """
-    writer = LeafWriter()
-    root = writer.block(payload, "")
-    for key, value in list(payload.items()):
-        root.publish(key, value)
-    return writer.entries()
+    return name_every_number(payload, LeafWriter())
 
 
 def optimize_build(

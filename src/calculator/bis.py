@@ -27,7 +27,7 @@ from .optimizer import (
     optimizer_supported_items,
 )
 from .pipeline import DEFAULT_FIGHT_DURATION
-from .program.views import LeafWriter
+from .program.views import LeafWriter, name_every_number
 from .participant_timeline import build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
@@ -578,11 +578,7 @@ def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
     single writer means; re-serialising a value at the path it now lives at
     is that writer, not a second one.
     """
-    writer = LeafWriter()
-    root = writer.block(payload, "")
-    for key, value in list(payload.items()):
-        root.publish(key, value)
-    return writer.entries()
+    return name_every_number(payload, LeafWriter())
 
 
 def bis_payload(data: Mapping[str, object]) -> dict:
