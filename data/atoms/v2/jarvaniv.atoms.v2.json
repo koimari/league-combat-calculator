@@ -1,0 +1,2698 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": ""
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "Attack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.6,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "Attack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.6,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "Attack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.6,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JarvanIVBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "Attack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.6,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "JarvanIVCataclysm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    120.0,
+    105.0,
+    90.0,
+    8.0,
+    5.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    700.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "stat_2": 1.7999999523162842,
+    "bonus_ad": 1.7999999523162842,
+    "_raw_calcs": [
+     {
+      "name": "DamageCalc",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.7999999523162842
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     575.0,
+     700.0,
+     825.0
+    ],
+    "WallDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysm"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JarvanIVCataclysm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    120.0,
+    105.0,
+    90.0,
+    8.0,
+    5.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    700.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "stat_2": 1.7999999523162842,
+    "bonus_ad": 1.7999999523162842,
+    "_raw_calcs": [
+     {
+      "name": "DamageCalc",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.7999999523162842
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     575.0,
+     700.0,
+     825.0
+    ],
+    "WallDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysm"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JarvanIVCataclysm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    120.0,
+    105.0,
+    90.0,
+    8.0,
+    5.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    700.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    75.0,
+    200.0,
+    325.0,
+    450.0,
+    575.0,
+    700.0,
+    825.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "stat_2": 1.7999999523162842,
+    "bonus_ad": 1.7999999523162842,
+    "_raw_calcs": [
+     {
+      "name": "DamageCalc",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.7999999523162842
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     575.0,
+     700.0,
+     825.0
+    ],
+    "WallDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysm"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVCataclysm",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    120.0,
+    105.0,
+    90.0,
+    8.0,
+    5.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    700.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "stat_2": 1.7999999523162842,
+    "bonus_ad": 1.7999999523162842,
+    "_raw_calcs": [
+     {
+      "name": "DamageCalc",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.7999999523162842
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     575.0,
+     700.0,
+     825.0
+    ],
+    "WallDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysm"
+   ],
+   "evidence": "tag:Trait_CreateTerrain"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVCataclysm",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    120.0,
+    105.0,
+    90.0,
+    8.0,
+    5.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    700.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "stat_2": 1.7999999523162842,
+    "bonus_ad": 1.7999999523162842,
+    "_raw_calcs": [
+     {
+      "name": "DamageCalc",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.7999999523162842
+     }
+    ]
+   },
+   "effect_amounts": {},
+   "data_values": {
+    "BaseDamage": [
+     75.0,
+     200.0,
+     325.0,
+     450.0,
+     575.0,
+     700.0,
+     825.0
+    ],
+    "WallDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysm"
+   ],
+   "evidence": "name:cataclysm"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVCataclysmAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCataclysmAbility/JarvanIVCataclysmAttack"
+   ],
+   "evidence": "name:cataclysm"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "Spell4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JarvanIVCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Crit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JarvanIVDemacianStandard",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": [
+    0.17499999701976776,
+    0.20000000298023224,
+    0.22499999403953552,
+    0.25,
+    0.2750000059604645,
+    0.30000001192092896,
+    0.32499998807907104
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0,
+     22.0,
+     25.0
+    ],
+    "1": [
+     80.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "3": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "data_values": {
+    "EDashSpeed": [
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "EBehindJarvanCheck": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "EKnockUpAoE": [
+     0.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0
+    ],
+    "PermanentAttackSpeed": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseAuraAS": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDemacianStandardAbility/JarvanIVDemacianStandard"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.501,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.501,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JarvanIVDemacianStandard",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": [
+    0.17499999701976776,
+    0.20000000298023224,
+    0.22499999403953552,
+    0.25,
+    0.2750000059604645,
+    0.30000001192092896,
+    0.32499998807907104
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0,
+     22.0,
+     25.0
+    ],
+    "1": [
+     80.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "3": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "data_values": {
+    "EDashSpeed": [
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "EBehindJarvanCheck": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "EKnockUpAoE": [
+     0.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0
+    ],
+    "PermanentAttackSpeed": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseAuraAS": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDemacianStandardAbility/JarvanIVDemacianStandard"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.501,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.501,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVDemacianStandard",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "0": [
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0,
+     22.0,
+     25.0
+    ],
+    "1": [
+     80.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "3": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "data_values": {
+    "EDashSpeed": [
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0,
+     1400.0
+    ],
+    "EBehindJarvanCheck": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "EKnockUpAoE": [
+     0.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0
+    ],
+    "PermanentAttackSpeed": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseAuraAS": [
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645,
+     0.30000001192092896,
+     0.32499998807907104
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDemacianStandardAbility/JarvanIVDemacianStandard"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.501,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1450.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": 0.501,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVDemacianStandardSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDemacianStandardAbility/JarvanIVDemacianStandardSpellPassive"
+   ]
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JarvanIVDragonStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.4500000476837158,
+    "bonus_ad": 1.4500000476837158,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.4500000476837158
+     }
+    ]
+   },
+   "effect_amounts": {
+    "0": [
+     70.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     250.0
+    ],
+    "2": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0,
+     290.0
+    ],
+    "BaseARShred": [
+     0.05999999865889549,
+     0.10000000149011612,
+     0.14000000059604645,
+     0.18000000715255737,
+     0.2199999988079071,
+     0.25999999046325684,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDragonStrikeAbility/JarvanIVDragonStrike"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JarvanIVDragonStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0
+   ],
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.4500000476837158,
+    "bonus_ad": 1.4500000476837158,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.4500000476837158
+     }
+    ]
+   },
+   "effect_amounts": {
+    "0": [
+     70.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     250.0
+    ],
+    "2": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0,
+     290.0
+    ],
+    "BaseARShred": [
+     0.05999999865889549,
+     0.10000000149011612,
+     0.14000000059604645,
+     0.18000000715255737,
+     0.2199999988079071,
+     0.25999999046325684,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDragonStrikeAbility/JarvanIVDragonStrike"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JarvanIVDragonStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0,
+    770.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0
+   ],
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_2": 1.4500000476837158,
+    "bonus_ad": 1.4500000476837158,
+    "_raw_calcs": [
+     {
+      "name": "TotalDamage",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 1.4500000476837158
+     }
+    ]
+   },
+   "effect_amounts": {
+    "0": [
+     70.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     250.0
+    ],
+    "2": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0,
+     290.0
+    ],
+    "BaseARShred": [
+     0.05999999865889549,
+     0.10000000149011612,
+     0.14000000059604645,
+     0.18000000715255737,
+     0.2199999988079071,
+     0.25999999046325684,
+     0.30000001192092896
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDragonStrikeAbility/JarvanIVDragonStrike"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=20.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 10.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVDragonStrikeDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDragonStrikeAbility/JarvanIVDragonStrikeDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JarvanIVDragonStrikePH2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Knockup",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVDragonStrikeAbility/JarvanIVDragonStrikePH2"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JarvanIVGoldenAegis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": [
+    0.10000000149011612,
+    0.15000000596046448,
+    0.20000000298023224,
+    0.25,
+    0.30000001192092896,
+    0.3499999940395355,
+    0.4000000059604645
+   ],
+   "duration": null,
+   "ratios": {
+    "stat_2": 0.699999988079071,
+    "bonus_ad": 0.699999988079071,
+    "_raw_calcs": [
+     {
+      "name": "TotalShield",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.699999988079071
+     },
+     {
+      "name": "BonusShield",
+      "stat": 12,
+      "formula": null,
+      "coefficient": 0.013000000268220901
+     }
+    ],
+    "stat_12": 0.013000000268220901
+   },
+   "effect_amounts": {
+    "0": [
+     60.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "2": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "3": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "4": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "5": [
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901
+    ]
+   },
+   "data_values": {
+    "BaseSlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVGoldenAegisAbility/JarvanIVGoldenAegis"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "JarvanIVGoldenAegis",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "stat_2": 0.699999988079071,
+    "bonus_ad": 0.699999988079071,
+    "_raw_calcs": [
+     {
+      "name": "TotalShield",
+      "stat": 2,
+      "formula": 2,
+      "coefficient": 0.699999988079071
+     },
+     {
+      "name": "BonusShield",
+      "stat": 12,
+      "formula": null,
+      "coefficient": 0.013000000268220901
+     }
+    ],
+    "stat_12": 0.013000000268220901
+   },
+   "effect_amounts": {
+    "0": [
+     60.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "2": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "3": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "4": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "5": [
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901,
+     0.013000000268220901
+    ]
+   },
+   "data_values": {
+    "BaseSlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVGoldenAegisAbility/JarvanIVGoldenAegis"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.1,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_speed=1500.0"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect application"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JarvanIVMartialCadence",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {
+    "MaximumCadenceDamage": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "MinimumCadenceDamage": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "TooltipCurrentHealthDamage": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-hit",
+    "Current health damage"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVMartialCadenceAbility/JarvanIVMartialCadence",
+    "Characters/JarvanIV/Spells/JarvanIVMartialCadenceAbility/JarvanIVMartialCadenceAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   },
+   {
+    "state": "cast",
+    "duration": 0.26,
+    "behavior": "Passive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.26,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JarvanIVMartialCadence",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cooldown",
+    "Passive"
+   ],
+   "binary": [
+    "Characters/JarvanIV/Spells/JarvanIVMartialCadenceAbility/JarvanIVMartialCadenceCheck"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ }
+]

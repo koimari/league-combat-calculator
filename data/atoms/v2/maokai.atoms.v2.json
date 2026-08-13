@@ -1,0 +1,5150 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    75.0,
+    150.0,
+    225.0,
+    300.0,
+    375.0,
+    450.0,
+    525.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "statNone": [
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "BaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "MoveHaste": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "amount6": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    130.0,
+    90.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0058,
+   "reset_on": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    75.0,
+    150.0,
+    225.0,
+    300.0,
+    375.0,
+    450.0,
+    525.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "statNone": [
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "BaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "MoveHaste": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "amount6": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    130.0,
+    90.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0058,
+   "reset_on": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    75.0,
+    150.0,
+    225.0,
+    300.0,
+    375.0,
+    450.0,
+    525.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "statNone": [
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "MinRootDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxRootDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "BaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "MoveHaste": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "HasteDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RootDuration": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "amount6": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    130.0,
+    90.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0058,
+   "reset_on": [
+    "Trait_Ultimate",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "spell_coefficient": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "LolipopRadius": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "KnockbackSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "KnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "BasePercentHealth": [
+     0.014999999664723873,
+     0.019999999552965164,
+     0.02500000037252903,
+     0.029999999329447746,
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934
+    ],
+    "NonChampMax": [
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0
+    ],
+    "BonusMonsterDamage": [
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0357,
+   "reset_on": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "spell_coefficient": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "LolipopRadius": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "KnockbackSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "KnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "BasePercentHealth": [
+     0.014999999664723873,
+     0.019999999552965164,
+     0.02500000037252903,
+     0.029999999329447746,
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934
+    ],
+    "NonChampMax": [
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0
+    ],
+    "BonusMonsterDamage": [
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0357,
+   "reset_on": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_AoE"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "spell_coefficient": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "LolipopRadius": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "KnockbackSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "KnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "BasePercentHealth": [
+     0.014999999664723873,
+     0.019999999552965164,
+     0.02500000037252903,
+     0.029999999329447746,
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934
+    ],
+    "NonChampMax": [
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0
+    ],
+    "BonusMonsterDamage": [
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0357,
+   "reset_on": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    120.0,
+    165.0,
+    210.0,
+    255.0,
+    300.0
+   ],
+   "duration": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "ratios": {
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "spell_coefficient": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     75.0,
+     120.0,
+     165.0,
+     210.0,
+     255.0,
+     300.0
+    ],
+    "SlowAmount": [
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432,
+     0.9900000095367432
+    ],
+    "SlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "LolipopRadius": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "KnockbackSpeed": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ],
+    "KnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "BasePercentHealth": [
+     0.014999999664723873,
+     0.019999999552965164,
+     0.02500000037252903,
+     0.029999999329447746,
+     0.03500000014901161,
+     0.03999999910593033,
+     0.04500000178813934
+    ],
+    "NonChampMax": [
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0,
+     9999.0
+    ],
+    "BonusMonsterDamage": [
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0357,
+   "reset_on": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "statNone": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "DashSpeed": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "amount3": [
+     45.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "amount4": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "amount5": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0643,
+   "reset_on": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "statNone": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "DashSpeed": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "amount3": [
+     45.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "amount4": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "amount5": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0643,
+   "reset_on": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "statNone": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "DashSpeed": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "amount3": [
+     45.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "amount4": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "amount5": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0643,
+   "reset_on": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.8999999761581421,
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "statNone": [
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "RootDuration": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "DashSpeed": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "amount3": [
+     45.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "amount4": [
+     0.8999999761581421,
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ],
+    "amount5": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0643,
+   "reset_on": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_Untargetable"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiWRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiWRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TrapLimiter_Maokai",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/TrapLimiter_Maokai"
+   ],
+   "evidence": "name:trap"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiSapling2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiSapling2"
+   ],
+   "evidence": "name:sapling"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "ratios": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "stat12": [
+     0.014999999664723873,
+     0.05000000074505806,
+     0.10000000149011612
+    ],
+    "statNone": [
+     9.999999747378752e-05
+    ]
+   },
+   "effect_amounts": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredBaseDamage": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SaplingDetectionRadius": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BaseEmpoweredSlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MaxTraps": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_Trap",
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Pet",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "ratios": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "stat12": [
+     0.014999999664723873,
+     0.05000000074505806,
+     0.10000000149011612
+    ],
+    "statNone": [
+     9.999999747378752e-05
+    ]
+   },
+   "effect_amounts": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredBaseDamage": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SaplingDetectionRadius": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BaseEmpoweredSlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MaxTraps": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_Trap",
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Pet",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "ratios": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "stat12": [
+     0.014999999664723873,
+     0.05000000074505806,
+     0.10000000149011612
+    ],
+    "statNone": [
+     9.999999747378752e-05
+    ]
+   },
+   "effect_amounts": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredBaseDamage": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SaplingDetectionRadius": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BaseEmpoweredSlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MaxTraps": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_Trap",
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Pet",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "ratios": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "stat12": [
+     0.014999999664723873,
+     0.05000000074505806,
+     0.10000000149011612
+    ],
+    "statNone": [
+     9.999999747378752e-05
+    ]
+   },
+   "effect_amounts": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredBaseDamage": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SaplingDetectionRadius": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BaseEmpoweredSlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MaxTraps": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_Trap",
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Pet",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_Pet"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "ratios": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "stat12": [
+     0.014999999664723873,
+     0.05000000074505806,
+     0.10000000149011612
+    ],
+    "statNone": [
+     9.999999747378752e-05
+    ]
+   },
+   "effect_amounts": {
+    "SaplingDuration": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "GrowthDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredDoTDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EmpoweredBaseDamage": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SaplingDetectionRadius": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BaseEmpoweredSlowAmount": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "MaxTraps": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "BaseAPRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "EmpoweredAPRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_Trap",
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Pet",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MaokaiCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "maokai Passive (Sapling)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Sapling"
+   ],
+   "binary": [
+    "maokai Passive (Sapling)"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "maokai Passive (Sap Magic)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "PassiveCooldownReduction": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PassiveHealthThreshold": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "JungPassCooldownReduction": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Sap Magic"
+   ],
+   "binary": [
+    "maokai Passive (Sap Magic)"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     0.5
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     0.5
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     0.5
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     1.0
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     1.0
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     1.0
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "spell_coefficient": [
+     1.0
+    ]
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRMoveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile/travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Nature's Grasp"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMoveSpeed"
+   ],
+   "evidence": "binary:game_buff_tooltip_MaokaiRMoveSpeed - Nature's Grasp applies a decaying move-speed effect to enemies hit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiTrunkLine",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Twisted Advance"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiTrunkLine"
+   ],
+   "evidence": "wiki:Twisted Advance - Maokai dashes to the target (dash collision line object)"
+  }
+ }
+]

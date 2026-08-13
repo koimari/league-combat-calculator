@@ -1,0 +1,3197 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KaisaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaBasicAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaBasicAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaCritAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaCritAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaCritAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaCritAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaCritAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaCritAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaCritAttack3"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaCritAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaCritAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaCritAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    11.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346,
+   "cast_frame": 7.5,
+   "missile_speed": 1500.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaE"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KaisaE"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaE"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "KaisaE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    11.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346,
+   "cast_frame": 7.5,
+   "missile_speed": 1500.0
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaE"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KaisaE"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaE"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "KaisaE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaEAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaEAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack2"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack2"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEAttack3",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack3"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaEAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEAttack3",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack3"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaEAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEAttack4",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack4"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEAttack4",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack4"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEAttack5",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack5"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEAttack5",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 2500.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEAttack5"
+   ],
+   "inherited_from": "KaisaE",
+   "evidence": "inherited:KaisaE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaEAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaEAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaECritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 3000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaECritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaECritAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaECritAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaECritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaECritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 3000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaECritAttack2"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaECritAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaECritAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaECritAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaECritAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 3000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaECritAttack3"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaECritAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaECritAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaECritAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaECritAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 9.0,
+   "missile_speed": 3000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaECritAttack4"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "KaisaECritAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaECritAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaECritAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KaisaECritAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375,
+    552.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.0,
+   "missile_speed": 3000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaECritAttack5"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "KaisaECritAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaECritAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaECritAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEEvolveProgression",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEEvolveProgression"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaEEvolved",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cast_frame": 60.0,
+   "missile_speed": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEEvolved"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 2.0,
+    "behavior": "KaisaEEvolved"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaEEvolved"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 2.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KaisaEStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaEAbility/KaisaEStealth"
+   ],
+   "evidence": "name:stealth"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "KaisaPassive",
+  "trigger": "threshold",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {
+    "PDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "PAPRatioBase": [
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099
+    ],
+    "PAPRatioPerStack": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ],
+    "PExecuteRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "PExecuteAPRatio": [
+     0.0006000000284984708,
+     0.0006000000284984708,
+     0.0006000000284984708,
+     0.0006000000284984708,
+     0.0006000000284984708,
+     0.0006000000284984708,
+     0.0006000000284984708
+    ]
+   },
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaPassiveAbility/KaisaPassive"
+   ],
+   "evidence": "rule:execute"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaPassiveMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaPassiveAbility/KaisaPassiveMarker"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KaisaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": [
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0,
+    100.0,
+    115.0
+   ],
+   "ratios": {
+    "BonusADRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "APRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 14.850000381469727,
+   "missile_speed": 2500.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.495,
+    "behavior": "KaisaQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaQ"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.495,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KaisaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "damage": [
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0,
+    100.0,
+    115.0
+   ],
+   "ratios": {
+    "BonusADRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "APRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 14.850000381469727,
+   "missile_speed": 2500.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.495,
+    "behavior": "KaisaQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaQ"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.495,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KaisaQ missile swarm (Icathian Rain 6 missiles)",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Kai'Sa Icathian Rain"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile2",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile3",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile4",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile5",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile6",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile2",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile3",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile4",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile5",
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile6"
+   ],
+   "evidence": "missile objects mirror KaisaQLeftMissile1 (flags 4194308)"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaQEvolveProgression",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQEvolveProgression"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaQEvolved",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cast_frame": 60.0,
+   "missile_speed": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQEvolved"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 2.0,
+    "behavior": "KaisaQEvolved"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaQEvolved"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 2.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaQLeftMissile1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cast_frame": 14.800000190734863,
+   "missile_speed": 1800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.493,
+    "behavior": "KaisaQLeftMissile1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaQLeftMissile1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.493,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaQRightMissile1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cast_frame": 14.800000190734863,
+   "missile_speed": 1800.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.493,
+    "behavior": "KaisaQRightMissile1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaQRightMissile1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.493,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KaisaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    100.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "ratios": {
+    "RShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RTotalADRatio": [
+     0.44999998807907104,
+     0.8999999761581421,
+     1.350000023841858,
+     1.7999999523162842,
+     2.25,
+     2.700000047683716,
+     3.1500000953674316
+    ],
+    "RAPRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cast_frame": 6.0,
+   "missile_speed": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaRAbility/KaisaR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "KaisaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.2,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KaisaR",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    100.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "ratios": {
+    "RShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RTotalADRatio": [
+     0.44999998807907104,
+     0.8999999761581421,
+     1.350000023841858,
+     1.7999999523162842,
+     2.25,
+     2.700000047683716,
+     3.1500000953674316
+    ],
+    "RAPRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cast_frame": 6.0,
+   "missile_speed": 0.0
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaRAbility/KaisaR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "KaisaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.2,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KaisaR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    100.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": null,
+   "ratios": {
+    "RShieldDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "RTotalADRatio": [
+     0.44999998807907104,
+     0.8999999761581421,
+     1.350000023841858,
+     1.7999999523162842,
+     2.25,
+     2.700000047683716,
+     3.1500000953674316
+    ],
+    "RAPRatio": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cast_frame": 6.0,
+   "missile_speed": 0.0
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaRAbility/KaisaR"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "KaisaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.2,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KaisaRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaRAbility/KaisaRShield"
+   ],
+   "evidence": "name:shield"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KaisaW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    85.0
+   ],
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cast_frame": 15.0,
+   "missile_speed": 1750.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaWAbility/KaisaW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "KaisaW"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KaisaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaWEvolveProgression",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaWAbility/KaisaWEvolveProgression"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaisaWEvolved",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cast_frame": 60.0,
+   "missile_speed": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kaisa/Spells/KaisaWAbility/KaisaWEvolved"
+   ],
+   "evidence": "name:evolve"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 2.0,
+    "behavior": "KaisaWEvolved"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KaisaWEvolved"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 2.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ }
+]

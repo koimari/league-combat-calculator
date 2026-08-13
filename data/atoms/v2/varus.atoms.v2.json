@@ -1,0 +1,3067 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusEAbility/VarusE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 18.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0,
+      300.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusEAbility/VarusE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 18.0,
+    "rank_max": 10.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{75920f2e}"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusRRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRRoot"
+   ],
+   "evidence": "name:root"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VarusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VarusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VarusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VarusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "value": [
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQAbility/VarusQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "value": [
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQAbility/VarusQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448,
+    0.15000000596046448
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448,
+      0.15000000596046448
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224,
+      -0.20000000298023224
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "value": [
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185,
+      0.33000001311302185
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQAbility/VarusQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 17.0,
+    "rank_max": 11.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VarusWBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VarusWBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VarusWBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VarusWBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VarusWDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      4.0,
+      6.0,
+      8.0,
+      10.0,
+      12.0,
+      14.0,
+      16.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0,
+      70.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VarusCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    150.0,
+    150.0,
+    250.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      150.0,
+      150.0,
+      250.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRAbility/VarusR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 100.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    150.0,
+    150.0,
+    250.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      150.0,
+      150.0,
+      250.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRAbility/VarusR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 100.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    150.0,
+    150.0,
+    250.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      150.0,
+      150.0,
+      250.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0,
+      650.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "value": [
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0,
+      600.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "value": [
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75,
+      1.75
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRAbility/VarusR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 100.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    75.0,
+    250.0,
+    425.0,
+    600.0,
+    0.0,
+    0.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      75.0,
+      250.0,
+      425.0,
+      600.0,
+      0.0,
+      0.0,
+      175.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQMissile"
+   ],
+   "inherited_from": "VarusQ",
+   "evidence": "inherited:VarusQ"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    75.0,
+    250.0,
+    425.0,
+    600.0,
+    0.0,
+    0.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      75.0,
+      250.0,
+      425.0,
+      600.0,
+      0.0,
+      0.0,
+      175.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQMissile"
+   ],
+   "inherited_from": "VarusQ",
+   "evidence": "inherited:VarusQ"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    75.0,
+    250.0,
+    425.0,
+    600.0,
+    0.0,
+    0.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      75.0,
+      250.0,
+      425.0,
+      600.0,
+      0.0,
+      0.0,
+      175.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQMissile"
+   ],
+   "inherited_from": "VarusQ",
+   "evidence": "inherited:VarusQ"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106,
+   "effect_amounts": null
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRMissile"
+   ],
+   "inherited_from": "VarusR",
+   "evidence": "inherited:VarusR"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106,
+   "effect_amounts": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRMissile"
+   ],
+   "inherited_from": "VarusR",
+   "evidence": "inherited:VarusR"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0,
+    1250.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106,
+   "effect_amounts": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRMissile"
+   ],
+   "inherited_from": "VarusR",
+   "evidence": "inherited:VarusR"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VarusEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0,
+    230.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      50.0,
+      80.0,
+      110.0,
+      140.0,
+      170.0,
+      200.0,
+      230.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      13.0,
+      12.0,
+      11.0,
+      10.0,
+      9.0,
+      8.0,
+      7.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusEMissile"
+   ],
+   "inherited_from": "VarusE",
+   "evidence": "inherited:VarusE"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0,
+    230.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "0": {
+     "value": [
+      50.0,
+      80.0,
+      110.0,
+      140.0,
+      170.0,
+      200.0,
+      230.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      13.0,
+      12.0,
+      11.0,
+      10.0,
+      9.0,
+      8.0,
+      7.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusEMissile"
+   ],
+   "inherited_from": "VarusE",
+   "evidence": "inherited:VarusE"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VarusW (Blighted Quiver - Blight stacks, up to 3)",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.02500000037252903,
+    0.029999999329447746,
+    0.03500000014901161,
+    0.03999999910593033,
+    0.04500000178813934,
+    0.05000000074505806,
+    0.054999999701976776
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "0": {
+     "__type": "SpellEffectAmount"
+    },
+    "1": {
+     "value": [
+      0.02500000037252903,
+      0.029999999329447746,
+      0.03500000014901161,
+      0.03999999910593033,
+      0.04500000178813934,
+      0.05000000074505806,
+      0.054999999701976776
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "2": {
+     "value": [
+      6.0,
+      6.0,
+      6.0,
+      6.0,
+      6.0,
+      6.0,
+      6.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "3": {
+     "value": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "4": {
+     "value": [
+      120.0,
+      120.0,
+      120.0,
+      120.0,
+      120.0,
+      120.0,
+      120.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    "5": {
+     "__type": "SpellEffectAmount"
+    },
+    "6": {
+     "__type": "SpellEffectAmount"
+    },
+    "7": {
+     "__type": "SpellEffectAmount"
+    },
+    "8": {
+     "__type": "SpellEffectAmount"
+    },
+    "9": {
+     "__type": "SpellEffectAmount"
+    }
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Stacking",
+    "Blight"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWAbility/VarusW"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 40.0,
+    "rank_max": 40.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusWDetonate (Blight detonation - bonus magic damage per stack)",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusWAbility/VarusWDetonate"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VarusPassive (Living Vengeance - attack speed + AD/AP on takedown)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Buff",
+    "Innate"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusPassive"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VarusQLaunch (Piercing Arrow recast - physical damage)",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQAbility/VarusQLaunch"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusRSecondary (Chain of Corruption - tendril spreads and roots nearby champions)",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Crowd control",
+    "Root"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRAbility/VarusRSecondary",
+    "VarusRShackles"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusRPassive (Chain of Corruption - roots targets that stay in the tendril area)",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Crowd control",
+    "Root"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusRAbility/VarusRPassive"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VarusRunSpeed (Piercing Arrow - self slow while charging)",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Varus",
+    "Crowd control",
+    "Slow"
+   ],
+   "binary": [
+    "Characters/Varus/Spells/VarusQAbility/VarusRunSpeed"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ }
+]

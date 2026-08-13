@@ -1,0 +1,3573 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25,
+    1.25
+   ],
+   "ratios": {
+    "mCoefficient": 0.6000000238418579,
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherFalloff": [
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05
+    ],
+    "MinionMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherThreshold": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "FeatherReturnDelay": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    7.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1042,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579,
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherFalloff": [
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05
+    ],
+    "MinionMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherThreshold": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "FeatherReturnDelay": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    7.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579,
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "bADRatio": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "CritRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherFalloff": [
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05,
+     0.05
+    ],
+    "MinionMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "FeatherThreshold": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RootDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "FeatherReturnDelay": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    7.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5,
+    "mCoefficient2": 0.5,
+    "MultiHitRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "MultiHitRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "StartingCastTime": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinCastTime": [
+     0.0,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1
+    ],
+    "ASpeedCastTimeScalarPerHundrethSecond": [
+     0.0,
+     0.07,
+     0.07,
+     0.07,
+     0.07,
+     0.07,
+     0.07
+    ],
+    "Missile1DelayTime": [
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334
+    ],
+    "Missile2DelayTime": [
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584
+    ],
+    "Missile1DelaySpeed": [
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0
+    ],
+    "Missile2DelaySpeed": [
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0
+    ],
+    "effect_amount": [
+     {
+      "value": [
+       30.0,
+       45.0,
+       60.0,
+       75.0,
+       90.0,
+       105.0,
+       120.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahQAbility/XayahQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahQ",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": 0.334,
+    "behavior": "XayahQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5,
+    "mCoefficient2": 0.5,
+    "MultiHitRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0
+    ],
+    "MultiHitRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "StartingCastTime": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinCastTime": [
+     0.0,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     0.1
+    ],
+    "ASpeedCastTimeScalarPerHundrethSecond": [
+     0.0,
+     0.07,
+     0.07,
+     0.07,
+     0.07,
+     0.07,
+     0.07
+    ],
+    "Missile1DelayTime": [
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334,
+     0.334
+    ],
+    "Missile2DelayTime": [
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584,
+     0.584
+    ],
+    "Missile1DelaySpeed": [
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0
+    ],
+    "Missile2DelaySpeed": [
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0
+    ],
+    "effect_amount": [
+     {
+      "value": [
+       30.0,
+       45.0,
+       60.0,
+       75.0,
+       90.0,
+       105.0,
+       120.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115,
+       0.33399999141693115
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312,
+       0.5839999914169312
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0,
+       3500.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahQAbility/XayahQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahQ",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": 0.334,
+    "behavior": "XayahQ",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    10.0,
+    6.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahQMissile1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "effect_amounts": {
+    "effect_amount": [
+     {
+      "value": [
+       0.0,
+       30.0,
+       60.0,
+       90.0,
+       120.0,
+       150.0,
+       180.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{65b1fd9e}"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahQMissile1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahQMissile1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "XayahW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "WAttackSpeedDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "WMoveSpeedDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BonusDamagePercent": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "WAttackSpeedAmount": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "WAttackSpeedDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "WMoveSpeedAmount": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "WMoveSpeedDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "WRakanSeekDistance": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "effect_amount": [
+     {
+      "value": [
+       30.0,
+       35.0,
+       40.0,
+       45.0,
+       50.0,
+       55.0,
+       60.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "WAttackSpeedDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "WMoveSpeedDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "effect_amounts": {
+    "BonusDamagePercent": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "WAttackSpeedAmount": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "WAttackSpeedDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "WMoveSpeedAmount": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "WMoveSpeedDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "WRakanSeekDistance": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "effect_amount": [
+     {
+      "value": [
+       30.0,
+       35.0,
+       40.0,
+       45.0,
+       50.0,
+       55.0,
+       60.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0,
+       30.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0,
+       20.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0,
+       1000.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    14.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWMissile1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{f657b652}"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahWMissile1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahWMissile1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XayahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XayahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "XayahCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahCritAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "RAttackDelay": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RUntargetable": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    160.0,
+    100.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "RAttackDelay": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RUntargetable": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    160.0,
+    100.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "effect_amounts": {
+    "RBaseDamage": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0,
+     700.0
+    ],
+    "RAttackDelay": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RUntargetable": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    160.0,
+    100.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blind",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahRMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6499999761581421
+   },
+   "effect_amounts": {
+    "effect_amount": [
+     {
+      "value": [
+       15.0,
+       55.0,
+       95.0,
+       140.0,
+       185.0,
+       230.0,
+       275.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "{fa63440b}"
+   ],
+   "evidence": "name:miss"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahRMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahRMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    7.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "effect_amounts": {
+    "effect_amount": [
+     {
+      "value": [
+       0.0,
+       30.0,
+       60.0,
+       90.0,
+       120.0,
+       150.0,
+       180.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{64b1fc0b}"
+   ],
+   "inherited_from": "XayahQ",
+   "evidence": "inherited:XayahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahQMissile2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahQMissile2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "effect_amounts": {
+    "effect_amount": [
+     {
+      "value": [
+       0.0,
+       30.0,
+       60.0,
+       90.0,
+       120.0,
+       150.0,
+       180.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{64b1fc0b}"
+   ],
+   "inherited_from": "XayahQ",
+   "evidence": "inherited:XayahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahQMissile2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahQMissile2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "XayahWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{f557b4bf}"
+   ],
+   "inherited_from": "XayahW",
+   "evidence": "inherited:XayahW"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahWMissile2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahWMissile2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f557b4bf}"
+   ],
+   "inherited_from": "XayahW",
+   "evidence": "inherited:XayahW"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahWMissile2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahWMissile2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Plumage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahWHaste"
+   ],
+   "evidence": "buff tooltip game_buff_tooltip_XayahWHaste; W grants bonus attack speed"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahWHaste",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahWHaste",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahWHaste",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahWRakanMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Plumage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahWRakanMissile"
+   ],
+   "evidence": "W empowered basic attacks fire an additional feather dealing physical damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahWRakanMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahWRakanMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "PFeatherDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "PEmpoweredDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "effect_amounts": {
+    "PFeatherDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "PFeatherSpacingMin": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "PFeatherSpacingMax": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "PDamageFalloffMax": [
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55,
+     0.55
+    ],
+    "PEmpoweredDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "PStacksPerCast": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PStackMax": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PDamageFalloffMin": [
+     0.35,
+     0.35,
+     0.35,
+     0.35,
+     0.35,
+     0.35,
+     0.35
+    ],
+    "PDamageFalloffMid": [
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45,
+     0.45
+    ],
+    "effect_amount": [
+     {
+      "value": [
+       6.0,
+       6.0,
+       6.0,
+       6.0,
+       6.0,
+       6.0,
+       6.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.550000011920929,
+       0.550000011920929,
+       0.550000011920929,
+       0.550000011920929,
+       0.550000011920929,
+       0.550000011920929,
+       0.550000011920929
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       8.0,
+       8.0,
+       8.0,
+       8.0,
+       8.0,
+       8.0,
+       8.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.3499999940395355,
+       0.3499999940395355,
+       0.3499999940395355,
+       0.3499999940395355,
+       0.3499999940395355,
+       0.3499999940395355,
+       0.3499999940395355
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "value": [
+       0.44999998807907104,
+       0.44999998807907104,
+       0.44999998807907104,
+       0.44999998807907104,
+       0.44999998807907104,
+       0.44999998807907104,
+       0.44999998807907104
+      ],
+      "__type": "SpellEffectAmount"
+     },
+     {
+      "__type": "SpellEffectAmount"
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassive"
+   ],
+   "evidence": "feathers linger and are planted in the ground for 6 seconds (feather resource)"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahPassive",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahPassive",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassiveAttack"
+   ],
+   "evidence": "passive feather projectile fired by basic attacks"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahPassiveAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahPassiveAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahPassiveActive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassiveActive"
+   ],
+   "evidence": "passive feather flight on attack; same behavior as XayahPassiveAttack (duplicate script)"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "XayahPassiveActive",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "XayahPassiveActive",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "XayahPassiveActive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ }
+]

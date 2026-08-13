@@ -1,0 +1,4209 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirTowerClickChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {}
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 3093
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "AzirTowerClickChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "AzirTowerClickChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirPassiveAbility/AzirTowerClickChannel"
+   ],
+   "evidence": "name:channel"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    200.0,
+    400.0,
+    600.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.75,
+    "ap": [
+     75,
+     75,
+     75
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Width": {
+      "values": [
+       [
+        6,
+        7,
+        8
+       ]
+      ],
+      "units": [
+       [
+        " soldiers",
+        " soldiers",
+        " soldiers"
+       ]
+      ]
+     },
+     "Width (charge)": {
+      "values": [
+       [
+        620,
+        720,
+        820
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Width (impassable wall)": {
+      "values": [
+       [
+        750,
+        850,
+        950
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        200,
+        400,
+        600
+       ],
+       [
+        75,
+        75,
+        75
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       200.0,
+       200.0,
+       400.0,
+       600.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       6.0,
+       6.0,
+       7.0,
+       8.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "AzirR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 105.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirRBump",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    200.0,
+    400.0,
+    600.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     75,
+     75,
+     75
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Width": {
+      "values": [
+       [
+        6,
+        7,
+        8
+       ]
+      ],
+      "units": [
+       [
+        " soldiers",
+        " soldiers",
+        " soldiers"
+       ]
+      ]
+     },
+     "Width (charge)": {
+      "values": [
+       [
+        620,
+        720,
+        820
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Width (impassable wall)": {
+      "values": [
+       [
+        750,
+        850,
+        950
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        200,
+        400,
+        600
+       ],
+       [
+        75,
+        75,
+        75
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AzirRBump",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AzirRBump",
+    "atoms": [
+     "crowd-control-mobility.knockback"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Emperor's Divide: enemies impacted by the charge are dealt magic damage and knocked away over 1 second"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirRAbility/AzirRBump"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": [
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0,
+    3000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    70.0,
+    110.0,
+    150.0,
+    190.0,
+    230.0
+   ],
+   "duration": [
+    70,
+    110,
+    150,
+    190,
+    230
+   ],
+   "ratios": {
+    "coefficient": 0.4000000059604645,
+    "ap": [
+     60,
+     60,
+     60,
+     60,
+     60
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Shield Strength": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       20.0,
+       19.0,
+       18.0,
+       17.0,
+       16.0,
+       15.0,
+       14.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       30.0,
+       60.0,
+       90.0,
+       120.0,
+       150.0,
+       180.0,
+       210.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       40.0,
+       80.0,
+       120.0,
+       160.0,
+       200.0,
+       240.0,
+       280.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       -0.4000000059604645,
+       -0.5,
+       -0.6000000238418579,
+       -0.699999988079071,
+       -0.800000011920929,
+       -0.8999999761581421,
+       -1.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       1100.0,
+       1100.0,
+       1100.0,
+       1100.0,
+       1100.0,
+       1100.0,
+       1100.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 20.0,
+    "rank_max": 16.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 3.5,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirEWrapperAbility/AzirE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     40,
+     45,
+     50,
+     55
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        60,
+        80,
+        100,
+        120,
+        140
+       ],
+       [
+        35,
+        40,
+        45,
+        50,
+        55
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AzirQSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirQWrapperAbility/AzirQSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AzirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.5,
+    "ap": [
+     35,
+     40,
+     45,
+     50,
+     55
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        60,
+        80,
+        100,
+        120,
+        140
+       ],
+       [
+        35,
+        40,
+        45,
+        50,
+        55
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       45.0,
+       65.0,
+       85.0,
+       105.0,
+       125.0,
+       145.0,
+       165.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       -0.25,
+       -0.25,
+       -0.25,
+       -0.25,
+       -0.25,
+       -0.25,
+       -0.25
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "rank_max": 7.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Conquering Sands: soldiers dash toward the target location, dealing magic damage to enemies passed through and in front on arrival"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirQWrapperAbility/AzirQ"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AzirR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    200.0,
+    400.0,
+    600.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.75,
+    "ap": [
+     75,
+     75,
+     75
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Width": {
+      "values": [
+       [
+        6,
+        7,
+        8
+       ]
+      ],
+      "units": [
+       [
+        " soldiers",
+        " soldiers",
+        " soldiers"
+       ]
+      ]
+     },
+     "Width (charge)": {
+      "values": [
+       [
+        620,
+        720,
+        820
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Width (impassable wall)": {
+      "values": [
+       [
+        750,
+        850,
+        950
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        200,
+        400,
+        600
+       ],
+       [
+        75,
+        75,
+        75
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       200.0,
+       200.0,
+       400.0,
+       600.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       6.0,
+       6.0,
+       7.0,
+       8.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "AzirR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 105.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttackSoldier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {}
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttackSoldier"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AzirCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2800.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AzirR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    200.0,
+    400.0,
+    600.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.75,
+    "ap": [
+     75,
+     75,
+     75
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Width": {
+      "values": [
+       [
+        6,
+        7,
+        8
+       ]
+      ],
+      "units": [
+       [
+        " soldiers",
+        " soldiers",
+        " soldiers"
+       ]
+      ]
+     },
+     "Width (charge)": {
+      "values": [
+       [
+        620,
+        720,
+        820
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Width (impassable wall)": {
+      "values": [
+       [
+        750,
+        850,
+        950
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        200,
+        400,
+        600
+       ],
+       [
+        75,
+        75,
+        75
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       200.0,
+       200.0,
+       400.0,
+       600.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       6.0,
+       6.0,
+       7.0,
+       8.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "AzirR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 105.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.5,
+    "rank_max": 1.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.missile",
+  "family": "damage",
+  "behavior": "AzirSoldierMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1000.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arise!: Sand Soldier spear-thrust attack missile"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirSoldierMissile"
+   ]
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.missile",
+  "family": "damage",
+  "behavior": "AzirWSelfMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6000000238418579,
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 1800.0
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       35.0,
+       80.0,
+       125.0,
+       170.0,
+       215.0,
+       260.0,
+       305.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 60.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arise!: the Sand Soldier attacks in his stead, thrusting their spear to deal magic damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirWSelfMissile"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "AzirWProcBuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AzirWProcBuff",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
+   ],
+   "evidence": "name:proc"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {},
+    "binary_raw": [
+     {
+      "field": "missile_speed",
+      "value": 2600.0
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttackSoldier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625,
+    549.4000244140625
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {}
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttackSoldier"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "AzirEShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    70,
+    110,
+    150,
+    190,
+    230
+   ],
+   "ratios": {
+    "ap": [
+     60,
+     60,
+     60,
+     60,
+     60
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Shield Strength": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        70,
+        110,
+        150,
+        190,
+        230
+       ],
+       [
+        60,
+        60,
+        60,
+        60,
+        60
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AzirEShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirEWrapperAbility/AzirEShield"
+   ],
+   "evidence": "name:shield"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirW",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.5,
+    "rank_max": 1.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirWProcBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AzirWProcBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirPassive",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {}
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 90.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shurima's Legacy: Azir constructs the Sun Disc above the ruins, a turret that deals magic damage (binary calcs TowerDamage, BonusResists)"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirPassiveAbility/AzirPassive"
+   ]
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    105.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    200.0,
+    400.0,
+    600.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.75,
+    "ap": [
+     75,
+     75,
+     75
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Width": {
+      "values": [
+       [
+        6,
+        7,
+        8
+       ]
+      ],
+      "units": [
+       [
+        " soldiers",
+        " soldiers",
+        " soldiers"
+       ]
+      ]
+     },
+     "Width (charge)": {
+      "values": [
+       [
+        620,
+        720,
+        820
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Width (impassable wall)": {
+      "values": [
+       [
+        750,
+        850,
+        950
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "Magic Damage": {
+      "values": [
+       [
+        200,
+        400,
+        600
+       ],
+       [
+        75,
+        75,
+        75
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       200.0,
+       200.0,
+       400.0,
+       600.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       6.0,
+       6.0,
+       7.0,
+       8.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "AzirR",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 105.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
+   ],
+   "evidence": "tag:Trait_CreateTerrain"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0,
+       25.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirW",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.5,
+    "rank_max": 1.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_Pet"
+  },
+  "notes": [
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirWSpawnSoldier",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6000000238418579,
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       13.0,
+       12.0,
+       11.0,
+       10.0,
+       9.0,
+       8.0,
+       7.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirWSpawnSoldier",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arise!: summons a Sand Soldier at the target location that is untargetable, lasts 10 seconds, grants sight"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirWSpawnSoldier"
+   ]
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirW_URF",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    4.235294117647059,
+    8.470588235294118,
+    12.705882352941178,
+    16.941176470588236,
+    21.176470588235293,
+    25.411764705882355,
+    29.647058823529413,
+    33.88235294117647,
+    38.11764705882353,
+    42.35294117647059,
+    46.588235294117645,
+    50.82352941176471,
+    55.05882352941177,
+    59.294117647058826,
+    63.529411764705884,
+    67.76470588235294,
+    72.0
+   ],
+   "duration": null,
+   "ratios": {
+    "coefficient": 0.6000000238418579,
+    "ap": [
+     35,
+     42.5,
+     50,
+     57.5,
+     65
+    ]
+   },
+   "effect_amounts": {
+    "wiki": {
+     "Magic Damage": {
+      "values": [
+       [
+        0.0,
+        4.235294117647059,
+        8.470588235294118,
+        12.705882352941178,
+        16.941176470588236,
+        21.176470588235293,
+        25.411764705882355,
+        29.647058823529413,
+        33.88235294117647,
+        38.11764705882353,
+        42.35294117647059,
+        46.588235294117645,
+        50.82352941176471,
+        55.05882352941177,
+        59.294117647058826,
+        63.529411764705884,
+        67.76470588235294,
+        72.0
+       ],
+       [
+        50,
+        65,
+        80,
+        95,
+        110
+       ],
+       [
+        35,
+        42.5,
+        50,
+        57.5,
+        65
+       ]
+      ],
+      "units": [
+       [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP",
+        "% AP"
+       ]
+      ]
+     },
+     "Per-Level Scaling": {
+      "values": [
+       [
+        20,
+        28,
+        36,
+        44,
+        52,
+        60,
+        68,
+        76,
+        84,
+        92,
+        100
+       ]
+      ],
+      "units": [
+       [
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%",
+        "%"
+       ]
+      ]
+     }
+    },
+    "binary_raw": [
+     {
+      "field": "mEffectAmount",
+      "value": [
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0,
+       9.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       26.0,
+       24.0,
+       22.0,
+       20.0,
+       18.0,
+       16.0,
+       14.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       0.10000000149011612,
+       0.20000000298023224,
+       0.30000001192092896,
+       0.4000000059604645,
+       0.5,
+       0.6000000238418579,
+       0.699999988079071
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0,
+       40.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5,
+       1.5
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       45.0,
+       45.0,
+       45.0,
+       45.0,
+       45.0,
+       45.0,
+       45.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       60.0,
+       60.0,
+       60.0,
+       60.0,
+       60.0,
+       60.0,
+       60.0
+      ]
+     },
+     {
+      "field": "mEffectAmount",
+      "value": [
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0,
+       10.0
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 16384
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AzirW_URF",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arise! (URF mode variant): summons a Sand Soldier"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirW_URF"
+   ]
+  },
+  "notes": [
+   "no cooldown in binary (passive/on-takedown)",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "azir Passive (Sand Soldier)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki": {}
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Sand Soldier"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "notes": [
+   "binary object not located; wiki-only atom",
+   "mana_cost not present in binary or wiki for this champion dump"
+  ]
+ }
+]

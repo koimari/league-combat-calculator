@@ -1,0 +1,6013 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "e0": [
+     65.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     205.0
+    ],
+    "e1": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "e2": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "e3": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "e4": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "e5": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "e6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "e7": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "ArmorShred": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "SlowDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ArmorShredDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "APRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "damage": [
+    30.0,
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "SlowDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ArmorShredDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "APRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 0.3077,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "e0": [
+     65.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     205.0
+    ],
+    "e1": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "e2": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "e3": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "e4": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "e5": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "e6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "e7": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "ArmorShred": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "SlowDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ArmorShredDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "APRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "damage": [
+    30.0,
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "SlowDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ArmorShredDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "APRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "max_rank": 9.0
+   },
+   "uptime_fraction": 0.3077,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "behavior": "SionEArmorShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEArmorShred"
+   ],
+   "evidence": "name:armorshred"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionESlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{17936053}"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{17936053}"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SionWShieldStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionWShieldStacks"
+   ],
+   "evidence": "name:shield"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SionWShieldStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionWShieldStacks"
+   ],
+   "evidence": "name:stack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "e0": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "e1": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "e2": [
+     8.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     16.0
+    ],
+    "e3": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "e4": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "e5": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e6": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "e7": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e8": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "data_values": {
+    "ShieldPercentHealthTooltip": [
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737
+    ],
+    "DamagePercentHealthTooltip": [
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645,
+     0.15000000596046448
+    ],
+    "HPPerChampKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "HPPerKill": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "HPPerLargeKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BaseShield": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "DetonateRecastCooldown": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "max_rank": 12.0
+   },
+   "uptime_fraction": 0.4,
+   "reset_on": [
+    "HPPerChampKill",
+    "HPPerKill",
+    "HPPerLargeKill"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "e0": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "e1": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "e2": [
+     8.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     16.0
+    ],
+    "e3": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "e4": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "e5": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e6": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "e7": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e8": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "data_values": {
+    "ShieldPercentHealthTooltip": [
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737
+    ],
+    "DamagePercentHealthTooltip": [
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645,
+     0.15000000596046448
+    ],
+    "HPPerChampKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "HPPerKill": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "HPPerLargeKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BaseShield": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "DetonateRecastCooldown": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "max_rank": 12.0
+   },
+   "uptime_fraction": 0.4,
+   "reset_on": [
+    "HPPerChampKill",
+    "HPPerKill",
+    "HPPerLargeKill"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "e0": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "e1": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "e2": [
+     8.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     16.0
+    ],
+    "e3": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "e4": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "e5": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e6": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "e7": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "e8": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "data_values": {
+    "ShieldPercentHealthTooltip": [
+     0.05999999865889549,
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737
+    ],
+    "DamagePercentHealthTooltip": [
+     0.09000000357627869,
+     0.10000000149011612,
+     0.10999999940395355,
+     0.11999999731779099,
+     0.12999999523162842,
+     0.14000000059604645,
+     0.15000000596046448
+    ],
+    "HPPerChampKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "HPPerKill": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "HPPerLargeKill": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "BaseShield": [
+     60.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0,
+     120.0,
+     120.0
+    ],
+    "BaseDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "DetonateRecastCooldown": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "cooldown": [
+    15.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "damage": [
+    15.0,
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {
+    "ShieldAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxHPDamageRatio": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "ShieldDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   }
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "max_rank": 12.0
+   },
+   "uptime_fraction": 0.4,
+   "reset_on": [
+    "HPPerChampKill",
+    "HPPerKill",
+    "HPPerLargeKill"
+   ],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SionCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "cast_time": [
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821,
+    0.3666999936103821
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3666999936103821,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQStun"
+   ],
+   "evidence": "name:stun"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "e2": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "e3": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "e4": [
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0
+    ],
+    "e5": [
+     105.0,
+     120.0,
+     135.0,
+     150.0,
+     165.0,
+     180.0,
+     195.0
+    ],
+    "e6": [
+     16.0,
+     18.0,
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0
+    ]
+   },
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQDamage"
+   ],
+   "evidence": "name:damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 7.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "data_values": {
+    "MinDamage": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0,
+     750.0,
+     900.0
+    ],
+    "MaxDamage": [
+     0.0,
+     400.0,
+     800.0,
+     1200.0,
+     1600.0,
+     2000.0,
+     2400.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "MinionDamagePercent": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    140.0,
+    100.0,
+    60.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    0.0,
+    400.0,
+    800.0,
+    1200.0,
+    1600.0,
+    2000.0,
+    2400.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "ratios": {
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks": {
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "uptime_fraction": 0.175,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "data_values": {
+    "MinDamage": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0,
+     750.0,
+     900.0
+    ],
+    "MaxDamage": [
+     0.0,
+     400.0,
+     800.0,
+     1200.0,
+     1600.0,
+     2000.0,
+     2400.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "MinionDamagePercent": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    140.0,
+    100.0,
+    60.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    0.0,
+    400.0,
+    800.0,
+    1200.0,
+    1600.0,
+    2000.0,
+    2400.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "ratios": {
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks": {
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "uptime_fraction": 0.175,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "data_values": {
+    "MinDamage": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0,
+     750.0,
+     900.0
+    ],
+    "MaxDamage": [
+     0.0,
+     400.0,
+     800.0,
+     1200.0,
+     1600.0,
+     2000.0,
+     2400.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "MinionDamagePercent": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    140.0,
+    100.0,
+    60.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    0.0,
+    400.0,
+    800.0,
+    1200.0,
+    1600.0,
+    2000.0,
+    2400.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "ratios": {
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks": {
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "uptime_fraction": 0.175,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "data_values": {
+    "MinDamage": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0,
+     750.0,
+     900.0
+    ],
+    "MaxDamage": [
+     0.0,
+     400.0,
+     800.0,
+     1200.0,
+     1600.0,
+     2000.0,
+     2400.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "MinionDamagePercent": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    140.0,
+    100.0,
+    60.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    0.0,
+    400.0,
+    800.0,
+    1200.0,
+    1600.0,
+    2000.0,
+    2400.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "ratios": {
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks": {
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "uptime_fraction": 0.175,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "data_values": {
+    "MinDamage": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0,
+     750.0,
+     900.0
+    ],
+    "MaxDamage": [
+     0.0,
+     400.0,
+     800.0,
+     1200.0,
+     1600.0,
+     2000.0,
+     2400.0
+    ],
+    "SlowAmount": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0
+    ],
+    "MinionDamagePercent": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    140.0,
+    100.0,
+    60.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage": [
+    0.0,
+    400.0,
+    800.0,
+    1200.0,
+    1600.0,
+    2000.0,
+    2400.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "ratios": {
+    "MinStunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MaxStunDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks": {
+    "MoveSpeedCap": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   }
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "rule:execute"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "uptime_fraction": 0.175,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQKnockUp"
+   ],
+   "evidence": "name:knockup"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e4": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "e6": [
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5
+    ],
+    "e7": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "e8": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "e9": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "data_values": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "LowDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "HighDamage": [
+     25.0,
+     90.0,
+     155.0,
+     220.0,
+     285.0,
+     350.0,
+     415.0
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "BaseStunTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "SlowAmount": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "channel_duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage": [
+    25.0,
+    90.0,
+    155.0,
+    220.0,
+    285.0,
+    350.0,
+    415.0
+   ],
+   "ratios": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 2.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 7.0
+   },
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e4": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "e6": [
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5
+    ],
+    "e7": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "e8": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "e9": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "data_values": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "LowDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "HighDamage": [
+     25.0,
+     90.0,
+     155.0,
+     220.0,
+     285.0,
+     350.0,
+     415.0
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "BaseStunTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "SlowAmount": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "channel_duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage": [
+    25.0,
+    90.0,
+    155.0,
+    220.0,
+    285.0,
+    350.0,
+    415.0
+   ],
+   "ratios": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 2.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 7.0
+   },
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e4": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "e6": [
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5
+    ],
+    "e7": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "e8": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "e9": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "data_values": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "LowDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "HighDamage": [
+     25.0,
+     90.0,
+     155.0,
+     220.0,
+     285.0,
+     350.0,
+     415.0
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "BaseStunTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "SlowAmount": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "channel_duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage": [
+    25.0,
+    90.0,
+    155.0,
+    220.0,
+    285.0,
+    350.0,
+    415.0
+   ],
+   "ratios": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 2.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 7.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e4": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "e6": [
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5,
+     7.5
+    ],
+    "e7": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "e8": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "e9": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "data_values": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "LowDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "HighDamage": [
+     25.0,
+     90.0,
+     155.0,
+     220.0,
+     285.0,
+     350.0,
+     415.0
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "BaseStunTime": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "SlowAmount": [
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929,
+     -0.800000011920929
+    ]
+   },
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "channel_duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "damage": [
+    25.0,
+    90.0,
+    155.0,
+    220.0,
+    285.0,
+    350.0,
+    415.0
+   ],
+   "ratios": {
+    "ADRatioMin": [
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071,
+     0.800000011920929,
+     0.8999999761581421
+    ],
+    "ADRatioMax": [
+     0.8999999761581421,
+     1.2000000476837158,
+     1.5,
+     1.7999999523162842,
+     2.0999999046325684,
+     2.4000000953674316,
+     2.700000047683716
+    ],
+    "MinionRatio": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "MonsterRatio": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 2.0,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 7.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     25.0,
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0
+    ],
+    "e1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "damage": [
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0,
+    100.0,
+    115.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEMissile"
+   ],
+   "inherited_from": "SionE",
+   "evidence": "inherited:SionE"
+  },
+  "relations": [],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     25.0,
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0
+    ],
+    "e1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "damage": [
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0,
+    100.0,
+    115.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEMissile"
+   ],
+   "inherited_from": "SionE",
+   "evidence": "inherited:SionE"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "e1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "e2": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "cooldown": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": [],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 80.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "e1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "e2": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "cooldown": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": [],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 80.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "e1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "e2": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "cooldown": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "damage": [
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    0.0,
+    0.0,
+    150.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": [],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 80.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     0.0,
+     0.0,
+     150.0
+    ],
+    "e1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "e2": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "cooldown": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "damage": [
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    0.0,
+    0.0,
+    150.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 80.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ],
+   "evidence": "wiki: reanimates on fatal damage, restoring 100% max health"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.life-steal",
+  "family": "heal-shield",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death",
+    "100% life steal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ]
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "damage": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ],
+   "evidence": "wiki: bonus physical damage on-hit equal to 10% max health"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death",
+    "Ghosting"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ]
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveDelay",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveDelay"
+   ],
+   "evidence": "wiki: enters stasis for 1.5s before reanimating"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Death Surge"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveSpeed"
+   ],
+   "evidence": "wiki: 67% bonus movement speed decaying over 2.376s"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "unknown"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     0.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     100.0
+    ],
+    "e1": [
+     0.0,
+     250.0,
+     500.0,
+     750.0,
+     0.0,
+     0.0,
+     250.0
+    ],
+    "e2": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     0.0,
+     0.0,
+     5.0
+    ],
+    "e3": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e4": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e5": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e6": [
+     0.0,
+     4.0,
+     8.0,
+     12.0,
+     0.0,
+     0.0,
+     4.0
+    ],
+    "e8": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ],
+   "evidence": "wiki: immune to crowd control while charging"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.100000381469727,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 160.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     0.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     100.0
+    ],
+    "e1": [
+     0.0,
+     250.0,
+     500.0,
+     750.0,
+     0.0,
+     0.0,
+     250.0
+    ],
+    "e2": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     0.0,
+     0.0,
+     5.0
+    ],
+    "e3": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e4": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e5": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e6": [
+     0.0,
+     4.0,
+     8.0,
+     12.0,
+     0.0,
+     0.0,
+     4.0
+    ],
+    "e8": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.100000381469727,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 160.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     0.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     100.0
+    ],
+    "e1": [
+     0.0,
+     250.0,
+     500.0,
+     750.0,
+     0.0,
+     0.0,
+     250.0
+    ],
+    "e2": [
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     0.0,
+     0.0,
+     5.0
+    ],
+    "e3": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e4": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e5": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "e6": [
+     0.0,
+     4.0,
+     8.0,
+     12.0,
+     0.0,
+     0.0,
+     4.0
+    ],
+    "e8": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0,
+    7500.0
+   ],
+   "channel_duration": [
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727,
+    8.100000381469727
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ],
+   "evidence": "wiki: ramps movement speed up to 950 total"
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 8.100000381469727,
+    "behavior": null,
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 160.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SionEMinion",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 8.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Roar of the Slayer"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEMinion"
+   ],
+   "evidence": "wiki: minions/non-epic monsters stunned 0.75s and knocked back"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SionEMinion",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 8.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Roar of the Slayer"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEMinion"
+   ]
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ }
+]

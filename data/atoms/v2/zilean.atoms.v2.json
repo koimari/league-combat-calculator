@@ -1,0 +1,3298 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ZileanPassiveChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.2
+   ],
+   "ratios": {
+    "primary": 2.5
+   },
+   "effect_amounts": {
+    "effect_0": [
+     375.0,
+     625.0,
+     875.0,
+     1125.0,
+     0.0,
+     0.0
+    ],
+    "effect_1": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     180.0,
+     150.0,
+     120.0,
+     90.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 65.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "ZileanPassiveChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanPassiveChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanPassiveChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 2.0,
+    "rank_max": 2.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.6,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/HeightenedLearningAbility/ZileanPassiveChannel"
+   ],
+   "evidence": "name:channel"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZileanPAmmo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.2
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZileanPAmmo",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.01,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/HeightenedLearningAbility/ZileanPAmmo"
+   ],
+   "evidence": "name:ammo"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZileanPLevel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.2
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanPLevel",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ZileanPLevel",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.01,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/HeightenedLearningAbility/ZileanPLevel"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZileanQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     75.0,
+     115.0,
+     165.0,
+     230.0,
+     300.0
+    ],
+    "effect_1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_2": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "effect_3": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.5,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0952,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZileanQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    115.0,
+    165.0,
+    230.0,
+    300.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     75.0,
+     115.0,
+     165.0,
+     230.0,
+     300.0
+    ],
+    "effect_1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_2": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "effect_3": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.5,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": [
+    30.0,
+    75.0,
+    115.0,
+    165.0,
+    230.0,
+    300.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     75.0,
+     115.0,
+     165.0,
+     230.0,
+     300.0
+    ],
+    "effect_1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_2": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "effect_3": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.5,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.ground",
+  "family": "crowd-control-mobility",
+  "behavior": "ZileanQGround",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {
+    "primary": 0.5,
+    "secondary": -0.5
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQGround",
+    "atoms": [
+     "crowd-control-mobility.ground"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQGround"
+   ],
+   "evidence": "name:ground"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZileanQBuffer",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.100000023841858,
+    1.2000000476837158,
+    1.2999999523162842,
+    1.399999976158142,
+    1.5
+   ],
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     75.0,
+     115.0,
+     165.0,
+     230.0,
+     300.0
+    ],
+    "effect_1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_2": [
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0,
+     7.0
+    ],
+    "effect_3": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZileanQBuffer",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQBuffer",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ZileanQBuffer",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.5,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0952,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQBuffer"
+   ],
+   "evidence": "name:buff"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ChronoShift",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    90.0,
+    60.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    125.0,
+    150.0,
+    175.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": [
+    3.0
+   ],
+   "ratios": {
+    "primary": 2.0
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ChronoShift",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ChronoShift",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ChronoShiftAbility/ChronoShift"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ChronoShift",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    90.0,
+    60.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    125.0,
+    150.0,
+    175.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": [
+    5.0
+   ],
+   "ratios": {
+    "primary": 2.0
+   },
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ChronoShift",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ChronoShift",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ChronoShift",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0417,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ChronoShiftAbility/ChronoShift"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZileanBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZileanBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZileanCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ChronoRevive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    90.0,
+    60.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    125.0,
+    150.0,
+    175.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ChronoRevive",
+    "atoms": [
+     "heal-shield.revive"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ChronoRevive"
+   ],
+   "evidence": "name:revive"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ChronoRevive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    90.0,
+    60.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    125.0,
+    150.0,
+    175.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ChronoRevive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ChronoRevive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ChronoRevive"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "ZileanStunAnim",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "primary": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_1": [
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5135.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanStunAnim",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanStunAnim",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanStunAnim"
+   ],
+   "evidence": "name:stun"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZileanBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZileanBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TimeWarp",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "ratios": {
+    "primary": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "effect_1": [
+     25.0,
+     40.0,
+     55.0,
+     70.0,
+     85.0,
+     99.0
+    ],
+    "effect_2": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_3": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5135.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TimeWarp",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TimeWarp",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TimeWarp",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "rank_max": 15.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5333,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/TimeWarpAbility/TimeWarp"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "zilean Passive (Chronoshift)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    90.0,
+    60.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    125.0,
+    150.0,
+    175.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 60.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing",
+    "Chronoshift"
+   ],
+   "binary": [],
+   "evidence": "wiki-map"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZileanQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQMissile"
+   ],
+   "evidence": "inherited:ZileanQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZileanQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQMissile"
+   ],
+   "evidence": "inherited:ZileanQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQMissile"
+   ],
+   "evidence": "inherited:ZileanQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZileanQAllyBomb",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    70.0,
+    85.0,
+    100.0,
+    115.0,
+    130.0,
+    145.0
+   ],
+   "damage": [
+    35.0,
+    90.0,
+    145.0,
+    200.0,
+    260.0,
+    320.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     90.0,
+     145.0,
+     200.0,
+     260.0,
+     320.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAllyBomb",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAllyBomb",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAllyBomb"
+   ],
+   "evidence": "refined:name:ZileanQAllyBomb"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQAllyBomb",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    70.0,
+    85.0,
+    100.0,
+    115.0,
+    130.0,
+    145.0
+   ],
+   "damage": [
+    35.0,
+    90.0,
+    145.0,
+    200.0,
+    260.0,
+    320.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     90.0,
+     145.0,
+     200.0,
+     260.0,
+     320.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAllyBomb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAllyBomb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAllyBomb"
+   ],
+   "evidence": "refined:name:ZileanQAllyBomb"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZileanQEnemyBomb",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    70.0,
+    85.0,
+    100.0,
+    115.0,
+    130.0,
+    145.0
+   ],
+   "damage": [
+    35.0,
+    90.0,
+    145.0,
+    200.0,
+    260.0,
+    320.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     90.0,
+     145.0,
+     200.0,
+     260.0,
+     320.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQEnemyBomb",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQEnemyBomb",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "rank_max": 15.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQEnemyBomb"
+   ],
+   "evidence": "refined:name:ZileanQEnemyBomb"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQEnemyBomb",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    70.0,
+    85.0,
+    100.0,
+    115.0,
+    130.0,
+    145.0
+   ],
+   "damage": [
+    35.0,
+    90.0,
+    145.0,
+    200.0,
+    260.0,
+    320.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.8999999761581421
+   },
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     90.0,
+     145.0,
+     200.0,
+     260.0,
+     320.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQEnemyBomb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQEnemyBomb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 15.0,
+    "rank_max": 15.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQEnemyBomb"
+   ],
+   "evidence": "refined:name:ZileanQEnemyBomb"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQAttachMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAttachMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAttachMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Time Bomb"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAttachMissile"
+   ],
+   "evidence": "refined:name:ZileanQAttachMissile"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQAttachMissileMinion",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileMinion",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileMinion",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Time Bomb"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAttachMissileMinion"
+   ],
+   "evidence": "refined:name:ZileanQAttachMissileMinion"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQAttachMissileShort",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileShort",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileShort",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Time Bomb"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAttachMissileShort"
+   ],
+   "evidence": "refined:name:ZileanQAttachMissileShort"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZileanQAttachMissileTall",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileTall",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanQAttachMissileTall",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 13.0,
+    "rank_max": 8.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Time Bomb"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanQAbility/ZileanQAttachMissileTall"
+   ],
+   "evidence": "refined:name:ZileanQAttachMissileTall"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "vision-economy.experience-sharing",
+  "family": "vision-economy",
+  "behavior": "HeightenedLearning",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HeightenedLearning",
+    "atoms": [
+     "vision-economy.experience-sharing"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Experience",
+    "Time in a Bottle"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/HeightenedLearningAbility/HeightenedLearning"
+   ],
+   "evidence": "refined:wiki-P"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Heightened_Learning",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    1.2
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_Heightened_Learning",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "rank_max": 120.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.01,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Experience",
+    "Time in a Bottle"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/Heightened_Learning"
+   ],
+   "evidence": "refined:wiki-P"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Rewind",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": null,
+   "duration": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "ratios": {
+    "primary": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_2": [
+     35.0,
+     35.0,
+     35.0,
+     35.0,
+     35.0,
+     35.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Rewind",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Rewind",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Rewind",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 2.1875,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cooldown reduction",
+    "Rewind"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/Rewind"
+   ],
+   "evidence": "refined:wiki-W"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZileanW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "damage": null,
+   "duration": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "ratios": {
+    "primary": 1.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_2": [
+     35.0,
+     35.0,
+     35.0,
+     35.0,
+     35.0,
+     35.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZileanW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZileanW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ZileanW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 2.1875,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cooldown reduction",
+    "Rewind"
+   ],
+   "binary": [
+    "Characters/Zilean/Spells/ZileanWAbility/ZileanW"
+   ],
+   "evidence": "refined:wiki-W"
+  },
+  "_unresolved": false
+ }
+]

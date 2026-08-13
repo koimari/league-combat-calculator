@@ -1,0 +1,3443 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiQRelease",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "impact",
+    "behavior": "YuumiQRelease",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.5,
+    "max_rank": 0.5
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiQAbility/YuumiQRelease"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiQAllyBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiQAllyBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{5ce77ac6}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 100.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiQSkillShot",
+    "duration": null
+   },
+   {
+    "state": "cast",
+    "behavior": "YuumiQCast",
+    "duration": null
+   },
+   {
+    "state": "impact",
+    "behavior": "YuumiQRelease",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiQAllyBuff",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiQSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiQAttackSpeedVisualMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 6.5,
+    "max_rank": 6.5
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiQAbility/YuumiQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YuumiQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 100.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5,
+     6.5
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiQSkillShot",
+    "duration": null
+   },
+   {
+    "state": "cast",
+    "behavior": "YuumiQCast",
+    "duration": null
+   },
+   {
+    "state": "impact",
+    "behavior": "YuumiQRelease",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiQAllyBuff",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiQSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiQAttackSpeedVisualMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 6.5,
+    "max_rank": 6.5
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiQAbility/YuumiQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiWCast",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 17413,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiWCast",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAbility/YuumiWCast"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiWAttach",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 17413,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiWAttach",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAbility/YuumiWAttach"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 16385,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiWCast",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiWSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAbility/YuumiW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiWSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 16385,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiWSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAbility/YuumiWSpellPassive"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "YuumiPHealMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0,
+    20000.0
+   ],
+   "cast_radius": [
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0
+   ],
+   "cast_frame": 7.974999904632568,
+   "missile_speed": 1500.0,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     20000.0,
+     20000.0,
+     20000.0,
+     20000.0,
+     20000.0,
+     20000.0,
+     20000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiPHealMis",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.266,
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiPHealMis"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiPShieldBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 9.0,
+   "missile_speed": null,
+   "affects_type_flags": 4234,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPShieldBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShieldBuff"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiPShieldBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 9.0,
+   "missile_speed": null,
+   "affects_type_flags": 4234,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPShieldBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShieldBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "YuumiPHealMark",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiPHealMark",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{4a0434de}"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiPHealMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiPHealMark",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{4a0434de}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiPCompanionshipBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPCompanionshipBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{6e292322}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiPCompanionshipBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPCompanionshipBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{6e292322}"
+   ],
+   "evidence": "name:companion"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiPShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 9.0,
+   "missile_speed": null,
+   "affects_type_flags": 4234,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPShieldBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPShieldBuff",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiPCompanionshipBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiP"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    110.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     120.0,
+     120.0,
+     110.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 120.0,
+    "max_rank": 100.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 16385,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{1d7bd936}"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 16385,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiRSpellPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{1d7bd936}"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiRShield",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{26fdc33c}"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiE",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiEAbility/YuumiE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiEAbility/YuumiE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiEURF",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     15.0,
+     13.75,
+     12.5,
+     11.25,
+     10.0,
+     10.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiEURF",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiEURF"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiEURF",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 8192,
+   "effect_amounts": {
+    "Cooldown": [
+     10.0,
+     15.0,
+     13.75,
+     12.5,
+     11.25,
+     10.0,
+     10.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "{210f9ec0}": [
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiEURF",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 10.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiEURF"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YuumiCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 7.75,
+   "missile_speed": 2200.0,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiCritAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.258,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "YuumiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 9.0,
+   "missile_speed": 1500.0,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "YuumiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 9.0,
+   "missile_speed": 1500.0,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiPAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0,
+    1800.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 9.0,
+   "missile_speed": null,
+   "affects_type_flags": 4234,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0,
+     1800.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiPShieldBuff",
+    "duration": null
+   },
+   {
+    "state": "persistent",
+    "behavior": "YuumiPCompanionshipBuff",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiPAbility/YuumiPAttack"
+   ],
+   "inherited_from": "YuumiP",
+   "evidence": "inherited:YuumiP"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 1900.0,
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiRMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{581ba847}"
+   ],
+   "inherited_from": "YuumiR",
+   "evidence": "inherited:YuumiR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YuumiQSkillShot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 100.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiQSkillShot",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Prowling Projectile"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiQSkillShot"
+   ],
+   "evidence": "Q: fires an errant missile that deals magic damage to the first enemy hit"
+  }
+ },
+ {
+  "atom_id": "vision-economy.attacker-reveal",
+  "family": "vision-economy",
+  "behavior": "YuumiQSkillShot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 100.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0,
+     5.0
+    ],
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YuumiQSkillShot",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 5.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Prowling Projectile"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiQSkillShot"
+   ],
+   "evidence": "Q: champion targets are revealed"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "YuumiWAlly",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    750.0,
+    800.0,
+    850.0,
+    900.0,
+    950.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     700.0,
+     700.0,
+     750.0,
+     800.0,
+     850.0,
+     900.0,
+     950.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiWAlly",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "You and Me!"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAlly"
+   ],
+   "evidence": "W: Yuumi dashes to the target allied champion and attaches"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiWAlly",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    750.0,
+    800.0,
+    850.0,
+    900.0,
+    950.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     700.0,
+     700.0,
+     750.0,
+     800.0,
+     850.0,
+     900.0,
+     950.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YuumiWAlly",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "You and Me!"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiWAlly"
+   ],
+   "evidence": "W: while attached Yuumi is untargetable (except turrets and inbound projectiles)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YuumiEPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YuumiEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Zoomies"
+   ],
+   "binary": [
+    "Characters/Yuumi/Spells/YuumiEPassive"
+   ],
+   "evidence": "E: grants bonus attack speed for 3 seconds and 20% bonus movement speed while the shield holds; attached bonus restores mana to the Anchor"
+  }
+ }
+]

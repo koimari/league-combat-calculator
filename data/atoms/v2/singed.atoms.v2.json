@@ -1,0 +1,1704 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SlipstreamMoveSpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SlipstreamMoveSpeedBuff"
+   ],
+   "evidence": "name:movespeed"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SlipstreamMoveSpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SlipstreamMoveSpeedBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "Fling",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 125.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "e1": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "e2": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "e3": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "e4": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "data_values": {
+    "BaseDamageValue": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "MaxHPDamage": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "FlingDistance": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "cast_time": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "damage": [
+    50.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ]
+   },
+   "stacks": {
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/FlingAbility/Fling"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.5
+   },
+   "uptime_fraction": 0.075,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "Fling",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 125.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "e1": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "e2": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "e3": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "e4": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "data_values": {
+    "BaseDamageValue": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "MaxHPDamage": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "FlingDistance": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "cast_time": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "damage": [
+    50.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ]
+   },
+   "stacks": {
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/FlingAbility/Fling"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.5
+   },
+   "uptime_fraction": 0.075,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Fling",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 8.0,
+   "range": 125.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "e0": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "e1": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "e2": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "e3": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "e4": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "data_values": {
+    "BaseDamageValue": [
+     50.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0
+    ],
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ],
+    "MaxHPDamage": [
+     6.0,
+     6.0,
+     6.5,
+     7.0,
+     7.5,
+     8.0,
+     8.5
+    ],
+    "FlingDistance": [
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0,
+     420.0
+    ],
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "cast_time": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "damage": [
+    50.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {
+    "RootDuration": [
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25
+    ]
+   },
+   "stacks": {
+    "NonChampionDamageCap": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/FlingAbility/Fling"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "max_rank": 8.5
+   },
+   "uptime_fraction": 0.075,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SingedBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SingedBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "InsanityPotion",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 100.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "data_values": {
+    "StatAmount": [
+     -5.0,
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0
+    ],
+    "Duration": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "GrievousAmount": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "GrievousDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "cooldown": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "duration": [
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "ratios": {
+    "Duration": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "GrievousDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   }
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/InsanityPotionAbility/InsanityPotion"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 100.0,
+    "max_rank": 100.0
+   },
+   "uptime_fraction": 0.25,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SingedCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SingedBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SingedBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "PoisonTrail",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 0.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "data_values": {
+    "BaseDamagePerSecond": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "APRatioPerSecond": [
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896
+    ],
+    "ToggleCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CloudDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ],
+    "PoisonDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MaxLingerTicks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0
+   ],
+   "duration": [
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25
+   ],
+   "ratios": {
+    "APRatioPerSecond": [
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896
+    ],
+    "CloudDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ],
+    "PoisonDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   }
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Poison Trail",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/PoisonTrailAbility/PoisonTrail"
+   ],
+   "evidence": "wiki: poison tick magic damage every 0.25s over 2s"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.persistent-area",
+  "family": "damage",
+  "behavior": "PoisonTrail",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "data_values": {
+    "BaseDamagePerSecond": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "APRatioPerSecond": [
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896
+    ],
+    "ToggleCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CloudDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ],
+    "PoisonDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TicksPerSecond": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MaxLingerTicks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": [
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0
+   ],
+   "duration": [
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25,
+    3.25
+   ],
+   "ratios": {
+    "APRatioPerSecond": [
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896,
+     0.42500001192092896
+    ],
+    "CloudDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ],
+    "PoisonDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.dot"
+  ],
+  "provenance": {
+   "wiki": [
+    "Poison Trail"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/PoisonTrailAbility/PoisonTrail"
+   ],
+   "evidence": "wiki: toxic cloud lingers 3.25s in Singed's wake"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ground",
+  "family": "crowd-control-mobility",
+  "behavior": "MegaAdhesive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 13.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mega Adhesive",
+    "Ground"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/MegaAdhesive"
+   ],
+   "evidence": "wiki: field grounds enemies for 3s"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MegaAdhesive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 13.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mega Adhesive",
+    "Slow"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/MegaAdhesive"
+   ]
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SingedP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "data_values": {
+    "MSPercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MSDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "PerTargetCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "TriggerArea": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ]
+   },
+   "cast_range": [
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0,
+    225.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MSDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Noxious Slipstream"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedPAbility/SingedP"
+   ],
+   "evidence": "wiki: stacks up to 25 on passing near champions"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SingedQPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Poison Trail",
+    "Mana cost"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SingedQPassive"
+   ],
+   "evidence": "wiki: toggle toggled off when unable to pay mana cost"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SlipstreamCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Noxious Slipstream"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SlipstreamCooldown"
+   ],
+   "evidence": "wiki: same-target slipstream limited to once every few seconds"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": null,
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ }
+]

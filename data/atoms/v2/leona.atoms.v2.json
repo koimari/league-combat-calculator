@@ -1,0 +1,3400 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaShieldOfDaybreakAttack",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreakAttack",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreakAttack"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "damage.basic-attack"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "damage.on-hit"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "LeonaShieldOfDaybreak",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "damage": [
+    10.0,
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "effect_amounts": {
+    "StunDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseDamage": [
+     10.0,
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaShieldOfDaybreak",
+    "atoms": [
+     "interaction.attack-reset"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    5.0,
+    5.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaShieldOfDaybreakAbility/LeonaShieldOfDaybreak"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaZenithBladeRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBladeRoot",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBladeRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaZenithBlade",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBlade",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBlade"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaZenithBlade",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBlade",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBlade"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeonaZenithBlade",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBlade",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBlade"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaSolarFlare",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    90.0,
+    90.0,
+    150.0
+   ],
+   "damage": [
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "OnHitAPRatio": 0.15000000596046448,
+    "ExplosionAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "OnHitBaseDamage": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnHitStacks": [
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "OnHitDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AttackRangeIncrease": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "OnHitAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ExplosionBaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "ExplosionAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowPercent": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "CCDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks_cap": 8.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarFlare",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    90.0,
+    150.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0556,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarFlareAbility/LeonaSolarFlare"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeonaSolarFlare",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    90.0,
+    90.0,
+    150.0
+   ],
+   "damage": [
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "OnHitAPRatio": 0.15000000596046448,
+    "ExplosionAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "OnHitBaseDamage": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnHitStacks": [
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "OnHitDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AttackRangeIncrease": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "OnHitAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ExplosionBaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "ExplosionAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowPercent": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "CCDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks_cap": 8.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarFlare",
+    "atoms": [
+     "damage.aoe"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    90.0,
+    150.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0556,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarFlareAbility/LeonaSolarFlare"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeonaSolarFlare",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    90.0,
+    90.0,
+    150.0
+   ],
+   "damage": [
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "OnHitAPRatio": 0.15000000596046448,
+    "ExplosionAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "OnHitBaseDamage": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnHitStacks": [
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "OnHitDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "AttackRangeIncrease": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "OnHitAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "ExplosionBaseDamage": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ],
+    "ExplosionAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowPercent": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "CCDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ]
+   },
+   "stacks_cap": 8.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarFlare",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    90.0,
+    150.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0556,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarFlareAbility/LeonaSolarFlare"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeonaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeonaSolarBarrier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrier",
+    "atoms": [
+     "damage.aoe"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeonaSolarBarrier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrier",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaSolarBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrier",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier"
+   ],
+   "evidence": "name:barrier"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "LeonaSolarBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrier",
+    "atoms": [
+     "interaction.parry"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeonaSolarBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrier",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaSolarBarrierAttackBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrierAttackBuff",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrierAttackBuff"
+   ],
+   "evidence": "name:barrier"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeonaSolarBarrierAttackBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "damage": [
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+    24.0,
+    28.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "FlatDamageReduction": [
+     4.0,
+     8.0,
+     12.0,
+     16.0,
+     20.0,
+     24.0,
+     28.0
+    ],
+    "FlatDamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     25.0,
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0
+    ],
+    "MRBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorBaseBonus": [
+     12.5,
+     20.0,
+     27.5,
+     35.0,
+     42.5,
+     50.0,
+     57.5
+    ],
+    "ArmorMRDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 11333
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaSolarBarrierAttackBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    9.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrierAttackBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "LeonaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaZenithBladeMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBladeMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBladeMissile"
+   ],
+   "inherited_from": "LeonaZenithBlade",
+   "evidence": "inherited:LeonaZenithBlade"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeonaZenithBladeMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBladeMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBladeMissile"
+   ],
+   "inherited_from": "LeonaZenithBlade",
+   "evidence": "inherited:LeonaZenithBlade"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeonaZenithBladeMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     210.0,
+     250.0
+    ],
+    "RootDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeonaZenithBladeMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0385,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaZenithBladeAbility/LeonaZenithBladeMissile"
+   ],
+   "inherited_from": "LeonaZenithBlade",
+   "evidence": "inherited:LeonaZenithBlade"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "LeonaSunlightPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "effect_amounts": {
+    "MarkDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark"
+  ],
+  "provenance": {
+   "wiki": [
+    "Sunlight",
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leona/Spells/LeonaSunlightPassiveAbility/LeonaSunlightPassive"
+   ],
+   "evidence": "wiki P Sunlight: allied damaging attacks consume the mark for bonus magic damage; binary key verified: Characters/Leona/Spells/LeonaSunlightPassiveAbility/LeonaSunlightPassive"
+  }
+ }
+]

@@ -1,0 +1,1873 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MonkeyKingCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MonkeyKingNimbus",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    30.0,
+    50.0
+   ],
+   "damage": [
+    40.0,
+    280.0
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbus",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusAbility/MonkeyKingNimbus"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MonkeyKingNimbus",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    30.0,
+    50.0
+   ],
+   "damage": [
+    40.0,
+    280.0
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbus",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusAbility/MonkeyKingNimbus"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MonkeyKingNimbus",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    30.0,
+    50.0
+   ],
+   "damage": [
+    40.0,
+    280.0
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbus",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusAbility/MonkeyKingNimbus"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingNimbus",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    30.0,
+    50.0
+   ],
+   "damage": [
+    40.0,
+    280.0
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbus",
+    "atoms": [
+     "stack-transform-summon-resource.clone"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusAbility/MonkeyKingNimbus"
+   ],
+   "evidence": "tag:Trait_CreateClone"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingPassiveStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "maxhealth": 2.0999999046325684
+   },
+   "tick_rate": null,
+   "stacks_cap": 5.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingPassiveStack",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingPassiveStack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.15,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingPassiveStack"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "MonkeyKingDecoyStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoyStealth",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "MonkeyKingDecoyStealth",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyStealth"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingDoubleAttackDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "adratio": 0.5,
+    "armor": 0.05000000074505806
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDoubleAttackDebuff",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingDoubleAttackDebuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDoubleAttackDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "MonkeyKingDecoy",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoy",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyAbility/MonkeyKingDecoy"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MonkeyKingDecoy",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoy",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyAbility/MonkeyKingDecoy"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MonkeyKingDecoy",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoy",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyAbility/MonkeyKingDecoy"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingDecoy",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoy",
+    "atoms": [
+     "stack-transform-summon-resource.clone"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyAbility/MonkeyKingDecoy"
+   ],
+   "evidence": "tag:Trait_CreateClone"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "MonkeyKingDecoy",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    18.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    40.0
+   ],
+   "damage": [
+    0.3499999940395355,
+    0.6499999761581421
+   ],
+   "duration": [
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDecoy",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDecoyAbility/MonkeyKingDecoy"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingNimbusKickClone",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    2.5,
+    1.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbusKickClone",
+    "atoms": [
+     "stack-transform-summon-resource.clone"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 2.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusKickClone"
+   ],
+   "evidence": "name:clone"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MonkeyKingBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MonkeyKingBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MonkeyKingBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MonkeyKingBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MonkeyKingDoubleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "adratio": 0.5,
+    "armor": 0.05000000074505806
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDoubleAttackAbility/MonkeyKingDoubleAttack"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MonkeyKingDoubleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "adratio": 0.5,
+    "armor": 0.05000000074505806
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDoubleAttackAbility/MonkeyKingDoubleAttack"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MonkeyKingDoubleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "adratio": 0.5,
+    "armor": 0.05000000074505806
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDoubleAttackAbility/MonkeyKingDoubleAttack"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "MonkeyKingDoubleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "adratio": 0.5,
+    "armor": 0.05000000074505806
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingDoubleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingDoubleAttackAbility/MonkeyKingDoubleAttack"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingNimbusAS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    30.0,
+    50.0
+   ],
+   "damage": [
+    40.0,
+    280.0
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbusAS",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 5.0,
+    "behavior": "MonkeyKingNimbusAS",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Nimbus Strike"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusStrikeAbility/MonkeyKingNimbusAS"
+   ],
+   "evidence": "wiki:E grants attack speed to self (mBuff)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "MonkeyKingNimbusKick",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    2.5,
+    1.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingNimbusKick",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 2.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Nimbus Strike"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingNimbusStrikeAbility/MonkeyKingNimbusKick"
+   ],
+   "evidence": "wiki:E dashes to target enemy"
+  }
+ },
+ {
+  "atom_id": "damage.on-attack",
+  "family": "damage",
+  "behavior": "MonkeyKingQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingQAttack",
+    "atoms": [
+     "damage.on-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingQAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Crushing Blow"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingQAttack"
+   ],
+   "evidence": "wiki:Q empowers next basic attack with bonus physical damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MonkeyKingQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingQAttack",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MonkeyKingQAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Crushing Blow"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingQAttack"
+   ],
+   "evidence": "wiki:Q inflicts armor reduction for 3s"
+  }
+ },
+ {
+  "atom_id": "damage.persistent-area",
+  "family": "damage",
+  "behavior": "MonkeyKingSpinRecast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    660.0,
+    660.0
+   ],
+   "mana_cost": [
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": [
+    0.6000000238418579,
+    0.6000000238418579
+   ],
+   "ratios": {
+    "adratio": 1.375
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingSpinRecast",
+    "atoms": [
+     "damage.persistent-area"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.6000000238418579,
+    "behavior": "MonkeyKingSpinRecast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.06,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Cyclone"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingSpinToWinAbility/MonkeyKingSpinRecast"
+   ],
+   "evidence": "wiki:R deals physical damage every 0.25s while spinning (mBuff)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "MonkeyKingSpinRecast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    660.0,
+    660.0
+   ],
+   "mana_cost": [
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": [
+    0.6000000238418579,
+    0.6000000238418579
+   ],
+   "ratios": {
+    "adratio": 1.375
+   },
+   "tick_rate": 0.25,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingSpinRecast",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.6000000238418579,
+    "behavior": "MonkeyKingSpinRecast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.06,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Cyclone"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingSpinToWinAbility/MonkeyKingSpinRecast"
+   ],
+   "evidence": "wiki:R knocks enemies up once for 0.6s per cast"
+  }
+ },
+ {
+  "atom_id": "heal-shield.health-regeneration",
+  "family": "heal-shield",
+  "behavior": "MonkeyKingPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "maxhealth": 2.0999999046325684
+   },
+   "tick_rate": null,
+   "stacks_cap": 5.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MonkeyKingPassive",
+    "atoms": [
+     "heal-shield.health-regeneration"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 3.0,
+    "behavior": "MonkeyKingPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.15,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Monkey King Stone Skin"
+   ],
+   "binary": [
+    "Characters/MonkeyKing/Spells/MonkeyKingPassiveAbility/MonkeyKingPassive"
+   ],
+   "evidence": "wiki:P regenerates 0.35% max HP every 5s"
+  }
+ }
+]

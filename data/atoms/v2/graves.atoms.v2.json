@@ -1,0 +1,2587 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 3000.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GravesBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 3000.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GravesChargeShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "RBaseDamage": [
+     125.0,
+     275.0,
+     425.0,
+     575.0,
+     725.0,
+     875.0,
+     1025.0
+    ],
+    "RFalloffDamage": [
+     80.0,
+     200.0,
+     320.0,
+     440.0,
+     560.0,
+     680.0,
+     800.0
+    ],
+    "RKnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "missile_speed": 1400.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "Damage": {
+     "base": "RBaseDamage",
+     "ratios": [
+      "None"
+     ]
+    },
+    "FalloffDamage": {
+     "base": null,
+     "ratios": [
+      "None"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.5,
+    "coefficient2": 1.2000000476837158
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShot"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesChargeShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "affects_type_flags": 13327,
+   "effect_amounts": {
+    "RBaseDamage": [
+     125.0,
+     275.0,
+     425.0,
+     575.0,
+     725.0,
+     875.0,
+     1025.0
+    ],
+    "RFalloffDamage": [
+     80.0,
+     200.0,
+     320.0,
+     440.0,
+     560.0,
+     680.0,
+     800.0
+    ],
+    "RKnockbackDistance": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ]
+   },
+   "missile_speed": 1400.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "Damage": {
+     "base": "RBaseDamage",
+     "ratios": [
+      "None"
+     ]
+    },
+    "FalloffDamage": {
+     "base": null,
+     "ratios": [
+      "None"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.5,
+    "coefficient2": 1.2000000476837158
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShot"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GravesQLineSpell",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    13.0,
+    13.0,
+    11.25,
+    9.5,
+    7.75,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "affects_type_flags": 23759,
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "FirstADRatio": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "BaseDetonationDamage": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "bADDetonationRatio": [
+     0.4000000059604645,
+     0.550000011920929,
+     0.699999988079071,
+     0.8500000238418579,
+     1.0,
+     1.149999976158142,
+     1.2999999523162842
+    ],
+    "TerrainCollisionDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "missile_speed": 902.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": "BaseDamage",
+     "ratios": [
+      "FirstADRatio"
+     ]
+    },
+    "TotalDetonationDamage": {
+     "base": "BaseDetonationDamage",
+     "ratios": [
+      "bADDetonationRatio"
+     ]
+    }
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQLineSpell"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesQLineSpell",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    13.0,
+    13.0,
+    11.25,
+    9.5,
+    7.75,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "affects_type_flags": 23759,
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "FirstADRatio": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "BaseDetonationDamage": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ],
+    "bADDetonationRatio": [
+     0.4000000059604645,
+     0.550000011920929,
+     0.699999988079071,
+     0.8500000238418579,
+     1.0,
+     1.149999976158142,
+     1.2999999523162842
+    ],
+    "TerrainCollisionDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "missile_speed": 902.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": "BaseDamage",
+     "ratios": [
+      "FirstADRatio"
+     ]
+    },
+    "TotalDetonationDamage": {
+     "base": "BaseDetonationDamage",
+     "ratios": [
+      "bADDetonationRatio"
+     ]
+    }
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQLineSpell"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesAutoAttackRecoil",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "slot_0": [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "slot_1": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0
+    ],
+    "slot_2": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "slot_3": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "slot_4": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "missile_speed": 1500.0,
+   "cast_frame": 8.0,
+   "is_toggle": true,
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "None"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle-or-buff"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.267,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesAutoAttackRecoil"
+   ],
+   "evidence": "name:autoattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GravesSmokeGrenade",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    26.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0
+   ],
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ]
+   },
+   "missile_speed": 1650.0,
+   "cast_frame": 8.5,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_Target_Area",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "ImpactDamage": {
+     "base": "BaseDamage",
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.6000000238418579
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.283,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeGrenade"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesSmokeGrenade",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    26.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0
+   ],
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     60.0,
+     110.0,
+     160.0,
+     210.0,
+     260.0,
+     310.0
+    ]
+   },
+   "missile_speed": 1650.0,
+   "cast_frame": 8.5,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_Target_Area",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "ImpactDamage": {
+     "base": "BaseDamage",
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.6000000238418579
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "Spell2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.283,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeGrenade"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GravesBasicAttackSpread",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23178,
+   "missile_speed": 3800.0,
+   "spell_tags": [
+    "Trait_MultiTargetAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackSpread"
+   ],
+   "evidence": "tag:Trait_MultiTargetAttack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackSpread",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23178,
+   "missile_speed": 3800.0,
+   "spell_tags": [
+    "Trait_MultiTargetAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackSpread"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackSpread",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23178,
+   "missile_speed": 3800.0,
+   "spell_tags": [
+    "Trait_MultiTargetAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackSpread"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackAmmo2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackAmmo2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesBasicAttackAmmo2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo2"
+   ],
+   "evidence": "name:ammo"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackAmmo1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackAmmo1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesBasicAttackAmmo1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesBasicAttackAmmo1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackAmmo1"
+   ],
+   "evidence": "name:ammo"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackClone",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 25000.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackClone"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GravesBasicAttackClone",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 25000.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackClone"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesBasicAttackClone",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 25000.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesBasicAttackClone"
+   ],
+   "evidence": "name:clone"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesEGrit",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesMoveAbility/GravesEGrit"
+   ],
+   "evidence": "name:grit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "GravesMove",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ArmorPerStack": [
+     4.0,
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0,
+     22.0
+    ],
+    "MRGrantPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CooldownPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxStacks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 25.850000381469727,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection"
+   ],
+   "calculations": {
+    "MRGrant": {
+     "base": null,
+     "ratios": []
+    }
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.862,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cast_time_seconds": 0.862,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesMoveAbility/GravesMove"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GravesMove",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ArmorPerStack": [
+     4.0,
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0,
+     22.0
+    ],
+    "MRGrantPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CooldownPerHit": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxStacks": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 25.850000381469727,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection"
+   ],
+   "calculations": {
+    "MRGrant": {
+     "base": null,
+     "ratios": []
+    }
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.862,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cast_time_seconds": 0.862,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesMoveAbility/GravesMove"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GravesCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156,
+    284.6000061035156
+   ],
+   "affects_type_flags": 21711,
+   "missile_speed": 3400.0,
+   "cast_frame": 7.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.233,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesChargeShotShot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     0.0,
+     20.0,
+     45.0,
+     70.0,
+     95.0,
+     110.0,
+     135.0
+    ]
+   },
+   "missile_speed": 2100.0,
+   "cast_frame": 7.5,
+   "ratios": {
+    "coefficient": 1.2000000476837158
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotShot"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q End of the Line projectile hit)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesChargeShotXplode",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     5.0,
+     60.0,
+     115.0,
+     170.0,
+     225.0,
+     280.0,
+     335.0
+    ],
+    "slot_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 18.0,
+   "ratios": {
+    "coefficient": 0.699999988079071
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "Attack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": 0.6,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotXplode"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q explosion)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesQLineMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 3000.0,
+   "cast_frame": 15.074999809265137
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.502,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.502,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQLineMis"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q line missile)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesQZoneMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 3000.0,
+   "cast_frame": 15.074999809265137
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.502,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.502,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQZoneMis"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q zone missile)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesQReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "slot_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "missile_speed": 1600.0,
+   "cast_frame": 7.53000020980835,
+   "ratios": {
+    "coefficient": 1.2000000476837158
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.251,
+    "behavior": "None"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.251,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQReturn"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q return hit)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GravesQZoneSpell",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "affects_type_flags": 23759,
+   "effect_amounts": {
+    "slot_0": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "slot_1": [
+     0.0,
+     70.0,
+     140.0,
+     210.0,
+     280.0,
+     350.0,
+     420.0
+    ],
+    "slot_2": [
+     0.20000000298023224,
+     0.4000000059604645,
+     0.6000000238418579,
+     0.800000011920929,
+     1.0,
+     1.2000000476837158,
+     1.399999976158142
+    ],
+    "slot_3": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "missile_speed": 902.0,
+   "cast_frame": 7.5,
+   "ratios": {
+    "coefficient": 0.75
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage",
+    "Area of effect"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQZoneSpell"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (Q end-of-line explosion zone)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GravesSmokeGrenadeBoom",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "slot_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "slot_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0
+    ]
+   },
+   "missile_speed": 1500.0,
+   "cast_frame": 7.974999904632568,
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.266,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeGrenadeBoom"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (W Smoke Screen impact magic damage)"
+  }
+ },
+ {
+  "atom_id": "vision-economy.nearsight",
+  "family": "vision-economy",
+  "behavior": "GravesSmokeCloud",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Nearsight",
+    "Vision",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeCloud"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (W smoke cloud nearsight zone)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesPassive",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "CritDamageRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "StructureDamageReduction": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "calculations": {
+    "SingleBulletDamage": {
+     "base": null,
+     "ratios": [
+      "None"
+     ]
+    },
+    "CritDamageMult": {
+     "base": null,
+     "ratios": []
+    },
+    "{549cda4d}": {
+     "base": null,
+     "ratios": [
+      "None"
+     ]
+    }
+   }
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ammunition",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesPassiveAbility/GravesPassive"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (P New Destiny ammo driver)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesPassiveShotAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesPassiveAbility/GravesPassiveShotAttack"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (P passive shot attack)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GravesClusterShotAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 2800.0,
+   "cast_frame": 15.074999809265137
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.502,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.502,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesClusterShotAttack"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (P pellet basic attack, alt VolleyAttack)"
+  }
+ }
+]

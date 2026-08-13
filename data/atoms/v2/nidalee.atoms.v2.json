@@ -1,0 +1,2260 @@
+[
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "Takedown",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.175,
+    "behavior": "Takedown",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Takedown",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Takedown"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JavelinToss",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": [
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "JavelinToss",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JavelinToss",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JavelinToss",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/JavelinTossAbility/JavelinToss"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "PrimalSurge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "PrimalSurge",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "PrimalSurge",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/PrimalSurgeAbility/PrimalSurge"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "PrimalSurge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "PrimalSurge",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/PrimalSurgeAbility/PrimalSurge"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NidaleeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NidaleeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.6,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AspectOfTheCougar",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AspectOfTheCougar",
+    "atoms": [
+     "stack-transform-summon-resource.transform"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AspectOfTheCougar",
+    "atoms": [
+     "stack-transform-summon-resource.transform"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 3.0,
+    "rank_max": 3.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/AspectOfTheCougarAbility/AspectOfTheCougar"
+   ],
+   "evidence": "tag:Trait_Transformation"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Bushwhack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/Bushwhack"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "Bushwhack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/Bushwhack"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Bushwhack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/Bushwhack"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Bushwhack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    55.0
+   ],
+   "damage": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Bushwhack",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/Bushwhack"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BushwhackDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "BushwhackDamage",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/BushwhackDamage"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BushwhackDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "BushwhackDamage",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/BushwhackAbility/BushwhackDamage"
+   ],
+   "evidence": "name:bushwhack"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "BrushPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "BrushPassive",
+    "atoms": [
+     "vision-economy.sight"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleePassiveHuntAbility/BrushPassive"
+   ],
+   "evidence": "name:brush"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "Pounce",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    210.0,
+    260.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Pounce",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Pounce",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Pounce"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "Pounce",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    210.0,
+    260.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "Pounce",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Pounce",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Pounce"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NidaleeCougarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "NidaleeCougarBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCougarBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NidaleeCougarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "NidaleeCougarBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCougarBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NidaleeCougarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "NidaleeCougarCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCougarCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NidaleeCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.208,
+    "behavior": "NidaleeCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NidaleeCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NidaleeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.61,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NidaleeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.61,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NidaleeCougarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "NidaleeCougarBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCougarBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NidaleeCougarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "NidaleeCougarBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeCougarBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "PounceMS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "PounceMS",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/PounceMS"
+   ],
+   "evidence": "name:ms"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "nidalee Passive (Bushwhack)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "nidalee Passive (Bushwhack)",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Bushwhack"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "Prowl",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Prowl",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Prowl"
+   ],
+   "evidence": "wiki:P Prowl - 10% bonus movement speed in brush, 30% facing a visible enemy"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "Prowl",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Prowl",
+    "atoms": [
+     "crowd-control-mobility.ghost"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ghosting"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Prowl"
+   ],
+   "evidence": "wiki:P Prowl - ghosting while in brush"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "NidaleePassiveHunt",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleePassiveHunt",
+    "atoms": [
+     "vision-economy.sight"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleePassiveHuntAbility/NidaleePassiveHunt"
+   ],
+   "evidence": "wiki:P Hunt - marked targets are revealed and grant sight of a 300-unit radius"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "NidaleeTakedownAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 7423
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.667,
+    "behavior": "NidaleeTakedownAttack",
+    "atoms": [
+     "damage.execute"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NidaleeTakedownAttack",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execute"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeTakedownAttack"
+   ],
+   "evidence": "binary:TakedownDamageAmp calc; cougar Q bonus damage (missing-health amp) + melee attack replacement"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Swipe",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    80.0,
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    260.0,
+    260.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.733,
+    "behavior": "Swipe",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Swipe",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 6.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/Swipe"
+   ],
+   "evidence": "binary:SwipeDamage + SwipeADRatio/SwipeAPRatio calcs (cougar E damage ability)"
+  }
+ }
+]

@@ -1,0 +1,5627 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "MelW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "Duration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ShieldRadius": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "BaseDamagePercent": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "PhysDamageMod": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BaseShieldAmount": [
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "MoveSpeedDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "Trait_Shield",
+    "Trait_ProjectileDestruction",
+    "Trait_Immune"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "protective barrier + shield (BaseShieldAmount 50-230) + 40% decaying move speed for 0.75s"
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "hostile projectiles destroyed and replicated toward original sources; 35-65% damage retained (BaseDamagePercent), physical reduced 30% before conversion (PhysDamageMod)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelWAbility/MelW"
+   ],
+   "evidence": "tag:Trait_Immune"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "MelW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "heal": [
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0,
+    230.0
+   ],
+   "ratios": {},
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "Duration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ShieldRadius": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "BaseDamagePercent": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "PhysDamageMod": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BaseShieldAmount": [
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "MoveSpeedDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "Trait_Shield",
+    "Trait_ProjectileDestruction",
+    "Trait_Immune"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "protective barrier + shield (BaseShieldAmount 50-230) + 40% decaying move speed for 0.75s"
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "hostile projectiles destroyed and replicated toward original sources; 35-65% damage retained (BaseDamagePercent), physical reduced 30% before conversion (PhysDamageMod)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelWAbility/MelW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "MelW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "Duration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ShieldRadius": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "BaseDamagePercent": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "MoveSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "PhysDamageMod": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BaseShieldAmount": [
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "MoveSpeedDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "spell_tags": [
+    "Trait_Shield",
+    "Trait_ProjectileDestruction",
+    "Trait_Immune"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "protective barrier + shield (BaseShieldAmount 50-230) + 40% decaying move speed for 0.75s"
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "hostile projectiles destroyed and replicated toward original sources; 35-65% damage retained (BaseDamagePercent), physical reduced 30% before conversion (PhysDamageMod)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelWAbility/MelW"
+   ],
+   "evidence": "tag:Trait_ProjectileDestruction"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MelBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{1031c47f}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MelBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{1031c47f}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MelPassiveUltKillMark",
+  "trigger": "on_takedown",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{fea9c16e}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MelRStackWatcher",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "BasePassiveStackDamage": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "BasePassiveFlatDamage": [
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseUltStackDamage": [
+     4.0,
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0
+    ],
+    "BaseUltFlatDamage": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "DisintegrateDelay": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "duration": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "affects_type_flags": 6146
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.9,
+    "behavior": "disintegrate delay 0.9s (DisintegrateDelay), enemies revealed 1s from cast start"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "radiant blast on all Overwhelm enemies: magic damage (BaseUltFlatDamage 50-500 + BaseUltStackDamage 1-19 per stack)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.9,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "{2152fae8}"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "duration": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6146,
+   "effect_amounts": {
+    "BasePassiveStackDamage": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "BasePassiveFlatDamage": [
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseUltStackDamage": [
+     4.0,
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0
+    ],
+    "BaseUltFlatDamage": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "DisintegrateDelay": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.9,
+    "behavior": "disintegrate delay 0.9s (DisintegrateDelay), enemies revealed 1s from cast start"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "radiant blast on all Overwhelm enemies: magic damage (BaseUltFlatDamage 50-500 + BaseUltStackDamage 1-19 per stack)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.9,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelRAbility/MelR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "duration": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6146,
+   "effect_amounts": {
+    "BasePassiveStackDamage": [
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "BasePassiveFlatDamage": [
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BaseUltStackDamage": [
+     4.0,
+     7.0,
+     10.0,
+     13.0,
+     16.0,
+     19.0
+    ],
+    "BaseUltFlatDamage": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0
+    ],
+    "DisintegrateDelay": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.9,
+    "behavior": "disintegrate delay 0.9s (DisintegrateDelay), enemies revealed 1s from cast start"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "radiant blast on all Overwhelm enemies: magic damage (BaseUltFlatDamage 50-500 + BaseUltStackDamage 1-19 per stack)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.9,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelRAbility/MelR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MelQMissile1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{54b6ccc3}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "ratios": {},
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelQAbility/MelQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "ratios": {},
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelQAbility/MelQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "MelERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": [],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "{81be74d8}"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MelE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelEAbility/MelE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": [],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelEAbility/MelE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": [],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelEAbility/MelE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MelE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ]
+   },
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": [],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelEAbility/MelE"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MelESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamage": [
+     60.0,
+     105.0,
+     150.0,
+     195.0,
+     240.0,
+     285.0
+    ],
+    "BaseAreaDamage": [
+     16.0,
+     28.0,
+     40.0,
+     52.0,
+     64.0,
+     76.0
+    ],
+    "AreaAPRatio": [
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066,
+     0.07999999821186066
+    ],
+    "AreaSlowAmount": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "AreaSlowDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MinionMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxAreaRadius": [
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0,
+     230.0
+    ],
+    "TimeToMaxRadius": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "AreaTicksPerSecond": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "DoTDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_DoT",
+    "Trait_Ranged_Piercing",
+    "Trait_AoE",
+    "Trait_ImmobilizingCCSpell"
+   ],
+   "reset_on": [],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "tick_rate": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "orb grants sight every 0.25s while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "root 1.5s (RootDuration) + magic damage (BaseDamage 15-285)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.5,
+    "behavior": "solar field expands after 0.5s delay (TimeToMaxRadius), 8 ticks/s (AreaTicksPerSecond), 30% slow (AreaSlowAmount), slow lingers 0.25s (AreaSlowDuration)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{fa3d02a5}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MelBasicAttackEnhanced",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{f1d12415}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MelBasicAttackEnhanced",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{f1d12415}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MelBasicAttackEnhanced",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "{f1d12415}"
+   ],
+   "evidence": "name:enhance"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MelCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 24527,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mel/Spells/MelCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile10",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{4ec4a289}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile10",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{4ec4a289}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{55b6ce56}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{55b6ce56}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{56b6cfe9}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{56b6cfe9}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{57b6d17c}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{57b6d17c}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{58b6d30f}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{58b6d30f}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{59b6d4a2}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{59b6d4a2}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile7",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{5ab6d635}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile7",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{5ab6d635}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile8",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{5bb6d7c8}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile8",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{5bb6d7c8}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissile9",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{5cb6d95b}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissile9",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{5cb6d95b}"
+   ],
+   "inherited_from": "MelQ",
+   "evidence": "inherited:MelQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelPassiveBonusMissileLeft",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{12497dc8}"
+   ],
+   "evidence": "refined: Overwhelm fires a bonus magic-damage bolt"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelPassiveBonusMissileRight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{40323c5d}"
+   ],
+   "evidence": "refined: Overwhelm fires a bonus magic-damage bolt"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MelPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 9.0,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "OverwhelmDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "BonusAttackDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "PassiveBonusMissiles": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "MaxPassiveBonusMissiles": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ]
+   },
+   "spell_tags": [],
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "Overwhelm stacks for 5s per damage instance, refresh on new damage; Searing Brilliance 3 stacks/cast, cap 9"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack fires blazing projectiles (8-30 + 4% AP each)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Searing Brilliance stacks consumed on next basic attack"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking"
+   ],
+   "binary": [
+    "{64e86cf4}"
+   ],
+   "evidence": "refined: Overwhelm hit counter; every 6th attack/ability triggers the bonus bolts"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MelQMissileBase",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Area of effect"
+   ],
+   "binary": [
+    "{80dfbd65}"
+   ],
+   "evidence": "refined: Q's initial missile splits into eight on first hit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MelQMissileBase",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "ExplosionDamage": [
+     5.0,
+     7.0,
+     9.0,
+     11.0,
+     13.0,
+     15.0
+    ],
+    "ExplosionCount": [
+     6.0,
+     7.0,
+     8.0,
+     9.0,
+     10.0,
+     11.0
+    ],
+    "Spread": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "ExplosionRadius": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "ChannelDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "InitialDamage": [
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "reset_on": [],
+   "damage": [
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "barrage over 0.5s (ChannelDuration), bolts distribute evenly in area"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "bolts grant sight while travelling"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosions deal magic damage (InitialDamage 35-185 + 5-11 bolts ExplosionCount), later explosions reduced"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{80dfbd65}"
+   ],
+   "evidence": "refined: Q base missile damage before splitting"
+  }
+ }
+]

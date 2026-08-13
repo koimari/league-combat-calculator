@@ -1,0 +1,1589 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KassadinCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ForcePulse",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "ap": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/ForcePulseAbility/ForcePulse"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.0,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank": 16.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ForcePulse",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "ap": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/ForcePulseAbility/ForcePulse"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.0,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_rank": 16.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0455,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NullLance",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    35.0,
+    65.0,
+    95.0,
+    125.0,
+    155.0,
+    185.0,
+    215.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NullLanceAbility/NullLance"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 1400.0
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NullLance",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    35.0,
+    65.0,
+    95.0,
+    125.0,
+    155.0,
+    185.0,
+    215.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NullLanceAbility/NullLance"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_travel",
+    "atoms": [],
+    "speed": 1400.0
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NetherBlade",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBlade"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NetherBlade",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBlade"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NetherBlade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBlade"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NetherBlade",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBlade"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "attack_reset"
+   ],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NetherBladeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBladeBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "RiftWalk",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    3.5,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    90.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/RiftWalkAbility/RiftWalk"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RiftWalk",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    3.5,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    90.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/RiftWalkAbility/RiftWalk"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RiftWalk",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    3.5,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    90.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/RiftWalkAbility/RiftWalk"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RiftWalk",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    5.0,
+    5.0,
+    3.5,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    90.0,
+    110.0,
+    110.0,
+    110.0,
+    110.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/RiftWalkAbility/RiftWalk"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ability_cast"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_impact"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KassadinBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4,
+    49.4
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/KassadinBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.resistance-penetration",
+  "family": "interaction",
+  "behavior": "NetherBladeArmorPen",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic penetration",
+    "Nether Blade"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/NetherBladeAbility/NetherBladeArmorPen"
+   ],
+   "evidence": "buff tooltip game_buff_tooltip_NetherBladeArmorPen; Nether Blade passive ignores a portion of target magic resistance"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.magic-damage-reduction",
+  "family": "interaction",
+  "behavior": "VoidStone",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Void Stone",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/VoidStoneAbility/VoidStone"
+   ],
+   "evidence": "innate: permanently ghosted and takes reduced magic damage"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ForcePulseAvailable",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Force Pulse"
+   ],
+   "binary": [
+    "Characters/Kassadin/Spells/ForcePulseAbility/ForcePulseAvailable"
+   ],
+   "evidence": "E passive: ability casts charge Force Pulse"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff_persist"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ }
+]

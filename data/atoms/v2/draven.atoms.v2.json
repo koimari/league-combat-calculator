@@ -1,0 +1,2420 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DravenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24575
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenBasicAttack2.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DravenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24575
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenBasicAttack2.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenSpinning",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": [
+    [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    [
+     5.75,
+     5.75,
+     5.75,
+     5.75,
+     5.75,
+     5.75,
+     5.75
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinning.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinning.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinning"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "DravenSpinningAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.23330000042915344,
+    "behavior": "DravenSpinningAttackCrit.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinningAttackCrit.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinningAttackCrit.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinningAttackCrit"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "DravenSpinningAttack2Crit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.23330000042915344,
+    "behavior": "DravenSpinningAttack2Crit.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinningAttack2Crit.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinningAttack2Crit.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinningAttack2Crit"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DravenFury",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    35,
+    30,
+    25,
+    20
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap": 1.0
+   },
+   "effect_amounts": [
+    [
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    [
+     20.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2418999969959259,
+    "behavior": "DravenFury.cast",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DravenFury.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    12
+   ],
+   "cast_time_seconds": 0.242,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenFuryAbility/DravenFury"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DravenFury",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    35,
+    30,
+    25,
+    20
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap": 1.0
+   },
+   "effect_amounts": [
+    [
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    [
+     20.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2418999969959259,
+    "behavior": "DravenFury.cast",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DravenFury.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    12
+   ],
+   "cast_time_seconds": 0.242,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenFuryAbility/DravenFury"
+   ],
+   "evidence": "name:fury"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DravenFuryBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    35,
+    30,
+    25,
+    20
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenFuryBuff.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    12
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenFuryAbility/DravenFuryBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DravenFuryBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    35,
+    30,
+    25,
+    20
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenFuryBuff.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    12
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenFuryAbility/DravenFuryBuff"
+   ],
+   "evidence": "name:fury"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "DravenDoubleShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DravenDoubleShot.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShot.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShot.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShot"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "DravenDoubleShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DravenDoubleShot.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShot.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShot.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShot"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DravenDoubleShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DravenDoubleShot.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShot.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShot.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShot"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenDoubleShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DravenDoubleShot.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShot.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShot.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShot"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DravenPassiveStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenPassiveStacks.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenPassiveAbility/DravenPassiveStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "DravenCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24575
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenCritAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenCritAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DravenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24575
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenBasicAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DravenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 24575
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenBasicAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DravenRCast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100,
+    90,
+    80
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100,
+    100,
+    100
+   ],
+   "damage": [
+    200,
+    300,
+    400
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "DravenRCast.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenRCast.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenRCast.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    100,
+    80
+   ],
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenRCastAbility/DravenRCast"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenRCast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100,
+    90,
+    80
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100,
+    100,
+    100
+   ],
+   "damage": [
+    200,
+    300,
+    400
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "DravenRCast.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenRCast.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenRCast.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    100,
+    80
+   ],
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenRCastAbility/DravenRCast"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenSpinningAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinningAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinningAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinningAttack"
+   ],
+   "inherited_from": "DravenSpinning",
+   "evidence": "inherited:DravenSpinning"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenSpinningReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {
+    "ap": 0.4
+   },
+   "effect_amounts": [
+    [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinningReturn.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinningReturn.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinningReturn"
+   ],
+   "inherited_from": "DravenSpinning",
+   "evidence": "inherited:DravenSpinning"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenSpinningAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenSpinningAttack2.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinningAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningAbility/DravenSpinningAttack2"
+   ],
+   "inherited_from": "DravenSpinning",
+   "evidence": "inherited:DravenSpinning"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "DravenDoubleShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 1.2
+   },
+   "effect_amounts": [
+    [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "DravenDoubleShotMissile.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShotMissile"
+   ],
+   "inherited_from": "DravenDoubleShot",
+   "evidence": "inherited:DravenDoubleShot"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "DravenDoubleShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 1.2
+   },
+   "effect_amounts": [
+    [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "DravenDoubleShotMissile.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShotMissile"
+   ],
+   "inherited_from": "DravenDoubleShot",
+   "evidence": "inherited:DravenDoubleShot"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DravenDoubleShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 1.2
+   },
+   "effect_amounts": [
+    [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "DravenDoubleShotMissile.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShotMissile"
+   ],
+   "inherited_from": "DravenDoubleShot",
+   "evidence": "inherited:DravenDoubleShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DravenDoubleShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16,
+    15,
+    14,
+    13,
+    12
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": [
+    70,
+    70,
+    70,
+    70,
+    70
+   ],
+   "damage": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "duration": [
+    75,
+    110,
+    145,
+    180,
+    215
+   ],
+   "ratios": {
+    "ap": 1.2
+   },
+   "effect_amounts": [
+    [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "DravenDoubleShotMissile.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenDoubleShotMissile.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16,
+    12
+   ],
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenDoubleShotAbility/DravenDoubleShotMissile"
+   ],
+   "inherited_from": "DravenDoubleShot",
+   "evidence": "inherited:DravenDoubleShot"
+  }
+ },
+ {
+  "atom_id": "vision-economy.gold-on-takedown",
+  "family": "vision-economy",
+  "behavior": "DravenPassive",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenPassive.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Draven/P",
+    "League of Draven"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenPassive"
+   ],
+   "evidence": "wiki: champion takedown consumes Adoration for 25 + 2/stacks gold; 50% of stacks lost on death"
+  }
+ },
+ {
+  "atom_id": "interaction.catch-refresh",
+  "family": "interaction",
+  "behavior": "DravenSpinning",
+  "trigger": "on_catch",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12,
+    11,
+    10,
+    9,
+    8
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    45,
+    45,
+    45,
+    45,
+    45
+   ],
+   "damage": null,
+   "duration": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenSpinning.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12,
+    8
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Draven/Q",
+    "Spinning Axe"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenSpinningSpellPassive",
+    "Characters/Draven/Spells/DravenSpinningReturnCatch",
+    "Characters/Draven/Spells/DravenSpinningLeft"
+   ],
+   "evidence": "wiki: catching the ricocheted axe refreshes the empowered attack; up to 2 axes held"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "DravenR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100,
+    90,
+    80
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100,
+    100,
+    100
+   ],
+   "damage": [
+    200,
+    300,
+    400
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": [
+    [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "DravenR.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DravenR.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DravenR.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    100,
+    80
+   ],
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Draven/R",
+    "Whirling Death"
+   ],
+   "binary": [
+    "Characters/Draven/Spells/DravenR",
+    "Characters/Draven/Spells/DravenRDoublecast"
+   ],
+   "evidence": "wiki: executes enemies damaged below a health threshold equal to Adoration stacks"
+  }
+ }
+]

@@ -1,0 +1,2829 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SwainE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "missile_speed": 935.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "E2Ratio": 0.699999988079071
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 935.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SwainE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE2"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SwainEReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 600.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 600.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    9.0
+   ],
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{51330b76}"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "SwainERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "missile_speed": 935.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "E2Ratio": 0.699999988079071
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 935.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "{51eae544}"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SwainRNovaSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRNovaSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SwainBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "missile_speed": 1800.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1800.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SwainBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "missile_speed": 1800.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1800.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SwainBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1800.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1800.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SwainBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1800.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1800.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "missile_speed": 935.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "E2Ratio": 0.699999988079071
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 935.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "missile_speed": 935.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "E2Ratio": 0.699999988079071
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 935.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE2"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    12.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainEAbility/SwainE2"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainEReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 600.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 600.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    9.0
+   ],
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{51330b76}"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainEReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 600.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.152,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 600.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    13.0,
+    9.0
+   ],
+   "cast_time_seconds": 0.152,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{51330b76}"
+   ],
+   "inherited_from": "SwainE",
+   "evidence": "inherited:SwainE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "missile_speed": 1000000000.0,
+   "toggle": true,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": null,
+   "ratios": {
+    "FirstBoltAPRatio": 0.44999998807907104,
+    "ExtraBoltRatio": 0.25
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000000000.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle / persistent buff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    3.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainQAbility/SwainQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "missile_speed": 1000000000.0,
+   "toggle": true,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "duration": null,
+   "ratios": {
+    "FirstBoltAPRatio": 0.44999998807907104,
+    "ExtraBoltRatio": 0.25
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000000000.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle / persistent buff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    3.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainQAbility/SwainQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRAbility/SwainR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRAbility/SwainR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SwainR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRAbility/SwainR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainRMegaNovaMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.5,
+    11.5,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0
+   ],
+   "cast_range": [
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0,
+    675.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 599.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 599.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    11.5,
+    9.5
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "magic damage",
+    "nova"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRMegaNovaMissile"
+   ],
+   "evidence": "manual review: wiki R2 + binary (Swain_R2.dds, mAlternateName SwainW, affects 6154, cooldown 11.5-9s, range 850) - Demonflare nova missile; complements classified SwainRNovaSlow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SwainW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    5500.0,
+    5500.0,
+    6000.0,
+    6500.0,
+    7000.0,
+    7500.0,
+    7500.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "APRatio": 0.6000000238418579
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    22.0,
+    18.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainWAbility/SwainW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SwainW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    5500.0,
+    5500.0,
+    6000.0,
+    6500.0,
+    7000.0,
+    7500.0,
+    7500.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "APRatio": 0.6000000238418579
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    22.0,
+    18.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainWAbility/SwainW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SwainBirdMissileSelfOnly",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1800.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1800.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "heal",
+    "Soul Fragment"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainBirdMissileSelfOnly"
+   ],
+   "evidence": "manual review: wiki P - self-only raven missile variant carrying a Soul Fragment to Swain (binary carries legacy damage values 200/325/450 with no damage-type tag; classified as the heal delivery)"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SwainPassiveReturnBirdMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1200.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1200.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "heal",
+    "Soul Fragment"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainPassiveReturnBirdMissile"
+   ],
+   "evidence": "manual review: wiki P - upon claiming a Soul Fragment the raven returns and Swain heals for 6% of his maximum health"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SwainR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRAbility/SwainR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainPSoulDropListener",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Senna",
+    "Thresh"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainPSoulDropListener"
+   ],
+   "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Soul Fragment",
+    "stack"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainPassiveAbility/SwainPassive"
+   ],
+   "evidence": "manual review: wiki P - Soul Fragment stacks grant 15 permanent bonus health each"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainPassivePullMoveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainPassivePullMoveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainRSoulBurn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Senna",
+    "Thresh"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRSoulBurn"
+   ],
+   "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainRSoulFlare",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": true,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle / persistent buff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8.0,
+    8.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Senna",
+    "Thresh"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRAbility/SwainRSoulFlare"
+   ],
+   "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SwainRSoulProgression",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": null,
+   "toggle": false,
+   "damage": [
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    55.0,
+    65.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.05000000074505806,
+    "HealHPRatio": 0.014999999664723873
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Senna",
+    "Thresh"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainRSoulProgression"
+   ],
+   "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "SwainPassiveReturnBirdMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1200.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.65,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1200.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.65,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "sight"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainPassiveReturnBirdMissile"
+   ],
+   "evidence": "manual review: wiki P - the returning raven grants sight of its surroundings during travel"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "SwainWPingPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    5500.0,
+    5500.0,
+    6000.0,
+    6500.0,
+    7000.0,
+    7500.0,
+    7500.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "APRatio": 0.6000000238418579
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    22.0,
+    18.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "sight"
+   ],
+   "binary": [
+    "Characters/Swain/Spells/SwainWPingPassive"
+   ],
+   "evidence": "manual review: wiki W - Vision of Empire grants sight of the target area for 2 seconds (PingPassive marker)"
+  }
+ }
+]

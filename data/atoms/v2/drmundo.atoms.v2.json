@@ -1,0 +1,2301 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DrMundoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "DrMundoE.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoE.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoE.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "DrMundoE.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoE.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoE.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DrMundoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "DrMundoE.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoE.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoE.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "DrMundoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "DrMundoE.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoE.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoE.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoE"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "DrMundoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "DrMundoE.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoE.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoE.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": 1.0,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack3.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack3.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DrMundoW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoW.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoW.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWAbility/DrMundoW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DrMundoW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoW.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoW.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWAbility/DrMundoW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "DrMundoW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoW.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoW.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWAbility/DrMundoW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "DrMundoW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoW.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoW.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWAbility/DrMundoW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DrMundoW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoW.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoW.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWAbility/DrMundoW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "DrMundoRHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120,
+    120,
+    120
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    15,
+    20,
+    25
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "DrMundoRHeal.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoRHeal.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120,
+    120
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoRAbility/DrMundoRHeal"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "DrMundoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120,
+    120,
+    120
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    15,
+    20,
+    25
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoR.travel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoR.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120,
+    120
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoRAbility/DrMundoR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DrMundoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120,
+    120,
+    120
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoR.travel",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DrMundoR.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120,
+    120
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoRAbility/DrMundoR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DrMundoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    50,
+    60,
+    70,
+    80,
+    90
+   ],
+   "damage": [
+    20,
+    22.5,
+    25,
+    27.5,
+    30
+   ],
+   "duration": [
+    80,
+    130,
+    180,
+    230,
+    280
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoQ.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoQ.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    4,
+    4
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoQAbility/DrMundoQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "DrMundoQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    50,
+    60,
+    70,
+    80,
+    90
+   ],
+   "damage": null,
+   "duration": [
+    80,
+    130,
+    180,
+    230,
+    280
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoQ.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoQ.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    4,
+    4
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoQAbility/DrMundoQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "DrMundoCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoCritAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttackTower.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DrMundoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoBasicAttackTower.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DrMundoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoEAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoEAttack"
+   ],
+   "inherited_from": "DrMundoE",
+   "evidence": "inherited:DrMundoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DrMundoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoEAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoEAttack"
+   ],
+   "inherited_from": "DrMundoE",
+   "evidence": "inherited:DrMundoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DrMundoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoEAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoEAttack"
+   ],
+   "inherited_from": "DrMundoE",
+   "evidence": "inherited:DrMundoE"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "DrMundoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": [
+    2,
+    2.3,
+    2.6,
+    2.9,
+    3.2
+   ],
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoEAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoEAttack"
+   ],
+   "inherited_from": "DrMundoE",
+   "evidence": "inherited:DrMundoE"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "DrMundoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoEAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEAbility/DrMundoEAttack"
+   ],
+   "inherited_from": "DrMundoE",
+   "evidence": "inherited:DrMundoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.health-regen",
+  "family": "heal-shield",
+  "behavior": "DrMundoP",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    60.0,
+    57.35294117647059,
+    54.705882352941174,
+    52.05882352941177,
+    49.411764705882355,
+    46.76470588235294,
+    44.11764705882353,
+    41.470588235294116,
+    38.82352941176471,
+    36.17647058823529,
+    33.529411764705884,
+    30.88235294117647,
+    28.235294117647058,
+    25.588235294117645,
+    22.94117647058824,
+    20.294117647058826,
+    17.647058823529413,
+    15.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.75,
+    0.85,
+    0.95,
+    1.05,
+    1.15,
+    1.25,
+    1.4,
+    1.55,
+    1.7,
+    1.9,
+    2.1,
+    2.3,
+    2.5,
+    2.7,
+    2.9,
+    3.1,
+    3.3,
+    3.5,
+    3.7,
+    3.9,
+    4.1,
+    4.3,
+    4.5,
+    4.7,
+    4.9,
+    5.1,
+    5.3,
+    5.5,
+    5.7,
+    5.9,
+    6.1,
+    6.3,
+    6.5,
+    6.7
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoP.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    60.0,
+    15.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "DrMundo/P",
+    "Goes Where He Pleases"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoP"
+   ],
+   "evidence": "wiki: regenerates 0.4%-2.3% of maximum health every 5 seconds"
+  }
+ },
+ {
+  "atom_id": "interaction.immobilize-immunity",
+  "family": "interaction",
+  "behavior": "DrMundoP",
+  "trigger": "on_hostile_immobilize",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    60.0,
+    57.35294117647059,
+    54.705882352941174,
+    52.05882352941177,
+    49.411764705882355,
+    46.76470588235294,
+    44.11764705882353,
+    41.470588235294116,
+    38.82352941176471,
+    36.17647058823529,
+    33.529411764705884,
+    30.88235294117647,
+    28.235294117647058,
+    25.588235294117645,
+    22.94117647058824,
+    20.294117647058826,
+    17.647058823529413,
+    15.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DrMundoP.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    60.0,
+    15.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "DrMundo/P",
+    "Goes Where He Pleases"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoP",
+    "Characters/DrMundo/Spells/DrMundoPImmunity",
+    "Characters/DrMundo/Spells/DrMundoPObjectMissile",
+    "Characters/DrMundo/Spells/DrMundoPCooldown"
+   ],
+   "evidence": "wiki: immunity to next immobilizing effect; 4% current health cost; canister heals 4% max HP and reduces the cooldown by 15s"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "DrMundoWRecast",
+  "trigger": "on_recast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    8.75,
+    12.5,
+    16.25,
+    20
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DrMundoWRecast.cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    17,
+    15
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "DrMundo/W",
+    "Heart Zapper"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoWRecast"
+   ],
+   "evidence": "wiki: stores 80%-95% of damage taken as grey health; recast heals 50% of grey health, 100% if an enemy champion is hit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.bonus-ad",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DrMundoEPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    10,
+    25,
+    40,
+    55,
+    70
+   ],
+   "damage": null,
+   "duration": [
+    5,
+    15,
+    25,
+    35,
+    45
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.75,
+    "behavior": "DrMundoEPassive.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DrMundoEPassive.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9,
+    6
+   ],
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "DrMundo/E",
+    "Blunt Force Trauma"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoEPassive"
+   ],
+   "evidence": "wiki: passive grants bonus attack damage scaling with maximum health"
+  }
+ }
+]

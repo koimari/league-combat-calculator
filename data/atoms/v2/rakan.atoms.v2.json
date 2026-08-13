@@ -1,0 +1,4136 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.charm",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanWCharm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanWCharm",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "RakanWCharm",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanWCharm"
+   ],
+   "evidence": "name:charm"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDashSpeed": [
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0
+    ],
+    "BaseDamage": [
+     20.0,
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0714,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDashSpeed": [
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0
+    ],
+    "BaseDamage": [
+     20.0,
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0714,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDashSpeed": [
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0
+    ],
+    "BaseDamage": [
+     20.0,
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0714,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RakanW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDashSpeed": [
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0
+    ],
+    "BaseDamage": [
+     20.0,
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0714,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RakanW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDashSpeed": [
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0,
+     1700.0
+    ],
+    "BaseDamage": [
+     20.0,
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0
+    ],
+    "KnockupDuration": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0714,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RakanQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": null,
+   "ratios": {
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    "HealDelay": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BaseCDActual": [
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0
+    ],
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RakanQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": null,
+   "ratios": {
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    "HealDelay": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BaseCDActual": [
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0
+    ],
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    295.0
+   ],
+   "duration": null,
+   "ratios": {
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    "HealDelay": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BaseCDActual": [
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0,
+     6.0
+    ],
+    "DamageAPRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ],
+    "HealAPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQ"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanQMark",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQMark",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQMark"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQMark",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RakanQHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQHeal",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{f443380d}"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RakanCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseShield": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "RecastWindow": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Cooldown": [
+     20.0,
+     20.0,
+     18.0,
+     16.0,
+     14.0,
+     12.0,
+     12.0
+    ],
+    "BonusDashSpeed": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "XayahBonusDashSpeed": [
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RakanE",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseShield": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "RecastWindow": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Cooldown": [
+     20.0,
+     20.0,
+     18.0,
+     16.0,
+     14.0,
+     12.0,
+     12.0
+    ],
+    "BonusDashSpeed": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "XayahBonusDashSpeed": [
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseShield": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "RecastWindow": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Cooldown": [
+     20.0,
+     20.0,
+     18.0,
+     16.0,
+     14.0,
+     12.0,
+     12.0
+    ],
+    "BonusDashSpeed": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "XayahBonusDashSpeed": [
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0,
+     1250.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RakanEShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0,
+    120.0
+   ],
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0,
+    13.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 65
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanEShield",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanEShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanECast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanECast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanECast"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanERecast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 17413
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanERecast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanERecast"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanERecast",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 17413
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanERecast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanERecast"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanECastXaya",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    20.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanECastXaya",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanEAbility/RakanECastXaya"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RakanBasicAttackShort",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttackShort",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttackShort"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RakanBasicAttackShort",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttackShort",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttackShort"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RakanPassiveShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanPassiveShield",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanPassiveAbility/RakanPassiveShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RakanBasicAttackShort2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttackShort2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttackShort2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RakanBasicAttackShort2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttackShort2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttackShort2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RakanBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RakanBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanRDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanRDebuff",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "RakanRDebuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanRAbility/RakanRDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    100.0,
+    200.0,
+    300.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     100.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CharmDuration": [
+     1.0,
+     1.0,
+     1.25,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BuffExtensionDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "InitialCastSpeed": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "TouchSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "TouchRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0308,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanRAbility/RakanR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RakanR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    100.0,
+    200.0,
+    300.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     100.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CharmDuration": [
+     1.0,
+     1.0,
+     1.25,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BuffExtensionDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "InitialCastSpeed": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "TouchSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "TouchRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0308,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanRAbility/RakanR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RakanR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    100.0,
+    200.0,
+    300.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BaseDamage": [
+     100.0,
+     100.0,
+     200.0,
+     300.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CharmDuration": [
+     1.0,
+     1.0,
+     1.25,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "BuffExtensionDuration": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "InitialCastSpeed": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "TouchSpeed": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "TouchRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    130.0,
+    130.0,
+    110.0,
+    90.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0308,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanRAbility/RakanR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RakanBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RakanBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1000.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RakanQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RakanQMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanQMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RakanQReturnMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQReturnMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RakanQReturnMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQReturnMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RakanQReturnMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    1850.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "RakanQReturnMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanQAbility/RakanQReturnMis"
+   ],
+   "inherited_from": "RakanQ",
+   "evidence": "inherited:RakanQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RakanWCast",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    20.0,
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": [
+    0.0
+   ],
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanWCast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Grand Entrance",
+    "Dash"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanWAbility/RakanWCast"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RakanPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "HitCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "missile_speed": null,
+   "cooldown_time": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RakanPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Fey Feathers",
+    "Shield"
+   ],
+   "binary": [
+    "Characters/Rakan/Spells/RakanPassive/RakanPassive"
+   ]
+  }
+ }
+]

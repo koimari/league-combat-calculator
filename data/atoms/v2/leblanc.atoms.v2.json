@@ -1,0 +1,3900 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.25,
+    12.5,
+    11.75,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": {
+    "InitialAPRatio": 0.4000000059604645,
+    "DelayedAPRatio": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "BaseInitialDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "BaseDelayedDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "InitialAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DelayedAPRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "TetherDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TetherDistance": [
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancERoot",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    11.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancERoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.25,
+    12.5,
+    11.75,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": {
+    "InitialAPRatio": 0.4000000059604645,
+    "DelayedAPRatio": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "BaseInitialDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "BaseDelayedDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "InitialAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DelayedAPRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "TetherDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TetherDistance": [
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    11.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.25,
+    12.5,
+    11.75,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": {
+    "InitialAPRatio": 0.4000000059604645,
+    "DelayedAPRatio": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "BaseInitialDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "BaseDelayedDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "InitialAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DelayedAPRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "TetherDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TetherDistance": [
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancE",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    11.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRERoot",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRERoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRE",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRE",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0,
+    190.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "BaseMarkDamage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "MarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "CooldownRefund": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "ManaRefund": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancQ",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5833,
+   "reset_on": [
+    "CooldownRefund=0.3",
+    "ManaRefund=1"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancQAbility/LeblancQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "damage": [
+    40.0,
+    65.0,
+    90.0,
+    115.0,
+    140.0,
+    165.0,
+    190.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "APRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "BaseMarkDamage": [
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0,
+     190.0
+    ],
+    "MarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "CooldownRefund": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "ManaRefund": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancQMark",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    6.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5833,
+   "reset_on": [
+    "CooldownRefund=0.3",
+    "ManaRefund=1"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancQAbility/LeblancQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "damage.aoe"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRW",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRWReturn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRWReturn"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRWReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancRWReturn",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRWReturn"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancWReturn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "damage": [
+    35.0,
+    75.0,
+    115.0,
+    155.0,
+    195.0,
+    235.0,
+    275.0
+   ],
+   "duration": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "ratios": {
+    "WAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "WAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseDamage": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "SnapbackTimeAllowed": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SnapbackDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SnapbackQueueWindow": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SpellMaxRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0133,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancWReturn"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "damage": [
+    35.0,
+    75.0,
+    115.0,
+    155.0,
+    195.0,
+    235.0,
+    275.0
+   ],
+   "duration": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "ratios": {
+    "WAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "WAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseDamage": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "SnapbackTimeAllowed": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SnapbackDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SnapbackQueueWindow": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SpellMaxRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancW",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0133,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "damage": [
+    35.0,
+    75.0,
+    115.0,
+    155.0,
+    195.0,
+    235.0,
+    275.0
+   ],
+   "duration": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "ratios": {
+    "WAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "WAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseDamage": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "SnapbackTimeAllowed": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SnapbackDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SnapbackQueueWindow": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SpellMaxRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancW",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0133,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "damage": [
+    35.0,
+    75.0,
+    115.0,
+    155.0,
+    195.0,
+    235.0,
+    275.0
+   ],
+   "duration": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "ratios": {
+    "WAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "WAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseDamage": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "SnapbackTimeAllowed": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SnapbackDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SnapbackQueueWindow": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SpellMaxRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancW",
+    "atoms": [
+     "damage.aoe"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0133,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    15.0,
+    13.75,
+    12.5,
+    11.25,
+    10.0,
+    10.0
+   ],
+   "damage": [
+    35.0,
+    75.0,
+    115.0,
+    155.0,
+    195.0,
+    235.0,
+    275.0
+   ],
+   "duration": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "ratios": {
+    "WAPRatio": 0.800000011920929
+   },
+   "effect_amounts": {
+    "WAPRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "BaseDamage": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "SnapbackTimeAllowed": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SnapbackDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SnapbackQueueWindow": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "SpellMaxRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancW",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "LeblancWReturn",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15.0,
+    10.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0133,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRToggle",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    54.0,
+    54.0,
+    42.0,
+    30.0,
+    32.0,
+    40.0,
+    40.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.toggle-form"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    54.0,
+    40.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRToggle"
+   ],
+   "evidence": "name:toggle"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRQ",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRQ",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancRQMark",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "LeblancCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancPBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "LeblancRStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancRStealth",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRStealth"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancPMarkProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancPMarkProc",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMarkProc"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPMarkProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancPMarkProc",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMarkProc"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancPMark",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "RQ1RE1BaseAPRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "RQ1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RQ2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RWBase": [
+     -15.0,
+     150.0,
+     315.0,
+     480.0,
+     645.0,
+     810.0,
+     975.0
+    ],
+    "RE1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RE2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RQMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "RQ1RE1BaseAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0778,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "RQ1RE1BaseAPRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "RQ1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RQ2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RWBase": [
+     -15.0,
+     150.0,
+     315.0,
+     480.0,
+     645.0,
+     810.0,
+     975.0
+    ],
+    "RE1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RE2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RQMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "RQ1RE1BaseAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancR",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0778,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": {
+    "RQ1RE1BaseAPRatio": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "RQ1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RQ2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RWBase": [
+     -15.0,
+     150.0,
+     315.0,
+     480.0,
+     645.0,
+     810.0,
+     975.0
+    ],
+    "RE1Base": [
+     -10.0,
+     70.0,
+     150.0,
+     230.0,
+     310.0,
+     390.0,
+     470.0
+    ],
+    "RE2Base": [
+     -20.0,
+     140.0,
+     300.0,
+     460.0,
+     620.0,
+     780.0,
+     940.0
+    ],
+    "RQMarkDuration": [
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5,
+     3.5
+    ],
+    "RQ1RE1BaseAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancR",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0778,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "leblanc Passive (Mirror Image)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "TooltipCooldown": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": [
+    60.0,
+    60.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units",
+    "Mirror Image"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPAbility/LeblancP",
+    "Characters/Leblanc/Spells/LeblancPMark"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map;binary-path-injected-depth2"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.25,
+    12.5,
+    11.75,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": {
+    "InitialAPRatio": 0.4000000059604645,
+    "DelayedAPRatio": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "BaseInitialDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "BaseDelayedDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "InitialAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DelayedAPRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "TetherDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TetherDistance": [
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancEMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    11.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancEMissile"
+   ],
+   "inherited_from": "LeblancE",
+   "evidence": "inherited:LeblancE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.25,
+    12.5,
+    11.75,
+    11.0,
+    11.0
+   ],
+   "damage": [
+    30.0,
+    50.0,
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0
+   ],
+   "duration": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": {
+    "InitialAPRatio": 0.4000000059604645,
+    "DelayedAPRatio": 0.8500000238418579
+   },
+   "effect_amounts": {
+    "BaseInitialDamage": [
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0
+    ],
+    "BaseDelayedDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "InitialAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DelayedAPRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ],
+    "TetherDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "TetherDistance": [
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0,
+     865.0
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancEMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    14.0,
+    11.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancEMissile"
+   ],
+   "inherited_from": "LeblancE",
+   "evidence": "inherited:LeblancE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancREMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancREMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    45.0,
+    45.0,
+    35.0,
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LeblancREMissile",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ],
+    "evidence": "castAnimation"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": [
+     "stack-transform-summon-resource.upgrade"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    45.0,
+    25.0
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancQDetonate",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancQDetonate",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Sigil of Malice"
+   ],
+   "binary": [
+    "{257c9645}"
+   ],
+   "evidence": "name:detonate; wiki Q: consuming the mark deals bonus magic damage"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancRQDetonate",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LeblancRQDetonate",
+    "atoms": [
+     "damage.proc"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Mimic"
+   ],
+   "binary": [
+    "{9c18eeef}"
+   ],
+   "evidence": "name:detonate; wiki R: mimicked Sigil of Malice mark consumption; binary key verified: {9c18eeef}"
+  }
+ }
+]

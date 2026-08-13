@@ -1,0 +1,2713 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchHideInShadowsImproved",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "AttackSpeedMod": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "AttackSpeedDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StealthDuration": [
+     9.0,
+     10.0,
+     11.0,
+     12.0,
+     13.0,
+     14.0,
+     15.0
+    ],
+    "MaxFadeTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StealthDetectionRange": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MoveSpeedMod": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "HiddenSpeed": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "MoveBonusRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "TwitchHideInShadowsImproved",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadowsImproved",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadowsImproved"
+   ],
+   "evidence": "name:shadow"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadowsImproved",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_AttackBuff_Duration",
+    "Trait_Camouflage"
+   ],
+   "data_values_found": [
+    "AttackSpeedDuration",
+    "AttackSpeedMod",
+    "HiddenSpeed",
+    "MaxFadeTime",
+    "MoveBonusRange",
+    "MoveSpeedMod",
+    "StealthDetectionRange",
+    "StealthDuration"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchHideInShadows",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "AttackSpeedMod": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "AttackSpeedDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StealthDuration": [
+     9.0,
+     10.0,
+     11.0,
+     12.0,
+     13.0,
+     14.0,
+     15.0
+    ],
+    "MaxFadeTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StealthDetectionRange": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MoveSpeedMod": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "HiddenSpeed": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "MoveBonusRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_AttackBuff_Duration",
+    "Trait_Camouflage"
+   ],
+   "data_values_found": [
+    "AttackSpeedDuration",
+    "AttackSpeedMod",
+    "HiddenSpeed",
+    "MaxFadeTime",
+    "MoveBonusRange",
+    "MoveSpeedMod",
+    "StealthDetectionRange",
+    "StealthDuration"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchHideInShadows",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "AttackSpeedMod": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "AttackSpeedDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StealthDuration": [
+     9.0,
+     10.0,
+     11.0,
+     12.0,
+     13.0,
+     14.0,
+     15.0
+    ],
+    "MaxFadeTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StealthDetectionRange": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MoveSpeedMod": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "HiddenSpeed": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "MoveBonusRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows"
+   ],
+   "evidence": "name:shadow"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_AttackBuff_Duration",
+    "Trait_Camouflage"
+   ],
+   "data_values_found": [
+    "AttackSpeedDuration",
+    "AttackSpeedMod",
+    "HiddenSpeed",
+    "MaxFadeTime",
+    "MoveBonusRange",
+    "MoveSpeedMod",
+    "StealthDetectionRange",
+    "StealthDuration"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "TwitchHideInShadows",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "AttackSpeedMod": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "AttackSpeedDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "StealthDuration": [
+     9.0,
+     10.0,
+     11.0,
+     12.0,
+     13.0,
+     14.0,
+     15.0
+    ],
+    "MaxFadeTime": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StealthDetectionRange": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "MoveSpeedMod": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "HiddenSpeed": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "MoveBonusRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadows",
+    "atoms": [
+     "vision-economy.stealth"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.375,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows"
+   ],
+   "evidence": "tag:Trait_Camouflage"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchHideInShadowsAbility/TwitchHideInShadows",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_AttackBuff_Duration",
+    "Trait_Camouflage"
+   ],
+   "data_values_found": [
+    "AttackSpeedDuration",
+    "AttackSpeedMod",
+    "HiddenSpeed",
+    "MaxFadeTime",
+    "MoveBonusRange",
+    "MoveSpeedMod",
+    "StealthDetectionRange",
+    "StealthDuration"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchHideInShadowsBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TwitchHideInShadowsBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadowsBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f253abec}"
+   ],
+   "evidence": "name:buff"
+  },
+  "_spell_object": "root/{f253abec}",
+  "_spine_source": "root/{f253abec}",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchHideInShadowsBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TwitchHideInShadowsBuff",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchHideInShadowsBuff",
+    "atoms": [
+     "stack-transform-summon-resource.pet"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{f253abec}"
+   ],
+   "evidence": "name:shadow"
+  },
+  "_spell_object": "root/{f253abec}",
+  "_spine_source": "root/{f253abec}",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchDeadlyVenomMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {
+    "APRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ]
+   },
+   "effect_amounts": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MaxStacks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "APRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchDeadlyVenomMarker",
+    "atoms": [
+     "stack-transform-summon-resource.mark"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenomMarker"
+   ],
+   "evidence": "name:mark"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenomMarker",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenomMarker",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "APRatio",
+    "Duration",
+    "MaxStacks"
+   ],
+   "calculations": {
+    "DamagePerSecond": [
+     "APRatio"
+    ],
+    "DamagePerSecondMax": [],
+    "DamageMaxTotal": []
+   }
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TwitchSprayAndPrayAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 23210
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchSprayAndPrayAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchSprayAndPrayAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchSprayAndPrayAttack"
+   ],
+   "evidence": "tag:Trait_MultiTargetAttack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchSprayAndPrayAttack",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchSprayAndPrayAttack",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_MultiTargetAttack"
+   ],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TwitchFullAutomatic",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BonusRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "FallOffDamage": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MinimumFallOffDamage": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "BonusAD": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "OvershootMult": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "OvershootMin": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TwitchFullAutomatic",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchFullAutomatic",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cooldown_max_rank_seconds": 90.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0667,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_SylasSpecialAttackOverride",
+    "Trait_MultiTargetAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "BonusAD",
+    "BonusRange",
+    "Duration",
+    "FallOffDamage",
+    "MinimumFallOffDamage",
+    "OvershootMin",
+    "OvershootMult"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchFullAutomatic",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "BonusRange": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "FallOffDamage": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MinimumFallOffDamage": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "BonusAD": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "OvershootMult": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "OvershootMin": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TwitchFullAutomatic",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "TwitchFullAutomatic",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchFullAutomatic",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 90.0,
+   "cooldown_max_rank_seconds": 90.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0667,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchFullAutomatic",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_SylasSpecialAttackOverride",
+    "Trait_MultiTargetAttack",
+    "Trait_AttackBuff_Duration",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "BonusAD",
+    "BonusRange",
+    "Duration",
+    "FallOffDamage",
+    "MinimumFallOffDamage",
+    "OvershootMin",
+    "OvershootMult"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TwitchExpunge",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0
+   ],
+   "duration": null,
+   "ratios": {
+    "bADRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "APRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "BasePhysicalDamagePerStack": [
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0
+    ],
+    "bADRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "APRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "MaxStacks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6152
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "APRatioPerStack",
+    "BaseDamage",
+    "BasePhysicalDamagePerStack",
+    "MaxStacks",
+    "bADRatioPerStack"
+   ],
+   "calculations": {
+    "PhysicalDamagePerStack": [
+     "BasePhysicalDamagePerStack",
+     "bADRatioPerStack"
+    ],
+    "MagicDamagePerStack": [
+     "APRatioPerStack"
+    ],
+    "MaxPhysicalDamage": [
+     "BaseDamage"
+    ],
+    "MaxMagicDamage": []
+   }
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TwitchExpunge",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0
+   ],
+   "duration": null,
+   "ratios": {
+    "bADRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "APRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "BasePhysicalDamagePerStack": [
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0
+    ],
+    "bADRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "APRatioPerStack": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "MaxStacks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6152
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchExpunge",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchExpungeAbility/TwitchExpunge",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "APRatioPerStack",
+    "BaseDamage",
+    "BasePhysicalDamagePerStack",
+    "MaxStacks",
+    "bADRatioPerStack"
+   ],
+   "calculations": {
+    "PhysicalDamagePerStack": [
+     "BasePhysicalDamagePerStack",
+     "bADRatioPerStack"
+    ],
+    "MagicDamagePerStack": [
+     "APRatioPerStack"
+    ],
+    "MaxPhysicalDamage": [
+     "BaseDamage"
+    ],
+    "MaxMagicDamage": []
+   }
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TwitchCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchCritAttack",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchCritAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TwitchVenomCask",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "BaseSlowAmount": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AoERadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TwitchVenomCask",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchVenomCask",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchVenomCask",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCask"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCask",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCask",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "AoERadius",
+    "BaseSlowAmount",
+    "Duration",
+    "SlowAPRatio"
+   ],
+   "calculations": {
+    "TotalSlowAmount": [
+     "BaseSlowAmount",
+     "SlowAPRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TwitchVenomCaskDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "BaseSlowAmount": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AoERadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchVenomCaskDebuff",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "TwitchVenomCaskDebuff",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchVenomCaskDebuff",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCaskDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCaskDebuff",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCask",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "AoERadius",
+    "BaseSlowAmount",
+    "Duration",
+    "SlowAPRatio"
+   ],
+   "calculations": {
+    "TotalSlowAmount": [
+     "BaseSlowAmount",
+     "SlowAPRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack3",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack3",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack3",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack3",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack2",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TwitchBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchBasicAttack2",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TwitchVenomCaskMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "effect_amounts": {
+    "BaseSlowAmount": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "Duration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "AoERadius": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "SlowAPRatio": [
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549,
+     0.05999999865889549
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TwitchVenomCaskMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TwitchVenomCaskMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCaskMissile"
+   ],
+   "inherited_from": "TwitchVenomCask",
+   "evidence": "inherited:TwitchVenomCask"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCaskMissile",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchVenomCaskAbility/TwitchVenomCask",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_Target_Area",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "AoERadius",
+    "BaseSlowAmount",
+    "Duration",
+    "SlowAPRatio"
+   ],
+   "calculations": {
+    "TotalSlowAmount": [
+     "BaseSlowAmount",
+     "SlowAPRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "Deadly Venom",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "ratios": {
+    "APRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ]
+   },
+   "effect_amounts": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "MaxStacks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "APRatio": [
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746,
+     0.029999999329447746
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Deadly Venom",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark",
+   "stack-transform-summon-resource.damage-over-time"
+  ],
+  "provenance": {
+   "wiki": [
+    "Deadly Venom",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenom",
+    "Characters/Twitch/Spells/Deadly_Venom"
+   ],
+   "evidence": "wiki: TRUE_DAMAGE per stack per second over 6s (up to 6 stacks); classifier damage_type map TRUE_DAMAGE->true"
+  },
+  "_spell_object": "root/Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenom",
+  "_spine_source": "root/Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenomMarker",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "APRatio",
+    "Duration",
+    "MaxStacks"
+   ],
+   "calculations": {
+    "DamagePerSecond": [
+     "APRatio"
+    ],
+    "DamagePerSecondMax": [],
+    "DamageMaxTotal": []
+   }
+  }
+ }
+]

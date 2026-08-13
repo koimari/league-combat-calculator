@@ -1,0 +1,5676 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "ModesMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MonsterMod": [
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7
+    ],
+    "LockoutTime": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.8
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "ModesMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MonsterMod": [
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7
+    ],
+    "LockoutTime": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.8
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoPassiveSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "ModesMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MonsterMod": [
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7
+    ],
+    "LockoutTime": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.8
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassiveSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "EkkoRHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoRHeal"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoWStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWShield"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoStunMarker"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoStunMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "affects_type_flags": 13327,
+   "damage": [
+    65.0,
+    80.0,
+    95.0,
+    110.0,
+    125.0,
+    140.0,
+    155.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "effect_amounts": {
+    "OutgoingDamage": [
+     65.0,
+     80.0,
+     95.0,
+     110.0,
+     125.0,
+     140.0,
+     155.0
+    ],
+    "ReturnDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "ExpandDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "SlowPercent": [
+     -0.25,
+     -0.4,
+     -0.45,
+     -0.5,
+     -0.55,
+     -0.6,
+     -0.67
+    ],
+    "SlowZoneRadius": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "primary": [
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0,
+     130.0,
+     145.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1842,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "affects_type_flags": 13327,
+   "damage": [
+    65.0,
+    80.0,
+    95.0,
+    110.0,
+    125.0,
+    140.0,
+    155.0
+   ],
+   "duration": [
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75,
+    1.75
+   ],
+   "effect_amounts": {
+    "OutgoingDamage": [
+     65.0,
+     80.0,
+     95.0,
+     110.0,
+     125.0,
+     140.0,
+     155.0
+    ],
+    "ReturnDamage": [
+     15.0,
+     40.0,
+     65.0,
+     90.0,
+     115.0,
+     140.0,
+     165.0
+    ],
+    "ExpandDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "SlowPercent": [
+     -0.25,
+     -0.4,
+     -0.45,
+     -0.5,
+     -0.55,
+     -0.6,
+     -0.67
+    ],
+    "SlowZoneRadius": [
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0,
+     165.0
+    ],
+    "primary": [
+     55.0,
+     70.0,
+     85.0,
+     100.0,
+     115.0,
+     130.0,
+     145.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1842,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoEAttackBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoEAttackBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "BuffDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DashDistance": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "AttackRangeIncrease": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "primary": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.4
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.5,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.3158,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "EkkoCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ekko Passive (Chronobreak (R heal))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Chronobreak (R heal)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "primary": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQReturn"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "primary": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQReturn"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "cast_time": [
+    0.251
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "primary": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.251,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQMis"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "cast_time": [
+    0.251
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "primary": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.251,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQMis"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6831,
+   "effect_amounts": {
+    "primary": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6831,
+   "effect_amounts": {
+    "primary": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6831,
+   "effect_amounts": {
+    "primary": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6831,
+   "effect_amounts": {
+    "primary": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 6831,
+   "effect_amounts": {
+    "primary": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "primary": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "primary": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "primary": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "ModesMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MonsterMod": [
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7
+    ],
+    "LockoutTime": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.8
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Resonance",
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassive"
+   ],
+   "evidence": "Z-Drive Resonance: third stack consumed to deal bonus magic damage (wiki P, MAGIC_DAMAGE)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoPassiveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "ModesMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MonsterMod": [
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7,
+     2.7
+    ],
+    "LockoutTime": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.8
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassiveSpeed"
+   ],
+   "evidence": "passive move-speed burst buff (binary buff object name EkkoPassiveSpeed)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoRInvuln",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    80.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_time": [
+    0.25
+   ],
+   "affects_type_flags": 1029,
+   "damage": [
+    50.0,
+    200.0,
+    350.0,
+    500.0,
+    650.0,
+    800.0,
+    950.0
+   ],
+   "effect_amounts": {
+    "Damage": [
+     50.0,
+     200.0,
+     350.0,
+     500.0,
+     650.0,
+     800.0,
+     950.0
+    ],
+    "FlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "PercentHealAmpPerPercentMissingHealth": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "stat": 0.6
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "cast_windup",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "recastable",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoRInvuln"
+   ],
+   "evidence": "Chronobreak: Ekko becomes untargetable/invulnerable while traveling (binary EkkoRInvuln)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoRMinion",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Summon"
+   ],
+   "binary": [
+    "{71103854}"
+   ],
+   "evidence": "Chronobreak time-delayed afterimage (clone-like unit object {71103854})"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "EkkoWPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0,
+    1600.0
+   ],
+   "affects_type_flags": 6154,
+   "damage": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "duration": [
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25,
+    2.25
+   ],
+   "effect_amounts": {
+    "BaseOnHitDamage": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "OnHitMinMinionDamage": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "OnHitMaxMinionDamage": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "StunDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "SlowZoneDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BelowHealthThreshold": [
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3,
+     0.3
+    ],
+    "AoERadius": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "ShieldBase": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ],
+    "DelayBeforeDetonation": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DelayBeforeEnemyCanSee": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowPercent": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "primary": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ]
+   },
+   "ratios": {
+    "stat": 1.5
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast_windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0938,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Parallel Convergence",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWPassive"
+   ],
+   "evidence": "Parallel Convergence passive: bonus magic damage vs enemies below 30% HP scaling with missing health (wiki W)"
+  }
+ }
+]

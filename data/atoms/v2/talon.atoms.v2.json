@@ -1,0 +1,2078 @@
+[
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "TalonRStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8191,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_time": 0.10000000149011612
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "TalonRStealth"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonRStealth"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TalonRToggle",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonRToggle"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 800.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonRToggle"
+   ],
+   "evidence": "name:toggle"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    45.0,
+    90.0,
+    135.0,
+    180.0,
+    225.0,
+    270.0,
+    315.0
+   ],
+   "ratios": {
+    "bonus_ad": 1.0
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_max_rank": 60.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 550.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TalonR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    45.0,
+    90.0,
+    135.0,
+    180.0,
+    225.0,
+    270.0,
+    315.0
+   ],
+   "ratios": {
+    "bonus_ad": 1.0
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_max_rank": 60.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 550.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TalonR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    45.0,
+    90.0,
+    135.0,
+    180.0,
+    225.0,
+    270.0,
+    315.0
+   ],
+   "ratios": {
+    "bonus_ad": 1.0
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_max_rank": 60.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 550.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "TalonR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    100.0,
+    100.0,
+    80.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    45.0,
+    90.0,
+    135.0,
+    180.0,
+    225.0,
+    270.0,
+    315.0
+   ],
+   "ratios": {
+    "bonus_ad": 1.0
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_max_rank": 60.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 550.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonR"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonEHop",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonEHop"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 0.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonEAbility/TalonEHop"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonE2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9152,
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonE2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonEAbility/TalonE2"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    6000.0,
+    6000.0,
+    6000.0,
+    6000.0,
+    6000.0,
+    6000.0,
+    6000.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 6000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonEAbility/TalonE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TalonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TalonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TalonPassiveStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8191,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_time": 0.10000000149011612
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "TalonPassiveStack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonPassiveAbility/TalonPassiveStack"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TalonPassiveBleed",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 8191,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_time": 0.10000000149011612
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "TalonPassiveBleed"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonPassiveAbility/TalonPassiveBleed"
+   ],
+   "evidence": "name:bleed"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TalonW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 23759,
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 650.0,
+   "mana_cost_rank1": 50.0,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonWAbility/TalonW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TalonW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 23759,
+   "cooldown": [
+    9.0,
+    9.0,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_max_rank": 7.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 650.0,
+   "mana_cost_rank1": 50.0,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonWAbility/TalonW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TalonQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    45.0,
+    65.0,
+    85.0,
+    105.0,
+    125.0,
+    145.0,
+    165.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 575.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown_or_condition_reset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TalonQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    45.0,
+    65.0,
+    85.0,
+    105.0,
+    125.0,
+    145.0,
+    165.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 575.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown_or_condition_reset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TalonQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    45.0,
+    65.0,
+    85.0,
+    105.0,
+    125.0,
+    145.0,
+    165.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 575.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown_or_condition_reset"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "TalonQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    45.0,
+    65.0,
+    85.0,
+    105.0,
+    125.0,
+    145.0,
+    165.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_rank": 6.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 575.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown_or_condition_reset"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonQDashAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0,
+    575.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonQDashAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 575.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQDashAttack"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TalonShadowAssaultMisOneHalf",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonShadowAssaultMisOneHalf"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 1200.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonShadowAssaultMisOneHalf"
+   ],
+   "evidence": "name:shadow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TalonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TalonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TalonCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 100.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TalonQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 22538,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TalonQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 170.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQAttack"
+   ],
+   "inherited_from": "TalonQ",
+   "evidence": "inherited:TalonQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TalonQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 22538,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TalonQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 170.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQAttack"
+   ],
+   "inherited_from": "TalonQ",
+   "evidence": "inherited:TalonQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TalonQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 22538,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TalonQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 170.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQAttack"
+   ],
+   "inherited_from": "TalonQ",
+   "evidence": "inherited:TalonQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "TalonQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 22538,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0,
+    170.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TalonQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 170.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonQAbility/TalonQAttack"
+   ],
+   "inherited_from": "TalonQ",
+   "evidence": "inherited:TalonQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonWMissileTwo",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    5000.0,
+    5000.0,
+    5000.0,
+    5000.0,
+    5000.0,
+    20000.0,
+    20000.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TalonWMissileTwo"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 5000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Slow"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonWAbility/TalonWMissileTwo"
+   ],
+   "evidence": "wiki:Rake return pass deals physical damage and slows for 1s; binary:object TalonWMissileTwo"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "TalonRHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 8191,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_time": 0.10000000149011612
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "TalonRHaste"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Stealth",
+    "Invisibility"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonRAbility/TalonRHaste"
+   ],
+   "evidence": "wiki:Shadow Assault grants bonus movement speed while stealthed; binary:object TalonRHaste"
+  }
+ }
+]

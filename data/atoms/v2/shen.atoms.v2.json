@@ -1,0 +1,2784 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    160.0,
+    160.0,
+    160.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 16385,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_ChannelSpell",
+    "PositiveEffect_Teleport",
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_CreateClone"
+   ],
+   "effect_amounts": {
+    "ArrivalPersonalSpace": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "ArrivalCheckRadiusVisible": [
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0
+    ],
+    "ArrivalCheckRadiusInvisible": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "BaseShieldAmount": [
+     20.0,
+     120.0,
+     220.0,
+     320.0,
+     420.0,
+     520.0,
+     620.0
+    ],
+    "ShieldAPRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MaxShieldThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxShieldMult": [
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858
+    ],
+    "ShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.350000023841858
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenR",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_rank1_seconds": 200.0
+  },
+  "tempo_class": "engage"
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    160.0,
+    160.0,
+    160.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 16385,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_ChannelSpell",
+    "PositiveEffect_Teleport",
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_CreateClone"
+   ],
+   "effect_amounts": {
+    "ArrivalPersonalSpace": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "ArrivalCheckRadiusVisible": [
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0
+    ],
+    "ArrivalCheckRadiusInvisible": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "BaseShieldAmount": [
+     20.0,
+     120.0,
+     220.0,
+     320.0,
+     420.0,
+     520.0,
+     620.0
+    ],
+    "ShieldAPRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MaxShieldThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxShieldMult": [
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858
+    ],
+    "ShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.350000023841858
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_rank1_seconds": 200.0
+  },
+  "tempo_class": "engage"
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "BonusHPRatio": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "CCDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CollisionPadding": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DepartureCollisionRadius": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "ArrivalCollisionRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "DashBonusSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "MinimumDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 20.0
+  },
+  "tempo_class": "engage"
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenEDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEDash"
+   ],
+   "evidence": "name:dash"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenEDash",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "engage"
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "BonusHPRatio": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "CCDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CollisionPadding": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DepartureCollisionRadius": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "ArrivalCollisionRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "DashBonusSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "MinimumDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 20.0
+  },
+  "tempo_class": "engage"
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "BonusHPRatio": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "CCDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CollisionPadding": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DepartureCollisionRadius": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "ArrivalCollisionRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "DashBonusSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "MinimumDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 20.0
+  },
+  "tempo_class": "peel"
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{33e7ee4f}"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "peel"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "BonusHPRatio": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "CCDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CollisionPadding": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DepartureCollisionRadius": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "ArrivalCollisionRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "DashBonusSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "MinimumDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 20.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.75,
+    8.0,
+    7.25,
+    6.5,
+    5.75,
+    5.0,
+    5.0
+   ],
+   "cast_radius": [
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "QBaseOnHitDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "QPerLevelOnHitDamage": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "QTowerDamageModifier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "QCollisionRadiusStart": [
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0
+    ],
+    "QCollisionRadiusEnd": [
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0
+    ],
+    "MonsterAmp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BasePercentDamage": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "NumEnhancedAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SlowPercent": [
+     25.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EnhancedPercentDamage": [
+     4.5,
+     5.0,
+     5.5,
+     6.0,
+     6.5,
+     7.0,
+     7.5
+    ],
+    "MinionDamageCap": [
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0,
+     200.0,
+     225.0
+    ],
+    "AttackBuffDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "SteroidAS": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "SteroidDuration": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.5,
+    "coefficient2": 2.0
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenQAbility/ShenQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_rank1_seconds": 8.75
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{b779fb32}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 14346
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{5bcf3302}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 2000.0",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "sustained"
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "sustained"
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ShenCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "BonusHPRatio": [
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355,
+     0.10999999940395355
+    ],
+    "CCDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "CollisionPadding": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DepartureCollisionRadius": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "ArrivalCollisionRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "DashBonusSpeed": [
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0,
+     800.0
+    ],
+    "MinimumDistance": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 20.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.75,
+    8.0,
+    7.25,
+    6.5,
+    5.75,
+    5.0,
+    5.0
+   ],
+   "cast_radius": [
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "effect_amounts": {
+    "QBaseOnHitDamage": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "QPerLevelOnHitDamage": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "QTowerDamageModifier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "QCollisionRadiusStart": [
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0
+    ],
+    "QCollisionRadiusEnd": [
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0,
+     130.0
+    ],
+    "MonsterAmp": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BasePercentDamage": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "NumEnhancedAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "SlowPercent": [
+     25.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EnhancedPercentDamage": [
+     4.5,
+     5.0,
+     5.5,
+     6.0,
+     6.5,
+     7.0,
+     7.5
+    ],
+    "MinionDamageCap": [
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0,
+     200.0,
+     225.0
+    ],
+    "AttackBuffDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "SteroidAS": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "SteroidDuration": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.5,
+    "coefficient2": 2.0
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenQAbility/ShenQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.0,
+   "cooldown_rank1_seconds": 8.75
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{b779fb32}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 14346
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{5bcf3302}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 2000.0",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_rank1_seconds": 0.0
+  },
+  "tempo_class": "burst"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ShenPassiveShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "LeashDistanceThreshold": [
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0,
+     3500.0
+    ],
+    "LeashPreferredResultDistance": [
+     2250.0,
+     2250.0,
+     2250.0,
+     2250.0,
+     2250.0,
+     2250.0,
+     2250.0
+    ],
+    "DirectionIndicatorMinimumDistance": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "PassiveCDFlexAmount": [
+     0.125,
+     0.125,
+     0.125,
+     0.125,
+     0.125,
+     0.125,
+     0.125
+    ],
+    "ShieldCooldown": [
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0,
+     11.0
+    ],
+    "ShenZedQuestShieldMultiplier": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ]
+   }
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenPassiveShield"
+   ],
+   "evidence": "name:shield"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenPassiveShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cooldown_rank1_seconds": 11.0
+  },
+  "tempo_class": "sustain"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    160.0,
+    160.0,
+    160.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 16385,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_ChannelSpell",
+    "PositiveEffect_Teleport",
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_CreateClone"
+   ],
+   "effect_amounts": {
+    "ArrivalPersonalSpace": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "ArrivalCheckRadiusVisible": [
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0
+    ],
+    "ArrivalCheckRadiusInvisible": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "BaseShieldAmount": [
+     20.0,
+     120.0,
+     220.0,
+     320.0,
+     420.0,
+     520.0,
+     620.0
+    ],
+    "ShieldAPRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MaxShieldThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxShieldMult": [
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858
+    ],
+    "ShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.350000023841858
+   }
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenR",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_rank1_seconds": 200.0
+  },
+  "tempo_class": "sustain"
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ShenRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRShield"
+   ],
+   "evidence": "name:shield"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenRShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "sustain"
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "ShenWActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenWActive"
+   ],
+   "evidence": "wiki W zone blocks all non-turret basic attacks for Shen and allies"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenWActive",
+    "atoms": [
+     "interaction.projectile-destruction"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "utility"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f7d0d6b3}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuffStrong",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{9ad2e70c}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQBuffStrong",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuffWeak",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{4de662af}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQBuffWeak",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    160.0,
+    160.0,
+    160.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 16385,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_ChannelSpell",
+    "PositiveEffect_Teleport",
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_CreateClone"
+   ],
+   "effect_amounts": {
+    "ArrivalPersonalSpace": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "ArrivalCheckRadiusVisible": [
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0
+    ],
+    "ArrivalCheckRadiusInvisible": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "BaseShieldAmount": [
+     20.0,
+     120.0,
+     220.0,
+     320.0,
+     420.0,
+     520.0,
+     620.0
+    ],
+    "ShieldAPRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MaxShieldThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxShieldMult": [
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858
+    ],
+    "ShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.350000023841858
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenR",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_rank1_seconds": 200.0
+  },
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.5,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cast_radius": [
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0,
+    35000.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": null,
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "effect_amounts": {
+    "ZoneDuration": [
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75,
+     1.75
+    ],
+    "ZoneDelay": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenWAbility/ShenW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_rank1_seconds": 18.5
+  },
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_time_seconds": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenWBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    160.0,
+    160.0,
+    160.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "cast_time_seconds": null,
+   "affects_type_flags": 16385,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "Trait_ChannelSpell",
+    "PositiveEffect_Teleport",
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_CreateClone"
+   ],
+   "effect_amounts": {
+    "ArrivalPersonalSpace": [
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0,
+     175.0
+    ],
+    "ArrivalCheckRadiusVisible": [
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0,
+     2000.0
+    ],
+    "ArrivalCheckRadiusInvisible": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "BaseShieldAmount": [
+     20.0,
+     120.0,
+     220.0,
+     320.0,
+     420.0,
+     520.0,
+     620.0
+    ],
+    "ShieldAPRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "MaxShieldThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MaxShieldMult": [
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858,
+     1.600000023841858
+    ],
+    "ShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "ChannelDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "ratios": {
+    "coefficient": 1.350000023841858
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:Trait_CreateClone"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenR",
+    "atoms": [
+     "stack-transform-summon-resource.clone"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_rank1_seconds": 200.0
+  },
+  "tempo_class": "setup"
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQTransmitter",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Summon"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenQAbility/ShenQTransmitter"
+   ],
+   "evidence": "wiki Q recalls/summons Spirit Blade to Shen"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ShenQTransmitter",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {},
+  "tempo_class": "setup"
+ }
+]

@@ -1,0 +1,1719 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MordekaiserBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MordekaiserBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MordekaiserQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.699999988079071,
+    "adratio": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserQAbility/MordekaiserQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MordekaiserQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.699999988079071,
+    "adratio": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserQAbility/MordekaiserQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.cosmetic-critical",
+  "family": "damage",
+  "behavior": "MordekaiserQ_SingleTargetHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.699999988079071,
+    "adratio": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserQ_SingleTargetHit",
+    "atoms": [
+     "damage.cosmetic-critical"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserQ_SingleTargetHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Critical strike"
+   ],
+   "binary": [
+    "{c0d0d7e9}"
+   ],
+   "evidence": "name:singletargethit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "MordekaiserW",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.44999998807907104,
+    0.44999998807907104
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "maxhealth": 0.30000001192092896
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserW",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.4167,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserWAbility/MordekaiserW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "MordekaiserW",
+  "trigger": "threshold",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.44999998807907104,
+    0.44999998807907104
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "maxhealth": 0.30000001192092896
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.4167,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserWAbility/MordekaiserW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MordekaiserBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MordekaiserBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MordekaiserE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MordekaiserE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MordekaiserE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "MordekaiserEPull",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserEPull",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserEPull",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserEPull"
+   ],
+   "evidence": "name:pull"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MordekaiserSoulMissile",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6155
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserSoulMissile",
+    "atoms": [
+     "stack-transform-summon-resource.soul"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Senna",
+    "Thresh"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserSoulMissile"
+   ],
+   "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MordekaiserR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    7.0,
+    7.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "MordekaiserR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    7.0,
+    7.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserR",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MordekaiserPassive_FullStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": 3.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserPassive_FullStacks",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 4.0,
+    "behavior": "MordekaiserPassive_FullStacks",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserPassiveAbility/MordekaiserPassive_FullStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MordekaiserCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MordekaiserEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserEMissile"
+   ],
+   "inherited_from": "MordekaiserE",
+   "evidence": "inherited:MordekaiserE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MordekaiserEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserEMissile"
+   ],
+   "inherited_from": "MordekaiserE",
+   "evidence": "inherited:MordekaiserE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MordekaiserEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserEMissile"
+   ],
+   "inherited_from": "MordekaiserE",
+   "evidence": "inherited:MordekaiserE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MordekaiserQ_MultiTargetHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    45.0,
+    255.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.699999988079071,
+    "adratio": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserQ_MultiTargetHit",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserQ_MultiTargetHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Obliterate"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserQAbility/MordekaiserQ_MultiTargetHit"
+   ],
+   "evidence": "wiki:Q reduced damage when hitting multiple enemies"
+  }
+ },
+ {
+  "atom_id": "heal-shield.grey-health",
+  "family": "heal-shield",
+  "behavior": "MordekaiserWPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    8.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.44999998807907104,
+    0.44999998807907104
+   ],
+   "duration": [
+    5.0,
+    5.0
+   ],
+   "ratios": {
+    "maxhealth": 0.30000001192092896
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserWPassive",
+    "atoms": [
+     "heal-shield.grey-health"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 5.0,
+    "behavior": "MordekaiserWPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.4167,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Indestructible"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserWAbility/MordekaiserWPassive"
+   ],
+   "evidence": "wiki:W passive stores damage dealt/taken as Potential Shield (grey health)"
+  }
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "behavior": "MordekaiserEMagicPen",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    10.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserEMagicPen",
+    "atoms": [
+     "damage.penetration"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserEMagicPen",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Death's Grasp"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserEAbility/MordekaiserEMagicPen"
+   ],
+   "evidence": "wiki:E passive grants magic penetration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MordekaiserR_StatSteal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    7.0,
+    7.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserR_StatSteal",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "MordekaiserR_StatSteal",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Realm of Death"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR_StatSteal"
+   ],
+   "evidence": "wiki:R gains the target's reduced stats for the duration (mBuff)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MordekaiserR_StatStealEnemy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserR_StatStealEnemy",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MordekaiserR_StatStealEnemy",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Realm of Death"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR_StatStealEnemy"
+   ],
+   "evidence": "wiki:R reduces target AP, AS, max HP, armor, MR and AD by 10%"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MordekaiserR_InsideSpiritRealm",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    8.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    7.0,
+    7.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserR_InsideSpiritRealm",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "MordekaiserR_InsideSpiritRealm",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.05,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Realm of Death"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR_InsideSpiritRealm"
+   ],
+   "evidence": "wiki:R Death Realm state marker (mBuff)"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MordekaiserPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": 3.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MordekaiserPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 4.0,
+    "behavior": "MordekaiserPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mordekaiser Darkness Rise"
+   ],
+   "binary": [
+    "Characters/Mordekaiser/Spells/MordekaiserPassiveAbility/MordekaiserPassive"
+   ],
+   "evidence": "wiki:P empowered basic attacks deal 40% AP bonus magic damage on-hit"
+  }
+ }
+]

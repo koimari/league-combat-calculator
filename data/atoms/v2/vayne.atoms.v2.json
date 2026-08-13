@@ -1,0 +1,3102 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#0": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemn",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#0": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemn",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    15.0,
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#0": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemn",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneCondemnAALock",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{3c1abe72}"
+   ],
+   "evidence": "name:aa"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemnAALock",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneRdamagedMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{52d8f7b6}"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneRdamagedMarker",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneEStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "{9694cb98}"
+   ],
+   "evidence": "name:stun"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneEStun",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VayneBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "VayneBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VayneCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilverDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilverDebuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneInquisition",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0,
+    110.0
+   ],
+   "duration": [
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 9221.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneInquisitionAbility/VayneInquisition"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneInquisition",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VayneInquisition",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.06,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 15567.0
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumble",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.5,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack4",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack4",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneInquisitionStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneInquisitionStealth"
+   ],
+   "evidence": "name:stealth"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneInquisitionStealth",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilveredDebuff",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     4.0,
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilveredDebuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     75.0,
+     250.0,
+     425.0,
+     600.0,
+     0.0,
+     0.0,
+     175.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "VayneCondemnMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VaynePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0,
+    2000.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement Speed",
+    "Night Hunter"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VaynePassiveAbility/VaynePassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VaynePassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneHunt",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement Speed",
+    "Night Hunter"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneHunt"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneHunt",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Basic Attack",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Basic Attack",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.attack-damage",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack Damage",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 5375.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack Reset",
+    "Tumble"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneTumbleUltAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilverBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverBolts"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilverBolts",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneSilverBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverBolts"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilverBolts",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilveredBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0,
+    110.0,
+    125.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#1": [
+     4.0,
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredBolts"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilveredBolts",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneSilveredBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0,
+    110.0,
+    125.0
+   ],
+   "duration": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#1": [
+     4.0,
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredBolts"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VayneSilveredBolts",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ }
+]

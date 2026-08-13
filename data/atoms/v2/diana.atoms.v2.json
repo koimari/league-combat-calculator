@@ -1,0 +1,2320 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "DianaShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 1.0
+   },
+   "effect_amounts": [
+    [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0,
+     295.0
+    ],
+    [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaShield.cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DianaOrbs",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    20,
+    32,
+    44,
+    56,
+    68
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.2,
+    "ad": 0.3
+   },
+   "effect_amounts": [
+    [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaOrbs.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbs.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbs.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DianaOrbs.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbs"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DianaOrbs",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    20,
+    32,
+    44,
+    56,
+    68
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.2,
+    "ad": 0.3
+   },
+   "effect_amounts": [
+    [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaOrbs.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbs.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbs.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DianaOrbs.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbs"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "DianaOrbs",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.2,
+    "ad": 0.3
+   },
+   "effect_amounts": [
+    [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaOrbs.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbs.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbs.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DianaOrbs.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbs"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DianaOrbs",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": null,
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.2,
+    "ad": 0.3
+   },
+   "effect_amounts": [
+    [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaOrbs.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbs.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbs.impact",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "DianaOrbs.persist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbs"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.moonlight",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DianaMoonlight",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    55,
+    65,
+    75,
+    85,
+    95,
+    110,
+    125,
+    140,
+    155,
+    170,
+    195,
+    220,
+    245,
+    270,
+    295,
+    320,
+    345,
+    370,
+    395,
+    420,
+    445,
+    470,
+    495,
+    520,
+    545,
+    570,
+    595,
+    620,
+    645,
+    670,
+    695,
+    720,
+    745,
+    770
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaMoonlight.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaQAbility/DianaMoonlight"
+   ],
+   "evidence": "name:moonlight"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DianaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50,
+    50,
+    50,
+    50,
+    50
+   ],
+   "damage": [
+    70,
+    105,
+    140,
+    175,
+    210
+   ],
+   "duration": [
+    70,
+    105,
+    140,
+    175,
+    210
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaQ.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaQ.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaQAbility/DianaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DianaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    50,
+    50,
+    50,
+    50,
+    50
+   ],
+   "damage": [
+    70,
+    105,
+    140,
+    175,
+    210
+   ],
+   "duration": [
+    70,
+    105,
+    140,
+    175,
+    210
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaQ.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaQ.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    8,
+    6
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaQAbility/DianaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DianaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100,
+    90,
+    80
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100,
+    100,
+    100
+   ],
+   "damage": [
+    200,
+    300,
+    400
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.6
+   },
+   "effect_amounts": [
+    [
+     -0.3499999940395355,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaR.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    100,
+    80
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaRAbility/DianaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DianaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100,
+    90,
+    80
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100,
+    100,
+    100
+   ],
+   "damage": [
+    200,
+    300,
+    400
+   ],
+   "duration": null,
+   "ratios": {
+    "ap": 0.6
+   },
+   "effect_amounts": [
+    [
+     -0.3499999940395355,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929,
+     -0.6000000238418579
+    ],
+    [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaR.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    100,
+    80
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaRAbility/DianaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "DianaTeleport",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22,
+    20,
+    18,
+    16,
+    14
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": null,
+   "duration": [
+    50,
+    70,
+    90,
+    110,
+    130
+   ],
+   "ratios": {
+    "ap": 0.6
+   },
+   "effect_amounts": [
+    [
+     0.0,
+     4.0,
+     4.0,
+     4.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     0.0
+    ],
+    [
+     0.0,
+     50.0,
+     75.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaTeleport.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaTeleport.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaTeleport.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    22,
+    14
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaTeleportAbility/DianaTeleport"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DianaTeleport",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22,
+    20,
+    18,
+    16,
+    14
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    50,
+    70,
+    90,
+    110,
+    130
+   ],
+   "duration": [
+    50,
+    70,
+    90,
+    110,
+    130
+   ],
+   "ratios": {
+    "ap": 0.6
+   },
+   "effect_amounts": [
+    [
+     0.0,
+     4.0,
+     4.0,
+     4.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     0.0
+    ],
+    [
+     0.0,
+     50.0,
+     75.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "DianaTeleport.cast",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaTeleport.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaTeleport.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    22,
+    14
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaTeleportAbility/DianaTeleport"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DianaPassiveMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    55,
+    65,
+    75,
+    85,
+    95,
+    110,
+    125,
+    140,
+    155,
+    170,
+    195,
+    220,
+    245,
+    270,
+    295,
+    320,
+    345,
+    370,
+    395,
+    420,
+    445,
+    470,
+    495,
+    520,
+    545,
+    570,
+    595,
+    620,
+    645,
+    670,
+    695,
+    720,
+    745,
+    770
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaPassiveMarker.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaPassiveAbility/DianaPassiveMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack3.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack3.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack3.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack3.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack2.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "DianaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaBasicAttack2.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaBasicAttack2.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DianaOrbsMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    20,
+    32,
+    44,
+    56,
+    68
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbsMissile"
+   ],
+   "inherited_from": "DianaOrbs",
+   "evidence": "inherited:DianaOrbs"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "DianaOrbsMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    20,
+    32,
+    44,
+    56,
+    68
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbsMissile"
+   ],
+   "inherited_from": "DianaOrbs",
+   "evidence": "inherited:DianaOrbs"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "DianaOrbsMissile",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbsMissile"
+   ],
+   "inherited_from": "DianaOrbs",
+   "evidence": "inherited:DianaOrbs"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DianaOrbsMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "damage": null,
+   "duration": [
+    45,
+    60,
+    75,
+    90,
+    105
+   ],
+   "ratios": {
+    "ap": 0.7
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "DianaOrbsMissile.travel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    15,
+    9
+   ],
+   "cast_time_seconds": null,
+   "uptime_fraction": 1.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaOrbsAbility/DianaOrbsMissile"
+   ],
+   "inherited_from": "DianaOrbs",
+   "evidence": "inherited:DianaOrbs"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.attack-speed",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DianaPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    55,
+    65,
+    75,
+    85,
+    95,
+    110,
+    125,
+    140,
+    155,
+    170,
+    195,
+    220,
+    245,
+    270,
+    295,
+    320,
+    345,
+    370,
+    395,
+    420,
+    445,
+    470,
+    495,
+    520,
+    545,
+    570,
+    595,
+    620,
+    645,
+    670,
+    695,
+    720,
+    745,
+    770
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaPassive.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Diana/P",
+    "Moonsilver Blade"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaPassive",
+    "Characters/Diana/Spells/DianaAttackSpeed"
+   ],
+   "evidence": "wiki: 15%-35% bonus attack speed, tripled after casting an ability for 5 seconds"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "DianaPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    55,
+    65,
+    75,
+    85,
+    95,
+    110,
+    125,
+    140,
+    155,
+    170,
+    195,
+    220,
+    245,
+    270,
+    295,
+    320,
+    345,
+    370,
+    395,
+    420,
+    445,
+    470,
+    495,
+    520,
+    545,
+    570,
+    595,
+    620,
+    645,
+    670,
+    695,
+    720,
+    745,
+    770
+   ],
+   "duration": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    55,
+    65,
+    75,
+    85,
+    95,
+    110,
+    125,
+    140,
+    155,
+    170,
+    195,
+    220,
+    245,
+    270,
+    295,
+    320,
+    345,
+    370,
+    395,
+    420,
+    445,
+    470,
+    495,
+    520,
+    545,
+    570,
+    595,
+    620,
+    645,
+    670,
+    695,
+    720,
+    745,
+    770
+   ],
+   "ratios": {},
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DianaPassive.impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Diana/P",
+    "Moonsilver Blade"
+   ],
+   "binary": [
+    "Characters/Diana/Spells/DianaPassive"
+   ],
+   "evidence": "wiki: at 2 stacks the next attack cleaves for 20-220 +50% AP magic damage, 270% vs monsters"
+  }
+ }
+]

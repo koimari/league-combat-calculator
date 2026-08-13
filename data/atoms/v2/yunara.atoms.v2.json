@@ -1,0 +1,4203 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "YunaraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{0201e6e7}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "YunaraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraBasicAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{0201e6e7}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YunaraCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraCritAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{08b777d7}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YunaraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraCritAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{8ceeab1f}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "YunaraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraBasicAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{fdfe614f}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "YunaraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraBasicAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{fdfe614f}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YunaraQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQAbility/YunaraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQAbility/YunaraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "YunaraQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQAbility/YunaraQ"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "YunaraQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQAbility/YunaraQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQAbility/YunaraQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YunaraQBounceCritMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6794,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{40721c48}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "Cooldown": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "max_rank": 9.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraEAbility/YunaraE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "Cooldown": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraE2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "max_rank": 9.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{e9fad66a}"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "Cooldown": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraE2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "max_rank": 9.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{e9fad66a}"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "YunaraE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "Cooldown": [
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0,
+     9.0
+    ],
+    "{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraE2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "max_rank": 9.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{e9fad66a}"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{19badf3f}"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraQAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{2ea9641e}"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraQAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraQAttackCrit",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{af38f4f2}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraQAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraQAttackCrit",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{af38f4f2}"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YunaraQCrit2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQCrit2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{c974acc0}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraAttackCrit",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{d282ca8f}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneYunaraAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "ItemHurricaneYunaraAttackCrit",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{d282ca8f}"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "YunaraQCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQCrit",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "{fc879872}"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraWSlow",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{2b07329d}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraW2Slow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraW2Slow",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{36fe1e27}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YunaraW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "cast_frame": 15.0,
+   "missile_speed": 2150.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "{210f9ec0}": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraWPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.5,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraWAbility/YunaraW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "cast_frame": 15.0,
+   "missile_speed": 2150.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "{210f9ec0}": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraWPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.5,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraWAbility/YunaraW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "YunaraW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "cast_frame": 15.0,
+   "missile_speed": 2150.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "{210f9ec0}": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraWPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.5,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraWAbility/YunaraW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "YunaraW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "cast_frame": 15.0,
+   "missile_speed": 2150.0,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ],
+    "{210f9ec0}": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraWPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.5,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraWAbility/YunaraW"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    90.0,
+    80.0,
+    70.0,
+    60.0,
+    50.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "effect_amounts": {
+    "Cooldown": [
+     100.0,
+     100.0,
+     90.0,
+     80.0,
+     70.0,
+     60.0,
+     50.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraRPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 100.0,
+    "max_rank": 50.0
+   },
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraRAbility/YunaraR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{7b1d381a}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{7b1d381a}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "YunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "{7b1d381a}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "YunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{7b1d381a}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceCritMissile",
+    "duration": null
+   },
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{7b1d381a}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YunaraQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{f6ff66f8}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{f6ff66f8}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "YunaraQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "{f6ff66f8}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "YunaraQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{f6ff66f8}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": 8.0,
+   "missile_speed": 10000.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraQAttack2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.267,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f6ff66f8}"
+   ],
+   "inherited_from": "YunaraQ",
+   "evidence": "inherited:YunaraQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "YunaraW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 18.0,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraW2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.6,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{dbba96be}"
+   ],
+   "inherited_from": "YunaraW",
+   "evidence": "inherited:YunaraW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 18.0,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraW2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.6,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{dbba96be}"
+   ],
+   "inherited_from": "YunaraW",
+   "evidence": "inherited:YunaraW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "YunaraW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 18.0,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraW2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.6,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "{dbba96be}"
+   ],
+   "inherited_from": "YunaraW",
+   "evidence": "inherited:YunaraW"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "YunaraW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0,
+    1150.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 18.0,
+   "missile_speed": 0.0,
+   "effect_amounts": {
+    "{0e1136d1}": [
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0,
+     1150.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "YunaraW2",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.6,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "{dbba96be}"
+   ],
+   "inherited_from": "YunaraW",
+   "evidence": "inherited:YunaraW"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "YunaraPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Vow of the First Lands"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraPassive"
+   ],
+   "evidence": "P: critical strikes deal 10% (+10% per 100 AP) bonus magic damage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "YunaraQPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Cultivation of Spirit"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQPassive"
+   ],
+   "evidence": "Q passive: basic attacks deal bonus magic damage on-hit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "YunaraQPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraQPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Cultivation of Spirit"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQPassive"
+   ],
+   "evidence": "Q passive: on-attack generates Unleash stacks, up to 8, refreshed on subsequent attacks"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "YunaraQBounceMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_frame": null,
+   "missile_speed": 2000.0,
+   "affects_type_flags": 6794,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "travel",
+    "behavior": "YunaraQBounceMissile",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Cultivation of Spirit"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraQBounceMissile"
+   ],
+   "evidence": "Q active empowered basic-attack missile (increased missile speed, empowered on-hit magic damage)"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "YunaraWPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraWPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arc of Judgment"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraWPassive"
+   ],
+   "evidence": "W: the spinning bead briefly grants sight of its surroundings as it travels"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraEPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Kanmei's Steps"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraEPassive"
+   ],
+   "evidence": "E: Yunara becomes ghosted for 1.5 seconds"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "YunaraEPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "cast_radius": null,
+   "cast_frame": null,
+   "missile_speed": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "behavior": "YunaraEPassive",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Kanmei's Steps"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/YunaraEPassive"
+   ],
+   "evidence": "E: gains bonus movement speed, 50% more effective while facing a visible enemy champion"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Yunara_ThreeSacredTreasuresAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": null,
+   "cast_frame": 18.0,
+   "missile_speed": 0.0,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "Cooldown": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "behavior": "Yunara_ThreeSacredTreasuresAttack",
+    "duration": null
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.6,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation"
+  ],
+  "provenance": {
+   "wiki": [
+    "Transcend One's Self"
+   ],
+   "binary": [
+    "Characters/Yunara/Spells/Yunara_ThreeSacredTreasuresAttack"
+   ],
+   "evidence": "R Transcendent State empowered attack (binary object; empowered basic abilities deal bonus damage)"
+  }
+ }
+]

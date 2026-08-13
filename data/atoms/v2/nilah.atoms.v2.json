@@ -1,0 +1,4680 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "DashSpeed": [
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0
+    ],
+    "DashTotalDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "affects_type_flags": 23567,
+   "tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_AttackReset",
+    "Trait_SignatureSpell",
+    "Trait_DamageAbility",
+    "Trait_Ammo",
+    "Trait_Low_Damage"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:SpecialCase_StasisLocked"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "crowd-control-mobility.stasis"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "crowd-control-mobility.stasis"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    26.0,
+    25.0,
+    24.0,
+    23.0,
+    22.0,
+    21.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {
+    "MoveSpeedPercent": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "BaseDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "ShareBaseDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExtensionBonus": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "AreaTriggerSize": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MagicDamageReduction": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "affects_type_flags": 7375,
+   "tags": [
+    "Trait_Parry",
+    "Trait_AttackBuff_Duration",
+    "Trait_Trap",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NilahCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NilahCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahCritAttack2",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "DashSpeed": [
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0
+    ],
+    "DashTotalDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "affects_type_flags": 23567,
+   "tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_AttackReset",
+    "Trait_SignatureSpell",
+    "Trait_DamageAbility",
+    "Trait_Ammo",
+    "Trait_Low_Damage"
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahEQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Formless Blade"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahEQMis"
+   ],
+   "evidence": "wiki:Q active physical damage wave projectile (castRange 2000 in binary)"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahEQMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NilahEQMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahEQMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Formless Blade"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQSpellPassive"
+   ],
+   "evidence": "wiki:Q passive heals 0-20% of post-mitigation champion damage; excess becomes shield"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahPShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{672d95e0}"
+   ],
+   "evidence": "name:shield"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahPShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    95.0,
+    80.0,
+    160.0,
+    160.0,
+    100.0
+   ],
+   "data_values": {
+    "Duration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "DamageBase": [
+     25.0,
+     125.0,
+     225.0,
+     325.0,
+     425.0,
+     525.0,
+     625.0
+    ],
+    "ShieldBase": [
+     15.0,
+     65.0,
+     115.0,
+     165.0,
+     215.0,
+     265.0,
+     315.0
+    ],
+    "DamagePerTick": [
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0,
+     55.0,
+     65.0
+    ],
+    "OtherHealingPercent": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "Microslow": [
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612,
+     -0.10000000149011612
+    ],
+    "NumTicks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "TickDelay": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   },
+   "damage": [
+    25.0,
+    125.0,
+    225.0,
+    325.0,
+    425.0,
+    525.0,
+    625.0
+   ],
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "affects_type_flags": 9221,
+   "tags": [
+    "Trait_Ultimate",
+    "SpecialCase_StasisLocked",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_DoT",
+    "Trait_AoE"
+   ],
+   "tick_rate": 0.20000000298023224
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NilahR",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "uptime_fraction": 0.0545,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "DashSpeed": [
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0
+    ],
+    "DashTotalDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "affects_type_flags": 23567,
+   "tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_AttackReset",
+    "Trait_SignatureSpell",
+    "Trait_DamageAbility",
+    "Trait_Ammo",
+    "Trait_Low_Damage"
+   ]
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahE",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    26.0,
+    25.0,
+    24.0,
+    23.0,
+    22.0,
+    21.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {
+    "MoveSpeedPercent": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "BaseDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "ShareBaseDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExtensionBonus": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "AreaTriggerSize": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MagicDamageReduction": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "affects_type_flags": 7375,
+   "tags": [
+    "Trait_Parry",
+    "Trait_AttackBuff_Duration",
+    "Trait_Trap",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ],
+    "DashSpeed": [
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0,
+     2200.0
+    ],
+    "DashTotalDistance": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ]
+   },
+   "damage": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "affects_type_flags": 23567,
+   "tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_AttackReset",
+    "Trait_SignatureSpell",
+    "Trait_DamageAbility",
+    "Trait_Ammo",
+    "Trait_Low_Damage"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahE",
+    "atoms": [
+     "stack-transform-summon-resource.ammo"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "data_values": {
+    "ExperiencePercentage": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HealDistance": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "ShieldIncrease": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ],
+    "HealingIncrease": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "ShieldMaxDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Joy Unending"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahPassiveAbility/NilahPassive"
+   ],
+   "evidence": "wiki:P Joy Unending innate: bonus experience share on minion kills"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "data_values": {
+    "BaseDamage": [
+     -10.0,
+     0.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0
+    ],
+    "CheatingThreshold": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "QADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "CritHealScalar": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "CritArmorPenScalar": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "MinionMod": [
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185,
+     0.33000001311302185
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "RangeIncrease": [
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0,
+     125.0
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ShieldDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "ActiveCritScaling": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "damage": [
+    -10.0,
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   },
+   "affects_type_flags": 6154,
+   "tags": [
+    "Trait_DamageAbility",
+    "PositiveEffect_EmpowerAttack",
+    "Trait_ActiveHeal",
+    "Trait_Shield",
+    "Trait_AttackBuff_Duration",
+    "Trait_Strike",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahQ",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "NilahQAttack2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    26.0,
+    25.0,
+    24.0,
+    23.0,
+    22.0,
+    21.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {
+    "MoveSpeedPercent": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "BaseDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "ShareBaseDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExtensionBonus": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "AreaTriggerSize": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MagicDamageReduction": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "affects_type_flags": 7375,
+   "tags": [
+    "Trait_Parry",
+    "Trait_AttackBuff_Duration",
+    "Trait_Trap",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahWAllyBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{d9c606db}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahWAllyBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f0b0ac31}"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    26.0,
+    25.0,
+    24.0,
+    23.0,
+    22.0,
+    21.0
+   ],
+   "cast_range": [
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0,
+    150.0
+   ],
+   "data_values": {
+    "MoveSpeedPercent": [
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552,
+     0.25,
+     0.2750000059604645
+    ],
+    "BaseDuration": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "ShareBaseDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "ExtensionBonus": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "AreaTriggerSize": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MagicDamageReduction": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ]
+   },
+   "damage": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "affects_type_flags": 7375,
+   "tags": [
+    "Trait_Parry",
+    "Trait_AttackBuff_Duration",
+    "Trait_Trap",
+    "Trait_AoE"
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_Trap"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "NilahW",
+    "atoms": [
+     "stack-transform-summon-resource.trap"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "tempo_class": "setup"
+  }
+ }
+]

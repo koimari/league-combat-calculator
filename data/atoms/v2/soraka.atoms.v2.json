@@ -1,0 +1,2474 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "Consecration",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "movement speed",
+    "health threshold"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Consecration"
+   ],
+   "evidence": "manual review: wiki P - the passive Consecration buff (allies below 40% health grant 90% bonus movement speed)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "Consecration_Self",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": null,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "movement speed",
+    "health threshold"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Consecration_SelfAbility/Consecration_Self"
+   ],
+   "evidence": "manual review: wiki P + binary DataValues MovementSpeed=0.9, HealthThreshold=0.4, castRange=2500 - the passive movement-speed self-buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0,
+    195.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    16.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0375,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.silence",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaEPacify",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0,
+    195.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    16.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0375,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "silence",
+    "pacify"
+   ],
+   "binary": [
+    "{0c424ff9}"
+   ],
+   "evidence": "manual review: wiki E - Equinox zone persists 1.5s and silences enemies within (buff game_buff_tooltip_SorakaEPacify)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaESnare",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0,
+    195.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    16.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0375,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "{f63cefa4}"
+   ],
+   "evidence": "name:snare"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "movement speed",
+    "health threshold"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaPassive"
+   ],
+   "evidence": "manual review: wiki P - Soraka gains 90% bonus movement speed while facing nearby allied champions below 40% maximum health"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "recast",
+    "duration": null,
+    "behavior": "second cast / return missile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SorakaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0,
+    195.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    16.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0375,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0,
+    875.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": [
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0,
+    170.0,
+    195.0
+   ],
+   "duration": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25
+   ],
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    20.0,
+    16.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0375,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    65.0
+   ],
+   "missile_speed": 1750.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0,
+    260.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.30000001192092896
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1750.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    4.0
+   ],
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": 0.2778,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaQAbility/SorakaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    65.0
+   ],
+   "missile_speed": 1750.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0,
+    260.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.30000001192092896
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1750.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    4.0
+   ],
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": 0.2778,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaQAbility/SorakaQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1100.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1100.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{37202a65}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1100.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1100.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{37202a65}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1400.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1400.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{0f15243f}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1400.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1400.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{0f15243f}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    135.0,
+    120.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    150.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "Soraka_BasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Soraka_BasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "Soraka_BasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "missile_speed": 1000.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.217,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1000.0",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.217,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Soraka_BasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    65.0
+   ],
+   "missile_speed": 1750.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0,
+    260.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.30000001192092896
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1750.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    4.0
+   ],
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": 0.2778,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaQAbility/SorakaQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1100.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1100.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{37202a65}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.health-regeneration",
+  "family": "heal-shield",
+  "behavior": "SorakaQRegen",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    65.0
+   ],
+   "missile_speed": 1750.0,
+   "toggle": false,
+   "damage": [
+    50.0,
+    85.0,
+    120.0,
+    155.0,
+    190.0,
+    225.0,
+    260.0
+   ],
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "HealAPRatio": 0.30000001192092896
+   },
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1750.0",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    9.0,
+    4.0
+   ],
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": 0.2778,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Health regeneration",
+    "Health",
+    "Grievous Wounds"
+   ],
+   "binary": [
+    "{fdaed7b0}"
+   ],
+   "evidence": "name:regen"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": null,
+   "missile_speed": 1400.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.033,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile speed 1400.0",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 0.033,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{0f15243f}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    135.0,
+    120.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    150.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   },
+   {
+    "state": "aftermath",
+    "duration": null,
+    "behavior": "buff/debuff effect window",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    2.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    150.0,
+    150.0,
+    135.0,
+    120.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    150.0,
+    10.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SorakaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    60.0
+   ],
+   "missile_speed": 0.0,
+   "toggle": false,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "stacks_cap": null,
+   "tick_rate": null,
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup (castFrame/30s)",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect / animation",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    2.0
+   ],
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ }
+]

@@ -1,0 +1,2716 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NautilusPiercingGazeShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGazeShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGazeShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NautilusWDoT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 28.0,
+    "rank_max": 18.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusWDoT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "NautilusWDoT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    18.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusWDoT",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 28.0,
+    "rank_max": 18.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusWDoT"
+   ],
+   "evidence": "name:dot"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NautilusPiercingGaze",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    700.0,
+    800.0,
+    900.0,
+    1000.0,
+    1100.0,
+    1200.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.321,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPiercingGaze",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 12.0,
+    "rank_max": 12.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPiercingGazeAbility/NautilusPiercingGaze"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusSplashZoneSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusSplashZoneSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusSplashZoneAbility/NautilusSplashZoneSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NautilusSplashZone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 7.5,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusSplashZoneAbility/NautilusSplashZone"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NautilusSplashZone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 7.5,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusSplashZoneAbility/NautilusSplashZone"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "NautilusSplashZone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusSplashZone",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 7.5,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusSplashZoneAbility/NautilusSplashZone"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusAnchorDragRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDragRoot",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDragRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusAnchorDrag",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    250.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDrag"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusAnchorDrag",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    250.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDrag"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NautilusAnchorDrag",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    70.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0,
+    250.0
+   ],
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDrag",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDrag"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusMinorKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusMinorKnockUp",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusMinorKnockUp"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusKnockUp",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusKnockUp"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusGrandLine",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusGrandLine"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NautilusGrandLine",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusGrandLine"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NautilusGrandLine",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusGrandLine",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 120.0,
+    "rank_max": 80.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusGrandLine"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NautilusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.386,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NautilusBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.386,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NautilusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.391,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NautilusBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.391,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    9.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPassive",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPassiveAbility/NautilusPassive"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusPassiveRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusPassiveRoot",
+    "atoms": [
+     "crowd-control-mobility.root"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusPassiveAbility/NautilusPassiveRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NautilusCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.405,
+    "behavior": "NautilusCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusAnchorDragMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDragMissile"
+   ],
+   "inherited_from": "NautilusAnchorDrag",
+   "evidence": "inherited:NautilusAnchorDrag"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NautilusAnchorDragMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDragMissile"
+   ],
+   "inherited_from": "NautilusAnchorDrag",
+   "evidence": "inherited:NautilusAnchorDrag"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NautilusAnchorDragMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusAnchorDragMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 14.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusAnchorDragAbility/NautilusAnchorDragMissile"
+   ],
+   "inherited_from": "NautilusAnchorDrag",
+   "evidence": "inherited:NautilusAnchorDrag"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NautilusWideswingAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906,
+    49.400001525878906
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.432,
+    "behavior": "NautilusWideswingAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusWideswingAttack",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Area of effect"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusWideswingAttack"
+   ],
+   "evidence": "wiki:W Titan's Wrath - empowered autos apply Pain of Wrath to target and nearby enemies"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "NautilusGrandLineTarget",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "ratios": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "NautilusGrandLineTarget",
+    "atoms": [
+     "vision-economy.sight"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight"
+   ],
+   "binary": [
+    "Characters/Nautilus/Spells/NautilusGrandLineAbility/NautilusGrandLineTarget"
+   ],
+   "evidence": "wiki:R Depth Charge - eruptions briefly grant sight of the area"
+  }
+ }
+]

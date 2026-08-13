@@ -1,0 +1,1941 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "TryndamereE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "NonChampCDRefund": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampCDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "NonChampFuryGain": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampFuryGain": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DamageAoE": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ChampCDRefund",
+    "NonChampCDRefund"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_binary_evidence": {
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "ADRatio",
+    "APRatio",
+    "ChampCDRefund",
+    "ChampFuryGain",
+    "Damage",
+    "DamageAoE",
+    "NonChampCDRefund",
+    "NonChampFuryGain"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "Damage",
+     "ADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TryndamereE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "NonChampCDRefund": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampCDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "NonChampFuryGain": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampFuryGain": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DamageAoE": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ChampCDRefund",
+    "NonChampCDRefund"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_binary_evidence": {
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "ADRatio",
+    "APRatio",
+    "ChampCDRefund",
+    "ChampFuryGain",
+    "Damage",
+    "DamageAoE",
+    "NonChampCDRefund",
+    "NonChampFuryGain"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "Damage",
+     "ADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TryndamereE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "NonChampCDRefund": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampCDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "NonChampFuryGain": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampFuryGain": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DamageAoE": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ChampCDRefund",
+    "NonChampCDRefund"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_binary_evidence": {
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "ADRatio",
+    "APRatio",
+    "ChampCDRefund",
+    "ChampFuryGain",
+    "Damage",
+    "DamageAoE",
+    "NonChampCDRefund",
+    "NonChampFuryGain"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "Damage",
+     "ADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TryndamereE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "ADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "NonChampCDRefund": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "ChampCDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "NonChampFuryGain": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampFuryGain": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "DamageAoE": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ChampCDRefund",
+    "NonChampCDRefund"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereEAbility/TryndamereE",
+  "_binary_evidence": {
+   "spell_tags": [
+    "PositiveEffect_MoveBlock",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "data_values_found": [
+    "ADRatio",
+    "APRatio",
+    "ChampCDRefund",
+    "ChampFuryGain",
+    "Damage",
+    "DamageAoE",
+    "NonChampCDRefund",
+    "NonChampFuryGain"
+   ],
+   "calculations": {
+    "TotalDamage": [
+     "Damage",
+     "ADRatio",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TryndamereBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TryndamereBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TryndamereBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack2",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TryndamereBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack2",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereBasicAttack2",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "UndyingRage",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "TryndRFuryGain": [
+     50.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "TryndRMinHealth": [
+     30.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "TryndRDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "UndyingRage",
+    "atoms": [
+     "crowd-control-mobility.stasis"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "UndyingRage",
+    "atoms": [
+     "crowd-control-mobility.stasis"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_rank_seconds": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0417,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage"
+   ],
+   "evidence": "tag:SpecialCase_StasisLocked"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage",
+  "_spine_source": "root/Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage",
+  "_binary_evidence": {
+   "spell_tags": [
+    "SpecialCase_StasisLocked",
+    "Trait_Ultimate",
+    "Trait_AttackBuff_Duration"
+   ],
+   "data_values_found": [
+    "TryndRDuration",
+    "TryndRFuryGain",
+    "TryndRMinHealth"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "UndyingRage",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "TryndRFuryGain": [
+     50.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "TryndRMinHealth": [
+     30.0,
+     30.0,
+     50.0,
+     70.0,
+     90.0,
+     110.0,
+     130.0
+    ],
+    "TryndRDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "UndyingRage",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 5.0,
+    "behavior": "UndyingRage",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "UndyingRage",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_max_rank_seconds": 80.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0417,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage",
+  "_spine_source": "root/Characters/Tryndamere/Spells/UndyingRageAbility/UndyingRage",
+  "_binary_evidence": {
+   "spell_tags": [
+    "SpecialCase_StasisLocked",
+    "Trait_Ultimate",
+    "Trait_AttackBuff_Duration"
+   ],
+   "data_values_found": [
+    "TryndRDuration",
+    "TryndRFuryGain",
+    "TryndRMinHealth"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TryndamereCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "TryndamereCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereCritAttack",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereCritAttack",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TryndamereWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "ADReduction": [
+     -5.0,
+     -20.0,
+     -35.0,
+     -50.0,
+     -65.0,
+     -80.0,
+     -95.0
+    ],
+    "SlowPotency": [
+     -0.25,
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929
+    ],
+    "ReductionDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SlowDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereWSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2857,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereWSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereWSlow",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereW",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "ADReduction",
+    "ReductionDuration",
+    "SlowDuration",
+    "SlowPotency"
+   ],
+   "calculations": {}
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TryndamereQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioPerFury": [
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128
+    ]
+   },
+   "effect_amounts": {
+    "BaseHealing": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "BonusHealPerFury": [
+     0.05000000074505806,
+     0.5,
+     0.949999988079071,
+     1.399999976158142,
+     1.850000023841858,
+     2.299999952316284,
+     2.75
+    ],
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "APRatioPerFury": [
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128,
+     0.012000000104308128
+    ],
+    "MaximumBonusAD": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "RemainingHealthThreshold": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "heal": {
+    "BaseHealing": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TryndamereQ",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereQAbility/TryndamereQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereQAbility/TryndamereQ",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereQAbility/TryndamereQ",
+  "_binary_evidence": {
+   "spell_tags": [
+    "Trait_ActiveHeal"
+   ],
+   "data_values_found": [
+    "APRatio",
+    "APRatioPerFury",
+    "BaseHealing",
+    "BonusHealPerFury",
+    "MaximumBonusAD",
+    "RemainingHealthThreshold"
+   ],
+   "calculations": {
+    "BaseHeal": [
+     "BaseHealing",
+     "APRatio"
+    ],
+    "HealPerFury": [
+     "BonusHealPerFury",
+     "APRatioPerFury"
+    ],
+    "MaximumHeal": [
+     "BaseHealing",
+     "APRatio"
+    ]
+   }
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Battle Fury",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "CherryFuryModifier": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "Battle Fury",
+    "atoms": [
+     "stack-transform-summon-resource.fury-rage-resource"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Battle Fury",
+    "atoms": [
+     "stack-transform-summon-resource.fury-rage-resource"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.critical-strike"
+  ],
+  "provenance": {
+   "wiki": [
+    "Fury",
+    "Battle Fury"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamerePassiveAbility/TryndamerePassive"
+   ],
+   "evidence": "wiki: resource FURY; generates Fury on-hit (5/10/15) with crit chance scaling per Fury; E and R also grant Fury"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamerePassiveAbility/TryndamerePassive",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamerePassiveAbility/TryndamerePassive",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "CherryFuryModifier"
+   ],
+   "calculations": {
+    "PassiveCritConversionTooltip": [],
+    "{dc63b617}": []
+   }
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Mocking Shout",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "ADReduction": [
+     -5.0,
+     -20.0,
+     -35.0,
+     -50.0,
+     -65.0,
+     -80.0,
+     -95.0
+    ],
+    "SlowPotency": [
+     -0.25,
+     -0.30000001192092896,
+     -0.3499999940395355,
+     -0.4000000059604645,
+     -0.44999998807907104,
+     -0.5,
+     -0.550000011920929
+    ],
+    "ReductionDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "SlowDuration": [
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25,
+     3.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Mocking Shout",
+    "atoms": [
+     "stack-transform-summon-resource.damage-modification-debuff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "Mocking Shout",
+    "atoms": [
+     "stack-transform-summon-resource.damage-modification-debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Mocking Shout",
+    "atoms": [
+     "stack-transform-summon-resource.damage-modification-debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2857,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "crowd-control-mobility.slow"
+  ],
+  "provenance": {
+   "wiki": [
+    "Mocking Shout"
+   ],
+   "binary": [
+    "Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereW"
+   ],
+   "evidence": "wiki: reduces bonus attack damage of nearby enemy champions by 20-80 for 4 seconds"
+  },
+  "_spell_object": "root/Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereW",
+  "_spine_source": "root/Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereW",
+  "_binary_evidence": {
+   "spell_tags": [],
+   "data_values_found": [
+    "ADReduction",
+    "ReductionDuration",
+    "SlowDuration",
+    "SlowPotency"
+   ],
+   "calculations": {}
+  }
+ }
+]

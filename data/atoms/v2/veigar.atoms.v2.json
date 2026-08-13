@@ -1,0 +1,1473 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "VeigarStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarStun"
+   ],
+   "evidence": "name:stun"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarStun",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VeigarBalefulStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5,
+    4.0,
+    3.5
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     null,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBalefulStrikeAbility/VeigarBalefulStrike"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBalefulStrike",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VeigarBalefulStrike",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.5,
+    6.0,
+    5.5,
+    5.0,
+    4.5,
+    4.0,
+    3.5
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     null,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 13327.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBalefulStrikeAbility/VeigarBalefulStrike"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBalefulStrike",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VeigarEventHorizon",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    18.5,
+    17.0,
+    15.5,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25,
+    2.5,
+    2.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#0": [
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "mEffectAmount#ability": [
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarEventHorizonAbility/VeigarEventHorizon"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarEventHorizon",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0625,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VeigarEventHorizon",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    20.0,
+    18.5,
+    17.0,
+    15.5,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "mana_cost": null,
+   "duration": [
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    2.25,
+    2.5,
+    2.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#0": [
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "mEffectAmount#ability": [
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarEventHorizonAbility/VeigarEventHorizon"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarEventHorizon",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0625,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VeigarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 512.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VeigarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 512.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VeigarDarkMatter",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    85.0,
+    140.0,
+    195.0,
+    250.0,
+    305.0,
+    360.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     null,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14474.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarDarkMatterAbility/VeigarDarkMatter"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarDarkMatter",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VeigarDarkMatter",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    85.0,
+    140.0,
+    195.0,
+    250.0,
+    305.0,
+    360.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     null,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14474.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarDarkMatterAbility/VeigarDarkMatter"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarDarkMatter",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "VeigarEventHorizonStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarEventHorizonStun"
+   ],
+   "evidence": "name:stun"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarEventHorizonStun",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VeigarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 512.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VeigarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 512.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VeigarR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    90.0,
+    60.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    100.0,
+    175.0,
+    250.0,
+    325.0,
+    400.0,
+    475.0,
+    550.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 4106.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarRAbility/VeigarR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "VeigarR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    90.0,
+    60.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    100.0,
+    175.0,
+    250.0,
+    325.0,
+    400.0,
+    475.0,
+    550.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 4106.0
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarRAbility/VeigarR"
+   ],
+   "evidence": "rule:execute"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VeigarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312,
+    622.7000122070312
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": 512.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.lockout",
+  "family": "crowd-control-mobility",
+  "behavior": "VeigarDarkMatterCastLockout",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     70.0,
+     120.0,
+     170.0,
+     220.0,
+     270.0,
+     320.0,
+     370.0,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 14474.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control",
+    "Dash"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarDarkMatterCastLockout"
+   ],
+   "evidence": "name:lockout"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarDarkMatterCastLockout",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VeigarBalefulStrikeMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0,
+     270.0,
+     0.0,
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBalefulStrikeMis"
+   ],
+   "inherited_from": "VeigarBalefulStrike",
+   "evidence": "inherited:VeigarBalefulStrike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBalefulStrikeMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VeigarBalefulStrikeMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": {
+    "mEffectAmount#ability": [
+     30.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0,
+     270.0,
+     0.0,
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "damage_type": null,
+   "affects_type_flags": 6154.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarBalefulStrikeMis"
+   ],
+   "inherited_from": "VeigarBalefulStrike",
+   "evidence": "inherited:VeigarBalefulStrike"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarBalefulStrikeMis",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VeigarPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Phenomenal Evil Power"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarPassiveAbility/VeigarPassive"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VeigarPhenomenalEvilPower",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Phenomenal Evil Power"
+   ],
+   "binary": [
+    "Characters/Veigar/Spells/VeigarPhenomenalEvilPower"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VeigarPhenomenalEvilPower",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ }
+]

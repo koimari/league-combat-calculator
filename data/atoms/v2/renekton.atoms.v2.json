@@ -1,0 +1,4094 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenekthonSliceAndDiceDelay",
+  "trigger": "on_recast_ready",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RenekthonSliceAndDiceDelay",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slice and Dice (E): if Renekton hits an enemy he can recast within the next 4 seconds"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenekthonSliceAndDiceDelay"
+   ],
+   "evidence": "E recast-window timer object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonDice",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonDice",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonDice"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0
+    ],
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedBaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnragedArmorShred": [
+     22.5,
+     25.0,
+     27.5,
+     30.0,
+     32.5,
+     35.0
+    ],
+    "ShredTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MinionRageGeneration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampionRageGeneration": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryMax": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "DiceTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseDashSpeed": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonSliceAndDice",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonDice",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonDice"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0
+    ],
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedBaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnragedArmorShred": [
+     22.5,
+     25.0,
+     27.5,
+     30.0,
+     32.5,
+     35.0
+    ],
+    "ShredTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MinionRageGeneration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampionRageGeneration": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryMax": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "DiceTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseDashSpeed": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonSliceAndDice",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonPredator",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "FuryPerAttack": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryIncreasePercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthPercentThreshold": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "InCombatDuration": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "FuryCost": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.0,
+    "behavior": "RenektonPredator",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 12.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "crowd-control-mobility.stun"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 7.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ruthless Predator (W): empowers next basic attack within 7s to strike twice (3 with Reign of Anger) and stun for 0.75s"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPredatorAbility/RenektonPredator"
+   ],
+   "evidence": "base W object (stun + multi-strike)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    20.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseMinionHeal": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampHeal": [
+     4.0,
+     12.0,
+     20.0,
+     28.0,
+     36.0,
+     44.0
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "BasicHealCap": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "EmpoweredBaseDamage": [
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0,
+     270.0
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "EmpoweredHealCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "EmpoweredHealMultiplier": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Range": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "UltimateRangeMod": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "MinionFuryGain": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ChampionFuryGain": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryGainCap": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonCleave",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -30.0,
+    60.0,
+    150.0,
+    240.0,
+    330.0,
+    420.0
+   ],
+   "duration": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "HealthGain": [
+     100.0,
+     300.0,
+     500.0,
+     700.0,
+     900.0,
+     1100.0
+    ],
+    "AuraDamagePerSecond": [
+     -30.0,
+     60.0,
+     150.0,
+     240.0,
+     330.0,
+     420.0
+    ],
+    "FuryPerSecond": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryOnCast": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BuffDuration": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "TickRate": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonReignOfTheTyrant",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 15.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0
+    ],
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedBaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnragedArmorShred": [
+     22.5,
+     25.0,
+     27.5,
+     30.0,
+     32.5,
+     35.0
+    ],
+    "ShredTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MinionRageGeneration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampionRageGeneration": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryMax": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "DiceTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseDashSpeed": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonSliceAndDice",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 16.0,
+    "behavior": "RenektonBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 16.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 16.1,
+    "behavior": "RenektonBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 16.1,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RenektonCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 16.0,
+    "behavior": "RenektonCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 16.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    20.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseMinionHeal": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampHeal": [
+     4.0,
+     12.0,
+     20.0,
+     28.0,
+     36.0,
+     44.0
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "BasicHealCap": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "EmpoweredBaseDamage": [
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0,
+     270.0
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "EmpoweredHealCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "EmpoweredHealMultiplier": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Range": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "UltimateRangeMod": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "MinionFuryGain": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ChampionFuryGain": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryGainCap": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonCleave",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonPredator",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "FuryPerAttack": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryIncreasePercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "LowHealthPercentThreshold": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "InCombatDuration": [
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0,
+     12.0
+    ],
+    "FuryCost": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8143
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.0,
+    "behavior": "RenektonPredator",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 12.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 7.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ruthless Predator (W): each strike deals modified physical damage and applies on-hit effects; first strike can critically strike"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPredatorAbility/RenektonPredator"
+   ],
+   "evidence": "base W damage (physical, on-hit per strike)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -30.0,
+    60.0,
+    150.0,
+    240.0,
+    330.0,
+    420.0
+   ],
+   "duration": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "HealthGain": [
+     100.0,
+     300.0,
+     500.0,
+     700.0,
+     900.0,
+     1100.0
+    ],
+    "AuraDamagePerSecond": [
+     -30.0,
+     60.0,
+     150.0,
+     240.0,
+     330.0,
+     420.0
+    ],
+    "FuryPerSecond": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryOnCast": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BuffDuration": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "TickRate": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonReignOfTheTyrant",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 15.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     10.0,
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0
+    ],
+    "BaseADRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "EnragedBaseDamage": [
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "EnragedADRatio": [
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858,
+     1.350000023841858
+    ],
+    "EnragedArmorShred": [
+     22.5,
+     25.0,
+     27.5,
+     30.0,
+     32.5,
+     35.0
+    ],
+    "ShredTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MinionRageGeneration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ChampionRageGeneration": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryMax": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "DiceTimer": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "BaseDashSpeed": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonSliceAndDice",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -30.0,
+    60.0,
+    150.0,
+    240.0,
+    330.0,
+    420.0
+   ],
+   "duration": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "HealthGain": [
+     100.0,
+     300.0,
+     500.0,
+     700.0,
+     900.0,
+     1100.0
+    ],
+    "AuraDamagePerSecond": [
+     -30.0,
+     60.0,
+     150.0,
+     240.0,
+     330.0,
+     420.0
+    ],
+    "FuryPerSecond": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryOnCast": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BuffDuration": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "TickRate": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonReignOfTheTyrant",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 15.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6191
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonExecute",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonExecuteAttack",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "RenektonExecuteAttack",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonExecuteAttack"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "damage.execute"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonSuperExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6191
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonSuperExecute",
+    "atoms": [
+     "damage.execute"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSuperExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 16.0,
+    "behavior": "RenektonBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 16.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 16.1,
+    "behavior": "RenektonBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time_seconds": 16.1,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    20.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "BaseADRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "BaseMinionHeal": [
+     1.0,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0
+    ],
+    "MinionHealADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "ChampHeal": [
+     4.0,
+     12.0,
+     20.0,
+     28.0,
+     36.0,
+     44.0
+    ],
+    "ChampionHealADRatio": [
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934,
+     0.17000000178813934
+    ],
+    "BasicHealCap": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "EmpoweredBaseDamage": [
+     45.0,
+     90.0,
+     135.0,
+     180.0,
+     225.0,
+     270.0
+    ],
+    "EmpoweredADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "EmpoweredHealCap": [
+     100.0,
+     200.0,
+     300.0,
+     400.0,
+     500.0,
+     600.0
+    ],
+    "EmpoweredHealMultiplier": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "Range": [
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0,
+     400.0
+    ],
+    "UltimateRangeMod": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ],
+    "MinionFuryGain": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ChampionFuryGain": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "FuryGainCap": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonCleave",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -10.0,
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "BaseDamagePerHit": [
+     -10.0,
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0
+    ],
+    "TotalADPerHit": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "StunDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "EnragedStunDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BonusFuryVsChamps": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 5.265,
+    "behavior": "RenektonPreExecute",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.75,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    0.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0
+   ],
+   "cast_time_seconds": 5.265,
+   "uptime_fraction": null,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    -30.0,
+    60.0,
+    150.0,
+    240.0,
+    330.0,
+    420.0
+   ],
+   "duration": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "HealthGain": [
+     100.0,
+     300.0,
+     500.0,
+     700.0,
+     900.0,
+     1100.0
+    ],
+    "AuraDamagePerSecond": [
+     -30.0,
+     60.0,
+     150.0,
+     240.0,
+     330.0,
+     420.0
+    ],
+    "FuryPerSecond": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "FuryOnCast": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "BuffDuration": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "TickRate": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tick_rate": 0.5,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 7.5,
+    "behavior": "RenektonReignOfTheTyrant",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 15.0,
+    "behavior": "buff/debuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_time_seconds": 7.5,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonSiblingRivalryActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RenektonSiblingRivalryActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "binary": [
+    "{b3b4a25c}"
+   ],
+   "evidence": "internal Renekton-vs-Nasus Sibling Rivalry interaction buff; no wiki cache entry (noted)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonSliceAndDiceShred",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RenektonSliceAndDiceShred",
+    "atoms": [
+     "stack-transform-summon-resource.damage-modification-debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slice and Dice (E) Reign of Anger: Dice (recast) inflicts armor reduction to enemies hit for 4 seconds"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDiceShred"
+   ],
+   "evidence": "armor-reduction debuff on empowered Dice"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenekthonTyrantForm",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "RenekthonTyrantForm",
+    "atoms": [
+     "stack-transform-summon-resource.transform"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenekthonTyrantForm"
+   ],
+   "evidence": "name:form"
+  }
+ }
+]

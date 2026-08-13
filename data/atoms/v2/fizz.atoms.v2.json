@@ -1,0 +1,5840 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzRHop",
+  "trigger": "on_erupt",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0
+   ],
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "crowd-control-mobility.airborne"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Chum the Waters"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRHop"
+   ],
+   "evidence": "wiki:R-shark-knockup; binary flags 4106"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "mana_cost": [
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0
+   ],
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "EDamage": [
+     0.95
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "SmallAoESize": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "LargeAoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzEBuffer",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    45.0,
+    85.0,
+    125.0,
+    165.0,
+    205.0,
+    245.0,
+    285.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzEBuffer"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzETwo",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "SmallDamage": [
+     60.0,
+     180.0,
+     300.0,
+     420.0,
+     540.0,
+     660.0,
+     780.0
+    ],
+    "SmallAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MidDamageMulti": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "LargeDamageMulti": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SmallFishSize": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MidFishSize": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "BigFishSize": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "MissileWidthTiers": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "MaxDistance": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "DetonationTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0167,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0
+   ],
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "mana_cost": [
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0
+   ],
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "EDamage": [
+     0.95
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "SmallAoESize": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "LargeAoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzETwo",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.5,
+    13.0,
+    11.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0
+   ],
+   "ratios": {
+    "QDamage": [
+     0.55
+    ],
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 8.5,
+    "behavior": "FizzQ",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzRCling",
+  "trigger": "on_attach",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Chum the Waters"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRCling"
+   ],
+   "evidence": "wiki:R-shark-cling-slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "mana_cost": [
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0
+   ],
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "EDamage": [
+     0.95
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "SmallAoESize": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "LargeAoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzEOne",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "damage": [
+    20.0,
+    70.0,
+    120.0,
+    170.0,
+    220.0,
+    270.0,
+    320.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "crowd-control-mobility.untargetable"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Playful",
+    "Untargetable"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzEOne"
+   ],
+   "evidence": "wiki:E-vault-untargetable; binary flags 15567"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "mana_cost": [
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0
+   ],
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "EDamage": [
+     0.95
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "SmallAoESize": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "LargeAoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "SmallDamage": [
+     60.0,
+     180.0,
+     300.0,
+     420.0,
+     540.0,
+     660.0,
+     780.0
+    ],
+    "SmallAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MidDamageMulti": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "LargeDamageMulti": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SmallFishSize": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MidFishSize": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "BigFishSize": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "MissileWidthTiers": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "MaxDistance": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "DetonationTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0167,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0
+   ],
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "fizzbasicattack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "fizzbasicattack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0
+   ],
+   "ratios": {
+    "QDamage": [
+     0.55
+    ],
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 8.5,
+    "behavior": "FizzQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzWBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "FizzCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "fizzcritattack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0,
+    400.0
+   ],
+   "mana_cost": [
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0
+   ],
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "EDamage": [
+     0.95
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "SmallAoESize": [
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0,
+     225.0
+    ],
+    "LargeAoESize": [
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0,
+     375.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    0.0,
+    10.0,
+    25.0,
+    40.0,
+    55.0,
+    70.0,
+    85.0
+   ],
+   "ratios": {
+    "QDamage": [
+     0.55
+    ],
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 8.5,
+    "behavior": "FizzQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.5,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    120.0,
+    100.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "effect_amounts": {
+    "SmallDamage": [
+     60.0,
+     180.0,
+     300.0,
+     420.0,
+     540.0,
+     660.0,
+     780.0
+    ],
+    "SmallAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "MidDamageMulti": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "LargeDamageMulti": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SmallFishSize": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MidFishSize": [
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0,
+     325.0
+    ],
+    "BigFishSize": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "MissileWidthTiers": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "MaxDistance": [
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0,
+     1300.0
+    ],
+    "DetonationTime": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SlowAmount": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0167,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0,
+    1175.0
+   ],
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 120.0,
+    "behavior": "FizzR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzRHop",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "FizzRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzRCling",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FizzWDOT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Seastone Trident"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWDOT"
+   ],
+   "evidence": "wiki:W-active-bleed; calc:DoTDamage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FizzWPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Seastone Trident"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWPassive"
+   ],
+   "evidence": "wiki:W-passive-bleed-magic-damage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzOnHitBuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
+   ],
+   "evidence": "name:onhit"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzWActive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Seastone Trident"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWActive"
+   ],
+   "evidence": "wiki:W-active-on-hit-magic-damage"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "fizzbasicattack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "fizzbasicattack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FizzWBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "interaction.attack-reset"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzEBuffer",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    45.0,
+    85.0,
+    125.0,
+    165.0,
+    205.0,
+    245.0,
+    285.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "FizzEBuffer",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzEIcon",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "FizzEOne",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "recast",
+    "duration": 16.0,
+    "behavior": "FizzETwo",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzEBuffer"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzOnHitBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    15.0,
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0
+   ],
+   "effect_amounts": {
+    "DamageReduction": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DamageReductionMax": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MonsterDamageReduction": [
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0,
+     14.0
+    ],
+    "APRatio": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Nimble Fighter"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzPassiveAbility/FizzPassive"
+   ],
+   "evidence": "wiki:P-reduced-damage-from-hits; calc:DamageReductionCalc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0
+   ],
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "effect_amounts": {
+    "DoTBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "DoTRatio": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "ActiveBaseDamage": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0
+    ],
+    "ActiveRatio": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "OnHitBuffBaseDamage": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "OnHitRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "BleedDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "DoTTicksPerSecond": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ActiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "OnHitBuffDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "OnKillManaRefund": [
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0
+    ],
+    "OnKillNewCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PassiveDoTDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TurretMod": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "BonusMonsterDamage": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.4286,
+   "reset_on": [
+    "Trait_AttackReset"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 7.0,
+    "behavior": "FizzW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzOnHitBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "FizzWBasicAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "FizzWDOT",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "FizzWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ }
+]

@@ -1,0 +1,1496 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EzrealBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_time_seconds": 0.317
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.317,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.317,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EzrealBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_time_seconds": 0.317
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.317,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.317,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EzrealBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_time_seconds": 0.317
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.317,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.317,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EzrealBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_time_seconds": 0.317
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.317,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.317,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "EzrealE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    26.0,
+    26.0,
+    23.0,
+    20.0,
+    17.0,
+    14.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "MissileRange": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ],
+    "CherryBonusHaste": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "EAPRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "ratios": {
+    "EAPRatio": 0.75
+   },
+   "cast_time_seconds": 0.2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealEAbility/EzrealE"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EzrealE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    26.0,
+    26.0,
+    23.0,
+    20.0,
+    17.0,
+    14.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "MissileRange": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ],
+    "CherryBonusHaste": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "EAPRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "ratios": {
+    "EAPRatio": 0.75
+   },
+   "cast_time_seconds": 0.2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealEAbility/EzrealE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EzrealE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    26.0,
+    26.0,
+    23.0,
+    20.0,
+    17.0,
+    14.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "MissileRange": [
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0,
+     750.0
+    ],
+    "CherryBonusHaste": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "EAPRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "ratios": {
+    "EAPRatio": 0.75
+   },
+   "cast_time_seconds": 0.2
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealEAbility/EzrealE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EzrealQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.5,
+   "cooldown_rank_max": 4.5,
+   "range": 1200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    5.75,
+    5.5,
+    5.25,
+    5.0,
+    4.75,
+    4.5,
+    3.5
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    28.0,
+    31.0,
+    34.0,
+    37.0,
+    40.0,
+    43.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     -5.0,
+     20.0,
+     45.0,
+     70.0,
+     95.0,
+     120.0,
+     145.0
+    ],
+    "CDRefund": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageADRatio": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "BaseDamageAPRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "damage": [
+    -5.0,
+    20.0,
+    45.0,
+    70.0,
+    95.0,
+    120.0,
+    145.0
+   ],
+   "ratios": {
+    "BaseDamageADRatio": 1.2999999523162842,
+    "BaseDamageAPRatio": 0.4000000059604645
+   },
+   "cast_time_seconds": 0.066
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 5.5,
+   "cast_time_seconds": 0.066,
+   "reset_on": [
+    "refund:CDRefund"
+   ],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealQAbility/EzrealQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EzrealPassiveStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealPassiveAbility/EzrealPassiveStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "EzrealCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_time_seconds": 0.317
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.317,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.317,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EzrealR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    120.0,
+    105.0,
+    90.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     150.0,
+     350.0,
+     550.0,
+     750.0,
+     950.0,
+     1150.0,
+     1350.0
+    ],
+    "DamageReductionPerHit": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MinimumDamagePercent": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "RAPRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamageMinionMonster": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ]
+   },
+   "damage": [
+    150.0,
+    350.0,
+    550.0,
+    750.0,
+    950.0,
+    1150.0,
+    1350.0
+   ],
+   "ratios": {
+    "RAPRatio": 1.100000023841858
+   },
+   "cast_time_seconds": 1.767
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.767,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 1.767,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealRAbility/EzrealR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EzrealR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    10.0,
+    120.0,
+    105.0,
+    90.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     150.0,
+     350.0,
+     550.0,
+     750.0,
+     950.0,
+     1150.0,
+     1350.0
+    ],
+    "DamageReductionPerHit": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "MinimumDamagePercent": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "RAPRatio": [
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858,
+     1.100000023841858
+    ],
+    "BaseDamageMinionMonster": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     375.0,
+     450.0,
+     525.0
+    ]
+   },
+   "damage": [
+    150.0,
+    350.0,
+    550.0,
+    750.0,
+    950.0,
+    1150.0,
+    1350.0
+   ],
+   "ratios": {
+    "RAPRatio": 1.100000023841858
+   },
+   "cast_time_seconds": 1.767
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.767,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 1.767,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealRAbility/EzrealR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "EzrealEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "cast_time_seconds": 0.135
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.135,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.135,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "{789e8475}"
+   ],
+   "inherited_from": "EzrealE",
+   "evidence": "inherited:EzrealE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EzrealEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "cast_time_seconds": 0.135
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.135,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.135,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{789e8475}"
+   ],
+   "inherited_from": "EzrealE",
+   "evidence": "inherited:EzrealE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EzrealEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "cast_time_seconds": 0.135
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit effect",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.135,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.135,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{789e8475}"
+   ],
+   "inherited_from": "EzrealE",
+   "evidence": "inherited:EzrealE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EzrealW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "cooldown": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ],
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "affects_type_flags": 2690,
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    "ManaReturn": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "DetonationTimeout": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "APRatio": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ]
+   },
+   "damage": [
+    25.0,
+    80.0,
+    135.0,
+    190.0,
+    245.0,
+    300.0,
+    355.0
+   ],
+   "ratios": {
+    "APRatio": 0.8999999761581421
+   },
+   "cast_time_seconds": 0.066
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile travel",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.066,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Magic damage",
+    "Essence Flux"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealWAbility/EzrealW"
+   ],
+   "evidence": "calc:Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EzrealWAttach",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration_seconds": 4.0
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Mark",
+    "Essence Flux"
+   ],
+   "binary": [
+    "Characters/Ezreal/Spells/EzrealWAbility/EzrealWAttach"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ }
+]
