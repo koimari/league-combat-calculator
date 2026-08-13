@@ -2,10 +2,10 @@
 
 Two halves.  The structural half pins the module's four tables against each
 other — every condition declared once, probed once, and the one clause both
-gates read being literally one function.  The equality half is D-98's: the
-derivation runs *beside* the legacy conjunctions on every fight the matrix
-drives, and any disagreement is a hard failure, so the one-symbol flip that
-follows is a flip and not a rewrite.
+gates read being literally one function.  The behavioural half drives twelve
+fights and asserts the ledger each one *returned* is the projection its
+declared conditions chose, with a coverage test proving every condition fires
+somewhere in the matrix so no clause is agreeing by never running.
 """
 
 from __future__ import annotations
@@ -72,29 +72,32 @@ def _params(threshold_heal: float) -> FightParams:
 
 
 def _inputs(champion: str, item_names: tuple[str, ...], threshold_heal: float):
-    """The two input records one matrix row resolves to, live off ``run_fight``."""
-    captured: dict[str, object] = {}
-    real_tuple = pipeline_module._legacy_tuple_ledger
-    real_shield = damage_module._legacy_skip_shield_outcome
+    """The two input records one matrix row resolves to, live off ``run_fight``.
 
-    def spy_tuple(params, champion_data, items, effects, stats, abilities):
-        captured["ledger"] = pipeline_module.ledger_inputs(
+    Captured through the engines' own builders rather than assembled here, so
+    a field the projection reads and the fight fills differently would fail
+    rather than be reproduced by the fixture.  ``result`` is the fight the
+    same inputs produced, which is what pins the projection to the ledger the
+    caller actually received.
+    """
+    captured: dict[str, object] = {}
+    real_ledger_inputs = pipeline_module.ledger_inputs
+    real_shield_inputs = damage_module.shield_outcome_inputs
+
+    def spy_ledger(params, champion_data, items, effects, stats, abilities):
+        captured["ledger"] = real_ledger_inputs(
             params, champion_data, items, effects, stats, abilities
         )
-        captured["legacy_ledger"] = real_tuple(
-            params, champion_data, items, effects, stats, abilities
-        )
-        return captured["legacy_ledger"]
+        return captured["ledger"]
 
     def spy_shield(config, items):
-        captured["shield"] = damage_module.shield_outcome_inputs(config, items)
-        captured["legacy_shield"] = real_shield(config, items)
-        return captured["legacy_shield"]
+        captured["shield"] = real_shield_inputs(config, items)
+        return captured["shield"]
 
-    pipeline_module._legacy_tuple_ledger = spy_tuple
-    damage_module._legacy_skip_shield_outcome = spy_shield
+    pipeline_module.ledger_inputs = spy_ledger
+    damage_module.shield_outcome_inputs = spy_shield
     try:
-        run_fight(
+        captured["result"] = run_fight(
             get_champion(champion),
             18,
             [get_item_by_name(name) for name in item_names],
@@ -102,8 +105,8 @@ def _inputs(champion: str, item_names: tuple[str, ...], threshold_heal: float):
             score_only=True,
         )
     finally:
-        pipeline_module._legacy_tuple_ledger = real_tuple
-        damage_module._legacy_skip_shield_outcome = real_shield
+        pipeline_module.ledger_inputs = real_ledger_inputs
+        damage_module.shield_outcome_inputs = real_shield_inputs
     return captured
 
 
@@ -180,7 +183,7 @@ def test_the_healing_registry_owns_every_declaring_champion():
     assert owned["Annie"] is None
 
 
-# ── the derivation, beside the legacy conjunctions (D-98) ───────────────────
+# ── the projection the fight actually took ──────────────────────────────────
 
 
 @pytest.mark.parametrize(
@@ -188,10 +191,17 @@ def test_the_healing_registry_owns_every_declaring_champion():
     MATRIX,
     ids=[row[0] for row in MATRIX],
 )
-def test_the_derivation_agrees_with_the_legacy_predicate(
+def test_the_fight_returns_the_projection_the_conditions_chose(
     label, champion, item_names, threshold_heal, fires
 ):
-    """Zero delta on every matrix row, for both gates (D-98, R-31)."""
+    """The gate's answer *is* the projection, on every matrix row.
+
+    ``damage_events_tuple`` is the engine's own statement of which ledger
+    shape it returned, so asserting it against the derivation pins the flip
+    to the result the caller received rather than to the predicate's return
+    value — the two would agree even if the call site had been rewired to
+    something else.
+    """
     captured = _inputs(champion, item_names, threshold_heal)
     ledger_inputs = captured["ledger"]
     shield_inputs = captured["shield"]
@@ -199,12 +209,11 @@ def test_the_derivation_agrees_with_the_legacy_predicate(
     derived_light = (
         lp.ledger_projection(ledger_inputs) is lp.ResultProjection.LIGHT_TUPLE_LEDGER
     )
-    derived_skip = (
-        lp.shield_outcome_projection(shield_inputs)
-        is lp.ResultProjection.SKIPPED_SHIELD_OUTCOME
-    )
-    assert derived_light == captured["legacy_ledger"], label
-    assert derived_skip == captured["legacy_shield"], label
+    assert bool(captured["result"].get("damage_events_tuple")) == derived_light, label
+    assert all(
+        isinstance(event, dict) is not derived_light
+        for event in captured["result"]["damage_events"]
+    ), label
 
     raised = {demand.condition for demand in lp.ledger_demands(ledger_inputs)} | {
         demand.condition for demand in lp.shield_outcome_demands(shield_inputs)
@@ -213,7 +222,7 @@ def test_the_derivation_agrees_with_the_legacy_predicate(
 
 
 def test_the_matrix_raises_every_declared_condition():
-    """The zero-delta assertion is not vacuous: each condition fires somewhere."""
+    """The projection choice is not vacuous: each condition fires somewhere."""
     raised: set[lp.AdequacyCondition] = set()
     for _label, champion, item_names, threshold_heal, _fires in MATRIX:
         captured = _inputs(champion, item_names, threshold_heal)

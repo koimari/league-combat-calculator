@@ -165,13 +165,15 @@ from .item_behavior import (
     Resistance,
     SustainStat,
 )
-from .ledger_projection import ShieldOutcomeInputs
+from .ledger_projection import (
+    ResultProjection,
+    ShieldOutcomeInputs,
+    shield_outcome_projection,
+)
 from .trigger_stream import (
     Stream,
     authored_triggers,
-    holders_in,
     is_immobilizing_event,
-    pair_outcome_items,
 )
 from .resistance import (
     apply_resistance,
@@ -10195,23 +10197,6 @@ def _apply_shield_reaver_venom(
     return reduced, [note]
 
 
-def _legacy_skip_shield_outcome(
-    config: FightConfig, items: list[dict[str, Any]]
-) -> bool:
-    """The two shield-outcome clauses, as the engine conjoined them.
-
-    Extracted verbatim so ``ledger_projection``'s derivation can be asserted
-    equal to it before the call site flips (D-98, R-31).  The first clause is
-    the mirror of ``pipeline``'s threshold-heal clause — the same question
-    asked of the same field at a second gate — which is why the derivation
-    answers both through one function.  One caller, one lifetime: the flip
-    deletes it.
-    """
-    return config.target_threshold_health_heal <= 0 and not holders_in(
-        items, pair_outcome_items()
-    )
-
-
 def shield_outcome_inputs(
     config: FightConfig, items: list[dict[str, Any]]
 ) -> ShieldOutcomeInputs:
@@ -10364,15 +10349,19 @@ def calculate_fight_damage(
             if isinstance(event, dict):
                 event["execute_threshold_ratio"] = execute_ratio
                 event["execute_source"] = state.damage_effects.execute.item_name
-    if score_only and _legacy_skip_shield_outcome(config, items):
+    if (
+        score_only
+        and shield_outcome_projection(shield_outcome_inputs(config, items))
+        is ResultProjection.SKIPPED_SHIELD_OUTCOME
+    ):
         # Score-mode consumers replay shields inside the coupled survival
-        # walk and never read the one-pair shield outcome.  The remaining
-        # engine-side consumers are the Protoplasm coverage downgrade below
-        # (requires a positive threshold heal) and the holders whose stream
-        # is synthesised from that outcome — ``pair_outcome_items()``, the
-        # projection of who declares ``Stream.TAKEDOWN``, whose
-        # ``takedown_events`` synthesis reads ``target_ending_health``
-        # (issue #169) — both keep the outcome.
+        # walk and never read the one-pair shield outcome.  The two readers
+        # that keep it are declared conditions rather than clauses spelled
+        # here: the Protoplasm coverage downgrade below, which reads the
+        # target's threshold heal — the same condition the pipeline's ledger
+        # gate reads, answered by one function at both — and the holders
+        # whose ``takedown_events`` synthesis reads ``target_ending_health``
+        # off this outcome (issue #169).
         shield_outcome: dict[str, float] = {}
     else:
         shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)

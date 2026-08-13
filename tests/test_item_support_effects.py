@@ -12,7 +12,7 @@ import pytest
 
 from src.app import app
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_support_effects, pipeline
+from src.calculator import item_support_effects, ledger_projection, pipeline
 from src.calculator.item_behavior import PacketKind, Persistence
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
@@ -1116,12 +1116,23 @@ class TestEventViewTupleGate:
         ``tuple_incapable_items()``, whose membership is pinned item for
         item in ``tests/test_trigger_stream.py``.  It was asserted equal to
         the hand set ``EVENT_VIEW_SUPPORT_ITEMS`` until P2c deleted that set
-        (D-98's flip).  The claim C1 landed is unchanged — the
-        pre-correction spelling is still forbidden here.
+        (D-98's flip).
+
+        Phase 4's S5 moved the *site*, not the claim: the clause is now the
+        ``RAW_ROW_STREAM_HOLDER`` adequacy condition, so ``pipeline`` holds no
+        clause of its own and the derivation is read from one probe.  The
+        pre-correction spelling stays forbidden in both files.
         """
-        body = Path(pipeline.__file__).read_text(encoding="utf-8")
-        assert "and not holders_in(items, tuple_incapable_items())" in body
-        assert "has_event_scan_support_items" not in body
+        pipeline_body = Path(pipeline.__file__).read_text(encoding="utf-8")
+        projection_body = Path(ledger_projection.__file__).read_text(encoding="utf-8")
+
+        assert "holders_in" not in pipeline_body
+        assert "tuple_incapable_items" not in pipeline_body
+        assert "return _held(inputs.item_names, tuple_incapable_items())" in (
+            projection_body
+        )
+        assert "has_event_scan_support_items" not in pipeline_body
+        assert "has_event_scan_support_items" not in projection_body
 
     def test_the_scan_predicate_is_gone_from_src_entirely(self):
         """C1 left the callable with no callers; P2c deleted it.

@@ -30,7 +30,7 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
-from .interpreters import periodic, spellblade, sustain
+from .interpreters import sustain
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
     ManaSpentHealRule,
@@ -39,13 +39,8 @@ from .item_behavior import (
     SustainStat,
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
-from .healing import (
-    HEALING_RULE_CHAMPIONS,
-    derive_self_healing,
-    self_heal_rule_owner,
-)
-from .ledger_projection import LedgerInputs
-from .trigger_stream import holders_in, tuple_incapable_items
+from .healing import derive_self_healing, self_heal_rule_owner
+from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -465,64 +460,6 @@ def _item_self_healing_events(
     return events
 
 
-def _has_item_self_healing(
-    effects: Any, items: list[Mapping[str, Any]] | None = None
-) -> bool:
-    """Whether an item build can emit timestamped self-heal packets.
-
-    The score-only tuple ledger is safe only when both the champion and the
-    item build are heal-free.  In particular, Dusk and Dawn's Spellblade heal
-    and Unending Despair's periodic Anguish heal are item-owned packets that
-    must remain in the full result even when the champion has no healing rule.
-    """
-    names = [str(item.get("name", "")) for item in (items or ())]
-    return (
-        spellblade.declares_self_heal(names)
-        or periodic.declares_self_heal(names)
-        or bool(effects.on_hit_heals)
-        or (
-            effects.first_auto_crit is not None
-            and (
-                effects.first_auto_crit.heal_base_ad_ratio > 0.0
-                or effects.first_auto_crit.heal_missing_health_ratio > 0.0
-            )
-        )
-        or declared_sustain(names, ManaSpentHealRule) is not None
-    )
-
-
-def _has_item_health_regen(stats: Mapping[str, Any]) -> bool:
-    """Whether items contribute health regeneration to this build.
-
-    Item flat/percent regen authors timestamped ``Health regeneration``
-    ticks in ``_item_self_healing_events``; the score-only tuple ledger
-    would silently drop them (issue #169).  Champion base regeneration
-    alone authors nothing, so equality means the tuple ledger stays safe.
-    """
-    try:
-        total = float(stats.get("health_regen_per_five", 0.0) or 0.0)
-        base = float(stats.get("base_health_regen_per_five", 0.0) or 0.0)
-    except (TypeError, ValueError):
-        return True
-    return math.isfinite(total) and math.isfinite(base) and total > base
-
-
-def _has_lifesteal_stat(stats: Mapping[str, Any]) -> bool:
-    """Return whether the fight needs the full ledger for life-steal events."""
-    value = stats.get("lifesteal_percent", 0.0)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return False
-    return math.isfinite(float(value)) and float(value) > 0.0
-
-
-def _has_omnivamp_stat(stats: Mapping[str, Any]) -> bool:
-    """Return whether the fight needs explicit omnivamp event receipts."""
-    value = stats.get("omnivamp_percent", 0.0)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return False
-    return math.isfinite(float(value)) and float(value) > 0.0
-
-
 def _saturated_omnivamp_percent(
     items: list[dict[str, Any]],
     fight_duration_seconds: float,
@@ -541,60 +478,6 @@ def _saturated_omnivamp_percent(
         SustainStat.OMNIVAMP_PERCENT,
         fight_duration_seconds=fight_duration_seconds,
         holder_is_melee=is_melee,
-    )
-
-
-def _legacy_tuple_ledger(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    params: "FightParams",
-    champion_data: dict[str, Any],
-    items: list[dict[str, Any]],
-    item_damage_effects: Any,
-    fight_stats: Mapping[str, Any],
-    ability_damages: Mapping[str, Any],
-) -> bool:
-    """The ten adequacy clauses, as ``run_fight`` conjoined them.
-
-    Extracted verbatim, in the same order, so the projection derivation in
-    ``ledger_projection`` can be asserted equal to it clause for clause
-    before the call site flips to the derivation (D-98, R-31).  It has one
-    caller and one lifetime: the flip deletes it.
-    """
-    return (
-        params.target_threshold_health_heal <= 0
-        and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
-        and not _has_item_self_healing(item_damage_effects, items)
-        and not _has_item_health_regen(fight_stats)
-        and not _has_lifesteal_stat(fight_stats)
-        and not _has_omnivamp_stat(fight_stats)
-        and not _saturated_omnivamp_percent(
-            items,
-            params.fight_duration_seconds,
-            is_melee=bool(fight_stats.get("is_melee", True)),
-        )
-        # Forced/empowered basic attacks are authored on ability rows. Keep
-        # the dict ledger so reactive defenders (Bramble/Thornmail) retain
-        # the basic-attack marker instead of losing it in the light tuple
-        # schema.
-        and not any(
-            ability.get("empowers_next_auto")
-            for ability in ability_damages.values()
-            if isinstance(ability, dict)
-        )
-        # Items that read the per-event view — the damage/takedown scanners
-        # (Black Cleaver Carve, Phage Rage, ...), the crowd-control readers
-        # (Imperial Mandate, Fimbulwinter, ...) and Echoes of Helia's raw
-        # damage sum — cannot read the positional tuple rows; keep dict rows
-        # so their scan sees the same events the receipt path enriches
-        # (issue #169).  ``tuple_incapable_items()`` is that set derived from
-        # the capabilities themselves — every holder declaring a stream the
-        # bus parses off raw rows — so the question is answered by the
-        # declarations rather than by a list kept beside them (D-01).
-        and not holders_in(items, tuple_incapable_items())
-        # The Collector's execute rides per-event threshold stamps that the
-        # tuple schema cannot carry; the engine stays fail-closed for the
-        # item by keeping dict rows, whose stamps the compiled walk then
-        # rejects with a named receipt (issue #169).
-        and item_damage_effects.execute is None
     )
 
 
@@ -623,6 +506,89 @@ def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arg
         is_melee=bool(fight_stats.get("is_melee", True)),
         target_threshold_health_heal=params.target_threshold_health_heal,
     )
+
+
+def _attach_engine_receipts(
+    result: dict[str, Any],
+    params: "FightParams",
+    items: list[dict[str, Any]],
+    fight_stats: Mapping[str, Any],
+    auto_attack_policy: Mapping[str, Any],
+) -> None:
+    """Decorate a finished engine result with the receipts this module owns.
+
+    Everything here is descriptive metadata over values the engine already
+    computed — the auto-attack policy and schedule, the stateful-item receipt,
+    and the effective stat block a ramp-armed grant republishes.  Kept beside
+    ``run_fight`` rather than inside it so the entry point reads as its own
+    pipeline: stats, abilities, engine, receipts.
+    """
+    result["auto_attack_policy"] = auto_attack_policy
+    # Every stateful item shares one typed, inspectable receipt.  The receipt
+    # is descriptive metadata over the same accessors the engine consumed;
+    # it is returned on manual, optimizer, and roster paths so a caller can
+    # distinguish authored state from an implicit always-on assumption.
+    result["item_state_receipts"] = item_effects.item_state_receipts(
+        items,
+        params.item_options,
+        fight_duration_seconds=params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
+        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
+        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
+        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
+        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
+        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
+    )
+    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
+    auto_total = (
+        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
+    )
+    rotation_count = max(1, int(params.rotation_count))
+    result["auto_attack_schedule"] = {
+        "status": (
+            "known" if auto_attack_policy.get("status") != "unknown" else "unknown"
+        ),
+        "rotation_count": rotation_count,
+        "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
+        "expected_autos_total": auto_total,
+        "window_seconds": round(params.fight_duration_seconds, 3),
+        "semantics": (
+            "sequential timed window; cooldowns, resources, cast lockouts, and "
+            "item events follow the engine ledger"
+        ),
+    }
+    if auto_attack_policy.get("status") == "unknown":
+        result.setdefault("notes", []).append(
+            "Auto attacks withheld: calculated uptime is unavailable for one or "
+            "more cast-time sources."
+        )
+    saturated_omnivamp = _saturated_omnivamp_percent(
+        items,
+        params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+    )
+    if saturated_omnivamp:
+        result["champion_stats"] = dict(fight_stats)
+        result["champion_stats"]["omnivamp_percent"] = (
+            result["champion_stats"].get("omnivamp_percent", 0.0) + saturated_omnivamp
+        )
+
+
+def _attach_display_splits(result: dict[str, Any]) -> None:
+    """The totals only a full result carries — self-heal, auto/ability, type.
+
+    Score-only callers return before this: every field here is a display
+    split of numbers already present, and computing them for a candidate
+    nobody renders is work the optimizer pays per fight.
+    """
+    result["self_healing"] = sum(
+        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
+    )
+    auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
+    result["auto_attack_damage"] = auto_damage
+    result["ability_damage"] = ability_damage
+    result["damage_by_type"] = split_by_damage_type(result["breakdown"])
 
 
 def _bounded_request_float(
@@ -1214,13 +1180,21 @@ def run_fight(
                 target_stats=params.target_stats(),
                 champion_options=champion_options,
             )
-    tuple_ledger = score_only and _legacy_tuple_ledger(
-        params,
-        champion_data,
-        items,
-        item_damage_effects,
-        fight_stats,
-        ability_damages,
+    # ``score_only`` is the request for a narrowed result; whether the light
+    # tuple ledger can serve it is projection satisfaction over the declared
+    # adequacy conditions, not a conjunction kept here (D-38, criterion 15).
+    tuple_ledger = score_only and (
+        ledger_projection(
+            ledger_inputs(
+                params,
+                champion_data,
+                items,
+                item_damage_effects,
+                fight_stats,
+                ability_damages,
+            )
+        )
+        is ResultProjection.LIGHT_TUPLE_LEDGER
     )
     result = calculate_fight_damage(
         fight_stats,
@@ -1249,56 +1223,7 @@ def run_fight(
         ),
         user_order=resolved_user_order,
     )
-    result["auto_attack_policy"] = auto_attack_policy
-    # Every stateful item shares one typed, inspectable receipt.  The receipt
-    # is descriptive metadata over the same accessors the engine consumed;
-    # it is returned on manual, optimizer, and roster paths so a caller can
-    # distinguish authored state from an implicit always-on assumption.
-    result["item_state_receipts"] = item_effects.item_state_receipts(
-        items,
-        params.item_options,
-        fight_duration_seconds=params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
-        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
-        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
-        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
-        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
-        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
-        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
-    )
-    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
-    auto_total = (
-        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
-    )
-    rotation_count = max(1, int(params.rotation_count))
-    result["auto_attack_schedule"] = {
-        "status": (
-            "known" if auto_attack_policy.get("status") != "unknown" else "unknown"
-        ),
-        "rotation_count": rotation_count,
-        "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
-        "expected_autos_total": auto_total,
-        "window_seconds": round(params.fight_duration_seconds, 3),
-        "semantics": (
-            "sequential timed window; cooldowns, resources, cast lockouts, and "
-            "item events follow the engine ledger"
-        ),
-    }
-    if auto_attack_policy.get("status") == "unknown":
-        result.setdefault("notes", []).append(
-            "Auto attacks withheld: calculated uptime is unavailable for one or "
-            "more cast-time sources."
-        )
-    saturated_omnivamp = _saturated_omnivamp_percent(
-        items,
-        params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
-    )
-    if saturated_omnivamp:
-        result["champion_stats"] = dict(fight_stats)
-        result["champion_stats"]["omnivamp_percent"] = (
-            result["champion_stats"].get("omnivamp_percent", 0.0) + saturated_omnivamp
-        )
+    _attach_engine_receipts(result, params, items, fight_stats, auto_attack_policy)
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
         # the empty list is the exact value the call would return.
@@ -1325,11 +1250,5 @@ def run_fight(
     )
     if score_only:
         return result
-    result["self_healing"] = sum(
-        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
-    )
-    auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
-    result["auto_attack_damage"] = auto_damage
-    result["ability_damage"] = ability_damage
-    result["damage_by_type"] = split_by_damage_type(result["breakdown"])
+    _attach_display_splits(result)
     return result

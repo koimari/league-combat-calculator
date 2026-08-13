@@ -6,7 +6,7 @@ one-pair shield outcome may be skipped entirely.  Both narrowings are
 **projections** of the same fight, and both are safe only while every reader
 the fight arms can still answer its question off what the projection keeps.
 
-Before this module those two questions were twelve boolean clauses conjoined
+Until Phase 4's S5 those two questions were twelve boolean clauses conjoined
 at two call sites — ten in ``pipeline.run_fight`` and two in
 ``damage.calculate_fight_damage`` — with the clause they share spelled twice.
 A conjunction is a fine way to compute an answer and a poor way to hold one:
@@ -15,7 +15,8 @@ prices a heal at zero and says nothing, which is this campaign's own failure
 shape.  Here each clause is an :class:`AdequacyCondition` with a declared
 reader, the stat fields it is derived from, and the reason it exists; a
 projection declares which conditions it **cannot** serve; and satisfaction is
-the question "does this fight arm a reader my projection would starve".
+the question "does this fight arm a reader my projection would starve".  Both
+call sites now read the answer from here and hold no clause of their own.
 
 Three properties are asserted at import rather than reviewed:
 
@@ -81,9 +82,9 @@ class ResultProjection(Enum):
 class AdequacyCondition(Enum):
     """One declared reason a fight cannot be served a narrowed result.
 
-    The declaration order is the order the two legacy conjunctions evaluated
-    their clauses in, and :func:`demands` preserves it, so the short-circuit
-    a caller asking only "is it satisfied" gets is the same work in the same
+    The declaration order is the order the two conjunctions this replaced
+    evaluated their clauses in, and both projection functions preserve it, so
+    a caller that only wants the projection does the same work in the same
     sequence the ``and`` chain did.
     """
 
