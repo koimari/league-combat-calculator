@@ -30,9 +30,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from ..item_behavior import Compilable, Compilability
+from ..item_behavior import Compilable, Compilability, EngineLane
 from ..survival.actions import TransitionRank
 from ..trigger_stream import HolderStacking
+from .views import ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
 from .route import PairDefender, RouteContext, RoutePolicy, resolve_route
@@ -54,11 +55,37 @@ class Projection(Enum):
 
 @dataclass(frozen=True, slots=True)
 class MechanicView:
-    """The three facts ``program/`` may ask about one declared mechanic."""
+    """The three facts ``program/`` may ask about one declared mechanic.
+
+    ``view_tags`` is keyed by :class:`~..item_behavior.EngineLane` here and
+    by ``trigger_stream.Engine`` on the declaration it projects.  The
+    widening is this class's job and not the declaration's: a walk half is
+    read by two lanes — the receipt walk and the compiled score walk — and
+    the bus cannot name ``EngineLane`` at all, because that enum's home
+    opens ``data/`` at import and the bus is a leaf that may not (D-35).
+    Widening here is what makes D-62's "exactly one tag per
+    ``(mechanic, EngineLane)``" a total function rather than a sentence.
+    """
 
     compilability: Compilability
-    view_tags: Mapping[str, str]
+    view_tags: Mapping[EngineLane, ViewTag]
     holder_stacking: HolderStacking | None
+
+    def tag_for(self, lane: EngineLane) -> ViewTag:
+        """What this mechanic's number means in *lane*, or a named refusal.
+
+        Raises rather than defaulting: a lane nobody declared a tag for is a
+        lane whose numbers have no declared meaning, and answering
+        ``APPLIED`` there is precisely how a pair-authored preview gets
+        summed into a coupled total with no symptom (D-62).
+        """
+        try:
+            return self.view_tags[lane]
+        except KeyError:
+            raise KeyError(
+                f"no view tag is declared for {lane.value}; a number with no "
+                "declared meaning may not be folded into a total"
+            ) from None
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +129,25 @@ class CapabilityView:
             (mechanic, view.compilability.reason)
             for mechanic, view in sorted(self.mechanics.items())
             if not isinstance(view.compilability, Compilable)
+        )
+
+    def lanes_declaring(
+        self, tag: ViewTag
+    ) -> tuple[tuple[MechanicId, EngineLane], ...]:
+        """Every ``(mechanic, lane)`` whose numbers carry *tag*.
+
+        The question a view asks before folding anything: a
+        ``THEORETICAL`` pair-authored preview may never be summed into a
+        coupled total, and asking the declaration is what makes that a
+        lookup rather than a convention.
+        """
+        return tuple(
+            (mechanic, lane)
+            for mechanic, view in sorted(self.mechanics.items())
+            for lane, declared in sorted(
+                view.view_tags.items(), key=lambda e: e[0].value
+            )
+            if declared is tag
         )
 
 

@@ -48,6 +48,7 @@ from src.calculator.item_behavior import (
     RuleFamily,
     Subject,
 )
+from src.calculator.program.views import ViewTag
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_support_effects import (
     EventViewStarvationError,
@@ -283,6 +284,8 @@ def test_the_light_tuple_path_raises_rather_than_pricing_a_declaration_at_zero(
         divergence_ref=None,
         impl="item_support_effects.derive_item_support_effects",
         packet_source="Abyssal Mask — Unmake",
+        view_tags=MappingProxyType({trigger_stream.Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     )
     grown = MappingProxyType(
         {**trigger_stream.CAPABILITIES, capability.mechanic: capability}

@@ -44,6 +44,7 @@ from src.calculator.item_support_effects import (
     derive_item_support_effects,
 )
 from src.calculator.program.compile import WalkCompiler, action_from_event
+from src.calculator.program.views import ViewTag
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
@@ -757,15 +758,49 @@ def test_importing_the_bus_performs_no_filesystem_read():
     assert module.tuple_incapable_items() == TUPLE_INCAPABLE
 
 
-def test_the_bus_imports_exactly_one_intra_package_module():
-    """``ability_spec`` and nothing else — the acyclicity argument."""
+def test_the_bus_imports_exactly_two_intra_package_modules():
+    """``ability_spec`` and ``program.views`` — the acyclicity argument.
+
+    Phase 2 shipped this as *exactly one*, and Phase 4 S7 amends it to
+    exactly two, in the criterion rather than in silence: ``view_tags`` is a
+    field of the declaration table, so ``ViewTag`` has to be nameable here,
+    and its home is ``program/views/__init__.py`` (umbrella, shared names).
+
+    The amendment is bounded by what the original clause was protecting, and
+    both halves are re-asserted rather than relaxed.  ``program.views``
+    imports nothing, so the package graph is still acyclic; and the
+    filesystem probe above still reports zero reads, which is the property
+    that rules ``EngineLane``'s home *out* — importing ``item_behavior``
+    opens ``data/items.json`` and ``data/runes.json`` at module scope, and a
+    bus that reads ``data/`` is neither a leaf nor inside the caching layer
+    (D-35, repo rule 2).  Anything beyond these two is still an error.
+    """
     tree = ast.parse((SRC / "calculator/trigger_stream.py").read_text("utf-8"))
     relative = {
         node.module
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom) and node.level
     }
-    assert relative == {"ability_spec"}
+    assert relative == {"ability_spec", "program.views"}
+
+
+def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
+    """The amendment's own red: ``program.views`` must stay import-free.
+
+    A future edit that gave the views package a module-scope import of the
+    behaviour registry would re-create exactly the condition the clause
+    above forbids — silently, because the bus would keep importing one name
+    from one module.  So the admissible import is pinned at its source.
+    """
+    tree = ast.parse((SRC / "calculator/program/views/__init__.py").read_text("utf-8"))
+    imported = {
+        node.module
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+        for node in (node,)
+        if getattr(node, "module", None) is not None
+    }
+    assert imported <= {"__future__", "enum"}
 
 
 # ---------------------------------------------------------------------------
@@ -786,6 +821,8 @@ def _capability(**overrides) -> ts.MechanicCapability:
         "divergence_ref": None,
         "impl": "item_support_effects.derive_item_support_effects",
         "packet_source": "Synthetic — Mechanic",
+        "view_tags": MappingProxyType({ts.Engine.WALK: ViewTag.APPLIED}),
+        "holder_stacking": None,
     }
     fields.update(overrides)
     return ts.MechanicCapability(**fields)
@@ -2472,3 +2509,96 @@ class TestTheP2aGateBreachIsStillTracked:
         repair = signature["repaired_in"]
         code, findings = self._plan_audit_at(self._commit(repair), tmp_path / "repair")
         assert (code, list(findings)) == (repair["plan_audit_exit"], [])
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 S7 — the two fields the migration lane writes on the declaration
+# ---------------------------------------------------------------------------
+
+
+def test_every_half_tags_exactly_the_engine_it_runs_on():
+    """D-62's "one tag per (mechanic, engine)", read off the live registry.
+
+    A tag says what *this* half's numbers mean.  A half carrying a tag for
+    the other engine would be one side of a split mechanic declaring what the
+    other side's number is worth, which is the shape of the sentence — "the
+    holder's pair engine already prices its own amp" — that this campaign
+    exists because nobody could check.
+    """
+    for mechanic, capability in ts.CAPABILITIES.items():
+        assert set(capability.view_tags) == {capability.engine}, mechanic
+        assert all(isinstance(tag, ViewTag) for tag in capability.view_tags.values())
+
+
+@pytest.mark.parametrize(
+    "overrides, message",
+    [
+        (
+            {"pairing": ts.Pairing.PAIRED, "pair_of": "abyssal_mask.magic_amp"},
+            "there is no default to inherit",
+        ),
+        (
+            {"holder_stacking": ts.HolderStacking.PER_HOLDER},
+            "only a dual-sided mechanic",
+        ),
+        (
+            {"view_tags": MappingProxyType({ts.Engine.PAIR: ViewTag.APPLIED})},
+            "tags the engine it runs on",
+        ),
+    ],
+)
+def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
+    """Both directions of D-66, plus the tag rule, each with a red.
+
+    A dual-sided declaration that omits ``holder_stacking`` must fail to
+    construct rather than inherit a guess; a solo one that carries a value
+    nobody reads must fail too, because a value nobody reads is a value that
+    can be wrong for a whole release without a symptom.
+    """
+    capability = _capability(**overrides)
+    with pytest.raises(ts.TriggerRegistryError, match=message):
+        ts._validate_view_semantics(capability.mechanic, capability)
+
+
+def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
+    """The five, by name, with the value each one declares.
+
+    Pinned rather than derived: D-66's whole point is that the answer is a
+    per-mechanic fact, so a test that recomputed it from some property of the
+    row would be the second answer the field exists to prevent.  Abyssal Mask
+    is the aura; the other four are per-holder pools, and two of those four
+    carry an unanswered ``[H]`` id rather than a ruling.
+    """
+    declared = {
+        mechanic: capability.holder_stacking.value
+        for mechanic, capability in ts.CAPABILITIES.items()
+        if capability.holder_stacking is not None
+    }
+    assert declared == {
+        "abyssal_mask.unmake": "idempotent_aura",
+        "black_cleaver.carve": "per_holder",
+        "bloodletters_curse.vile_decay": "per_holder",
+        "bloodsong.expose_weakness": "per_holder",
+        "imperial_mandate.command": "per_holder",
+    }
+
+
+def test_the_three_held_authority_moves_name_their_blocking_human_decision():
+    """Command, Carve and Vile Decay carry an ``[H]`` id, not a guess.
+
+    Phase 4 declares seven authority moves and lands four.  The other three
+    are blocked on decisions a machine may not make, and the campaign's rule
+    is that a deferral is *written down* where the declaration lives — a row
+    that simply kept its old authority with no explanation is
+    indistinguishable from a row nobody looked at.
+    """
+    source = (SRC / "calculator/trigger_stream.py").read_text("utf-8")
+    for mechanic, marker in (
+        ("imperial_mandate.command", "# H2"),
+        ("black_cleaver.carve", "# H1"),
+        ("bloodletters_curse.vile_decay", "# H1"),
+    ):
+        row = source.index(f'"{mechanic}"')
+        preamble = source[max(0, row - 700) : row]
+        assert marker in preamble, mechanic
+        assert ts.CAPABILITIES[mechanic].authority is Authority.SPLIT

@@ -26,6 +26,7 @@ from src.calculator.item_support_effects import (
     schedule_knights_vow,
 )
 from src.calculator import trigger_stream
+from src.calculator.program.views import ViewTag
 from src.calculator.trigger_stream import CAPABILITIES
 
 
@@ -43,6 +44,8 @@ def _capability(mechanic: str, packet_source: str):
         divergence_ref=None,
         impl="item_support_effects.derive_item_support_effects",
         packet_source=packet_source,
+        view_tags=MappingProxyType({trigger_stream.Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     )
 
 

@@ -13,11 +13,12 @@ declares which streams it consumes — every adequacy set the pipeline and the
 timeline consult is a *projection* of that declaration rather than a second
 list of names.
 
-The module is a leaf on purpose: its only intra-package import is
-``ability_spec``, the dependency-free vocabulary module, so the hot pipeline
-can ask a ledger-shape question without loading the 52 KB packet compiler.
-Registry validation is structural only and reads no file (D-35) — item-name
-resolution lives in the test that pins the projections.
+The module is a leaf on purpose: it imports exactly two intra-package
+modules, ``ability_spec`` and ``program.views``, and both are import-free
+vocabulary leaves — so the hot pipeline can ask a ledger-shape question
+without loading the 52 KB packet compiler.  Registry validation is
+structural only and reads no file (D-35) — item-name resolution lives in the
+test that pins the projections.
 """
 
 # The module is long because most of it is one declaration table; splitting
@@ -46,6 +47,17 @@ from .ability_spec import (
     Authority,
     Disposition,
 )
+
+# The module's second intra-package import, and Phase 4 S7's own amendment to
+# the "exactly one" clause Phase 2 shipped.  ``view_tags`` is a field of the
+# declaration table below, so its vocabulary has to be nameable here, and the
+# two properties that clause protects are re-asserted rather than relaxed:
+# ``program.views`` imports nothing at all, so the package graph stays acyclic
+# and importing the bus still reads no file.  That is also why the enum is
+# admissible while ``EngineLane``'s home is not — importing ``item_behavior``
+# opens ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
+# that reads ``data/`` is neither a leaf nor inside the caching layer (D-35).
+from .program.views import ViewTag
 
 __all__ = [
     "Authority",
@@ -199,8 +211,8 @@ class HolderStacking(Enum):
 
     Declared here, beside :class:`Pairing` and :class:`Engine`, because it is
     a field of the same registry: giving it a module of its own would cost
-    ``trigger_stream`` its single intra-package import for no reader's
-    benefit.  Phase 4 owns it; ``program.amp.arm_key`` is its one consumer.
+    ``trigger_stream`` an intra-package import for no reader's benefit.
+    Phase 4 owns it; ``program.amp.arm_key`` is its one consumer.
     """
 
     IDEMPOTENT_AURA = "idempotent_aura"
@@ -479,18 +491,18 @@ DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType(
 )
 
 
-# Eleven fields, and the umbrella's field-ownership table adds four more
-# in later phases: a declaration record is exactly as wide as the facts
-# it declares.
+# Thirteen fields: Phase 2's eleven plus the two Phase 4 writes here.  A
+# declaration record is exactly as wide as the facts it declares.
 @dataclass(frozen=True, slots=True)
 class MechanicCapability:  # pylint: disable=too-many-instance-attributes
     """One mechanic's declared transport, authority and implementation site.
 
-    Phase 2 writes every field below.  Phase 3 adds ``values`` and
-    ``compilability``, Phase 4 adds ``view_tags`` and ``holder_stacking`` —
-    all four required with no default on the commit that adds them, so a
-    later phase's field forces every declaration to be revisited instead of
-    silently inheriting an empty value.
+    Phase 2 writes the first eleven fields.  Phase 4 adds ``view_tags`` and
+    ``holder_stacking``, both required with no default on the commit that
+    adds them, so a later phase's field forces every declaration to be
+    revisited instead of silently inheriting an empty value.  (Phase 3's
+    ``values`` and ``compilability`` are declared per *rule*, on
+    ``item_behavior.BehaviorRule``, which is where its rule union lives.)
 
     Attributes:
         mechanic: the registry key, ``<owner_slug>.<effect_slug>``.
@@ -517,6 +529,20 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
         impl: the dotted path of the function that implements this half.
         packet_source: the walk packet's ``source`` string, verbatim, or
             ``None`` for a half that emits no packet.
+        view_tags: what this half's numbers *mean*, keyed by the engine that
+            produces them — ``APPLIED`` for a number the coupled walk
+            delivered, ``THEORETICAL`` for a pair-engine preview of one
+            (D-62).  Keyed rather than bare because the tag is a fact about
+            ``(mechanic, engine)`` and a mechanic's two halves can carry
+            different tags; ``program.build.CapabilityView`` widens the key
+            to ``EngineLane``, whose home reads ``data/`` and therefore
+            cannot be named in this leaf.
+        holder_stacking: whether a second holder of this mechanic arms a
+            second modifier on one subject (D-66).  Required exactly on a
+            dual-sided walk half — a ``PAIRED`` row — and ``None`` on every
+            other, structurally validated at import the way ``pair_of`` is,
+            so a dual-sided declaration that omits it fails to construct
+            rather than inheriting a guess.
     """
 
     mechanic: str
@@ -530,6 +556,8 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
     divergence_ref: str | None
     impl: str
     packet_source: str | None
+    view_tags: Mapping[Engine, ViewTag]
+    holder_stacking: HolderStacking | None
 
 
 _SUPPORT_IMPL = "item_support_effects.derive_item_support_effects"
@@ -541,6 +569,7 @@ def _walk_item(  # pylint: disable=too-many-arguments
     item: str,
     packet_source: str,
     *,
+    holder_stacking: HolderStacking | None,
     reads: frozenset[Stream] = frozenset(),
     needs: frozenset[Field] = frozenset(),
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
@@ -548,15 +577,24 @@ def _walk_item(  # pylint: disable=too-many-arguments
     pair_of: str | None = None,
     divergence_ref: str | None = None,
     impl: str = _SUPPORT_IMPL,
+    view_tag: ViewTag = ViewTag.APPLIED,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
     A constructor, not a default: every field the umbrella assigns Phase 2
     still has to be written for every row, and the keyword defaults here are
     the values that are true of the *majority* of walk packets — no stream,
-    no raw field, the walk owns its own packet, no pair-side half.  A row
-    that differs states its difference at the call site, which is what makes
-    the table readable as a table.
+    no raw field, the walk owns its own packet, no pair-side half, and a
+    number the coupled walk delivered rather than previewed.  A row that
+    differs states its difference at the call site, which is what makes the
+    table readable as a table.
+
+    ``holder_stacking`` is the one argument with no default at all, because
+    it is the one whose majority answer would be a guess.  "Does a second
+    holder arm a second modifier?" has no majority — it has a per-mechanic
+    answer, and D-66 exists because a flat key silently drops one of them —
+    so every row states it, ``None`` included, and adding this field is what
+    forced every declaration below to be revisited rather than inherit one.
     """
     return MechanicCapability(
         mechanic=mechanic,
@@ -570,6 +608,8 @@ def _walk_item(  # pylint: disable=too-many-arguments
         divergence_ref=divergence_ref,
         impl=impl,
         packet_source=packet_source,
+        view_tags=MappingProxyType({Engine.WALK: view_tag}),
+        holder_stacking=holder_stacking,
     )
 
 
@@ -579,12 +619,17 @@ def _pair_half(
     impl: str,
     *,
     authority: Authority,
+    view_tag: ViewTag = ViewTag.APPLIED,
 ) -> MechanicCapability:
     """One pair-engine half — the target of a walk half's ``pair_of``.
 
     A pair half reads no bus stream: the pair engine walks its own ordered
     breakdown rather than the authored row ledger, so its ``reads`` is empty
-    by construction and not by omission.
+    by construction and not by omission.  Its ``holder_stacking`` is ``None``
+    for the same kind of reason: arming is a walk-side act, a pair half arms
+    nothing, and the validator refuses a pair row that claims otherwise — so
+    the constructor encodes a structural fact rather than supplying a
+    default nobody looked at.
     """
     return MechanicCapability(
         mechanic=mechanic,
@@ -598,33 +643,48 @@ def _pair_half(
         divergence_ref=None,
         impl=impl,
         packet_source=None,
+        view_tags=MappingProxyType({Engine.PAIR: view_tag}),
+        holder_stacking=None,
     )
 
 
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
-    _walk_item("cull.reap", "Cull", "Cull — Reap"),
+    _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
     _walk_item(
         "phage.rage",
         "Phage",
         "Phage — Rage",
+        holder_stacking=None,
         reads=frozenset({Stream.DAMAGE}),
         needs=frozenset({Field.TIME, Field.SOURCE_KEY, Field.BASIC_ATTACK}),
     ),
     _walk_item(
-        "world_atlas.shared_riches", "World Atlas", "World Atlas — Shared Riches"
+        "world_atlas.shared_riches",
+        "World Atlas",
+        "World Atlas — Shared Riches",
+        holder_stacking=None,
     ),
-    _walk_item("world_atlas.ward", "World Atlas", "World Atlas — Ward"),
+    _walk_item(
+        "world_atlas.ward", "World Atlas", "World Atlas — Ward", holder_stacking=None
+    ),
     _walk_item(
         "runic_compass.shared_riches",
         "Runic Compass",
         "Runic Compass — Shared Riches",
+        holder_stacking=None,
     ),
-    _walk_item("runic_compass.ward", "Runic Compass", "Runic Compass — Ward"),
+    _walk_item(
+        "runic_compass.ward",
+        "Runic Compass",
+        "Runic Compass — Ward",
+        holder_stacking=None,
+    ),
     _walk_item(
         "fimbulwinter.everlasting",
         "Fimbulwinter",
         "Fimbulwinter — Everlasting",
+        holder_stacking=None,
         reads=frozenset({Stream.CC}),
         needs=frozenset(
             {
@@ -640,6 +700,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "abyssal_mask.unmake",
         "Abyssal Mask",
         "Abyssal Mask — Unmake",
+        holder_stacking=HolderStacking.IDEMPOTENT_AURA,
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="abyssal_mask.magic_amp",
@@ -648,6 +709,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "bloodsong.expose_weakness",
         "Bloodsong",
         "Bloodsong — Expose Weakness",
+        holder_stacking=HolderStacking.PER_HOLDER,
         reads=frozenset({Stream.DAMAGE}),
         needs=frozenset(
             {Field.TIME, Field.TARGET_ID, Field.EVENT_ID, Field.SOURCE_KEY}
@@ -657,10 +719,17 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pair_of="bloodsong.expose_weakness_preview",
         divergence_ref="bloodsong.expose_weakness",
     ),
+    # H1 — Carve's move to coupled-authoritative-with-preview is human-owned
+    # and unanswered, so this row states the blocking id instead of a guessed
+    # ruling: the stack ledger is a roster fact, but re-tuning the pair
+    # engine's Cesàro approximation is a documented balance change
+    # (docs/math-foundations.md §2.3).  ``PER_HOLDER`` is not a fall-through
+    # here — two Black Cleaver holders each build their own stack ledger.
     _walk_item(
         "black_cleaver.carve",
         "Black Cleaver",
         "Black Cleaver — Carve",
+        holder_stacking=HolderStacking.PER_HOLDER,
         reads=frozenset({Stream.DAMAGE}),
         needs=frozenset(
             {
@@ -675,10 +744,13 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pairing=Pairing.PAIRED,
         pair_of="black_cleaver.armor_reduction",
     ),
+    # H1 — Vile Decay is Carve's shape, magic- and ability-gated, and is
+    # blocked by the same unanswered human decision.
     _walk_item(
         "bloodletters_curse.vile_decay",
         "Bloodletter's Curse",
         "Bloodletter's Curse — Vile Decay",
+        holder_stacking=HolderStacking.PER_HOLDER,
         reads=frozenset({Stream.DAMAGE}),
         needs=frozenset(
             {
@@ -698,6 +770,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "cryptbloom.life_from_death",
         "Cryptbloom",
         "Cryptbloom — Life From Death",
+        holder_stacking=None,
         reads=frozenset({Stream.TAKEDOWN}),
         needs=frozenset({Field.TIME, Field.TARGET_ID}),
     ),
@@ -705,18 +778,21 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "ardent_censer.sanctify",
         "Ardent Censer",
         "Ardent Censer — Sanctify",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
     ),
     _walk_item(
         "staff_of_flowing_water.rapids",
         "Staff of Flowing Water",
         "Staff of Flowing Water — Rapids",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
     ),
     _walk_item(
         "moonstone_renewer.starlit_grace",
         "Moonstone Renewer",
         "Moonstone Renewer — Starlit Grace",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
     ),
     # The sixth cross-participant producer, and the one with no pair-side
@@ -727,6 +803,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "dream_maker.blue_bubble",
         "Dream Maker",
         "Dream Maker — Blue Dream Bubble",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
         authority=Authority.COUPLED_ONLY,
     ),
@@ -734,12 +811,14 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "dream_maker.purple_bubble",
         "Dream Maker",
         "Dream Maker — Purple Dream Bubble",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
     ),
     _walk_item(
         "echoes_of_helia.soul_siphon",
         "Echoes of Helia",
         "Echoes of Helia — Soul Siphon",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER, Stream.DAMAGE}),
         needs=frozenset({Field.DAMAGE, Field.RAW_DAMAGE}),
     ),
@@ -747,12 +826,14 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "diadem_of_songs.consonance",
         "Diadem of Songs",
         "Diadem of Songs — Consonance",
+        holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
     ),
     _walk_item(
         "bandlepipes.fanfare",
         "Bandlepipes",
         "Bandlepipes — Fanfare",
+        holder_stacking=None,
         reads=frozenset({Stream.CC}),
         needs=frozenset({Field.TIME}),
     ),
@@ -763,13 +844,22 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "solstice_sleigh.going_sledding",
         "Solstice Sleigh",
         "Solstice Sleigh — Going Sledding",
+        holder_stacking=None,
         reads=frozenset({Stream.CC}),
         needs=frozenset({Field.TIME}),
     ),
+    # H2 — Command's authority move waits on a sourced ``CcScope`` reading for
+    # Syndra E, and the umbrella records the disposition as *deferred, default
+    # shipped*.  So this row keeps ``SPLIT`` and states the blocking id, and
+    # its ``PER_HOLDER`` is the written fail-closed value D-66 requires rather
+    # than an absence: two Imperial Mandate holders each pay their own pool,
+    # and a flat aura key would silently drop the second — the incident's own
+    # shape mandated by a rule.
     _walk_item(
         "imperial_mandate.command",
         "Imperial Mandate",
         "Imperial Mandate — Command",
+        holder_stacking=HolderStacking.PER_HOLDER,
         reads=frozenset({Stream.CC}),
         needs=frozenset({Field.TIME, Field.TARGET_ID, Field.CC}),
         authority=Authority.SPLIT,
@@ -780,26 +870,38 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "locket_of_the_iron_solari.devotion",
         "Locket of the Iron Solari",
         "Locket of the Iron Solari — Devotion",
+        holder_stacking=None,
     ),
     _walk_item(
-        "mikaels_blessing.purify", "Mikael's Blessing", "Mikael's Blessing — Purify"
+        "mikaels_blessing.purify",
+        "Mikael's Blessing",
+        "Mikael's Blessing — Purify",
+        holder_stacking=None,
     ),
-    _walk_item("redemption.intervention", "Redemption", "Redemption — Intervention"),
+    _walk_item(
+        "redemption.intervention",
+        "Redemption",
+        "Redemption — Intervention",
+        holder_stacking=None,
+    ),
     _walk_item(
         "shurelyas_battlesong.inspiring_speech",
         "Shurelya's Battlesong",
         "Shurelya's Battlesong — Inspiring Speech",
+        holder_stacking=None,
     ),
     _walk_item(
         "stridebreaker.breaking_shockwave",
         "Stridebreaker",
         "Stridebreaker — Breaking Shockwave",
+        holder_stacking=None,
     ),
     # -- the second walk packet compiler ------------------------------------
     _walk_item(
         "knights_vow.sacrifice",
         "Knight's Vow",
         "Knight's Vow — Sacrifice",
+        holder_stacking=None,
         impl=_KNIGHTS_VOW_IMPL,
     ),
     # -- pair-engine halves -------------------------------------------------
@@ -834,11 +936,19 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
     ),
     # -- pair-only mechanics the umbrella's authority table rules ------------
+    # Hypershot is Phase 4 S7's canary: the first of the seven authority moves
+    # and the one that is expected to move nothing.  Its exclusion set — which
+    # abilities in a rotation the amp declines to reach — is a pair-local
+    # rotation fact, so ``PAIR_ONLY`` is the answer the authority rule gives
+    # and its number is what the one pair fight delivered, not a preview of a
+    # coupled one.  A canary that moved a number would mean the two new
+    # capability fields had a live consumer nobody declared.
     _pair_half(
         "horizon_focus.hypershot",
         ItemOwner("Horizon Focus"),
         "damage._apply_damage_amplifiers",
         authority=Authority.PAIR_ONLY,
+        view_tag=ViewTag.APPLIED,
     ),
     _pair_half(
         "shadowflame.cinderbloom",
@@ -868,6 +978,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         divergence_ref=None,
         impl="survival.transitions.trigger_defy",
         packet_source=None,
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     ),
     # Steadfast's stack ledger keys on any roster attacker's magic damage and
     # CC, which is a roster input: the coupled walk owns it outright.  It
@@ -885,6 +997,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         divergence_ref=None,
         impl="survival.transitions.update_combat_state",
         packet_source=None,
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     ),
     # -- non-item owners (D-36) ---------------------------------------------
     *(
@@ -900,6 +1014,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             divergence_ref=None,
             impl="rune_effects.resolve_keystone",
             packet_source=None,
+            view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
+            holder_stacking=None,
         )
         for slug, keystone in (
             ("electrocute", "Electrocute"),
@@ -921,6 +1037,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             divergence_ref=None,
             impl="healing_reduction.champion_grievous_wound_sources",
             packet_source=None,
+            view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
+            holder_stacking=None,
         )
         for champion, slot in (("Katarina", "R"), ("Varus", "E"))
     ),
@@ -936,6 +1054,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         divergence_ref=None,
         impl="support_effects.derive_ally_effects",
         packet_source=None,
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     ),
     MechanicCapability(
         mechanic="participant_timeline.ally_heal_clone",
@@ -949,6 +1069,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         divergence_ref=None,
         impl="participant_timeline.build_participant_timeline",
         packet_source=None,
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
+        holder_stacking=None,
     ),
     MechanicCapability(
         mechanic="ally_effects.stat_grants",
@@ -962,6 +1084,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         divergence_ref=None,
         impl="ally_effects.resolve_ally_stat_effects",
         packet_source=None,
+        view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
+        holder_stacking=None,
     ),
 )
 
@@ -977,10 +1101,12 @@ def _validate_registry() -> None:
     Structural only, and no file is read (D-35): slug shape, unique ids,
     ``pair_of`` resolving to an ``Engine.PAIR`` capability, ``PAIRED``
     implying a ``packet_source``, ``UNPAIRED_KNOWN_DEFECT`` implying a
-    ``divergence_ref`` that resolves in :data:`DIVERGENCES`, and a takedown
-    reader needing a target id.  Item-name resolution belongs to the test
-    that pins the projections, because a leaf that touches ``data/`` is
-    neither a leaf nor inside the caching layer (repo rule 2).
+    ``divergence_ref`` that resolves in :data:`DIVERGENCES`, a takedown
+    reader needing a target id, and Phase 4's two fields — one view tag for
+    the engine this half runs on, and a ``HolderStacking`` exactly where the
+    mechanic is dual-sided.  Item-name resolution belongs to the test that
+    pins the projections, because a leaf that touches ``data/`` is neither a
+    leaf nor inside the caching layer (repo rule 2).
     """
     counts = Counter(capability.mechanic for capability in _DECLARATIONS)
     duplicates = sorted(name for name, count in counts.items() if count > 1)
@@ -1001,6 +1127,7 @@ def _validate_registry() -> None:
                 "dotted path to the function implementing it"
             )
         _validate_pairing(mechanic, capability)
+        _validate_view_semantics(mechanic, capability)
         if Stream.TAKEDOWN in capability.reads and Field.TARGET_ID not in (
             capability.needs
         ):
@@ -1025,6 +1152,52 @@ def _row_fields(reads: frozenset[Stream]) -> frozenset[Field]:
     ``needs``.
     """
     return frozenset(Field) if reads & RAW_STREAMS else frozenset()
+
+
+def _validate_view_semantics(mechanic: str, capability: MechanicCapability) -> None:
+    """Phase 4's two fields, as structural implications rather than review.
+
+    Two rules, and each closes a way a declaration could be *shaped* like an
+    answer without being one:
+
+    * a half tags the engine it runs on, exactly once.  A tag on some other
+      engine would be one half claiming what the other half's number means,
+      which is how "the pair engine already priced this" became a sentence
+      nobody could check;
+    * ``holder_stacking`` is present exactly where the mechanic is
+      dual-sided — a ``PAIRED`` walk half — and absent everywhere else.  The
+      arm-time dedupe key is a question about a mechanic with a holder and a
+      subject; asking it of a pair half (which arms nothing) or of a solo
+      packet (which has no second holder to collide with) would be a value
+      nobody reads, and a value nobody reads is a value that can be wrong.
+    """
+    tags = capability.view_tags
+    if set(tags) != {capability.engine}:
+        raise TriggerRegistryError(
+            f"{mechanic} runs on {capability.engine.value} and declares "
+            f"view_tags for {sorted(engine.value for engine in tags)}; a half "
+            "tags the engine it runs on, exactly once, because a tag says "
+            "what *this* half's numbers mean (D-62)"
+        )
+    if not all(isinstance(tag, ViewTag) for tag in tags.values()):
+        raise TriggerRegistryError(
+            f"{mechanic} declares a view tag that is not a ViewTag member"
+        )
+    dual_sided = capability.pairing is Pairing.PAIRED
+    if dual_sided and not isinstance(capability.holder_stacking, HolderStacking):
+        raise TriggerRegistryError(
+            f"{mechanic} is dual-sided and declares "
+            f"holder_stacking={capability.holder_stacking!r}; a mechanic two "
+            "roster participants can hold has to say whether the second one "
+            "arms a second modifier, and there is no default to inherit "
+            "(D-66)"
+        )
+    if not dual_sided and capability.holder_stacking is not None:
+        raise TriggerRegistryError(
+            f"{mechanic} is {capability.pairing.value} and declares "
+            f"holder_stacking={capability.holder_stacking.value}; only a "
+            "dual-sided mechanic has an arming-dedupe question to answer"
+        )
 
 
 def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:

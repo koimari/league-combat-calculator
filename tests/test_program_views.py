@@ -8,7 +8,8 @@ what keeps the derived front-door registry honest about all five rather than
 about one mention of a directory.
 
 At S3 there is one view: the end-of-walk survival projection, moved out of
-the kernel with its 38 digit counts.
+the kernel with its 38 digit counts.  S7 adds ``ViewTag`` to the package
+initialiser, so its two rules are pinned here too.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.program import precision
-from src.calculator.program.views import survival
+from src.calculator.program.views import ViewTag, survival
 
 VIEWS_ROOT = Path(survival.__file__).resolve().parent
 
@@ -211,3 +212,35 @@ def test_a_field_the_registry_does_not_know_cannot_be_published() -> None:
     """Fail closed: the projection cannot invent a precision for a new leaf."""
     with pytest.raises(precision.UnregisteredField):
         precision.round_field("a_leaf_somebody_added", 1.0)
+
+
+# ---------------------------------------------------------------------------
+# ViewTag — S7's vocabulary, and the two rules it exists to make checkable
+# ---------------------------------------------------------------------------
+
+
+def test_the_view_tag_vocabulary_is_closed_at_two_members() -> None:
+    """ "Requested" is deliberately not a third member.
+
+    The ladder is requested -> priced -> applied, and a request carries no
+    number.  Tagging a non-number would re-open exactly the zero-versus-absent
+    confusion the campaign exists to close, so the enum stops at the two
+    states a *number* can be in.
+    """
+    assert [tag.name for tag in ViewTag] == ["THEORETICAL", "APPLIED"]
+
+
+def test_the_tag_vocabulary_module_imports_nothing_from_the_package() -> None:
+    """It is a leaf, and ``trigger_stream``'s second import depends on it.
+
+    The bus may name ``ViewTag`` only because this module reaches no further;
+    an import added here would silently give the bus a transitive dependency
+    the acyclicity clause forbids.
+    """
+    source = (VIEWS_ROOT / "__init__.py").read_text(encoding="utf-8")
+    relative = {
+        node.module
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.ImportFrom) and node.level
+    }
+    assert relative == set()
