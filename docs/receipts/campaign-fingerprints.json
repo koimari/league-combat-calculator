@@ -502,6 +502,20 @@
       "captured_at_commit": "8a9497b",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "S7's own R-28 baseline, captured on the S6 tip before S7's first src/ edit. The counters, residual, winner and score are byte-identical to the S1 through S6 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 0.2% above S6's 3380.1 ms, which is repeat noise on one machine. R-28 gates allocation at S4 alone, so S7 declares wall and nothing else. S7 is the seven-authority-move stage and four of its moves land, so the counters, winner and score above are the row-8 values each landing commit predicts or explains: Hypershot and Abyssal predict them unchanged, and Bloodsong and Shadowflame each declare their own expected move in their own commit body rather than absorbing one here."
+    },
+    "P4-S7H5": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3553.3,
+      "repeats_ms": [
+        3586.6,
+        3553.3,
+        3605.4
+      ],
+      "ratchet_ceiling_ms": 3908.6,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "03aba5e",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "The H5 stage's own R-28 baseline, captured on the S7 tip before the stage's first src/ edit. H5 is the umbrella's recorded SCOPED ruling and lands as its own stage after S7, so it declares its own wall row rather than riding S7's. The counters, residual, winner and score are byte-identical to the S1 through S7 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 5.0% above S7's 3385.5 ms. That spread is machine load on one box between two captures, not a stage regression, and it is exactly why R-28 gives each stage its own row: this stage is judged against 3553.3 ms and against nothing else. R-28 gates allocation at S4 alone, so this stage declares wall and nothing else."
     }
   },
   "tests": {
