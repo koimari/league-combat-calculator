@@ -1,0 +1,42 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "S6S7-oracle",
+  "dated": "2026-08-13",
+  "why_this_file_exists": "The independent oracle pass over the landed S6/S7 coupled diffs returned 78 new_value_correct, 2 old_value_correct and 2 both_wrong. One dissent (oracle-S6S7-leaf46) was a real defect and is corrected in its own commit. The other three are not absorbable and not fixable from this lane: one is a live silent-failure the correction reduces but does not remove, and two are gaps in the oracle protocol itself rather than in the tree. Written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
+  "how_an_entry_closes": "An entry moves from defects[] to retired[] only when its contradiction is resolved by a ruling recorded in the umbrella or the runbook, and only together with the gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it, and a retired entry keeps its original what/why so the reader can see what was ruled and against what.",
+  "gate": "tests/test_escalated_defects_s6s7_oracle.py",
+  "defects": [
+    {
+      "id": "support_damage_multiplier_publishes_one_of_several_applied_factors",
+      "dated": "2026-08-13",
+      "raised_by": "docs/receipts/oracle-S6S7-leaf46.json, indirectly: the oracle could read the applied factor only by dividing the two golden values, because the receipt beside them named a factor the engine had not used.",
+      "what": "survival/transitions._apply_cross_participant_modifiers writes support_damage_multiplier once per applying modifier, through OutcomeLedger.write, which is event.update(). When two modifiers price one packet the second write overwrites the first, so the published receipt names the LAST factor while the product was applied.",
+      "why_it_matters": "This is the campaign's own invariant at the point where a leaf is born: the number the model computed and the receipt it published disagree, with no symptom. It is what made the double-armed Expose Weakness invisible — every moved leaf carried a truthful-looking multiplier of 1.08 beside a value of 1.08 squared.",
+      "why_this_lane_may_not_fix_it": "The honest shapes are a list of applied factors or a published product, and both change the serialized support-event payload. That is a capability-schema move (D-63's chain, whose next value Phase 4 S9 owns) and it is not this correction. Landing it here would batch two semantic changes in one commit (R-30) and move a published payload outside the commit that owns the bump.",
+      "still_reachable_after_the_correction": "Yes. The refresh rule folds two arms of ONE mechanic by one holder; it deliberately does not touch two different mechanics on one packet (Abyssal Mask's Unmake and Imperial Mandate's Command both price an ally's magic packet in mandate_abyssal_curse_roster) nor two different holders of one mechanic, which HolderStacking.PER_HOLDER exists to keep.",
+      "reproducer": "tests/test_escalated_defects_s6s7_oracle.py::TestTheReceiptCanStillContradictTheNumber — two modifiers from two holders apply to one packet; the published multiplier is 1.08 and the applied factor is 1.1664.",
+      "for_the_owner": "Rule the published shape (list of {source, multiplier} versus one product) and schedule it with the CAPABILITY_SCHEMA_VERSION bump that carries it."
+    },
+    {
+      "id": "ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events",
+      "dated": "2026-08-13",
+      "raised_by": "docs/receipts/oracle-S6S7-leaf10.json (verdict old_value_correct) and docs/receipts/oracle-S6S7-leaf30.json (verdict both_wrong).",
+      "what": "A coupled-golden leaf path addresses a list member by ordinal — /combat/events[82]/damage_type. A slice that inserts or removes an earlier event re-indexes every later member, so leaf_report pairs the old snapshot's events[82] with the new snapshot's events[82] even when they are different events. S6/S7 removed two events from cleaver_bloodsong_roster, and the two dissenting verdicts above are both readings of that re-indexing: 'physical -> magic' is a Bloodsong spellblade proc compared against an E cast, and 'sequence 34 -> 7' compares two unrelated ordinals.",
+      "why_it_matters": "R-18 hands the investigator a leaf path and two values and forbids it the tree that would let it notice the substitution. Both oracles noticed anyway and wrote the caveat, which is why this is an escalation and not a wrong verdict; a less careful pass would have returned a confident finding about a comparison that has no referent.",
+      "why_this_lane_may_not_fix_it": "The fix is either an identity-keyed diff for list sections (pair events by event_id, report inserted and removed members as their own transitions) or a rule that a slice changing a list's length owes its investigators the identity rather than the ordinal. Both are changes to scripts/golden_snapshot.py's leaf_report and to R-15/R-18, which are the runbook's and L0's, not this lane's.",
+      "reproducer": "tests/test_escalated_defects_s6s7_oracle.py::TestOrdinalAddressingSubstitutesEvents — inserting one member at the head of a list makes leaf_report report every later member as a value change rather than as an insertion.",
+      "for_the_owner": "Decide whether leaf_report keys list members by identity, or whether R-20's population enumeration must name a length change so the investigator brief can carry the identity."
+    },
+    {
+      "id": "the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide",
+      "dated": "2026-08-13",
+      "raised_by": "docs/receipts/oracle-S6S7-leaf24.json (verdict old_value_correct, confidence 'low-moderate') and docs/receipts/oracle-S6S7-leaf30.json (verdict both_wrong, whose own verdict_meaning field says 'NOT a positive finding ... mapped onto the required three-way enum').",
+      "what": "R-19's verdict set is new_value_correct | old_value_correct | both_wrong, and R-18's evidence tree is exactly data/ and docs/math-foundations.md. Some qualifying leaves are provenance or bookkeeping fields — a packet's owner, an event's sequence — that no cached wiki text and no quoted formula can adjudicate. The oracle must still return a member of the closed set, so a 'cannot certify' is emitted as a dissent and reads to the consumer as a defect finding.",
+      "why_it_matters": "Two of this pass's four dissents are this. A dissent that means 'no evidence exists' and a dissent that means 'the tree is wrong' cost the same to raise and read the same in a tally, which blunts the instrument exactly where the campaign relies on it. leaf24 in particular reports old_value_correct against a value whose absence is D-07's ruled consequence of the authority move (owner is present iff Authority is SPLIT).",
+      "why_this_lane_may_not_fix_it": "The verdict set is R-19's and a fourth member is a runbook change. So is the alternative — excluding non-numeric provenance leaves from qualifies_for_investigation, which would change which occurrences the campaign owes receipts for.",
+      "reproducer": "tests/test_escalated_defects_s6s7_oracle.py::TestTheVerdictSetCannotSayNoEvidence — the two receipts still carry a dissenting verdict beside their own statement that the evidence tree could not decide.",
+      "for_the_owner": "Either add a fourth verdict member (out_of_oracle_scope) or narrow qualifies_for_investigation so provenance leaves are not routed to an oracle at all."
+    }
+  ],
+  "retired": []
+}
