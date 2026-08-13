@@ -1,0 +1,26 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "P4-S9",
+  "why_this_file_exists": "S9 published a four-member disposition vocabulary on three payloads and claimed the wire shape as operational. It is not: every leaf every production path emits today is MEASURED, because the one component that produces StructuralZero, Withheld and Starved -- survival/outcome_state.OutcomeLedger -- is not the ledger any walk runs with. The serializer supports all four and is unit-tested on all four; no request can reach three of them. That is a real gap between what the commit bodies say and what the tree does, and it is written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs (R-16 Shape).",
+  "how_an_entry_closes": "An entry moves from defects[] to retired[] only when the contradiction is resolved in the tree, and only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it.",
+  "gate": "tests/test_escalated_defects_p4_s9.py",
+  "defects": [
+    {
+      "id": "no_production_path_emits_a_non_measured_disposition",
+      "dated": "2026-08-13",
+      "raised_by": "the R-35 verifier for slice group S9, and confirmed by the remediation lane before its first src/ edit",
+      "what": "Every dispositions entry on every payload the calculator serves is MEASURED. The three other members are reachable from serialize_leaf and from OutcomeLedger.quantity, and from nowhere a request goes.",
+      "why": "LeafBlock.put has exactly one caller -- measured -- which constructs Measured(amount=float(value)). No view, no bis.py path and no optimizer path ever constructs a Withheld, a StructuralZero or a Starved for publication. The record that does produce them is OutcomeLedger, whose quantity() answers Measured / StructuralZero / Starved from what the walk wrote; it has no construction site in src/ outside its own module, so the walk runs on ScoreLedger and ReceiptLedger and the outcome ledger's dispositions never reach a view. AttackerOutcome and ObjectiveFold carry plain floats, so whatever disposition a number had is discarded before the projection.",
+      "what_is_nevertheless_true": [
+        "The wire shape is real and complete: serialize_leaf emits all four, a WITHHELD leaf is absent with its receipt-bearing entry present, and static/js/app.js renders that case as a named refusal with live call sites (tests/test_program_views.py).",
+        "Every published number on all three payloads carries exactly one entry, both directions, asserted against live runs (tests/test_payload_dispositions.py).",
+        "Quantity.__add__ propagates dispositions through a sum and Tagged.__add__ propagates the view tag, both unit-tested over the member matrix. The algebra criterion 19 asks for exists; what does not exist is a production value flowing through it that is not Measured."
+      ],
+      "why_this_lane_may_not_fix_it": "Making a request emit a non-MEASURED leaf means running the walk on the outcome ledger -- replacing or joining ScoreLedger/ReceiptLedger with OutcomeLedger inside survival/transitions -- and then teaching AttackerOutcome and ObjectiveFold to carry Quantity rather than float. That is a kernel-ledger change and a fold-type change across the composition, neither of which is S9's content: S9 is declared a pure stage whose subject is the five views. Doing it inside a slice labelled pure is precisely the mislabelling the stage table exists to prevent.",
+      "for_the_phase_owner": "Either S10 schedules the ledger join and the fold retyping, or the phase records that criterion 19's end-to-end backstop is discharged by fixture alone and says so in the umbrella. An implementation lane may not choose which.",
+      "reproducer": "Run a live coupled receipt (scripts/golden_snapshot.coupled_entry on any combat-carrying scenario) and collect {entry['disposition'] for entry in combat['dispositions'].values()}: the set is exactly {'MEASURED'}. Separately, an AST scan for OutcomeLedger( construction expressions over src/calculator finds none outside survival/outcome_state.py.",
+      "reproducer_after_closure": "Inverted: at least one production payload carries an entry whose disposition is not MEASURED, and the walk constructs an OutcomeLedger."
+    }
+  ],
+  "retired": []
+}
