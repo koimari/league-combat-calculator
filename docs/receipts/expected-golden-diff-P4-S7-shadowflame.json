@@ -136,7 +136,7 @@
     "why_the_two_differ": "The pair engine simulates one attacker against a target it also models alone; the walk sees the roster. In the probe roster (Ahri + Shadowflame, one ally Pantheon, one enemy Aatrox) the pair engine prices 154.5 and the walk delivers 229.3 across five packets, because the roster brings Aatrox under 40% earlier and keeps him there. With no ally the same holder delivers 0.0 while the pair preview still says 154.5: Aatrox's own healing keeps him above the threshold for the whole window, which is a roster fact the pair fight cannot see."
   },
   "oracle_receipts": {
-    "status": "OWED and NOT FILED for one downward move",
+    "status": "FILED - docs/receipts/oracle-P4-S7-shadowflame-leaf0.json, verdict new_value_correct",
     "rule": "R-19 gates the baseline re-capture, not the slice: R-17 lands this against the committed baselines plus this allowlist, and no baseline moves here.",
     "qualifying_leaves": 0,
     "why_zero": "compare emits no new differing leaf in either jurisdiction, so no leaf satisfies qualifies_for_investigation and R-18 owes no investigator.",
@@ -147,7 +147,15 @@
       "new_value": 4969.6,
       "why_it_is_recorded_here_anyway": "Phase 4 criterion 12 says a downward diff carries its own oracle receipt. This one moves no committed baseline, so R-18's machinery has nothing to point at and the lane may not grade its own arithmetic either. It is written down instead, with both values and its reproducer, so the phase-boundary re-capture cannot absorb it silently.",
       "reproducer": "POST /api/optimize with scripts/bench_coupled_optimizer.SCENARIOS['cassiopeia_5champ'], locked_items set to the five items above and locked_boots to Sorcerer's Shoes, at the time-budget ceiling; evaluations is 1.",
-      "the_lane_s_own_reading_offered_as_a_hypothesis_not_a_verdict": "The pair preview this composition now drops was priced against a target the holder was fighting alone, and in the five-champion roster the walk's own predicate is satisfied on fewer of the holder's packets than the pair fight assumed. mundo_3champ moves the other way by 5.0 on the same mechanism, which is what a preview replaced by a live reading should look like: sometimes more, sometimes less, never the same number by construction."
+      "the_lane_s_own_reading_offered_as_a_hypothesis_not_a_verdict": "The pair preview this composition now drops was priced against a target the holder was fighting alone, and in the five-champion roster the walk's own predicate is satisfied on fewer of the holder's packets than the pair fight assumed. mundo_3champ moves the other way by 5.0 on the same mechanism, which is what a preview replaced by a live reading should look like: sometimes more, sometimes less, never the same number by construction.",
+      "oracle": {
+        "receipt": "docs/receipts/oracle-P4-S7-shadowflame-leaf0.json",
+        "verdict": "new_value_correct",
+        "filed": "2026-08-13",
+        "isolation": "R-18: a fresh investigator whose only evidence was `git archive HEAD data docs/math-foundations.md` - never src/, tests/, scripts/, the diff, the plan or this receipt.",
+        "independent_finding": "The removed 10.4 reconstructs uniquely as 20% of a 52.00 damage instance, and 52.00 is Cassiopeia's level-18 basic attack (104 AD, growth factor exactly 1.0) mitigated by ~100 armor - a PHYSICAL instance. No magic or true instance in the kit at this build's ability power equals 52.00, and the build's 42 flat + 40% magic penetration floors every un-itemised level-18 target's magic resistance to 0, so no resistance freedom is left to bend one onto it. data/items.json's Cinderbloom text amplifies magic and true damage only, so the old total was granting the bonus to physical damage and the downward move removes exactly that ineligible bonus.",
+        "note": "The oracle reached the same instance the lane's hypothesis did not name, and by a mechanism the lane did not propose - it graded the arithmetic the lane may not grade for itself, which is what R-18's isolation buys. Its own recorded limitation: the absolute totals were not reproduced end-to-end, because the scenario tuple lives in scripts/, which R-18 forbids it to read; the adjudication is of the 10.4 delta and its mechanism."
+      }
     }
   }
 }
