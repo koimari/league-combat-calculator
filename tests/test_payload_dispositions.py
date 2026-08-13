@@ -102,6 +102,51 @@ def assert_covered(payload: Mapping, *, skip: Sequence[str] = ()) -> None:
     assert sorted(published - named) == []
 
 
+def coverage_of_a_whole_response(response: Mapping) -> dict[str, set[str]]:
+    """One /api/calculate response's leaves against *both* of its maps.
+
+    The response carries two ``dispositions`` maps and each covers one block:
+    ``combat`` is the five views' own payload, named by the receipt view's
+    writer at the paths inside it, and the response's own map covers
+    everything else.  Two maps rather than one because criterion 5 says
+    **exactly one** entry per leaf: a top-level map that also re-described
+    the 495 leaves of the combat receipt would give each of them a second
+    entry, and the second describer is the drift the single writer exists to
+    make impossible.
+
+    So the check is over the union: every numeric leaf of the response is
+    named once, by the map of the block it lives in, and the two maps'
+    domains do not overlap.
+    """
+    combat = response.get("combat") or {}
+    body = {key: value for key, value in response.items() if key != "combat"}
+    published = numeric_leaf_paths(
+        {key: value for key, value in body.items() if key != "dispositions"}
+    ) | {
+        f"combat.{path}"
+        for path in numeric_leaf_paths(
+            {key: value for key, value in combat.items() if key != "dispositions"}
+        )
+    }
+    own = response["dispositions"]
+    inherited = {
+        f"combat.{path}": entry
+        for path, entry in combat.get("dispositions", {}).items()
+    }
+    entries_are_well_formed(own)
+    entries_are_well_formed(inherited)
+    return {
+        "published": published,
+        "named": set(own) | set(inherited),
+        "withheld": {
+            path
+            for path, entry in {**own, **inherited}.items()
+            if entry["disposition"] == Disposition.WITHHELD.value
+        },
+        "overlapping": set(own) & set(inherited),
+    }
+
+
 # ---------------------------------------------------------------------------
 # The three payloads, checked against live runs rather than against fixtures
 # ---------------------------------------------------------------------------
@@ -189,6 +234,110 @@ COMBAT_SCENARIOS = (
     "catalyst_roster",
     "syndra_custom_order_60",
 )
+
+
+#: One coupled request, the shape the endpoint is actually asked for: a
+#: roster on both sides, so the response carries targets, allies, a combat
+#: receipt and the whole per-target fight block rather than the single-fight
+#: short form.
+CALCULATE_REQUEST = {
+    "champion": "Syndra",
+    "level": 13,
+    "items": ["Malignance"],
+    "enemies": [
+        {"champion": "Aatrox", "level": 13, "items": []},
+        {"champion": "Ashe", "level": 13, "items": []},
+    ],
+    "allies": [{"champion": "Lulu", "level": 13, "items": [], "role": "support"}],
+}
+
+
+def _calculate(request: Mapping | None = None) -> Mapping:
+    """One live ``/api/calculate`` response, through the app it is served by."""
+    from src.app import app
+
+    app.config["TESTING"] = True
+    app.config["RATE_LIMIT_ENABLED"] = False
+    response = app.test_client().post(
+        "/api/calculate", json=dict(request or CALCULATE_REQUEST)
+    )
+    assert response.status_code == 200
+    return response.get_json()
+
+
+class TestTheWholeCalculateResponse:
+    """The endpoint, not the sub-object — criterion 5's actual sentence.
+
+    The combat receipt is where the five views publish, and it was the only
+    block this file ever walked: ``_combat()`` returns
+    ``coupled_entry(...)['combat']``, so 492 of the response's 987 numbers --
+    the headline ``total_damage``, every ``champion_stats`` leaf, the
+    top-level ``breakdown``, ``cast_timeline`` and ``damage_events`` -- were
+    outside a check whose criterion says "every numeric leaf of the
+    /api/calculate payload".  ``/api/bis`` and ``/api/optimize`` were given
+    whole-payload treatment in the same slice; this endpoint was not, and
+    nothing recorded the difference.
+    """
+
+    def test_every_number_the_endpoint_serves_carries_exactly_one_entry(self) -> None:
+        """Both maps, one union, both directions, no overlap."""
+        coverage = coverage_of_a_whole_response(_calculate())
+        assert (
+            sorted(coverage["named"] - coverage["published"] - coverage["withheld"])
+            == []
+        )
+        assert sorted(coverage["published"] - coverage["named"]) == []
+        assert sorted(coverage["overlapping"]) == []
+
+    def test_the_response_names_numbers_outside_its_combat_block(self) -> None:
+        """A check that passed by walking the sub-object is not this check.
+
+        The named leaves below are the ones a consumer reads first and the
+        ones the combat-only map never described.
+        """
+        response = _calculate()
+        dispositions = response["dispositions"]
+        assert len(dispositions) > 400
+        for path in (
+            "total_damage",
+            "ability_damage",
+            "auto_attack_damage",
+            "effective_armor",
+            "effective_mr",
+            "champion_stats.ability_power",
+            "breakdown.Q.total_damage",
+        ):
+            assert path in dispositions, path
+        # ``champion_stats.attack_damage`` is deliberately not in that list:
+        # the endpoint rounds it to an int on the wire and an int carries no
+        # entry, by the same rule that keeps a build's ``gold`` bare.  The
+        # rule is the map's, not this slice's, and changing either the wire
+        # type or the rule is its own slice with its own baseline move.
+        assert isinstance(response["champion_stats"]["attack_damage"], int)
+        assert "champion_stats.attack_damage" not in dispositions
+        assert all(path.split(".")[0] != "combat" for path in dispositions)
+
+    def test_the_wire_shape_is_what_it_was_plus_the_map(self) -> None:
+        """Re-writing every member through the writer moves no number.
+
+        The walk rebuilds each nested container as it re-writes it, so the
+        objects are new; the values, their positions and their JSON types are
+        not allowed to be.  ``gold``-style ints stay ints, which is what
+        keeps them out of the map.
+        """
+        from src.calculator.calculate import _name_every_number, calculate_payload
+
+        payload = calculate_payload(dict(CALCULATE_REQUEST))
+        before = json.dumps(
+            {key: value for key, value in payload.items() if key != "dispositions"},
+            sort_keys=False,
+        )
+        rewritten = {
+            key: value for key, value in payload.items() if key != "dispositions"
+        }
+        _name_every_number(rewritten)
+        rewritten.pop("dispositions")
+        assert json.dumps(rewritten, sort_keys=False) == before
 
 
 class TestTheCalculatePayload:

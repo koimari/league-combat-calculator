@@ -16,6 +16,7 @@ from .defensive_effects import resolve_starting_defenses
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
 from .pipeline import ONE_ROTATION_DURATION, run_fight
+from .program.views import LeafWriter
 from .public_response import (
     aggregate_public_results,
     public_engine_mode,
@@ -246,8 +247,53 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     return response
 
 
+#: The response blocks that carry a parallel ``dispositions`` map of their
+#: own.  ``combat`` is the five views' payload and the receipt view's writer
+#: named every number in it at the path it lives at; re-describing those
+#: leaves here would give each of them a *second* entry, and criterion 5 says
+#: exactly one.  So the response holds one map per block that has one, every
+#: numeric leaf is covered by exactly one of them, and neither map is a
+#: second producer of the other's entries.
+_BLOCKS_CARRYING_THEIR_OWN_MAP = frozenset({"combat"})
+
+
+def _name_every_number(response: dict) -> None:
+    """Give the response its own ``dispositions`` map, keyed by leaf path.
+
+    The endpoint's headline ``total_damage``, all ninety-odd
+    ``champion_stats``, the top-level ``breakdown``, every ``cast_timeline``
+    and ``damage_events`` row, each target's fight and each roster member's
+    starting defenses are published numbers, and until now none of them
+    carried an entry: the map lived on the ``combat`` sub-object alone, which
+    is a little under half of what this endpoint serves.  Criterion 5 says
+    *every numeric leaf of the /api/calculate payload*, so the rest of the
+    payload gets the same treatment ``/api/bis`` and ``/api/optimize``
+    already had -- re-written through the one writer at the path it lives at,
+    so the entry is produced beside its leaf by ``serialize_leaf`` rather
+    than by a second pass describing numbers it did not write.
+
+    Two consequences are worth stating rather than discovering.  ``publish``
+    classifies each member by what it *is*, so an int stays an int and
+    carries no entry (a level, a rotation count and an ordinal are not
+    quantities a rule measured); and every nested container is rebuilt as it
+    is re-written -- a nested mapping becomes a fresh dict, a sequence a
+    fresh list -- assigned back over the key it came from, so values, key
+    order and positions are preserved while the objects are not the same
+    objects.  A tuple would come back as a list, which is what it already
+    serialized as.
+    """
+    writer = LeafWriter()
+    root = writer.block(response, "")
+    for key, value in list(response.items()):
+        if key not in _BLOCKS_CARRYING_THEIR_OWN_MAP:
+            root.publish(key, value)
+    response["dispositions"] = writer.entries()
+
+
 def calculate_payload(data: Mapping[str, object]) -> dict:
     """Return the complete JSON-safe calculate payload without Flask state."""
     request = parse_scenario_request(data)
     resolved = resolve_scenario(request)
-    return _calculate_resolved(request, resolved)
+    response = _calculate_resolved(request, resolved)
+    _name_every_number(response)
+    return response
