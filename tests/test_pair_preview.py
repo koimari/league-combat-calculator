@@ -22,6 +22,8 @@ from functools import lru_cache
 
 from src import app as app_module
 from src.calculator.program.build import pair_preview_mechanics
+from src.calculator.program.compile import WalkCompiler
+from src.calculator.survival.actions import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
 from src.calculator.program.views import ViewTag
 
@@ -179,3 +181,91 @@ def test_removing_the_item_removes_the_amplification_entirely():
     body = _roster(())
     assert _amped(body, "main") == []
     assert _amped(body, "ally1") == []
+
+
+def _one_previewed_mechanic():
+    """A mechanic the registry declares ``THEORETICAL`` on the pair lane."""
+    previewed = sorted(pair_preview_mechanics())
+    assert previewed, "the registry declares no pair preview to exclude"
+    return previewed[0]
+
+
+def _engine_result_with_a_preview_row():
+    """One pair fight holding a previewed row between two delivered ones."""
+    return {
+        "breakdown": {
+            "Q": {"total_damage": 100.0},
+            "preview_row": {
+                "total_damage": 40.0,
+                "pair_preview_of": _one_previewed_mechanic(),
+            },
+            "W": {"total_damage": 60.0},
+        },
+        "damage_events": [
+            {
+                "time": 0.0,
+                "sequence": 0,
+                "source_key": "Q",
+                "damage_type": "magic",
+                "damage": 100.0,
+            },
+            {
+                "time": 1.0,
+                "sequence": 1,
+                "source_key": "preview_row",
+                "damage_type": "magic",
+                "damage": 40.0,
+            },
+            {
+                "time": 2.0,
+                "sequence": 2,
+                "source_key": "W",
+                "damage_type": "magic",
+                "damage": 60.0,
+            },
+        ],
+        "self_healing_events": [],
+        "timeline_coverage": {},
+    }
+
+
+def _compile_engine_result():
+    """The score path's composition of that fight, as typed actions."""
+    compiler = WalkCompiler(0)
+    compiler.add_engine_result(
+        _engine_result_with_a_preview_row(),
+        "main",
+        0,
+        "enemy:Aatrox",
+        1,
+        {},
+        8.0,
+        {},
+        [],
+    )
+    return compiler.actions
+
+
+def test_the_score_path_drops_the_previews_the_receipt_path_drops():
+    """``add_engine_result`` composes what ``_pair_packet`` composes.
+
+    The score path compiles a candidate's fresh pair fights straight from
+    the engine rows, and it is the surface that picks the optimizer's
+    winner.  A preview summed here is the walk's number and a preview of it
+    inside one score, with nothing in the response saying so.
+    """
+    sources = [action.source_key for action in _compile_engine_result()]
+    assert sources == ["Q", "W"]
+
+
+def test_dropping_a_preview_does_not_renumber_the_events_after_it():
+    """The surviving ids stay positional, exactly as on the receipt path.
+
+    Event ids are the row's index in the engine's own ledger, so filtering
+    rather than skipping in place would move every public id downstream of
+    the first preview — and those ids are what trigger links, heal linkage
+    and the corpus receipts are keyed by.
+    """
+    slots = [action.event_slot for action in _compile_engine_result()]
+    texts = [EVENT_SLOTS.text(slot) for slot in slots]
+    assert texts == ["main:enemy:Aatrox:0", "main:enemy:Aatrox:2"]

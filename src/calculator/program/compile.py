@@ -81,7 +81,7 @@ from ..survival.compile import (
 )
 from ..trigger_stream import is_immobilizing_event
 from . import events as ev
-from .build import Program, Projection
+from .build import Program, Projection, pair_preview_sources
 from .caches import program_fingerprint, roster_fingerprint
 from .identity import event_id_text
 
@@ -599,7 +599,18 @@ class WalkCompiler:
         (Katarina R, Varus E) to their packets; score mode skips
         ``_pair_packet``'s per-event dict enrichment, so the wound tuple is
         built here from the same sourced packets instead.
+
+        "Equivalent to ``_pair_packet``" is a claim this method has to keep,
+        and the pair-preview exclusion is part of it: a pair row the registry
+        declares ``THEORETICAL`` is a preview of a number the coupled walk
+        owns, so composing it here would put the walk's number and a preview
+        of it into one score.  The receipt path drops those rows and their
+        events; so does this one, through the same
+        :func:`~.build.pair_preview_sources` join, because the surface that
+        picks the optimizer's winner is the worst place for the two paths to
+        disagree.
         """
+        previewed = pair_preview_sources(result.get("breakdown") or {})
         order_a, order_b = participant_order(attacker_id)
         # The event-id *string* stays in the sort key (position 6) and the
         # action carries only its slot, so both loops below intern once per
@@ -631,6 +642,12 @@ class WalkCompiler:
                 key = row[0]
                 time_value = key[0]
                 source_key = row[3]
+                if source_key in previewed:
+                    # ``continue`` rather than a filtered list, exactly as in
+                    # ``_pair_packet``: ``index`` is the per-pair event id and
+                    # re-numbering the survivors would move every public id
+                    # downstream of the first preview.
+                    continue
                 raw_formula = row[4]
                 raw_damage = row[5]
                 if index < known_ids:
@@ -712,6 +729,10 @@ class WalkCompiler:
             time_value = event["time"]
             sequence = event["sequence"]
             source_key = event["source_key"]
+            if source_key in previewed:
+                # See the tuple branch above: the id is positional, so a
+                # preview is skipped in place rather than filtered out.
+                continue
             damage_type = event["damage_type"]
             damage = event["damage"]
             raw_formula = event.get("raw_formula")

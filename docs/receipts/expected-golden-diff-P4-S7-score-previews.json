@@ -1,7 +1,10 @@
 {
   "slice": "P4-S7-score-previews",
-  "status": "population enumerated before the slice's first src/ edit; the measured block is written by the landing commit",
-  "decisions": ["D-62", "D-97"],
+  "status": "landed",
+  "decisions": [
+    "D-62",
+    "D-97"
+  ],
   "correction": {
     "what": "The roster composition drops a THEORETICAL pair-engine row and its authored events on the receipt path (participant_timeline._pair_packet) and does not drop them on the score path (program.compile.WalkCompiler.add_engine_result, which compiles the candidate main's fresh pair fights straight from the engine rows).",
     "why_it_matters": "add_engine_result documents itself as 'equivalent to _pair_packet + add_packet'. It is not, since the Bloodsong move: a preview the receipt walk excludes is summed by the compiled score walk, so the optimizer scores a build against a number the receipt walk says is a preview of one the walk already owns. That is D-62's double count, present on exactly the surface that picks the winner.",
@@ -28,10 +31,22 @@
       "instrument": "scripts/bench_coupled_optimizer.py's SCENARIOS with optimizer._evaluate_build counting candidates holding Bloodsong.",
       "measured_at_commit": "2853376",
       "per_scenario": {
-        "cassiopeia_3champ": {"proposals": 1306, "proposals_holding_bloodsong": 0},
-        "cassiopeia_5champ": {"proposals": 1015, "proposals_holding_bloodsong": 0},
-        "mundo_3champ": {"proposals": 688, "proposals_holding_bloodsong": 0},
-        "syndra_mandate_3champ": {"proposals": 782, "proposals_holding_bloodsong": 0}
+        "cassiopeia_3champ": {
+          "proposals": 1306,
+          "proposals_holding_bloodsong": 0
+        },
+        "cassiopeia_5champ": {
+          "proposals": 1015,
+          "proposals_holding_bloodsong": 0
+        },
+        "mundo_3champ": {
+          "proposals": 688,
+          "proposals_holding_bloodsong": 0
+        },
+        "syndra_mandate_3champ": {
+          "proposals": 782,
+          "proposals_holding_bloodsong": 0
+        }
       }
     }
   },
@@ -40,6 +55,33 @@
     "coupled_golden": []
   },
   "measured": {
-    "status": "not yet measured - this file is the pre-edit half of the receipt"
+    "golden": 0,
+    "coupled_golden": 0,
+    "coupled_exact": 0,
+    "how_zero_is_read_off_a_failing_compare": "The coupled compares do not report OK at this point in the campaign: S6, the Bloodsong move and the re-arm correction each landed against the committed baselines under R-17 and their diffs stand until the phase-boundary re-capture. The measurement is therefore a difference of counts across this commit alone, taken with the working tree stashed and restored: 132 differing coupled-golden leaves and 3 coupled-exact before, 132 and 3 after, and golden identical both times.  Zero new leaves, which is the prediction.",
+    "bench": {
+      "counters_residual_rungs_winner_score": "identical to the priors on all four scenarios",
+      "public_evaluations": [
+        1324,
+        1033,
+        706,
+        796
+      ],
+      "residual": [
+        87,
+        28,
+        34,
+        1422
+      ],
+      "score": [
+        4003.1,
+        5010.8,
+        3305.0,
+        4642.3
+      ],
+      "routing_divergences": "[] on all four (R-01 row 11)"
+    },
+    "wall_cassiopeia_5champ_ms": 3403.8,
+    "wall_ratchet": "S7's declared baseline 3385.5 ms, ceiling 3724.1 ms"
   }
 }

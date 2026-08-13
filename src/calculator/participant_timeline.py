@@ -99,7 +99,7 @@ from .survival import (
 # but it is the reason S4's vocabulary commit could say "nothing in src/
 # imports them yet" and the next commit could not.
 from .program.amp import ArmingLedger
-from .program.build import arming_stacking, pair_preview_mechanics
+from .program.build import arming_stacking, pair_preview_sources
 from .program.compile import (
     WalkCompiler,
     action_from_event,
@@ -222,7 +222,7 @@ def _pair_packet(
     # out of everything the roster composes — otherwise the walk's number and
     # the preview of it are both in one total, which is a double count with
     # no symptom (D-62).
-    previewed = _pair_preview_sources(result_breakdown)
+    previewed = pair_preview_sources(result_breakdown)
     champion_wounds = (
         champion_grievous_wound_sources(champion_data)
         if champion_data is not None
@@ -376,26 +376,6 @@ def _pair_packet(
             if isinstance(entry, Mapping) and source not in previewed
         },
     }
-
-
-def _pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """Which of one pair fight's breakdown rows are previews, not deliveries.
-
-    The join has two declared halves and this is where they meet: the pair
-    engine stamps each row it authors with the mechanic that rule belongs to
-    (``pair_preview_of``), and the capability registry says whether that
-    mechanic's pair-lane number is ``THEORETICAL``.  Neither half can decide
-    it alone, which is the point — a row that simply stopped being summed
-    would be an engine quietly demoting its own number.
-    """
-    previews = pair_preview_mechanics()
-    if not previews:
-        return frozenset()
-    return frozenset(
-        source
-        for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
-    )
 
 
 def _without_pair_previews(

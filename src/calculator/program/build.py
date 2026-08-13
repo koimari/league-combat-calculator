@@ -187,6 +187,33 @@ def pair_preview_mechanics() -> frozenset[str]:
     return frozenset(previewed)
 
 
+def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """Which of one pair fight's breakdown rows are previews, not deliveries.
+
+    The join has two declared halves and this is where they meet: the pair
+    engine stamps each row it authors with the mechanic that rule belongs to
+    (``pair_preview_of``), and the capability registry says whether that
+    mechanic's pair-lane number is ``THEORETICAL``.  Neither half can decide
+    it alone, which is the point — a row that simply stopped being summed
+    would be an engine quietly demoting its own number.
+
+    One home, because a roster composes a pair fight in **two** places: the
+    receipt path enriches it into event dicts and the score path compiles it
+    straight from the engine rows.  Two copies of this question would answer
+    it identically until the day one of them was not updated, and the surface
+    that picks the optimizer's winner is the one that would go on summing a
+    preview with nothing saying so.
+    """
+    previews = pair_preview_mechanics()
+    if not previews:
+        return frozenset()
+    return frozenset(
+        source
+        for source, entry in result_breakdown.items()
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
+    )
+
+
 @cache
 def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
     """Packet source -> the mechanic it arms, and how a second holder stacks.
