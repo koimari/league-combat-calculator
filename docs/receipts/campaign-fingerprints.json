@@ -530,6 +530,20 @@
       "captured_at_commit": "e6feed9",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "Phase 4 S8's own R-28 baseline, captured on the H5 stage's tip before S8's first src/ edit. The counters, residual, winner and score are the H5 stage's landed values rather than S1-through-S7's (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131): the H5 flip moved nine pair fights onto the compiled lane exactly as its own receipt declared, and S8 inherits that as its starting point rather than re-explaining it. Wall is 1.0% below the H5 stage's 3553.3 ms, which is repeat noise on one box. R-28 gates allocation at S4 alone, so S8 declares wall and nothing else."
+    },
+    "P4-S9": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3568.8,
+      "repeats_ms": [
+        3602.9,
+        3593.0,
+        3568.8
+      ],
+      "ratchet_ceiling_ms": 3925.7,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "a97383d",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "Phase 4 S9's own R-28 baseline, captured on the S8 tip before S9's first src/ edit. The counters, residual, winner and score are S8's landed values (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131) and S9 predicts every one of them unchanged: it is a pure stage, so its Expected qualifying occurrences is 0 on both baselines by definition (phase criterion 8) and any move is an unexpected occurrence that stops the slice. Wall is 1.5% above S8's 3516.7 ms, which is repeat noise on one box. R-28 gates allocation at S4 alone, so S9 declares wall and nothing else."
     }
   },
   "tests": {
