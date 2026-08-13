@@ -384,6 +384,42 @@ def test_the_writer_puts_the_leaf_and_records_its_entry_in_one_call() -> None:
     assert writer.withheld_paths() == {"breakdown.main.support_value"}
 
 
+def test_a_number_inside_a_list_is_a_leaf_like_any_other() -> None:
+    """The one shape the walk used to carry through with no entry.
+
+    ``row.nested.x`` got an entry and ``row.values[0]`` did not, because the
+    list branch recursed into ``_walk``, which handed a bare float back
+    unchanged.  No payload published that shape -- the backstop counts zero
+    across five combat scenarios, ``/api/bis`` and ``/api/optimize`` -- but
+    both ranking surfaces push whole finished payloads through this walk, so
+    a published list of numbers was one view away from serving numbers the
+    map had never heard of.
+    """
+    writer = LeafWriter()
+    payload: dict[str, object] = {}
+    root = writer.block(payload, "")
+    root.publish("top", [4.0])
+    root.publish("row", {"values": [1.0, 2.0], "nested": {"x": 3.0}})
+    assert payload == {
+        "top": [4.0],
+        "row": {"values": [1.0, 2.0], "nested": {"x": 3.0}},
+    }
+    assert set(writer.entries()) == {
+        "top[0]",
+        "row.values[0]",
+        "row.values[1]",
+        "row.nested.x",
+    }
+
+
+def test_a_discarded_list_member_is_the_same_number_unrecorded() -> None:
+    """``DISCARD`` skips the entry and nothing else, list members included."""
+    payload: dict[str, object] = {}
+    DISCARD.block(payload, "").publish("values", [1.0, {"x": 2.0}])
+    assert payload == {"values": [1.0, {"x": 2.0}]}
+    assert DISCARD.entries() == {}
+
+
 def test_a_leaf_path_is_its_payload_key_and_cannot_be_spelled_apart() -> None:
     """The block binds prefix to target, so a rename moves both or neither."""
     writer = LeafWriter()

@@ -240,10 +240,37 @@ class LeafBlock:
             return out
         if isinstance(value, (list, tuple)):
             return [
-                self._walk(member, f"{path}[{index}]")
+                self._member(member, f"{path}[{index}]")
                 for index, member in enumerate(value)
             ]
         return value
+
+    def _member(self, value: object, path: str) -> object:
+        """One list member, with a bare number inside it written as a leaf.
+
+        A float that sits directly in a list is as published as one behind a
+        key, and it used to be the one shape this walk carried through
+        untouched: the recursion handed a non-mapping, non-sequence value
+        back unchanged, so ``row.values[0]`` reached a consumer with no entry
+        naming it while ``row.nested.x`` got one.  No payload has that shape
+        today -- the backstop over five combat scenarios, ``/api/bis`` and
+        ``/api/optimize`` counts zero -- but ``bis`` and ``optimizer`` now
+        push whole finished payloads through here, so the hole was one
+        published list away from being real, and "one function emits the leaf
+        and its entry" has to be true of every shape the walk reaches rather
+        than of the shapes it happens to meet.
+
+        The discarding branch is :meth:`measured`'s, for :data:`DISCARD`'s
+        reason and no other: a member nobody records is the same float.
+        """
+        if not isinstance(value, float):
+            return self._walk(value, path)
+        if not self._records:
+            return float(value)
+        out = serialize_leaf(path, Measured(amount=float(value)), self._tag)
+        # pylint: disable-next=protected-access
+        self._writer._record(out)
+        return out.value
 
     def raw(self, key: str, value: object) -> None:
         """Publish a non-numeric leaf: a label, a flag, a list, an id.
