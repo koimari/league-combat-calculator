@@ -1,0 +1,108 @@
+{
+  "receipt_id": "oracle-S6S7-leaf53",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[28]/pair_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle53",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/3071.json",
+      "data/item-atoms/3877.json",
+      "data/wiki-atoms/damage.json",
+      "data/atoms/autoresearch-review.md",
+      "data/runes.json",
+      "data/practice-corpus/scenarios.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/",
+      "git history", "the diff", "the plan", "the golden baseline"
+    ],
+    "limitation": "The scenario definition (champions, levels, roster composition, target resistances, event ordering) lives outside data/ and outside docs/math-foundations.md, so the absolute damage number is not reconstructible from the permitted evidence. The computation below is therefore a RATIO oracle: it identifies the exact sourced quantity that separates 94.1 from 101.7 and rules the direction."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json — corpus-wide decoding of the wiki {{rd|A|B}} template (melee value first, ranged value second)",
+      "quote": "Ravenous Hydra {{rd|40% AD|20% AD}} · Titanic Hydra {{rd|4%|2%}} · Blade of the Ruined King {{rd|9%|6%}} · Divine Sunderer {{rd|6%|4%}} — in every legendary the second (ranged) value is the reduced one, fixing Bloodsong's split as melee 8% / ranged 5%."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom \"damage.modifier\" (Damage modifier (amplification/reduction))",
+      "quote": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "source": "docs/math-foundations.md §2.1 (resistance identity, used to bound the Black Cleaver alternative)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md §2.3 item 2 (Black Cleaver averaging model)",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8·max_stacks` constant ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`"
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md §3.2 and §4 (pair-fight / roster coupling; the historical gap class)",
+      "quote": "each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (`defender_index > 0`)  ...  plus execute branches (Pantheon Q, Shaco E, Naafiri recast) and damage-mod debuffs (Vladimir R amp, Wukong Q shred)."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_observed_ratio": {
+      "expression": "101.7 / 94.1",
+      "value": 1.0807651434644,
+      "note": "Golden leaves are stored to one decimal, so the true multiplier lies in [101.65/94.15, 101.75/94.05] = [1.07945, 1.08188]."
+    },
+    "step_2_candidate_from_the_cache": {
+      "quantity": "Bloodsong 'Expose Weakness': target takes 8% (melee holder) increased damage from ALL sources for 4 s",
+      "multiplier": 1.08,
+      "inside_admissible_window": true,
+      "check": "94.1 x 1.08 = 101.628; with the golden's 1-decimal storage the underlying pre-amp value must lie in [94.1204, 94.15) for the amped result to print 101.7 (e.g. 94.14 x 1.08 = 101.6712 -> 101.7). Both printed values are simultaneously consistent with exactly one factor of 1.08.",
+      "why_multiplicative": "data/wiki-atoms/damage.json: percent damage modifiers stack multiplicatively with each other and with resistance-based mitigation, so an 8% amp is a clean scalar on the post-mitigation pair damage regardless of where in the pipeline it is applied."
+    },
+    "step_3_ranged_variant_rejected": {
+      "multiplier": 1.05,
+      "predicted_new_value": 98.8,
+      "verdict": "rejected — 94.1 x 1.05 = 98.81, nowhere near 101.7; the engine used the melee (8%) leg of {{rd|8%|5%}}."
+    },
+    "step_4_black_cleaver_alternatives_bounded": {
+      "carve_stack_model_change_24pct_to_30pct": {
+        "solve": "(100 + 0.76A) / (100 + 0.70A) = 1.080765",
+        "required_target_armor": 2331.2,
+        "verdict": "rejected — physically impossible. The whole 24%->30% band is bounded above by 0.76/0.70 = 1.0857 only as armor -> infinity; at any realistic armor (60-200) it buys at most ~3-5%, not 8.1%. So the leaf did NOT move because the Black Cleaver averaging constant was swapped for the Cesaro mean C - C(C-1)/(2h)."
+      },
+      "carve_newly_propagated_to_the_pair_0pct_to_24pct": {
+        "solve": "(100 + A) / (100 + 0.76A) = 1.080765",
+        "required_target_armor": 45.2,
+        "verdict": "numerically possible but parameter-tuned; it needs the defender's post-penetration armor to land on 45.2 (or 33.2 for a full 30% shred). The Expose Weakness explanation needs no free parameter at all — it predicts 1.08 exactly. Occam favours the amp; and both readings share the same direction (a sourced roster-visible debuff that pair damage was previously missing)."
+      }
+    },
+    "step_5_direction_ruling": {
+      "question": "Does event 28's pair damage carry zero or one factor of Expose Weakness?",
+      "wiki_rule": "'causing them to take 8% increased damage FROM ALL SOURCES' — the debuff is a property of the TARGET, not of the Bloodsong holder's own damage. In a coupled roster fight, a pair-damage event landing on an Expose-Weakness-flagged defender within the 4 s window must be amplified once, whoever the attacker is.",
+      "timing": "The debuff arms after the first empowered (Spellblade) basic attack and refreshes on a 1.5 s cooldown for 4 s. Event index 28 is deep into the timeline, long past the first ability + empowered attack, so the window is open at that event.",
+      "prior_state_of_the_engine": "data/atoms/autoresearch-review.md's swarm synthesis lists 'damage-mod debuffs' as an open unmodeled/mis-modeled class, and §3.2 records that a pair fight 'cannot see the roster' — i.e. exactly the failure mode in which a roster-mate's Expose Weakness would be dropped from another participant's pair damage. 94.1 is that un-amplified number; 101.7 = 94.1 x 1.08 restores the sourced debuff.",
+      "conclusion": "101.7 carries exactly one factor of the wiki-sourced 8% melee Expose Weakness amplification; 94.1 carries none. The cache says the amplification is owed."
+    }
+  },
+
+  "residual_assumptions": [
+    "The Bloodsong holder in this roster is MELEE. The observed ratio is the melee leg (8%) of {{rd|8%|5%}}; if the scenario's Bloodsong carrier is a ranged champion, the sourced amp would be 5% and BOTH values would be wrong (correct value ~98.8). The scenario definition is outside the permitted evidence tree, so this could not be checked; the pairing of Bloodsong with Black Cleaver (a melee-fighter item) in the same scenario makes a melee carrier the strongly favoured reading.",
+    "The debuffed defender at event 28 is the champion that actually received the empowered attack. Expose Weakness is inflicted per-target; amplifying a defender who was never hit by the Spellblade attack would be an over-application. Nothing in data/ contradicts the single-application reading, and the ratio is exactly one factor of 1.08 either way.",
+    "Symmetry note: a 1 -> 2 double-application bug would produce the same 1.08 ratio with the old value correct. That reading is disfavoured because the cache-documented gap class is missing damage-mod debuffs, not duplicated ones, and because a debuff that a pair fight 'cannot see' is the documented coupling failure mode."
+  ],
+
+  "verdict_rationale": "The leaf moved by exactly one factor of 1.08 — the melee value of Bloodsong's Expose Weakness, quoted verbatim from data/items.json, which the wiki states applies to damage 'from all sources' on the flagged target. Every Black Cleaver explanation is either arithmetically impossible (the 24%->30% averaging change caps out at +8.6% only at ~2300 armor) or requires a tuned armor value to reproduce what the amp reproduces exactly. The new value prices a sourced debuff the old value omitted."
+}

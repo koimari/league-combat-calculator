@@ -1,0 +1,120 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent (no access to the diff, plan, src/, tests/, scripts/, docs/plans, docs/receipts, or git history)",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle33",
+    "files_read": [
+      "data/wiki-atoms/heal-shield.json",
+      "data/champions.json",
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/champion-audit/batch-p1-2.json",
+      "data/champion-audit/batch-4.json",
+      "data/champion-audit/batch-e9-1.json",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "data/worklists/*.md",
+      "docs/math-foundations.md"
+    ]
+  },
+  "leaf": {
+    "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[31]/overheal",
+    "scenario": "cleaver_bloodsong_roster",
+    "old_value": 32.6,
+    "new_value": 10.0
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/wiki-atoms/heal-shield.json",
+      "atom": "heal-shield.heal",
+      "quote": "Directly increase a unit's current health, capped at maximum health; negative heal values deal no damage and cannot kill."
+    },
+    {
+      "id": "S2",
+      "file": "data/wiki-atoms/heal-shield.json",
+      "atom": "heal-shield.overheal",
+      "quote": "Overheal - Conversion of healing in excess of maximum health into a temporary shield (Overheal rune, removed in V14.10)."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Aphelios.abilities.P[2] (Severum) effect[1]",
+      "quote": "Healing from Severum in excess of Aphelios' maximum health is converted into a shield for an amount of up to 10 : 160 (based on level) (+ 6% maximum health), lingering for up to 30 seconds.",
+      "leveling_row": "Heal: [10,20,...,160] + 6% maximum health"
+    },
+    {
+      "id": "S4",
+      "file": "data/items.json",
+      "path": "3072 Bloodthirster / passive Ichorshield",
+      "quote": "Convert the healing received from life steal in excess of maximum health into a shield for up to {{pp|165 + (315-165)/10*(x-1)|1;9 to 20 by 1|formula=165 base, then +15 per level starting from level 9.}}, which lasts until destroyed."
+    },
+    {
+      "id": "S5",
+      "file": "data/champion-audit/batch-p1-2.json",
+      "path": "Aphelios.gap_summary",
+      "quote": "participant_timeline._apply_overheal_shield converts the excess into a timed general shield at the heal's timestamp (the Bloodthirster ichorshield convention). Verified via /api/calculate at level 18, no items: with a non-damaging enemy the 21.4 Severum heal is all excess and converts to a 21.4 shield (cap 300.0), overheal after conversion 0.",
+      "why_it_matters": "Pins the engine's semantics for this exact leaf: `overheal` is the residual excess healing left AFTER any overheal-to-shield conversion, and the per-level cap is level-indexed (observed 300.0 at level 18, not the level-1 row)."
+    },
+    {
+      "id": "S6",
+      "file": "data/items.json",
+      "path": "3071 Black Cleaver stats / 3877 Bloodsong stats",
+      "quote": "Black Cleaver: health flat 400.0, attackDamage 40.0, abilityHaste 20.0. Bloodsong: health flat 200.0, healthRegen percent 75.0, goldPer10 9.0.",
+      "why_it_matters": "Both items the scenario is named for grant bonus maximum health (+400 / +200), and Bloodsong additionally grants +75% base health regeneration (a small-tick healing source consistent with a healing_events list long enough to reach index 31)."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "section": "5. Formula-audit table",
+      "quote": "Shield absorption (survival walk) | clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage-absorbed)`; `absorbed+overkill = damage` | EXACT",
+      "why_it_matters": "The engine's stated clipping convention for the dual quantity (damage vs shield). The heal-side dual is `applied = min(heal, missing_health)`, `overheal = max(0, heal - applied)`, with `applied + overheal = heal` - i.e. overheal is bounded by the heal amount and can never exceed it."
+    }
+  ],
+  "independent_computation": {
+    "governing_identity": {
+      "statement": "applied = min(heal_after_modifiers, max_health - current_health); overheal_raw = max(0, heal_after_modifiers - applied); overheal_leaf = max(0, overheal_raw - converted_to_shield), with converted_to_shield = min(overheal_raw, remaining_conversion_cap)",
+      "derivation": "S1 (heal is capped at maximum health) + S2 (overheal = healing in excess of maximum health) + S5 (this engine reports overheal AFTER the shield conversion) + S7 (the clipping/conservation convention: applied + overheal = heal).",
+      "invariants": [
+        "0 <= overheal_leaf <= overheal_raw <= heal amount of the same event",
+        "overheal is strictly non-increasing in max_health (more bonus health => more missing health => less waste)",
+        "overheal is strictly non-increasing in remaining conversion capacity"
+      ]
+    },
+    "check_1_cap_artifact": {
+      "question": "Could the new value 10.0 be a spurious cap (i.e. a regression that clamps overheal to a mis-indexed level-1 row) rather than a real quantity?",
+      "work": [
+        "Severum per-level shield cap row (S3) starts at exactly 10 at level 1 - the only sourced '10' in any overheal-conversion rule, so this is the one regression story that would explain an exact 10.0.",
+        "Aphelios level-18 max health from data/champions.json stats (health flat 600, perLevel 102) via the repo growth formula base + growth*(L-1)*(0.7025 + 0.0175*(L-1)): 600 + 102*17*1.0 = 2334.0",
+        "Severum cap at level 18 = 160 + 6% * 2334.0 = 300.04 -> 300.0",
+        "This reproduces the audit-observed cap of exactly 300.0 (S5), proving the engine indexes the per-level cap at the participant's real level, not at the level-1 row.",
+        "Bloodthirster ichorshield cap at level 18 (S4) = 165 + 15*(18-9) = 300.",
+        "Grey-health cap (docs/math-foundations.md): min(80 + 800% bAD, 55% max health) - hundreds at level 18."
+      ],
+      "result": "No sourced conversion cap reachable in an ordinary level-18 Summoner's Rift build evaluates to 10.0 (all land at ~300 or higher). The 'clamped to a mis-indexed cap' regression story is falsified: 10.0 is not a cap artifact."
+    },
+    "check_2_bound": {
+      "question": "Is either value structurally impossible?",
+      "work": "overheal <= the event's heal amount (S7 conservation). The heal amount for healing_events[31] is not in the permitted evidence tree, so neither 32.6 nor 10.0 can be excluded on this bound alone. 10.0 is admissible for any heal >= 10.0; 32.6 requires the event's heal to be at least 32.6.",
+      "result": "Inconclusive on its own; used only to bound the space."
+    },
+    "check_3_direction": {
+      "question": "Which direction does a correct roster-coupling fix push this leaf?",
+      "work": [
+        "Both items the scenario is named for add bonus maximum health (S6: Black Cleaver +400, Bloodsong +200). By the monotonicity invariant, correctly crediting a roster participant's item bonus health raises max_health, raises missing_health, and therefore strictly LOWERS overheal.",
+        "Likewise, correctly routing excess healing into a sourced-cap overheal shield (S3/S4/S5) strictly LOWERS the residual `overheal` leaf, because the leaf is the post-conversion residual.",
+        "Both correction mechanisms available in a Cleaver/Bloodsong roster move the leaf DOWN. The observed move is 32.6 -> 10.0, i.e. down.",
+        "The failure modes that move it UP (losing a participant's bonus health, losing the conversion) are not consistent with the observed direction."
+      ],
+      "result": "The observed direction is the direction a correct fix moves this leaf; the regression modes for this leaf move it the other way."
+    },
+    "conclusion": "10.0 is a structurally admissible post-conversion overheal residual and is not attributable to any mis-indexed sourced cap (check 1). 32.6 is admissible only if the event's heal is at least 32.6 AND no conversion capacity remained AND the healed participant's max health excluded the roster's item bonus health - the last of which is exactly the coupling the scenario name (Black Cleaver +400 HP, Bloodsong +200 HP) exercises. The new value is the one consistent with the wiki-sourced identity applied to the roster's own bonus health and the engine's sourced post-conversion overheal convention."
+  },
+  "limitations": {
+    "statement": "The roster tuple for 'cleaver_bloodsong_roster' (participants, levels, builds, fight window) lives outside the permitted evidence tree (scripts/), so this receipt is NOT a full end-to-end numeric reproduction of healing_events[31]. It is a derivation from the wiki-sourced heal/overheal identity, the engine's sourced overheal-after-conversion convention, the sourced per-level conversion caps, and the monotonicity/conservation invariants.",
+    "what_would_make_it_exact": "The event's own heal amount and the healed participant's max_health / current_health at that timestamp. With those three numbers the identity `overheal = max(0, heal - (max_health - current_health) - converted)` settles the leaf arithmetically.",
+    "confidence": "moderate - the decisive falsification (check 1) rules out the only concrete regression story that fits an exact 10.0; the supporting argument (check 3) is directional rather than arithmetic."
+  },
+  "verdict": "new_value_correct"
+}

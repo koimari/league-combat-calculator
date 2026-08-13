@@ -1,0 +1,87 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/support_damage_multiplier",
+  "old_value": null,
+  "old_value_note": "<absent> — the leaf did not exist in the previous baseline",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong — Expose Weakness"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/atoms/items.json",
+      "data/item-atoms/3877.json",
+      "data/practice-corpus/scenarios.json",
+      "data/wiki/article-index.json",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item id 3877 (\"Bloodsong\") -> passives[0] (name: \"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/atoms/items.json",
+      "locator": "\"3877\" -> atom_id \"damage.bonus\", source \"Bloodsong.passives[0].branches[0]\", evidence \"passive:Spellblade@kw:increased damage\"",
+      "quote": "\"values\": [10.0, 100.0, 4.0, 8.0, 5.0, 1.5], \"units\": [\"s\", \"percent\", \"s\", \"percent\", \"percent\", \"flat\"]",
+      "role": "Independent extraction of the same branch confirms the ordered numeric slots: 10 s proc window, 100 % base AD, 4 s debuff duration, 8 % / 5 % amp pair, 1.5 s cooldown."
+    },
+    {
+      "id": "S3",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenario \"e9-item-serpents-fang-venom\" and its sibling (Serpent's Fang, whose cached wiki text is {{rd|50%|35%}})",
+      "quote": "\"Katarina (melee) Serpent's Fang: ... is cut by the melee 50% while venom is active\"  /  \"Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%)\"",
+      "role": "Pins the {{rd|A|B}} template convention from inside the repo's own cached corpus: A = melee value, B = ranged value, keyed off the ITEM HOLDER's attack type (Serpent's Fang wiki text is {{rd|50%|35%}}; the corpus reads 50 % for melee Katarina and 35 % for ranged Ahri)."
+    },
+    {
+      "id": "S4",
+      "file": "data/items.json (corroborating survey of all {{rd|...}} usages)",
+      "quote": "Ravenous Hydra / Tiamat / Stridebreaker Cleave {{rd|40% AD|20% AD}}; Titanic Hydra Cleave {{rd|1%|{{fd|0.5}}}}; Death's Dance Ignore Pain {{rd|30%|10%}}; Blade of the Ruined King Mist's Edge {{rd|9%|6%}}",
+      "role": "Every case has the larger, melee-side value first — independent confirmation of the S3 ordering."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "quote": "(no Expose Weakness / support-amplifier derivation present; §2.1 gives only the 100/(100+R) identity and §2.2 the pen/reduction order)",
+      "role": "Negative result — the amplifier value is not derivable from the math doc; it is a pure source-data lookup, so data/ is the governing oracle."
+    }
+  ],
+  "independent_computation": {
+    "step_1": "Locate the effect in cached source data. data/items.json id 3877 is Bloodsong; its only passive branch (S1) defines Expose Weakness as a 4-second debuff on champions.",
+    "step_2": "Read the amplifier magnitude. The branch states the debuffed target takes {{rd|8%|5%}} increased damage FROM ALL SOURCES — i.e. it amplifies damage dealt by any ally, not only the Bloodsong holder. That matches a leaf named 'support_damage_multiplier' being applied to a combat event on another champion's damage timeline.",
+    "step_3": "Resolve the {{rd|A|B}} template. Per S3 (repo's own corpus resolving Serpent's Fang {{rd|50%|35%}} to 50 % melee / 35 % ranged) and S4 (every other rd usage in items.json puts the melee value first), A = 8 % applies when the Bloodsong holder is melee, B = 5 % when ranged.",
+    "step_4": "Convert the amplifier to a multiplier. 'Take X% increased damage' is a multiplicative outgoing-damage amp: multiplier = 1 + X/100.",
+    "step_5": "Melee holder: 1 + 8/100 = 1.08.  Ranged holder: 1 + 5/100 = 1.05.",
+    "result": 1.08,
+    "arithmetic": "1 + 0.08 = 1.08 (exact; the 8.0 'percent' slot in S2 is the same figure the wiki text carries)"
+  },
+  "residual_uncertainty": {
+    "statement": "The melee-vs-ranged branch depends on which ally in the cleaver_bloodsong_roster holds Bloodsong. Roster composition is defined in scenario/test code, which this oracle is forbidden to read, so it could not be confirmed from data/.",
+    "why_it_does_not_change_the_verdict": "1.08 reproduces the cached 8 % melee figure exactly and to the digit; the only competing candidate the source admits is 1.05 (ranged). The emitted leaf is therefore a faithful, unrounded read of a real current value in data/items.json rather than a stale or invented constant — nothing in the permitted evidence contradicts it.",
+    "follow_up_for_the_change_author": "Confirm the Bloodsong holder in this roster is melee. If that ally is a ranged champion, the correct leaf is {\"multiplier\": 1.05}; verify the implementation actually branches on the holder's attack type rather than hard-coding 8 %."
+  },
+  "cross_checks_performed": [
+    "data/staleness.json entry for id 3877 'Bloodsong' reports stale=false with an empty stat_drift — the cached item record is current for patch 16.15.1 (data/economics-sourced.json).",
+    "data/item-atoms/3877.json and data/bin/behavior-index.json carry no competing numeric value for Expose Weakness; data/wiki/article-index.json has len=0 for 'Bloodsong' (index only, no body text). data/items.json is the sole numeric source.",
+    "No other item in data/items.json emits an 8 %/5 % 'increased damage from all sources' debuff, so the source attribution 'Bloodsong — Expose Weakness' is unambiguous.",
+    "Semantics check: 'from all sources' confirms the amp legitimately applies to a teammate's damage event, which is what a leaf under /combat/events[..] named support_damage_multiplier represents."
+  ],
+  "verdict": "new_value_correct"
+}

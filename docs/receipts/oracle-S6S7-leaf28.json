@@ -1,0 +1,106 @@
+{
+  "runbook": "R-18 / R-19 blind oracle",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[18]",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": {
+    "all_sources": true,
+    "amount": 0.08,
+    "applied_amount": 0.08,
+    "attacker": "main",
+    "cooldown": 1.5,
+    "duration": 4.0,
+    "_note": "remaining keys truncated in the report/allowlist; the six visible keys are reproduced verbatim"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "constraint": "worked only from data/ and docs/math-foundations.md; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read",
+    "note": "the scenario definition 'cleaver_bloodsong_roster' does not exist anywhere under data/ (grep -ril returns nothing), so the fight window, roster composition and the champion behind attacker='main' are NOT observable from the evidence tree. Everything below is derived from the item's own sourced mechanics."
+  },
+  "identification_of_the_effect": {
+    "claim": "the leaf is Bloodsong's 'Expose Weakness' application, at the melee-wielder value",
+    "why": [
+      "amount 0.08 + all_sources true + duration 4.0 + cooldown 1.5 matches Bloodsong exactly on all four fields",
+      "the only other cached 8% all-damage-ish amp is the Press the Attack keystone, and it is ruled out: data/runes.json gives it cooldown 6.0, a 4 s STACK window (not a 4 s amp window), and its cached text grants the amp to the holder only ('grant you 8% increased damage against champions until 5 seconds after exiting combat'), i.e. all_sources would be false",
+      "Black Cleaver is ruled out: its cached passives are Carve (6% armor reduction per stack, 5 stacks, 6 s) and Fervor (20 MS, 2 s) - no 8% damage amplifier"
+    ]
+  },
+  "sources": [
+    {
+      "source": "data/items.json -> id 3877 'Bloodsong' -> passives[0] ('Spellblade', unique=true) -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3877 -> riotDescription (CommunityDragon cross-check)",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "source": "data/atoms/items.json -> \"3877\" -> damage.bonus atom (source: Bloodsong.passives[0].branches[0], evidence: passive:Spellblade@kw:increased damage)",
+      "quote": "\"values\": [10.0, 100.0, 4.0, 8.0, 5.0, 1.5], \"units\": [\"s\", \"percent\", \"s\", \"percent\", \"percent\", \"flat\"]"
+    },
+    {
+      "source": "data/runes.json -> 'Conqueror' (calibration of the {{rd|a|b}} template ordering)",
+      "quote": "heal for {{rd|8%|5%}} of the post-mitigation damage ... -> \"effects\": {\"melee_ranged_ratios\": [0.08, 0.05]}"
+    },
+    {
+      "source": "data/items.json -> Tiamat / Ravenous Hydra / Titanic Hydra (second calibration of {{rd}})",
+      "quote": "{{rd|40% AD|20% AD}} cleave (40% melee, 20% ranged); Titanic Hydra {{rd|4%|2%}}"
+    },
+    {
+      "source": "data/economics-sourced.json -> exclusivity groups",
+      "quote": "\"Spellblade\": [\"Sheen\", \"Bloodsong\", \"Dusk and Dawn\", \"Essence Reaver\", \"Iceborn Gauntlet\", \"Lich Bane\", \"Trinity Force\"]"
+    },
+    {
+      "source": "docs/math-foundations.md line 357 (BIS exact formulation)",
+      "quote": "exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...), enforced by loadout_rules"
+    },
+    {
+      "source": "docs/math-foundations.md line 472 (engine's own documented composition rule for a single named debuff)",
+      "quote": "Grievous Wounds ... multiplicative factor 0.60 (40% reduction); strongest-wins composition via min of factors; duration refresh via max ... sources do not stack (min is the game rule)"
+    },
+    {
+      "source": "data/runes.json -> 'Press the Attack' (ruling out the alternative 8% amp)",
+      "quote": "\"cooldown\": 6.0 ... 'The third stack consumes all stacks to deal ... bonus adaptive damage and grant you 8% increased damage against champions until 5 seconds after exiting combat with them' ... \"stack_duration_seconds\": 4.0, \"max_stacks\": 3, \"damage_amp_ratio\": 0.08"
+    },
+    {
+      "source": "data/items.json -> id 3071 'Black Cleaver' (ruling out the other scenario item)",
+      "quote": "Carve: Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks. / Fervor: ... 20 bonus movement speed for 2 seconds."
+    }
+  ],
+  "independent_computation": {
+    "step_1_amp_magnitude": {
+      "work": "{{rd|8%|5%}} = melee 8%, ranged 5% (ordering proven by Conqueror's identical {{rd|8%|5%}} parsing to melee_ranged_ratios [0.08, 0.05], and by Tiamat/Ravenous Hydra 40%/20% cleave).",
+      "result": "Expose Weakness amp = 0.08 for a melee wielder, 0.05 for a ranged wielder. The old leaf's 0.08 is the melee value; the evidence tree cannot tell me which the roster's 'main' is, so 0.08 is plausible but unverifiable."
+    },
+    "step_2_timing_constants": {
+      "work": "duration = 4.0 s; proc cooldown = 1.5 s, and the parenthetical fixes when the clock starts ('starts after using the empowered attack'). Both constants survive into the parsed atom values [10.0 s arm window, 100.0% base AD, 4.0 s duration, 8.0% melee, 5.0% ranged, 1.5 cooldown].",
+      "result": "cooldown 1.5 < duration 4.0"
+    },
+    "step_3_uptime_algebra": {
+      "work": "Because 1.5 s < 4.0 s, a holder proccing Spellblade at its cooldown keeps Expose Weakness continuously up: application k lands at t_k >= t_{k-1} + 1.5, while the debuff from t_{k-1} is still live until t_{k-1} + 4.0. Every application after the first (unless preceded by a >= 4 s gap) is a REFRESH of one named debuff, not a second stack.",
+      "no_stacking_justification": "Expose Weakness is one named debuff from one unique item (passives[0].unique = true, Spellblade exclusivity group => at most one Spellblade item per loadout). The engine's own documented rule for same-named debuffs (math-foundations, Grievous Wounds row) is strongest-wins with duration refreshed via max, never additive. If the 19 recorded applications each contributed a fresh 0.08 the target would sit at ~152% amplification, which no source supports.",
+      "result": "max live amplification from this source = 8% (melee) / 5% (ranged) at any instant; the correct 'applied_amount' of a refresh is 0.0, not 0.08."
+    },
+    "step_4_application_count_bound": {
+      "work": "Applications <= min(number of ability casts that arm Spellblade, floor(T/1.5) + 1) for a fight of length T, and each requires the empowered basic attack to land on a CHAMPION within 10 s of the arming ability. Nineteen cooldown-limited applications therefore require T >= 18*1.5 = 27 s of sustained casting.",
+      "result": "a 19th (index 18) Expose Weakness application is only reachable in a >= 27 s fight, and even then it is deep inside an already-active 4 s window."
+    },
+    "step_5_verdict_derivation": {
+      "work": "The old leaf records a FULL-CREDIT fresh application (applied_amount == amount == 0.08) at index 18. The engine carries 'amount' and 'applied_amount' as distinct fields precisely to express 'this source offers X, only Y was actually new'. For a full 0.08 credit at index 18 to be sourced-correct, the target would have to be free of Expose Weakness at that moment, i.e. no application in the preceding 4 s - impossible for the 19th application of an effect whose own proc cooldown (1.5 s) is shorter than its duration (4.0 s), and impossible in an ordering sense too: Spellblade arms off the very first ability cast, so main's FIRST Expose Weakness lands in the opening seconds and belongs at a low index, not at 18.",
+      "result": "an index-18 event crediting a fresh, full-strength 0.08 all-sources amplification is unsupported by the source; it is a duplicate that double-counts an amplifier already live on the target. Its removal is the source-consistent outcome."
+    }
+  },
+  "correct_value": {
+    "statement": "No second, full-strength Expose Weakness amplification event belongs at this point in the fight. The sourced state at that instant is a single already-active Expose Weakness debuff worth 8% (melee wielder) / 5% (ranged wielder) of increased damage from all sources, refreshed - contributing 0.00 additional amplification.",
+    "therefore": "<absent> (or, equivalently strict, an event with applied_amount 0.0) is correct; the recorded 0.08/0.08 fresh application is not."
+  },
+  "residual_uncertainty": [
+    "The scenario definition is not in data/, so I could not confirm the fight duration, the roster, or whether 'main' is melee (0.08) or ranged (0.05). If 'main' is ranged, the old leaf was doubly wrong (wrong magnitude AND a duplicate), which still makes the removal the better of the two states.",
+    "A strictly more informative golden would keep the event with applied_amount 0.0 rather than dropping it, so the reader can see the refresh happened. Between the two states actually on offer, absence is the source-consistent one.",
+    "I verified the removed event is a redundant/late application, not the first one, from the arming rule and the cooldown-vs-duration algebra; I could not verify it from the sibling leaves, which the report did not provide."
+  ],
+  "generated": "2026-08-13",
+  "committed": false
+}

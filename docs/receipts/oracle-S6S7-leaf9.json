@@ -1,0 +1,119 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh subagent, blind to the change under test",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_path": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle9",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/support_damage_multiplier",
+  "old_value": null,
+  "old_value_note": "leaf absent — no Bloodsong / Expose Weakness damage amplification was recorded on this event",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong — Expose Weakness"
+  },
+
+  "independent_computation": {
+    "step_1_locate_effect": {
+      "what": "Bloodsong (item id 3877) unique passive 'Spellblade' — its full effect text lives in passives[0].branches (per project rule 6, effect text is read from branches, never from a single indexed description).",
+      "quoted_wiki_text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "source_file": "data/items.json -> \"3877\".passives[0].branches[0]"
+    },
+    "step_2_resolve_rd_template": {
+      "template": "{{rd|8%|5%}}",
+      "claim": "The wiki {{rd|...}} template is the melee/ranged split, keyed on the ITEM HOLDER's attack type, with the MELEE arm first and the RANGED arm second.",
+      "verification_against_ground_truth_items_in_the_same_cache": [
+        {
+          "item": "Tiamat",
+          "cached_text": "Basic attacks [[on-hit]] deal {{as|{{rd|40% AD|20% AD}}|ad}} {{as|physical damage}} to other enemies in a 350 radius",
+          "known_game_values": "Cleave = 40% AD for melee holders, 20% AD for ranged holders",
+          "ordering_confirmed": "melee first"
+        },
+        {
+          "item": "Titanic Hydra",
+          "cached_text": "{{rd|1%|{{fd|0.5}}%}} maximum health on-hit and {{rd|3%|{{fd|1.5}}%}} maximum health cleave",
+          "known_game_values": "1% / 3% for melee holders, 0.5% / 1.5% for ranged holders",
+          "ordering_confirmed": "melee first"
+        },
+        {
+          "item": "Blade of the Ruined King",
+          "cached_text": "bonus physical damage on-hit equal to {{rd|9%|6%}} of the target's current health",
+          "known_game_values": "9% current health for melee holders, 6% for ranged holders",
+          "ordering_confirmed": "melee first"
+        },
+        {
+          "item": "Death's Dance",
+          "cached_text": "Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received",
+          "known_game_values": "30% deferred for melee holders, 10% for ranged holders",
+          "ordering_confirmed": "melee first"
+        }
+      ],
+      "conclusion": "{{rd|8%|5%}} on Bloodsong resolves to: 8% increased damage taken when the Bloodsong holder is MELEE, 5% when the holder is RANGED."
+    },
+    "step_3_form_of_the_amplifier": {
+      "wiki_phrasing": "\"causing them to take X increased damage from all sources\"",
+      "derivation": "An 'increased damage taken' debuff is a multiplicative amplifier applied to the damage instance: multiplier = 1 + X.",
+      "melee_holder": "1 + 0.08 = 1.08",
+      "ranged_holder": "1 + 0.05 = 1.05"
+    },
+    "step_4_gating_conditions_checked": [
+      "Applies only to champion targets ('If the target is a champion') — a coupled roster scenario's participant/opponent is a champion, so the gate is satisfied.",
+      "Duration 4 seconds from the empowered basic attack; 1.5 second internal cooldown starting after the empowered attack. Event[62] falling inside a 4s Expose Weakness window is the precondition for the leaf to exist at all.",
+      "'from all sources' — the amp is not restricted to the Bloodsong holder's own damage, so it correctly applies to an ALLY's damage event, which is exactly what a 'support_damage_multiplier' leaf on the participant's combat event represents.",
+      "Cross-check in data/champions.json (Gangplank entry): 'Specific Spellblade item interactions: Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them.' — confirms Expose Weakness is applied by the empowered basic attack, and is a champion-target debuff."
+    ],
+    "step_5_result": {
+      "correct_multiplier_if_bloodsong_holder_is_melee": 1.08,
+      "correct_multiplier_if_bloodsong_holder_is_ranged": 1.05,
+      "old_absent_leaf_is_wrong_either_way": "With a Bloodsong-carrying support in the roster and Expose Weakness active on the target at event[62], SOME amplifier (1.08 or 1.05) must be recorded. 'absent' (i.e. an implicit 1.0, no amp) is not a value the cached wiki text can produce."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "item \"3877\" (Bloodsong) -> passives[0] (unique 'Spellblade') -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "Tiamat / Titanic Hydra / Blade of the Ruined King / Death's Dance passive branches",
+      "quote": "{{rd|40% AD|20% AD}} ; {{rd|1%|{{fd|0.5}}%}} ; {{rd|9%|6%}} ; {{rd|30%|10%}}",
+      "used_for": "Independently establishing that {{rd|A|B}} = A for melee holders, B for ranged holders (all four resolve to known-correct game values in that order)."
+    },
+    {
+      "path": "data/champions.json",
+      "locator": "Gangplank -> item interaction notes",
+      "quote": "Specific Spellblade item interactions: Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them.",
+      "used_for": "Confirming Expose Weakness is applied by the Spellblade-empowered basic attack against champion targets."
+    },
+    {
+      "path": "data/staleness.json",
+      "locator": "\"3877\" (Bloodsong)",
+      "quote": "{\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 1, \"note\": \"\"}",
+      "used_for": "Confirming the cached Bloodsong entry is not flagged stale, so the 8%/5% text is current."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "whole file (523 lines) searched for 'Bloodsong', 'Expose Weakness', 'rd|', 'support', 'multiplier'",
+      "quote": "(no Bloodsong / Expose Weakness / support-amplifier formula present)",
+      "used_for": "Establishing that math-foundations contributes no competing formula; the cached wiki text is the sole authority for this leaf."
+    }
+  ],
+
+  "verdict": "new_value_correct",
+
+  "verdict_reasoning": "1.08 is exactly the multiplicative form (1 + 0.08) of the melee arm of Bloodsong's cached '{{rd|8%|5%}} increased damage from all sources', and the attached source label 'Bloodsong — Expose Weakness' names the correct passive. The prior state — leaf absent, i.e. no amplifier at all — cannot be produced from the cached text under any reading, so old_value_correct is excluded outright.",
+
+  "residual_uncertainty": {
+    "statement": "The one input this oracle could NOT verify from the permitted evidence tree is the ATTACK TYPE of the roster ally holding Bloodsong. The scenario definition for 'cleaver_bloodsong_roster' does not exist anywhere under data/ or docs/math-foundations.md (searched: data/practice-corpus/scenarios.json, data/worklists/, data/champion-audit/, data/wiki/article-index.json, data/economics-sourced.json — no hit for 'cleaver_bloodsong', 'roster' scenario ids, or 'support_damage_multiplier'), and it lives in scripts/ or tests/, which runbook R-18/R-19 forbids reading.",
+    "consequence": "1.08 is correct iff the Bloodsong carrier in this roster is a MELEE champion. If the carrier is RANGED (e.g. Lux, Karma, Senna, Nami, Sona, Janna, Morgana, Milio), the cached text mandates 1.05 and this leaf would be wrong by the classic 'took the first arm of {{rd}} without checking holder attack type' failure mode.",
+    "one_line_check_for_the_orchestrator": "Read the roster of 'cleaver_bloodsong_roster'; look up that champion's attackType in data/champions.json. MELEE -> 1.08 confirmed. RANGED -> the correct value is 1.05 and this verdict flips to both_wrong.",
+    "why_new_value_correct_was_still_chosen": "The recorded value matches a real, correctly-sourced arm of the cached formula with the correct multiplicative form and correct source attribution; the absent prior state is definitively wrong. Absent any evidence pointing at a ranged carrier, the value is not defective on its face."
+  },
+
+  "committed": false
+}

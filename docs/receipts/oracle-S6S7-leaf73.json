@@ -1,0 +1,117 @@
+{
+  "receipt": "oracle-S6S7-leaf73",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[2]/total_damage",
+  "old_value": 847.3,
+  "new_value": 900.6,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle73",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/3071.json",
+      "data/item-atoms/3877.json",
+      "data/wiki-atoms/damage.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md (grep only)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> id 3071 (Black Cleaver) .passives[0] 'Carve' .branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "reading": "Carve is a DEBUFF ON THE TARGET (percentage armor reduction), not an attacker-local modifier. Ceiling 5 stacks = 30% armor reduction."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> id 3877 (Bloodsong) .passives[0] 'Spellblade' .branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "reading": "Expose Weakness is a DEBUFF ON THE TARGET explicitly amplifying damage 'from all sources' (i.e. every attacker in the roster, not just the Bloodsong holder). Duration 4 s, re-proc cooldown 1.5 s."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json — {{rd|A|B}} template order, cross-checked against items whose melee/ranged split is canonically known",
+      "text": "Blade of the Ruined King / Mist's Edge: '{{rd|9%|6%}} of the target's current health'; Ravenous Hydra, Tiamat, Stridebreaker, Profane Hydra / Cleave: '{{rd|40% AD|20% AD}}'; Titanic Hydra / Cleave: '{{rd|1%|{{fd|0.5}}%}} maximum health'",
+      "reading": "{{rd|X|Y}} = X for MELEE holders, Y for RANGED holders. Therefore Expose Weakness = +8% damage taken (melee Bloodsong holder) or +5% (ranged holder)."
+    },
+    {
+      "id": "S4",
+      "where": "data/wiki-atoms/damage.json -> atom 'damage.modifier'",
+      "text": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.",
+      "reading": "Expose Weakness composes MULTIPLICATIVELY with the 100/(100+R) mitigation term, so its effect on a source total is a clean scalar factor (1 + amp) over the hits it covers."
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md Section 2.1 + Section 5 formula-audit table",
+      "text": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py) ... EHP round-trip raw = post*(1+R/100)  [verdict EXACT]",
+      "reading": "Post-mitigation damage scales as 100/(100+R_final); a change in the target's armor moves a source total by exactly (100+R_old)/(100+R_new)."
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md Section 2.2",
+      "text": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f) ... Penetration cannot reduce resistance below 0.",
+      "reading": "Used to bound how much a Carve-side change can possibly move the number, including under lethality."
+    },
+    {
+      "id": "S7",
+      "where": "docs/math-foundations.md Section 2.3 item 2 ('Black Cleaver average stacks')",
+      "text": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k,C) over h hits is C - C(C-1)/(2h) for h >= C ... Recommendation: replace the constant with the closed-form Cesaro mean",
+      "reading": "Bounds the Carve stack model: old constant = 0.8*5 = 4 stacks = 24% shred; exact Cesaro mean = 5 - 10/h, which is < 5 for all finite h and equals 4 at h = 10. So any Carve stack-model refinement moves the shred by at most 24% -> 30%."
+    }
+  ],
+
+  "independent_computation": {
+    "note": "The scenario's input tuple (attacker/ally/enemy champions, levels, full item sets, ability ranks, fight window, target armor) is NOT present anywhere in the permitted evidence tree — data/ carries wiki/game caches and worklists only, and grep for 'cleaver_bloodsong', 'roster', 'coupled_scenarios' over the whole export returns no scenario definition. An absolute from-scratch reproduction of 900.6 is therefore not possible under R-18/R-19 isolation. What IS computable from the quoted sources is the exact admissible envelope of the change, which is sufficient to discriminate the two candidate values.",
+
+    "step_1_observed_change": {
+      "ratio": "900.6 / 847.3 = 1.0629057 (+6.2906%)",
+      "rounding_band": "with both values rounded to 1 dp the true ratio lies in [1.0627840, 1.0630274]",
+      "sign": "the new value is LARGER: the new engine applies MORE of some target-side effect to this source"
+    },
+
+    "step_2_candidate_mechanisms": "The scenario is named for exactly two effects, and by S1/S2 both are target-side debuffs on the defender, i.e. both are shared across the whole roster's damage into that target. Only three shapes can move one source's total by a pure scalar: (a) Carve's percentage armor reduction appearing/disappearing, (b) Carve's average-stack count changing, (c) Expose Weakness's multiplicative amp appearing/changing/changing coverage.",
+
+    "step_3_bound_mechanism_a_full_carve": {
+      "formula": "ratio = (100 + A) / (100 + A*(1 - rho)), from S5",
+      "values_24pct_shred": {"A=60": 1.0989, "A=80": 1.1194, "A=100": 1.1364, "A=150": 1.1682, "A=200": 1.1905},
+      "values_30pct_shred": {"A=60": 1.1268, "A=80": 1.1538, "A=100": 1.1765, "A=150": 1.2195, "A=200": 1.2500},
+      "solve_for_observed_ratio": "1.0629057 requires A = 32.7 (at 24% shred) or A = 24.6 (at 30% shred); flat penetration only pushes the required A lower still (S6)",
+      "conclusion": "RULED OUT. A whole Carve debuff appearing on this source would move it by >= +11% at any champion-realistic armor (>= 60). +6.29% is far too small. So the change is NOT 'Black Cleaver's shred now reaches this source at all' — and equally it is not a double-application of the shred, which would be larger still."
+    },
+
+    "step_4_bound_mechanism_b_carve_stack_model": {
+      "formula": "ratio = (100 + 0.76A) / (100 + 0.70A) for the maximal refinement 24% -> 30% (S7 caps the move at 4 -> 5 average stacks)",
+      "values": {"A=80": 1.0308, "A=100": 1.0353, "A=150": 1.0439, "A=200": 1.0500, "A=250": 1.0545, "A=300": 1.0581, "A=400": 1.0632},
+      "conclusion": "A pure Carve stack-model refinement reaches +6.29% only at ~290+ armor (heavy-tank target) or, per S6, when flat penetration drives R_final near the 0 floor. Possible but strained; and note the Cesaro form 5 - 10/h never actually reaches 5 stacks, so the realistic ceiling is smaller than the numbers above."
+    },
+
+    "step_5_bound_mechanism_c_expose_weakness": {
+      "formula": "ratio = 1 + amp * f, where amp is the S2/S3 multiplier and f is the fraction of the source's damage falling inside the 4 s Expose Weakness window (S4: multiplicative with mitigation, so this is exact)",
+      "melee_8pct": "1 + 0.08f = 1.0629057 -> f = 0.7863 (78.6% coverage)",
+      "ranged_5pct": "1 + 0.05f = 1.0629057 -> f = 1.2581 (>100%, IMPOSSIBLE)",
+      "conclusion": "A melee Bloodsong holder's +8% Expose Weakness reproduces the observed change at 78.6% coverage — exactly the shape a 4 s debuff with a 1.5 s re-proc cooldown produces over a fight window longer than 4 s (the opening hits before the support's first empowered attack are un-amplified). The observed +6.29% sits strictly UNDER the +8% wiki ceiling, so the new value cannot be an over-application or a double-count of this amp."
+    },
+
+    "step_6_combined_reconstruction": {
+      "hypothesis": "amp corrected ranged-5% -> melee-8% AND Carve stacks 24% -> 30% together",
+      "arithmetic": "required mitigation factor = 1.0629057 / (1.08/1.05) = 1.033376; solving (100+0.76A)/(100+0.70A) = 1.033376 gives A = 91.1 armor — a textbook level-18 champion armor value; 1.028571 * 1.033376 = 1.062906, reproducing the observed ratio exactly",
+      "conclusion": "This reconstruction also lands on the new value, and again it lands there by moving both effects TOWARD their wiki ceilings (melee 8% per S3, 5-stack 30% shred per S1) — i.e. the old value was the under-application."
+    },
+
+    "step_7_discrimination": "Every reconstruction consistent with the quoted sources has the same signature: the new value applies a target-side debuff that S1/S2 say applies to all damage against that defender, at a magnitude at or under its wiki ceiling (8% amp; 30% shred), while the old value omits or under-applies it. No reconstruction puts the new value ABOVE a wiki ceiling, and the one over-application story that would be visible (a whole Carve shred double-counted, step 3) is quantitatively excluded. The old value 847.3 corresponds to the pre-fix under-application and is not defensible against S1/S2/S3."
+  },
+
+  "limitations": [
+    "The scenario input tuple is outside the permitted evidence tree, so the absolute number 900.6 was NOT reproduced from first principles; the discrimination is an envelope/ratio argument built entirely from the quoted wiki text and math-foundations identities.",
+    "The exact mechanism behind the +6.2906% (pure Expose Weakness coverage vs. an amp-tier correction combined with a Carve stack refinement) is not uniquely identified; both admissible reconstructions select the same verdict.",
+    "If a future runbook wants a hard numeric oracle for this leaf, the export must include the scenario definition (roster, levels, item sets, fight window) alongside data/ and docs/math-foundations.md."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "receipt_id": "oracle-S6S7-leaf32",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/applied_amount",
+  "old_value": 0.3,
+  "new_value": 0.08,
+  "verdict": "new_value_correct",
+  "independent_computation": {
+    "step_1_identify_the_effect": "The scenario name pairs two items. Of the two, only Bloodsong (id 3877, shop tag SUPPORT, buildsFrom 3867, classic sr 5v5 = true) is a support item, so an entry in `support_events` for this roster is a Bloodsong event. Bloodsong carries exactly one numeric combat effect that is 'applied' to a target: the Spellblade passive's 'Expose Weakness' debuff. Black Cleaver (id 3071) is tagged TANK/legendary and is not a support item; its Carve is armor reduction, not an applied support amount.",
+    "step_2_read_the_cached_source": "data/items.json -> '3877'.passives[0] (name 'Spellblade').branches[0]: \"After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).\" The amp magnitude is therefore the wiki template {{rd|8%|5%}}.",
+    "step_3_resolve_the_rd_template": "The League Wiki {{rd|A|B}} template is 'melee value | ranged value' (A = melee, B = ranged). Corroborated three ways inside the same cached corpus: (a) Doran's Shield (id 1054) writes {{rd|0 to 5 for 11|0 to 3.75 for 11|...|formula1=0.066 health regen per 1% missing health|formula2=0.05 ...}} and its own prose then says AoE/DoT/proc damage 'trigger this effect with the {{tip|ranged}} values' -> the SECOND argument is the ranged one; (b) Blade of the Ruined King (id 3153) {{rd|9%|6%}} current health on-hit = the known live melee 9% / ranged 6%; (c) Death's Dance (id 6333) {{rd|30%|10%}} = the known live melee 30% / ranged 10%.",
+    "step_4_compute": "applied_amount is a unit fraction (the golden stores 0.08, not 8). Expose Weakness amp = 8% -> 8/100 = 0.08 for a melee wielder (5% -> 0.05 for a ranged wielder). The new golden value 0.08 is exactly the melee branch of the cached source.",
+    "step_5_falsify_the_old_value": "0.3 (=30%) does not appear anywhere in Bloodsong's cached entry: its passives/active branches contain only 100% base AD, 4 s duration, 1.5 s cooldown, 10 s window, and {{rd|8%|5%}}; its stats are 200 health, 75% base health regen, 75% base mana regen, 9 gold/10. 30% IS, however, exactly the co-equipped Black Cleaver's cap: data/items.json '3071'.passives[0] ('Carve'): \"Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\" So 0.3 in a Bloodsong support event is the Black Cleaver Carve cap (0.06 x 5 = 0.30) surfacing on the wrong effect / a stale constant, not a sourced Bloodsong number. Under no reading of the cached Bloodsong text is 0.3 defensible.",
+    "arithmetic": "melee: 8% = 0.08 (matches new value). ranged: 5% = 0.05. Black Cleaver cap (the old value's likely origin): 6% x 5 stacks = 30% = 0.30."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> shop.tags / modes",
+      "quote": "\"tags\": [\"SUPPORT\"], \"modes\": {\"classic sr 5v5\": true, ...} — the only SUPPORT-tagged item named by the scenario."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 1054 \"Doran's Shield\" -> passives 'Enduring Focus' -> branches[0]",
+      "quote": "... equal to {{as|{{rd|0 to 5 for 11|0 to 3.75 for 11|levels=0 to 75|key1=%|formula1=0.066 health regen for every 1% missing health|formula2=0.05 health regen for every 1% missing health|...}} ... [[Area of effect]], [[damage over time]], or [[damage|proc]] damage taken trigger this effect with the {{tip|ranged}} values. (establishes {{rd|melee|ranged}} argument order)"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3153 'Blade of the Ruined King' -> 'Mist's Edge'; item 6333 \"Death's Dance\" -> 'Ignore Pain'",
+      "quote": "{{rd|9%|6%}} of the target's '''current''' health  /  Reduces {{rd|30%|10%}} of all post-mitigation ... damage received (both are the known melee|ranged splits, confirming argument order)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, 'Terminus/BC ramps' row",
+      "quote": "Terminus/BC ramps (`average_pen`, `average_reduction`) | Cesaro mean of the per-hit ramp | APPROX | ... BC constant = exact mean at ~10 autos ... — i.e. the engine models Black Cleaver as a ramped/averaged armor reduction, so a flat 0.30 is not even the Black Cleaver figure the engine is entitled to emit, let alone a Bloodsong support amount."
+    }
+  ],
+  "caveat": "The evidence tree deliberately excludes src/, tests/, scripts/ and the scenario definition, so the roster's Bloodsong holder attack type could not be observed. The cached source admits exactly two legal values for this leaf: 0.08 (melee wielder) and 0.05 (ranged wielder). The new value lands exactly on the melee branch, which is the consistent reading for a Black-Cleaver-carrying (melee bruiser) build. Should the Bloodsong holder in this roster in fact be a ranged champion, the correct value would be 0.05 and the verdict would become 'both_wrong'; in either case the old value 0.3 is unsourced and wrong.",
+  "committed": false
+}

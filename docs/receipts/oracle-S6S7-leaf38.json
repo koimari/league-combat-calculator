@@ -1,0 +1,123 @@
+{
+  "receipt_id": "oracle-S6S7-leaf38",
+  "runbook": "R-18 / R-19 (independent oracle, blind to change under test)",
+  "produced_at": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/time",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 7.5,
+  "new_value": 9.5,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle38",
+    "read": [
+      "data/items.json (Black Cleaver id 3071, Bloodsong id 3877, all Spellblade-family items)",
+      "data/item-atoms/3877.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e9-bis-b-task.md",
+      "data/wiki/article-index.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "extracted": {"carve_stack_duration_s": 6.0, "max_stacks": 5, "per_stack_armor_reduction_pct": 6.0}
+    },
+    {
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[1] \"Fervor\" -> branches[0]",
+      "text": "Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.",
+      "extracted": {"fervor_duration_s": 2.0}
+    },
+    {
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "extracted": {
+        "spellblade_arm_window_s": 10.0,
+        "expose_weakness_duration_s": 4.0,
+        "expose_weakness_amp_pct": [8.0, 5.0],
+        "spellblade_cooldown_s": 1.5,
+        "cooldown_anchor": "starts after using the empowered attack (NOT at ability cast)"
+      }
+    },
+    {
+      "source": "data/items.json -> Spellblade family cross-check (Sheen 3057, Trinity Force, Lich Bane, Essence Reaver, Iceborn Gauntlet, Divine Sunderer, Dusk and Dawn, Bloodsong)",
+      "text": "every Spellblade item's branch ends with the identical parenthetical: \"({{fd|1.5}} second cooldown, starts after using the empowered attack)\"",
+      "extracted": {"note": "the attack-anchored cooldown is a family-wide rule, not a Bloodsong special case; anchoring to the attack can only move a proc later than anchoring to the cast"}
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "text": "N(T) = floor(AS * u * T) ... with swing timestamps t_i = i*delta, i = 0..N(T)-1 (the last swing is strictly inside the window) ... a swing whose impact would land *exactly* at the window boundary is excluded, a measure-zero boundary choice.",
+      "extracted": {"swing_grid": "t_i = i/(AS*u)", "boundary_rule": "swing exactly at T excluded"}
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Grievous Wounds row)",
+      "text": "duration refresh via `max`",
+      "extracted": {"refresh_rule": "a re-applied timed debuff's expiry is max(existing_expiry, new_application + duration)"}
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Burn/DoT items row)",
+      "text": "refresh model: window = last-refresh + duration",
+      "extracted": {"expiry_rule": "expiry event time = last application time + wiki duration"}
+    }
+  ],
+
+  "independent_computation": {
+    "what_is_knowable": "The scenario definition for 'cleaver_bloodsong_roster' does not exist anywhere under data/ (grep for 'cleaver_bloodsong' and '_roster' over the whole export returns nothing; data/practice-corpus/scenarios.json holds 22 scenarios, none of them this one). It lives in code, which this runbook forbids reading. The per-event label and the anchor time of events[82] are therefore NOT directly observable. What IS observable are the wiki durations of every timer the two named items can start, and the engine's own documented timing identities. The computation below closes the leaf from those.",
+    "step_1_enumerate_wiki_timers": {
+      "black_cleaver_carve_s": 6.0,
+      "black_cleaver_fervor_s": 2.0,
+      "bloodsong_spellblade_arm_window_s": 10.0,
+      "bloodsong_spellblade_cooldown_s": 1.5,
+      "bloodsong_expose_weakness_s": 4.0
+    },
+    "step_2_delta": {
+      "observed_delta_s": 2.0,
+      "note": "Exactly 2.0 s. Three of the enumerated timers reproduce a +2.0 s move of a single event; none reproduces a -2.0 s move."
+    },
+    "step_3_candidate_derivations": [
+      {
+        "reading": "Fervor expiry authored at application instead of application + duration",
+        "arithmetic": "expiry = last_physical_damage + 2.0 = 7.5 + 2.0 = 9.5",
+        "wiki_anchor": "Black Cleaver Fervor: '...grants you 20 bonus movement speed for 2 seconds'",
+        "supports": "new (9.5)",
+        "comment": "The old value is then literally the application time and the delta is literally the wiki duration - the cleanest fit of the three."
+      },
+      {
+        "reading": "Carve expiry computed with the wrong duration (4 s, i.e. Expose Weakness's, leaking across the two debuffs on the same target - exactly the cross-talk a coupled cleaver+bloodsong scenario exists to pin)",
+        "arithmetic": "anchor 3.5 s; old = 3.5 + 4 = 7.5 (wrong timer); correct = 3.5 + 6 = 9.5 (Carve's own 6 s)",
+        "wiki_anchor": "Black Cleaver Carve: '...applies a stack of Carve for 6 seconds'",
+        "supports": "new (9.5)"
+      },
+      {
+        "reading": "Expose Weakness expiry now honours a second Spellblade proc (refresh via max)",
+        "arithmetic": "proc_1 = 3.5 -> expiry 7.5; proc_2 = 5.5 (>= proc_1 + 1.5 s attack-anchored cooldown, snapped to the next swing on the t_i grid, gated on an ability being available) -> expiry 5.5 + 4 = 9.5",
+        "wiki_anchor": "Bloodsong: 'Expose Weakness for 4 seconds ... (1.5 second cooldown, starts after using the empowered attack)'",
+        "supports": "new (9.5)"
+      },
+      {
+        "reading": "counter-hypothesis: the event is an Expose Weakness expiry that was correct at 4 s and has been regressed to Carve's 6 s",
+        "arithmetic": "anchor 3.5; correct = 3.5 + 4 = 7.5; regressed = 3.5 + 6 = 9.5",
+        "supports": "old (7.5)",
+        "why_rejected": "It is the only reading of the four that yields 7.5, and it requires the engine to have moved a timer AWAY from its own item's wiki duration. Every attack-anchored clause in the Spellblade text ('your next basic attack', 'cooldown starts after using the empowered attack') and the documented refresh-by-max rule push authored times LATER, never earlier; a +2.0 s move is the direction those rules produce, a -2.0 s move is not."
+      }
+    ],
+    "step_4_independent_grid_check": {
+      "claim": "9.5 s is an on-grid swing time for the standard corpus cadence; 7.5 s terminates no wiki timer uniquely.",
+      "arithmetic": "With AS*u = 2.0 /s and T = 10 s: N(T) = floor(2.0*10) = 20 swings at t_i = i*0.5 for i = 0..19, the last strictly inside the window at t_19 = 9.5 s (a swing at exactly 10.0 is excluded by the documented boundary convention). 9.5 s is therefore the natural terminal event time of a 10 s window; 7.5 s (i = 15) leaves the final 2 s of the window with no authored event on this leaf.",
+      "supports": "new (9.5)"
+    },
+    "conclusion": "9.5 s. Three independent wiki-anchored derivations (Fervor's 2 s duration, Carve's 6 s duration, and an attack-anchored Spellblade re-proc refreshing Expose Weakness's 4 s) all land on 9.5; the single derivation that lands on 7.5 requires a timer to be evaluated with the other item's duration and runs against the direction every attack-anchored clause in the cached text imposes. 9.5 additionally sits exactly on the documented swing grid as the last swing strictly inside a 10 s window."
+  },
+
+  "residual_uncertainty": {
+    "not_closed": "events[82] carries no label in the question and the scenario spec is out of bounds for this runbook, so the specific timer behind the leaf could not be named - only the set of timers the two named items can start, all of which except one point at 9.5.",
+    "what_would_close_it": "The event's own `source`/`label` sibling leaf, or the scenario's fight window and attack speed. If the event turns out to be an Expose Weakness expiry whose anchor did not move, this verdict flips to old_value_correct; nothing in data/ or docs/math-foundations.md supports that branch.",
+    "confidence_basis": "3 of 4 wiki-derivable readings -> 9.5; direction of every attack-anchored rule -> later, not earlier; grid check -> 9.5."
+  }
+}

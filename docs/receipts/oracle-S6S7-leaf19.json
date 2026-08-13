@@ -1,0 +1,69 @@
+{
+  "receipt": "oracle-S6S7-leaf19",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/all_sources",
+  "old_value": "<absent>",
+  "new_value": true,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle19",
+    "scope_respected": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+  "identification_of_the_leaf": {
+    "reasoning": "The scenario name names two items: Black Cleaver and Bloodsong. Bloodsong (id 3877) is the only SUPPORT-tagged item in the pair, and it is the only item in the scenario whose effect emits a per-application debuff event on a champion target (Expose Weakness). 'support_events' therefore carries Bloodsong's Expose Weakness applications, and 'all_sources' is the flag stating whether the amplifier applies to damage from every source or only to damage dealt by the Bloodsong holder.",
+    "cross_check": "grep over the whole exported data/ tree for the literal token 'all_sources' returns zero hits, so the flag is engine-side vocabulary, not a cached field; its correct value must be read out of the cached wiki effect text.",
+    "black_cleaver_excluded": "Black Cleaver (id 3071) carries only 'Carve' (6% armor reduction per stack, up to 30% at 5) and 'Fervor' (20 bonus MS). Neither is a support event nor a damage-amplifier flag, so it cannot be the owner of this leaf."
+  },
+  "independent_computation": {
+    "step_1_read_cached_effect_text": "data/items.json -> '3877' -> passives[0] (name 'Spellblade') -> branches[0], read via the passives[].branches contract (CLAUDE.md rule 6).",
+    "step_2_quoted_text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+    "step_3_parse": {
+      "debuff_name": "Expose Weakness",
+      "duration_s": 4.0,
+      "amp_percent": {"melee": 8.0, "ranged": 5.0, "template": "{{rd|8%|5%}} = ranged-difference template, melee value first"},
+      "internal_cooldown_s": 1.5,
+      "scope_clause": "'increased damage FROM ALL SOURCES' -- the amplifier is a debuff on the target, not a buff on the Bloodsong holder, so every damage instance from any source (holder, allies, turrets, pets) is amplified while Expose Weakness is up."
+    },
+    "step_4_conclusion": "The scope clause is explicit and unconditional in the cached wiki text. A boolean flag named 'all_sources' on an Expose Weakness event must therefore be true. An absent flag either (a) reads as false / holder-only under any sane default, which contradicts the wiki text, or (b) leaves the scope unrecorded, which under-specifies the event. Emitting all_sources = true is the value the source text supports.",
+    "corroboration": "The same 'from all sources' wording is used by the other cached amplifier debuffs that are known to be source-agnostic -- Imperial Mandate (4005) 'marks them as Vulnerable for 4 seconds, increasing the damage they take from all sources by 7%' and Abyssal Mask (8020) 'causing them to receive 12% increased magic damage from all sources'. The phrase is the wiki's consistent marker for a target-side, all-attacker amplifier, which confirms the reading rather than being an isolated turn of phrase. Contrast with holder-side amps that lack the phrase, e.g. Riftmaker (4633) 'deal 2% increased damage' and Spear of Shojin (3161), which amplify only the wearer's own damage."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> riotDescription",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 4005 'Imperial Mandate' -> passive branch (corroborating use of the same scope clause)",
+      "quote": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 8020 'Abyssal Mask' -> passive branch (corroborating use of the same scope clause)",
+      "quote": "Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 'Black Cleaver' -> passives (exclusion evidence)",
+      "quote": "Carve: Dealing physical damage to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3 item 2, 'Black Cleaver average stacks'",
+      "quote": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C",
+      "relevance": "The only mention of either scenario item in math-foundations.md. It governs Black Cleaver stack averaging and says nothing about support events or damage-amplifier scope, so it neither supports nor contradicts this leaf; the wiki text is the sole controlling source."
+    }
+  ],
+  "caveats": [
+    "The exported tree contains no scenario definition for 'cleaver_bloodsong_roster' (grep for the scenario name across data/ returns nothing), so support_events[17] could not be resolved to a specific timestamp or actor. The identification rests on Bloodsong being the scenario's only support item and the only one whose cached text carries a target-side amplifier.",
+    "The magnitude of the amplifier (8% melee / 5% ranged) is not the subject of this leaf and was not audited; only the source-scope boolean was computed."
+  ]
+}

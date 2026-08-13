@@ -1,0 +1,83 @@
+{
+  "receipt": "oracle-S6S7-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[30]/support_damage_multiplier",
+  "old_value": "<absent>",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong — Expose Weakness"
+  },
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-tree",
+    "paths_read": [
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/staleness.json",
+      "data/economics-sourced.json",
+      "data/champions.json",
+      "data/wiki/article-index.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e9-bis-b-task.md",
+      "docs/math-foundations.md"
+    ],
+    "paths_deliberately_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/ (other receipts)",
+      "git history / diff / plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json → item 3877 \"Bloodsong\" → passives[0] (\"Spellblade\") → branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json → item 3877 \"Bloodsong\" → riotDescription (client text, corroborating)",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage>  <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "source": "data/items.json — corroborating {{rd|melee|ranged}} template calibration (independent items whose live melee/ranged split is known)",
+      "quote": [
+        "Death's Dance: \"Reduces {{rd|30%|10%}} of all post-mitigation ... damage received\" (live: 30% melee / 10% ranged)",
+        "Tiamat / Ravenous Hydra / Stridebreaker: \"{{rd|40% AD|20% AD}}\" cleave (live: 40% melee / 20% ranged)",
+        "Serpent's Fang: shield reduction \"{{rd|50%|35%}}\" (live: 50% melee / 35% ranged)",
+        "Yun Tal Wildarrows: \"{{rd|0.4%|0.2%}} critical strike chance ... stacking up to {{rd|63|125}} times (capped at 25%)\" — 63×0.4% ≈ 125×0.2% ≈ 25%, an internal consistency check that pins argument 1 = melee, argument 2 = ranged"
+      ]
+    },
+    {
+      "source": "data/staleness.json → \"3877\"",
+      "quote": "{\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 1, \"note\": \"\"} — the cached Bloodsong entry is not flagged stale, so the quoted wiki text is the current cache truth (items.json fetched_at 1786113359)."
+    },
+    {
+      "source": "data/item-atoms/3877.json",
+      "quote": "Atoms for Bloodsong carry family \"damage\" / behavior \"Spellblade\" with provenance evidence \"passive:Spellblade\"; the atom layer records no numeric parameters for Expose Weakness, so the amp value must come from the wiki branch text above."
+    },
+    {
+      "source": "docs/math-foundations.md §5 formula-audit table",
+      "quote": "The table contains no row for a damage-taken amplifier; it does establish that mitigation is linear in raw damage (\"mitigation commutes with expectation (linear in raw)\"), so a flat percentage 'increased damage taken' rides as a scalar multiplier on the damage instance and may be applied either pre- or post-mitigation with the same result."
+    }
+  ],
+  "independent_computation": {
+    "step_1_effect_identification": "Bloodsong (id 3877) is a Legendary support item whose UNIQUE passive Spellblade, on the empowered basic attack against a champion, inflicts 'Expose Weakness' for 4 s. Expose Weakness is a debuff on the TARGET that increases the damage it takes from ALL sources — i.e. it is a team-wide amplifier available to every participant hitting that target, which is exactly what a per-event 'support_damage_multiplier' on the attacker's combat event models.",
+    "step_2_template_resolution": "The amp magnitude in the cached wikitext is {{rd|8%|5%}}. {{rd|A|B}} is the League Wiki's ranged-difference template: A applies when the ITEM HOLDER is melee, B when the holder is ranged. Calibrated against three independently-known items (Death's Dance 30/10, Hydra cleave 40%/20% AD, Serpent's Fang 50/35) and internally cross-checked with Yun Tal Wildarrows, where 63 × 0.4% = 25.2% and 125 × 0.2% = 25.0% both land on the item's stated 25% crit cap — only the melee-first reading makes both branches self-consistent.",
+    "step_3_arithmetic": "Expose Weakness = +8% damage taken (melee holder). A '+X% increased damage taken' debuff is a scalar multiplier on the damage instance: multiplier = 1 + X = 1 + 0.08 = 1.08. Ranged-holder branch would be 1 + 0.05 = 1.05. With no other 'increased damage taken' source present in this leaf's receipt, no additive stacking of amp terms applies, so the multiplier is exactly the single term.",
+    "step_4_old_value": "The old value <absent> is equivalent to no amplifier (multiplier 1.0). Under either branch of {{rd|8%|5%}} the wiki mandates a non-unity amplifier on any damage event landing inside the 4 s Expose Weakness window after a Bloodsong Spellblade proc on a champion, so 'absent' cannot be the correct modelling of an event that the scenario's own receipt attributes to 'Bloodsong — Expose Weakness'. old_value_correct is ruled out.",
+    "result": "1.08 for a melee Bloodsong holder; 1.05 for a ranged Bloodsong holder. The published new value 1.08 is the exact, correctly-derived melee branch."
+  },
+  "residual_uncertainty": {
+    "statement": "The one input I could not obtain inside the permitted evidence tree is the ATTACK TYPE of the Bloodsong-holding ally in this scenario's roster. The scenario definition 'cleaver_bloodsong_roster' lives outside data/ and docs/math-foundations.md (it is not in data/practice-corpus/scenarios.json, data/worklists/, or anywhere else in the export), and src/, tests/ and scripts/ are out of bounds for this runbook.",
+    "decision_rule_for_the_parent": "If the Bloodsong holder in the roster has attackType MELEE → 1.08 is exactly right (verdict stands). If the holder has attackType RANGED → the correct value is 1.05 and the leaf is wrong (verdict would become both_wrong, since <absent> is wrong too).",
+    "attack_type_lookup_is_in_the_cache": "data/champions.json carries an explicit attackType per champion, so the check is mechanical. Spot values gathered for the common support pool: Leona MELEE (125), Pyke MELEE (150), Nautilus MELEE (175); Thresh RANGED (450 — a frequent trap, Thresh is ranged for item melee/ranged splits), Senna RANGED (600), Lulu RANGED (550), Janna RANGED (550).",
+    "why_the_verdict_is_still_new_value_correct": "1.08 is not an arbitrary number — it reproduces the melee branch of the cached wiki text to the digit, including the correct 1+X multiplier form and the correct 'all sources' team-wide semantics that justify a support_damage_multiplier field at all. A hardcoded-8%-ignoring-the-split defect is possible but is not evidenced by anything in the permitted tree, whereas the value's exact agreement with a real branch of the source formula is."
+  },
+  "notes": [
+    "Bloodsong's Expose Weakness also carries a 1.5 s internal cooldown starting after the empowered attack and a 4 s debuff duration; those govern WHICH events carry the multiplier, not its magnitude, and were not evaluable from data/ alone.",
+    "Aside (off-task, from data/champions.json Gangplank notes): the cache records 'Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them' — a real exclusion if a Gangplank scenario ever routes Spellblade through Powder Kegs."
+  ]
+}

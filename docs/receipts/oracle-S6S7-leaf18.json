@@ -1,0 +1,113 @@
+{
+  "receipt": "oracle-S6S7-leaf18",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[12]/owner",
+  "old_value": "main",
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/item-atoms/3071.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e8d-task.md",
+      "data/worklists/e9-bis-b-task.md",
+      "data/worklists/issues-c-task.md",
+      "data/worklists/f1-task.md",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] (\"Spellblade\") .branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> acquisitionNote, shop.tags",
+      "quote": "acquisitionNote: \"Requires completion of the support quest for {{ii|Runic Compass}}, which transforms into {{ii|Bounty of Worlds}} afterwards to allow you to upgrade into this item for free.\"; shop.tags: [\"SUPPORT\"]; stats: 200 health, 75% base health regen, 75% base mana regen, 9 gold per 10 (no AD, no AP, no penetration)."
+    },
+    {
+      "id": "S3",
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives \"Carve\" and \"Fervor\" .branches",
+      "quote": "Carve: \"Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\"  Fervor: \"Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.\""
+    },
+    {
+      "id": "S4",
+      "source": "data/item-atoms/3877.json (Bloodsong) and data/item-atoms/3071.json (Black Cleaver) — full atom lists",
+      "quote": "Bloodsong atoms: stats.health, stats.gold-per-10, stack-transform-summon-resource.{trap,ward-unit,mana,ammo}, damage.on-hit, damage.on-attack, heal-shield.health-regeneration, heal-shield.max-health-increase-restores-current, vision-economy.*  — no ally-targeted heal/shield/buff atom. Black Cleaver atoms: stats.{health,attack-damage,ability-haste}, stack-transform-summon-resource.stack (Carve), crowd-control-mobility.movement-speed (Fervor, self), damage.resistance-mitigation (Carve, target-side)."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md, section 2.2 and the section-5 audit table",
+      "quote": "reduce_resistance(R, r_flat, r_pct):   R <- R - r_flat;  R <- R*(1 - r_pct/100)  ... apply_{armor,magic}_penetration(R, f, p): R <- max(0, R*(1 - p) - f). \"Only armor/magic *reduction* effects can push resistance negative; penetration floors at 0\" — i.e. reduction rewrites the TARGET's armor (seen identically by every attacker), while penetration is attacker-scoped."
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md, section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S7",
+      "source": "data/worklists/e8d-task.md (task text shipped inside the data cache)",
+      "quote": "\"ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items — reuse the same event shape)\" — a support event is an effect one participant CONFERS on another; its owner is the conferring participant (cf. data/wiki-atoms/stack-transform-summon-resource.json, where \"owner\" is consistently the source: \"damage dealt by pets is credited to the summoning champion\", takedowns \"are attributed to their owner\")."
+    },
+    {
+      "id": "S8",
+      "source": "data/worklists/issues-c-task.md item 3 / data/worklists/e9-bis-b-task.md item 1",
+      "quote": "\"Support-item progression: basic/upgraded stages legal per quest state ... (role_quest_complete flag; BIS sweep: the 5 support upgrades certify with quest complete)\"; \"Support starter upgrades ... Bloodsong, Celestial Opposition, Dream Maker, Solstice Sleigh, Zaz'Zak's Realmspike\" — the Bloodsong line is held by the quest-completing SUPPORT slot of the roster, not by the Black Cleaver carry."
+    }
+  ],
+  "independent_computation": {
+    "question": "Does a support event in the cleaver_bloodsong_roster fight have owner == \"main\"?",
+    "step_1_inventory_the_two_items_effects": {
+      "black_cleaver_3071": {
+        "Carve": "target-side: 6% armor reduction per stack, 5 stacks, 30% max (S3). Applied to the ENEMY's armor.",
+        "Fervor": "owner-side: 20 bonus movement speed to the wielder (\"grants you\", S3). Confers nothing on any ally."
+      },
+      "bloodsong_3877": {
+        "Spellblade damage": "owner-side: \"your next basic attack ... deals 100% base AD bonus physical damage on-hit\" (S1). Accrues to the ITEM HOLDER only.",
+        "Expose Weakness": "target-side: the enemy \"take[s] 8%/5% increased damage FROM ALL SOURCES\" for 4s, 1.5s cooldown (S1). A debuff on the target, not a buff handed to a named participant."
+      },
+      "conclusion": "Neither item in this scenario emits an ally-targeted heal/shield/buff — confirmed independently by the atom decomposition (S4), which contains no ally-facing atom for either item. The only cross-participant effects are two TARGET debuffs."
+    },
+    "step_2_show_the_target_debuffs_are_owner_free": {
+      "method": "If Carve + Expose Weakness were owned by a participant, the resulting multiplier would differ by owner. Compute the multiplier both debuffs produce, using S5/S6, for an example target with 100 armor at 5 Carve stacks.",
+      "carve": "R = 100 * (1 - 0.30) = 70.0   [S5: percentage reduction on the target's armor]",
+      "mitigation": "m(70) = 100 / (100 + 70) = 0.588235   [S6]",
+      "expose_weakness": "x1.08 (melee holder) or x1.05 (ranged holder) on incoming damage FROM ALL SOURCES [S1]",
+      "combined_multiplier_seen_by_the_main_carry": "0.588235 * 1.08 = 0.635294 (melee) / 0.588235 * 1.05 = 0.617647 (ranged)",
+      "combined_multiplier_seen_by_the_bloodsong_ally": "0.635294 / 0.617647 — IDENTICAL, because both terms are properties of the target's state, not of the attacker",
+      "conclusion": "The Carve shred and the Expose Weakness amp are ownerless by construction: the wiki text says the target takes increased damage 'from all sources', and armor reduction (unlike penetration, S5) rewrites the target's own armor for every attacker. No per-participant owner attribution exists for either."
+    },
+    "step_3_who_could_own_a_support_event_here": {
+      "as_emitter": "A support event's owner is the participant conferring the effect (S7). Bloodsong is a SUPPORT-quest item (S2, S8) held by the roster's support slot; the main carries Black Cleaver, whose only owner-scoped effect is 20 self movement speed (S3) — not conferred on anyone. So the main confers no support effect and cannot be the emitter/owner.",
+      "as_beneficiary": "Even under the alternative reading (owner = beneficiary), 'main' is still unsupportable: Expose Weakness amplifies damage 'from all sources' (S1) and Carve reduces armor against all sources (S3/S5), so the beneficiary set is the whole roster, not the main participant alone.",
+      "conclusion": "Under BOTH readings of 'owner', attributing this support event to 'main' is not derivable from the cached source text; dropping the attribution is."
+    },
+    "result": "owner = <absent> (no participant-level owner is derivable for a support event in this scenario); owner = \"main\" is a mis-attribution of an ownerless target-side effect (or of a support-slot-owned effect) to the carry."
+  },
+  "confidence": "medium-high",
+  "residual_uncertainty": [
+    "The scenario definition ('cleaver_bloodsong_roster' roster composition, fight window, and the support_events record schema) lives in src/ and tests/, which this oracle is forbidden to read; it does not appear anywhere under data/ or docs/math-foundations.md (grep for 'cleaver_bloodsong' and 'support_events' over the export returns nothing).",
+    "Consequently the argument is made from item semantics rather than from the engine's event schema: it rules out 'main' as an owner under both the emitter reading and the beneficiary reading, but it cannot independently confirm the exact replacement (field dropped vs. whole event 12 dropped vs. re-attributed to the support slot).",
+    "If the diff instead deleted the entire 13th support event, the count could not be re-derived here either: Bloodsong's proc cadence is bounded by the 1.5 s Expose Weakness cooldown (S1) — at most floor(T/1.5)+1 applications in a window of length T — but T is not recoverable from the permitted evidence."
+  ],
+  "verdict_rationale": "\"main\" is affirmatively contradicted by the cached wiki text: the Bloodsong/Black Cleaver pair produces exactly two cross-participant effects, both of which are target debuffs that the wiki states apply to damage 'from all sources', and the only owner-scoped effects (Fervor's self movement speed, Spellblade's own-attack damage) belong to the item holder — the support-quest slot for Bloodsong (S2, S8), never the Black Cleaver carry. The new state (no owner attribution) is consistent with every source; the old state is not. 'both_wrong' is not claimed because no third value is derivable from the permitted evidence."
+}

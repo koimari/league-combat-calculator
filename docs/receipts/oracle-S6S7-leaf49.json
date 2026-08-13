@@ -1,0 +1,74 @@
+{
+  "receipt_id": "oracle-S6S7-leaf49",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/expires_at",
+  "old_value": 13.5,
+  "new_value": 11.5,
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "export_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle49",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "cache_freshness": {
+      "data/staleness.json": {"patch": "16.15", "checked_at": "2026-08-06T12:36:09Z"},
+      "item_3877_entry": {"stale": false, "stat_drift": {}, "note": ""}
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 (\"Bloodsong\") -> passives[0] (\"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3877 -> riotDescription (in-client text, independent of the wiki prose)",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "source": "data/items.json -> id 3071 (\"Black Cleaver\") -> passives[0] (\"Carve\") -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json -> shop.tags scan over the whole cache",
+      "quote": "The only SUPPORT-tagged item in the scenario name is 3877 Bloodsong; the five Bounty-of-Worlds upgrades (3869 Celestial Opposition 2 s linger / 1.5 s slow, 3870 Dream Maker 3 s bubbles, 3871 Zaz'Zak's 0.5 s delay, 3876 Solstice Sleigh 2.5 s, 3877 Bloodsong 4 s) contain NO 6-second effect. The only 6-second timer anywhere in this scenario's item set is Black Cleaver's Carve."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Grievous Wounds row) — the engine's stated timed-debuff convention",
+      "quote": "duration refresh via `max` ... Heal landing exactly at window expiry is un-reduced (boundary convention)"
+    }
+  ],
+
+  "independent_computation": {
+    "what_the_leaf_is": "A timed debuff record on the support participant's event ledger in a coupled roster fight. The support's only debuff-authoring item is Bloodsong, whose Spellblade proc inflicts 'Expose Weakness' on a champion target. A coupled roster needs this window materialized with an expires_at precisely because the 8%/5% damage amplification applies to every participant's damage inside [applied_at, expires_at].",
+    "identity": "expires_at = applied_at + duration, with duration read from the cached wiki/riot text.",
+    "duration_from_source": 4.0,
+    "proc_cadence_from_source": "Expose Weakness re-applications are gated by the sourced '1.5 second cooldown, starts after using the empowered attack', so application epochs lie on a 1.5 s lattice: t_k = t_0 + 1.5k.",
+    "step_1": "Both candidate values must decompose as applied_at + duration with applied_at on the 1.5 s proc lattice anchored at t_0 = 0. new: 11.5 - 4.0 = 7.5 = 5 x 1.5  -> ON the lattice with the sourced 4 s duration. old: 13.5 - 4.0 = 9.5; 9.5 / 1.5 = 6.33  -> OFF the lattice with the sourced duration.",
+    "step_2": "old: 13.5 - 6.0 = 7.5 = 5 x 1.5 -> ON the lattice, but only if the duration used were 6 s. 6 s is not Bloodsong's duration in any cached text; it is exactly Black Cleaver's Carve duration, the other item named by this scenario.",
+    "step_3": "The two values therefore share one and the same application epoch, applied_at = 7.5 s, and differ only in the duration constant: 13.5 = 7.5 + 6 (Carve's 6 s, wrong item) vs 11.5 = 7.5 + 4 (Bloodsong's sourced 4 s). The delta is exactly 13.5 - 11.5 = 2.0 = 6 - 4, i.e. the difference between the two durations present in this scenario, not a timing shift (a cadence change would move event k by k x delta_cd, not by a constant equal to a duration difference).",
+    "correct_value": 11.5,
+    "arithmetic": "expires_at = applied_at + Expose Weakness duration = 7.5 s + 4.0 s = 11.5 s"
+  },
+
+  "alternative_hypotheses_considered": [
+    {
+      "hypothesis": "The leaf is the Spellblade ARM window ('your next basic attack within 10 seconds'), so expires_at = ability_cast_time + 10; old cast 3.5 s vs new cast 1.5 s.",
+      "disposition": "Rejected as the likelier reading. The arm window is a self-buff on the support and is not needed by other participants; a coupled roster ledger exposes support_events with an expires_at so cross-participant damage can be tested against the amplification window. Also, under this reading the change would be a 2.0 s shift of a cast epoch with no source basis, whereas the duration reading reproduces the delta exactly from two durations both quoted from the cache. Note the conclusion is unchanged either way only for the duration reading; this is the one residual ambiguity, flagged honestly below."
+    },
+    {
+      "hypothesis": "The leaf is a Black Cleaver Carve stack (6 s) that was wrongly shortened to 4 s.",
+      "disposition": "Rejected. Black Cleaver is a fighter/carry item (data/items.json 3071, tags contain no SUPPORT); Carve stacks belong to the physical-damage dealer's ledger, not the support participant's. Reading a 6 s Carve duration onto the support's Bloodsong debuff is precisely the failure mode the new value removes."
+    },
+    {
+      "hypothesis": "A proc-cadence fix (internal cooldown changed) moved applied_at from 9.5 to 7.5 with duration held at 4 s.",
+      "disposition": "Rejected. 9.5 s is not reachable on the sourced 1.5 s lattice from any natural anchor (9.5/1.5 = 6.33), and the sourced cooldown is 1.5 s in both the wiki branch text and the client text, so there is no source-supported 'old' cadence to move away from."
+    }
+  ],
+
+  "residual_uncertainty": "applied_at = 7.5 s is inferred (it is the unique value that puts BOTH the old and the new leaf on the sourced 1.5 s proc lattice) rather than recomputed from the scenario definition; the scenario's participant roster, fight window, and event indexing are defined outside data/ and were deliberately not read. The duration constant itself — the thing that decides this leaf — is read directly from cached source text and is unambiguous: 4 seconds, corroborated independently by the wiki branch and the Riot client description.",
+
+  "conclusion": "Bloodsong's Expose Weakness lasts 4 seconds per the patch-16.15 cache (wiki branch text and riotDescription agree). The old leaf 13.5 corresponds to applying Black Cleaver's 6-second Carve duration to the Bloodsong debuff; the new leaf 11.5 = 7.5 + 4 applies Bloodsong's own sourced duration."
+}

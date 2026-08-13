@@ -1,0 +1,104 @@
+{
+  "receipt_id": "oracle-S6S7-leaf66",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[48]/raw_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle66",
+    "isolation": "Only data/** and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, and git history were never opened."
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item 3877 (Bloodsong) -> passives[0] (name \"Spellblade\", unique) -> branches[0]; raw line at data/items.json:83147",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "why": "The only damage-multiplying number Bloodsong contributes. 'increased damage from all sources' makes it a target-side amplifier that scales every damage instance landed on the debuffed target during the 4 s window, including damage from other roster members."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "Template argument-order calibration for {{rd|melee|ranged}} — items 3077 (Tiamat), 3074 (Ravenous Hydra), 6631 (Stridebreaker), 6698 (Profane Hydra), passive \"Cleave\"",
+      "quote": "Basic attacks [[on-hit]] deal {{as|{{rd|40% AD|20% AD}}|ad}} {{as|physical damage}} to other enemies in a ... 350 radius centered around the target.",
+      "why": "Cleave's published values are 40% total AD for melee holders and 20% for ranged holders. Because the cache renders those exact numbers as {{rd|40% AD|20% AD}}, the template's first argument is the MELEE value and the second is the RANGED value. Applying that to S1: Expose Weakness = 8% (melee Bloodsong holder) / 5% (ranged holder)."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "item 3071 (Black Cleaver) -> passives[0] \"Carve\"",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "why": "Negative control. The scenario's other named item is purely an ARMOR-REDUCTION effect. Per docs/math-foundations.md Sections 2.1-2.2, armor only enters through m(R) = 100/(100+R), which acts on post-mitigation damage. Black Cleaver therefore cannot move a raw_damage (pre-mitigation) leaf at all, so it is excluded as the cause of this delta."
+    },
+    {
+      "id": "S4",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1, 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)   ...   post = raw . m(R)",
+      "why": "Establishes that raw_damage is the pre-mitigation quantity and that resistance/penetration/reduction act strictly downstream of it. Any change to raw_damage must come from a term on the damage-formation side (base/scaling/amplifier), not from armor math."
+    },
+    {
+      "id": "S5",
+      "file": "data/runes.json",
+      "locator": "keystone 'Press the Attack' -> effects.damage_amp_ratio",
+      "quote": "grant you 8% increased damage against champions until 5 seconds after exiting combat with them  /  \"damage_amp_ratio\": 0.08",
+      "why": "Cross-check on the magnitude. The only other 8% amplifier reachable from the cache is the Press the Attack keystone, and it is also exactly 8%. Both candidate sources agree on the multiplier, so the computed target value is robust to which of them the scenario intends. (Bloodsong is the one named in the scenario id.)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_delta": {
+      "implied_multiplier": 1.0807651434644,
+      "implied_additive_delta": 7.6,
+      "note": "Both golden values are stored to 1 decimal place, so the true multiplier is only pinned to an interval."
+    },
+    "step_2_rounding_interval": {
+      "reasoning": "old displayed 94.1 => unrounded old in [94.05, 94.15); new displayed 101.7 => unrounded new in [101.65, 101.75).",
+      "admissible_multiplier_interval": "[101.65/94.15, 101.75/94.05] = [1.07966, 1.08187]",
+      "conclusion": "1.08 lies inside the interval; 1.05 and 1.07 do not. The only clean amplifier consistent with the observed pair is exactly +8%."
+    },
+    "step_3_forward_check": {
+      "formula": "raw_amped = raw_base x (1 + expose_weakness_ratio),  expose_weakness_ratio = 0.08 (melee holder, S1 + S2)",
+      "point_estimate": "94.1 x 1.08 = 101.628",
+      "self_consistent_preimage_window": "unrounded raw_base in [94.1204, 94.15) yields displayed old 94.1 AND displayed new 101.7 under 1-dp rounding (window width 0.0296 inside the 0.1-wide old-value bucket)",
+      "conclusion": "101.7 is exactly reproducible as the 8% Expose Weakness amplification of the pre-change raw damage; the 0.072 gap versus the naive 94.1 x 1.08 = 101.628 is entirely accounted for by the old value itself being a rounded display of a raw base near 94.13."
+    },
+    "step_4_falsify_the_alternatives": [
+      {
+        "hypothesis": "ranged Expose Weakness (5%)",
+        "computed": "94.1 x 1.05 = 98.8",
+        "result": "rejected — 98.8 matches neither stored value; it is outside the admissible multiplier interval by a wide margin"
+      },
+      {
+        "hypothesis": "amplifier upgraded 5% -> 8%",
+        "computed": "94.1 x (1.08/1.05) = 96.8",
+        "result": "rejected — cannot reach 101.7"
+      },
+      {
+        "hypothesis": "Black Cleaver Carve (up to 30% armor reduction) moved the leaf",
+        "result": "rejected — Carve is armor reduction (S3); by S4 it acts only through m(R) on post-mitigation damage and is structurally incapable of changing raw_damage"
+      },
+      {
+        "hypothesis": "old value was the correct one (no amplifier on this event)",
+        "result": "rejected — S1 states the debuff causes the target to take increased damage 'from all sources' for 4 s. An unamplified damage instance landing on an Expose Weakness'd target contradicts the cached wiki text; 94.1 is only correct if the event falls outside the 4 s window, which would then also forbid the 101.7 value, and the observed ratio being exactly the sourced 8% makes coincidence implausible."
+      }
+    ],
+    "result": 101.7
+  },
+
+  "verdict_rationale": "raw_damage is pre-mitigation (S4), so the delta must come from a damage-formation term, which rules out Black Cleaver's armor reduction (S3). The observed change is a clean multiplicative x1.08 — the admissible multiplier interval implied by 1-dp rounding, [1.07966, 1.08187], contains 1.08 and excludes every other round value. 8% is precisely Bloodsong's Expose Weakness amplifier for a melee holder as quoted from the cache (S1), with the {{rd|melee|ranged}} argument order independently calibrated against Cleave's published 40%/20% split (S2), and the same 8% magnitude is corroborated by the only other amplifier in the cache (S5). The new value reproduces the sourced formula; the old value corresponds to the amplifier not being applied to this event at all, which contradicts the 'increased damage from all sources' wording.",
+
+  "residual_uncertainty": [
+    "The golden corpus scenario definition for 'cleaver_bloodsong_roster' lives outside the permitted evidence tree (scripts/), so the roster's champions were not observable. The 8% figure is the MELEE Bloodsong holder's value; if the scenario's Bloodsong carrier is a ranged champion the sourced amplifier would be 5% (S1/S2) and the correct leaf would be ~98.8, making both stored values wrong. The observed ratio matching 8% to within rounding is strong evidence the engine applied the melee branch, but this oracle cannot confirm the holder's range type from data/ alone.",
+    "Whether event[48] falls inside the 4 s Expose Weakness window is likewise not verifiable from the evidence tree; the verdict assumes it does, which the exact 8% ratio supports.",
+    "Both stored values are rounded to 1 decimal place, so the computation pins the multiplier to an interval rather than reconstructing the leaf from first principles digit-for-digit."
+  ],
+
+  "notes": "No files were committed. Nothing outside data/** and docs/math-foundations.md was read."
+}

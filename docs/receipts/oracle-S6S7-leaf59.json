@@ -1,0 +1,87 @@
+{
+  "receipt_id": "oracle-S6S7-leaf59",
+  "runbook": "R-18 / R-19 (independent oracle investigator)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/pair_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "isolation_note": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/ (including scripts/golden_baseline.json and the scenario definitions), docs/plans/, docs/receipts/, the diff and git history were never opened. The scenario's own input tuple is therefore NOT visible to this oracle; the computation below is a ratio/rule identification, not an absolute re-simulation, and its residual assumption is stated explicitly."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 (Bloodsong), passives[0] 'Spellblade', branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3071 (Black Cleaver), passives[0] 'Carve', branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json -> {{rd|melee|ranged}} template calibration (melee value first, ranged second), corroborated by four independent cached items",
+      "quote": "Tiamat / Ravenous Hydra / Stridebreaker / Profane Hydra cleave: '{{rd|40% AD|20% AD}}' (game: 40% AD melee, 20% ranged); Eclipse: '{{rd|6%|4%}} of target's maximum health' (6% melee, 4% ranged); Divine Sunderer: '(+ {{rd|6%|4%}} of target's maximum health)'; World Atlas / Runic Compass minion execute: 'below {{rd|50%|30%}} of its maximum health' (50% melee, 30% ranged)."
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 2.1 (The 100/(100+R) identity)",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py); post = raw * m(R)"
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C"
+    },
+    {
+      "source": "data/worklists/e9-bis-b-task.md",
+      "quote": "Support starter upgrades withheld for ALL 173 champions: Bloodsong, ... 1. Bloodsong (support starter upgrade - spellblade proc on support items)  [establishes that Bloodsong's Spellblade / Expose Weakness is a recently-modeled effect in this corpus]"
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md Sec. 3.2",
+      "quote": "each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (defender_index > 0)  [establishes that 'coupled_scenarios/.../pair_damage' is a per-pair damage leaf inside a roster ledger]"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_observed_ratio": {
+      "arithmetic": "101.7 / 94.1 = 1.0807651",
+      "note": "Both leaf values are reported to one decimal, so the true underlying ratio lies in [101.65/94.15, 101.75/94.05] = [1.079660, 1.081871]."
+    },
+    "step_2_candidate_constants_tested_against_that_interval": [
+      {"constant": "1.08 = Expose Weakness, MELEE holder (data/items.json 3877, {{rd|8%|5%}} -> 8%)", "in_interval": true, "check": "94.1 * 1.08 = 101.628; underlying old in [94.1204, 94.15) reproduces 101.7 exactly after rounding"},
+      {"constant": "1.05 = Expose Weakness, RANGED holder", "in_interval": false, "check": "94.1 * 1.05 = 98.8, not 101.7"},
+      {"constant": "1.08/1.05 = 1.028571 (ranged -> melee correction)", "in_interval": false, "check": "94.1 * 1.028571 = 96.8"},
+      {"constant": "1.06 (one Black Cleaver Carve stack, if armor were 0)", "in_interval": false, "check": "94.1 * 1.06 = 99.7"},
+      {"constant": "1.10 (Vladimir R style 10% amp)", "in_interval": false, "check": "94.1 * 1.10 = 103.5"}
+    ],
+    "step_3_black_cleaver_alternative_ruled_out": {
+      "model": "With Sec. 2.1, damage ratio for an armor-reduction change from s1 to s2 Carve stacks (6% each) on base armor A is (100 + (1-0.06*s1)*A) / (100 + (1-0.06*s2)*A).",
+      "solved_for_A_at_ratio_1.0808": [
+        "0.8*C = 4 stacks -> 5 stacks: A = 2331 armor (physically impossible)",
+        "4 stacks -> Cesaro max 4.5 stacks: A < 0 (the required direction is unattainable; Cesaro mean C - C(C-1)/(2h) = 5 - 10/h never exceeds 5 and equals 4 at h = 10, so the documented Cesaro fix cannot produce a +8% jump)",
+        "3 stacks -> 5 stacks: A = 127 (numerically possible, but 5 stacks is the cap, not a mean, and no cached rule produces a jump from a 3-stack to a full-cap model)",
+        "0 stacks -> 5 stacks: A = 33 (would require Carve to have been entirely absent, contradicting the scenario name)"
+      ],
+      "conclusion": "No Black Cleaver stacking-model change yields a clean 1.08 at any plausible armor; the Cleaver hypotheses need a bespoke armor value, whereas the Bloodsong hypothesis needs a constant that is literally printed in the cached wiki text."
+    },
+    "step_4_rule_reconstruction": {
+      "statement": "The leaf moved by exactly the melee Expose Weakness amplifier. Old = un-amplified pair damage D; new = D * 1.08.",
+      "derivation": "Bloodsong's Spellblade, on an empowered basic attack against a champion, applies Expose Weakness for 4 s: the victim takes 8% (melee holder) increased damage FROM ALL SOURCES. In a coupled roster ledger, 'pair_damage' is damage dealt to that defender, so an active Expose Weakness debuff multiplies it: pair_damage = D_base * (1 + 0.08).",
+      "numeric_check": "D_base (unrounded) must lie in [94.1204, 94.15) to display 94.1 and, after x1.08, display 101.7. E.g. D_base = 94.14 -> 94.14 * 1.08 = 101.67 -> 101.7. Consistent.",
+      "why_old_is_wrong": "94.1 = D_base * 1.00, i.e. no Expose Weakness amplifier at all. Under either branch of {{rd|8%|5%}} the un-amplified value is wrong once the debuff is live in that event, so 'old_value_correct' is excluded unless Expose Weakness should not be active at events[39] - and if it were not active, the new value would not have moved by exactly the printed 8%."
+    },
+    "step_5_residual_assumption": {
+      "assumption": "The Bloodsong holder in this roster is MELEE, so the {{rd|8%|5%}} template resolves to 8%.",
+      "why_it_is_the_supported_reading": "The scenario pairs Bloodsong with Black Cleaver, whose Carve stacks require repeatedly dealing physical damage and which is a melee-bruiser/melee-support purchase; the cached rd calibration makes 8% the melee branch; and the engine's own new value lands on 8%, not 5%.",
+      "falsifier": "If the Bloodsong holder in this roster is a RANGED champion, the correct amplifier is 1.05 -> 98.8, and the verdict would flip to 'both_wrong'. This oracle could not read the scenario's champion list (it lives outside the permitted evidence tree: data/practice-corpus/scenarios.json contains no 'cleaver_bloodsong_roster' entry, and the golden scenario definitions live under scripts/). Recommended cheap confirmation by a party allowed to read the scenario: check the attackType / melee-ranged flag of the Bloodsong holder in cleaver_bloodsong_roster."
+    }
+  },
+
+  "computed_value": 101.7,
+  "computed_value_expression": "D_base * (1 + 0.08), with D_base the un-amplified pair damage reported as the old leaf (94.1 rounded; ~94.12-94.15 unrounded)",
+
+  "verdict_rationale": "The leaf's movement is exactly the Bloodsong 'Expose Weakness' melee amplifier (8% increased damage from all sources) quoted verbatim from the cached wiki text in data/items.json id 3877. That constant is the only sourced constant in the rounding-admissible ratio interval [1.07966, 1.08187]; 5%, 6%, 10% and every Black-Cleaver stacking-model change are excluded. The old value carried no amplifier at all."
+}

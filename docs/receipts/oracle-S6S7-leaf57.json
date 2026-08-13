@@ -1,0 +1,93 @@
+{
+  "receipt": "oracle-S6S7-leaf57",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": ["data/items.json", "data/champions.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "data/worklists/*.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[37]/raw_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "step_1_identify_the_only_mechanism_that_can_move_a_raw_damage_leaf_in_this_scenario": {
+      "scenario_named_items": ["Black Cleaver (id 3071)", "Bloodsong (id 3877)"],
+      "black_cleaver": "Carve = '6% armor reduction' per stack, up to 30% at 5 stacks (data/items.json 3071). Armor reduction enters only the mitigation multiplier m(R) = 100/(100+R) (docs/math-foundations.md Sec 2.1). Under the round-trip identity 'post = raw . m(R)', armor reduction is mathematically incapable of changing a raw (pre-mitigation) leaf. Excluded.",
+      "bloodsong": "Spellblade passive inflicts 'Expose Weakness' for 4 seconds, 'causing them to take {{rd|8%|5%}} increased damage from all sources'. A damage-taken amplifier is a multiplier on the damage instance itself (pre-mitigation), i.e. it lives in raw. This is the ONLY multiplicative amplifier in the scenario's named items, and the only mechanism that can move this leaf."
+    },
+
+    "step_2_resolve_the_wiki_rd_template": {
+      "claim": "{{rd|A|B}} = A for a MELEE item holder, B for a RANGED holder.",
+      "proof_from_the_same_cache": [
+        "Hullbreaker: '{{rd|120%|{{ap|120*0.7}}%}} base AD' - the second argument is literally written as 0.7x the first, i.e. the ranged penalty.",
+        "Iceborn Gauntlet: 'slowed by {{rd|25%|{{ap|25*0.5}}%}}' - second argument literally 0.5x the first.",
+        "Ravenous Hydra / Tiamat / Stridebreaker: '{{rd|40% AD|20% AD}}' cleave - the well-known 50% ranged cleave penalty.",
+        "Titanic Hydra: '{{rd|1%|{{fd|0.5}}%}} maximum health'."
+      ],
+      "conclusion": "Bloodsong Expose Weakness = +8% damage taken (melee holder) / +5% (ranged holder)."
+    },
+
+    "step_3_multiplier_test_against_the_golden_display_rounding": {
+      "observed_ratio": "101.7 / 94.1 = 1.080765",
+      "admissible_multiplier_band": "golden leaves are shown to 0.1, so old in [94.05, 94.15) and new in [101.65, 101.75) => multiplier in (101.65/94.15, 101.75/94.05) = (1.07998, 1.08187)",
+      "candidates_tested": {
+        "1.08 (Expose Weakness, melee)": "INSIDE the band - accepted",
+        "1.05 (Expose Weakness, ranged)": "94.1 x 1.05 = 98.8 - outside, rejected",
+        "1.00 (no amplifier)": "rejected: it is the old value, and the wiki text says the target takes increased damage 'from all sources'",
+        "1.30 / 1.06 / other item multipliers": "no other multiplicative damage-taken amplifier exists in the two named items"
+      },
+      "implied_unamplified_base": "B = old value unrounded. Consistency requires B in [94.05,94.15) AND 1.08.B in [101.65,101.75) => B in [94.12, 94.15). Non-empty: the two displayed numbers are exactly consistent with 'same base, x1.08'.",
+      "worked_example_at_the_midpoint": "B = 94.135 -> 94.135 x 1.08 = 101.6658 -> displays 101.7, and B itself displays 94.1. Both endpoints reproduced.",
+      "additive_cross_check": "delta = 7.6 = 8% of 95.0-ish; 0.08 x 94.135 = 7.53, which rounds into the observed 7.6 gap given both endpoints are independently rounded. No plausible additive constant (flat proc, lethality term) matches 7.6 in either item's cached text."
+    },
+
+    "step_4_placement_of_the_amplifier_in_the_pipeline": {
+      "rule": "docs/math-foundations.md Sec 2.1 fixes the pipeline as post = raw . m(R), with m(R) = 100/(100+R) carrying ALL resistance/penetration/reduction effects.",
+      "consequence": "A 'takes X% increased damage from all sources' debuff is not a resistance term, so it cannot live in m(R); it must scale the damage instance, i.e. raw. Booking Expose Weakness inside raw_damage is therefore the structurally correct placement, and it is also the game's order (amplification before mitigation).",
+      "roster_semantics": "'from all sources' means the debuff amplifies damage dealt by every attacker on the roster, not only the Bloodsong holder. In a coupled roster scenario this is exactly what makes a non-Bloodsong participant's damage event (the Black Cleaver carrier's) move by 8%."
+    },
+
+    "result": "Correct value = (unamplified base) x 1.08 = 101.7. The old 94.1 is the unamplified base, i.e. Expose Weakness was not being credited to this event at all."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json -> 'Hullbreaker' (rd-template disambiguation)",
+      "quote": "{{as|{{rd|120%|{{ap|120*0.7}}%}} '''base''' AD|ad}}"
+    },
+    {
+      "source": "data/items.json -> 'Iceborn Gauntlet' (rd-template disambiguation)",
+      "quote": "Enemies within the field are slowed by {{rd|25%|{{ap|25*0.5}}%}}"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 'The 100/(100+R) identity'",
+      "quote": "post = raw . m(R)  <=>  raw = post . (1 + R/100) = post . EHP_multiplier(R)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Terminus/BC ramps row)",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`) ... m(R) convex => averaging understates ramp damage (Jensen)  [confirms Black Cleaver acts only through the mitigation multiplier, never through raw]"
+    }
+  ],
+
+  "assumptions_and_residual_boundaries": [
+    "MELEE HOLDER ASSUMPTION: 8% is the melee arm of {{rd|8%|5%}}. The scenario roster is defined outside the permitted evidence tree (src/ and tests/ were not read), so the Bloodsong holder's attack type could not be confirmed from data/. If that holder is a RANGED champion, the sourced amplifier is 5% and the correct leaf would be ~98.8, making both 94.1 and 101.7 wrong. The x1.08 fit is exact to the display rounding, and no 1.05 reading fits, so the engine is at minimum self-consistent with the melee arm.",
+    "SELF-APPLICATION BOUNDARY: the wiki text says the debuff is inflicted BY the empowered attack ('cooldown ... starts after using the empowered attack'). If events[37] were itself the Expose-Weakness-applying spellblade attack, the amplifier should not scale that same instance. Index 37 is deep in the ledger, consistent with a later event inside the 4 s window, so this boundary is noted rather than charged.",
+    "The old value 94.1 is only explicable as the unamplified base: it is exactly (new / 1.08) to within the golden file's 0.1 rounding, and no sourced mechanic in either named item produces a 94.1 that is itself an amplified figure."
+  ],
+
+  "verdict_rationale": "The wiki text for the scenario's own named item states an unconditional team-wide damage-taken amplifier; the observed change is exactly that amplifier's melee value (x1.08, the unique multiplier admitted by the two rounded endpoints); and the amplifier's correct home is the pre-mitigation raw term under the engine's own post = raw . m(R) identity. The old value credited no amplifier at all and is wrong."
+}

@@ -1,0 +1,111 @@
+{
+  "receipt": "oracle-S6S7-leaf21",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated_by": "independent oracle investigator; evidence tree built solely from `git archive --format=tar HEAD data docs/math-foundations.md`",
+  "evidence_tree": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+  "isolation_note": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never read. Only data/ and docs/math-foundations.md from the HEAD export were consulted.",
+
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/cooldown",
+  "old_value": "<absent>",
+  "new_value": 1.5,
+
+  "identification": {
+    "claim": "The only support-slot item in this scenario carrying an internal cooldown expressible as 1.5 is Bloodsong's UNIQUE passive `Spellblade`.",
+    "how_identified": [
+      "Scenario name pins the two named items: Black Cleaver (`data/items.json` id 3071) and Bloodsong (id 3877).",
+      "Black Cleaver carries no cooldown at all: passives `Carve` and `Fervor` both have `cooldown: null` and no cooldown phrase in their branch text — so the leaf cannot come from the Cleaver side.",
+      "Bloodsong is the Support-item-slot member of the roster: `data/wiki/article-index.json` categorises page `Bloodsong` (pageid 1619520) under `Gold income items` and `Support items`; `data/items.json` gives it `goldPer10.flat = 9.0` and `buildsFrom: [3867] (Bounty of Worlds)`.",
+      "Sweeping every gold-income (support) item in the cache, the cooldowns present are: World Atlas / Runic Compass `Shared Riches` 20 s, Dream Maker 8 s cycle, Zaz'Zak's Realmspike `Void Explosion` 10 s (structured field), Solstice Sleigh `Going Sledding` 30 s (structured field), Celestial Opposition `Blessing of the Mountain` 18 s (text). None of these is 1.5. Bloodsong's Spellblade 1.5 s is the unique 1.5 in the support roster."
+    ]
+  },
+
+  "independent_computation": {
+    "nature": "Fixed item internal cooldown — a stated constant, not a derived quantity. No arithmetic is required; the derivation is the extraction plus a family cross-check.",
+    "step_1_primary_source": "data/items.json -> item 3877 'Bloodsong' -> passives[0] (name 'Spellblade', unique: true) -> branches[0] states verbatim: \"... ({{fd|1.5}} second cooldown, starts after using the empowered attack).\"  => internal cooldown = 1.5 s.",
+    "step_2_why_old_was_absent": "The same passive object has `\"cooldown\": null` — the wiki parser does not lift the inline-prose ICD into the structured `cooldown` field (it only populates it when the wiki infobox carries a separate cooldown value, as it does for Zaz'Zak's Realmspike = 10 and Solstice Sleigh = 30). A consumer reading only `passives[].cooldown` therefore emits no cooldown at all, which is exactly the observed `<absent>`. Per CLAUDE.md rule 6, the authoritative effect text lives in `passives[].branches`, and that text carries the 1.5.",
+    "step_3_family_cross_check": "Every member of the `Spellblade` exclusivity group states the identical constant, so 1.5 s is the family-wide Spellblade ICD and Bloodsong conforms rather than deviating: Sheen \"({{fd|1.5}} second cooldown, starts after using the empowered attack)\"; Trinity Force same; Lich Bane same; Iceborn Gauntlet same; Essence Reaver same; Dusk and Dawn \"({{fd|1.5}} sec...\"; Divine Sunderer same clause. Group membership is independently confirmed by data/economics-sourced.json -> groups_26_12 -> \"Spellblade\": [\"Sheen\", \"Bloodsong\", \"Dusk and Dawn\", \"Essence Reaver\", \"Iceborn Gauntlet\", \"Lich Bane\", \"Trinity Force\"], and by docs/math-foundations.md line 357 (\"exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...)\"), which also means Bloodsong is the sole Spellblade source in this build — no other item could be supplying the event.",
+    "step_4_no_haste_adjustment": "The recorded value should be the raw 1.5 s, not a haste-reduced number. docs/math-foundations.md line 462 scopes the haste transform `cd' = cd * 100/(100+AH)` to *ability* cooldowns (`effective_cooldown`, ability haste). The Spellblade clause states a bare 'second cooldown' with no haste qualifier, and no field in data/items.json or data/item-atoms/3877.json supplies any haste scaling for it; item haste in the cache applies to item *actives* (Bloodsong's only active is `Ward`, `cooldown: null`), not to on-hit passive ICDs. So 1.5 is the correct number to record unmodified.",
+    "step_5_atoms_check": "data/item-atoms/3877.json decomposes Spellblade into `damage.on-hit` / `damage.on-attack` atoms with empty `parameters` and `provenance.evidence = \"passive:Spellblade\"` — the atom layer carries no competing cooldown value, so it neither supports nor contradicts; the branch text remains the only cached carrier of the number.",
+    "result": 1.5,
+    "units": "seconds"
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item id 3877 (Bloodsong) -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 3877 -> passives[0].cooldown",
+      "quote": "null",
+      "significance": "explains the old <absent>: the structured field is empty; the constant exists only in the branch text"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 3010 family — Sheen -> passives 'Spellblade' -> branches[0]",
+      "quote": "After using an [[Champion ability|ability]], your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]] ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "Trinity Force -> passives 'Spellblade' -> branches[0]",
+      "quote": "... deals {{as|200% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]] ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 3071 (Black Cleaver) -> passives 'Carve' and 'Fervor'",
+      "quote": "Carve: cooldown = null, text \"Dealing physical damage to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times...\"; Fervor: cooldown = null, text \"Dealing physical damage grants you 20 bonus movement speed for 2 seconds.\"",
+      "significance": "the Cleaver contributes no cooldown-bearing effect, so the changed leaf is not attributable to it"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "gold-income (support) items sweep — ids 3865, 3866, 3867, 3869, 3870, 3871, 3876, 3877",
+      "quote": "Shared Riches 'Grants a Shared Riches charge every 20 seconds'; Celestial Opposition 'slows enemies within 500 units by 50% for {{fd|1.5}} seconds (18 second cooldown, timer restarts upon taking damage from champions)'; Dream Maker 'Every 8 seconds, you gain a Blue Dream Bubble and a Purple Dream Bubble'; Zaz'Zak's Realmspike passive cooldown field = 10; Solstice Sleigh passive cooldown field = 30; Bloodsong Spellblade = 1.5 s (text)",
+      "significance": "1.5 s as a *cooldown* is unique to Bloodsong within the support roster"
+    },
+    {
+      "file": "data/economics-sourced.json",
+      "locator": "groups_26_12 -> 'Spellblade'",
+      "quote": "\"Spellblade\": [\"Sheen\", \"Bloodsong\", \"Dusk and Dawn\", \"Essence Reaver\", \"Iceborn Gauntlet\", \"Lich Bane\", \"Trinity Force\"]"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "line 357",
+      "quote": "exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...), enforced by `loadout_rules`."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "line 462",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | **EXACT** | ... |",
+      "significance": "haste transform is scoped to ability cooldowns; it does not apply to the Spellblade item ICD, so no adjustment to 1.5"
+    },
+    {
+      "file": "data/wiki/article-index.json",
+      "locator": "entry 'Bloodsong'",
+      "quote": "\"cats\": [\"Gold income items\", \"Health items\", \"Health regeneration items\", \"Items with active abilities\", \"Legendary items\", \"Mana regeneration items\", \"Season 2024 item release\", \"Support items\"], \"pageid\": \"1619520\"",
+      "significance": "confirms Bloodsong occupies the support-item slot, so its procs belong in a support_events stream"
+    },
+    {
+      "file": "data/item-atoms/3877.json",
+      "locator": "atoms[] entries with evidence 'passive:Spellblade'",
+      "quote": "{\"atom_id\": \"damage.on-hit\", \"family\": \"damage\", \"behavior\": \"Spellblade\", \"parameters\": {}, \"provenance\": {\"wiki\": [\"Bloodsong\"], \"evidence\": \"passive:Spellblade\"}}",
+      "significance": "atom layer carries no competing cooldown parameter"
+    },
+    {
+      "file": "data/staleness.json",
+      "locator": "entry '3877'",
+      "quote": "{\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 1, \"note\": \"\"}",
+      "significance": "the cached Bloodsong entry is not flagged stale, so the quoted branch text is trustworthy for this patch"
+    }
+  ],
+
+  "caveats": [
+    "The event index (`support_events[17]`) cannot be resolved from the data export alone — event ordering lives in code, which this investigation is forbidden to read. The identification rests on: (a) the scenario names Bloodsong, (b) Bloodsong is the roster's support-slot item, (c) 1.5 s is the unique support-roster cooldown equal to the new value, and (d) Black Cleaver contributes no cooldown.",
+    "One way the new value could still be wrong: if `support_events[17]` were in fact the Celestial Opposition event, 1.5 would be a mis-extraction of that item's *slow duration* ({{fd|1.5}} seconds) in place of its true 18-second cooldown, since both numbers appear in one sentence. Nothing in the cached data supports that reading for a Bloodsong-named scenario, and it would require the leaf to belong to an item absent from the scenario title, so it is recorded as a residual risk rather than a finding."
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_rationale": "The Bloodsong `Spellblade` internal cooldown is stated verbatim as 1.5 seconds in the cached wiki text and is corroborated by the identical constant across all seven Spellblade-group items. The prior `<absent>` reflected the parser leaving `passives[0].cooldown` null rather than a genuine lack of cooldown, so surfacing 1.5 is a correction; 1.5 s raw (no haste adjustment) is the right recorded value."
+}

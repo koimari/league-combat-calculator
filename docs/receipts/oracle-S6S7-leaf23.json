@@ -1,0 +1,73 @@
+{
+  "receipt": "oracle-S6S7-leaf23",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/multiplier",
+  "old_value": null,
+  "old_value_note": "absent (leaf did not exist in the prior baseline)",
+  "new_value": 1.08,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read_only_scope": "data/ and docs/math-foundations.md; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read"
+  },
+  "sources": [
+    {
+      "source": "data/items.json -> id 3877 (Bloodsong) -> passives[0] (name: \"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json — corroborating {{rd|melee|ranged}} template-order evidence (same cache, other items)",
+      "quote": "Tiamat / Ravenous Hydra Cleave: \"{{rd|40% AD|20% AD}}\" (40% AD melee, 20% AD ranged); Hullbreaker: \"{{rd|120%|{{ap|120*0.7}}...\" and \"{{rd|70 to 130 for 11|70*0.5 to 130*0.5 for 11|...}}\" — the second parameter is explicitly the scaled-down ranged branch. Therefore in {{rd|X|Y}} the first parameter is the melee value."
+    },
+    {
+      "source": "data/staleness.json -> patch, items[\"3877\"]",
+      "quote": "patch = \"16.15\", checked_at = \"2026-08-06T12:36:09.630672+00:00\"; items[\"3877\"] = {\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 1, \"note\": \"\"} — the cached Bloodsong text is current for the pinned patch."
+    },
+    {
+      "source": "data/item-atoms/3877.json",
+      "quote": "Bloodsong decomposes to atoms including \"damage.on-hit\" / \"damage.on-attack\" (behavior \"Spellblade\"); no atom carries a competing numeric amp, so the only quantified damage-amplification in the item is Expose Weakness."
+    },
+    {
+      "source": "data/items.json -> id 3071 (Black Cleaver) -> passives \"Carve\" / \"Fervor\"",
+      "quote": "\"Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\" / \"grants you {{as|20 '''bonus''' movement speed}}\" — Black Cleaver contributes armor reduction and movement speed only, i.e. it supplies no damage-taken multiplier that could combine into this leaf."
+    },
+    {
+      "source": "docs/math-foundations.md line 357 (BIS exclusivity groups)",
+      "quote": "\"exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, …)\" — Bloodsong's passive is the Spellblade family, so at most one Spellblade-family amp can be live; there is no second Expose Weakness instance to stack."
+    }
+  ],
+  "independent_computation": {
+    "statement": "Bloodsong's Expose Weakness makes the marked champion take a fixed percentage of increased damage from all sources for 4 s. The engine's damage-taken multiplier for a target under Expose Weakness is therefore m = 1 + amp.",
+    "steps": [
+      "1. Read the amp from the cached wiki text: {{rd|8%|5%}} increased damage from all sources.",
+      "2. Resolve the {{rd|...}} template: parameter 1 = melee wielder, parameter 2 = ranged wielder (established from Tiamat 40%/20% AD and Hullbreaker's explicit ranged x0.7 / x0.5 second parameter in the same cache).",
+      "3. amp(melee) = 8% = 0.08; amp(ranged) = 5% = 0.05.",
+      "4. m(melee) = 1 + 0.08 = 1.08 ; m(ranged) = 1 + 0.05 = 1.05.",
+      "5. No other cached effect in this scenario's named items contributes a multiplier: Black Cleaver's Carve is armor reduction (a resistance-side term, not a damage-taken multiplier), and Fervor is movement speed."
+    ],
+    "result": 1.08,
+    "result_condition": "1.08 is exact for a melee Bloodsong holder; the only other value the cached text can produce is 1.05, for a ranged holder.",
+    "absence_check": "The prior state (leaf absent) means no Expose Weakness multiplier was recorded at all. That cannot be right under any reading of the cached text: Expose Weakness is an unconditional, quantified amp applied whenever the empowered Spellblade attack lands on a champion, so a support event that emits a multiplier must carry 1.08 (melee) or 1.05 (ranged), never nothing."
+  },
+  "alternative_hypotheses_ruled_out": [
+    {
+      "hypothesis": "1.05 — Bloodsong held by a ranged champion.",
+      "assessment": "Not refutable from data/ alone: the roster of 'cleaver_bloodsong_roster' is defined outside the permitted evidence tree (no occurrence of 'cleaver_bloodsong' or 'support_events' anywhere in data/ or docs/math-foundations.md). 1.08 is however the melee branch of the same quoted text and is a legitimate value; combined with the scenario pairing Bloodsong with Black Cleaver (a melee-fighter/bruiser item whose Carve stacks on repeated physical hits), the melee branch is the reading the scenario name supports."
+    },
+    {
+      "hypothesis": "The 1.08 comes from Press the Attack rather than Bloodsong.",
+      "assessment": "data/runes.json -> Press the Attack: \"...grant you 8% increased damage against champions until 5 seconds after exiting combat with them.\" This is also exactly 8%, and it is not melee/ranged split. Either attribution yields the same multiplier 1.08, so the recorded number is correct under both readings."
+    },
+    {
+      "hypothesis": "Black Cleaver contributes to this multiplier.",
+      "assessment": "Ruled out — Carve is 6% armor reduction per stack (max 30%), which enters the resistance term (actual = raw x 100/(100+R)), not a multiplicative damage-taken factor. It can never produce 1.08."
+    }
+  ],
+  "caveats": [
+    "The scenario definition (roster, who holds Bloodsong, event ordering) lives outside the permitted evidence tree, so this receipt certifies the VALUE against the cached wiki text, not the event's index or its attribution. If the Bloodsong holder in 'cleaver_bloodsong_roster' is a ranged champion, the correct multiplier is 1.05 and this verdict flips to 'both_wrong'.",
+    "Verified that neither 'cleaver_bloodsong' nor 'support_events' appears anywhere under data/ or in docs/math-foundations.md, so no roster-side confirmation was available within scope."
+  ],
+  "committed": false
+}

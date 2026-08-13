@@ -1,0 +1,71 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigated_at": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/support_damage_multiplier",
+  "old_value": null,
+  "old_value_note": "absent (leaf did not exist; effective semantics = no support amplification, multiplier 1.00)",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong — Expose Weakness"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/champions.json",
+      "data/staleness.json",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "data/worklists/*.md",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/ (other files)",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> item 3877 \"Bloodsong\" -> passives[0] (\"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> item 3877 -> riotDescription (client text, corroborating, unnumbered)",
+      "quote": "After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "source": "data/items.json — corpus of {{rd|...}} template uses, used to decode argument order (arg1 = melee, arg2 = ranged)",
+      "quote": "Blade of the Ruined King Mist's Edge: \"{{rd|9%|6%}} of the target's '''current''' health\"; Death's Dance Ignore Pain: \"Reduces {{rd|30%|10%}} of all post-mitigation ... damage\"; Titanic Hydra Cleave: \"{{rd|1%|{{fd|0.5}}%}} '''maximum''' health\"; Hullbreaker Skipper: \"{{rd|120%|{{ap|120*0.7}}%}} '''base''' AD\"; Kraken Slayer: \"{{rd|150 + (200-150)/10*(x-1) for 13|150*0.8 + (200*0.8-150*0.8)/10*(x-1) for 13|levels=1;9 to 20|pp=true}}\"; Immortal Shieldbow: \"{{rd|400 to 700 for 11|400*0.8 to 700*0.8 for 11|...}}\""
+    },
+    {
+      "source": "data/.items.json.meta",
+      "quote": "{\"fetched_at\": 1786113359.05, \"filename\": \"items.json\"} — cache is current; data/staleness.json carries no stale flag for item 3877 beyond its name entry."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "No section of the math-foundations document mentions Bloodsong, Expose Weakness, support damage multipliers, or the melee/ranged split (grep for 'bloodsong|expose weakness|support_damage|melee|ranged|{{rd' returns zero hits). The document therefore neither supports nor contradicts this leaf; the wiki cache is the sole numeric source."
+    }
+  ],
+  "independent_computation": {
+    "step_1_effect_exists": "The cached Bloodsong wiki text states the debuff explicitly amplifies damage 'from all sources', not merely the holder's. In a coupled/roster ledger, an ally's (or the subject's) damage event landing inside the 4 s Expose Weakness window must therefore carry an amplification factor. A total absence of the leaf is equivalent to multiplier = 1.00, i.e. no amplification at all, which contradicts the item text.",
+    "step_2_decode_template": "The value is written {{rd|8%|5%}}. The {{rd|...}} template is the League Wiki melee/ranged split, first argument melee, second ranged. Decoded from the same cache without outside knowledge: (a) Hullbreaker writes the second argument literally as the first times 0.7 ({{rd|120%|{{ap|120*0.7}}%}}, {{rd|5%|{{ap|5*0.7}}%}}, {{rd|300%|{{ap|300*0.7}}%}}); (b) Kraken Slayer and Immortal Shieldbow write the second argument as the first times 0.8; (c) Titanic Hydra writes {{rd|1%|{{fd|0.5}}%}} and {{rd|3%|{{fd|1.5}}%}}, i.e. exactly half. In every case the second argument is the systematically reduced value, which is the ranged-holder value in League's melee/ranged item convention (cross-checked against the well-known live splits: BORK 9% melee / 6% ranged, Death's Dance 30% melee / 10% ranged, Ravenous & Titanic Hydra cleave 40%/20% and 1%/0.5%). Argument order is therefore melee | ranged.",
+    "step_3_value": "Expose Weakness damage amplification = 8% if the Bloodsong holder is melee, 5% if ranged.",
+    "step_4_multiplier_form": "The leaf encodes a factor, so multiplier = 1 + amp: melee 1 + 0.08 = 1.08; ranged 1 + 0.05 = 1.05. The published new value 1.08 equals the melee-holder value exactly.",
+    "step_5_window_check": "The amplification is windowed (4 s of Expose Weakness, applied only after the empowered on-hit lands on a champion, 1.5 s internal cooldown starting after the empowered attack). The leaf appearing on a single event (events[39]) rather than on every event is consistent with a windowed application; the per-event membership itself is engine timing that this evidence tree cannot adjudicate.",
+    "conclusion": "1.08 is the correct value for a melee Bloodsong holder and is the only value between the two admissible ones that the change could plausibly intend; the previous state (leaf absent, i.e. 1.00) is unambiguously wrong because the cached item text amplifies damage from all sources."
+  },
+  "caveats": [
+    "The scenario roster for 'cleaver_bloodsong_roster' is defined outside the permitted evidence tree (nothing under data/ names the scenario; data/practice-corpus/scenarios.json does not contain it). I therefore could not confirm from the allowed sources that the Bloodsong holder in this roster is melee.",
+    "Conditional statement of the result: if the Bloodsong holder is melee, 1.08 is exactly right. If the holder is a ranged champion, the correct value would be 1.05 and the verdict would flip to both_wrong. The absent (1.00) state is wrong in either case.",
+    "Aside (out of scope for this leaf, flagged for the maintainer): data/champions.json documents a Gangplank-specific exception — 'Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them.' Any scenario whose Spellblade proc is carried by a Gangplank keg must not author this multiplier."
+  ],
+  "verdict": "new_value_correct"
+}

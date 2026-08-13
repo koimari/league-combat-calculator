@@ -1,0 +1,90 @@
+{
+  "receipt_id": "oracle-S6S7-leaf50",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[0]/total_damage",
+  "old_value": 277.2,
+  "new_value": 300.3,
+  "verdict": "new_value_correct",
+  "confidence": "low-moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle50",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> id 3071 (Black Cleaver) .passives[0] (\"Carve\") .branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> id 3877 (Bloodsong) .passives[0] (\"Spellblade\") .branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> {{rd|melee|ranged}} ordering cross-check",
+      "text": "Ravenous Hydra / Tiamat '{{rd|40% AD|20% AD}}', Blade of the Ruined King '{{rd|9%|6%}}', Titanic Hydra '{{rd|4%|2%}}' -> first argument is the melee value, second the ranged value. Hence Expose Weakness = 8% melee / 5% ranged."
+    },
+    {
+      "id": "S4",
+      "where": "data/items.json -> id 3071 stats / id 3877 stats",
+      "text": "Black Cleaver: 40 AD, 400 health, 20 ability haste (no attack speed, no lethality, no crit). Bloodsong: 200 health, 9 gold/10, 75% health+mana regen (no AD, no AS, no ability haste, no lethality). Neither item carries any stat that scales a per-hit damage number by 8.33%."
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md Section 2.3 item 2",
+      "text": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes."
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md Section 2.1",
+      "text": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S7",
+      "where": "docs/math-foundations.md Section 1.1 (renewal counting + approximation 1)",
+      "text": "N(T) = floor(AS * u * T)  (damage.py: num_auto_attacks = floor(...)) ... a swing whose impact would land *exactly* at the window boundary is excluded, a measure-zero boundary choice. ... Uptime as a rate scale ... The error is bounded by +/-1 swing and vanishes as T grows."
+    },
+    {
+      "id": "S8",
+      "where": "data/runes.json (keystone amp scan)",
+      "text": "Only one damage-amplification keystone text exists in the cache: '... bonus adaptive damage and grant you 8% increased damage against champions ...'. No cached amp constant equals 8.33%."
+    }
+  ],
+  "independent_computation": {
+    "step_1_exact_ratio": {
+      "work": "300.3 / 277.2 = 3003/2772 = 13/12 = 1.0833333...  (3003 = 3*7*11*13, 2772 = 2^2*3^2*7*11, gcd = 231)",
+      "rounding_band": "Both leaves are displayed to 1 decimal, so the true ratio lies in [300.25/277.25, 300.35/277.15] = [1.08296, 1.08371]. 13/12 = 1.08333 sits inside; any candidate outside this band is excluded."
+    },
+    "step_2_exclude_bloodsong_amp": {
+      "work": "Expose Weakness amp candidates from S2/S3: 1.08 (melee), 1.05 (ranged), 1.08/1.05 = 1.02857 (melee-vs-ranged correction). 277.2*1.08 = 299.376 -> 299.4; 277.2*1.05 = 291.06 -> 291.1; 277.2*1.02857 = 285.12. None reaches 300.3, and none of 1.08 / 1.05 / 1.02857 lies in the band [1.08296, 1.08371].",
+      "conclusion": "The diff is NOT 'Expose Weakness started (or stopped) applying' and is not a melee/ranged fix of the amp."
+    },
+    "step_3_exclude_amp_merge_rules": {
+      "work": "Merging two amps a,b: multiplicative/additive = (1+a)(1+b)/(1+a+b); for the only cached amp constants (8% item, 8% keystone, 5% ranged) this gives 1.0055 (8%+8%) or 1.0030 (8%+5%) - far below the band. 'Largest-only' -> 'both multiplied' gives exactly (1 + smaller amp) = 1.08 or 1.05 - also outside the band. Reaching 1.08333 by an amp-merge rule would require a cached amplifier of exactly 8.333%, which does not exist (S4, S8).",
+      "conclusion": "No amplification-merge rule over the cached constants can produce 13/12."
+    },
+    "step_4_exclude_black_cleaver_stack_model": {
+      "work": "With m(R)=100/(100+R) (S6) and Carve shred r on base armor A, ratio = (100 + A(1-r_old)) / (100 + A(1-r_new)). Solving = 13/12: r 0.24 -> 0.30 (the 0.8*max_stacks constant -> full 5 stacks of S5/S1) requires A = 5000 armor; the asymptotic maximum of that change as A -> infinity is 0.76/0.70 = 1.0857, and at a realistic A = 100 it is only 176/170 = 1.0353. The Cesaro-mean correction of S5 moves the stack count by at most one stack (6% armor), which at A = 100 is a 1.7% damage change.",
+      "conclusion": "A Black Cleaver stack-model change cannot move a mitigated damage total by 8.33% at any realistic armor. (For completeness, 'shred absent -> shred present' would need A = 34.48 for 30% or A = 47.17 for 24% - unverifiable without the scenario roster, and it would also require the per-hit value to change, which step 5 shows it did not.)"
+    },
+    "step_5_decomposition_that_does_fit": {
+      "work": "277.2 = 12 * 23.1 and 300.3 = 13 * 23.1 exactly. Dividing out the ranged Expose Weakness amp of S2/S3: 277.2/1.05 = 264.0 = 12 * 22 and 300.3/1.05 = 286.0 = 13 * 22 - both exact integers, i.e. a per-instance post-mitigation 22.0 amplified to 23.1. The per-instance number is IDENTICAL on both sides of the diff (23.1); only the instance count changed, 12 -> 13.",
+      "conclusion": "The whole diff is one additional damage instance on an otherwise byte-identical mitigation/amplification chain. No item constant (6%/stack, 5 stacks, 30% cap, 100% base AD, 8%/5% amp, 1.5 s / 4 s / 6 s / 10 s timers) is violated by either value."
+    },
+    "step_6_which_count_is_right": {
+      "work": "Per S7 the count is governed by N(T) = floor(AS*u*T) with interior swings counted and a swing landing exactly at T excluded (for casts: a cast counts when it STARTS inside the window). A +/-1 swing difference is precisely the tolerance S7 attaches to the uptime-as-rate-scale model. Certifying 12 vs 13 in absolute terms requires the scenario's attack speed, uptime and fight window (and, in a coupled roster, the participant's death time) - these live in the golden scenario definition under scripts/, which this runbook forbids reading, and they are not present anywhere in data/ (grep for 'cleaver_bloodsong' across the whole export returns nothing; data/practice-corpus/scenarios.json has no Cleaver/Bloodsong scenario).",
+      "conclusion": "The absolute count could not be derived from the permitted evidence. The wiki-derived verdict is therefore a consistency verdict, not an absolute recomputation."
+    },
+    "verdict_rationale": "Everything wiki-checkable is unchanged between the two values: the per-instance damage 23.1 (= 22.0 post-mitigation * 1.05 ranged Expose Weakness) is identical, so the mitigation order, the Carve shred, the Spellblade base-AD row and the amplification chain all reproduce identically under both. The diff is exactly +1 damage instance (x13/12), which no Black Cleaver or Bloodsong constant can fabricate and which no amp-merge rule can produce - it is a counting/timing effect inside the documented +/-1-swing band of docs/math-foundations.md S1.1. Since no cached wiki value contradicts the new number, and the new number preserves every constant the old one honored while adding a swing that the documented floor(AS*u*T) convention counts (interior swings all count; only a swing landing exactly at T is dropped), the new value is the one consistent with the stated convention. Flagged: this is a consistency verdict at low-moderate confidence, NOT an absolute recomputation - an over-counted boundary swing would produce the same +1 signature in the opposite direction, and distinguishing the two requires the scenario's AS/uptime/window, which is outside the permitted evidence tree.",
+    "cross_check_negative_results": [
+      "No scenario definition for 'cleaver_bloodsong_roster' exists anywhere under data/ (searched every file).",
+      "Neither 277.2 nor 300.3 appears anywhere in data/ (searched all json/md).",
+      "data/item-atoms/3071.json and 3877.json carry no numeric parameters for Carve or Spellblade beyond the stat atoms, so they add no independent constant."
+    ]
+  }
+}

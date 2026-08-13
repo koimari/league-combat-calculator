@@ -1,0 +1,109 @@
+{
+  "receipt_id": "oracle-S6S7-leaf56",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[37]/pair_damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+  "confidence": "high",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle56",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/item-atoms/3071.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e9-bis-b-task.md",
+      "data/wiki/article-index.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"
+    ],
+    "limitation": "The scenario definition (roster, levels, items, target armor) and the golden baseline live under scripts/ and tests/, which runbook R-18/R-19 forbids. The reconstruction below is therefore an exact ratio-level identification of the responsible multiplier, not an absolute re-derivation of the raw damage packet."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 (\"Bloodsong\") -> passives[0] (\"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "load_bearing_phrase": "take 8% increased damage FROM ALL SOURCES"
+    },
+    {
+      "source": "data/items.json -> id 3071 (\"Black Cleaver\") -> passives[0] (\"Carve\") -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "role": "second roster-wide debuff named in the scenario id; used to test and reject the competing hypothesis"
+    },
+    {
+      "source": "data/items.json (template-orientation calibration for {{rd|A|B}})",
+      "quote": "Death's Dance {{rd|30%|10%}}; Ravenous Hydra / Tiamat / Stridebreaker {{rd|40% AD|20% AD}}; Blade of the Ruined King {{rd|9%|6%}}; Titanic Hydra {{rd|1%|{{fd|0.5}}}}; Eclipse {{rd|6%|4%}}",
+      "conclusion": "{{rd|A|B}} is ordered melee-first, ranged-second (verified against five items whose melee/ranged split is independently known). Bloodsong's Expose Weakness is therefore 8% for a melee holder, 5% for a ranged holder."
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.1 / Section 5 audit table",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... post = raw * m(R)  <=>  raw = post * (1 + R/100)",
+      "role": "mitigation identity used to price the competing Black Cleaver hypothesis"
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch). Under the engine's own ordering convention ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes.",
+      "role": "the competing hypothesis for the delta; quantitatively falsified below"
+    }
+  ],
+
+  "independent_computation": {
+    "observed_delta": {
+      "absolute": 7.6,
+      "ratio_new_over_old": 1.0807651434643997,
+      "ratio_uncertainty_window_from_1dp_rounding": [1.0796601168348380, 1.0818713450292399],
+      "note": "Both leaf values are stored to one decimal, so the true underlying ratio is only pinned to the window above."
+    },
+
+    "hypothesis_A_bloodsong_expose_weakness": {
+      "claim": "pair_damage (the damage the PAIRED participant deals into the same target) was previously computed without Bloodsong's Expose Weakness amplifier; the new value applies it. Multiplier = 1.08 (melee holder).",
+      "arithmetic": [
+        "1.08 lies inside the observed ratio window [1.07966, 1.08187] -- it is admitted with room on both sides.",
+        "Round-trip check: an unrounded old packet x in [94.1204, 94.15) prints as 94.1 and 1.08*x prints as 101.7. Worked example: x = 94.14 -> 94.1; 1.08 * 94.14 = 101.6712 -> 101.7.",
+        "Equivalently the observed absolute delta 7.6 is 8.077% of 94.1, i.e. 8% to within the 1-decimal storage granularity (0.08 * 94.14 = 7.53, which prints as 101.7 - 94.1 = 7.6)."
+      ],
+      "free_parameters": 0,
+      "textual_support": "The cached wiki branch says the debuff makes the target 'take 8% increased damage FROM ALL SOURCES'. Expose Weakness is a debuff on the TARGET, not a buff on the Bloodsong holder, so every roster member's damage into that target -- including the paired participant's -- must carry the multiplier. A model that applied it only to the holder's own damage under-counts the pair's damage by exactly the amplifier factor, which is precisely the observed 94.1 -> 101.7 correction.",
+      "consistency_checks": [
+        "Duration is 4 s with a 1.5 s internal cooldown starting after the empowered attack, so a mid-fight event (index 37) landing inside an Expose Weakness window is expected, not exceptional.",
+        "The melee branch (8%, not the ranged 5%) is the one the engine selected; 5% would give 98.8, which is far outside the observed window, and the 5%->8% branch swap would give 96.8. Neither matches. Only 'amplifier absent -> amplifier present at 8%' fits.",
+        "The scenario id pairs Bloodsong with Black Cleaver, a melee-bruiser item, which is consistent with a melee Expose Weakness holder."
+      ]
+    },
+
+    "hypothesis_B_black_cleaver_stack_model": {
+      "claim": "The delta comes from replacing Black Cleaver's 0.8*max_stacks constant with the exact Cesaro mean C - C(C-1)/(2h) recommended in math-foundations 2.3.",
+      "arithmetic": [
+        "Cached C = 5 stacks x 6% = 30% max. Constant model: 0.8*5 = 4 stacks = 24% reduction. Cesaro model: (5 - 10/h) stacks = 30% - 60%/h.",
+        "The entire reachable span of that change is 24% -> 30% armor reduction (h -> infinity). Damage ratio = (100 + 0.76A)/(100 + 0.70A).",
+        "That ratio is 1.0222 at A=50, 1.0353 at A=100, 1.0500 at A=200, 1.0632 at A=400, and its asymptote as A -> infinity is 0.76/0.70 = 1.0857.",
+        "Solving (100 + 0.76A)/(100 + 0.70A) = 1.08077 requires A = 2331 armor."
+      ],
+      "verdict": "REJECTED. No physically reachable target armor in a champion fight can make the Black Cleaver averaging change produce an 8.08% damage increase; it would need ~2331 armor. The whole family is capped at +8.57% even in the limit, and at realistic armor (50-200) it produces only +2% to +5%."
+    },
+
+    "hypothesis_C_black_cleaver_debuff_propagation": {
+      "claim": "pair_damage previously ignored Black Cleaver's armor shred (a target-side debuff) and now applies it.",
+      "arithmetic": [
+        "Ratio = (100 + A)/(100 + 0.76A) = 1.08077 requires target armor A = 45.22 exactly."
+      ],
+      "verdict": "NOT PREFERRED. Arithmetically possible, but it needs one free parameter tuned to a precise value (45.2 armor) that I cannot corroborate from the permitted evidence, whereas hypothesis A fits with zero free parameters and a verbatim 8% in the cached item text. Note that this hypothesis and hypothesis A point the same direction (a target-side debuff must amplify the pair's damage), so it does not change the verdict; it only changes which item is credited.",
+      "note": "Hypotheses A and C cannot both be responsible for this leaf: combined they would give 1.08 * 1.167 = 1.26x, i.e. ~118, not 101.7."
+    },
+
+    "conclusion": "The 8.08% increase is the Bloodsong 'Expose Weakness' amplifier, quoted verbatim in the cached wiki text as 8% (melee) increased damage FROM ALL SOURCES, being applied to the paired participant's damage. The old value 94.1 omitted a debuff the cached source says applies to all sources; the new value 101.7 = 1.08 x 94.14 (pre-rounding) restores it. Directionally the change also matches the general rule that Black Cleaver's Carve is an armor REDUCTION on the target, hence roster-wide, so a roster scenario named for both items is exactly where a 'target-side debuffs only helped their own holder' bug would surface."
+  },
+
+  "caveats": [
+    "Ratio-level identification only: the scenario roster/levels/target armor are defined outside the permitted evidence tree, so the absolute packet 94.14 -> 101.67 could not be rebuilt from first principles.",
+    "The 8% (melee) rather than 5% (ranged) branch is inferred from the observed multiplier itself plus the melee-first orientation of {{rd|A|B}} verified against five other cached items. If the Bloodsong holder in this roster is a RANGED champion, the correct multiplier would be 1.05 (giving ~98.8) and the verdict would become both_wrong. Nothing in the permitted evidence tree names the holder; the engine's own selection of 1.08 is the only signal, and it is a sourced choice driven by the holder's attack type."
+  ]
+}

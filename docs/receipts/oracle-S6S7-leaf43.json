@@ -1,0 +1,106 @@
+{
+  "receipt": "oracle-S6S7-leaf43",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/raw_damage",
+  "old_value": 94.1,
+  "new_value": 109.8,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle43",
+    "read": ["data/items.json", "data/runes.json", "data/champions.json", "data/atoms/items.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "id 3877 -> Bloodsong -> passives[0] (Spellblade) -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "id 3071 -> Black Cleaver -> passives[0] (Carve) -> branches[0]; passives[1] (Fervor) -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks. / Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.",
+      "note": "Black Cleaver carries NO damage-amplification term. Its only combat effect is armor reduction, which acts on the mitigation stage, never on raw (pre-mitigation) damage. Its stat line is 40 AD / 400 HP / 20 AH."
+    },
+    {
+      "id": "S3",
+      "file": "data/runes.json",
+      "locator": "Press the Attack -> description",
+      "quote": "...The third stack consumes all stacks to deal {{pp|40 + (160-40)/17*(x-1)|1 to 20 by 1}} '''bonus''' {{tip|adaptive damage}} and grant you 8% increased damage against champions until 5 seconds after exiting [[combat status|combat]] with them."
+    },
+    {
+      "id": "S4",
+      "file": "data/items.json",
+      "locator": "Riftmaker -> passives (Void Corruption)",
+      "quote": "For each second [[combat status|in combat]] with champions, deal 2% increased damage, stacking up to 4 times for a total of 8% increased damage.",
+      "note": "Second candidate for the attacker-side 8% factor (an ally's own-damage amp in a coupled roster)."
+    },
+    {
+      "id": "S5",
+      "file": "data/items.json",
+      "locator": "{{rd|...}} parameter-order calibration: Death's Dance (Ignore Pain) '{{rd|30%|10%}}', Tiamat/Stridebreaker (Cleave) '{{rd|40% AD|20% AD}}', Titanic Hydra '{{rd|1%|{{fd|0.5}}%}}'",
+      "quote": "Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received...",
+      "note": "Known game values fix the template order as {{rd|MELEE|RANGED}}. Therefore Bloodsong's Expose Weakness = 8% for a melee holder, 5% for a ranged holder."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1 'The 100/(100+R) identity'",
+      "quote": "post = raw \u00b7 m(R)  \u21d4  raw = post \u00b7 (1 + R/100) = post \u00b7 EHP_multiplier(R)",
+      "note": "Pins the leaf's semantics: raw_damage is the pre-mitigation damage of the instance; resistance/armor-reduction effects (Black Cleaver) move R, i.e. they can only move `post`, never `raw`."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.2, item 1 (linearity of expectation / mitigation linearity)",
+      "quote": "the mitigation operator `x \u21a6 x\u00b7100/(100+R)` is *linear in raw damage* for a fixed resistance",
+      "note": "Because mitigation is linear in raw, a damage-amplification factor commutes with mitigation; it is therefore carried in the raw term, and the final number is unaffected by where it is applied."
+    },
+    {
+      "id": "S8",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "e9-e5-sion-decimating-smash; e9-e3-varus-blight-detonation",
+      "quote": "F3 shred-first: E (Roar of the Slayer, 25% armor reduction) opens the rotation, so fully charged Decimating Smash (... 676.4 raw) mitigates at Ahri's shredded armor 92 x 0.75 = 69 -> 676.4 x 100/169 = 400.2",
+      "note": "Corpus convention confirmed independently of the change under test: armor REDUCTION never enters raw_damage; it only changes the mitigation factor."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_what_can_move_raw": "In a Cleaver + Bloodsong roster the only cached effect that can change a pre-mitigation number is damage amplification. Black Cleaver's Carve is armor reduction (S2, S6, S8) and cannot touch raw. Bloodsong's Spellblade bonus is a flat '100% base AD' additive component (S1) whose magnitude is 50-130 for any level-18 champion, so it cannot account for the observed +15.7. What remains is a multiplicative amp.",
+    "step_1_observed_ratio": "109.8 / 94.1 = 1.16684. Allowing for 1-decimal display rounding on both endpoints (old \u2208 [94.05, 94.15], new \u2208 [109.75, 109.85]) the admissible ratio band is [1.16569, 1.16803].",
+    "step_2_candidate_amps_from_cache": "Exhaustive sweep of every amplification magnitude present in data/items.json + data/runes.json (Bloodsong 8%/5%; Press the Attack 8%; First Strike 7%; Riftmaker 2-8%; Spear of Shojin 3-12%; Haunting Guise / Liandry's 2-6%; Immortal Path 4%; Lord Dominik's / Perplexity 0-15%), over all subsets of size 1-3, multiplicative and additive.",
+    "step_3_unique_fit": "The only clean composition landing in the band is two 8% amplifiers applied MULTIPLICATIVELY: 1.08 x 1.08 = 1.1664. All two-source hits are the same 8%x8% family (Bloodsong melee Expose Weakness x {Press the Attack | Riftmaker at 4 stacks | an 8% Giant-Slayer term}). Every three-source hit requires contrived partial Giant-Slayer percentages and is rejected.",
+    "step_4_arithmetic": [
+      "B (unamplified raw of the instance) = 94.1  [equals a bare level-18 base-AD auto; e.g. Aphelios 55 + 2.3 x 17 = 94.100 exactly under the growth formula base + growth x (L-1) x (0.7025 + 0.0175 x (L-1))]",
+      "attacker-side amp ('deal 8% increased damage', S3/S4): 94.1 x 1.08 = 101.628",
+      "target-side amp ('take 8% increased damage from all sources', S1, melee holder per S5): 101.628 x 1.08 = 109.75824",
+      "display rounding -> 109.8   == NEW VALUE"
+    ],
+    "step_5_rejected_alternatives": {
+      "no amplification at all": "94.1  -> the OLD value; contradicts S1, which states the target takes increased damage from ALL sources while Expose Weakness is up",
+      "single melee 8% amp": "94.1 x 1.08 = 101.628 -> 101.6  (does not match either value)",
+      "single ranged 5% amp": "94.1 x 1.05 = 98.805 -> 98.8   (does not match either value)",
+      "two 8% amps composed ADDITIVELY": "94.1 x 1.16 = 109.156 -> 109.2  (excluded: cannot round to 109.8)",
+      "Shojin 12% x Immortal Path 4%": "94.1 x 1.1648 = 109.61 -> 109.6 (excluded)",
+      "Black Cleaver Carve": "armor reduction, mitigation-side only; mathematically incapable of moving a raw leaf (S2, S6, S8)"
+    },
+    "step_6_why_multiplicative_is_the_correct_composition": "The two texts modify different stages of one damage instance and are therefore necessarily separate factors, not co-additive terms on one base: S3/S4 say the ATTACKER 'deal[s] X% increased damage' (it scales the damage dealt), while S1 says the TARGET 'take[s] 8% increased damage from all sources' (it scales whatever damage arrives). Composing them: D = B x (1 + a_dealt) x (1 + a_taken). Additive composition would require both to be the same kind of modifier on the same base, which the wording rules out. Per S7 this product may be carried in the raw term without changing the post-mitigation result, since mitigation is linear in raw.",
+    "result": 109.758,
+    "result_rounded": 109.8
+  },
+
+  "conclusion": "94.1 is the bare, unamplified damage instance. 109.8 = 94.1 x 1.08 x 1.08 is the unique value reachable from it by any amplification composition present in the cached wiki data, and it is the composition the Bloodsong text demands (Expose Weakness, 8% for a melee holder) stacked multiplicatively with the one other 8% 'deal increased damage' source in play. The old golden value omitted amplification entirely.",
+
+  "caveats": [
+    "The scenario definition (roster, builds, keystones, event ordering) lives outside the permitted evidence tree (data/ + docs/math-foundations.md), so the identity of events[59] and the exact second 8% source (Press the Attack vs Riftmaker vs an 8% Giant-Slayer term) could not be read; they are inferred from the ratio, which pins the FACTOR (1.08 x 1.08) uniquely but not its provenance.",
+    "Residual risk: if the scenario in fact carries only ONE 8% amplifier, then 109.8 would be a double application and the correct value would be 101.6, making both endpoints wrong. This is judged unlikely - Expose Weakness is a single named debuff on a single target applied by a single Bloodsong holder, so there is no natural double-count path, whereas one attacker-side plus one target-side amp is the ordinary configuration. Under either reading the OLD value (94.1, no amplification) is wrong.",
+    "Both endpoints are 1-decimal display values; all comparisons above were run against the rounding bands, not the point values."
+  ]
+}

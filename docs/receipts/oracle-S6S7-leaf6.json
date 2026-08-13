@@ -1,0 +1,101 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/support_damage_multiplier",
+  "old_value": "<absent>",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong — Expose Weakness"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/atoms/items.json",
+      "data/item-atoms/3877.json",
+      "data/champions.json",
+      "data/wiki/article-index.json",
+      "data/practice-corpus/scenarios.json",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "locator": "data/items.json -> \"3877\" (Bloodsong) .passives[0] (\"Spellblade\") .branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "locator": "data/items.json -> \"3877\" .riotDescription",
+      "text": "If the target is a champion, they take increased damage for 4 seconds.",
+      "role": "Riot client text corroborates the debuff exists and lasts 4s, but carries no number."
+    },
+    {
+      "id": "S3",
+      "locator": "data/atoms/items.json -> \"3877\" atoms with source \"Bloodsong.passives[0].branches[0]\"",
+      "text": "values [10.0, 100.0, 4.0, 8.0, 5.0, 1.5] with units [s, percent, s, percent, percent, flat]",
+      "role": "Independent parse of the same branch: the two candidate amp percents are exactly 8 and 5, in that textual order; no other percent appears."
+    },
+    {
+      "id": "C1",
+      "locator": "data/items.json -> Doran's Shield .passives[0].branches[0]",
+      "text": "... equal to {{as|{{rd|0 to 5 for 11|0 to 3.75 for 11|...}}|health}} ... [[Area of effect]], [[damage over time]], or [[damage|proc]] damage taken trigger this effect with the {{tip|ranged}} values.",
+      "role": "Control case pinning the {{rd|A|B}} template: B is explicitly named the ranged branch, so A is melee."
+    },
+    {
+      "id": "C2",
+      "locator": "data/items.json -> Tiamat / Ravenous Hydra (Cleave)",
+      "text": "Basic attacks [[on-hit]] deal {{as|{{rd|40% AD|20% AD}}|ad}} ...",
+      "role": "Control case: melee cleave 40% AD, ranged 20% AD — melee-first ordering."
+    },
+    {
+      "id": "C3",
+      "locator": "data/items.json -> Yun Tal Wildarrows",
+      "text": "grant {{as|{{rd|{{fd|0.4}}%|{{fd|0.2}}%}} critical strike chance}} permanently, stacking up to {{rd|63|125}} times (capped at {{as|25% critical strike chance}})",
+      "role": "Control case: 0.4% x 63 = 25.2% (melee) and 0.2% x 125 = 25% (ranged) both hit the stated 25% cap only under melee-first ordering."
+    },
+    {
+      "id": "C4",
+      "locator": "data/items.json -> Immortal Shieldbow",
+      "text": "{{rd|400 to 700 for 11|400*0.8 to 700*0.8 for 11|...}}",
+      "role": "Control case: the second branch is literally the first x0.8 — the reduced ranged branch."
+    },
+    {
+      "id": "C5",
+      "locator": "docs/math-foundations.md §2.1",
+      "text": "post = raw · m(R) ⟺ raw = post · (1 + R/100)",
+      "role": "Confirms the engine models damage modifiers as multiplicative factors on the raw/post pipeline, so an 'increased damage taken' debuff is expressed as a multiplier (1 + p), not an additive term."
+    }
+  ],
+  "independent_computation": {
+    "step_1_identify_effect": "The leaf's own source string names 'Bloodsong — Expose Weakness'. Bloodsong is item id 3877 (data/items.json, data/item-atoms/3877.json). Its only passive, Spellblade, is the sole carrier of an 'Expose Weakness' debuff (S1). No other cached item or champion text in data/ defines an effect by that name (the only other mention is a Gangplank interaction note in data/champions.json: 'Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them.').",
+    "step_2_read_the_number": "S1 states the debuffed champion takes '{{rd|8%|5%}} increased damage from all sources'. So the sourced amplification p is either 8% or 5% — there is no third admissible value, and S3's independent atom parse of the same branch yields exactly {8.0, 5.0} percent.",
+    "step_3_resolve_the_template": "{{rd|A|B}} on the LoL wiki is the melee/ranged split, A = melee, B = ranged. Pinned by four independent control cases in the same cached file: C1 (B explicitly labelled the 'ranged values'), C2 (ranged cleave is the halved 20% AD), C3 (only melee-first makes both branches land on the stated 25% crit cap), C4 (B is literally A x 0.8). The split keys off the Bloodsong holder — the support who consumed Spellblade — not the ally whose damage is being amplified.",
+    "step_4_form_the_multiplier": "'Increased damage from all sources' is a damage-taken amplifier applied multiplicatively (C5): multiplier = 1 + p. Therefore melee Bloodsong holder -> 1 + 0.08 = 1.08; ranged Bloodsong holder -> 1 + 0.05 = 1.05. Rounding is exact, no level or stat scaling exists on this term (S3 shows no per-level unit), and the 4s duration / 1.5s cooldown affect only when the debuff is live, not its magnitude.",
+    "step_5_admissible_set": [
+      1.08,
+      1.05
+    ],
+    "step_6_evaluate_old_value": "The old state is <absent> — no support amplification recorded on this event, i.e. an effective multiplier of 1.0. 1.0 is not in the admissible set. Given the leaf is emitted at all with a Bloodsong holder in the roster and the debuff's own preconditions satisfied (Spellblade-empowered basic attack landing on a champion), the source text mandates a non-unit amplifier. Absence is unsupported by the cached wiki text.",
+    "step_7_evaluate_new_value": "1.08 is exactly the melee branch of {{rd|8%|5%}} under the template resolution pinned by C1-C4. It is a directly sourced, unrounded, admissible value, and its attached provenance string names the correct item and the correct debuff.",
+    "conclusion": "1.08 is correct for a melee Bloodsong holder; the only competing sourced value, 1.05, would be correct for a ranged holder. Between the two values actually under test, the new value is the one the source supports and the old (absent / 1.0) is not."
+  },
+  "residual_uncertainty": {
+    "statement": "This oracle deliberately never read src/, tests/ or scripts/, so the roster composition of 'cleaver_bloodsong_roster' — specifically whether the Bloodsong-holding support is a melee or a ranged champion — is not visible in the evidence tree. The scenario id does not appear anywhere under data/ (data/practice-corpus/scenarios.json contains 22 scenarios, none of them this one).",
+    "impact": "The verdict is stated for the pair actually under test and is robust: absence (1.0) is inadmissible under S1 either way. The one way 1.08 could still be wrong is if that scenario's Bloodsong holder is a ranged champion, in which case S1 mandates 1.05 instead.",
+    "recommended_confirmation_by_a_reviewer_with_code_access": "Check the attack-range class of the Bloodsong carrier in the cleaver_bloodsong_roster ally roster. Melee -> 1.08 stands. Ranged -> the leaf should read 1.05 and the melee/ranged branch selection is keying off the wrong participant (a plausible failure mode: reading the amp off the amplified attacker, e.g. the melee Black Cleaver holder, instead of off the Bloodsong holder)."
+  },
+  "verdict": "new_value_correct"
+}

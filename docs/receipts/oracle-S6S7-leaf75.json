@@ -1,0 +1,147 @@
+{
+  "receipt_id": "oracle-S6S7-leaf75",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/total_damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 3226.1,
+  "new_value": 3338.3,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "build_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle75",
+    "read": [
+      "data/items.json (ids 3071 Black Cleaver, 3877 Bloodsong)",
+      "data/practice-corpus/scenarios.json (searched: no cleaver/bloodsong entry)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/",
+      "git history", "the diff", "the plan"
+    ]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 3071 Black Cleaver -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "derived": "C = 5 max stacks; per-stack reduction = 6%; cap = 30% armor reduction; stack duration = 6 s, refreshed by every physical damage instance."
+    },
+    {
+      "source": "data/items.json -> 3071 Black Cleaver -> riotDescription",
+      "quote": "Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. (stacks 5 times).",
+      "derived": "Corroborates 6% x 5 = 30% from the game-client string, independent of the wiki prose branch."
+    },
+    {
+      "source": "data/items.json -> 3877 Bloodsong -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "derived": "Expose Weakness is a flat multiplicative amp (8% melee / 5% ranged, {{rd|melee|ranged}} convention confirmed against 40+ other {{rd|..}} usages in the same cache). Being a common multiplicative factor on the whole breakdown row, it CANCELS in the old/new ratio and cannot by itself explain the observed delta (see rejected_hypotheses)."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.3 item 2 ('Black Cleaver average stacks')",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes. The stack *duration* (6 s) is always longer than the engine's inter-swing interval for any realistic AS*u > 1/6, so expiry does not rescue the constant - this is a documented tuning constant, not a theorem.",
+      "derived": "0.8 * C = 0.8 * 5 = 4.0 stacks = 24% reduction is the OLD model. It is exact only at h = 10 hits and is biased LOW for every longer fight. The doc itself labels it APPROX and recommends replacing it with the closed form."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)",
+      "derived": "Mitigation multiplier used for every arithmetic step below."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.2",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)",
+      "derived": "Composition order: Carve's percentage reduction applies to armor BEFORE penetration; flat pen subtracts last, floored at 0."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.3 preamble + row 'Terminus/BC ramps' of the Section 5 audit table",
+      "quote": "m(R) convex => averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, +/-20% at extremes",
+      "derived": "Any averaged-stack model is a LOWER bound on the true per-hit ramp sum; the exact per-hit simulation is strictly larger."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_source_rule": "Carve per-hit armor-reduction sequence for a participant landing h physical damage instances: r_k = 6% * min(k, 5), capped at 30%. Correct damage total = SUM_k raw_k * m(A_k), never a single constant.",
+    "step_2_stack_means": {
+      "formula": "mean stacks over h hits = C - C(C-1)/(2h) with C = 5  =>  5 - 10/h",
+      "table_h_to_mean_stacks_and_reduction_pct": {
+        "5": [3.0, 18.0],
+        "8": [3.75, 22.5],
+        "10": [4.0, 24.0],
+        "12": [4.1667, 25.0],
+        "15": [4.3333, 26.0],
+        "20": [4.5, 27.0],
+        "30": [4.6667, 28.0],
+        "50": [4.8, 28.8],
+        "100": [4.9, 29.4],
+        "cap": [5.0, 30.0]
+      },
+      "conclusion": "The old model's 4.0 stacks / 24% is the exact ramp mean at exactly h = 10 physical hits. A coupled roster fight with a Black Cleaver carrier (4 leading ability hits + a sustained auto stream, 6 s stack duration never lapsing) has h >> 10, so the source rule REQUIRES a mean strictly above 24% and the change's direction (upward) is forced."
+    },
+    "step_3_observed_delta": {
+      "ratio": 1.0347788,
+      "delta_pct": 3.4779,
+      "interpretation": "Expose Weakness (8%/5%) and every non-armor factor are common multiplicative factors on this row and cancel in the ratio, so the ratio isolates the change in the physical-damage mitigation multiplier m(A_eff)."
+    },
+    "step_4_solve_for_the_reduction": {
+      "identity": "ratio = m(A_eff_new) / m(A_eff_old) = (100 + A*(1-r_old)*(1-p) - f) / (100 + A*(1-r_new)*(1-p) - f)",
+      "method": "Exhaustive grid over integer target armor A in [20,260], flat pen f in [0,40], percent pen p in {0,.10,.15,.18,.20,.24,.25,.30,.35,.40,.45}, holding r_old = 24%.",
+      "result": "1386 parameterisations reproduce ratio = 1.03478 to within 3e-4 with r_new = 30% (the wiki cap). Best fits include (A=79, f=19, p=0), (A=113, f=5, p=18%), (A=101, f=12, p=15%), (A=131, f=6, p=30%) - all ordinary level-18/20 armor and lethality values. Cesaro-mean values of r_new (27%-29.4%) also fit, at correspondingly higher armor. No parameterisation reproduces the ratio with r_new <= 24%: the observed change is only reachable by increasing Carve's effective reduction toward the 30% cap.",
+      "worked_example": {
+        "assumed": "target armor A = 79, attacker flat armor pen (lethality) f = 19, percent pen p = 0",
+        "old_model_24pct": "R = max(0, 79*(1-0.24) - 19) = 60.04 - 19 = 41.04 ; m = 100/141.04 = 0.709019 -> pins the old leaf 3226.1",
+        "cesaro_h20_27pct": "R = 79*0.73 - 19 = 38.67 ; m = 0.721137 -> total = 3281.2",
+        "cesaro_h50_28.8pct": "R = 79*0.712 - 19 = 37.248 ; m = 0.728608 -> total = 3315.2",
+        "exact_per_hit_ramp": {
+          "h=20": 3285.7,
+          "h=30": 3303.2,
+          "h=50": 3317.2,
+          "h=100": 3327.8,
+          "note": "computed as old * (mean_k m(A_k)) / m(0.76A) with A_k = 79*(1 - 0.06*min(k,5)) - 19"
+        },
+        "wiki_cap_30pct": "R = 79*0.70 - 19 = 36.3 ; m = 0.733676 -> total = 3338.29",
+        "observed_new": 3338.3
+      }
+    },
+    "step_5_verdict_logic": {
+      "old_value": "3226.1 corresponds to a flat 24% Carve reduction, i.e. exactly 0.8 * 5 stacks. This is the tuning constant that docs/math-foundations.md Section 2.3 labels 'a documented tuning constant, not a theorem', exact only at h = 10 hits. For a sustained coupled roster fight it is outside the band the wiki rule permits and biased low. REJECTED.",
+      "new_value": "3338.3 lies inside the band the wiki rule permits: [exact-per-hit-ramp, 30% cap]. Under the best-fitting realistic parameterisation it reproduces the 30% five-stack cap to 0.01 damage (3338.29 vs 3338.3); under higher-armor parameterisations it reproduces the exact Cesaro/per-hit ramp. Either reading is source-consistent. ACCEPTED.",
+      "both_wrong_test": "'both_wrong' would require the new value to exceed the ceiling the source permits. The ceiling is the 30% five-stack cap; the observed delta is reachable at or below that cap for many ordinary armor/penetration values, so the new value is not provably over-stated. Not selected."
+    }
+  },
+
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Expose Weakness corrected from the ranged 5% to the melee 8%",
+      "test": "1.08/1.05 = 1.028571 -> 3226.1 * 1.028571 = 3318.3",
+      "result": "rejected; misses 3338.3 by 20.0 (0.6%)"
+    },
+    {
+      "hypothesis": "Expose Weakness newly applied at 8% across the whole row",
+      "test": "3226.1 * 1.08 = 3484.2",
+      "result": "rejected; overshoots by 145.9"
+    },
+    {
+      "hypothesis": "Expose Weakness newly applied at 8% over only part of the window",
+      "test": "requires amped fraction = 0.034779/0.08 = 43.5% (or 69.6% at 5%)",
+      "result": "rejected as unmotivated; with a 10 s spellblade window and a 1.5 s cooldown the 4 s debuff is near-permanent in a sustained fight, so neither fraction has a source basis"
+    },
+    {
+      "hypothesis": "Bloodsong Spellblade proc count off by one (100% base AD bonus physical)",
+      "test": "delta 112.2 would be one post-mitigation proc; requires ~180 base AD at ~40 effective armor",
+      "result": "rejected; no champion in data/champions.json reaches that base AD at the level cap, and the hypothesis leaves the Carve constant unexplained"
+    },
+    {
+      "hypothesis": "Penetration/reduction ORDER bug (pen applied before Carve's percentage reduction)",
+      "test": "the two orderings differ by exactly f*r_pct of armor; with f = 19 and r = 0.30 that is 5.7 armor, which also lands in range",
+      "result": "not excluded, but it is the SAME correction in substance - both readings move the effective post-Carve armor down by the amount the wiki-quoted composition order (Section 2.2) demands, and both push the leaf upward. Verdict is unchanged."
+    }
+  ],
+
+  "residual_uncertainty": [
+    "The scenario definition for 'cleaver_bloodsong_roster' (champions, levels, items, target, fight window) lives outside the permitted evidence tree - it is not in data/practice-corpus/scenarios.json nor anywhere else under data/. The absolute leaf value therefore cannot be reconstructed from first principles; the computation above pins the RATIO, which is exactly where the change lives, and bounds it against the wiki-sourced band.",
+    "Within that band I cannot distinguish 'engine now holds max 5 stacks (30%)' from 'engine now uses the exact Cesaro/per-hit ramp'. If the former, the new value still over-states the first 4 hits of the ramp by a bounded amount (0.3-1.6% for h = 100 down to h = 20 in the worked parameterisation) - materially closer to the source rule than the old 24% constant, but not the exact ramp. That is a follow-up worth checking against the scenario's actual hit count, not grounds to call the new value wrong."
+  ],
+
+  "conclusion": "The League Wiki cache (data/items.json 3071 Carve: 6% per stack, 5 stacks, 30% cap, 6 s) combined with the closed form quoted in docs/math-foundations.md Section 2.3 (mean stacks = C - C(C-1)/(2h) = 5 - 10/h) shows that the old leaf is pinned to a flat 4-stack / 24% tuning constant that is correct only for a 10-hit fight and biased low for every longer one. The observed +3.4779% move is reproducible to 0.01 damage by raising Carve's effective reduction to the wiki-sourced 30% five-stack cap under ordinary armor and lethality values, and is unreachable at any reduction <= 24%. The new value is the source-consistent one."
+}

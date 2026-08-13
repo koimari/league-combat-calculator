@@ -1,0 +1,100 @@
+{
+  "receipt": "oracle-S6S7-leaf67",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "export_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle67",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "known_limitation": "The scenario definition (roster composition, levels, target armor, event ordering) lives outside the permitted evidence tree, so the leaf's absolute damage cannot be reconstructed. The computation below is therefore a *ratio* oracle: it identifies, uniquely, which cached wiki quantity the old->new change corresponds to, and checks that it is the correct one for this scenario."
+  },
+
+  "independent_computation": {
+    "step_1_observed_multiplier": {
+      "ratio_point_estimate": 1.0807651434644,
+      "note": "Golden leaves are stored at 1 decimal place, so the point ratio is only accurate to ~+/-0.1%. The admissible multiplier band is derived from the rounding intervals instead."
+    },
+    "step_2_admissible_multiplier_band": {
+      "old_pre_round_interval": "[94.05, 94.15)",
+      "new_pre_round_interval": "[101.65, 101.75)",
+      "band_low": 1.0796601168348,
+      "band_high": 1.0818713450292,
+      "conclusion": "The change is a multiplicative amplification of the event's damage by a factor in [1.0797, 1.0819], i.e. an amp of 7.97%-8.19%. Any candidate mechanic must land inside that 0.22-percentage-point window."
+    },
+    "step_3_match_against_cached_quantities": {
+      "candidates_tested_and_excluded": [
+        {"amp": "5% (Bloodsong Expose Weakness, RANGED holder)", "implied_new_value": 98.8, "excluded": true},
+        {"amp": "6% (Black Cleaver Carve, one stack)", "implied_new_value": 99.7, "excluded": true},
+        {"amp": "9%", "implied_new_value": 102.6, "excluded": true},
+        {"amp": "10%", "implied_new_value": 103.5, "excluded": true},
+        {"amp": "12% (Carve, two stacks)", "implied_new_value": 105.4, "excluded": true},
+        {"amp": "30% (Carve, five stacks)", "implied_new_value": 122.3, "excluded": true}
+      ],
+      "unique_match": {
+        "amp": "8%",
+        "source": "Bloodsong (item 3877) passive Spellblade -> Expose Weakness, MELEE value of {{rd|8%|5%}}",
+        "check": "94.1 (rounded) x 1.08 = 101.63; consistency requires the pre-round base in [94.1204, 94.15), which is a non-empty sub-interval of the old value's rounding bucket [94.05, 94.15). Both stored leaves are therefore exactly reproduced by an 8.000% multiplicative amp."
+      }
+    },
+    "step_4_rule_out_the_black_cleaver_armor_hypothesis": {
+      "why_it_was_tested": "The scenario name also carries `cleaver`, and docs/math-foundations.md Section 2.3(2) flags the Black Cleaver `0.8 x max_stacks` average-stacks constant as a documented approximation with a standing recommendation to replace it with the exact Cesaro mean `C - C(C-1)/(2h)`. A stack-count change would move the target's armor and hence the damage.",
+      "model": "damage ratio under an armor change = (100 + R_old) / (100 + R_new), with R = A x (1 - 0.06 x stacks), per the 100/(100+R) identity in docs/math-foundations.md Section 2.1.",
+      "armor_required_to_reproduce_the_observed_ratio": {
+        "1_stack_delta_(6%)": 2331.3,
+        "2_stack_delta_(12%)": 127.3,
+        "3_stack_delta_(18%)": 65.4,
+        "4_stack_delta_(24%)": 44.0,
+        "5_stack_delta_(30%)": 33.2
+      },
+      "conclusion": "No stack-count delta reproduces the observed ratio at any round/plausible armor value; in particular the specific 0.8*C -> Cesaro-mean change (a 1-stack delta at h>=10 autos) would require ~2331 armor. A percentage-armor-reduction change also cannot produce a clean 8.000% amp except by coincidence. The 8% Expose Weakness amp is the parsimonious and exact explanation."
+    },
+    "step_5_is_the_8_percent_amp_correct_here": {
+      "wiki_rule": "Bloodsong's Expose Weakness makes the debuffed target take increased damage FROM ALL SOURCES - not only from the Bloodsong holder. In a roster (allies + enemies) scenario, a damage event authored by any participant against the debuffed target must therefore carry the amp. An engine that amplified only the holder's own damage would understate exactly this leaf, which is the observed old->new direction (94.1 -> 101.7, +8%).",
+      "melee_vs_ranged": "{{rd|X|Y}} is melee-then-ranged in this cache: Ravenous Hydra `{{rd|40% AD|20% AD}}`, Titanic Hydra `{{rd|4%|2%}}`, Death's Dance `{{rd|30%|10%}}`, Hullbreaker `{{rd|120%|{{ap|120*0.7}}...}}` - the first argument is always the melee figure. So 8% is the melee-holder value and 5% the ranged-holder value. The scenario's Bloodsong holder is not observable from the permitted evidence tree; the engine's 8% is correct iff that holder is melee. This is the single residual assumption in the verdict.",
+      "amps_are_multiplicative_on_the_damage_instance": "Consistent with docs/math-foundations.md Section 1.2 (mitigation is linear in raw damage for fixed resistance), so a flat 8% amp scales the post-mitigation event value by exactly 1.08 - which is what the leaf shows."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 (Bloodsong), passives[0] 'Spellblade', branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json -> id 3071 (Black Cleaver), passives[0] 'Carve', branches",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks. / Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "source": "data/items.json -> Ravenous Hydra / Titanic Hydra / Death's Dance / Hullbreaker (rd-template calibration)",
+      "quote": "{{rd|40% AD|20% AD}} ; {{rd|4%|2%}} ; {{rd|30%|10%}} - first argument is the melee value, second the ranged value."
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.1 (and audit table row 'Resistance mitigation')",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.3, item 2 (tested as an alternative hypothesis and rejected)",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`"
+    },
+    {
+      "source": "data/runes.json -> Press the Attack (adjacent 8% amp, noted for completeness)",
+      "quote": "The third stack consumes all stacks to deal ... '''bonus''' {{tip|adaptive damage}} and grant you 8% increased damage against champions until 5 seconds after exiting [[combat status|combat]] with them.",
+      "note": "Same 8% magnitude, but this cache's wording is a SELF amp ('grant you'), not a roster-wide 'from all sources' debuff, and the scenario is named for Bloodsong. It does not change the verdict either way, since both cached 8% mechanics agree on the multiplier."
+    },
+    {
+      "source": "data/worklists/e9-bis-b-task.md line 27",
+      "quote": "Bloodsong (support starter upgrade - spellblade proc on support items)",
+      "note": "Confirms Bloodsong is a support-starter upgrade whose spellblade is modeled - i.e. it is a roster/ally-held item, matching the scenario's `_roster` suffix."
+    }
+  ],
+
+  "verdict_rationale": "The old->new change is exactly a x1.08 multiplicative amplification of the event's damage (the rounding-consistent multiplier band is [1.0797, 1.0819], which admits 8% and excludes every other cached candidate, including all Black Cleaver stack deltas at plausible armor). 8% is the cached melee value of Bloodsong's Expose Weakness, whose wiki text says the debuffed target takes that much increased damage 'from all sources' - so in a roster fight the amp must reach damage events beyond the Bloodsong holder's own. The old 94.1 corresponds to that amp being absent from this event; the new 101.7 corresponds to it being applied at its sourced value. Residual assumption, unverifiable inside the permitted evidence tree: the scenario's Bloodsong holder is melee (a ranged holder would make the correct amp 5% and the correct leaf 98.8).",
+
+  "verdict": "new_value_correct"
+}

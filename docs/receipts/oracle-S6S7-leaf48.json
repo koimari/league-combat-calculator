@@ -1,0 +1,71 @@
+{
+  "receipt": "oracle-S6S7-leaf48",
+  "runbook": "R-18 / R-19 (independent oracle, isolated evidence tree)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/pair_damage",
+  "old_value": 138.6,
+  "new_value": 161.7,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle48b",
+    "read": ["data/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> \"3071\" (Black Cleaver) .passives[0] (\"Carve\") .branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "used_for": "Carve is a PERCENT ARMOR REDUCTION debuff placed on the TARGET (max 5 x 6% = 30%). Because it lowers the target's armor stat, every damage source hitting that target benefits, not only the Cleaver holder."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> \"3877\" (Bloodsong) .passives[0] (\"Spellblade\") .branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "used_for": "Expose Weakness is a TARGET-SIDE damage amplifier explicitly stated to apply to 'all sources' -> an allied participant's damage on the same target is amplified too. Value is 8% melee / 5% ranged (see S3)."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> \"1054\"/\"Doran's Shield\" .passives \"Enduring Focus\" branch, cross-checked against every {{rd|...}} usage in data/items.json",
+      "quote": "... equal to {{as|{{rd|0 to 5 for 11|0 to 3.75 for 11|levels=0 to 75|key1=%|formula1=0.066 health regen for every 1% missing health|formula2=0.05 health regen for every 1% missing health|...}}|health}} ... trigger this effect with the {{tip|ranged}} values.",
+      "used_for": "Establishes the wiki {{rd|A|B}} convention from inside the cache: arg1 = melee, arg2 = ranged (formula1 0.066 -> value1 0..5; formula2 0.05 -> value2 0..3.75, the value the text calls the 'ranged' one). Corroborated by Death's Dance {{rd|30%|10%}}, Ravenous/Profane/Stridebreaker/Tiamat {{rd|40% AD|20% AD}}, Hullbreaker/Iceborn/Shieldbow/Kraken where arg2 is written literally as arg1 x 0.7 / x 0.5 / x 0.8. Therefore Bloodsong Expose Weakness = 8% (melee holder) / 5% (ranged holder)."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md, Section 2.1 (line 235) and Section 2.2 (line 275)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)   ...   reduce_resistance(R, r_flat, r_pct):   R <- R - r_flat;  R <- R*(1 - r_pct/100)   [flat first, then %]",
+      "used_for": "Mitigation multiplier and the percent-armor-reduction operator used below."
+    }
+  ],
+  "independent_computation": {
+    "note": "The golden scenario spec lives outside the permitted evidence tree (scripts/), so the two scenario constants (target armor and the event's raw damage) were RECOVERED BY INVERSION from the two reported values and then checked for uniqueness against the item text, rather than read.",
+    "step_0_ratio": "161.7 / 138.6 = 1.1666666... = 7/6 exactly. Whatever changed is a clean multiplicative factor of 7/6 on one timeline event.",
+    "step_1_uniqueness_search": "Solved (100 + A) / (100 + A*(1 - 0.06*k)) * amp = 7/6 over A on a 0.5-armor grid in [0,150], Carve stacks k in 0..5, and amp in {1.00, 1.08 (melee EW), 1.05 (ranged EW)}. Exactly two solutions exist, and BOTH require the 5% ranged Expose Weakness amp: (A=50, k=5 stacks = 30% armor reduction) and (A=125, k=3 stacks = 18%). No solution exists with amp=1.00 or amp=1.08 at any round armor (they force A = 90.9 / 147.1 and A = 32.9 / 44.8 / 70.3 respectively). The natural solution is A = 50 armor with Carve at its documented 5-stack cap.",
+    "step_2_recovered_constants": {
+      "target_armor_before_shred": 50.0,
+      "event_raw_damage": 207.9,
+      "derivation": "raw = 138.6 * (1 + 50/100) = 138.6 * 1.5 = 207.9  [EHP round-trip, S4]"
+    },
+    "step_3_old_value_reconstruction": "138.6 = 207.9 * 100/(100+50) = 207.9 * 0.666667  -> the event was mitigated by the target's FULL 50 armor and received NO Expose Weakness amp: neither target-side debuff reached this participant.",
+    "step_4_new_value_reconstruction": [
+      "Carve at 5 stacks (S1): R = 50 * (1 - 30/100) = 35 armor   [percent reduction operator, S4]",
+      "Mitigation (S4): 207.9 * 100/(100+35) = 207.9 * 0.7407407 = 154.0",
+      "Expose Weakness, ranged holder (S2,S3): 154.0 * 1.05 = 161.7"
+    ],
+    "step_5_exactness": "Both reconstructions are exact to the printed precision (138.6 and 161.7, no rounding slack), from a single shared raw of 207.9.",
+    "step_6_ruling_out_partials": {
+      "shred_only": 154.0,
+      "amp_only": 145.53,
+      "shred_plus_melee_8pct_amp": 166.32,
+      "shred_plus_ranged_5pct_amp": 161.7,
+      "conclusion": "Only 'both debuffs, ranged 5% amp' reproduces the new value; no combination reproduces 138.6 other than 'no debuff applied at all'."
+    },
+    "step_7_semantics": "Black Cleaver's Carve lowers the TARGET's armor stat (S1) and Bloodsong's Expose Weakness explicitly makes the target 'take increased damage from ALL SOURCES' (S2). In a coupled roster/pair scenario, the second participant's damage on the shared target must therefore see both. The old leaf siloed both target-side debuffs to their applier; the new leaf shares them, which is what the cached item text mandates."
+  },
+  "caveats": [
+    "The scenario input tuple (participants, levels, target armor, event ordering) was not readable from the permitted evidence tree; armor=50 and raw=207.9 are inverted, not sourced. The uniqueness search in step_1 is what pins them: 5-stack Carve (30%) on 50 armor plus the ranged 5% Expose Weakness is the only decomposition of 7/6 whose every constant is quoted verbatim from the two items the scenario is named after.",
+    "docs/math-foundations.md Section 2.3(2) notes an averaged Black Cleaver stack model (0.8 x max_stacks = 24%) for aggregate paths; 24% does not reproduce the ratio at any round armor (it would need A = 71.43). A per-event timeline entry at index 61 (deep in the fight, after the documented '4 leading ability hits apply stacks before the auto stream') is expected to carry the capped 30%, which is what the new value shows."
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "receipt": "oracle-S6S7-leaf58",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle58",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item id 3877 (\"Bloodsong\") -> passives[0] (name: \"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "template-convention calibration for {{rd|melee|ranged}} within the same cached file",
+      "quote": "Ravenous Hydra / Tiamat \"Cleave\": {{rd|40% AD|20% AD}}; Blade of the Ruined King \"Mist's Edge\": {{rd|9%|6%}}; Titanic Hydra \"Titanic Crescent\": {{rd|4%|2%}}",
+      "why": "In every calibration case the first {{rd}} argument is the melee-holder value and the second the ranged-holder value, so Bloodsong's Expose Weakness is 8% (melee holder) / 5% (ranged holder)."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "item id 3071 (\"Black Cleaver\") -> passives[0] (name: \"Carve\") -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "why": "The scenario's other named item. Used to rule out an armor-shred explanation of the observed change."
+    },
+    {
+      "id": "S4",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1, \"The 100/(100+R) identity\"",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)",
+      "why": "Used to convert a hypothetical armor-shred change into a damage ratio for the ruled-out alternative."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3, item 2 (\"Black Cleaver average stacks\")",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch) ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`",
+      "why": "Bounds how much a Black-Cleaver-stack modelling change could move a single event; see ruled_out_alternatives."
+    }
+  ],
+
+  "independent_computation": {
+    "claim": "The leaf moved by exactly one multiplicative factor of 1.08 - i.e. one application of Bloodsong's Expose Weakness at its melee value - and nothing else.",
+    "step_1_rounding_bands": {
+      "note": "Golden leaves are reported to 1 decimal place, so each displayed number is a band.",
+      "old_band": "94.1 => true value in [94.05, 94.15)",
+      "new_band": "101.7 => true value in [101.65, 101.75)",
+      "implied_ratio_band": "[101.65/94.15, 101.75/94.05] = [1.079660, 1.081871]"
+    },
+    "step_2_candidate_constants": {
+      "test": "Which round damage-amplification constants fall inside the implied ratio band [1.07966, 1.08187]?",
+      "results": {
+        "+5% (Expose Weakness, ranged holder)": "1.05 - OUTSIDE (would give 94.14 x 1.05 = 98.85 -> 98.8/98.9)",
+        "+6%": "1.06 - OUTSIDE (99.79)",
+        "+7.5%": "1.075 - OUTSIDE (101.20)",
+        "+8% (Expose Weakness, melee holder)": "1.08 - INSIDE (94.14 x 1.08 = 101.67 -> 101.7)",
+        "+9%": "1.09 - OUTSIDE (102.61)",
+        "+10%": "1.10 - OUTSIDE (103.55)"
+      },
+      "conclusion": "8% is the only round amplification constant consistent with the observed 94.1 -> 101.7 move."
+    },
+    "step_3_consistency_window": {
+      "requirement": "A single pre-amp damage D must satisfy round1(D) = 94.1 AND round1(1.08 x D) = 101.7.",
+      "solution": "D in [94.1204, 94.1500) - non-empty, so old = D and new = 1.08 x D are simultaneously consistent with the two displayed values.",
+      "worked_point_estimate": "D = 94.14 (post-mitigation physical damage of the event, unamplified). Amplified: 94.14 x (1 + 0.08) = 101.6712 -> reported 101.7."
+    },
+    "step_4_semantics": {
+      "wiki_rule": "Expose Weakness makes the debuffed champion 'take 8% increased damage from ALL SOURCES' for 4 seconds (S1).",
+      "reading": "'All sources' is attacker-agnostic: once one roster member's Bloodsong-empowered attack lands on the target, every subsequent damage instance on that target - from any participant, any damage type - is amplified for the 4 s window. That cross-participant coupling is precisely what a 'coupled_scenarios/..._roster' golden case exists to pin.",
+      "old_value_reading": "94.1 is the un-amplified damage: the leaf received NO Expose Weakness amplification at all. That contradicts S1 for any holder type - a ranged holder would still amplify, just by 5% (98.8).",
+      "new_value_reading": "101.7 = D x 1.08 applies the debuff at the melee-holder value quoted verbatim in the cached wiki text."
+    }
+  },
+
+  "ruled_out_alternatives": [
+    {
+      "alternative": "The move is a Black Cleaver armor-shred change, not an amplification.",
+      "test": "Using m(R) = 100/(100+R) (S4) and Carve's 6%/stack, 30% cap (S3), the damage ratio from shredding a target whose pre-shred armor is A is (100+R_old)/(100+R_new). The largest achievable ratio - a full 0-stack to 5-stack swing - is (100+A)/(100+0.7A).",
+      "numbers": "Ratio = 1.08 requires A = 32.8 exactly ( (100+A)/(100+0.7A) = 1.08 => 0.244A = 8 ). For any realistic target armor the 0->5 swing gives a much larger ratio: A=60 -> 1.127, A=80 -> 1.154, A=100 -> 1.176. A one-stack step (6% of A) cannot reach 1.08 at all for positive armor: (100+R)/(94+R) = 1.08 => R = -19.",
+      "conclusion": "A Cleaver-stack explanation needs a contrived ~32.8 armor target AND a full 0->5 stack swing on this single event. Rejected in favour of the exact, quoted 8% constant."
+    },
+    {
+      "alternative": "The move is the Cesaro-mean vs 0.8*max_stacks re-tuning discussed in math-foundations 2.3 (S5).",
+      "test": "That change moves average stacks between 4.0 and 5.0, i.e. shred between 24% and 30% of A - a ratio of at most (100+0.76A)/(100+0.70A), which is bounded by 0.76/0.70 = 1.0857 only as A -> infinity and is 1.017 at A=100.",
+      "conclusion": "Cannot produce 1.08 at any plausible target armor. Rejected."
+    },
+    {
+      "alternative": "The amp should be the ranged-holder value (5%).",
+      "test": "94.14 x 1.05 = 98.85 -> 98.8/98.9, which equals neither displayed value.",
+      "conclusion": "Whatever the engine did, it did not apply 5%. If (and only if) the Bloodsong holder in this roster is a ranged champion would the true answer be ~98.8 and both displayed values wrong - see residual_uncertainty."
+    }
+  ],
+
+  "residual_uncertainty": {
+    "statement": "This oracle deliberately did not read src/, tests/ or scripts/, so the scenario's roster composition (which champion carries Bloodsong, and that champion's melee/ranged type) and the exact timestamp of events[39] relative to the 4 s Expose Weakness window / 1.5 s proc cooldown are not observable from data/ alone.",
+    "impact": "The only way the new value could be wrong is if the Bloodsong holder is RANGED (correct value would then be ~98.8) or if events[39] falls outside the 4 s debuff window (correct value would then be the old 94.1).",
+    "why_it_does_not_change_the_verdict": "Both escape hatches are less likely than the direct reading: (a) the observed factor is exactly the melee constant quoted in the cached wiki text, to within the 1-dp rounding band, which is what an engine that consults item_effects would produce; (b) Black Cleaver + Bloodsong on a roster is a melee-bruiser loadout; (c) a golden scenario named for both items exists to exercise the debuff, so an event sitting inside the debuff window is the intended case. The old value applies NO amplification, which contradicts the quoted 'increased damage from all sources' under every holder type."
+  },
+
+  "verdict_rationale": "The change is exactly x1.08 on a single damage leaf. 8% is the melee value of Bloodsong's Expose Weakness in the cached wiki text (data/items.json 3877), the {{rd|melee|ranged}} convention is confirmed against three other cached items, and no other constant in the implied rounding band [1.0797, 1.0819] exists. The Black Cleaver alternatives are numerically excluded. The old value 94.1 corresponds to the debuff not being applied at all, which the cached wiki text forbids for a champion target inside the 4 s window - and 'from all sources' is what makes this a coupled roster case. New value stands."
+}

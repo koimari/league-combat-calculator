@@ -1,0 +1,74 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/event_id",
+  "old_value": "enemy:Aatrox:support:17",
+  "new_value": "enemy:Aatrox:support:2",
+  "leaf_kind": "synthetic identifier (string label), not a physical/derived quantity",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle22",
+    "read": [
+      "data/items.json (item 3877 Bloodsong, 3071 Black Cleaver lookup)",
+      "data/README.md",
+      "data/atoms/aatrox.atoms.json",
+      "data/champion-audit/batch-0.json, batch-e9-*.json, batch-p1-1.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e8d-task.md, e8-interactions.json, e9-corpus-task.md, f0/f1/p2/issues-* task files",
+      "docs/math-foundations.md (all headings; sections 0, 1.1, 1.2, 5 read in full)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "goal": "Derive the correct trailing component of the event_id for the 18th (index 17) entry of support_events from cached wiki text or a quoted formula.",
+    "steps": [
+      "1. Searched the whole evidence tree for the leaf's grammar: `grep -rn 'event_id|support_events|coupled|roster'` over data/ and docs/math-foundations.md. Zero hits for `event_id`, `support_events`, `coupled_scenarios`, or `cleaver_bloodsong_roster` anywhere under data/ or in docs/math-foundations.md. A regex sweep for id-shaped tokens `(enemy|ally|self):<Champion>:<kind>:<int>` over the whole export returned no matches. The id grammar therefore has no definition in the oracle-visible sources.",
+      "2. Checked the two named items for any wiki quantity equal to 17 or 2 that an id could encode. Bloodsong (data/items.json id 3877): stats are health 200, base HP regen 75%, base mana regen 75%, gold/10 = 9; passive branch text is 'After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown ...)'; active 'Ward' with 4 charges; tier 3; shop total 400. No cached Bloodsong or Black Cleaver number is 17, and none is 2 (the only small integers present -- 4 charges, 4s duration, tier 3, 1.5s ICD, 10s window -- do not match either candidate).",
+      "3. Checked docs/math-foundations.md for any documented convention on event identity, keying, or ordinal numbering. The document is exclusively quantitative (Sec. 0 deterministic expectation semantics; 1.1 renewal-process auto/cast schedule N(T)=floor(AS*u*T); 1.2 linearity of expectation for multi-hit/DoT/proc counts; 1.3 execute quantiles; 2 resistance/penetration; 3 BIS optimization; 4 variance; 5 formula-audit table). It states no rule that fixes an event_id, and the audit table (Sec. 5) contains no row for event identifiers.",
+      "4. Checked whether Aatrox's own cached material could pin an ordinal: data/atoms/aatrox.atoms.json (basic-attack, R buff, heal-shield.revive), data/champion-audit/batch-0.json Aatrox entry, and data/worklists/e8d-task.md ('Aatrox is explicitly NOT implemented (pre-rework ghost atom) -- do not touch') and e8-interactions.json ('Aatrox: ghost atoms -- pre-rework revive, do NOT implement'). None describes how many support events an Aatrox participant emits, nor any numbering.",
+      "5. Structural analysis (the only inference the evidence supports). The old suffix (17) is exactly equal to the array position of the leaf (support_events[17]). That equality is the signature of a suffix taken from the flattened, roster-wide list index: it carries no information the JSON path does not already carry, and it renumbers whenever any *other* participant's event is inserted earlier in the list. The new suffix (2) is strictly less than the array position, so it cannot be a global index; it is consistent with a per-participant (per-source) ordinal -- Aatrox's 3rd support event, 0-based -- which stays stable under unrelated roster churn while remaining unique because the id is already scoped by team and champion (`enemy:Aatrox:support`)."
+    ],
+    "result": "NOT INDEPENDENTLY DERIVABLE. No cached wiki text under data/ and no quoted formula in docs/math-foundations.md determines this leaf's value; the leaf is a labeling convention, not a computed quantity. Neither candidate can be confirmed or refuted against a source. The only usable signal is structural (step 5), which favors the new value: 17 duplicates the array index and is unstable to unrelated insertions, while 2 is consistent with a stable per-participant ordinal that remains unique under the team+champion+kind scoping already present in the id.",
+    "confidence": "low -- structural reasoning only, no source confirmation",
+    "residual_risk": "A suffix scoped per participant is only unique while the (team, champion, kind) prefix is unique within the roster. If cleaver_bloodsong_roster can hold two enemy Aatrox participants, the new scheme could collide; the oracle sources cannot see the roster to rule this out. Separately, a drop from 17 to 2 would look identical whether the counter was rescoped or whether events were lost -- distinguishing those requires the sibling leaves (event count/amount), which are outside this leaf."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> item 3877 (Bloodsong), passives[0].branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "bearing": "Full cached effect text of the scenario's support item; contains no quantity equal to 17 or 2."
+    },
+    {
+      "source": "data/items.json -> item 3877 (Bloodsong), active[0].branches[0] and stats",
+      "quote": "Consumes a charge to place a {{tip|Stealth Ward}} at the target location, which grants {{tip|sight}} of the surrounding area. Charges refill upon visiting the shop. | stats: health 200, healthRegen 75%, manaRegen 75%, goldPer10 9; shop total 400",
+      "bearing": "Remaining cached Bloodsong numbers; none matches either candidate suffix."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 0",
+      "quote": "The engine runs with `deterministic=True` in every scoring path (optimizer, BIS, golden corpus) ... every stochastic draw is replaced by its expectation ... T = E[ D | model, config ]",
+      "bearing": "Defines what the golden corpus's numbers mean; says nothing about event identifiers."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2",
+      "quote": "Deterministic every-`N`th-hit procs (Kraken Slayer, Hullbreaker) have exact count `floor(n/N)` -- modular counting over the shared hit sequence",
+      "bearing": "The closest the document comes to prescribing event counts/ordinals; it governs proc counts, not id strings, and yields no value for this leaf."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (Formula-audit table)",
+      "quote": "(no row for event identifiers; rows cover stat growth, on-hit stacking, mitigation, penetration, etc.)",
+      "bearing": "Confirms the audit table does not bind this leaf."
+    },
+    {
+      "source": "data/worklists/e8d-task.md",
+      "quote": "ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items -- reuse the same event shape) ... Aatrox is explicitly NOT implemented (pre-rework ghost atom) -- do not touch.",
+      "bearing": "Establishes that support events are the heal/shield event family, but specifies no id grammar and no per-participant numbering."
+    },
+    {
+      "source": "data/champion-audit/batch-p1-1.json",
+      "quote": "API evidence: one 'Dirty Fighting (3-Stack Shield)' support event at 280.0, support_shield_received 280.0; passive_procs=0 emits none.",
+      "bearing": "The only cached example of a support-event receipt; it records amount and count, never an event_id, so it cannot fix the suffix."
+    }
+  ],
+  "verdict": "new_value_correct",
+  "verdict_caveat": "Chosen from the required three-value enum under an explicit inability to derive the leaf. The oracle sources (cached wiki text under data/, docs/math-foundations.md) do not determine this leaf at all, so this is NOT a source-confirmed verdict: it records only that the new value is the more defensible of the two under the one available inference (a per-source ordinal that is stable and non-redundant, versus an old value that merely restates the array index), and that no evidence shows either value to be wrong. If the runbook admits an 'indeterminate' outcome, that is the accurate one here."
+}

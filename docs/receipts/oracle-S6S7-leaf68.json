@@ -1,0 +1,122 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "investigator": "fresh oracle subagent (no access to src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or git history)",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle_leaf68",
+    "files_read": [
+      "data/items.json",
+      "data/item-atoms/3071.json",
+      "data/item-atoms/3877.json",
+      "data/champions.json (grep only: 'Expose Weakness', 'Bloodsong')",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "docs/math-foundations.md"
+    ]
+  },
+
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/pair_damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 94.1,
+  "new_value": 101.7,
+
+  "method_note": "The scenario's input tuple (champions, levels, ranks, target resistances) is defined outside my permitted evidence tree, so the leaf cannot be reconstructed as an absolute number from data/ alone. What IS decidable from data/ is the multiplier between the two candidate values: a golden leaf rounded to 1 dp pins the true ratio to a narrow interval, and that interval admits exactly one wiki-sourced constant.",
+
+  "independent_computation": {
+    "step_1_observed_ratio": {
+      "arithmetic": "101.7 / 94.1 = 1.0807651",
+      "rounding_interval": "old in [94.05, 94.15), new in [101.65, 101.75) => true ratio in [1.079660, 1.081871)",
+      "note": "Underlying unrounded pair must satisfy x in [94.121, 94.149] for x and 1.08*x to display as 94.1 and 101.7 — a non-empty, self-consistent band."
+    },
+    "step_2_candidate_multipliers_from_cached_wiki_text": [
+      {
+        "candidate": "Bloodsong 'Expose Weakness' applied to the partner's damage (melee holder, 8%)",
+        "multiplier": 1.08,
+        "in_interval": true,
+        "parameters_fitted": 0,
+        "verdict": "MATCH — exact, armor-independent, parameter-free"
+      },
+      {
+        "candidate": "Bloodsong 'Expose Weakness' at the ranged value (5%)",
+        "multiplier": 1.05,
+        "in_interval": false,
+        "implied_new_value": 98.8,
+        "verdict": "excluded"
+      },
+      {
+        "candidate": "melee/ranged mis-selection corrected (5% -> 8%)",
+        "multiplier": "1.08 / 1.05 = 1.0285714",
+        "in_interval": false,
+        "verdict": "excluded"
+      },
+      {
+        "candidate": "Black Cleaver average-stack model change: constant 0.8*C = 4 stacks (24% shred) -> Cesaro mean C - C(C-1)/(2h) -> 5 stacks (30% shred), per docs/math-foundations.md 2.3(2)",
+        "multiplier_formula": "(100 + 0.76*R) / (100 + 0.70*R)",
+        "evaluated": {
+          "armor_50": 1.02222,
+          "armor_100": 1.03529,
+          "armor_200": 1.05,
+          "armor_300": 1.05806,
+          "armor_500": 1.06667,
+          "asymptote_R_to_inf": 1.0857143
+        },
+        "armor_required_to_land_in_interval": "R between ~1880 and ~3043",
+        "in_interval": "only at physically impossible armor",
+        "verdict": "excluded — no reachable Summoner's Rift armor produces a +8.08% swing from a 24%->30% shred change"
+      },
+      {
+        "candidate": "Black Cleaver 'Carve' shred becoming visible to the partner's damage at all (0% -> 30% shred on the shared target)",
+        "multiplier_formula": "(100 + R) / (100 + 0.70*R)",
+        "evaluated": {"armor_30": 1.07438, "armor_33": 1.08042, "armor_35": 1.08434, "armor_40": 1.09375},
+        "in_interval": "yes, but only for a fitted target armor of ~32-34",
+        "verdict": "same-direction alternative — requires one fitted parameter; does not change the verdict (see reconciliation)"
+      }
+    ],
+    "step_3_conclusion": "The only parameter-free, armor-independent multiplier in the cached wiki corpus that reproduces 94.1 -> 101.7 is exactly 1.08 — Bloodsong's 'Expose Weakness', melee value. Independent recomputation of the leaf: 94.1(4) x 1.08 = 101.7 (1 dp). The old value 94.1 corresponds to that debuff (or the equivalent shared target-side shred) being credited only to its own holder and NOT to the partner's damage inside the coupled pair fight — which contradicts the item's own wording, 'take 8% increased damage from all sources'.",
+    "step_4_direction_check": "Both surviving readings (Bloodsong 'from all sources', or Black Cleaver's armor shred as a state on the shared target) are the same class of defect and point the same way: a target-side debuff that every source should see was being withheld from the coupled partner. Under either reading the correction raises pair_damage, and 101.7 is the corrected figure. There is no reading under which 94.1 is the corrected figure."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "path": "3877 (Bloodsong) -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "load_bearing": "the 8% amplifier and the phrase 'from all sources'"
+    },
+    {
+      "file": "data/items.json",
+      "path": "template semantics of {{rd|X|Y}} = melee | ranged, established from unambiguous cached cases",
+      "quote": "Death's Dance 'Ignore Pain': 'Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received' (canonically 30% melee / 10% ranged); Titanic Hydra 'Cleave': '{{rd|1%|{{fd|0.5}}%}} maximum health'; Tiamat/Ravenous Hydra 'Cleave': '{{rd|40% AD|20% AD}}'; Phage 'Rage': '{{rd|20|10}} bonus movement speed'",
+      "load_bearing": "fixes first slot = melee, so Bloodsong's Expose Weakness is 8% for a melee holder, 5% for a ranged holder"
+    },
+    {
+      "file": "data/items.json",
+      "path": "3071 (Black Cleaver) -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "load_bearing": "C = 5 stacks, 6%/stack, 30% cap — the numbers used to rule the BC model change out"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1, 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)",
+      "load_bearing": "the mitigation model used to convert a shred change into a damage ratio"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.3, item 2, 'Black Cleaver average stacks'",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch) ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`",
+      "load_bearing": "defines the competing BC hypothesis (24% -> up to 30% shred), which the armor sweep excludes"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.2, penetration/reduction composition",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)",
+      "load_bearing": "confirms percentage armor reduction multiplies the running armor, giving the (100+0.76R)/(100+0.70R) form used above"
+    }
+  ],
+
+  "residual_uncertainty": "The one input I cannot observe from data/ is whether the Bloodsong holder in this roster is melee or ranged. The observed multiplier is exactly the melee value (8%); had the holder been ranged the correct leaf would be 94.1 x 1.05 = 98.8 and the verdict would be both_wrong. Disfavored: Bloodsong is a support-quest item (shop tag SUPPORT, 400g, Classic SR 5v5 only) and the scenario pairs it with Black Cleaver (3000g FIGHTER item, 40 AD / 400 HP / 20 AH), a melee-bruiser shape; and the fitted multiplier lands on 8% to within rounding rather than on 5%. Independently, the same-direction Black Cleaver reading in step_2 would also make 101.7 the corrected value.",
+
+  "verdict": "new_value_correct"
+}

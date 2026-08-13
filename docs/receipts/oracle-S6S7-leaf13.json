@@ -1,0 +1,100 @@
+{
+  "runbook": "R-18 / R-19 blind oracle",
+  "investigator": "independent oracle subagent (no access to src/, tests/, scripts/, docs/plans, docs/receipts, git history, diff or plan)",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle13b",
+    "contents": ["data/**", "docs/math-foundations.md"]
+  },
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/raw_damage",
+  "old_value": 0.0,
+  "new_value": 263.5,
+  "verdict": "new_value_correct",
+  "confidence": "medium — the direction of the change is established from sourced data; the exact event could not be re-derived end-to-end because the scenario input tuple (participants, levels, ranks, full builds) is defined outside the permitted evidence tree (it lives in scripts/, which this investigation may not read)",
+
+  "independent_computation": {
+    "step_1_what_the_two_named_items_can_author": {
+      "black_cleaver_id_3071": {
+        "passive_Carve": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.",
+        "passive_Fervor": "Dealing physical damage grants you 20 bonus movement speed for 2 seconds.",
+        "conclusion": "Black Cleaver authors NO damage event. Carve is a resistance modifier and per docs/math-foundations.md it acts on the mitigation step (100/(100+R)), which is downstream of raw_damage. It therefore cannot produce or change a raw_damage leaf at all."
+      },
+      "bloodsong_id_3877": {
+        "passive_Spellblade": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown).",
+        "spellblade_ceiling_check": "Spellblade raw = 100% base AD. Applying the CLAUDE.md/math-foundations growth identity base + growth*(L-1)*(0.7025+0.0175*(L-1)) at L=18 to all 173 champions in data/champions.json, the maximum base AD in the game is 150.0 (Illaoi; 68 + 4.7*17*1.0). 263.5 > 150.0, so events[82] is NOT a Bloodsong Spellblade proc.",
+        "expose_weakness_check": "263.5 / 1.08 = 243.981..., 263.5 / 1.05 = 250.952...; neither is a cached wiki row value, so 263.5 is not a round ability value carrying the Expose Weakness amp either."
+      },
+      "conclusion": "Neither named item can author 263.5. events[82] must be a champion damage event (ability or auto) that the two items only modify — which is exactly the class of event whose raw_damage is a champion-formula quantity."
+    },
+
+    "step_2_is_0.0_a_value_any_cached_formula_produces": {
+      "method": "Enumerated every damage leveling row for all 173 champions in data/champions.json and evaluated each rank with non-negative stats.",
+      "result": "Every damage row carries a strictly positive flat term or a strictly positive ratio at every rank (the only zero-valued rows are stack-scaled rows evaluated at zero stacks, e.g. Thresh Flay minimum at 0 souls). No champion damage event and no item effect in the cached data yields raw_damage == 0.0 for a landed damage instance.",
+      "conclusion": "0.0 is not a wiki-sourced damage value; it is the signature of a source that failed to resolve (the canonical case in this codebase being a form/variant option that did not select a variant, so the variant's damage row was never read). A slot that legitimately deals no damage would be a no-damage row, and such rows do not acquire damage from a form-variant change."
+    },
+
+    "step_3_is_263.5_reachable_from_cached_wiki_rows": {
+      "method": "Exhaustive sweep of all 173 champions x all damage leveling rows x all ranks x levels 1-18, with bonus AD in {0, 40} (40 = Black Cleaver's cached attackDamage.flat) and bonus health in {0, 200, 400, 600} (200 = Bloodsong, 400 = Black Cleaver, 600 = both), resolving %AD / %bonus AD / %max-health terms against cached base stats grown with the level formula.",
+      "exact_hits_at_263.5": [
+        {
+          "source": "data/champions.json Gnar E 'Hop' -> 'Physical Damage' = [50,85,120,155,190] + 6% of target's maximum health",
+          "arithmetic": "rank 2: 85 + 0.06 * 2975 = 85 + 178.5 = 263.5",
+          "target_health_derivation": "2975 = Gwen base health at level 18 (610 + 79/level -> 2575.0 by the growth identity) + 400 (Black Cleaver cached health.flat)",
+          "note": "Gnar is the shapeshifter whose E slot is form-split: Hop (Mini) vs Crunch (Mega). A mis-resolved form option is precisely the way this slot's damage would read 0.0."
+        },
+        {
+          "source": "data/champions.json Renekton W 'Ruthless Predator' -> 'Total Physical Damage' = [10,40,70,100,130] + 150% AD",
+          "arithmetic": "rank 3 at level 16: base AD = 69 + 4.15*15*(0.7025+0.0175*15) = 129.07 -> 129 after the documented display-level integer rounding; 70 + 1.5*129 = 70 + 193.5 = 263.5"
+        }
+      ],
+      "conclusion": "263.5 is exactly reproducible from cached wiki damage rows using the documented growth and rounding identities; it is an ordinary champion-formula magnitude, not an out-of-range or fabricated number. 0.0 is reproducible by no cached formula."
+    },
+
+    "step_4_verdict_reasoning": "raw_damage is the pre-mitigation quantity (docs/math-foundations.md: mitigation is the separate 100/(100+R) step, and the EHP round-trip is raw = post*(1+R/100)). Black Cleaver's Carve therefore cannot touch it, and Bloodsong's Spellblade ceiling (150.0 max base AD in the entire cached roster) rules the item out as the source. So the leaf is a champion damage event. For such an event, 0.0 is not a value any cached wiki row can produce, while 263.5 is exactly producible. The change therefore moves the leaf from an unsourceable value to a sourceable one, which is the correct direction."
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "key": "3071 Black Cleaver",
+      "quote": "Dealing physical damage to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks."
+    },
+    {
+      "path": "data/items.json",
+      "key": "3877 Bloodsong",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Gnar.abilities.E[0] 'Hop'",
+      "quote": "If Gnar lands on a unit he will bounce 500 units further in the same direction. Landing on an enemy deals them physical damage and slows them by 80% for 0.5 seconds. Physical Damage: [50, 85, 120, 155, 190] + 6% maximum health"
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Gnar.abilities.E[1] 'Crunch'",
+      "quote": "Active: Gnar leaps to the target location and deals physical damage to nearby enemies upon impact ... Physical Damage: [80, 115, 150, 185, 220] + 6% of his maximum health"
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Renekton.abilities.W 'Ruthless Predator'",
+      "quote": "Total Physical Damage: [10, 40, 70, 100, 130] + 150% AD"
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Gwen.stats.health / Illaoi.stats.attackDamage",
+      "quote": "Gwen base health 610 (+79/level) -> 2575.0 at level 18; Illaoi is the roster-wide maximum base AD at level 18, 150.0"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "key": "Section 5 formula-audit table",
+      "quote": "Stat growth (`growth_stat`) | `base + growth*(L-1)*(0.7025 + 0.0175*(L-1))` | EXACT ... Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)`; EHP round-trip `raw = post*(1+R/100)` | EXACT ... Stat rounding (`calculate_total_stats`) | display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX"
+    }
+  ],
+
+  "limitations": [
+    "The scenario input tuple for 'cleaver_bloodsong_roster' (participants, levels, ability ranks, full item builds, event ordering) is not present anywhere in data/ or docs/math-foundations.md; it is defined in scripts/, which this runbook forbids reading. Event index 82 therefore could not be mapped to a specific caster/ability with certainty.",
+    "Because the event could not be mapped, the 263.5 reproductions above are existence proofs that the value is formula-legal under the scenario's items, not a full end-to-end recomputation of that specific event.",
+    "Golden event arrays are index-addressed; if the change inserted an event earlier in the timeline, index 82 may address a different event before and after. That possibility does not change the verdict direction: a damage event carrying 0.0 raw damage is unsourceable, and 263.5 is sourceable."
+  ]
+}

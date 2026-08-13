@@ -1,0 +1,96 @@
+{
+  "receipt": "oracle-S6S7-leaf11",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/event_id",
+  "old_value": "main:enemy:Aatrox:33",
+  "new_value": "main:enemy:Aatrox:35",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle11",
+    "read": [
+      "docs/math-foundations.md (all 523 lines)",
+      "data/items.json (3071 Black Cleaver, 3877 Bloodsong passives[].branches)",
+      "data/item-atoms/3877.json",
+      "data/champions.json (Aatrox abilities P/Q/W/E/R)",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "data/worklists/*.md (grep only)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "leaf_classification": "NON-PHYSICAL BOOKKEEPING LABEL. The leaf is an event identifier of the form <scope>:<side>:<champion>:<ordinal>, not a damage/stat/timing quantity. The trailing integer is a per-participant event ordinal produced by the engine's own event-authoring order.",
+
+  "independent_computation": {
+    "goal": "Derive the correct trailing ordinal for the enemy-Aatrox event occupying combat/events[82] from cached wiki text and/or a quoted formula in docs/math-foundations.md.",
+    "step_1_search_for_a_defining_source": {
+      "action": "grep -rn 'event_id|eventId|main:enemy|coupled_scenarios|cleaver_bloodsong' over the whole exported data/ tree and docs/math-foundations.md",
+      "result": "Zero hits for event_id, main:enemy, coupled_scenarios and cleaver_bloodsong. The only related string anywhere in the tree is prose in data/atoms/autoresearch-review.md:97 ('test asserts 2 distinct event ids ...'), which describes de-duplication of heal events and defines no numbering scheme.",
+      "conclusion": "No cached wiki page, no atom file, and no line of docs/math-foundations.md defines the event-id grammar or the ordinal counter. docs/math-foundations.md never uses the words 'event id' at all; its event-level vocabulary is 'event ledger' / 'damage events' (Sections 1.3, 1.4, 5) with no identifier scheme."
+    },
+    "step_2_can_the_ordinal_be_derived_from_physics": {
+      "reasoning": "An ordinal of the form 'Aatrox:N' is by construction the count of previously-authored Aatrox events plus one. Deriving N therefore requires (a) the scenario input tuple (levels, loadouts, fight mode, window length, uptime) and (b) the engine's event-authoring and interleaving convention. (a) is not present anywhere under data/ - the coupled scenario 'cleaver_bloodsong_roster' has no definition in the exported tree (data/practice-corpus/scenarios.json contains only the Practice-Tool corpus: cp21-ziggs-outer-blast, cp21-bis-utility-ahri, ...; no coupled roster scenarios). (b) lives in src/ and scripts/, which this runbook forbids reading. Wiki text pins damage/stat magnitudes, never ledger indices.",
+      "conclusion": "The ordinal is not computable from the permitted evidence, by construction and not by omission: there is no wiki quantity and no formula in docs/math-foundations.md whose value is a participant-local event ordinal."
+    },
+    "step_3_structural_check_of_the_diff_itself": {
+      "observation": "The array index (82) is unchanged while the Aatrox-local ordinal rises by exactly 2 (33 -> 35).",
+      "implication": "Within the prefix events[0..82], the enemy-Aatrox stream gained exactly 2 events while the prefix length stayed at 83. That is only consistent with a re-composition of the prefix (two events re-attributed to Aatrox, or Aatrox events moved earlier / other participants' events moved later or removed), not with a pure insertion (a pure insertion of 2 Aatrox events would shift this event to index 84).",
+      "checkability": "Whether that re-composition is right is a property of the sibling events (their timestamps, sources and amounts) and of the physical leaves in the same scenario - none of which this leaf carries and none of which the permitted sources pin. The ordinal itself carries no independently falsifiable content: it is unique-and-monotone-by-construction relative to whatever stream produced it, and both 33 and 35 satisfy that invariant against their own stream."
+    },
+    "step_4_plausibility_bounds": {
+      "reasoning": "The only bound the wiki sources support is a sanity bound on how many events an enemy Aatrox can plausibly author. From data/champions.json Aatrox has a periodic empowered auto (P Deathbringer Stance, cooldown 22 s at level 1 down to 10 s at 18, reduced by 2 s per on-hit/ability hit), a triple-cast Q (14/12/10/8/6 s, 1 s static between casts), a two-hit W (20/18/16/14/12 s; 'the target is dealt the same physical damage again' if the tether is not broken), E and R. Together with autos and item procs, a 30-40 event stream for one participant over a golden coupled fight is unremarkable.",
+      "conclusion": "Both 33 and 35 fall inside the plausible range; the bound does not discriminate. No source supports a 'both_wrong' finding."
+    },
+    "result": "NOT INDEPENDENTLY DERIVABLE. I cannot verify this leaf from cached wiki text or from docs/math-foundations.md. Neither value can be shown wrong, and neither can be shown right, from the permitted evidence."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json #3071 Black Cleaver, passives[Carve].branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "bearing": "Pins the Carve ramp (5 stacks x 6% = 30%) - a damage-magnitude fact. It constrains no event ordinal."
+    },
+    {
+      "source": "data/items.json #3071 Black Cleaver, passives[Carve].branches[1]",
+      "quote": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame.",
+      "bearing": "The only wiki rule in the scenario's item set that touches event granularity; it caps stack applications per frame, but says nothing about how the engine numbers ledger entries."
+    },
+    {
+      "source": "data/items.json #3877 Bloodsong, passives[Spellblade].branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "bearing": "Pins the Spellblade proc cadence and the Expose Weakness amp - again magnitudes/cadence for the holder, not ledger indices for the enemy Aatrox stream."
+    },
+    {
+      "source": "data/champions.json Aatrox, abilities P/Q/W",
+      "quote": "Innate: Periodically, Aatrox empowers his next basic attack ... | Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. | If the tether is not broken by the end of its duration, the target is dealt the same physical damage again",
+      "bearing": "Used only for the step-4 plausibility bound on Aatrox's event count."
+    },
+    {
+      "source": "docs/math-foundations.md Section 1.3",
+      "quote": "The engine computes these exactly for threshold triggers (Stormsurge's rolling window: `_damage_threshold_trigger_time` scans the event ledger with a sliding-window sum - the exact crossing time of a discrete cumulative process).",
+      "bearing": "The document's most specific statement about the event ledger. It describes scanning the ledger; it defines no identifier and no ordinal."
+    },
+    {
+      "source": "docs/math-foundations.md Section 5, formula-audit table",
+      "quote": "| On-hit stacking (`_calculate_stacking_procs`, `_simulate_stacking_on_hit_damage`) | modular every-Nth counting; sequential health-path expectation (affine => exact) | EXACT | Ability-carried on-hits lead the shared counter (ordering convention); double-on-hit extra stacks attributed to a prefix of autos, not the spellblade's actual weave times |",
+      "bearing": "Confirms that event ORDER/attribution is an explicitly-declared engine convention ('ordering convention', 'attributed to a prefix of autos'), i.e. a modeling choice the document records rather than a quantity the wiki fixes. An ordinal that depends on that convention cannot be adjudicated by an external source."
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.3 item 2",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C` ...",
+      "bearing": "The only Black-Cleaver formula the document supplies. It is a mitigation-magnitude formula (a Cesaro mean of an armor-reduction ramp); no substitution of it yields an event ordinal. Recorded here to show the search for a quotable formula was exhaustive and came up empty for this leaf."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "quote": "\"purpose\": \"Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log).\"",
+      "bearing": "Checked for a definition of 'cleaver_bloodsong_roster'; the corpus contains only Practice-Tool scenarios (cp21-*), none coupled, so the scenario's input tuple is not recoverable from data/."
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_confidence": "none-from-evidence / structural-default only",
+  "verdict_rationale": "This leaf is not oracle-checkable and the receipt must not pretend otherwise. 'both_wrong' would be a positive claim that neither ordinal fits the stream, and I have no evidence for it - step 4 shows both values sit inside the only bound the wiki supports. 'old_value_correct' would require showing the enemy-Aatrox prefix should contain 33 events, which no permitted source states. The remaining verdict is the structural default: an event id is correct BY CONSTRUCTION relative to the stream that authored it (unique and monotone within the participant), so whichever stream the physical leaves of this scenario vindicate also vindicates its labels. Accordingly this leaf should be treated as CARRIED, not CONFIRMED: it contributes no independent evidence for or against the change, and the scenario's verdict must rest on its physical leaves (damage, mitigation, timing) rather than on this identifier.",
+  "caveat": "If the aggregator requires every leaf to be independently adjudicated, this one cannot be, and should be re-routed to a check that can see the sibling events' timestamps and sources within the same golden snapshot."
+}

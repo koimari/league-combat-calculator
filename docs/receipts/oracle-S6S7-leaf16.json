@@ -1,0 +1,115 @@
+{
+  "receipt": "oracle-S6S7-leaf16",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[83]",
+  "old_value": {
+    "attacker": "main",
+    "damage": 0.0,
+    "damage_type": "magic",
+    "event_id": "main:enemy:Aatrox:34",
+    "event_precision": "e… (truncated in the report/allowlist; remaining fields not visible to this oracle)"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+
+  "question_restated": "Is a combat-ledger event carrying damage = 0.0 with damage_type = 'magic', authored by attacker 'main' against enemy Aatrox, a value the cached sources can produce? If not, what is the correct leaf?",
+
+  "independent_computation": {
+    "step_1_mitigation_is_strictly_positive": {
+      "claim": "Post-mitigation damage is 0.0 if and only if the raw (pre-mitigation) magic damage is 0.0. Mitigation can never zero a positive packet.",
+      "derivation": "docs/math-foundations.md §2.1 gives m(R) = 100/(100+R) for R >= 0 and m(R) = 2 - 100/(100-R) for R < 0, so m(R) ∈ (0, 2] for every reachable R. §2.2 floors penetration at R = 0, giving the best case m(0) = 1. Hence raw > 0 => post > 0, strictly.",
+      "target_numbers": {
+        "target": "Aatrox, level 18",
+        "growth_formula": "base + growth*(L-1)*(0.7025 + 0.0175*(L-1))  [CLAUDE.md / math-foundations §Appendix table]",
+        "max_health": "650 + 114*17*(0.7025 + 0.0175*17) = 650 + 1938*1.0 = 2588.0",
+        "magic_resistance": "32 + 2.05*17*1.0 = 66.85",
+        "mitigation_multiplier": "100/(100+66.85) = 0.599341",
+        "note": "L = 18 makes the growth bracket exactly 1.0 (0.7025 + 0.2975)."
+      }
+    },
+    "step_2_no_cached_magic_source_can_evaluate_to_zero": {
+      "champion_scan": "Enumerated every leveling row in data/champions.json (173 champions) whose attribute name contains 'magic', and evaluated every rank. ZERO rows have an all-zero rank: every rank of every cached magic-damage row carries at least one strictly positive term (flat, %AD, %AP, %max-health or %mana).",
+      "champion_scan_ap_relaxation": "Relaxing to 'could this row be 0 for a build with 0 AP?' (i.e. every non-zero term at that rank is AP-scaled) yields exactly ONE hit in the whole cache: AurelionSol Q 'Total Maximum Magic Damage' rank 5 — and that row is on the CLAUDE.md known-degraded list (Aurelion Sol Q Stardust stacks, units come back empty). It is not reachable from a Black Cleaver / Bloodsong attacker attacking Aatrox.",
+      "item_scan": "Enumerated every passive/active effect branch in data/items.json mentioning magic damage. Every one of them carries a strictly positive flat base in addition to any AP term (Blackfire Torch 60, Dusk and Dawn 75% base AD, Lich Bane 75% base AD, Nashor's Tooth 15, Terminus 30, Zaz'Zak's Realmspike 10, Stormsurge 125, Luden's Echo 75, Night Harvester 160, Everfrost 300, Runecarver 20-45, Cruelty 50-150, Lightning Rod 135-230, Hextech Gunblade 175-253). No item magic-damage effect can evaluate to 0.0.",
+      "build_scan": "Neither item that names the scenario deals magic damage at all. data/items.json 3071 Black Cleaver: 'Carve' = physical-damage-triggered 6% armor reduction per stack (max 30%), 'Fervor' = 20 movement speed on physical damage — no damage component. data/items.json 3877 Bloodsong: Spellblade = 'your next basic attack ... deals 100% base AD bonus PHYSICAL damage on-hit' plus the 'Expose Weakness' 8%/5% increased-damage-taken debuff — again no magic damage instance."
+    },
+    "step_3_conclusion": "0.0 is not a computable value for a magic damage instance under any cached formula. A leaf reading {damage: 0.0, damage_type: 'magic'} therefore does not describe a real damage instance delivered to Aatrox; it is a phantom row for a source that was not actually active for that attacker/target (an ability unavailable in the attacker's active form, an untriggered proc, or a packet whose terms were all dropped). The correct ledger contains no event at that position, i.e. <absent>.",
+    "step_4_why_absence_and_not_a_zero_display_row": "The repo's zero-damage convention (data/worklists/p1-review-task-{1,2,3}.md rule 5; data/champion-audit/batch-p1-2.json 'Death Defied' receipt; batch-0.json Annie E 'zero-damage display row') applies to SLOT-LEVEL receipts that document a non-priced mechanic — not to timestamped per-target instances in a combat events[] stream. A phantom 0.0 instance is not inert in this engine: 'on damage event' hooks read the ledger (Black Cleaver Carve applies a stack on damage dealt, Bloodsong's Expose Weakness applies on the empowered hit, life steal, and the Stormsurge rolling-window trigger scans the event ledger per math-foundations §1.3), and in game a 0-damage instance applies none of those. Keeping it risks spurious triggers; dropping it costs nothing numerically (0.0 contributes 0 to every total and to every conservation identity in math-foundations §1.2).",
+    "counterfactual_checked": {
+      "hypothesis": "The most plausible concrete source of a form-gated magic instance in a Black Cleaver build is Gnar W 'Hyper' (data/champions.json Gnar W is the only magic-damage row in his kit; Q/E/R are all physical). Hyper is form-gated: the cached blurb reads 'MINI Gnar's basic attacks on-hit and damaging abilities apply stacks. The third stack deals bonus magic damage based on the target's maximum health', and the third effect line is 'Gnar gains Hyper's bonus movement speed when he leaves Mega form.' In Mega form the W slot is Wallop (PHYSICAL_DAMAGE), so no Hyper magic instance exists.",
+      "mini_form_value_if_it_had_fired": {
+        "formula": "Bonus Magic Damage = [0,10,20,30,40] + [6,8,10,12,14]% of target's maximum health + 100% AP  (data/champions.json Gnar W Hyper)",
+        "rank_1_vs_aatrox_l18_0AP": "0 + 0.06*2588 = 155.28 raw -> 155.28*0.599341 = 93.07 post-mitigation",
+        "rank_5_vs_aatrox_l18_0AP": "40 + 0.14*2588 = 402.32 raw -> 402.32*0.599341 = 241.13 post-mitigation"
+      },
+      "conclusion": "Under EVERY branch the old 0.0 is wrong: in the form where the magic source is live the leaf must be a strictly positive number (93.07 .. 241.13 for the Hyper reading), and in the form where it is not live the leaf must not exist. The observed correction removed the row rather than re-valuing it, which is the signature of the second branch (source not active), and is the only branch consistent with the old value having been 0.0 in the first place."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md §2.1 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py) ... m(R) = 2 − 100/(100 − R) for R < 0 ... saturates at m → 2",
+      "used_for": "Mitigation multiplier is strictly positive, so post-mitigation 0.0 implies raw 0.0."
+    },
+    {
+      "source": "docs/math-foundations.md §2.2 'Penetration and reduction order'",
+      "quote": "Only armor/magic *reduction* effects can push resistance negative; penetration floors at 0 (Section 2.2).",
+      "used_for": "No penetration configuration can make the multiplier zero or negative."
+    },
+    {
+      "source": "docs/math-foundations.md §1.2 (linearity / conservation)",
+      "quote": "Conservation `Σ ticks = total` is enforced with a drift correction on the last tick.",
+      "used_for": "Removing a 0.0 event preserves every conservation identity in the ledger."
+    },
+    {
+      "source": "data/items.json id 3071 (Black Cleaver), passives 'Carve' / 'Fervor'",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks. / Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.",
+      "used_for": "Black Cleaver contributes no magic damage instance, and it is an on-damage-event consumer (phantom events would spuriously stack Carve)."
+    },
+    {
+      "source": "data/items.json id 3877 (Bloodsong), passive 'Spellblade'",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "used_for": "Bloodsong's proc is PHYSICAL; it also consumes damage events (Expose Weakness application)."
+    },
+    {
+      "source": "data/champions.json Aatrox stats",
+      "quote": "health {flat: 650, perLevel: 114}; magicResistance {flat: 32, perLevel: 2.05}",
+      "used_for": "Target max health 2588.0 and MR 66.85 at level 18 (growth formula from CLAUDE.md / math-foundations appendix)."
+    },
+    {
+      "source": "data/champions.json Gnar W 'Hyper' (effects[1].leveling 'Bonus Magic Damage', effects[2].description, blurb)",
+      "quote": "values [0,10,20,30,40] + [6,8,10,12,14] '% of target's maximum health' + [100..] '% AP' ... 'Gnar gains Hyper's bonus movement speed when he leaves Mega form.' ... blurb: 'Passive: Mini Gnar's basic attacks on-hit and damaging abilities apply stacks. The third stack deals bonus magic damage based on the target's maximum health'",
+      "used_for": "The counterfactual: the only form-gated magic source natural to a Black Cleaver build; live value 93.07–241.13 post-mitigation, and no value at all in Mega form — never 0.0."
+    },
+    {
+      "source": "data/champions.json (whole-cache scan, 173 champions)",
+      "quote": "Scan result: 0 magic-damage leveling rows have an all-zero rank; relaxing to 'all non-zero terms are AP-scaled' yields exactly 1 row (AurelionSol Q 'Total Maximum Magic Damage' rank 5, a CLAUDE.md known-degraded parse).",
+      "used_for": "No cached champion magic formula evaluates to 0.0."
+    },
+    {
+      "source": "data/items.json (whole-cache scan of magic-damage effect branches)",
+      "quote": "Every magic-damage item effect carries a strictly positive flat base alongside any AP term (Blackfire Torch 60, Nashor's Tooth 15, Terminus 30, Zaz'Zak's Realmspike 10, Stormsurge 125, Luden's Echo 75, Night Harvester 160, Everfrost 300, Lich Bane / Dusk and Dawn base-AD terms, ...).",
+      "used_for": "No cached item magic effect evaluates to 0.0."
+    },
+    {
+      "source": "data/worklists/p1-review-task-1.md rule 5 (and -2, -3)",
+      "quote": "A mechanic may remain non-priced ONLY if it is genuinely inexpressible in a deterministic single-target fight ... then it must be a DOCUMENTED option or zero-damage receipt with a sourced reason",
+      "used_for": "Establishing that the repo's zero-damage convention is a slot-level RECEIPT, not a timestamped per-target damage instance in the combat events stream."
+    },
+    {
+      "source": "data/champion-audit/batch-p1-2.json (Sion 'Death Defied')",
+      "quote": "The module now emits a P receipt ('Death Defied', zero parts, detail citing the boundary) so the slot is explicit in every parse instead of absent",
+      "used_for": "Same — zero-damage documentation lives on slot receipts, which is why removing a phantom 0.0 combat event does not violate the 'never silent' convention."
+    }
+  ],
+
+  "boundaries_and_caveats": [
+    "This oracle worked ONLY from `git archive HEAD data docs/math-foundations.md`. The scenario definition for 'cleaver_bloodsong_roster' lives outside that tree (scripts/), so the attacker champion, its ability ranks, and its form/option toggles were not visible; the identification of the source as a form-gated ability is inference from the cache, not a read of the scenario.",
+    "The report truncated the old leaf after 'event_precision': 'e…', so the event's source/label field was not visible. The verdict does not depend on it: the argument is that NO cached magic source can produce 0.0.",
+    "Residual risk on the verdict: if the scenario's intended state is the one in which the magic source IS live, the correct leaf would be a positive number (93.07–241.13 on the Hyper reading) rather than absence, which would make the answer 'both_wrong'. Two facts argue against that reading — (a) the old baseline recorded 0.0 rather than a positive number, which is only reachable when the source was not actually active, and (b) the correction removed the row rather than re-valuing it. On the evidence available, absence is the correct ledger state.",
+    "Numerically the two states are indistinguishable: 0.0 contributes 0 to every total, so no damage-total leaf can be affected by this leaf alone."
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "receipt": "oracle-S6S7-leaf54",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[28]/raw_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle54",
+    "read": ["data/items.json", "data/champions.json", "data/runes.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "data/wiki/article-index.json", "data/worklists/*.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0] (cached League Wiki text)",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 3877 -> riotDescription (CommunityDragon text, cross-check)",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "id": "S3",
+      "source": "data/items.json — semantics of the wiki template {{rd|A|B}} = melee value | ranged value, established by other entries in the same cache whose in-game melee/ranged split is well known",
+      "quote": "Blade of the Ruined King: {{rd|9%|6%}} (current-health on-hit); Ravenous Hydra / Tiamat Cleave: {{rd|40% AD|20% AD}}; Death's Dance: {{rd|30%|10%}}; Sundered Sky: {{rd|100%|50%}}; Eclipse: {{rd|6%|4%}}; Hullbreaker: {{rd|120%|{{ap|120*0.7}}...}} — melee first, ranged second in every case."
+    },
+    {
+      "id": "S4",
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0] (the scenario's other named item; establishes it cannot move a *raw* number)",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md §2.1 / §5 (mitigation identity — why armor-side effects cannot change a raw leaf)",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... post = raw · m(R)  ⟺  raw = post · (1 + R/100)"
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md §5 formula-audit table (Black Cleaver row — the only BC-related modelling knob, and it is a mitigation-side average)",
+      "quote": "Terminus/BC ramps (average_pen, average_reduction) | Cesàro mean of the per-hit ramp | APPROX | m(R) convex ⇒ averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, ±20% at extremes"
+    },
+    {
+      "id": "S7",
+      "source": "data/champions.json -> Gangplank ability notes (confirms Expose Weakness is a target-side debuff applied by the Bloodsong holder's empowered attack)",
+      "quote": "Specific Spellblade item interactions: Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_can_move_a_raw_leaf": "The leaf is `raw_damage` = pre-mitigation. Black Cleaver's only effect is 6%-per-stack armor *reduction* (S4), which enters only through m(R)=100/(100+R) (S5) and therefore cannot change a raw number; its documented modelling knob is likewise mitigation-side (S6). Bloodsong's Expose Weakness, by contrast, is a 'take X% increased damage from all sources' amplifier (S1) — in the game's damage pipeline amplification multiplies the damage instance before resistance mitigation, so it is exactly the kind of term that lands in a raw/pre-mitigation figure. Of the two items the scenario is named for, only Bloodsong can produce a raw-side delta.",
+    "step_2_implied_multiplier": {
+      "ratio_of_leaves": "101.7 / 94.1 = 1.0807651",
+      "rounding_band": "Golden leaves carry one decimal. If new = old_underlying x m, then round(v,1)=94.1 and round(v*m,1)=101.7 force m in [101.65/94.15, 101.75/94.05] = [1.07966, 1.08187].",
+      "candidates_tested": {
+        "1.05 (Bloodsong ranged branch)": "94.1 x 1.05 = 98.8  -> rejected",
+        "1.06 (Haunting Guise/Liandry's stack cap)": "94.1 x 1.06 = 99.7 -> rejected",
+        "1.08 (Bloodsong MELEE Expose Weakness, S1)": "accepted: feasible underlying v in [94.121, 94.149]; 1.08v in [101.65, 101.68) -> prints 101.7, and v itself prints 94.1",
+        "1.10 / 1.12 (Riftmaker omnivamp / Spear of Shojin 12%)": "103.5 / 105.4 -> rejected"
+      },
+      "conclusion": "1.08 is the only catalogued amplifier in the admissible band. The delta is exactly one application of Bloodsong's Expose Weakness at the melee value, 8% (S1 + S3)."
+    },
+    "step_3_which_leaf_is_the_amplified_one": "new = old x 1.08 means the OLD leaf carried no Expose Weakness amplification at all (had the old value been the ranged 5% branch, the new/old ratio would be 1.08/1.05 = 1.0286 -> 96.8, not 101.7). Event index 28 sits deep in a coupled roster ledger, i.e. well after the first Spellblade proc that applies the 4 s debuff, so under S1 an amplifier must be in force at that event. An un-amplified raw there is wrong.",
+    "step_4_independent_value": "raw_corrected = raw_unamplified x (1 + 0.08) = v x 1.08 with v in [94.121, 94.149]  =>  101.65 <= raw_corrected < 101.68  =>  101.7 at one decimal. This reproduces the new leaf and excludes the old one.",
+    "arithmetic_check": "94.1 x 1.08 = 101.628 (prints 101.6) and 101.7 / 1.08 = 94.1667 (prints 94.2) — the two printed leaves are not exact inverses of each other, which is expected: both are one-decimal renderings of an unrounded v ~ 94.12-94.15. That window is non-empty and is the only window consistent with BOTH printed leaves under a single 8% factor."
+  },
+
+  "residual_uncertainty": [
+    "Melee/ranged branch of S1: {{rd|8%|5%}} is set by the Bloodsong HOLDER's attack type (S3). The scenario roster (which participant carries Bloodsong, and whether it is melee) is defined in scripts/ + src/, which runbook R-18/R-19 forbids this investigator from reading. The computation above therefore verifies the *melee* branch. If the scenario's Bloodsong holder is RANGED, the correct raw would be v x 1.05 ~ 98.8 and the verdict would flip to both_wrong. Nothing under data/ or docs/math-foundations.md names the roster, so this is stated, not silently assumed.",
+    "Debuff uptime: Expose Weakness lasts 4 s with a 1.5 s Spellblade cooldown (S1). Whether event[28] falls inside a live 4 s window depends on the holder's cast/attack weave, which again is engine-side. The 1.08 factor being present at that event is consistent with a maintained debuff; a stale (expired) debuff would be the failure mode to check engine-side.",
+    "The empowered attack that APPLIES the debuff should not itself be amplified — S1 says the effect 'starts after using the empowered attack'. If event[28] were that applying attack, the old value would be right. Its late index (28) makes this unlikely but it is not provable from data/ alone.",
+    "Coincidence checked and dismissed: Aphelios' level-18 base AD is exactly 94.1 under the growth formula (55 + 2.3 x 17 x (0.7025 + 0.0175 x 17)), which would fit a 'Bloodsong on-hit = 100% base AD' reading of the leaf — but 94.1 x 1.08 = 101.63 prints 101.6, not 101.7, so the leaf is not an exact base-AD figure."
+  ],
+
+  "verdict_rationale": "Only Bloodsong can move a pre-mitigation leaf in this scenario (S4/S5/S6 rule Black Cleaver out). The old->new ratio pins the change to a single 8% damage-taken amplifier, which is verbatim Bloodsong's melee Expose Weakness value in the cached wiki text (S1, template semantics S3). The old leaf carried no such amplifier despite sitting deep in the ledger; the new leaf carries exactly one, at the sourced value.",
+  "committed": false
+}

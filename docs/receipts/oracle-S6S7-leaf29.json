@@ -1,0 +1,55 @@
+{
+  "receipt": "oracle-S6S7-leaf29",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle29",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "leaf": {
+    "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner",
+    "scenario": "cleaver_bloodsong_roster",
+    "old_value": "main",
+    "new_value": "<absent>"
+  },
+  "independent_computation": {
+    "kind": "structural / attribution leaf — not a numeric leaf; no closed-form formula in docs/math-foundations.md covers it, so it was adjudicated against the cached wiki effect text for the two items the scenario names and against the cached definition of the support-event ledger",
+    "step_1_what_the_scenario_holds": {
+      "Black Cleaver (data/items.json id 3071)": {
+        "Carve": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.",
+        "Fervor": "Dealing physical damage grants you 20 bonus movement speed for 2 seconds.",
+        "heal_or_shield_granted": "none — Carve is a target-side debuff, Fervor is a self movement buff"
+      },
+      "Bloodsong (data/items.json id 3877)": {
+        "Spellblade": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack).",
+        "Ward (active)": "Consumes a charge to place a Stealth Ward ... Charges refill upon visiting the shop.",
+        "stats": "200 health, 75% base health regen, 75% base mana regen, 9 gold per 10",
+        "acquisitionNote": "Requires completion of the support quest for Runic Compass, which transforms into Bounty of Worlds afterwards to allow you to upgrade into this item for free.",
+        "heal_or_shield_granted": "none — regen is a stat, not a support event; Spellblade is self on-hit damage plus a target-side amp"
+      }
+    },
+    "step_2_what_a_support_event_is": "The cached worklists and audit corpus define the support ledger as the ALLY-FACING heal/shield ledger, emitted by support_effects.derive_ally_effects / item_support_effects: (a) data/worklists/e8d-task.md — 'ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items — reuse the same event shape)'; (b) data/champion-audit/batch-3.json (Lulu) — 'E shield is emitted by support_effects.derive_ally_effects when E is cast (verified in deep-audit-2026-08 2.3: \"Help, Pix! · Shield Strength\" 230 -> main)', i.e. a granter/recipient ledger whose entries name the participant that produced the effect and the participant that received it; (c) data/practice-corpus/scenarios.json — the three support entries are all kind 'support_shield' with a named source (Molten Shield, Fimbulwinter) and applied/received/absorbed amounts.",
+    "step_3_ownership_of_the_scenario_effects": "Both coupling effects the scenario's items produce are TARGET-SIDE debuffs, not owner-scoped grants: Carve 'inflicts armor reduction' on the enemy (docs/math-foundations.md 2.2-2.3 treats armor reduction as target state — reduce_resistance(R, r_flat, r_pct), reduction may go negative, penetration floors at 0, and 2.3 item 2 prices Black Cleaver as an average-stack shred of the target's armor), and Expose Weakness explicitly increases the target's damage taken 'from all sources'. Neither benefit belongs to a single owner in the ledger sense; both benefit every damage source on the team.",
+    "step_4_can_the_main_own_a_support_event_here": "No sourced path exists. Neither Black Cleaver nor Bloodsong grants a heal or a shield to anyone, so neither can emit an entry into the ally heal/shield ledger at all — with or without an owner. And Bloodsong's own acquisitionNote gates it behind the support quest (World Atlas -> Runic Compass -> Bounty of Worlds -> free upgrade), i.e. the team member who actually carries it in an ordinary Summoner's Rift roster is the support ally, not the Black-Cleaver main. An entry in this scenario's support ledger stamped owner='main' therefore has no basis in the cached effect text: it is either an entry that should not exist, or an entry whose sourced holder is the ally support — under neither reading is 'main' the correct owner.",
+    "conclusion": "'main' is not supportable from the cached wiki text for this scenario; the leaf's disappearance is consistent with it. The new state (leaf absent) is the correct one."
+  },
+  "sources_quoted": [
+    {"file": "data/items.json", "locator": "id 3877 Bloodsong -> passives[0] 'Spellblade' branches[0]", "text": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack)."},
+    {"file": "data/items.json", "locator": "id 3877 Bloodsong -> acquisitionNote", "text": "Requires completion of the support quest for Runic Compass, which transforms into Bounty of Worlds afterwards to allow you to upgrade into this item for free."},
+    {"file": "data/items.json", "locator": "id 3867 Bounty of Worlds -> passives[0] 'Upgrade'", "text": "You have completed the support quest and can now upgrade this item, Bounty of Worlds, for free into Bloodsong, Celestial Opposition, Dream Maker, Solstice Sleigh, or Zaz'Zak's Realmspike ..."},
+    {"file": "data/items.json", "locator": "id 3071 Black Cleaver -> passives 'Carve' / 'Fervor'", "text": "Carve: Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks. | Fervor: Dealing physical damage grants you 20 bonus movement speed for 2 seconds."},
+    {"file": "data/worklists/e8d-task.md", "locator": "ALLY-SUPPORT heals/shields section", "text": "ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items - reuse the same event shape)"},
+    {"file": "data/champion-audit/batch-3.json", "locator": "Lulu gap_summary", "text": "E shield is emitted by support_effects.derive_ally_effects when E is cast (verified in deep-audit-2026-08 2.3: 'Help, Pix! - Shield Strength' 230 -> main)."},
+    {"file": "data/practice-corpus/scenarios.json", "locator": "e9-e8-annie-molten-shield / e9-item-fimbulwinter-everlasting", "text": "expected.kind = 'support_shield' with source, shield, applied, received, absorbed — the corpus's pinned support-event shape carries a named source and amounts."},
+    {"file": "docs/math-foundations.md", "locator": "2.2-2.3", "text": "reduce_resistance(R, r_flat, r_pct): R <- R - r_flat; R <- R*(1 - r_pct/100) ... Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant — i.e. Carve is modelled as target-side armor state, not as an owner-scoped grant."},
+    {"file": "docs/math-foundations.md", "locator": "3.1", "text": "f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death ... exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...)"}
+  ],
+  "alternatives_considered": [
+    {"hypothesis": "owner should be the ally support that carries Bloodsong (=> both_wrong)", "why_rejected": "A corrected owner would appear in the golden diff as a changed string, not as an absent leaf; and the ally heal/shield ledger cannot carry a Bloodsong entry at all, since Bloodsong grants no heal or shield. Nothing in the cached text supports a third concrete value at this index."},
+    {"hypothesis": "'owner' was the recipient of a self-shield on the main, so dropping it loses attribution (=> old_value_correct)", "why_rejected": "The scenario is named by its two items, and neither Black Cleaver nor Bloodsong produces a heal/shield; a main-owned entry in the ally-support ledger for this scenario has no sourced effect behind it. The corpus's pinned support-event expectations likewise carry source/applied/received, never an 'owner' stamp of 'main'."}
+  ],
+  "confidence": "moderate — this leaf is a structural attribution field. The cached wiki text and docs/math-foundations.md constrain it only indirectly (they fix what each item does and who can hold it, not the snapshot schema). The adjudication rests on the fact that neither named item can source a main-owned entry in the ally heal/shield support ledger, and that Bloodsong is support-quest-gated to the ally support in a roster.",
+  "verdict": "new_value_correct"
+}

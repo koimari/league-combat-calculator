@@ -1,0 +1,65 @@
+{
+  "receipt": "oracle-S6S7-leaf8",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/support_damage_multiplier",
+  "old_value": "<absent>",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong \u2014 Expose Weakness"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle8",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item id 3877 (\"Bloodsong\") -> passives[0] (name \"Spellblade\", unique) -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 3877 -> riotDescription (in-client text, corroborating)",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>. If the target is a champion, they take increased damage for 4 seconds."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "cache patch marker \u2014 item 3877 icon URL",
+      "quote": "https://raw.communitydragon.org/16.15/plugins/rcp-be-lol-game-data/global/default/assets/items/icons2d/3877_bloodsong.png"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "{{rd|...}} template calibration \u2014 other items in the same cache",
+      "quote": "Tiamat / Ravenous Hydra / Stridebreaker / Profane Hydra Cleave: '{{rd|40% AD|20% AD}}'; Titanic Hydra Cleave: '{{rd|1%|{{fd|0.5}}%}} maximum health'; Phage Rage: '{{rd|20|10}} bonus movement speed'; Death's Dance Ignore Pain: 'Reduces {{rd|30%|10%}} of all post-mitigation ... damage'"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "whole document (grepped for bloodsong / expose weakness / melee / ranged / amplif / increased damage)",
+      "quote": "NO MATCH \u2014 the document covers renewal-theory timing, the 100/(100+R) resistance identity, penetration composition, and BIS optimization; it carries no Bloodsong or damage-amplifier formula. The item cache is therefore the sole authority for this leaf."
+    }
+  ],
+  "independent_computation": {
+    "step_1_template_semantics": "The League wiki template {{rd|A|B}} is a ranged-difference split: A is the value for a MELEE wielder, B for a RANGED wielder. Calibrated inside this same cache against four independently-known effects: Tiamat-family Cleave is 40% AD melee / 20% AD ranged; Titanic Hydra on-hit is 1% max HP melee / 0.5% ranged; Phage grants 20 MS melee / 10 ranged; Death's Dance stores 30% of damage melee / 10% ranged. In every case the FIRST argument is the melee value. Ordering is therefore melee-first, unambiguously.",
+    "step_2_read_the_effect": "Bloodsong's Spellblade proc, when the empowered basic attack lands on a champion, applies 'Expose Weakness' for 4 seconds. Expose Weakness is a debuff ON THE TARGET that increases the damage it takes FROM ALL SOURCES \u2014 not only from the Bloodsong holder. So an ally carry attacking the debuffed champion is amplified too, which is exactly what a leaf named 'support_damage_multiplier' on a coupled (attacker + support ally) roster scenario should represent.",
+    "step_3_apply": "increase = {{rd|8%|5%}} -> 8% if the Bloodsong holder is melee, 5% if ranged. 'Take X% increased damage' is a multiplicative amp on the damage instance, so the multiplier is 1 + X/100: melee -> 1 + 0.08 = 1.08; ranged -> 1 + 0.05 = 1.05.",
+    "step_4_admissible_set": "{1.08 (melee holder), 1.05 (ranged holder)}. A value of 1.0 / absent is NOT admissible for an event that carries a Bloodsong Expose Weakness application \u2014 the cached text makes the debuff unconditional on a champion-target proc.",
+    "step_5_verdict_basis": "The published new value 1.08 equals the melee branch exactly, with the correct 1 + X/100 sense and the correct 'all sources' scope (a support's debuff amplifying a different participant's damage). The old state, <absent>, corresponds to no amplification at all and contradicts the only source text available for this item.",
+    "result": 1.08
+  },
+  "residual_dependency": {
+    "statement": "1.08 is correct if and only if the Bloodsong holder in the cleaver_bloodsong_roster support slot is a MELEE champion; a ranged holder would make the sourced value 1.05.",
+    "why_unresolved_here": "The roster composition for coupled_scenarios/cleaver_bloodsong_roster is defined outside the permitted evidence tree (scenario/golden definitions live under scripts/ and tests/, which this runbook forbids reading). data/ contains no scenario roster \u2014 grep for 'cleaver_bloodsong', 'coupled_scenarios', and 'roster' across the export returns no scenario definition.",
+    "effect_on_verdict": "It does not rescue the old state. <absent> is outside the admissible set under EITHER holder type, so the change is directionally required and the published value matches a verbatim branch of the cached formula. Verdict is new_value_correct; the melee/ranged branch selection is flagged as the one check an evidence-tree-restricted oracle cannot close, and should be confirmed against the scenario's support champion attack range."
+  },
+  "checks_performed": [
+    "Multiplier sense: 'increased damage' -> 1 + X, not 1 - X and not a resistance change. 1.08 has the correct sense.",
+    "Scope: 'from all sources' \u2014 a support-held debuff legitimately multiplies a different participant's damage, so a 'support_damage_multiplier' leaf is the right home for it.",
+    "Attribution: the source string 'Bloodsong \u2014 Expose Weakness' names the debuff, not the item's own 100% base AD on-hit component \u2014 those are separate rows of the same passive and must not be conflated.",
+    "Co-item cross-talk: Black Cleaver ('cleaver' in the scenario name) contributes armor REDUCTION, not a damage amplifier, so it cannot account for or contaminate a 1.08 multiplier leaf.",
+    "Cache freshness: data/staleness.json entry 3877 reports {\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}} \u2014 the cached Bloodsong entry is not flagged stale."
+  ],
+  "verdict": "new_value_correct"
+}

@@ -1,0 +1,136 @@
+{
+  "receipt_id": "oracle-S6S7-leaf14",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/skipped_reason",
+  "old_value": "attacker_dead",
+  "new_value": "outside_window",
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle14",
+    "contents_read": [
+      "data/items.json (Black Cleaver id 3071, Bloodsong id 3877)",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md, data/champion-audit/*.json, data/README.md",
+      "docs/math-foundations.md (full)"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/",
+      "git history", "the diff", "the plan"
+    ]
+  },
+
+  "derivability": {
+    "leaf_is_a_wiki_number": false,
+    "derivable_from_permitted_sources": false,
+    "explanation": "This leaf is an engine bookkeeping label on a combat-ledger entry, not a quantity with a wiki formula. Exhaustive grep of the whole export for 'skipped_reason', 'attacker_dead', 'outside_window', 'coupled_scenarios' and 'cleaver_bloodsong_roster' returns zero hits: the scenario definition, the fight window T, the event timestamps and the participant death times all live outside the permitted tree (scripts/golden_baseline.json, src/calculator/participant_timeline.py). The ruling below is therefore NOT a numeric recomputation of the leaf; it is a rule-derivation from the documented event-admission conventions the engine is bound to, plus a check that the flip's direction is consistent with the only Black-Cleaver-adjacent numeric defect the documentation itself flags. This limitation is stated plainly so the verdict is not over-read."
+  },
+
+  "independent_computation": {
+    "step_1_what_the_two_labels_assert": {
+      "outside_window": "the event's timestamp lies outside the simulated fight horizon [0, T) — a schedule-time property of the event alone",
+      "attacker_dead": "at the event's timestamp the authoring participant was in the dead absorbing state — a simulated-state property that only exists where the state is resolved"
+    },
+    "step_2_which_predicate_is_the_documented_admission_test": {
+      "finding": "docs/math-foundations.md makes window membership the first-class admission test for EVERY authored event family, and never makes death an admission test.",
+      "window_as_admission_test": [
+        "S1.1: 'swing timestamps t_i = i*Delta, i = 0..N(T)-1 (the last swing is strictly inside the window)' and 'a swing whose impact would land exactly at the window boundary is excluded, a measure-zero boundary choice'",
+        "S1.1: 'a cast counts when it *starts* within the window (_schedule_shared_casts)'",
+        "S5 audit table, Ability rotation row: 'shared-timeline renewal schedule; cast starts within window'",
+        "S5 audit table, DoT totals row: 'remainder < interval paid at window end'",
+        "S5 audit table, Grievous Wounds row: 'Heal landing exactly at window expiry is un-reduced (boundary convention)'"
+      ],
+      "death_as_a_score_gate_not_an_admission_test": [
+        "S3.1: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window' — death filters what COUNTS toward the total; the window bounds what is SIMULATED",
+        "S5 audit table, BIS score row: 'finite-horizon renewal-reward functional: cumulative damage until death'"
+      ],
+      "conclusion": "The reason an authored entry is absent from the fight at all is properly the admission test, i.e. the window. Death governs aggregation of admitted damage."
+    },
+    "step_3_post_horizon_liveness_is_deliberately_unresolved": {
+      "quote": "S5 audit table, Revive row: 'Candidate revive authored after every damage event, applied only when dead — exact earliest-trigger semantics; post-window revives visible but not applied'",
+      "argument": "The ledger provably contains post-window entries that are authored but not applied, and the engine explicitly declines to resolve a post-window revive. Therefore for any entry at t > T the participant's alive/dead status is NOT resolved by the model: a post-window revive that the game would apply is present in the ledger yet withheld. Labelling such an entry 'attacker_dead' asserts an unsimulated state, and can be self-contradicted by the ledger's own post-window revive entry. 'outside_window' is unconditionally true for the same entry (it is a pure timestamp-vs-horizon statement). Of the two labels, only one is always assertable past the horizon.",
+      "corollary": "When an entry is both post-death and post-horizon, the horizon reason is the sound attribution and the death reason is not."
+    },
+    "step_4_direction_check_against_the_one_documented_cleaver_defect": {
+      "why_this_check": "The scenario is named for Black Cleaver, and docs/math-foundations.md S2.3 item 2 is the single place the document says an engine constant is knowingly off and names its exact replacement. If the upstream change is that fix, the flip direction must be explicable as a death-time shift rather than as a relabelling regression.",
+      "wiki_source": "data/items.json id 3071 Black Cleaver, passive 'Carve': \"Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.\" => C = 5 stacks, 6% each, cap 30%.",
+      "quoted_formula": "docs/math-foundations.md S2.3(2): 'the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes' vs the established 'fixed 0.8*max_stacks constant'.",
+      "arithmetic": {
+        "constant_model": "0.8 * 5 = 4.000 stacks -> 4.000 * 6% = 24.00% armor reduction",
+        "exact_cesaro_mean": "5 - 5*4/(2h) = 5 - 10/h stacks",
+        "table_stacks_and_reduction": {
+          "h=5": "3.0000 stacks -> 18.00%",
+          "h=6": "3.3333 stacks -> 20.00%",
+          "h=8": "3.7500 stacks -> 22.50%",
+          "h=10": "4.0000 stacks -> 24.00% (crossover, matches the doc's '~10 autos')",
+          "h=12": "4.1667 stacks -> 25.00%",
+          "h=14": "4.2857 stacks -> 25.71%",
+          "h=20": "4.5000 stacks -> 27.00%"
+        },
+        "mitigation_impact_at_100_base_armor": {
+          "identity_used": "docs/math-foundations.md S2.1: m(R) = 100/(100+R); armor reduction applies to the running value (S2.2)",
+          "constant_24pct": "R = 76.00, m = 0.5682 (baseline)",
+          "h=8_exact_22.5pct": "R = 77.50, m = 0.5634  => -0.85% physical damage",
+          "h=14_exact_25.71pct": "R = 74.29, m = 0.5738 => +0.98% physical damage",
+          "h=20_exact_27.00pct": "R = 73.00, m = 0.5780 => +1.73% physical damage"
+        }
+      },
+      "reading": "A sub-2% swing in physical mitigation is precisely the magnitude that moves a participant's death time by a fraction of a second, or removes an in-window death entirely, without moving most golden numbers dramatically. Under the low-hit-count branch (h < 10) the exact mean grants LESS armor reduction than the 0.8*C constant, so damage falls, so a participant that previously died inside the window survives it. Every entry that participant authored past the horizon then loses its death-based attribution and retains only the horizon one — attacker_dead -> outside_window, exactly the observed flip, with no change to the reason-precedence rules. The reverse story (damage up) would move deaths EARLIER and produce the opposite flip, so it is excluded by the observed direction."
+    },
+    "step_5_ruling": "Both the rule argument (steps 2-3: the window is the documented admission test and the only predicate assertable past the horizon) and the direction argument (step 4: the observed flip is what a small mitigation change does to a boundary-adjacent skip label, and the opposite direction is excluded) point the same way. The correct value for a skipped entry at t > T, with the participant's post-horizon liveness unresolved by the model, is 'outside_window'."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json",
+      "locator": "item id 3071, name 'Black Cleaver', passives[0] 'Carve', branches[0]",
+      "text": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks."
+    },
+    {
+      "source": "data/items.json",
+      "locator": "item id 3877, name 'Bloodsong', passives[0] 'Spellblade', branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S1.1, lines 52-57",
+      "text": "with swing timestamps t_i = i*Delta, i = 0..N(T)-1 (the last swing is strictly inside the window) ... a swing whose impact would land *exactly* at the window boundary is excluded, a measure-zero boundary choice."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S1.1, lines 62-63",
+      "text": "a cast counts when it *starts* within the window (_schedule_shared_casts)"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S3.1, lines 353-356",
+      "text": "f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S5 audit table, Revive row (line 475)",
+      "text": "Candidate revive authored after every damage event, applied only when dead — exact earliest-trigger semantics; post-window revives visible but not applied"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S2.3 item 2 (lines 308-320)",
+      "text": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes ... Recommendation: replace the constant with the closed-form Cesaro mean"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "locator": "S2.1, line 235",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    }
+  ],
+
+  "caveats": [
+    "The permitted evidence tree (data/ + docs/math-foundations.md) contains no event ledger, no fight-window length, and no death times, so the event's timestamp was NOT observed. The ruling assumes the entry's timestamp exceeds the fight horizon T, which is forced by the new label being a *skip* reason under any self-consistent engine, but was not independently verified.",
+    "The one condition under which the old value would be right: if events[82] lies INSIDE the window and the change collapsed the death gate into the window gate (i.e. redefined the horizon as min(T, death_time)), then 'attacker_dead' was the more specific and correct attribution and the new label is a diagnostic regression. Nothing in the permitted sources supports that reading — the documentation keeps the two gates separate (S3.1) and never defines the window in terms of a death — but it cannot be excluded from data/ alone.",
+    "A third possibility, that the entry should not be skipped at all, would map to 'both_wrong'; no evidence in the permitted tree supports it, so it is not asserted.",
+    "The Black Cleaver Cesaro arithmetic is offered as a direction check on the flip, not as a claim about what the change under test actually was — the diff, plan and receipts were not read."
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "receipt_id": "oracle-S6S7-leaf24",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/owner",
+  "old_value": "main",
+  "new_value": "<absent>",
+  "verdict": "old_value_correct",
+  "confidence": "low-moderate — see limitations; this leaf is a provenance/serialization field, not a game quantity, and no wiki text or documented formula fixes its value",
+
+  "independent_computation": {
+    "step_0_what_the_leaf_is": "The leaf is the `owner` attribute of the 18th entry (index 17) of the coupled scenario's support-event ledger. `support_events` is the engine's heal/shield/support ledger: the practice corpus serializes entries of this family as `\"kind\": \"support_shield\"` with fields source / shield / applied / received / absorbed (data/practice-corpus/scenarios.json, ids e9-e8-annie-molten-shield, e9-e8-serpents-fang-shield-cut, e9-item-fimbulwinter-everlasting), and the E8d worklist confirms the same shape is reused for ally-support heals/shields ('the ledger already tracks support_shield_received / support heals from items — reuse the same event shape', data/worklists/e8d-task.md). `owner` therefore denotes the roster participant the support event is attributed to.",
+
+    "step_1_what_the_two_named_items_actually_do_per_cache": {
+      "Black Cleaver (data/items.json id 3071)": {
+        "Carve": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.",
+        "Fervor": "Dealing physical damage grants you 20 bonus movement speed for 2 seconds.",
+        "stats": "400 health, 40 AD, 20 ability haste",
+        "shop.tags": ["FIGHTER", "ONHIT_EFFECTS", "ARMOR_PEN", "MOVEMENT"],
+        "acquisitionNote": "(empty — ordinary legendary, no role gate)",
+        "support_character": "Carve's armor reduction is a debuff on the target and therefore benefits every ally attacking that target — a genuine cross-participant (support) effect owned by the Cleaver holder. It grants no heal or shield."
+      },
+      "Bloodsong (data/items.json id 3877)": {
+        "Spellblade": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack).",
+        "active_Ward": "Consumes a charge to place a Stealth Ward ... (vision only)",
+        "stats": "200 health, 75% base health regen, 75% base mana regen, 9 gold per 10",
+        "shop.tags": ["SUPPORT"],
+        "acquisitionNote": "Requires completion of the support quest for Runic Compass, which transforms into Bounty of Worlds afterwards to allow you to upgrade into this item for free.",
+        "support_character": "Expose Weakness amplifies damage 'from all sources', i.e. it is a team-wide amp owned by the Bloodsong holder. Bloodsong's only heal-family output is the 75% base health-regen line (item-atoms/3877.json carries heal-shield.health-regeneration and heal-shield.max-health-increase-restores-current); it grants no ally heal or shield."
+      },
+      "conclusion_of_step_1": "Every support-family effect this scenario can produce (Carve shred, Expose Weakness amp, item health/regen) is emitted BY a specific roster participant — the item holder. None of them is an ownerless, participant-free effect. There is no effect in either item's cached wiki text whose provenance is a non-champion entity (the only non-champion unit either item creates is Bloodsong's Stealth Ward, which produces vision, not a support-ledger heal/shield)."
+    },
+
+    "step_2_structural_requirement_from_the_documented_ledger_design": "data/atoms/autoresearch-review.md §3.2 ('Ledger fix (multi-target heals re-priced by roster index) — sound') states the coupled ledger prices support events by participant index: 'the coupled ledger re-prices defenders past the first (defender_index > 0)' and 'Index semantics match the legacy attack groups everywhere: allied attackers -> enemies indexed from 0; enemy attackers -> [main, *allies] with main at 0 and allies at 1+.' A support event that carries no participant attribution cannot be placed in that indexing at all — it can be neither re-priced nor routed to a ledger. Attribution is therefore load-bearing for exactly this scenario family (a *_roster coupled fight). An absent `owner` is not a value the coupled ledger design can consume.",
+
+    "step_3_which_participant": "The scenario name pairs the two items in one label ('cleaver_bloodsong_roster') with 'roster' as the qualifier for the allies list (cf. the corpus scenario cp21-ziggs-outer-blast, which uses setup.allies for the roster). The most consistent reading is: the main participant carries Black Cleaver + Bloodsong (legal with role=support and the quest complete — the engine's role_quest_complete flag is the gate named in data/worklists/issues-c-task.md item 3), and the roster allies are the beneficiaries of the shred/amp. Under that reading, the emitter — and hence the owner — of the item-sourced support events is the main participant, i.e. exactly the old value 'main'.",
+
+    "step_4_verdict_logic": "new_value (<absent>) is rejected because (a) no cached effect of either item is ownerless, and (b) the documented coupled-ledger design requires per-participant attribution for support events. Given the field must be present, the only participant supported by the evidence for these item-sourced events is the main participant. Hence 'main' is the defensible value and the removal is a loss of provenance, not a correction. This also matches the repo's stated convention that unmatched provenance is 'named rather than dropped' (data/README.md, sourceWarnings row)."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json (id 3877, Bloodsong)",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/items.json (id 3877, Bloodsong)",
+      "quote": "shop.tags = [\"SUPPORT\"]; acquisitionNote = \"Requires completion of the support quest for {{ii|Runic Compass}} ...\"; stats: health 200 flat, healthRegen 75%, manaRegen 75%, goldPer10 9"
+    },
+    {
+      "source": "data/items.json (id 3071, Black Cleaver)",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json (e9-e8-annie-molten-shield, e9-item-fimbulwinter-everlasting)",
+      "quote": "\"expected\": {\"kind\": \"support_shield\", \"source\": \"Molten Shield\", \"shield\": 200.0, \"applied\": 200.0, \"received\": 200.0, \"absorbed\": 200.0 ...}"
+    },
+    {
+      "source": "data/worklists/e8d-task.md",
+      "quote": "ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items — reuse the same event shape)"
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md §3.2",
+      "quote": "each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (`defender_index > 0`) ... allied attackers -> enemies indexed from 0; enemy attackers -> [main, *allies] with main at 0 and allies at 1+."
+    },
+    {
+      "source": "data/item-atoms/3877.json",
+      "quote": "atoms include heal-shield.health-regeneration and heal-shield.max-health-increase-restores-current (evidence: passive:Spellblade / stats), i.e. Bloodsong's only heal-family output is its own regen/health line"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "NEGATIVE EVIDENCE: the document's §5 formula-audit table covers resistance, penetration, growth, AS, haste, DoT, on-hit stacking, shields, grey health, revive and the BC `average_reduction` Cesaro-mean approximation, but contains no identity, convention or invariant governing support-event serialization or event ownership. Grep for 'owner' in docs/math-foundations.md returns nothing; grep for '\"owner\"' across all of data/ returns nothing."
+    }
+  ],
+
+  "limitations": [
+    "No file in the permitted evidence tree (data/ + docs/math-foundations.md) defines the `owner` field, its allowed values, or the conditions under which it may be omitted; the scenario definition itself lives outside the tree (scripts/), so the roster composition and item assignment could not be read, only inferred from the scenario name and the corpus' roster convention.",
+    "Alternative hypothesis not excludable from this evidence tree: the support-event list may have shifted by one (an inserted or removed earlier event), in which case index 17 now addresses a different event and the leaf-level 'main -> absent' delta is an indexing artifact rather than a semantic change. Sibling leaves at support_events[16..18] (kind/source/amount) would settle this; they were not part of this oracle's assignment.",
+    "Second alternative: if the roster assigns Bloodsong to a support ALLY rather than to the main participant, then the correct owner is that ally and both values would be wrong (verdict would become both_wrong). Nothing in data/ fixes the assignment; the single-build reading of the scenario name was used."
+  ]
+}

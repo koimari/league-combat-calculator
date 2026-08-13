@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-S6S7-leaf36",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[25]/overheal",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 37.4,
+  "new_value": 17.3,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle36",
+    "read": [
+      "data/items.json (ids 3071 Black Cleaver, 3877 Bloodsong)",
+      "data/item-atoms/3877.json",
+      "data/atoms/autoresearch-review.md",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md (searched only)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json and golden_snapshot.py)",
+      "docs/plans/",
+      "docs/receipts/ (other receipts)",
+      "git history / diff / plan"
+    ]
+  },
+  "reproduction_limit": {
+    "statement": "The leaf is a simulation-internal derived quantity, not a wiki constant. Reproducing it numerically requires the scenario input tuple (champions, levels, ability ranks, full item sets, roster membership, fight window) plus the per-event health path. That tuple lives in the golden corpus definition under scripts/, which this runbook forbids reading, and it is NOT present anywhere in the permitted evidence tree (data/ + docs/math-foundations.md): grep for 'cleaver_bloodsong', 'roster' and 'overheal' over the whole export returns no scenario definition (data/practice-corpus/scenarios.json holds a different, E9 corpus with 22 unrelated ids).",
+    "consequence": "The verdict below is a constraint + mechanism-direction verdict derived from the two numbers and the cached effect text, not a full numeric re-derivation. It is stated as such deliberately rather than dressed up as an independent recomputation."
+  },
+  "independent_computation": {
+    "identity_used": {
+      "overheal": "overheal = max(0, heal_applied_amount - (max_health - current_health)) = max(0, H - d), with d >= 0 the health deficit at the event timestamp",
+      "provenance": "docs/math-foundations.md Section 5 states the sibling clip identity for shields verbatim -- 'clipping identity absorbed = min(shield, damage), overkill = max(0, damage - absorbed); absorbed + overkill = damage' -- and the same clip is what an overheal field records for a heal against the health cap. data/champion-audit/batch-*.json confirms the engine carries an explicit overheal channel ('participant_timeline._apply_overheal_shield converts the excess into a timed general shield ... the Bloodthirster ichorshield convention')."
+    },
+    "step_1_delta": "Both readings share the same event index, so H_old - d_old = 37.4 and H_new - d_new = 17.3. The change moves the leaf by exactly 20.1 downward. Either the heal shrank by 20.1 (same health path) or the healed participant was 20.1 further from full health at that timestamp (same heal), or a mix.",
+    "step_2_bound_on_any_multiplicative_heal_reduction": {
+      "setup": "If the change is a multiplicative reduction factor f applied to an unchanged heal H against an unchanged deficit d: H - d = 37.4 and f*H - d = 17.3.",
+      "solve": "Subtracting: H*(1 - f) = 20.1, and d = H - 37.4.",
+      "feasibility": "d >= 0 forces H >= 37.4, hence (1 - f) = 20.1/H <= 20.1/37.4 = 0.5374, i.e. f >= 0.4626.",
+      "consequences": [
+        "Grievous Wounds (f = 0.60, the exact factor pinned in docs/math-foundations.md Section 5: 'multiplicative factor 0.60 (40% reduction); strongest-wins composition via min of factors') is FEASIBLE: H = 20.1/0.4 = 50.25, d = 50.25 - 37.4 = 12.85 >= 0, and 0.60*50.25 - 12.85 = 17.30 reproduces the new leaf to the printed precision.",
+        "A 50% reduction is feasible: H = 40.2, d = 2.8, 0.5*40.2 - 2.8 = 17.30.",
+        "Vladimir-style later-target re-pricing (f = 0.40, 'Reduced Heal 60/100/140 (+28% AP)' = 40% of full per data/atoms/autoresearch-review.md 3.1) is INFEASIBLE here: it needs d = -3.9 < 0.",
+        "AoE/omnivamp 1/3 effectiveness (f = 0.333) is INFEASIBLE: it needs d = -7.25 < 0."
+      ],
+      "direction_theorem": "The algebra is one-sided. For ANY multiplicative heal-reduction mechanism, the equations are solvable only with the LARGER number as the unreduced reading and the SMALLER as the reduced one (the mirrored assignment forces f > 1, i.e. heal amplification). So if this leaf moved because a documented reduction now applies, 17.3 is the post-rule value and 37.4 the pre-rule value."
+    },
+    "step_3_health_path_branch": "If instead the heal amount is unchanged (plausible: only the overheal sub-field is reported as changed, not the sibling amount), then the healed participant had taken 20.1 more cumulative post-mitigation damage by event 25 in the new run. Both items named in the scenario are damage-increasing debuffs on the defender and neither grants healing or heal amplification, so more-damage-modelled is the direction they can produce; 20.1 extra damage is the size of Bloodsong's Expose Weakness amp on ~250-400 damage (8%/5%) or of Carve's 6%-per-stack armour shred on a mid-size physical stream.",
+    "step_4_what_would_be_needed_for_the_old_value": "Recovering 37.4 from 17.3 requires either heal inflation (f > 1: a heal-and-shield-power or double-count path) or 20.1 of incoming damage going uncounted on the healed participant. Neither Black Cleaver nor Bloodsong contains any healing, heal-amp or damage-reduction text in the cached wiki source (quoted below), so no cached effect in this scenario's named items supports the larger reading."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json id 3071 (Black Cleaver), passives[0] Carve, branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "note": "stats: 40 AD, 400 health, 20 ability haste. Second passive Fervor is 20 bonus movement speed for 2 s. No heal, no heal amp, no damage reduction."
+    },
+    {
+      "source": "data/items.json id 3877 (Bloodsong), passives[0] Spellblade, branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "note": "stats: 200 health, 75% base health regen, 75% base mana regen, 9 gold/10. Its only heal-adjacent stat is percentage BASE health regen; it grants no heal amplification."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Grievous Wounds row",
+      "text": "Grievous Wounds (healing_reduction.py, survival walk) | multiplicative factor 0.60 (40% reduction); strongest-wins composition via min of factors; duration refresh via max | EXACT | Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Shield absorption row",
+      "text": "clipping identity absorbed = min(shield, damage), overkill = max(0, damage - absorbed); absorbed + overkill = damage"
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md, Section 3.2 (multi-target heals re-priced by roster index)",
+      "text": "The _later_target_amount receipt design is correct: each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (defender_index > 0).",
+      "use": "Checked as a candidate explanation for a roster-scenario heal change and RULED OUT arithmetically: its 40% factor needs a negative health deficit (step_2)."
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md, Section 3.1 (Vladimir W heal basis)",
+      "text": "the wiki cache says 'heals himself for 30% of the pre-mitigation damage dealt' ... the engine's event damage is post-mitigation (verified: rank-5 tick raw 75 vs Ahri MR 52.1 -> event damage 49.3 -> heal 14.8; correct pre-mitigation heal would be 22.5/tick, ~34% higher)",
+      "use": "Checked as the mirror hypothesis (a regression from pre- to post-mitigation heal basis would also shrink a heal). Noted as the one family that could make 37.4 the correct reading, but it is not supported by anything in this scenario's cached item text, and the ratio it implies (17.3/37.4 = 0.4626 => a mitigating resistance of ~116) cannot be checked without the scenario tuple. Recorded here so the tie-break is auditable rather than hidden."
+    }
+  ],
+  "verdict_rationale": [
+    "1. Overheal is a clip of heal against the health deficit; the two readings differ by exactly 20.1.",
+    "2. Every heal-reduction mechanism that can explain the move is one-directional: the algebra admits only 'larger = rule not applied, smaller = rule applied' (f > 1 otherwise). Under the documented EXACT Grievous Wounds factor 0.60 the new value reproduces exactly (H = 50.25, d = 12.85 -> 17.30).",
+    "3. On the health-path branch, the two items named by the scenario are purely damage-increasing on the defender (6%/stack armour reduction to 30%; 8%/5% increased damage taken from all sources). Applying them more completely in a coupled roster deepens the healed participant's deficit and lowers overheal; 20.1 is the right order of magnitude for that amp.",
+    "4. No cached effect text in this scenario's items produces heal inflation or damage under-counting, which is what the old, larger value would require.",
+    "5. Therefore the smaller value is the one consistent with the cached sources and the documented identities."
+  ],
+  "caveats": [
+    "This is not a full numeric reproduction: the golden scenario definition is outside the permitted evidence tree, so the heal source, the healed participant and its health path at event index 25 are unknown.",
+    "The one hypothesis under which 37.4 would be correct is a regression in the heal BASIS (pre-mitigation -> post-mitigation, the failure class flagged in data/atoms/autoresearch-review.md 3.1). It cannot be excluded from data/ alone. If the change under test touched heal-basis code rather than damage/heal-reduction code, this verdict should be re-run with the scenario tuple in hand."
+  ]
+}

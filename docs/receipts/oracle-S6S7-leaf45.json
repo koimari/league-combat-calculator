@@ -1,0 +1,105 @@
+{
+  "receipt_id": "oracle-S6S7-leaf45",
+  "runbook": "R-18 / R-19 independent oracle",
+  "generated_utc": "2026-08-13",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle45",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/pair_damage",
+  "old_value": 94.1,
+  "new_value": 109.8,
+  "verdict": "new_value_correct",
+  "confidence": "medium-high",
+
+  "independent_computation": {
+    "method": "The leaf is a single post-mitigation damage event, and the scenario inputs (champions, levels, ranks) are not in the permitted evidence tree. What IS independently checkable is the multiplicative factor between the two values, because both game rules named by the scenario (Black Cleaver 'Carve', Bloodsong 'Expose Weakness') are pure multipliers on any damage event against the debuffed target. So I tested the observed factor against every factor derivable from the cached wiki text.",
+
+    "observed_factor": {
+      "value": 1.1668438,
+      "arithmetic": "109.8 / 94.1",
+      "rounding_band": [1.1656930, 1.1679957],
+      "band_note": "both leaves are printed to 1 dp, so the true factor lies in [109.75/94.15, 109.85/94.05]"
+    },
+
+    "rules_instantiated": {
+      "mitigation": "m(R) = 100 / (100 + R)   [docs/math-foundations.md Sec 2.1; data/wiki-atoms/damage.json damage.resistance-mitigation]",
+      "carve_shred": "target armor A -> A x (1 - 0.06 x stacks), 5 stacks max = 30% [data/items.json id 3071, passive 'Carve']",
+      "expose_weakness": "target takes +8% (melee holder) / +5% (ranged holder) damage from ALL sources [data/items.json id 3877, passive 'Spellblade']",
+      "amp_composition": "percent modifiers stack multiplicatively with each other and with resistance-based reduction [data/wiki-atoms/damage.json damage.modifier]"
+    },
+
+    "exact_fit_found": {
+      "statement": "The observed factor is exactly 7/6, and 7/6 is exactly what the two cached wiki rules produce against a 50-armor target with a ranged Bloodsong holder.",
+      "work": [
+        "target armor A = 50  ->  m(50) = 100/150 = 0.666667",
+        "Carve at 5 stacks: A' = 50 x (1 - 0.30) = 35  ->  m(35) = 100/135 = 0.740741",
+        "shred factor = m(35)/m(50) = 150/135 = 1.111111",
+        "Expose Weakness (ranged holder, {{rd|8%|5%}} -> 5%) = 1.05",
+        "multiplicative composition (wiki rule): 1.111111 x 1.05 = 1.1666667 = 7/6",
+        "predicted new = 94.1 x 7/6 = 109.7833 -> prints as 109.8   (matches the new value)",
+        "predicted old (neither target debuff shared into this pair's damage) = 109.7833 x 6/7 = 94.1   (matches the old value)"
+      ],
+      "why_this_is_the_correct_direction": "Both effects are TARGET-side debuffs in the cached wiki text, not attacker-local buffs. Carve is 'applies a stack of Carve' to the enemy and 'inflicts 6% armor reduction' on that enemy; Expose Weakness explicitly causes the target 'to take X% increased damage from all sources'. In a roster/coupled fight, every participant hitting that debuffed target must see both. An engine that priced this pair's damage without them understates the event by exactly the 7/6 measured here."
+    },
+
+    "alternative_decompositions_tested": [
+      {"model": "Expose Weakness applied once, no Carve sharing (8% melee)", "predicted_new": 101.6, "verdict": "rejected - does not reach 109.8"},
+      {"model": "Expose Weakness applied once, no Carve sharing (5% ranged)", "predicted_new": 98.8, "verdict": "rejected"},
+      {"model": "two 8% amps merged ADDITIVELY (1 + 0.08 + 0.08)", "predicted_new": 109.2, "verdict": "rejected - outside the rounding band; also contradicts the cached rule that percent modifiers stack multiplicatively"},
+      {"model": "two 8% amps merged MULTIPLICATIVELY (1.08^2 = 1.1664)", "predicted_new": 109.76, "verdict": "inside the band but rejected - it requires Black Cleaver's shred to contribute a factor of 1.0004 (implied target armor 0.13) in a scenario named for Black Cleaver, and it would make BOTH values wrong (correct would then be 94.1 x 1.08 = 101.6). The 50-armor / 30%-shred / 5%-amp decomposition reproduces the factor exactly with round, game-plausible parameters."},
+      {"model": "Carve sharing only, no amp", "implied_target_armor": 91.07, "verdict": "possible but requires a non-round armor; does not use the scenario's Bloodsong"},
+      {"model": "Carve sharing + 8% melee amp", "implied_target_armor": 32.99, "verdict": "possible but requires a non-round armor"},
+      {"model": "Black Cleaver modeled at the documented 0.8 x max_stacks constant (24% shred) instead of 5 stacks", "note": "at A = 50 gives 1.05 x 150/138 = 1.1413 -> 107.4, and 1.08 x 150/138 = 1.1739 -> 110.5", "verdict": "rejected - neither is in the band; the diff is consistent with the FULL 5-stack 30% shred, i.e. a saturated stack ramp, which is the regime docs/math-foundations.md Sec 2.3 says the constant model deviates from"},
+      {"model": "old value produced by a correct engine and new value inflated by a spurious factor", "verdict": "rejected - 1.16684 has no basis in any cached item/rune/champion number; every wiki-sourced factor that lands in the band ADDS a real target debuff rather than inventing one"}
+    ],
+
+    "limits_of_this_check": "The scenario's participant list, levels, ranks and target armor are defined outside the permitted evidence tree (scripts/), so I could not recompute the absolute event damage from first principles - only the factor between the two values. The factor test is still discriminating: it is satisfied exactly by the two wiki-sourced target debuffs the scenario is named after and by no competing reading that leaves the old value correct."
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "item 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "{{rd|melee|ranged}} convention corroboration",
+      "text": "Death's Dance 'Ignore Pain': Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received; Ravenous Hydra 'Cleave': {{rd|40% AD|20% AD}} - in both cases the first slot is the known melee value, so Expose Weakness is 8% melee / 5% ranged."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.modifier",
+      "text": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.resistance-mitigation",
+      "text": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.1 'The 100/(100+R) identity'",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.3 item 2 'Black Cleaver average stacks'",
+      "text": "the established model uses a fixed 0.8 x max_stacks constant (with a hits/2 short-fight branch) ... the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes ... Recommendation: replace the constant with the closed-form Cesaro mean when a champion module needs exact BC numbers"
+    }
+  ],
+
+  "asides": [
+    "The measured factor rules OUT additive merging of percent amps (would have printed 109.2), which is the behavior the cached wiki rule forbids - a useful positive signal about the new engine independent of this leaf's verdict.",
+    "The diff is consistent with Black Cleaver at the full 5-stack 30% shred, not the 0.8 x max_stacks (24%) constant documented in math-foundations Sec 2.3. If that constant is still live elsewhere in the engine, this scenario and that model now disagree."
+  ]
+}

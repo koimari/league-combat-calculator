@@ -1,0 +1,98 @@
+{
+  "receipt_id": "oracle-S6S7-leaf39",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[55]/applied_amount",
+  "old_value": 261.8,
+  "new_value": 316.1,
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle39",
+    "read": ["data/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/champions.json", "data/practice-corpus/scenarios.json", "data/wiki-atoms/heal-shield.json", "data/champion-audit/batch-e9-1.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 3071 Black Cleaver, passives[Carve].branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "used_for": "Carve is a TARGET-SIDE armor-reduction debuff (benefits every attacker's physical damage, not just the holder's); hard cap 30% armor reduction."
+    },
+    {
+      "source": "data/items.json -> 3877 Bloodsong, passives[Spellblade].branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "used_for": "Expose Weakness is an explicit ALL-SOURCES incoming-damage amplifier on the target: 8% (melee) / 5% (ranged). In a coupled roster it amplifies every ally's damage."
+    },
+    {
+      "source": "docs/math-foundations.md, Sec 2.1",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... post = raw * m(R)",
+      "used_for": "Damage-derived healing is linear in post-mitigation damage, so heal ratio = amp x (100+R_old)/(100+R_new)."
+    },
+    {
+      "source": "docs/math-foundations.md, Sec 2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`",
+      "used_for": "Feasible per-fight average stack count: 4.00 stacks (24% reduction) at h=10, 4.50 (27%) at h=20, 4.82 (28.9%) at h=56, asymptote 5 (30%)."
+    },
+    {
+      "source": "data/champions.json -> Aatrox, abilities.E 'Umbral Dash' effect text (archetype of the damage-derived heal family this leaf belongs to)",
+      "quote": "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions.",
+      "used_for": "Confirms the engine's damage-derived heals are a fixed fraction of POST-MITIGATION damage, i.e. proportional to m(R) and to any incoming-damage amplifier on the target."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json -> e9-e1-aatrox-umbral-dash-heal (tier: local, game-verified)",
+      "quote": "formula: E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R ... Q 863.7 x 0.16 x 2.0 = 276.4",
+      "used_for": "Calibration: reproduced independently (Aatrox lvl18 AD 145 x 1.4 R3 = 203; Q 3-cast sweetspot raw = 459.375 + 5.90625 x 203 = 1658.3; Ahri lvl18 armor 92 -> x100/192 = 863.7; x0.32 = 276.4). Confirms the heal-vs-mitigation chain used below is the engine's real semantics, and that heals of this magnitude (260-320) are the expected scale for this family."
+    },
+    {
+      "source": "data/champions.json -> armor growth applied per CLAUDE.md formula base + growth*(L-1)*(0.7025+0.0175*(L-1))",
+      "quote": "level-18 base armor across the 173-champion cache: min 88.7 (Anivia), 91.0 (Annie), 92.4 (Ahri), max 126.65 (Sejuani). Only outlier: Thresh 33.0 (zero armor growth by design).",
+      "used_for": "Bounds the target armor A that any roster damage instance is mitigated by."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_the_leaf_is": "applied_amount on a healing event is the post-modifier heal actually applied (the corpus's grievous entry shows the sibling fields raw / applied / factor). No Grievous Wounds source exists in a Black-Cleaver+Bloodsong roster, and no sourced healing-reduction factor equals the observed change, so the change must come from the heal's raw amount, i.e. from the damage instance that generated it.",
+    "step_2_implied_ratio": {
+      "ratio": 1.2074102,
+      "rounding_window_at_1dp": [1.2069887, 1.2078319],
+      "note": "new = old x 1.20741 (+20.74%)."
+    },
+    "step_3_model": "For every damage-derived heal in the engine, heal = k x post_mitigation_damage, k constant within one event. Hence ratio = amp x (100 + A) / (100 + A(1 - x)), where A = target armor before Carve, x = fractional armor reduction applied, amp = Expose Weakness incoming-damage amplifier (1.00, 1.05 or 1.08).",
+    "step_4_solve_for_required_reduction": {
+      "formula": "x = (q*100 + q*A - 100 - A) / (A*q),  q = 1.20741 / amp",
+      "table": [
+        {"A": 88.7,  "x_no_amp": 0.3654, "x_amp_1.08": 0.2245, "x_amp_1.05": 0.2773},
+        {"A": 92.4,  "x_no_amp": 0.3577, "x_amp_1.08": 0.2197, "x_amp_1.05": 0.2715},
+        {"A": 100.0, "x_no_amp": 0.3436, "x_amp_1.08": 0.2110, "x_amp_1.05": 0.2607},
+        {"A": 110.0, "x_no_amp": 0.3279, "x_amp_1.08": 0.2015, "x_amp_1.05": 0.2489},
+        {"A": 126.65,"x_no_amp": 0.3074, "x_amp_1.08": 0.1888, "x_amp_1.05": 0.2333}
+      ]
+    },
+    "step_5_feasibility_against_sourced_caps": {
+      "carve_cap": "0.30 (5 stacks x 6%), per the cached wiki text",
+      "carve_alone": "INFEASIBLE for every level-18 champion in the cache: the required reduction is 0.307-0.365, above the 30% hard cap. So the observed jump cannot be Carve alone.",
+      "carve_plus_expose_weakness": "FEASIBLE across the whole armor range: 0.19-0.28 required, all strictly inside the 30% cap and inside the average-stack band the math doc derives (0.24 at h=10 hits, 0.27 at h=20, 0.289 at h=56).",
+      "forward_check": [
+        {"A": 92, "reduction": 0.270, "amp": 1.05, "predicted_new_heal": 315.7, "comment": "4.5 average Carve stacks (Cesaro mean at h=20) + ranged Expose Weakness -> 315.7 vs golden 316.1 (0.1%)"},
+        {"A": 92, "reduction": 0.240, "amp": 1.08, "predicted_new_heal": 319.5, "comment": "0.8*max_stacks constant + melee Expose Weakness -> 319.5 (1.1% high)"},
+        {"A": 110,"reduction": 0.285, "amp": 1.05, "predicted_new_heal": 323.1, "comment": "long-fight Cesaro stacks + ranged amp"}
+      ]
+    },
+    "step_6_conclusion": "261.8 is exactly the value obtained when NEITHER target-side debuff reaches this damage instance (amp = 1.00, x = 0). 316.1 sits in the middle of the band produced by applying both sourced debuffs at legal magnitudes (Carve 19-28% effective armor reduction, Expose Weakness 5-8%). Both debuffs are, per the quoted wiki text, inflicted ON THE TARGET and apply to damage 'from all sources' - so in a coupled roster every member's damage, and therefore every damage-derived heal, must carry them. The 55th healing event is deep in a long fight, where Carve is at or near full stacks (Cesaro mean 4.82 of 5 at h=56), so the near-cap reduction implied by 316.1 is exactly what the model predicts at that point in the timeline."
+  },
+
+  "what_i_could_not_verify": [
+    "The scenario's roster (champions, levels, ranks, full item sets, target identity) is not in data/ or docs/math-foundations.md, so the leaf could not be recomputed to the decimal - only bounded.",
+    "Which of the two debuffs (or both) the change actually restored; the arithmetic only shows that Carve alone is insufficient and Carve+Expose Weakness is sufficient.",
+    "Whether healing_events[] re-indexed between the two runs (an index-keyed leaf can compare two different events). If the event list length changed, this leaf's diff is a labelling artifact rather than a value change - worth confirming against the sibling leaves' shape."
+  ],
+
+  "flags_for_parent": [
+    "If the engine models Expose Weakness at 8% for a RANGED Bloodsong holder, that is a data mismatch: the cached branch text is {{rd|8%|5%}} (melee/ranged split).",
+    "docs/math-foundations.md Sec 2.3 recommends replacing the 0.8*max_stacks Black Cleaver constant with the exact Cesaro mean C - C(C-1)/(2h). At h=56 hits the two differ by 4.8 percentage points of armor reduction (24.0% vs 28.9%), i.e. ~2-3% on this heal - large enough to matter for the last digit but far too small to explain the 20.74% diff on its own."
+  ]
+}

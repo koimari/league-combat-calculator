@@ -1,0 +1,82 @@
+{
+  "receipt": "oracle-S6S7-leaf78",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-13",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/incoming_damage",
+  "old_value": 4074.9,
+  "new_value": 4187.2,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle78",
+    "read": ["data/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/staleness.json", "data/onhit-matrix.json", "data/practice-corpus/scenarios.json", "data/worklists/*.md", "data/atoms/autoresearch-review.md", "docs/README-equivalent data/README.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_baseline.json)", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "scope_limit": {
+    "statement": "The scenario input tuple for 'cleaver_bloodsong_roster' (champions, levels, builds, target armor, fight window, roster) lives in scripts/golden_snapshot.py, which is outside the permitted evidence tree. No scenario definition for it exists anywhere under data/ (grepped: data/practice-corpus/scenarios.json, data/worklists/, data/champion-audit/ - zero hits for 'cleaver_bloodsong').",
+    "consequence": "The absolute post-mitigation number cannot be reproduced from the permitted sources. The independent computation below is therefore an exact reconstruction of the *rule* that governs this leaf plus a closed-form inversion of the observed delta, which is decidable from the cached wiki text and the quoted formula.",
+    "honest_caveat": "Verdict is a rule-level and direction/magnitude-bound determination, not a digit-for-digit reproduction."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0] (wiki cache)",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 3071 -> riotDescription (CommunityDragon, independent of the wiki text)",
+      "quote": "Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. (stacks 5 times)."
+    },
+    {
+      "id": "S3",
+      "source": "docs/math-foundations.md Section 2.3, item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed 0.8 * max_stacks constant (with a hits/2 short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes. ... this is a documented tuning constant, not a theorem. Recommendation: replace the constant with the closed-form Cesaro mean when a champion module needs exact BC numbers ... changing it re-tunes every BC fight in the corpus"
+    },
+    {
+      "id": "S4",
+      "source": "docs/math-foundations.md Section 2.1 / 2.2 (mitigation and composition order)",
+      "quote": "m(R) = 100 / (100 + R) ... R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    },
+    {
+      "id": "S5",
+      "source": "data/items.json -> id 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0] (wiki cache)",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S6",
+      "source": "data/items.json - convention check for the {{rd|a|b}} template (melee value first, ranged second), verified across independent items",
+      "quote": "Ravenous Hydra / Tiamat: {{rd|40% AD|20% AD}}; Titanic Hydra: {{rd|1%|{{fd|0.5}}%}}; Phage: {{rd|20|10}} bonus movement speed; Blade of the Ruined King: {{rd|9%|6%}} current health; Muramana: {{rd|4%|3%}} maximum mana. In every case the first slot is the melee value."
+    }
+  ],
+
+  "independent_computation": {
+    "observed_delta": {
+      "ratio_new_over_old": 1.0275589585,
+      "percent_increase": 2.7558959,
+      "absolute": 112.3
+    },
+
+    "primary_reading": {
+      "mechanic": "Black Cleaver 'Carve' average armor reduction (scenario name leads with 'cleaver'; docs/math-foundations.md S3 is the only pending formula recommendation in the permitted evidence tree, and it is exactly this one)",
+      "step_1_cached_parameters": "From S1 and S2 (two independent caches agree): C = max_stacks = 5, per-stack armor reduction = 6%, cap = 30%.",
+      "step_2_derive_the_exact_mean_myself": "The Carve ramp seen by the h-th damaging hit is min(k, C) stacks for k = 1..h (the hit that applies the stack also benefits from it). Sum_{k=1..h} min(k,C) = C(C+1)/2 + (h-C)*C = C*h - C(C-1)/2 for h >= C. Dividing by h gives mean = C - C(C-1)/(2h). This is an independent re-derivation of S3's closed form and it matches term-for-term (checked numerically at h = 5, 8, 10, 12, 20, 30, 47).",
+      "step_3_crossover": "With C = 5, the legacy constant is 0.8*C = 4.000 stacks = 24.0% reduction. Setting 5 - 10/h = 4 gives h = 10 exactly - the constant is exact at, and only at, ten Carve-applying hits (matching S3's '~10 autos'). For h > 10 the exact mean strictly exceeds 4 stacks: h = 15 -> 26.0%, h = 20 -> 27.0%, h = 30 -> 28.0%, h = 50 -> 28.8%, sup = 30.0%.",
+      "step_4_sign": "By S4, m(R) = 100/(100+R) is strictly decreasing in R, and armor reduction lowers R (reduction is applied before penetration, so a larger reduction cannot be masked unless penetration already floors R at 0 - in which case the leaf could not have changed at all). Therefore more Carve reduction => strictly MORE post-mitigation physical damage on the Carve-stacked defender. The golden leaf moved UP (+2.76%). The sign is the only sign the corrected model can produce, and it pins h > 10 for this defender.",
+      "step_5_magnitude_inversion": "Invert the observed ratio for the implied new reduction, treating the leaf as physical damage mitigated by defender armor A with r_old = 24%: A*(1 - r_new) = (100 + 0.76A)/1.0275590 - 100. Results (no penetration): A=100 -> r_new 28.72% (4.787 stacks, h~47); A=150 -> 27.83% (4.638, h~28); A=200 -> 27.38% (4.563, h~23); A=300 -> 26.93% (4.489, h~20). Every solution is a legal Cesaro mean (strictly between 4 and 5 stacks, i.e. strictly between the old constant and the 30% cap), and every one requires h in the 20-50 range - exactly what a coupled, multi-target, sustained roster fight produces (~1.5 AS over a 15 s window plus ability hits). Flat/percent armor penetration in the build shifts the required h upward but never changes the sign.",
+      "step_6_ceiling_check": "The corrected model's maximum possible increase over the constant (24% -> 30% reduction, h -> infinity) is +3.08% at 80 armor, +3.53% at 100, +4.39% at 150, +5.00% at 200. The observed +2.76% sits strictly inside that envelope for any plausible defender armor - the new value is not merely larger, it is larger by an amount the corrected formula can actually produce. A value larger than the envelope would have falsified it; 4187.2 does not.",
+      "step_7_old_value_status": "The old value encodes 0.8*max_stacks = exactly 24.0% reduction. No cached source supports that number: S1/S2 give only the per-hit ramp, and S3 states in the project's own words that the constant is 'a documented tuning constant, not a theorem'. It coincides with the sourced ramp only in the measure-zero case h = 10, which is excluded here because the leaf changed at all. Hence old_value_correct is not defensible."
+    },
+
+    "secondary_reading_cross_check": {
+      "mechanic": "Bloodsong 'Expose Weakness' melee/ranged amp (the only other numeric lever named in the scenario id)",
+      "computation": "S5 gives the amp as {{rd|8%|5%}}; S6 establishes melee-first, so melee = 8%, ranged = 5%. A 5% -> 8% correction has a hard ceiling of 1.08/1.05 = 1.0285714 (+2.857%), which would predict 4191.3 if every point of incoming damage sat inside the 4 s Expose Weakness window. The observed 4187.2 is 1.0275590, i.e. 96.3% of the amp ceiling: 0.03 * A = 112.3 -> A = 3743.3 amped, leaving 144.4 (3.7%) un-amped - the natural un-amped prefix before the first empowered attack lands (~0.37 s of a 10 s window). So this reading is also arithmetically consistent, and it too points at the LARGER value as the correct one (8% is the melee value, and Black Cleaver + Bloodsong is a melee-holder build; a 4074.9 leaf would encode the ranged 5% figure).",
+      "conclusion": "Both readings that the cached data admits move the same direction and select the same value. There is no reading under which 4074.9 is the sourced number."
+    },
+
+    "residual_uncertainty": "I could not reproduce 4187.2 to the digit, because the scenario's inputs are outside the permitted evidence tree. What I can state from the sources alone: (a) the old value encodes an unsourced tuning constant (or the ranged amp), (b) the new value's direction is forced by the cached rules, and (c) its magnitude lands inside the closed-form envelope those rules allow, with an implied hit count and defender armor that are jointly plausible for a sustained roster fight. If the change re-tuned every Black Cleaver fight in the corpus (as S3 predicts it must), a single-leaf review is not sufficient acceptance evidence - the corpus-wide diff should show the same sign on every Carve-stacked defender with h > 10 and the opposite sign on any short fight with h < 10."
+  }
+}

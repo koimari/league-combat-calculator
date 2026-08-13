@@ -1,0 +1,91 @@
+{
+  "receipt": "oracle-S6S7-leaf15",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-13",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/source",
+  "old_value": "expose_weakness_Bloodsong",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle15",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item id 3877 (Bloodsong) -> passives[0] name \"Spellblade\" -> branches[0]; line 83147",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Gangplank -> abilities.E[0] \"Powder Keg\" -> notes; line 42133",
+      "quote": "Specific Spellblade item interactions: Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "Serpent's Fang -> passives \"Shield Reaver\" -> branches[0]",
+      "quote": "reducing any {{tip|shield|shields}} they gain within the duration by {{rd|50%|35%}}",
+      "used_for": "Decoding the {{rd|a|b}} template ordering as melee|ranged, cross-checked against data/worklists/e8b-task.md line 15: \"the venom REDUCES SHIELDS the target gains by 50%/35% (melee/ranged)\". Hence Bloodsong's {{rd|8%|5%}} = 8% melee holder / 5% ranged holder."
+    },
+    {
+      "id": "S4",
+      "file": "data/worklists/e9-bis-b-task.md",
+      "locator": "line 7",
+      "quote": "Bastionbreaker, Eclipse, Muramana - explicitly-audited timing exclusions (EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES in src/calculator/timeline_coverage.py: muramana_ability, proc_Eclipse, shaped_charge_Bastionbreaker - coarse sources with no authored event timing).",
+      "used_for": "Establishes the engine's item-effect event-source naming convention <effect_snake>_<ItemName>, of which 'expose_weakness_Bloodsong' is an instance. These are DAMAGE/effect event sources."
+    },
+    {
+      "id": "S5",
+      "file": "data/worklists/e9-bis-b-task.md",
+      "locator": "line 27 (suggested order item 1)",
+      "quote": "Bloodsong (support starter upgrade - spellblade proc on support items)",
+      "used_for": "Bloodsong's priceable combat component is the Spellblade proc, not Expose Weakness."
+    },
+    {
+      "id": "S6",
+      "file": "data/atoms/autoresearch-review.md",
+      "locator": "line 156",
+      "quote": "Goal: model \"increased damage taken\" amps (Vladimir R 10%, Wukong Q shred) using the existing target_debuff precedent (Kog'Maw Caustic Spittle).",
+      "used_for": "In this engine, 'increased damage taken' amps are modeled as target debuffs that scale OTHER events, not as events that carry their own source."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.2, lines 110-116",
+      "quote": "the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance - splitting a 3x100 hit packet into three 100-hit packets, or summing it into one 300 packet, gives the same post-mitigation total.",
+      "used_for": "A multiplicative amp composes into the damaging event's own value; it does not constitute a separate damage instance."
+    },
+    {
+      "id": "S8",
+      "file": "data/onhit-matrix.json",
+      "locator": "champions.*[].slot",
+      "quote": "slot values are the ability-slot letters \"P\", \"Q\", \"W\", \"E\", \"R\"",
+      "used_for": "\"E\" is a well-formed source token: an ability slot of a roster participant."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_bloodsong_actually_does": "Per S1 the item has exactly two combat components. (a) Spellblade proc: a DAMAGE component worth 100% base AD as bonus physical damage on the next basic attack within 10s of an ability cast. (b) Expose Weakness: a 4-second DEBUFF on the champion hit, 'causing them to take {{rd|8%|5%}} increased damage from all sources'. Component (b) carries no damage term of any kind.",
+    "step_2_amp_arithmetic": "Expose Weakness is a pure multiplier on damage the target receives: post_amp = post_mitigation_damage * 1.08 (melee holder) or * 1.05 (ranged holder), per S1 + the melee|ranged template ordering fixed by S3. Its own contribution as an independent damage instance is identically 0: raw_expose_weakness = 0 for every target, level, and build. There is no leveling row, no ratio, and no flat term anywhere in the cached entry to price.",
+    "step_3_therefore_it_cannot_be_an_event_source": "A combat-ledger event needs an entity that produced the packet. Since Expose Weakness produces 0 damage and only rescales packets produced by other entities (S1, S6), 'expose_weakness_Bloodsong' cannot be the source of any damage instance. By S7 the amp folds multiplicatively into the value of the event that actually dealt the damage; it does not split off a separately-sourced event. Whatever damage sat at events[82] was dealt by some roster participant's ability or attack and must be booked to that producer.",
+    "step_4_what_the_producer_is": "'E' is a valid producer token: an ability slot (S8). It is the only one of the two candidate values that names an entity capable of dealing damage. So the corrected attribution at this index is the ability slot E.",
+    "step_5_scenario_specific_corroboration": "The scenario name pins Black Cleaver + Bloodsong on a coupled roster. The single champion-ability interaction with Bloodsong anywhere in the cache is S2: Gangplank E (Powder Keg) - 'Dealing damage with kegs to champions won't apply Expose Weakness to them,' while the same note says 'If the keg destroying attack was empowered with Spellblade, its damage will be added to the explosions' damage' (the sDMG term of the note's formula {aDMG * [2(+0.30)]} + sDMG + cDMG). That is precisely the shape the corrected value asserts: the Spellblade-empowered damage rides the E (keg) event and is booked to E, and the Expose Weakness debuff is NOT applied - and therefore must not appear as a source - on the keg path. Both the general rule (step 3) and this specific carve-out point at 'E'.",
+    "step_6_did_the_engine_lose_the_amp": "No total is at stake either way: the 8%/5% amp is multiplicative and, by S7, conserved whether it is expressed as a separate row or folded into the producing event. The change is an attribution correction, not a damage change - and the attribution the wiki supports is the producer's, i.e. 'E'."
+  },
+
+  "boundaries_and_residual_uncertainty": [
+    "The scenario definition for 'cleaver_bloodsong_roster' lives outside the permitted evidence tree (it is not in data/ or docs/math-foundations.md), so the exact identity of ledger index 82 - which participant, which timestamp - cannot be recovered from cached data alone. The verdict therefore rests on the type-level rule that Expose Weakness can never be a damage source while an ability slot can, plus the Gangplank keg carve-out that independently forbids Expose Weakness on the E path.",
+    "If the ledger were a mixed ledger that also records debuff APPLICATION rows, an Expose Weakness row could exist in principle - but per S1 its applier is the empowered BASIC ATTACK ('your next basic attack ... inflict them with Expose Weakness'), never an ability cast, so 'E' would still not be a legitimate source for such a row and the old value would still be wrong on the keg path per S2. Under either reading of the ledger, 'expose_weakness_Bloodsong' is not defensible at this leaf.",
+    "'expose_weakness_Bloodsong' does not appear in the sanctioned coarse-source list quoted in S4 (muramana_ability, proc_Eclipse, shaped_charge_Bastionbreaker), so there is no audited exemption keeping it as an intentional catch-all source."
+  ],
+
+  "verdict_rationale": "Expose Weakness deals zero damage by its own cached wiki text - it is a 8% (melee) / 5% (ranged) multiplier on damage the target takes from all OTHER sources - so it cannot be the source of a combat event; and on the one champion path in the cache where Bloodsong meets an E ability (Gangplank's Powder Keg), the wiki explicitly states kegs never apply Expose Weakness at all while Spellblade damage IS added to the keg explosion. The producer-attributed value 'E' is the correct source; 'expose_weakness_Bloodsong' was a misattribution of an amplifier as a damage producer."
+}

@@ -1,0 +1,88 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[28]/support_damage_multiplier",
+  "old_value": null,
+  "old_value_note": "absent (leaf did not exist in the previous baseline)",
+  "new_value": {
+    "multiplier": 1.08,
+    "source": "Bloodsong \u2014 Expose Weakness"
+  },
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/3877.json",
+      "data/practice-corpus/scenarios.json",
+      "data/wiki/article-index.json",
+      "data/staleness.json",
+      "data/worklists/*.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / diff / plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item id 3877 (\"Bloodsong\") -> passives[0] (\"Spellblade\", unique) -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "template-convention cross-check for {{rd|A|B}} = melee value | ranged value, over 62 uses in the cache",
+      "quotes": [
+        "Ravenous Hydra / Tiamat \u2014 Cleave: \"deal {{as|{{rd|40% AD|20% AD}}|ad}} {{as|physical damage}}\" (known live values: 40% AD melee, 20% AD ranged)",
+        "Titanic Hydra \u2014 Cleave: \"{{rd|1%|{{fd|0.5}}%}} '''maximum''' health\" (1% melee / 0.5% ranged)",
+        "Death's Dance: \"Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received\" (30% melee / 10% ranged)",
+        "Eclipse \u2014 Ever Rising Moon: \"{{rd|6%|4%}} of target's '''maximum''' health\" (6% melee / 4% ranged)",
+        "World Atlas \u2014 Shared Riches: \"Damaging a minion below {{rd|50%|30%}} of its maximum health ... will execute it\" (melee supports execute below 50%, ranged below 30%)"
+      ],
+      "conclusion": "In this cache the first {{rd}} argument is the MELEE value and the second is the RANGED value, keyed off the item HOLDER, not the target."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "item id 3877 -> riotDescription",
+      "quote": "If the target is a champion, they take increased damage for 4 seconds.",
+      "note": "Riot's client string confirms the debuff and its 4 s duration but carries no numbers; the wiki branch (S1) is the only numeric source in the cache."
+    },
+    {
+      "id": "S4",
+      "file": "docs/math-foundations.md",
+      "locator": "full-document scan (sections 0-6, incl. the \u00a75 formula-audit table)",
+      "quote": "(no match)",
+      "note": "The document contains no Bloodsong / Expose Weakness / support-amplifier entry, so it neither supports nor contradicts this leaf. Damage amplifiers of this form are ordinary multiplicative pre-mitigation factors under \u00a72.1's `post = raw \u00b7 m(R)` decomposition."
+    }
+  ],
+  "independent_computation": {
+    "step_1_effect": "Bloodsong's Spellblade proc, when the empowered basic attack hits an enemy CHAMPION, applies 'Expose Weakness' for 4 s (1.5 s cooldown starting on the empowered attack).",
+    "step_2_magnitude": "Expose Weakness makes the debuffed target take {{rd|8%|5%}} increased damage from ALL sources \u2014 8% if the Bloodsong holder is melee, 5% if the holder is ranged (S1 + S2).",
+    "step_3_form": "\"X% increased damage taken\" is a multiplicative amplifier on the damage instance, i.e. multiplier = 1 + X/100.",
+    "step_4_arithmetic": {
+      "melee_holder": "1 + 8/100 = 1.08",
+      "ranged_holder": "1 + 5/100 = 1.05"
+    },
+    "result": "1.08 for a melee Bloodsong holder; 1.05 for a ranged holder. The baseline's 1.08 is exactly the sourced melee branch, and the attribution string 'Bloodsong \u2014 Expose Weakness' names the correct effect.",
+    "old_value_assessment": "The previous state (leaf absent) asserts no amplifier at all, which contradicts S1 outright for any roster in which the Bloodsong holder lands a Spellblade-empowered attack on an enemy champion. 'absent' cannot be the correct value for a scenario deliberately named after Bloodsong; the only sourced values are 1.08 and 1.05."
+  },
+  "caveat": {
+    "residual_uncertainty": "The melee/ranged branch is selected by the Bloodsong HOLDER's attack type. The scenario definition for 'cleaver_bloodsong_roster' lives outside the permitted evidence tree (tests/ and scripts/), so this oracle could not read the holder's champion and cannot discriminate 1.08 from 1.05 by direct inspection of the roster.",
+    "why_new_value_correct_was_still_returned": "1.08 reproduces a sourced value of the correct effect with the correct multiplicative form and the correct attribution, whereas the old state (absent) reproduces no sourced value at all. Nothing in the permitted tree indicates a ranged holder; the scenario pairs Bloodsong with Black Cleaver, a melee-flavoured physical-damage build. The verdict is therefore new_value_correct, conditional on the holder being melee.",
+    "falsifier": "If the Bloodsong carrier in 'cleaver_bloodsong_roster' has attackRange > 300 (ranged) per data/champions.json, this leaf must be 1.05, not 1.08, and the verdict flips to both_wrong. That single check is the whole remaining risk and can be settled by whoever can read the scenario roster."
+  },
+  "patch_context": {
+    "item_icon_cdn_version": "16.15 (from data/items.json id 3877 icon URL)",
+    "staleness": "data/staleness.json marks item 3877 'stale': false"
+  }
+}
