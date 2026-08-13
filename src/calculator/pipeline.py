@@ -39,7 +39,12 @@ from .item_behavior import (
     SustainStat,
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
-from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
+from .healing import (
+    HEALING_RULE_CHAMPIONS,
+    derive_self_healing,
+    self_heal_rule_owner,
+)
+from .ledger_projection import LedgerInputs
 from .trigger_stream import holders_in, tuple_incapable_items
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
@@ -536,6 +541,87 @@ def _saturated_omnivamp_percent(
         SustainStat.OMNIVAMP_PERCENT,
         fight_duration_seconds=fight_duration_seconds,
         holder_is_melee=is_melee,
+    )
+
+
+def _legacy_tuple_ledger(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    params: "FightParams",
+    champion_data: dict[str, Any],
+    items: list[dict[str, Any]],
+    item_damage_effects: Any,
+    fight_stats: Mapping[str, Any],
+    ability_damages: Mapping[str, Any],
+) -> bool:
+    """The ten adequacy clauses, as ``run_fight`` conjoined them.
+
+    Extracted verbatim, in the same order, so the projection derivation in
+    ``ledger_projection`` can be asserted equal to it clause for clause
+    before the call site flips to the derivation (D-98, R-31).  It has one
+    caller and one lifetime: the flip deletes it.
+    """
+    return (
+        params.target_threshold_health_heal <= 0
+        and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
+        and not _has_item_self_healing(item_damage_effects, items)
+        and not _has_item_health_regen(fight_stats)
+        and not _has_lifesteal_stat(fight_stats)
+        and not _has_omnivamp_stat(fight_stats)
+        and not _saturated_omnivamp_percent(
+            items,
+            params.fight_duration_seconds,
+            is_melee=bool(fight_stats.get("is_melee", True)),
+        )
+        # Forced/empowered basic attacks are authored on ability rows. Keep
+        # the dict ledger so reactive defenders (Bramble/Thornmail) retain
+        # the basic-attack marker instead of losing it in the light tuple
+        # schema.
+        and not any(
+            ability.get("empowers_next_auto")
+            for ability in ability_damages.values()
+            if isinstance(ability, dict)
+        )
+        # Items that read the per-event view — the damage/takedown scanners
+        # (Black Cleaver Carve, Phage Rage, ...), the crowd-control readers
+        # (Imperial Mandate, Fimbulwinter, ...) and Echoes of Helia's raw
+        # damage sum — cannot read the positional tuple rows; keep dict rows
+        # so their scan sees the same events the receipt path enriches
+        # (issue #169).  ``tuple_incapable_items()`` is that set derived from
+        # the capabilities themselves — every holder declaring a stream the
+        # bus parses off raw rows — so the question is answered by the
+        # declarations rather than by a list kept beside them (D-01).
+        and not holders_in(items, tuple_incapable_items())
+        # The Collector's execute rides per-event threshold stamps that the
+        # tuple schema cannot carry; the engine stays fail-closed for the
+        # item by keeping dict rows, whose stamps the compiled walk then
+        # rejects with a named receipt (issue #169).
+        and item_damage_effects.execute is None
+    )
+
+
+def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    params: "FightParams",
+    champion_data: dict[str, Any],
+    items: list[dict[str, Any]],
+    item_damage_effects: Any,
+    fight_stats: Mapping[str, Any],
+    ability_damages: Mapping[str, Any],
+) -> LedgerInputs:
+    """One fight's facts, as the ledger projection's readers are decided by.
+
+    The one place ``run_fight``'s locals become the projection's declared
+    inputs, so the derivation's fixtures and the engine's live call build the
+    same record from the same fields.
+    """
+    return LedgerInputs(
+        champion_name=str(champion_data.get("name", "")),
+        self_heal_rule=self_heal_rule_owner(str(champion_data.get("name", ""))),
+        item_names=tuple(str(item.get("name", "")) for item in items),
+        stats=fight_stats,
+        damage_effects=item_damage_effects,
+        ability_damages=ability_damages,
+        fight_duration_seconds=params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+        target_threshold_health_heal=params.target_threshold_health_heal,
     )
 
 
@@ -1128,43 +1214,13 @@ def run_fight(
                 target_stats=params.target_stats(),
                 champion_options=champion_options,
             )
-    tuple_ledger = (
-        score_only
-        and params.target_threshold_health_heal <= 0
-        and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
-        and not _has_item_self_healing(item_damage_effects, items)
-        and not _has_item_health_regen(fight_stats)
-        and not _has_lifesteal_stat(fight_stats)
-        and not _has_omnivamp_stat(fight_stats)
-        and not _saturated_omnivamp_percent(
-            items,
-            params.fight_duration_seconds,
-            is_melee=bool(fight_stats.get("is_melee", True)),
-        )
-        # Forced/empowered basic attacks are authored on ability rows. Keep
-        # the dict ledger so reactive defenders (Bramble/Thornmail) retain
-        # the basic-attack marker instead of losing it in the light tuple
-        # schema.
-        and not any(
-            ability.get("empowers_next_auto")
-            for ability in ability_damages.values()
-            if isinstance(ability, dict)
-        )
-        # Items that read the per-event view — the damage/takedown scanners
-        # (Black Cleaver Carve, Phage Rage, ...), the crowd-control readers
-        # (Imperial Mandate, Fimbulwinter, ...) and Echoes of Helia's raw
-        # damage sum — cannot read the positional tuple rows; keep dict rows
-        # so their scan sees the same events the receipt path enriches
-        # (issue #169).  ``tuple_incapable_items()`` is that set derived from
-        # the capabilities themselves — every holder declaring a stream the
-        # bus parses off raw rows — so the question is answered by the
-        # declarations rather than by a list kept beside them (D-01).
-        and not holders_in(items, tuple_incapable_items())
-        # The Collector's execute rides per-event threshold stamps that the
-        # tuple schema cannot carry; the engine stays fail-closed for the
-        # item by keeping dict rows, whose stamps the compiled walk then
-        # rejects with a named receipt (issue #169).
-        and item_damage_effects.execute is None
+    tuple_ledger = score_only and _legacy_tuple_ledger(
+        params,
+        champion_data,
+        items,
+        item_damage_effects,
+        fight_stats,
+        ability_damages,
     )
     result = calculate_fight_damage(
         fight_stats,

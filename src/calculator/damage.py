@@ -165,6 +165,7 @@ from .item_behavior import (
     Resistance,
     SustainStat,
 )
+from .ledger_projection import ShieldOutcomeInputs
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -10194,6 +10195,33 @@ def _apply_shield_reaver_venom(
     return reduced, [note]
 
 
+def _legacy_skip_shield_outcome(
+    config: FightConfig, items: list[dict[str, Any]]
+) -> bool:
+    """The two shield-outcome clauses, as the engine conjoined them.
+
+    Extracted verbatim so ``ledger_projection``'s derivation can be asserted
+    equal to it before the call site flips (D-98, R-31).  The first clause is
+    the mirror of ``pipeline``'s threshold-heal clause — the same question
+    asked of the same field at a second gate — which is why the derivation
+    answers both through one function.  One caller, one lifetime: the flip
+    deletes it.
+    """
+    return config.target_threshold_health_heal <= 0 and not holders_in(
+        items, pair_outcome_items()
+    )
+
+
+def shield_outcome_inputs(
+    config: FightConfig, items: list[dict[str, Any]]
+) -> ShieldOutcomeInputs:
+    """One fight's facts, as the shield outcome's readers are decided by."""
+    return ShieldOutcomeInputs(
+        item_names=tuple(str(item.get("name", "")) for item in items),
+        target_threshold_health_heal=config.target_threshold_health_heal,
+    )
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -10336,11 +10364,7 @@ def calculate_fight_damage(
             if isinstance(event, dict):
                 event["execute_threshold_ratio"] = execute_ratio
                 event["execute_source"] = state.damage_effects.execute.item_name
-    if (
-        score_only
-        and config.target_threshold_health_heal <= 0
-        and not holders_in(items, pair_outcome_items())
-    ):
+    if score_only and _legacy_skip_shield_outcome(config, items):
         # Score-mode consumers replay shields inside the coupled survival
         # walk and never read the one-pair shield outcome.  The remaining
         # engine-side consumers are the Protoplasm coverage downgrade below
