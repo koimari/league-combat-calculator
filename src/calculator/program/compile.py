@@ -1097,11 +1097,25 @@ class ProgramKey(NamedTuple):
 
 
 def program_key(program: Program, projection: Projection) -> ProgramKey:
-    """One program's cache key, derived from the program and nothing else."""
+    """One program's cache key, derived from the program and nothing else.
+
+    "Nothing else" cuts both ways, and the second direction is the one a
+    cache key gets wrong: **every** field of the program is in the key, not
+    the fields a reader expects to matter.  ``compile_program`` reads the
+    events, so two programs sharing a roster and a pass but holding
+    different events are two keys; the patch and the pass index are in for
+    the same reason, since a cross-pass rebuild is a different program
+    wearing the same roster.  ``caches.CACHES['compiled_actions']`` declares
+    this function's parameters as its key fields and the test file reads
+    both bodies to check that what the compiler takes off ``program`` is a
+    subset of what this takes off it.
+    """
     roster = roster_fingerprint(program.participants)
     return ProgramKey(
         roster=roster,
-        program=program_fingerprint(roster, (), (), program.pass_index),
+        program=program_fingerprint(
+            roster, program.events, program.pass_index, program.patch
+        ),
         projection=projection.value,
     )
 

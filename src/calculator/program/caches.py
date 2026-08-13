@@ -57,6 +57,15 @@ class CacheDeclaration:
     served value reads.  ``invalidated_by`` is the writer's half.  A
     declaration with a field in neither is the silent staleness this module
     exists to remove.
+
+    ``key_fields`` is spelled as the **parameter names of the cache's key
+    function**, and that is what makes the assertion mechanical rather than
+    editorial: ``tests/test_program_caches`` ties each declaration to its key
+    function by signature, then reads — from the source of both — every
+    attribute the value's *producer* takes off a key field and requires the
+    key function to take it too.  A field the producer reads and the key
+    ignores is a cached answer computed from an input the key cannot see,
+    which is the whole failure this module names.
     """
 
     name: str
@@ -109,22 +118,67 @@ def params_fingerprint(params: Any, fields: Iterable[str]) -> tuple:
     return tuple((field, getattr(params, field, None)) for field in sorted(fields))
 
 
-def program_fingerprint(
+def program_inputs_fingerprint(
     roster: tuple, actors: Sequence[tuple], params: tuple, pass_index: int
 ) -> tuple:
-    """The whole program's value key — roster, actors, params and pass.
+    """What a program was *built from* — roster, actors, params and pass.
 
-    ``pass_index`` is in the key because a cross-pass dependency rebuilds the
-    program with a parameter patch: pass 2 is a different program, and
-    serving pass 1's compiled actions for it would silently discard the
-    patch that was the whole reason for the second pass.
+    The key of the cache that serves a built ``Program``, so its fields are
+    the request-side inputs the builder consumed.  ``pass_index`` is among
+    them because a cross-pass dependency rebuilds the program with a
+    parameter patch: pass 2 is a different program, and serving pass 1's for
+    it would silently discard the patch that was the whole reason for the
+    second pass.
+
+    Distinct from :func:`program_fingerprint`, which keys on what a program
+    *is* rather than on what produced it.  Two functions because they answer
+    two different questions and a cache that confused them would serve one
+    program's actions under another's key.
     """
     return (roster, tuple(actors), params, int(pass_index))
+
+
+def patch_fingerprint(patch: Any) -> tuple:
+    """A per-pass parameter patch as a value key; ``()`` means no patch.
+
+    The overrides are a mapping, so they are flattened in sorted field order:
+    a ``dict`` cannot be part of a hashable key, and two patches that differ
+    only in insertion order are one patch.
+    """
+    if patch is None:
+        return ()
+    overrides = getattr(patch, "overrides", {}) or {}
+    return (
+        str(getattr(patch, "reason", "")),
+        tuple((str(field), overrides[field]) for field in sorted(overrides, key=str)),
+    )
+
+
+def program_fingerprint(
+    roster: tuple, events: Sequence[Any], pass_index: int, patch: Any
+) -> tuple:
+    """What a built program *is* — every field of it, as one value key.
+
+    Every field, not the ones a caller expects to matter.  The cache this
+    keys serves compiled actions, and the compiler reads the events; a key
+    that carried only the roster and the pass would hand two programs with
+    the same roster and different events one entry, which is an answer
+    computed from inputs it no longer has — the exact staleness an ``id()``
+    key produces, reached by a shorter route.
+    """
+    return (roster, tuple(events), int(pass_index), patch_fingerprint(patch))
 
 
 # The declarations this layer's caches carry.  A registry rather than a
 # docstring per cache, because "every cache declares ``invalidated_by``" is a
 # property something has to be able to iterate.
+#
+# Each ``key_fields`` tuple is its key function's parameter list, in order:
+# ``program`` is keyed by ``program_inputs_fingerprint`` and
+# ``compiled_actions`` by ``compile.program_key``.  The test file asserts the
+# tie by signature, so renaming a parameter without moving the declaration
+# fails rather than quietly leaving the declaration describing a function
+# that no longer exists.
 CACHES: Mapping[str, CacheDeclaration] = {
     "program": CacheDeclaration(
         name="program",
@@ -160,6 +214,8 @@ __all__ = [
     "Invalidator",
     "actor_fingerprint",
     "params_fingerprint",
+    "patch_fingerprint",
     "program_fingerprint",
+    "program_inputs_fingerprint",
     "roster_fingerprint",
 ]
