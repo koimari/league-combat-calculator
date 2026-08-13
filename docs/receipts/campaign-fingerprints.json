@@ -488,6 +488,20 @@
       "captured_at_commit": "4b21f49",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "S6's own R-28 baseline, captured on the S5 tip before S6's first src/ edit. The counters, residual, winner and score are byte-identical to the S1 through S5 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 1.3% above S5's 3335.8 ms, which is repeat noise on one machine. R-28 gates allocation at S4 alone, so S6 declares wall and nothing else. S6 is a semantic stage, so the counters, winner and score above are also the row-8 values it predicts unchanged: its two reordering sites are pure arming-order moves at one timestamp, and a move in any of them is an unexpected occurrence that stops the slice rather than a budget overrun."
+    },
+    "P4-S7": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3385.5,
+      "repeats_ms": [
+        3487.2,
+        3385.5,
+        3407.2
+      ],
+      "ratchet_ceiling_ms": 3724.1,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "8a9497b",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "S7's own R-28 baseline, captured on the S6 tip before S7's first src/ edit. The counters, residual, winner and score are byte-identical to the S1 through S6 captures (1033/1015/967/3127, residual 28, score 5010.8, rungs compiled 833 / receipt_walk_candidate 134); only wall moved, 0.2% above S6's 3380.1 ms, which is repeat noise on one machine. R-28 gates allocation at S4 alone, so S7 declares wall and nothing else. S7 is the seven-authority-move stage and four of its moves land, so the counters, winner and score above are the row-8 values each landing commit predicts or explains: Hypershot and Abyssal predict them unchanged, and Bloodsong and Shadowflame each declare their own expected move in their own commit body rather than absorbing one here."
     }
   },
   "tests": {
