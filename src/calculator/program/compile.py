@@ -69,12 +69,12 @@ from ..survival.compile import (
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
+    trigger_time_key,
 )
 from ..trigger_stream import is_immobilizing_event
 from . import events as ev
 from .build import Program, Projection
 from .caches import program_fingerprint, roster_fingerprint
-from .precision import trigger_time_key
 from .identity import event_id_text
 
 # Kinds a compiled damage action may carry; a revive candidate is authored

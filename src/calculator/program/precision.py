@@ -18,6 +18,19 @@ one-way dependency runs ``program -> survival`` and gating the kernel at
 zero would invert it.  The kernel's rounding leaves by the projection moving
 out, never by the registry moving in.
 
+**What this registry is not.**  A rounded number nobody publishes is not
+presentation and does not belong here.  The one live instance is the
+tolerance a trigger *lookup* keys on: the compiler writes a self-heal's
+trigger index under a normalized timestamp and the kernel reads it back
+under the same one, so the two must agree exactly or the link silently stops
+matching.  Its reader is ``survival.compile.heal_trigger_key``, on the far
+side of a dependency that runs ``program -> survival`` and never back, so
+``TRIGGER_TIME_KEY_DIGITS`` and ``trigger_time_key`` live *there*, beside
+that reader, and ``program/compile.py`` imports them.  A copy here would be
+one tolerance with two spellings on opposite sides of a boundary only one of
+them can cross — which is the failure this module exists to prevent, not a
+tidier filing of it.
+
 Cutoffs are the other half.  A rounded number that is only displayed is
 presentation; a rounded number that a *rule* then reads is a policy, and the
 one live instance of that is the post-death damage cutoff.  It is named
@@ -37,11 +50,9 @@ from types import MappingProxyType
 __all__ = [
     "CutoffPolicy",
     "ROUNDING",
-    "TRIGGER_TIME_KEY_DIGITS",
     "damage_cutoff",
     "digits_for",
     "round_field",
-    "trigger_time_key",
 ]
 
 
@@ -143,28 +154,6 @@ def round_field(field: str, value: float) -> float:
     projection decides which one it has before it asks for a precision.
     """
     return round(float(value), digits_for(field))
-
-
-# The digits a *key* is normalized to.  A different decision from the digits
-# a number is shown to, and it lives here for the same reason: a compiler
-# matching a self-heal to the hit that caused it compares two timestamps that
-# travelled through different arithmetic, so it compares them at a declared
-# tolerance rather than exactly.  Nine digits is what the two producers used
-# before this constant existed, transcribed rather than revised.
-TRIGGER_TIME_KEY_DIGITS = 9
-
-
-def trigger_time_key(value: float) -> float:
-    """One timestamp, normalized to the digits a trigger lookup keys on.
-
-    Not presentation: nothing publishes this number.  It is the identity half
-    of a dict key, and the reason it is here rather than at the five call
-    sites that used to spell the digit count themselves is that a lookup
-    normalized to nine digits on one side and ten on the other silently stops
-    matching -- a self-heal that loses its trigger link is not an error, it
-    is a heal the walk applies unconditionally.
-    """
-    return round(float(value), TRIGGER_TIME_KEY_DIGITS)
 
 
 class CutoffPolicy(Enum):

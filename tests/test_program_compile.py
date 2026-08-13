@@ -15,6 +15,9 @@ and re-asserting them under a new name would be a second pin that can drift
 from the first.  What is new is what is tested.
 """
 
+import ast
+import pathlib
+
 import pytest
 
 from src.calculator.program import compile as program_compile
@@ -27,6 +30,7 @@ from src.calculator.program.build import (
     pair_program,
 )
 from src.calculator.program.identity import EventId, PairOrigin
+from src.calculator.survival import compile as survival_compile
 from src.calculator.survival.actions import ActionKind, TransitionRank
 
 ORIGIN = PairOrigin("main", "enemy:0")
@@ -201,3 +205,67 @@ class TestTheGreyHealthTickBuilder:
 
         action = program_compile.grey_health_heal_action(1.0, "Warmog", 10.0, 3, 0)
         assert EVENT_SLOTS.text(action.event_slot) == "main:grey:Warmog:3"
+
+
+class TestTheTriggerTimeToleranceHasOneHome:
+    """One tolerance, one spelling, across a one-way boundary.
+
+    The compiler writes a self-heal's trigger index under a timestamp
+    normalized to a declared number of digits, and the *kernel* reads it back
+    with ``heal_trigger_key``.  ``program -> survival`` runs one way, so the
+    kernel cannot import the logical layer: if each side spelled its own
+    digit count, changing one would silently unlink every self-heal from the
+    hit that caused it — a heal the walk then applies unconditionally, which
+    is a wrong number and not an error.
+    """
+
+    def test_moving_the_digit_count_moves_both_sides(self, monkeypatch) -> None:
+        """The property, not the arrangement: one constant, two readers."""
+        event = {
+            "_trigger_source": "Q",
+            "_trigger_time": 1.2345678901234,
+            "_trigger_sequence": 3,
+        }
+        monkeypatch.setattr(survival_compile, "TRIGGER_TIME_KEY_DIGITS", 3)
+        assert survival_compile.heal_trigger_key(event)[1] == 1.235
+        assert survival_compile.heal_trigger_key(event)[1] == (
+            survival_compile.trigger_time_key(event["_trigger_time"])
+        )
+
+    def test_the_writer_and_the_reader_agree_on_one_timestamp(self) -> None:
+        """The link itself: what the compiler files under, the kernel finds."""
+        time_value = 2.0 / 3.0
+        event = {
+            "_trigger_source": "Q",
+            "_trigger_time": time_value,
+            "_trigger_sequence": 1,
+        }
+        written = ("Q", program_compile.trigger_time_key(time_value), 1)
+        assert survival_compile.heal_trigger_key(event) == written
+
+    def test_the_tolerance_is_defined_exactly_once_in_src(self) -> None:
+        """A second definition is a second tolerance wearing one name."""
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "calculator"
+        definitions: list[str] = []
+        for path in sorted(root.rglob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if (
+                    isinstance(node, ast.FunctionDef)
+                    and node.name == "trigger_time_key"
+                ):
+                    definitions.append(f"{path.name}:def")
+                if isinstance(node, ast.Assign) and any(
+                    isinstance(target, ast.Name)
+                    and target.id == "TRIGGER_TIME_KEY_DIGITS"
+                    for target in node.targets
+                ):
+                    definitions.append(f"{path.name}:digits")
+        assert sorted(definitions) == ["compile.py:def", "compile.py:digits"]
+
+    def test_the_compiler_spells_no_digit_count_of_its_own(self) -> None:
+        """Counter 6's ``program/`` zero, read as the reason it exists."""
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "calculator"
+        text = (root / "program" / "compile.py").read_text(encoding="utf-8")
+        assert "trigger_time_key" in text
+        assert "round(" not in text

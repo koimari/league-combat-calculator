@@ -16,7 +16,9 @@ edits the ledger and its refusal together, in one package.
 
 **The prices.**  ``thorns_return_damage`` and ``champion_wound_tuple`` are
 priced before the walk by both adapters, and ``heal_trigger_key`` is the
-identity a self-heal carries back to the event that caused it.
+identity a self-heal carries back to the event that caused it -- normalized
+at ``TRIGGER_TIME_KEY_DIGITS``, which lives here beside its reader and is
+imported by the compiler that writes the other side of the same lookup.
 
 ``UncompilableActionError`` is raised from ``program/compile.py`` and from
 the compile-stage capability checks; it is declared here because ``invariant``
@@ -103,11 +105,34 @@ def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
     return unrepresentable_heal_receipt(template)
 
 
+# The digits a trigger *lookup* is normalized to.  Not presentation --
+# nothing publishes this number -- and not the precision registry's, whose
+# scope is ``program/``: the reader of this tolerance is ``heal_trigger_key``
+# below, on the kernel side of a boundary that runs ``program -> survival``
+# and never back.  So the one home is here, and the logical layer imports it.
+#
+# One home because the two sides must agree exactly.  A lookup normalized to
+# nine digits where it is written and ten where it is read silently stops
+# matching, and a self-heal that loses its trigger link is not an error: it
+# is a heal the walk applies unconditionally.
+TRIGGER_TIME_KEY_DIGITS = 9
+
+
+def trigger_time_key(value: float) -> float:
+    """One timestamp, normalized to the digits a trigger lookup keys on."""
+    return round(float(value), TRIGGER_TIME_KEY_DIGITS)
+
+
 def heal_trigger_key(event: Mapping[str, Any]) -> tuple[str, float, int]:
-    """The trigger identity carried by an engine self-heal event."""
+    """The trigger identity carried by an engine self-heal event.
+
+    The *reader* of the key the compiler writes, which is why it normalizes
+    its timestamp through :func:`trigger_time_key` rather than spelling a
+    digit count of its own.
+    """
     return (
         str(event.get("_trigger_source", "")),
-        round(float(event.get("_trigger_time", 0.0)), 9),
+        trigger_time_key(event.get("_trigger_time", 0.0)),
         int(event.get("_trigger_sequence", 0) or 0),
     )
 
@@ -217,11 +242,13 @@ def coalesce_darius_q_heals(
 
 
 __all__ = [
+    "TRIGGER_TIME_KEY_DIGITS",
     "UncompilableActionError",
     "champion_wound_tuple",
     "coalesce_darius_q_heals",
     "thorns_return_damage",
     "heal_trigger_key",
+    "trigger_time_key",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
     "unrepresentable_template_receipt",
