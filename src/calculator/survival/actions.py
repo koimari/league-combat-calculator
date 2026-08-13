@@ -49,14 +49,17 @@ class TransitionRank(IntEnum):
     trigger armed.  ``DEBUFF_ARM`` put it after, which made the opening
     exchange the one exchange the aura did not price.
 
-    **Two groups still resolve as one.**  ``LATE_BARRIER``/``REACTIVE`` and
-    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` rode one float apiece before
-    S2 and ride one :func:`ordering_slot` apiece after it, so their relative
-    declaration order still changes nothing.  Ordering them 4 < 5 and
-    6 < 7 < 8 is nonetheless a decision — debuff arming resolves before
-    healing, and both before utility — and it becomes the live tie-break the
-    moment Phase 4 S6 splits the groups.  If either ordering is wrong, it is
-    wrong here and not at the call sites.
+    **One group still resolves as one.**  ``LATE_BARRIER``/``REACTIVE`` rode
+    one float before S2 and ride one :func:`ordering_slot` after it, so
+    their relative declaration order still changes nothing.
+
+    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` rode the other float and no
+    longer share anything: Phase 4 S6 split them, so ``6 < 7 < 8`` is now
+    the live tie-break between two transitions authored at one timestamp —
+    a debuff arms before a heal lands, and both before a utility effect
+    resolves.  That is the ordering the collapsed float could not express
+    and could not be asked about; if it is wrong, it is wrong here and not
+    at the call sites.
     """
 
     STATE_GRANT = 0
@@ -71,34 +74,44 @@ class TransitionRank(IntEnum):
     TERMINAL = 9
 
 
-# Two groups of ranks resolve as one, and this is the whole of what the
+# One pair of ranks resolves as one, and this is the last of what the
 # deleted float ladder meant that the ordinals do not.  That ladder gave
-# ``LATE_BARRIER`` and ``REACTIVE`` one number (0.5) and ``DEBUFF_ARM``,
-# ``RECOVERY`` and ``UTILITY_ARM`` another (1.0), so each group folds onto
-# its first member wherever the walk *orders* or *classifies* by rank.
-# ``LATE_BARRIER`` is a barrier an authored packet places *after* damage
-# (Eclipse's self-shield, Fimbulwinter's Everlasting), which is why it is
-# not ``BARRIER_GRANT``.
+# ``LATE_BARRIER`` and ``REACTIVE`` one number (0.5), so the pair folds onto
+# its first member wherever the walk *orders* by rank.  ``LATE_BARRIER`` is
+# a barrier an authored packet places *after* damage (Eclipse's self-shield,
+# Fimbulwinter's Everlasting), which is why it is not ``BARRIER_GRANT``.
+#
+# It is a preserved defect and is named as one: a barrier resolving after
+# the damage at its own timestamp absorbs nothing at that timestamp.  The
+# row lives on ``docs/migration-frontier.json`` under ``preserved_defects``,
+# declined by S6 because correcting it is a different reordering from the
+# one this stage predicted and bounded.
+#
+# The ladder's other number (1.0) was shared by ``DEBUFF_ARM``, ``RECOVERY``
+# and ``UTILITY_ARM``.  **Phase 4 S6 split them**, so they resolve in
+# declaration order at a shared timestamp and appear here no longer.  What
+# the split does *not* touch is which ranks the receipt adapter classifies
+# as a recovery: that set was spelled as this fold's output and is now
+# spelled as itself, in ``_RECOVERY_CLASSIFIED_RANKS`` below.
 #
 # Every other read of a rank is fold-invariant by construction: the kernel's
-# comparisons are thresholds at a group boundary, and no group straddles
-# one.  Splitting these two groups reorders same-timestamp debuffs against
-# recoveries, which is a behaviour change with a stage of its own — Phase 4
-# S6 — and deleting this fold is that stage's whole content.
+# comparisons are thresholds at a group boundary, and the surviving pair
+# does not straddle one.
 _ORDERING_SLOTS: dict[TransitionRank, TransitionRank] = {
     TransitionRank.REACTIVE: TransitionRank.LATE_BARRIER,
-    TransitionRank.RECOVERY: TransitionRank.DEBUFF_ARM,
-    TransitionRank.UTILITY_ARM: TransitionRank.DEBUFF_ARM,
 }
 
 
 def ordering_slot(rank: TransitionRank) -> TransitionRank:
-    """The rank a transition sorts and classifies *as*.
+    """The rank a transition sorts *as*.
 
-    Identity for every rank that resolves alone, and the group's first
-    member for the two that do not.  The fold cannot develop a hole the way
-    a total table could: a rank absent from :data:`_ORDERING_SLOTS` resolves
-    as itself, which is what a rank sharing its slot with nothing means.
+    Ordering only, since Phase 4 S6: classification asks a separate
+    question and reads :data:`_RECOVERY_CLASSIFIED_RANKS` for its answer.
+
+    Identity for every rank that resolves alone, and the pair's first member
+    for the two that do not.  The fold cannot develop a hole the way a total
+    table could: a rank absent from :data:`_ORDERING_SLOTS` resolves as
+    itself, which is what a rank sharing its slot with nothing means.
     """
     return _ORDERING_SLOTS.get(rank, rank)
 
@@ -604,9 +617,12 @@ def action_key(
     event (``_sk``) because the walk re-sorts the same roster events for
     every optimizer candidate.
 
-    Element 1 is the rank's :func:`ordering_slot`, not the rank: two groups
-    of ranks resolve together, and folding them here is what keeps the two
-    inline sort tuples in ``compile.py`` comparable with this one.
+    Element 1 is the rank's :func:`ordering_slot`, not the rank: one pair of
+    ranks still resolves together, and folding it here is what keeps the
+    inline sort tuples in ``compile.py`` comparable with this one.  Since
+    Phase 4 S6 the fold is the identity for every other rank, so a debuff,
+    a recovery and a utility arming authored at one timestamp now order
+    ``6 < 7 < 8`` instead of tying and falling through to ``sequence``.
 
     The ``_event_id`` component is a dead tie-break for engine damage
     events: ``sequence`` is unique per pair fight, and events from
@@ -729,6 +745,26 @@ _STANDALONE_KINDS = {
 }
 
 
+# Which ranks the recovery branch below accepts — a *classification*
+# question, and a different one from which rank resolves first.
+#
+# Until Phase 4 S6 it was spelled ``ordering_slot(phase) is DEBUFF_ARM``:
+# the three ranks shared one ordering slot, so the slot happened to be this
+# set as well.  S6 split the slot, and this set is what the split must not
+# move — a packet arming at ``UTILITY_ARM`` with an unlisted kind is the
+# engine's own self-heal (``champion_ability`` and friends) and classifying
+# it as a utility no-op would drop a heal, which is a second behaviour
+# change with no fixture and no prediction.  Written down here so the two
+# questions have two answers instead of one accident.
+_RECOVERY_CLASSIFIED_RANKS = frozenset(
+    {
+        TransitionRank.DEBUFF_ARM,
+        TransitionRank.RECOVERY,
+        TransitionRank.UTILITY_ARM,
+    }
+)
+
+
 def classify_prefetched(
     event: Mapping[str, Any],
     phase: TransitionRank,
@@ -748,14 +784,13 @@ def classify_prefetched(
         return ActionKind.TEMP_HEALTH
     if phase is TransitionRank.BARRIER_GRANT and kind in _HEAL_KINDS:
         return _classify_heal(event)
-    if ordering_slot(phase) is TransitionRank.DEBUFF_ARM:
+    if phase in _RECOVERY_CLASSIFIED_RANKS:
         # The authoritative walk's recovery branch heals every remaining
         # packet unconditionally (the kind gate exists only at
         # ``BARRIER_GRANT``); engine self-heals may carry arbitrary kind
-        # strings such as ``champion_ability``.  The slot, not the rank: a
-        # debuff or utility arming reaches this branch too, because the
-        # float the three shared could not tell them apart, and telling
-        # them apart is S6's correction and not this classifier's.
+        # strings such as ``champion_ability``.  All three arming ranks
+        # reach it, which is why the set is named rather than read off the
+        # ordering fold — see :data:`_RECOVERY_CLASSIFIED_RANKS`.
         return _classify_heal(event)
     if phase < TransitionRank.DAMAGE:
         # Kinds arming before damage but outside the enumerated support

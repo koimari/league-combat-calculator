@@ -1763,10 +1763,12 @@ def run_survival_walk(
             # with no trigger linkage at all passes both adapters trivially,
             # so the ledger is only consulted when a link exists.
             #
-            # ``DEBUFF_ARM`` is the recovery *slot*, not the recovery rank:
-            # the three ranks that shared the deleted 1.0 float fold onto the
-            # first of them, so "before recovery" is the same set of ranks it
-            # has always been (see ``actions.ordering_slot``).
+            # ``DEBUFF_ARM`` is a *threshold*, not the debuff rank: every
+            # rank below it resolves before any arming does, and the three
+            # arming ranks sit at or above it.  That was true when they
+            # shared one ordering slot and is still true now that Phase 4 S6
+            # has split them, which is why the split moved no comparison
+            # here (see ``actions.ordering_slot``).
             ledger.skip(
                 action,
                 "trigger_event_skipped",

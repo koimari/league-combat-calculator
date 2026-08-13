@@ -7,12 +7,19 @@ tree writes, sorts, compares or dispatches on one.
 
 What the float said that the ordinals do not is a *collapse*: two groups of
 ranks shared one number and therefore resolved together.  ``ordering_slot``
-is that collapse, named, and these tests pin its shape — which groups, and
-that every other read of a rank is invariant under it — because splitting
-the groups is a behaviour change with a stage of its own (Phase 4 S6).
+is that collapse, named, and these tests pin its shape — which group, and
+that every other read of a rank is invariant under it.
+
+Phase 4 S6 split one of the two groups.  ``DEBUFF_ARM``/``RECOVERY``/
+``UTILITY_ARM`` now resolve ``6 < 7 < 8`` at a shared timestamp instead of
+tying, and the reorderings that follows from are pinned below by name.
+``LATE_BARRIER``/``REACTIVE`` still share a slot, deliberately: that one is
+a preserved defect with a committed row on the migration frontier, not an
+oversight.
 """
 
 import ast
+import json
 from pathlib import Path
 from typing import Iterable, Mapping, NamedTuple, Sequence
 
@@ -65,27 +72,26 @@ def test_the_ordering_fold_is_total_and_closed() -> None:
     assert set(actions_module._ORDERING_SLOTS) < set(TransitionRank)
 
 
-def test_the_two_collapsed_groups_are_exactly_the_shared_floats() -> None:
-    """Nine producing ranks resolve in six ordering slots (D-06).
+def test_one_collapsed_pair_survives_and_the_other_group_is_split() -> None:
+    """Nine producing ranks resolve in eight ordering slots (D-06, S6).
 
     The float ladder S2 deleted gave ``LATE_BARRIER``/``REACTIVE`` one
-    number and ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` another; those
-    two groups, and no others, still resolve together.
+    number and ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` another.  S6
+    split the second group; the first still shares a slot, and this
+    asserts *both* halves so the stage cannot be read as having split
+    everything or nothing.
     """
     producing = [rank for rank in TransitionRank if rank is not TransitionRank.TERMINAL]
     assert len(producing) == 9
-    assert len({ordering_slot(rank) for rank in producing}) == 6
+    assert len({ordering_slot(rank) for rank in producing}) == 8
     assert ordering_slot(TransitionRank.REACTIVE) is TransitionRank.LATE_BARRIER
-    assert (
-        ordering_slot(TransitionRank.RECOVERY)
-        is ordering_slot(TransitionRank.UTILITY_ARM)
-        is TransitionRank.DEBUFF_ARM
-    )
-    alone = set(producing) - {
-        TransitionRank.REACTIVE,
+    for rank in (
+        TransitionRank.DEBUFF_ARM,
         TransitionRank.RECOVERY,
         TransitionRank.UTILITY_ARM,
-    }
+    ):
+        assert ordering_slot(rank) is rank
+    alone = set(producing) - {TransitionRank.REACTIVE}
     assert all(ordering_slot(rank) is rank for rank in alone)
 
 
@@ -112,17 +118,25 @@ def test_terminal_is_declared_last_and_produced_by_nothing() -> None:
 def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
     """Element 1 of the walk's total order is the fold's output.
 
-    A heal and a debuff armed at one timestamp compare equal on the phase
-    component and fall through to the tie-breaks after it, exactly as they
-    did when both rode 1.0.  S6 is where that stops being true.
+    Since S6 the fold is the identity for every arming rank, so a heal and
+    a debuff armed at one timestamp no longer tie on the phase component
+    and no longer fall through to the tie-breaks after it.  A reactive
+    strike-back still ties with a late barrier, which is the one pair the
+    fold still holds.
     """
     event = {"sequence": 0, "attacker": "main", "_event_id": "e", "source": "s"}
     heal = action_key(1.0, TransitionRank.RECOVERY, "main", event)
     debuff = action_key(1.0, TransitionRank.DEBUFF_ARM, "main", event)
-    assert heal[1] is TransitionRank.DEBUFF_ARM
-    assert heal == debuff
+    utility = action_key(1.0, TransitionRank.UTILITY_ARM, "main", event)
+    assert heal[1] is TransitionRank.RECOVERY
+    assert debuff[1] is TransitionRank.DEBUFF_ARM
+    assert utility[1] is TransitionRank.UTILITY_ARM
+    assert debuff < heal < utility
     assert action_key(1.0, TransitionRank.DAMAGE, "main", event)[1] is (
         TransitionRank.DAMAGE
+    )
+    assert action_key(1.0, TransitionRank.REACTIVE, "main", event) == action_key(
+        1.0, TransitionRank.LATE_BARRIER, "main", event
     )
 
 
@@ -547,12 +561,15 @@ def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
 
 
 def test_an_arming_rank_still_classifies_as_a_recovery() -> None:
-    """The 1.0 fall-through, preserved: the slot decides, not the rank.
+    """The 1.0 fall-through, preserved: a named set decides, not the fold.
 
     Every rank that shared the deleted 1.0 float still reaches the recovery
     branch, and a rank one slot earlier still reaches the damage path.
-    This is the behaviour S6 changes, pinned here so that stage has to move
-    a test rather than move a number quietly.
+    S6 split the *ordering* of those three ranks and deliberately left
+    their *classification* alone: an unlisted kind arming at
+    ``UTILITY_ARM`` is the engine's own self-heal, and reclassifying it as
+    a utility no-op would drop a heal — a second behaviour change with no
+    fixture and no prediction.  Pinned here so that stays a decision.
     """
     event = {"kind": "champion_ability", "amount": 10.0}
     for rank in (
@@ -570,14 +587,24 @@ def test_the_classified_ladder_reproduces_the_slots_it_replaced() -> None:
     """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through.
 
     The fall-through is the load-bearing one: an unlisted kind still arms
-    in the recovery slot, which is what the open ``else 1.0`` did.
+    at the rank the open ``else 1.0`` gave it.  What S6 changed is that the
+    three ranks the 1.0 covered no longer answer to one slot, so the kind
+    ladder's answers are read one by one instead of as a single fold.
     """
     assert support_transition_rank({"kind": "stasis"}) is TransitionRank.STATE_GRANT
     assert support_transition_rank({"kind": "shield"}) is TransitionRank.BARRIER_GRANT
-    for kind in ("heal", "damage_modifier", "movement", "anything_unlisted"):
-        assert ordering_slot(support_transition_rank({"kind": kind})) is (
-            TransitionRank.DEBUFF_ARM
-        )
+    by_kind = {
+        "heal": TransitionRank.RECOVERY,
+        "regen": TransitionRank.RECOVERY,
+        "damage_modifier": TransitionRank.DEBUFF_ARM,
+        "stat_buff": TransitionRank.DEBUFF_ARM,
+        "movement": TransitionRank.UTILITY_ARM,
+        "on_hit_magic": TransitionRank.UTILITY_ARM,
+        "anything_unlisted": TransitionRank.UTILITY_ARM,
+    }
+    for kind, rank in by_kind.items():
+        assert support_transition_rank({"kind": kind}) is rank
+        assert ordering_slot(rank) is rank
 
 
 def test_a_packet_may_declare_a_rank_but_not_an_ordering() -> None:
@@ -632,3 +659,162 @@ def test_the_packet_authors_that_declare_a_rank_are_exactly_four() -> None:
         ("item_support_effects.py", "LATE_BARRIER"),
         ("participant_timeline.py", "LATE_BARRIER"),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 S6 — the split, named reordering by named reordering
+#
+# S6's diff is bounded by prediction (criterion 8): same-timestamp arming
+# reorderings only, each with a fixture that names it.  The four below are
+# that enumeration.  Two of them were *measured* on the pre-edit tree before
+# the baselines were read — the population S6c1's commit body declares — and
+# they carry the scenario and the source that produced them, so a reader can
+# find the same pair again rather than trust the sentence.
+# ---------------------------------------------------------------------------
+
+
+def _armed_at(rank: TransitionRank, source: str, time: float = 0.0):
+    """One authored packet's sort key at *rank*, all tie-breaks held equal.
+
+    Everything after element 1 is identical between two calls with the same
+    *source*, which is exactly the position the collapsed slot used to push
+    the decision down to.
+    """
+    event = {
+        "sequence": 0,
+        "attacker": "main",
+        "_event_id": f"{source}:{rank.name}",
+        "source": source,
+    }
+    return action_key(time, rank, "main", event)
+
+
+def test_s6_reorders_a_stat_buff_ahead_of_a_same_timestamp_utility() -> None:
+    """The ``syndra_mandate_3champ`` shape: Bandlepipes — Fanfare at t=0.
+
+    Measured on the pre-edit tree: 8 of that scenario's 775 walks held this
+    exact inversion — the Fanfare utility packet resolving before the
+    Fanfare stat buff, because both rode ``DEBUFF_ARM``'s slot and the
+    decision fell through to the components after it.  A stat buff is a
+    state change the packets at its timestamp read; it arms first now.
+    """
+    source = "Bandlepipes — Fanfare"
+    stat_buff = _armed_at(TransitionRank.DEBUFF_ARM, source)
+    utility = _armed_at(TransitionRank.UTILITY_ARM, source)
+    assert support_transition_rank({"kind": "stat_buff"}) is TransitionRank.DEBUFF_ARM
+    assert support_transition_rank({"kind": "movement"}) is TransitionRank.UTILITY_ARM
+    assert stat_buff[1] is TransitionRank.DEBUFF_ARM
+    assert utility[1] is TransitionRank.UTILITY_ARM
+    assert stat_buff < utility
+
+
+def test_s6_reorders_a_debuff_ahead_of_a_same_timestamp_recovery() -> None:
+    """The ``cassiopeia_5champ`` shape: Vile Decay against Twin Fang's heal.
+
+    Measured on the pre-edit tree: 3 of that scenario's 967 walks held this
+    inversion — the Twin Fang heal resolving before the Bloodletter's Curse
+    ``damage_modifier`` armed at the same timestamp.  The debuff arms
+    first now, which is the ordering the class docstring states and the
+    collapsed float could not express.
+    """
+    debuff = _armed_at(TransitionRank.DEBUFF_ARM, "Bloodletter's Curse — Vile Decay")
+    heal = _armed_at(TransitionRank.RECOVERY, "Bloodletter's Curse — Vile Decay")
+    assert (
+        support_transition_rank({"kind": "damage_modifier"})
+        is TransitionRank.DEBUFF_ARM
+    )
+    assert support_transition_rank({"kind": "heal"}) is TransitionRank.RECOVERY
+    assert debuff < heal
+
+
+def test_s6_reorders_a_recovery_ahead_of_a_same_timestamp_on_hit_magic() -> None:
+    """The third pair: an on-hit magic packet arms at ``UTILITY_ARM``.
+
+    No baseline scenario holds this collision today, which is exactly why
+    it needs a fixture: an ordering nothing exercises is an ordering that
+    changes silently the first time something does.
+    """
+    heal = _armed_at(TransitionRank.RECOVERY, "Nashor's Tooth")
+    on_hit = _armed_at(TransitionRank.UTILITY_ARM, "Nashor's Tooth")
+    assert support_transition_rank({"kind": "on_hit_magic"}) is (
+        TransitionRank.UTILITY_ARM
+    )
+    assert heal < on_hit
+
+
+def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> None:
+    """The two orderings S6 must *not* touch, asserted rather than assumed.
+
+    ``AURA_ARM`` resolves before the damage at its timestamp (C4's
+    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot — the
+    preserved defect declined by this stage on the migration frontier.
+    """
+    assert _armed_at(TransitionRank.AURA_ARM, "Abyssal Mask — Unmake") < _armed_at(
+        TransitionRank.DAMAGE, "Abyssal Mask — Unmake"
+    )
+    assert (
+        _armed_at(TransitionRank.REACTIVE, "Thornmail")[1]
+        is _armed_at(TransitionRank.LATE_BARRIER, "Thornmail")[1]
+        is TransitionRank.LATE_BARRIER
+    )
+    frontier = json.loads(
+        (ROOT / "docs" / "migration-frontier.json").read_text(encoding="utf-8")
+    )
+    declined = {
+        row["name"]: row["declined_by"] for row in frontier["preserved_defects"]
+    }
+    assert declined["LATE_BARRIER"] == "P4-S6"
+
+
+def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
+    """Payload neutrality, asserted (stage table, criterion 5).
+
+    All three split ranks keep the published name they had, so the derived
+    phase list is byte-identical across the split and D-63's chain does not
+    advance: S6 takes no version and S9 still takes 4.
+    """
+    from src.calculator.capabilities import (
+        CAPABILITY_SCHEMA_VERSION,
+        PARTICIPANT_LEDGER_CONTRACT,
+    )
+    from src.calculator.survival.actions import public_phase
+
+    assert public_phase(TransitionRank.DEBUFF_ARM) == "state_transition"
+    assert public_phase(TransitionRank.UTILITY_ARM) == "state_transition"
+    assert public_phase(TransitionRank.RECOVERY) == "healing_and_regeneration"
+    assert PARTICIPANT_LEDGER_CONTRACT["phases"] == [
+        "state_transition",
+        "shield_or_temporary_health",
+        "persistent_aura_arming",
+        "damage_and_mitigation",
+        "reactive_effect",
+        "healing_and_regeneration",
+        "death_or_terminal_cutoff",
+    ]
+    assert CAPABILITY_SCHEMA_VERSION == 3
+
+
+def test_s6_moved_the_ordering_and_not_the_classification() -> None:
+    """The one behaviour the split deliberately holds still.
+
+    ``classify_prefetched`` read the ordering fold to decide which arming
+    ranks classify as a recovery.  Splitting the fold would have silently
+    reclassified every ``UTILITY_ARM`` engine self-heal as a utility no-op
+    — a dropped heal with no fixture and no prediction — so the set is
+    named in the module instead, and this is the assertion that the two
+    questions now have two answers.
+    """
+    assert actions_module._RECOVERY_CLASSIFIED_RANKS == frozenset(
+        {
+            TransitionRank.DEBUFF_ARM,
+            TransitionRank.RECOVERY,
+            TransitionRank.UTILITY_ARM,
+        }
+    )
+    # ...and it is no longer expressible as the fold's output, which is what
+    # makes naming it load-bearing rather than stylistic.
+    assert {
+        rank
+        for rank in TransitionRank
+        if ordering_slot(rank) is TransitionRank.DEBUFF_ARM
+    } == {TransitionRank.DEBUFF_ARM}
