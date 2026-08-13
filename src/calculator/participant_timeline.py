@@ -144,6 +144,38 @@ def _pair_run_fight(
     return run_fight(*args, **kwargs)
 
 
+# The compiled score lane prices no external resource ledger, so its cached
+# packets sit under the empty one.  That is a property and not a hope: the
+# request gate below refuses the compiled path for any pass carrying a
+# cross-pass ParamPatch, so a patched pass never reaches these two sites.
+_UNPATCHED_RESTORES: tuple[tuple[float, float], ...] = ()
+
+
+def _pair_cache_key(
+    attacker_id: str,
+    defender_id: str,
+    defensive: tuple[Any, ...],
+    restores: tuple[tuple[float, float], ...],
+) -> tuple[Any, ...]:
+    """The identity of one cached pair packet — every input that priced it.
+
+    A cached packet is replayed for any later evaluation whose key matches,
+    so the key has to carry everything that could have priced it
+    differently.  The defender's defensive signature is one such input.  The
+    attacker's **external resource ledger** is the other, and it is the one
+    a cross-pass dependency changes between passes: pass 2 prices the
+    attacker's fight with the restores pass 1 derived, so without the ledger
+    in the key it would be served pass 1's restore-free packet and Catalyst's
+    Eternity heals would silently disappear into a cache hit.
+
+    That is why the recursive repass gives itself a fresh cache today.
+    Carrying the ledger here is what lets the two passes share one — and
+    sharing it is what makes "caches stay live across passes" a property of
+    the code rather than a sentence beside it.
+    """
+    return (attacker_id, defender_id, defensive, restores)
+
+
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     """Identify a champion cast without treating passive/proc rows as casts.
 
@@ -2543,7 +2575,8 @@ def _context_setup(
         defender.participant_id: index for index, defender in enumerate(ally_actors)
     }
     for attacker, defender in base_pairs:
-        cache_key = (attacker.participant_id, defender.participant_id)
+        pair_id = (attacker.participant_id, defender.participant_id)
+        cache_key = _pair_cache_key(*pair_id, (), _UNPATCHED_RESTORES)
         defender_index = (
             enemy_index.get(defender.participant_id, 0)
             if attacker.team == "ally"
@@ -2557,7 +2590,7 @@ def _context_setup(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    context.roster_pair_params[cache_key],
+                    context.roster_pair_params[pair_id],
                     validated=True,
                 ),
                 attacker.participant_id,
@@ -2663,7 +2696,9 @@ def _build_signature_panel(
     ]
     ally_count = sum(1 for actor in roster if actor.team == "ally")
     for attacker in enemy_actors:
-        cache_key = (attacker.participant_id, "main", signature)
+        cache_key = _pair_cache_key(
+            attacker.participant_id, "main", signature, _UNPATCHED_RESTORES
+        )
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
@@ -3391,14 +3426,19 @@ def build_participant_timeline(
                 # fights instead of re-simulating them.  Fights the candidate
                 # attacks with are always recomputed.
                 cacheable = attacker.participant_id != "main"
-                if defender.participant_id == "main":
-                    cache_key = (
-                        attacker.participant_id,
-                        defender.participant_id,
-                        _defensive_signature(defender),
-                    )
-                else:
-                    cache_key = (attacker.participant_id, defender.participant_id)
+                cache_key = _pair_cache_key(
+                    attacker.participant_id,
+                    defender.participant_id,
+                    (
+                        _defensive_signature(defender)
+                        if defender.participant_id == "main"
+                        else ()
+                    ),
+                    # Read off the params this fight is actually priced with,
+                    # never off the pass number: a key derived from the same
+                    # object the pricer reads cannot disagree with it.
+                    actor_params.resource_restore_events,
+                )
                 packet = (
                     pair_result_cache.get(cache_key)
                     if cacheable and pair_result_cache is not None

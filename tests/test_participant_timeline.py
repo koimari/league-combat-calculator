@@ -5162,3 +5162,54 @@ def test_a_short_bonus_sequence_stops_rather_than_misaligning():
 
     with pytest.raises(ValueError, match="participant-index-aligned"):
         build_states(combatants, (0.0,))
+
+
+class TestThePairCacheKeyCarriesEveryInputThatPricedIt:
+    """Phase 4 S8 — one key function, and the resource ledger is in it.
+
+    A cached pair packet is replayed for every later evaluation whose key
+    matches, so a priced-in input missing from the key is a stale packet
+    served as a fresh one.  The cross-pass ledger is the input a second pass
+    changes, and it is the reason the recursive repass gives itself an empty
+    cache today.
+    """
+
+    def test_two_passes_of_one_pair_do_not_share_a_key(self):
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        pass_one = _pair_cache_key("ally:Lulu", "enemy:Aatrox", (), ())
+        pass_two = _pair_cache_key(
+            "ally:Lulu", "enemy:Aatrox", (), ((1.5, 40.0), (3.0, 55.0))
+        )
+        assert pass_one != pass_two
+
+    def test_an_unpatched_pass_keys_identically_across_both_lanes(self):
+        """The compiled panel and the receipt walk share one cache.
+
+        Their docstrings say they interoperate; this is that claim as a
+        test rather than a sentence, and it is what makes the constant the
+        compiled lane passes checkable instead of assumed.
+        """
+        from src.calculator.participant_timeline import (
+            _UNPATCHED_RESTORES,
+            _pair_cache_key,
+        )
+
+        assert _pair_cache_key(
+            "enemy:Aatrox", "ally:Jax", (), _UNPATCHED_RESTORES
+        ) == _pair_cache_key("enemy:Aatrox", "ally:Jax", (), ())
+
+    def test_the_defensive_signature_still_separates_main_candidates(self):
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        thin = _pair_cache_key("enemy:Aatrox", "main", (60.0, 30.0), ())
+        thick = _pair_cache_key("enemy:Aatrox", "main", (140.0, 30.0), ())
+        assert thin != thick
+
+    def test_a_defended_main_never_collides_with_a_roster_defender(self):
+        """The two key shapes the widening unified may not fold together."""
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        assert _pair_cache_key(
+            "enemy:Aatrox", "main", (60.0, 30.0), ()
+        ) != _pair_cache_key("enemy:Aatrox", "main", (), ())
