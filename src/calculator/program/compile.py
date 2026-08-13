@@ -15,6 +15,14 @@ target is one: ``survival/actions``'s ``_ACTION_DEFAULT_ROW``, the issue-#171
 fast constructor's default row, which is the declared performance fallback
 the phase's criterion 17 keeps.
 
+Outside, and only outside — so the arithmetic is worth stating plainly, since
+"nine become one" reads as a subtraction and is not one.  The tree held nine
+expressions before the move and holds **ten** after it: nine here and the one
+declared survivor.  Eight relocated, ``compile_program`` added a tenth, and
+the counter went 9 -> 1 because every one of the nine is now in the file the
+counter does not scan.  What the migration bought is a single place to change
+a field, not fewer places that build the tuple.
+
 Four builders and one entry point:
 
 * :func:`action_from_event` converts one authored packet dict -- the receipt

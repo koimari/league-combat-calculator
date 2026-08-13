@@ -35,6 +35,21 @@ resolve an id string to the same slot the kernel will compare.  0A.8 shrank it b
 export was a second dispatch ladder over the same kinds, with zero
 callers, and a declared API is exactly where such a thing survives long
 enough to drift from the loop that is actually run.
+
+**Phase 4 S4 shrank it by three, which is a breaking API change and is
+recorded as one.**  ``WalkCompiler``, ``revive_candidate_actions`` and this
+package's own from-event action builder left it: the first two moved to
+``calculator.program.compile`` unchanged, and the third is that module's
+``action_from_event`` -- same body, new layer, and its old name is pinned at
+zero occurrences in ``src/``, so ``from calculator.survival import
+WalkCompiler`` stopped resolving.  They cannot be re-exported from here --
+``program -> survival`` runs one way and a re-export would be the kernel
+importing the logical layer -- so an importer moves to
+``calculator.program.compile`` rather than being kept working from both
+places.  S4 also grew it by two, ``trigger_time_key`` and
+``TRIGGER_TIME_KEY_DIGITS``: the tolerance a trigger lookup keys on lives on
+this side of that same one-way boundary, because ``heal_trigger_key`` is its
+reader and cannot import the registry that would otherwise own it.
 """
 
 from .actions import (

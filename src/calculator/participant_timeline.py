@@ -90,6 +90,14 @@ from .survival import (
 # The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
 # both layers, so this module is where the logical builder and the kernel it
 # builds for meet; nothing under ``survival/`` reaches this way.
+#
+# This is the composition root's one eager edge into ``program/``, and it is
+# transitive: importing ``program.compile`` imports ``events``, ``build``,
+# ``route``, ``identity``, ``caches`` and ``precision`` on every process
+# start.  Deliberate and checked -- none of the six does import-time I/O or
+# registry validation, so the edge costs module objects and nothing else --
+# but it is the reason S4's vocabulary commit could say "nothing in src/
+# imports them yet" and the next commit could not.
 from .program.compile import (
     WalkCompiler,
     action_from_event,

@@ -1,8 +1,8 @@
 """The one kernel call site, and the frozen result five views project.
 
 Two engines pricing one mechanic is failure mode C of the incident this
-campaign exists to close, and the tree has two ``run_survival_walk`` call
-sites today — one for the receipt, one for the score.  They agree because two
+campaign exists to close, and the timeline has two ``run_survival_walk`` call
+sites — one for the receipt, one for the score.  They agree because two
 pieces of composition code have been kept in step by hand, which is exactly
 the arrangement that stopped being true for Imperial Mandate.
 
@@ -23,6 +23,16 @@ passed.
 Repointing the timeline's two legacy call sites at this function is Phase 4
 S9's, with the five views; S4 lands the seam and the result type so the views
 have something to be projections *of*.
+
+**Which means this module makes criterion 1's counter worse before it makes
+it better, and that is worth a sentence rather than a discovery.**  The
+criterion asks for exactly one ``run_survival_walk(`` call expression in
+``src/`` against a baseline of two; landing the seam beside the two it will
+replace makes it **three** — ``participant_timeline.py`` twice and line 77
+below — and it stays three until S9 repoints them.  A structural counter
+that rises mid-phase is the normal shape of a strangler stage, but a counter
+that rises with nothing saying so is indistinguishable from one nobody is
+driving.
 """
 
 from __future__ import annotations
