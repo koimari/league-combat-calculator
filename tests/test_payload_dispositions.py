@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+import pytest
+
 from src.calculator.ability_spec import Disposition
 
 DISPOSITIONS = {member.value for member in Disposition}
@@ -70,7 +72,17 @@ def entries_are_well_formed(dispositions: Mapping) -> None:
 
 
 def assert_covered(payload: Mapping, *, skip: Sequence[str] = ()) -> None:
-    """The two-way check: map keys are exactly the numbers plus the refusals."""
+    """The two-way check: map keys are exactly the numbers plus the refusals.
+
+    The whole payload, in one call, by the map's own path grammar.  ``skip``
+    exists for a payload block that is genuinely not a view's output -- an
+    echo of the request, a counter of the search itself -- and every use of
+    it names the block and the reason at the call site.  It is deliberately
+    awkward to reach for: the first version of this suite never called this
+    function at all and re-derived a *hand-enumerated* list of blocks
+    instead, which is how a hundred-odd leaves per payload stayed invisible
+    to a check whose name says "covered".
+    """
     dispositions = payload["dispositions"]
     entries_are_well_formed(dispositions)
     published = numeric_leaf_paths(
@@ -84,10 +96,10 @@ def assert_covered(payload: Mapping, *, skip: Sequence[str] = ()) -> None:
     }
     named = set(dispositions)
     # A map entry naming neither a present leaf nor a withheld path fails.
-    assert named - published - withheld == set()
+    assert sorted(named - published - withheld) == []
     # Every leaf a view published carries an entry.  The difference is what a
     # second producer of payload numbers would look like.
-    assert published - named == set()
+    assert sorted(published - named) == []
 
 
 # ---------------------------------------------------------------------------
@@ -120,75 +132,66 @@ def _combat(name: str = "mandate_abyssal_curse_roster") -> Mapping:
     return snapshot.coupled_entry(scenario)["combat"]
 
 
-def _row_leaf_paths(
-    rows: Sequence[Mapping], prefix: str, *, skip: Sequence[str] = ()
-) -> set[str]:
-    """Every quantity leaf of an indexed block, in the map's key grammar."""
-    found: set[str] = set()
-    for index, row in enumerate(rows):
-        found |= {
-            f"{prefix}[{index}].{leaf}" for leaf in numeric_leaf_paths(row, skip=skip)
-        }
-    return found
+#: Every coupled scenario carrying a combat receipt, so the check runs over
+#: the payload shapes the baseline actually holds rather than over one.
+COMBAT_SCENARIOS = (
+    "mandate_abyssal_curse_roster",
+    "cleaver_bloodsong_roster",
+    "dream_maker_roster",
+    "catalyst_roster",
+    "syndra_custom_order_60",
+)
 
 
 class TestTheCalculatePayload:
     """``/api/calculate``'s combat receipt — the five views' own output."""
 
-    def test_every_view_produced_number_carries_exactly_one_entry(self) -> None:
-        combat = _combat()
-        dispositions = combat["dispositions"]
-        entries_are_well_formed(dispositions)
-        published = set()
-        # ``utility_outcomes`` is excluded from the breakdown rows and from
-        # the objective block: it is a receipt in native units, published
-        # under an explicit declaration that the calculator does not convert
-        # movement, cleanse, vision or economy into a common scalar.  Those
-        # numbers are the declaration's own, not a rule's output.
-        published |= _row_leaf_paths(
-            combat["breakdown"], "breakdown", skip=("utility_outcomes",)
-        )
-        published |= _row_leaf_paths(combat["events"], "events")
-        published |= _row_leaf_paths(combat["healing_events"], "healing_events")
-        published |= _row_leaf_paths(combat["support_events"], "support_events")
-        # ``focus_survival`` and ``focus_utility_outcomes`` republish blocks
-        # named elsewhere in the same payload.  One leaf, one entry: naming a
-        # republication again would be an over-count wearing full coverage.
-        published |= {
-            f"objective.{leaf}"
-            for leaf in numeric_leaf_paths(
-                combat["objective"],
-                skip=("focus_survival", "focus_utility_outcomes"),
-            )
-        }
-        for row in combat["participants"]:
-            published |= {
-                f"participants.survival.{row['participant_id']}.{leaf}"
-                for leaf in numeric_leaf_paths(row["survival"])
-            }
-        # Every published number is named, and every name is a published
-        # number.  Both directions, because one of them alone is satisfied by
-        # a map that describes nothing and by a map that describes ghosts.
-        assert published - set(dispositions) == set()
-        assert set(dispositions) - published == set()
+    @pytest.mark.parametrize("scenario", COMBAT_SCENARIOS)
+    def test_every_number_it_publishes_carries_exactly_one_entry(
+        self, scenario: str
+    ) -> None:
+        """The whole payload, walked by the map's own path grammar.
+
+        No block list and no skips.  An enumerated list of blocks is a
+        second place the payload's shape is written down, and the first
+        version of this test had one: it named six blocks, skipped three
+        more, and every number outside them -- the duration, ninety-odd
+        stats per participant, the utility receipt, both republications --
+        was invisible to a check whose docstring said "every published
+        number".  111 to 133 leaves per scenario, unnamed and unnoticed.
+        """
+        assert_covered(_combat(scenario))
 
     def test_the_map_is_not_vacuous(self) -> None:
         """A check that passes on an empty map is not a check."""
         assert len(_combat()["dispositions"]) > 100
 
-    def test_the_focus_survival_block_is_not_double_counted(self) -> None:
-        """``objective.focus_survival`` republishes a row already named.
+    def test_a_republished_row_is_named_where_it_is_republished(self) -> None:
+        """``objective.focus_survival`` is a second path, not a second number.
 
-        Its leaves live at ``participants.survival.<focus>`` and are named
-        there once.  A second set of entries under the objective block would
-        make "exactly one entry per leaf" false while every leaf still had
-        one, which is the shape of an over-count rather than a gap.
+        A leaf path is where a reader finds a number, so the republication
+        carries its own entries: a consumer reading
+        ``objective.focus_survival.ending_health`` and finding no entry has
+        been handed exactly the undispositioned number this campaign is
+        about.  The entries agree with the original's, because the same
+        ``serialize_leaf`` call shape produced both.
         """
         combat = _combat()
-        assert not any(
-            path.startswith("objective.focus_survival")
-            for path in combat["dispositions"]
+        dispositions = combat["dispositions"]
+        focus = combat["objective"]["focus_participant_id"]
+        index = next(
+            index
+            for index, row in enumerate(combat["participants"])
+            if row["participant_id"] == focus
         )
+        republished = {
+            path[len("objective.focus_survival.") :]: entry
+            for path, entry in dispositions.items()
+            if path.startswith("objective.focus_survival.")
+        }
+        assert republished
+        for leaf, entry in republished.items():
+            assert dispositions[f"participants[{index}].survival.{leaf}"] == entry
 
 
 class TestTheTwoScoreServingPayloads:

@@ -129,9 +129,11 @@ UNRESOLVED_ALLOWED = frozenset(
         "items",
         "len",
         "list",
+        "range",
         "round",
         "sorted",
         "str",
+        "tuple",
     }
 )
 

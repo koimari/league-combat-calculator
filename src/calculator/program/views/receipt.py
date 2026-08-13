@@ -34,7 +34,7 @@ from ..precision import round_field
 from ..walk import WalkResult
 from . import LeafWriter
 from .breakdown import breakdown_leaves
-from .survival import survival_leaves
+from .survival import participant_paths, survival_leaves
 from .tdd import tdd_leaves
 
 __all__ = ["receipt"]
@@ -232,7 +232,7 @@ def _damage_event_rows(
                 list(event["support_resistance_reduction"]),
             )
         if event.get("support_on_hit_magic"):
-            leaf.raw("support_on_hit_magic", list(event["support_on_hit_magic"]))
+            leaf.structure("support_on_hit_magic", list(event["support_on_hit_magic"]))
         if isinstance(event.get("targeting"), Mapping):
             leaf.structure("targeting", dict(event["targeting"]))
         if event.get("_deferred_from"):
@@ -445,46 +445,82 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     serializing one.  Both projections read the same walk.
     """
     writer = LeafWriter()
-    rows = survival_leaves(program, result, writer, "participants.survival")
-    attacker_rows = breakdown_leaves(program, result, writer)
-    objective = tdd_leaves(program, result, writer)
-    return {
-        "duration": float(result.duration),
-        "participants": [
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "level": actor.level,
-                "stats": dict(actor.stats),
-                "items": [item.get("name", "") for item in actor.items],
-                "survival": rows[actor.participant_id],
-            }
+    payload: dict[str, Any] = {}
+    root = writer.block(payload, "")
+    rows = survival_leaves(program, result, writer, participant_paths(program))
+    root.measured("duration", float(result.duration))
+    root.raw("participants", _participant_rows(program, rows, writer))
+    root.raw("breakdown", breakdown_leaves(program, result, writer))
+    root.raw("events", _damage_event_rows(result.damage_events, writer, "events"))
+    root.raw(
+        "healing_events",
+        _healing_event_rows(result.healing_events, writer, "healing_events"),
+    )
+    root.raw(
+        "support_events",
+        _support_event_rows(result.support_events, writer, "support_events"),
+    )
+    root.raw("utility_outcomes", _utility_block(program, result, writer))
+    root.structure("target_allocation", result.target_allocation)
+    root.raw("objective", tdd_leaves(program, result, writer, rows))
+    root.structure("timeline_coverage", result.timeline_coverage)
+    payload["dispositions"] = writer.entries()
+    return payload
+
+
+def _participant_rows(
+    program: Program, rows: Mapping[str, dict[str, Any]], writer: LeafWriter
+) -> list[dict[str, Any]]:
+    """One published participant per roster slot: who it is, and what happened.
+
+    The stats block goes through :meth:`~..views.LeafBlock.structure` rather
+    than being assigned whole.  Ninety-odd numbers describing a champion at a
+    level holding items are published numbers like any others, and they were
+    the largest block of the payload that carried no entry -- a stat card a
+    consumer renders straight from bare leaves, saying nothing about whether
+    a rule produced them.
+    """
+    published: list[dict[str, Any]] = []
+    for index, actor in enumerate(program.actors):
+        row: dict[str, Any] = {}
+        published.append(row)
+        block = writer.block(row, f"participants[{index}]")
+        block.raw("participant_id", actor.participant_id)
+        block.raw("team", actor.team)
+        block.raw("champion", actor.champion_data.get("name", ""))
+        block.raw("level", actor.level)
+        block.structure("stats", dict(actor.stats))
+        block.raw("items", [item.get("name", "") for item in actor.items])
+        block.raw("survival", rows[actor.participant_id])
+    return published
+
+
+def _utility_block(
+    program: Program, result: WalkResult, writer: LeafWriter
+) -> dict[str, Any]:
+    """The utility receipt, in native units, with every unit named.
+
+    The note is the block's own declaration and stays exactly as published.
+    What changes is that the numbers under it are written through the one
+    writer: "the calculator does not convert these into a common scalar" is a
+    statement about what the numbers *mean*, not a reason for them to be the
+    one published block that says nothing about where they came from.
+    """
+    block: dict[str, Any] = {}
+    leaf = writer.block(block, "utility_outcomes")
+    leaf.raw("contract", "utility_outcomes_v1")
+    leaf.structure(
+        "participants",
+        {
+            actor.participant_id: result.utility_by_actor[actor.participant_id]
             for actor in program.actors
-        ],
-        "breakdown": attacker_rows,
-        "events": _damage_event_rows(result.damage_events, writer, "events"),
-        "healing_events": _healing_event_rows(
-            result.healing_events, writer, "healing_events"
-        ),
-        "support_events": _support_event_rows(
-            result.support_events, writer, "support_events"
-        ),
-        "utility_outcomes": {
-            "contract": "utility_outcomes_v1",
-            "participants": {
-                actor.participant_id: result.utility_by_actor[actor.participant_id]
-                for actor in program.actors
-            },
-            "focus": result.utility_by_actor.get(program.focus, {}),
-            "metric_note": (
-                "Utility dimensions are reported in their native units. The "
-                "calculator does not convert movement, cleanse, vision, or "
-                "economy into TDD or a guessed common scalar."
-            ),
         },
-        "target_allocation": result.target_allocation,
-        "objective": objective,
-        "timeline_coverage": result.timeline_coverage,
-        "dispositions": writer.entries(),
-    }
+    )
+    leaf.structure("focus", result.utility_by_actor.get(program.focus, {}))
+    leaf.raw(
+        "metric_note",
+        "Utility dimensions are reported in their native units. The "
+        "calculator does not convert movement, cleanse, vision, or "
+        "economy into TDD or a guessed common scalar.",
+    )
+    return block

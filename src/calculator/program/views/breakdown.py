@@ -90,7 +90,7 @@ def breakdown_leaves(
             "healing_output", round_field("healing_output", outcome.healing_output)
         )
         if outcome.utility_outcomes is not None:
-            leaf.raw("utility_outcomes", outcome.utility_outcomes)
+            leaf.structure("utility_outcomes", outcome.utility_outcomes)
         leaf.raw("survived_window", bool(outcome.survived_window))
         leaf.optional_measured("death_time", outcome.death_time)
         rows.append(row)

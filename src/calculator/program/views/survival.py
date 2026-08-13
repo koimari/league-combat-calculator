@@ -26,6 +26,7 @@ already computed, re-rounded at its declared precision and published.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from ..build import Program
@@ -33,7 +34,23 @@ from ..precision import round_field
 from ..walk import WalkResult
 from . import LeafBlock, LeafWriter
 
-__all__ = ["survival", "survival_leaves"]
+__all__ = ["participant_paths", "survival", "survival_leaves"]
+
+
+def participant_paths(program: Program) -> tuple[str, ...]:
+    """Where each participant's survival row lives in the combat payload.
+
+    A ``dispositions`` key is the path a reader would walk to reach the leaf
+    it describes, and a survival row lives at ``participants[i].survival``.
+    Deriving the prefixes here rather than spelling a synthetic
+    ``participants.survival.<id>`` at each call site is what makes the map's
+    key set and the payload's leaf set the *same* strings -- which is the
+    whole of criterion 5's two-way equality, and what it could not have while
+    99 entries named paths the payload does not have.
+    """
+    return tuple(
+        f"participants[{index}].survival" for index in range(len(program.actors))
+    )
 
 
 def _optional_time(field: str, value: float | None) -> float | None:
@@ -64,7 +81,7 @@ def _combat_state_blocks(
         "stacks_until",
         round_field("force_of_nature.stacks_until", state["force_stacks_until"]),
     )
-    inner.raw("events", list(state["force_stack_events"]))
+    inner.structure("events", list(state["force_stack_events"]))
     inner.measured(
         "dynamic_bonus_magic_resistance",
         round_field(
@@ -76,7 +93,7 @@ def _combat_state_blocks(
     row["jaksho"] = jaksho
     inner = leaf.nested(jaksho, "jaksho")
     inner.raw("stacks", int(state["jaksho_stacks"]))
-    inner.raw("events", list(state["jaksho_stack_events"]))
+    inner.structure("events", list(state["jaksho_stack_events"]))
     inner.measured(
         "dynamic_bonus_armor",
         round_field(
@@ -94,7 +111,10 @@ def _combat_state_blocks(
 
 
 def survival_leaves(
-    program: Program, result: WalkResult, writer: LeafWriter, prefix: str
+    program: Program,
+    result: WalkResult,
+    writer: LeafWriter,
+    prefixes: Sequence[str],
 ) -> dict[str, dict[str, Any]]:
     """Project the walk's final state into one published row per participant.
 
@@ -108,7 +128,17 @@ def survival_leaves(
     read off ``program.actors`` and never off the result, because a
     participant is a champion at a level holding items and the walk records
     only what happened to it.
+
+    ``prefixes`` is where each row's leaves live in the *caller's* payload,
+    index-aligned with the roster: one payload embeds these rows under
+    ``participants[i].survival`` and another under a ranked candidate, and
+    the entry has to name the path the leaf is actually at.
     """
+    if len(prefixes) != len(program.actors):
+        raise ValueError(
+            f"{len(prefixes)} leaf paths for {len(program.actors)} participants; "
+            "a row published at a path nobody named is a leaf with no entry"
+        )
     states = result.states
     combatants = program.actors
     folds = result.survival
@@ -128,7 +158,7 @@ def survival_leaves(
         threshold_health = pools.threshold_health
         row: dict[str, Any] = {}
         rows[participant_id] = row
-        leaf = writer.block(row, f"{prefix}.{participant_id}")
+        leaf = writer.block(row, prefixes[index])
         leaf.measured("max_health", round_field("max_health", pools.max_health))
         leaf.measured("ending_health", round_field("ending_health", pools.health))
         leaf.measured(
@@ -189,7 +219,7 @@ def survival_leaves(
         leaf.raw(
             "healing_reduction_sources", sorted(state["healing_reduction_sources"])
         )
-        leaf.raw(
+        leaf.structure(
             "healing_reduction_events",
             [
                 {"recipient": participant_id, **event}
@@ -198,7 +228,7 @@ def survival_leaves(
         )
         leaf.measured("venom_until", round_field("venom_until", state["venom_until"]))
         leaf.measured("venom_factor", round_field("venom_factor", pools.venom_factor))
-        leaf.raw(
+        leaf.structure(
             "venom_events",
             [{"recipient": participant_id, **event} for event in state["venom_events"]],
         )
@@ -320,4 +350,4 @@ def survival(program: Program, result: WalkResult) -> dict[str, dict[str, Any]]:
     view's front door and the shape criterion 3 checks: exactly
     ``(Program, WalkResult)`` in, published rows out.
     """
-    return survival_leaves(program, result, LeafWriter(), "survival")
+    return survival_leaves(program, result, LeafWriter(), participant_paths(program))

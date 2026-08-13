@@ -3290,7 +3290,7 @@ def _score_with_search_context(
     # view for the one it returns; recording a third map here would be a
     # map describing rows nobody serializes, on the optimizer's hot path.
     rows_by_id = _survival_view.survival_leaves(
-        program, walk_result, _DISCARD, "participants.survival"
+        program, walk_result, _DISCARD, _survival_view.participant_paths(program)
     )
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
@@ -4011,7 +4011,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         ),
     )
     survival = _survival_view.survival_leaves(
-        program, walk_result, _DISCARD, "participants.survival"
+        program, walk_result, _DISCARD, _survival_view.participant_paths(program)
     )
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:

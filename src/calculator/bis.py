@@ -732,13 +732,13 @@ def bis_payload(data: Mapping[str, object]) -> dict:
                     )
                 )
                 continue
-            survival_prefix = f"participants.survival.{focus_id}."
             objective = combat["objective"]
-            focus = next(
-                row
-                for row in combat["participants"]
+            focus_index, focus = next(
+                (index, row)
+                for index, row in enumerate(combat["participants"])
                 if row["participant_id"] == focus_id
             )
+            survival_prefix = f"participants[{focus_index}].survival."
             score, metric, components, rank_key = bis_objective_score(
                 objective_key,
                 subject_team=subject_team,

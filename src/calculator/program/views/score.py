@@ -30,7 +30,7 @@ from ..build import Program
 from ..walk import WalkResult
 from . import DISCARD
 from .breakdown import breakdown_leaves
-from .survival import survival_leaves
+from .survival import participant_paths, survival_leaves
 
 __all__ = ["score"]
 
@@ -48,7 +48,7 @@ def score(program: Program, result: WalkResult) -> dict[str, Any]:
     # their own map over the leaves they actually publish.  ``DISCARD`` says
     # that in one word instead of leaving it to a reader to notice.
     writer = DISCARD
-    rows = survival_leaves(program, result, writer, "participants.survival")
+    rows = survival_leaves(program, result, writer, participant_paths(program))
     return {
         "duration": float(result.duration),
         "participants": [

@@ -1,0 +1,69 @@
+{
+  "slice": "P4-S9-coverage",
+  "dated": "2026-08-13",
+  "decisions": [
+    "Criterion 5 — every numeric leaf of the /api/calculate payload is covered by exactly one entry in that payload's dispositions map, keyed by leaf path.",
+    "D-72 — serialize_leaf stays the only producer of a payload leaf and of that leaf's entry; this slice widens what goes through it, it does not add a second writer.",
+    "R-17/D-97 — landed against the committed coupled baseline plus this allowlist; the baseline is re-captured at the phase boundary, never here.",
+    "R-20 — the qualifying population is the same one P4-S9-dispositions enumerated, because the map is one leaf per captured combat receipt and this slice changes its contents rather than its location."
+  ],
+  "change": {
+    "one_sentence": "The dispositions map's keys become the paths the leaves actually live at, and every numeric leaf of the combat receipt gets an entry — the duration, each participant's stats, the utility receipt, the two objective republications and the nested support-on-hit rows included.",
+    "site": "src/calculator/program/views/{receipt,survival,tdd,breakdown}.py",
+    "wire_shape": "Unchanged. Every published number keeps its value and its position; what moves is the key set of the sibling map."
+  },
+  "why_the_map_was_short": {
+    "path_grammar": "Survival rows were described at a synthetic 'participants.survival.<participant_id>.<leaf>' while the payload publishes them at 'participants[i].survival.<leaf>'. Every one of those entries named a path the payload does not have (99 ghosts in mandate_abyssal_curse_roster) while every row leaf it described was itself unnamed.",
+    "unwritten_blocks": "duration, participants[i].stats.*, utility_outcomes.*, breakdown[i].utility_outcomes.*, objective.focus_survival.*, objective.focus_utility_outcomes.* and nested events[i].support_on_hit_magic[j].* were assigned into the payload rather than written through the block, so no serialize_leaf call ever saw them."
+  },
+  "measured": {
+    "pair_golden": "zero diffs — the map is coupled-path output and golden enters through pipeline.run_fight (D-93).",
+    "coupled_golden_total_diffs": 142,
+    "coupled_golden_paths_added_by_this_slice": 0,
+    "numeric_leaves_moved": 0,
+    "coverage_before": {
+      "mandate_abyssal_curse_roster": "535 leaves / 424 entries / 210 uncovered / 99 ghosts",
+      "cleaver_bloodsong_roster": "1344 leaves / 1229 entries",
+      "dream_maker_roster": "531 leaves",
+      "catalyst_roster": "690 leaves",
+      "syndra_custom_order_60": "178 leaves"
+    },
+    "coverage_after": {
+      "mandate_abyssal_curse_roster": "535 leaves / 535 entries / 0 uncovered / 0 ghosts",
+      "cleaver_bloodsong_roster": "1344 leaves / 1344 entries / 0 uncovered / 0 ghosts",
+      "dream_maker_roster": "531 leaves / 531 entries / 0 uncovered / 0 ghosts",
+      "catalyst_roster": "690 leaves / 690 entries / 0 uncovered / 0 ghosts",
+      "syndra_custom_order_60": "178 leaves / 178 entries / 0 uncovered / 0 ghosts"
+    }
+  },
+  "oracle_pass": {
+    "status": "NOT_OWED_NO_OLD_VALUE",
+    "why": "R-19 asks an independent investigator to adjudicate between an old and a new value. The ten occurrences this slice touches are the same absent_to_value block P4-S9-dispositions enumerated: the coupled baseline predates the map entirely, so there is no old value to adjudicate and no arithmetic to reproduce from cached wiki text. No published number moves — the difference set is the identical 142 paths, path for path, before and after.",
+    "numeric_evidence": "tests/test_payload_dispositions.py asserts the map's key set equals the payload's published quantities, both directions, over all five combat-carrying coupled scenarios against live runs — the non-golden numeric gate this slice cites (D-93)."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 — no baseline moves inside this commit"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/catalyst_roster/combat/dispositions",
+      "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions",
+      "/coupled_scenarios/dream_maker_roster/combat/dispositions",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_120/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_39/combat/dispositions",
+      "/coupled_scenarios/syndra_custom_order_60/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_120/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_39/combat/dispositions",
+      "/coupled_scenarios/syndra_derived_order_60/combat/dispositions"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ]
+  }
+}

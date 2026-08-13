@@ -24,28 +24,36 @@ claims to project.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..build import Program
 from ..precision import round_field
 from ..walk import WalkResult
-from . import LeafWriter, ViewTag
-from .survival import survival_leaves
+from . import DISCARD, LeafWriter, ViewTag
+from .survival import participant_paths, survival_leaves
 
 __all__ = ["tdd", "tdd_leaves"]
 
 
 def tdd_leaves(
-    program: Program, result: WalkResult, writer: LeafWriter
+    program: Program,
+    result: WalkResult,
+    writer: LeafWriter,
+    rows: Mapping[str, dict[str, Any]],
 ) -> dict[str, Any]:
     """The objective block, with every numeric leaf written through *writer*.
 
     Split from :func:`tdd` so the receipt payload can carry one
     ``dispositions`` map across all of its blocks rather than one map per
     block: the writer is the payload's, the leaves are this view's.
+
+    ``rows`` are the survival rows the payload already published.  They
+    arrive rather than being re-projected: this block *republishes* the
+    focused participant's row at a second path, and a republication is a
+    second place a number lives, not a second time it is computed.
     """
     fold = result.objective
-    rows = survival_leaves(program, result, writer, "participants.survival")
     block: dict[str, Any] = {}
     leaf = writer.block(block, "objective")
     leaf.measured(
@@ -64,8 +72,8 @@ def tdd_leaves(
         ),
         ViewTag.APPLIED,
     )
-    block["surviving_main_team"] = int(fold.surviving_main_team)
-    block["focus_participant_id"] = program.focus
+    leaf.raw("surviving_main_team", int(fold.surviving_main_team))
+    leaf.raw("focus_participant_id", program.focus)
     leaf.measured(
         "focus_damage_before_death",
         round_field(
@@ -73,13 +81,15 @@ def tdd_leaves(
         ),
         ViewTag.APPLIED,
     )
-    block["focus_survival"] = rows.get(program.focus)
+    leaf.structure("focus_survival", rows.get(program.focus))
     leaf.measured(
         "focus_support_value",
         round_field("objective.focus_support_value", fold.focus_support_value),
         ViewTag.APPLIED,
     )
-    block["focus_utility_outcomes"] = result.utility_by_actor.get(program.focus, {})
+    leaf.structure(
+        "focus_utility_outcomes", result.utility_by_actor.get(program.focus, {})
+    )
     leaf.measured(
         "focus_healing",
         round_field("objective.focus_healing", fold.focus_healing),
@@ -119,7 +129,13 @@ def tdd(program: Program, result: WalkResult) -> dict[str, Any]:
     carries one map.  This entry point is the view's own front door and the
     shape criterion 3 checks: exactly ``(Program, WalkResult)`` in, published
     leaves out, no arithmetic in between.
+
+    The survival rows the objective republishes are projected through
+    ``DISCARD``: this payload publishes them only under ``focus_survival``,
+    so entries at ``participants[i].survival`` would name leaves this payload
+    does not have -- the ghost half of criterion 5's two-way equality.
     """
     writer = LeafWriter()
-    block = tdd_leaves(program, result, writer)
+    rows = survival_leaves(program, result, DISCARD, participant_paths(program))
+    block = tdd_leaves(program, result, writer, rows)
     return {**block, "dispositions": writer.entries()}

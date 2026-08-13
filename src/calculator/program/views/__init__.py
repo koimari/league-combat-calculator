@@ -139,21 +139,28 @@ class LeafBlock:
     there, which is the drift the single writer exists to make impossible.
     """
 
-    __slots__ = ("_prefix", "_records", "_set", "_target", "_writer")
+    __slots__ = ("_dot", "_prefix", "_records", "_set", "_target", "_writer")
 
     def __init__(
         self, writer: "LeafWriter", target: MutableMapping[str, object], prefix: str
     ) -> None:
         """Bind one target mapping to the path prefix its keys hang under.
 
-        ``_records`` and ``_set`` are bound once because the optimizer walks
-        every participant of every candidate through here: two attribute
-        chases per leaf, times a few hundred leaves, times a thousand
-        evaluations, is measurable against the phase's wall ratchet.
+        An empty prefix is the payload's own root, and its keys are paths
+        with no dot in front of them -- ``duration``, not ``.duration``.  A
+        root block exists because a top-level number is a published number:
+        the payload's own leaves were the ones no block owned, and a leaf no
+        block owns is a leaf with no entry.
+
+        ``_records``, ``_set`` and ``_dot`` are bound once because the
+        optimizer walks every participant of every candidate through here:
+        two attribute chases per leaf, times a few hundred leaves, times a
+        thousand evaluations, is measurable against the phase's wall ratchet.
         """
         self._writer = writer
         self._target = target
         self._prefix = prefix
+        self._dot = f"{prefix}." if prefix else ""
         self._records = writer.records
         self._set = target.__setitem__
 
@@ -164,7 +171,7 @@ class LeafBlock:
         which is the asymmetry that lets a consumer tell "refused, and here is
         why" from "this payload has no such field".
         """
-        out = serialize_leaf(f"{self._prefix}.{key}", quantity, tag)
+        out = serialize_leaf(f"{self._dot}{key}", quantity, tag)
         # pylint: disable-next=protected-access
         self._writer._record(out)
         if out.present:
@@ -177,7 +184,7 @@ class LeafBlock:
         nested leaf's map key is still the path a reader would walk to reach
         it.
         """
-        return LeafBlock(self._writer, target, f"{self._prefix}.{key}")
+        return LeafBlock(self._writer, target, f"{self._dot}{key}")
 
     def structure(self, key: str, value: object) -> None:
         """Publish a nested object or list, naming every quantity inside it.
@@ -190,7 +197,7 @@ class LeafBlock:
         flattens; every float found is written through the same
         :func:`serialize_leaf`, at the path a reader would walk to reach it.
         """
-        self._set(key, self._walk(value, f"{self._prefix}.{key}"))
+        self._set(key, self._walk(value, f"{self._dot}{key}"))
 
     def _walk(self, value: object, path: str) -> object:
         """One nested value, rebuilt with every float written as a leaf."""
