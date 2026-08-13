@@ -23,6 +23,7 @@ from src.calculator.item_behavior import (
     AmpChainSlot,
     BuildContext,
     Comparison,
+    Compilable,
     EngineLane,
     Fixed,
     KernelField,
@@ -40,8 +41,10 @@ from src.calculator.item_behavior import (
     chain_rank,
 )
 from src.calculator.item_behavior_catalog import (
+    AMP_COMPILABILITY,
     BehaviorCatalogError,
     COMPILED_KERNEL_CANNOT_AMP,
+    COMPILED_KERNEL_CAN_AMP,
     KEYSTONE_AMPS,
     behavior_rules,
     build_context,
@@ -544,10 +547,76 @@ def test_every_amp_declares_the_compiled_kernel_refusal_in_both_h5_branches() ->
     )
     for rule in amps:
         assert (
-            rule.compilability is COMPILED_KERNEL_CANNOT_AMP
-        ), f"{rule.mechanic_id} does not carry the one compiled-kernel refusal"
+            rule.compilability is AMP_COMPILABILITY
+        ), f"{rule.mechanic_id} does not carry the one compiled-kernel answer"
     assert "H5 is SCOPED" in COMPILED_KERNEL_CANNOT_AMP.reason
     assert "descoped" not in COMPILED_KERNEL_CANNOT_AMP.reason
+
+
+# ── D-98: the derivation beside the legacy set, and the asserted delta ────
+
+# Every mechanic the H5 flip moves, enumerated before it moves them.  This is
+# the delta R-31 requires an asserted set for: the flip is one symbol, so
+# without a committed population its blast radius would be whatever the tree
+# happened to contain on the day, discovered afterwards rather than declared.
+#
+# Twelve of the fourteen are holder-side amps the pair engine prices into its
+# own damage rows, which the compiled walk has always consumed already
+# amplified; two author a cross-participant ``damage_modifier`` packet and are
+# the reason the blanket refusal existed at all.  Both halves move together
+# because one constant answered for both.
+AMP_FLIP_POPULATION = frozenset(
+    {
+        "actualizer.ability_part_amp",
+        "bloodsong.expose_weakness",
+        "first_strike.opening_window_amp",
+        "haunting_guise.whole_total_amp",
+        "hexoptics_c44.basic_part_amp",
+        "horizon_focus.hypershot",
+        "immortal_path.whole_total_amp",
+        "imperial_mandate.command",
+        "liandrys_torment.whole_total_amp",
+        "lord_dominiks_regards.whole_total_amp",
+        "press_the_attack.lasting_proc_amp",
+        "riftmaker.whole_total_amp",
+        "shadowflame.cinderbloom",
+        "spear_of_shojin.whole_total_amp",
+    }
+)
+
+
+def test_the_amp_flip_population_is_the_declared_one() -> None:
+    """Which mechanics the one-symbol flip moves, asserted rather than found.
+
+    D-98/R-31: a derivation lands beside the legacy declaration with an
+    asserted delta, and only then does the flip land as its own revert unit.
+    ``AMP_COMPILABILITY`` is that indirection; this is the delta.  A
+    fifteenth amp declared without a line here fails on the commit that adds
+    it, which is what stops the flip from silently taking a mechanic nobody
+    scoped with it.
+    """
+    live = {
+        rule.mechanic_id
+        for owner in sorted(rule_owners())
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP
+    }
+    assert live == AMP_FLIP_POPULATION
+
+
+def test_the_two_amp_answers_are_a_real_delta() -> None:
+    """Both sides of the flip exist, and they say different things.
+
+    A "derivation beside the legacy set" whose two sides were the same
+    object, or the same verdict, would make the flip a no-op wearing a
+    correction's clothes.  The scope is asserted on the refusal because that
+    is the population H5's stage names (``ReceiptScope`` documents it), and
+    the flip is asserted to be exactly one of the two.
+    """
+    assert isinstance(COMPILED_KERNEL_CANNOT_AMP, ReceiptOnly)
+    assert isinstance(COMPILED_KERNEL_CAN_AMP, Compilable)
+    assert COMPILED_KERNEL_CANNOT_AMP.scope is ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+    assert AMP_COMPILABILITY in (COMPILED_KERNEL_CANNOT_AMP, COMPILED_KERNEL_CAN_AMP)
 
 
 def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:

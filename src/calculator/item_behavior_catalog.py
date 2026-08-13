@@ -1307,6 +1307,37 @@ COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
     scope=ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
 )
 
+# The answer that stage's kernel half makes true.  The compiled score kernel
+# stages an armed ``damage_modifier`` as an ``ActionKind.DAMAGE_MODIFIER``
+# through the one ``SurvivalAction`` constructor, and the compiled damage rows
+# it applies to carry the delivery flags and resistance baselines an
+# attack-class restriction and a resistance reduction read; the equivalence
+# fixture that proves the compiled lane reproduces the receipt walk over every
+# producer is ``tests/test_amp_kernel.py``.
+#
+# It lands **beside** the refusal rather than replacing it, and the flip is a
+# separate one-symbol commit (D-98/R-31): the revert unit is the flip, and a
+# stage that rewrote the refusal in place would make reverting the claim mean
+# rewriting the declaration a second time.
+COMPILED_KERNEL_CAN_AMP = Compilable()
+
+# The symbol every ``delta_amp`` rule declares, and the one the flip moves.
+#
+# One indirection, so the flip is a change to this line and to nothing else.
+# Fourteen rules carry it — twelve holder-side amps the pair engine prices
+# into its own damage rows, plus the two that author a cross-participant
+# packet (Bloodsong's Expose Weakness and Imperial Mandate's Command) — and
+# repointing them one by one at the new answer would make the flip fourteen
+# edits nobody can revert as a unit.
+#
+# ``COMPILED_KERNEL_CANNOT_AMP`` above is what this points at before the flip
+# and what a revert restores, which is why it survives the flip rather than
+# being deleted by it.  ``tests/test_interp_delta_amp.py`` asserts the delta
+# between the two: the exact population the flip moves, enumerated by
+# mechanic id, so the flip's blast radius is a committed set rather than a
+# consequence discovered afterwards.
+AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CANNOT_AMP
+
 
 # ── compilers (D-52's ruled exception to "no callables in declarations") ──
 
@@ -1917,7 +1948,7 @@ def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -1979,7 +2010,7 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2017,7 +2048,7 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.HYPERSHOT),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2096,7 +2127,7 @@ def _whole_total_rule(
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.WHOLE_TOTAL),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2136,7 +2167,7 @@ def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.OPENING_WINDOW),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
         ),
@@ -2191,7 +2222,7 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.ANY_ATTACKER,
             lane_chain_rank=chain_rank(AmpChainSlot.POST_IMMOBILIZE),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2245,7 +2276,7 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.ANY_ATTACKER,
             lane_chain_rank=chain_rank(AmpChainSlot.EXPOSE_WEAKNESS),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2309,7 +2340,7 @@ def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.CINDERBLOOM),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -2409,7 +2440,7 @@ def _lasting_proc_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.LASTING_PROC_AMP),
         ),
-        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        compilability=AMP_COMPILABILITY,
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
         ),
@@ -6449,7 +6480,9 @@ __all__ = [
     "EntryShape",
     "CACHED_ITEM_SOURCE",
     "CACHED_RUNE_SOURCE",
+    "AMP_COMPILABILITY",
     "COMPILED_KERNEL_CANNOT_AMP",
+    "COMPILED_KERNEL_CAN_AMP",
     "BehaviorCatalogError",
     "Compiler",
     "COMPILED_KERNEL_CANNOT_STAGE",
