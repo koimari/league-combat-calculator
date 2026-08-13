@@ -26,6 +26,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..build import Program
+from ..walk import WalkResult
 from . import DISCARD
 from .breakdown import breakdown_leaves
 from .survival import survival_leaves
@@ -33,7 +35,7 @@ from .survival import survival_leaves
 __all__ = ["score"]
 
 
-def score(program: Any, result: Any) -> dict[str, Any]:
+def score(program: Program, result: WalkResult) -> dict[str, Any]:
     """Project one walk into the payload a candidate is scored from.
 
     Both composition paths return exactly this, which is what makes "the

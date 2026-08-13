@@ -29,7 +29,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ..build import Program
 from ..precision import round_field
+from ..walk import WalkResult
 from . import LeafWriter
 from .breakdown import breakdown_leaves
 from .survival import survival_leaves
@@ -434,7 +436,7 @@ def _support_event_rows(
     return rows
 
 
-def receipt(program: Any, result: Any) -> dict[str, Any]:
+def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     """Project one walk into the serialized combat receipt.
 
     The participants block publishes each actor's stats and items beside its

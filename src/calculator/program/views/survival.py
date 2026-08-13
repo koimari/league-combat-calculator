@@ -28,7 +28,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..build import Program
 from ..precision import round_field
+from ..walk import WalkResult
 from . import LeafBlock, LeafWriter
 
 __all__ = ["survival", "survival_leaves"]
@@ -92,7 +94,7 @@ def _combat_state_blocks(
 
 
 def survival_leaves(
-    program: Any, result: Any, writer: LeafWriter, prefix: str
+    program: Program, result: WalkResult, writer: LeafWriter, prefix: str
 ) -> dict[str, dict[str, Any]]:
     """Project the walk's final state into one published row per participant.
 
@@ -310,7 +312,7 @@ def survival_leaves(
     return rows
 
 
-def survival(program: Any, result: Any) -> dict[str, dict[str, Any]]:
+def survival(program: Program, result: WalkResult) -> dict[str, dict[str, Any]]:
     """The published rows on their own, for a caller that wants only them.
 
     The payload views call :func:`survival_leaves` with the payload's own

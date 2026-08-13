@@ -247,3 +247,61 @@ class TestViewPurity:
         assert [(site.module, site.what) for site in sites] == [
             ("program.precision", "Mult")
         ]
+
+
+class TestEveryViewTakesTheWalkAndNothingElse:
+    """Criterion 3's second clause: a view's inputs are exactly two.
+
+    The five front doors have taken ``(program, result)`` since S9, but the
+    parameters were annotated ``Any`` and no test read them, so "exactly
+    ``Program`` and ``WalkResult``" was a claim three docstrings made about
+    themselves.  A view that quietly grew a third parameter -- the roster,
+    the request, a cache -- would be reading a number that reached it by
+    some route no counter can trace to this walk, which is the whole reason
+    the clause is in the criterion.
+    """
+
+    #: The five views, by the dotted path a reader would import.
+    FRONT_DOORS = (
+        "program.views.score:score",
+        "program.views.breakdown:breakdown",
+        "program.views.survival:survival",
+        "program.views.tdd:tdd",
+        "program.views.receipt:receipt",
+    )
+
+    @staticmethod
+    def _front_door(spec: str):
+        """One view function, imported the way its consumer imports it."""
+        import importlib
+
+        module, name = spec.split(":")
+        return getattr(importlib.import_module(f"src.calculator.{module}"), name)
+
+    def test_each_view_takes_a_program_and_a_walk_result_and_no_third_thing(
+        self,
+    ) -> None:
+        import inspect
+        import typing
+
+        from src.calculator.program.build import Program
+        from src.calculator.program.walk import WalkResult
+
+        for spec in self.FRONT_DOORS:
+            view = self._front_door(spec)
+            parameters = list(inspect.signature(view).parameters.values())
+            assert [p.name for p in parameters] == ["program", "result"], spec
+            assert all(
+                p.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD for p in parameters
+            ), spec
+            hints = typing.get_type_hints(view)
+            assert hints["program"] is Program, spec
+            assert hints["result"] is WalkResult, spec
+
+    def test_the_annotations_are_resolvable_and_not_strings(self) -> None:
+        """``Any`` passed the old reading of this clause; so would a typo."""
+        import typing
+
+        for spec in self.FRONT_DOORS:
+            hints = typing.get_type_hints(self._front_door(spec))
+            assert typing.Any not in hints.values(), spec

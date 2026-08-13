@@ -26,14 +26,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..build import Program
 from ..precision import round_field
+from ..walk import WalkResult
 from . import LeafWriter, ViewTag
 from .survival import survival_leaves
 
 __all__ = ["tdd", "tdd_leaves"]
 
 
-def tdd_leaves(program: Any, result: Any, writer: LeafWriter) -> dict[str, Any]:
+def tdd_leaves(
+    program: Program, result: WalkResult, writer: LeafWriter
+) -> dict[str, Any]:
     """The objective block, with every numeric leaf written through *writer*.
 
     Split from :func:`tdd` so the receipt payload can carry one
@@ -108,7 +112,7 @@ def tdd_leaves(program: Any, result: Any, writer: LeafWriter) -> dict[str, Any]:
     return block
 
 
-def tdd(program: Any, result: Any) -> dict[str, Any]:
+def tdd(program: Program, result: WalkResult) -> dict[str, Any]:
     """The objective block on its own, with its own ``dispositions`` map.
 
     The receipt payload uses :func:`tdd_leaves` instead, because one payload

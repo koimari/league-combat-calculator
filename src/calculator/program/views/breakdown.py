@@ -25,14 +25,19 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..build import Program
 from ..precision import round_field
+from ..walk import WalkResult
 from . import LeafWriter
 
 __all__ = ["breakdown", "breakdown_leaves"]
 
 
 def breakdown_leaves(
-    program: Any, result: Any, writer: LeafWriter, prefix: str = "breakdown"
+    program: Program,
+    result: WalkResult,
+    writer: LeafWriter,
+    prefix: str = "breakdown",
 ) -> list[dict[str, Any]]:
     """Project the walk into the published per-attacker rows.
 
@@ -92,7 +97,7 @@ def breakdown_leaves(
     return rows
 
 
-def breakdown(program: Any, result: Any) -> list[dict[str, Any]]:
+def breakdown(program: Program, result: WalkResult) -> list[dict[str, Any]]:
     """The published rows on their own, for a caller that wants only them.
 
     The payload views call :func:`breakdown_leaves` with the payload's own
