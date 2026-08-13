@@ -1139,6 +1139,18 @@ _PAYLOAD_KINDS = {
     ev.TemporaryHealth: ActionKind.TEMP_HEALTH,
 }
 
+# Which rider families this compiler can stage on the action it builds.
+# **Empty on purpose**, and empty is a claim rather than an omission: riders
+# are a second axis (``events.RIDER_KINDS`` -- execute, defer, redirect,
+# wound, amp bonus), every one of them modifies the host event's arithmetic,
+# and this entry point stages none of them yet.  An unstageable *payload*
+# raised while an unstageable *rider* vanished, which is the same fail-open
+# shape one axis over: a compiled action with the execute threshold dropped
+# is a hit that silently failed to kill.  Teaching the entry point a rider is
+# one row here beside the code that reads it -- the same shape as widening
+# ``_PAYLOAD_KINDS`` -- so a rider can never be staged by nobody.
+_STAGED_RIDERS: frozenset[type] = frozenset()
+
 
 def compile_program(
     program: Program, *, projection: Projection
@@ -1155,7 +1167,13 @@ def compile_program(
     :class:`~..survival.compile.UncompilableActionError` with a named
     receipt, exactly as the packet and engine-row paths do, so the caller
     falls back to the receipt walk instead of walking a program with a hole
-    in it.
+    in it.  **A rider family it cannot stage raises the same way**, on the
+    same rule and for the same reason: riders are the second axis an event
+    carries (:data:`~.events.RIDER_KINDS`), the builder attaches them to
+    every routed event, and a compiler that read only the payload would drop
+    an execute threshold or a wound in silence -- fail-open on the axis whose
+    sibling fails closed.  :data:`_STAGED_RIDERS` names the families this
+    entry point can carry and is empty today.
 
     The sort key comes from :func:`~..survival.actions.action_key` and is not
     rebuilt here.  This function is the phase's declared future entry point,
@@ -1174,6 +1192,15 @@ def compile_program(
         if kind is None:
             raise UncompilableActionError(
                 receipt=f"payload_family={type(event.payload).__name__}",
+                source=event_id_text(event.id),
+            )
+        unstageable = next(
+            (rider for rider in event.riders if type(rider) not in _STAGED_RIDERS),
+            None,
+        )
+        if unstageable is not None:
+            raise UncompilableActionError(
+                receipt=f"rider_family={type(unstageable).__name__}",
                 source=event_id_text(event.id),
             )
         payload = event.payload

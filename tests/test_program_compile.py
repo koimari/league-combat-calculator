@@ -55,8 +55,8 @@ def two_row_program() -> Program:
     return build_program(("main", "enemy:0"), [(pair, 0, 1)], EMPTY_CAPS)
 
 
-def program_of(payload) -> Program:
-    """One routed event carrying *payload*, at the damage rank."""
+def program_of(payload, riders: tuple = ()) -> Program:
+    """One routed event carrying *payload* and *riders*, at the damage rank."""
     event = events.RoutedEvent(
         id=EventId(ORIGIN, 0),
         subject=1,
@@ -65,6 +65,7 @@ def program_of(payload) -> Program:
         sequence=0,
         rank=TransitionRank.DAMAGE,
         payload=payload,
+        riders=riders,
     )
     return Program(participants=("main", "enemy:0"), events=(event,))
 
@@ -163,6 +164,73 @@ class TestAnUnstageableFamilyFailsClosed:
         actions = program_compile.compile_program(
             program_of(payload), projection=Projection.SCORE
         )
+        assert len(actions) == 1
+
+
+class TestAnUnstageableRiderFailsClosed:
+    """The second axis, held to the first one's rule.
+
+    A rider modifies its host event's arithmetic — an execute threshold that
+    kills below a ratio, a wound that halves healing, an amp bonus read
+    before absorption — so a compiler that reads the payload and ignores the
+    riders emits an action that is wrong rather than absent.  That is the
+    fail-open shape one axis over from the one the payload table closes, and
+    it is invisible to every equality gate until a rider-bearing packet
+    reaches this entry point.
+    """
+
+    @pytest.mark.parametrize(
+        "rider",
+        [
+            events.Execute(0.05, "Bastionbreaker"),
+            events.Defer(EventId(ORIGIN, 4)),
+            events.Redirect(0, 0.4, 120.0),
+            events.Wound(3.0, "Katarina R"),
+            events.AmpBonus(1.2, "shadowflame"),
+        ],
+    )
+    def test_the_rider_raises_naming_its_family(self, rider) -> None:
+        program = program_of(events.Damage(50.0, "magic"), riders=(rider,))
+        with pytest.raises(survival_compile.UncompilableActionError) as caught:
+            program_compile.compile_program(program, projection=Projection.SCORE)
+        assert caught.value.receipt == f"rider_family={type(rider).__name__}"
+
+    def test_every_declared_rider_family_is_covered(self) -> None:
+        """The population is the declaration, so a sixth rider is not silent."""
+        assert len(events.RIDER_KINDS) == 5
+        assert program_compile._STAGED_RIDERS == frozenset()  # pylint: disable=W0212
+
+    def test_a_rider_the_builder_attached_is_refused_end_to_end(self) -> None:
+        """The live shape: ``pair_program`` reads riders off the packet.
+
+        Not a hand-built event — the builder attaches ``riders_from_packet``
+        to every routed event, so an engine row carrying an execute threshold
+        already produces a rider-bearing program today.
+        """
+        result = {
+            "damage_events": [
+                {
+                    "time": 0.0,
+                    "sequence": 0,
+                    "damage": 100.0,
+                    "damage_type": "physical",
+                    "source_key": "q",
+                    "execute_threshold_ratio": 0.05,
+                    "execute_source": "Bastionbreaker",
+                }
+            ]
+        }
+        pair = pair_program(result, ORIGIN, EMPTY_CAPS)
+        program = build_program(("main", "enemy:0"), [(pair, 0, 1)], EMPTY_CAPS)
+        assert program.events[0].riders != ()
+        with pytest.raises(survival_compile.UncompilableActionError) as caught:
+            program_compile.compile_program(program, projection=Projection.SCORE)
+        assert caught.value.receipt == "rider_family=Execute"
+
+    def test_a_rider_free_event_still_compiles(self) -> None:
+        """The refusal is the riders', not a blanket one."""
+        program = program_of(events.Damage(50.0, "magic"))
+        actions = program_compile.compile_program(program, projection=Projection.SCORE)
         assert len(actions) == 1
 
 
