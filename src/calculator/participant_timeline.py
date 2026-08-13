@@ -441,6 +441,14 @@ def _pair_packet(  # pylint: disable=too-many-arguments
             enriched["_wound_source"] = str(
                 wound_packet.get("source", "Grievous Wounds")
             )
+            # When the window closes is the annotator's answer, not the
+            # receipt view's: the other two sites that arm a wound
+            # (`_thorns_events`, the reactive packet loop) already write it
+            # here, and the view computing it for the third was the one
+            # place a published timestamp had two producers.
+            enriched["_wound_until"] = (
+                float(event.get("time", 0.0)) + enriched["grievous_duration"]
+            )
         # Multi-target rows are authored on the engine breakdown. Carry the
         # same target-allocation receipt onto each ordered packet so the
         # coupled timeline can prove which roster slot received it instead of
@@ -1151,6 +1159,32 @@ def _utility_outcome_receipt(
             "applied support amounts remain event-derived values."
         ),
     }
+
+
+def _annotate_overheal(healing_events: Iterable[MutableMapping[str, Any]]) -> None:
+    """Give every published recovery row the overheal figure it publishes.
+
+    The walk's own annotator writes ``overheal`` for a recovery it applied --
+    the excess that neither temporary health, Ichorshield nor an overheal
+    shield absorbed.  A recovery the walk *skipped* never reaches that line,
+    and its published overheal is a different quantity: everything the heal
+    would have restored and did not.
+
+    Both are the composition's answer, and this is where the second one is
+    given.  The receipt view read the field with the second expression
+    spelled inline as a default, which made a published number have two
+    producers -- a projection quietly computing what the walk had not.  The
+    number is unchanged; what moves is who says it.
+    """
+    for event in healing_events:
+        if event.get("overheal") is not None:
+            continue
+        amount = float(event.get("amount", 0.0))
+        event["overheal"] = max(
+            0.0,
+            float(event.get("reduced_amount", amount))
+            - float(event.get("applied_amount", amount)),
+        )
 
 
 def _target_allocation_receipt(
@@ -4110,6 +4144,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             event,
         ),
     )
+    _annotate_overheal(public_healing_events)
     public_support_events = sorted(
         (event for events in support_effects.values() for event in events),
         key=lambda event: (

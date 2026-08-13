@@ -17,7 +17,11 @@ and a flat registry would have had to guess.
 It re-runs no arithmetic.  The three streams arrive ordered, the ten objective
 aggregates arrive summed, and the target-allocation receipt arrives built --
 all folded once by the composition, because a view that adds is a view that
-can disagree with the walk it claims to project.
+can disagree with the walk it claims to project.  The two receipt fields that
+used to be *computed here behind a default* -- a wound window's end and a
+skipped recovery's overheal -- are written by the composition that annotates
+the event, and read here by name: a number a view can produce for itself is a
+number with two producers, whatever the expression looks like.
 """
 
 from __future__ import annotations
@@ -240,16 +244,7 @@ def _damage_event_rows(
             )
             leaf.measured(
                 "wound_until",
-                round_field(
-                    "events.wound_until",
-                    float(
-                        event.get(
-                            "_wound_until",
-                            float(event.get("time", 0.0))
-                            + float(event["grievous_duration"]),
-                        )
-                    ),
-                ),
+                round_field("events.wound_until", float(event["_wound_until"])),
             )
         if event.get("healing_reduction"):
             leaf.structure("healing_reduction", dict(event["healing_reduction"]))
@@ -307,21 +302,7 @@ def _healing_event_rows(
         )
         leaf.measured(
             "overheal",
-            round_field(
-                "healing_events.overheal",
-                float(
-                    event.get(
-                        "overheal",
-                        max(
-                            0.0,
-                            float(event.get("reduced_amount", event.get("amount", 0.0)))
-                            - float(
-                                event.get("applied_amount", event.get("amount", 0.0))
-                            ),
-                        ),
-                    )
-                ),
-            ),
+            round_field("healing_events.overheal", float(event["overheal"])),
         )
         leaf.measured(
             "temporary_health",

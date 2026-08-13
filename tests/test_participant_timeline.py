@@ -5469,3 +5469,93 @@ class TestCatalystIsTwoPassesAndNotARecursion:
         slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
         assert isinstance(slot.rule.compilability, ReceiptOnly)
         assert "second pass" in slot.rule.compilability.reason
+
+
+class TestThePublishedReceiptFieldsHaveOneProducer:
+    """Two fields the receipt view used to compute for itself (criterion 3).
+
+    Both were spelled as a *default* behind ``event.get(...)``, which is the
+    least visible way for a published number to acquire a second producer:
+    the walk annotates the field on the paths it reaches, and the projection
+    quietly answered for the paths it does not.  The composition answers for
+    both now, and the view reads the key by name.
+    """
+
+    def test_a_skipped_recovery_is_given_the_overheal_it_publishes(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        skipped = {"amount": 31.5, "applied_amount": 0.0, "skipped_reason": "x"}
+        _annotate_overheal([skipped])
+        assert skipped["overheal"] == 31.5
+
+    def test_a_reduced_recovery_overheals_only_what_it_did_not_apply(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 40.0, "reduced_amount": 24.0, "applied_amount": 10.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 14.0
+
+    def test_the_walks_own_annotation_is_never_overwritten(self) -> None:
+        """The applied path's overheal is a different, narrower quantity."""
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 40.0, "applied_amount": 10.0, "overheal": 0.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 0.0
+
+    def test_a_recovery_that_applied_everything_overheals_nothing(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 12.0, "applied_amount": 30.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 0.0
+
+    def test_the_receipt_view_reads_overheal_rather_than_deriving_it(self) -> None:
+        """A healing row with no annotated overheal is a composition bug."""
+        from src.calculator.program.views import LeafWriter
+        from src.calculator.program.views import receipt as receipt_view
+
+        with pytest.raises(KeyError):
+            # pylint: disable-next=protected-access
+            receipt_view._healing_event_rows(
+                [{"time": 0.0, "amount": 5.0}], LeafWriter(), "healing_events"
+            )
+
+    def test_the_receipt_view_reads_the_wound_window_rather_than_closing_it(
+        self,
+    ) -> None:
+        """A wounded damage row with no annotated window is a composition bug."""
+        from src.calculator.program.views import LeafWriter
+        from src.calculator.program.views import receipt as receipt_view
+
+        with pytest.raises(KeyError):
+            # pylint: disable-next=protected-access
+            receipt_view._damage_event_rows(
+                [{"time": 1.0, "grievous_duration": 3.0}], LeafWriter(), "events"
+            )
+
+    def test_a_champion_wound_publishes_the_instant_its_window_closes(self) -> None:
+        """Varus E is the third arming site, and it now annotates like the others."""
+        app.config["TESTING"] = True
+        response = app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Varus",
+                "level": 18,
+                "items": [],
+                "fight_mode": "time_based",
+                "fight_duration": 10,
+                "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+            },
+        )
+        assert response.status_code == 200
+        wounded = [
+            event
+            for event in response.get_json()["combat"]["events"]
+            if event.get("wound_duration")
+        ]
+        assert wounded, "Varus E arms no wound; the fixture no longer covers the site"
+        for event in wounded:
+            assert event["wound_until"] == pytest.approx(
+                event["time"] + event["wound_duration"], abs=1e-3
+            )
