@@ -88,12 +88,56 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
     return None
 
 
+# The resolved support kinds the compiled score ledger can stage.
+#
+# ``damage_modifier`` joined the set at the H5 stage, which is where the
+# kernel was taught timed, typed damage modifiers (D-101; the umbrella's
+# ``[H]`` table records the scoping and this module does not re-rule it).
+# The transition itself was never the missing half: ``_apply_damage_modifier``
+# and ``_apply_cross_participant_modifiers`` are kernel functions both
+# adapters have always driven, so what refused was *compilation*.  Widening
+# the set is therefore a statement about the compiler's reach and not about
+# the walk's, which is why the modifier's own refusals get a function of
+# their own below rather than clauses inside the shield/heal ladder: a heal's
+# duration is a reason to decline and a modifier's duration is the mechanic.
+_STAGED_SUPPORT_KINDS = frozenset({"shield", "heal", "damage_modifier"})
+
+
+def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:
+    """Return a named receipt when an armed damage modifier carries a
+    transition the compiled score kernel cannot stage, else None.
+
+    Deliberately short, and the shortness is the finding: an armed modifier
+    is a timed entry in ``state["active_damage_modifiers"]`` that the shared
+    kernel applies, expires and refreshes identically under either ledger,
+    so a duration, a persistence flag, a resistance reduction and a
+    next-event consumption are all *representable* and none of them is a
+    reason to decline.
+
+    What is not representable is an amount only the walk can price — a live
+    formula, or a transition a deferral batch owns — and those are the two
+    clauses here.  The one refusal this function deliberately does **not**
+    make is the class declaration: an armed modifier with no
+    ``damage_classes``/``attack_classes`` must raise in
+    ``declared_modifier_classes`` on both paths (D-04), and declining it
+    here would convert that fail-loud into a quiet fall back to the walk
+    that raises anyway.
+    """
+    if template.get("amount_formula") is not None:
+        return "modifier_amount_formula"
+    if template.get("_deferred"):
+        return "deferred_transition"
+    return None
+
+
 def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a resolved support template cannot ride
     the compiled score kernel, else None."""
     kind = str(template.get("kind", ""))
-    if kind not in {"shield", "heal"}:
+    if kind not in _STAGED_SUPPORT_KINDS:
         return f"support_kind={kind}"
+    if kind == "damage_modifier":
+        return unrepresentable_modifier_receipt(template)
     try:
         duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
     except (TypeError, ValueError):
@@ -251,5 +295,6 @@ __all__ = [
     "trigger_time_key",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
+    "unrepresentable_modifier_receipt",
     "unrepresentable_template_receipt",
 ]

@@ -76,6 +76,7 @@ from .compile import (
     trigger_time_key,
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
+    unrepresentable_modifier_receipt,
     unrepresentable_template_receipt,
 )
 from .receipt_state import (
@@ -132,5 +133,6 @@ __all__ = [
     "trigger_time_key",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
+    "unrepresentable_modifier_receipt",
     "unrepresentable_template_receipt",
 ]

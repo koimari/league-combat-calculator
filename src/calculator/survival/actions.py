@@ -607,6 +607,10 @@ _I_SOURCE = _INDEX("source")
 _I_EVENT_SLOT = _INDEX("event_slot")
 _I_SEQUENCE = _INDEX("sequence")
 _I_LIVE_AMP = _INDEX("live_amp")
+_I_IS_ABILITY = _INDEX("is_ability")
+_I_BASIC_ATTACK = _INDEX("basic_attack")
+_I_BASELINE_ARMOR = _INDEX("baseline_effective_armor")
+_I_BASELINE_MR = _INDEX("baseline_effective_mr")
 
 
 def compiled_damage_action(
@@ -627,10 +631,14 @@ def compiled_damage_action(
     event_slot: int,
     sequence: Any,
     live_amp: LiveAmp | None,
+    is_ability: bool,
+    basic_attack: bool,
+    baseline_effective_armor: float | None,
+    baseline_effective_mr: float | None,
 ) -> SurvivalAction:
     """Build a compiler damage action without keyword-default parsing.
 
-    Exactly ``SurvivalAction(**those seventeen fields)``: every other field
+    Exactly ``SurvivalAction(**those twenty-one fields)``: every other field
     keeps its class default, ``reactive=False`` and the phase included.
     The phase is the load-bearing one — this function has no ``_I_PHASE``
     because the class default *is* ``TransitionRank.DAMAGE``, which is what the
@@ -642,6 +650,25 @@ def compiled_damage_action(
     a compiler that forgot to pass it would score a build whose
     amplification it silently dropped, which is the incident.  Every call
     site states it, ``None`` included.
+
+    ``is_ability`` and ``basic_attack`` have no defaults for the same
+    reason, and they joined at the H5 stage.  They are how a packet says
+    *how it was delivered* (:func:`attack_class_of`), and until an armed
+    damage modifier could compile nothing on the score path read them, so
+    both sat at their ``False`` class default and every compiled packet
+    classified as ``OTHER``.  A modifier declaring all three attack classes
+    then reached only the rows whose ``source_key`` happened to be
+    ``auto_attacks``.  Defaulting them here would put that silence back
+    behind a keyword nobody has to type.
+
+    The two resistance baselines joined at the same stage and carry the
+    same warning.  They are the pair fight's own final effective armour and
+    magic resistance, and a resistance-reducing modifier re-prices its
+    packet against them; ``None`` is the honest "this fight published no
+    such figure", which the kernel receipts as
+    ``support_resistance_reduction_unavailable`` rather than inventing a
+    mitigation ratio.  A default of ``None`` here would spell the same
+    refusal for a compiler that simply forgot to pass the number it had.
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
@@ -661,6 +688,10 @@ def compiled_damage_action(
     row[_I_EVENT_SLOT] = event_slot
     row[_I_SEQUENCE] = sequence
     row[_I_LIVE_AMP] = live_amp
+    row[_I_IS_ABILITY] = is_ability
+    row[_I_BASIC_ATTACK] = basic_attack
+    row[_I_BASELINE_ARMOR] = baseline_effective_armor
+    row[_I_BASELINE_MR] = baseline_effective_mr
     return tuple.__new__(SurvivalAction, row)
 
 

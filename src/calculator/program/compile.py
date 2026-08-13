@@ -49,6 +49,7 @@ that builds the walk compiles what the walk may not reach and hands it over.
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
@@ -79,10 +80,10 @@ from ..survival.compile import (
     unrepresentable_template_receipt,
     trigger_time_key,
 )
-from ..trigger_stream import is_immobilizing_event
+from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
-from .build import Program, Projection, pair_preview_sources
+from .build import Program, Projection, arming_stacking, pair_preview_sources
 from .caches import program_fingerprint, roster_fingerprint
 from .identity import event_id_text
 
@@ -272,6 +273,69 @@ def action_from_event(
     )
 
 
+def pair_resistance_baselines(
+    result: Mapping[str, Any],
+) -> tuple[float | None, float | None]:
+    """One pair fight's final effective armour and magic resistance.
+
+    ``None`` for either figure the engine did not publish, or published as
+    a non-finite number.  Deliberately absent rather than zero: a resistance
+    reduction re-prices its packet as the ratio of two mitigation factors,
+    and a missing baseline is a question the fight cannot answer, which the
+    walk receipts as ``support_resistance_reduction_unavailable`` instead of
+    inventing a mitigation ratio.
+
+    One home for both readers, because both must agree exactly.  The
+    receipt path stamps these onto every enriched pair event
+    (``participant_timeline._pair_packet``) and the compiler reads them off
+    the engine result once per fight; the same figure has to reach the same
+    kernel field either way, or a resistance-reducing modifier prices
+    differently on the two paths.
+    """
+    baselines: list[float | None] = []
+    for field in ("effective_armor", "effective_mr"):
+        try:
+            value = float(result[field])
+        except (KeyError, TypeError, ValueError):
+            baselines.append(None)
+            continue
+        baselines.append(value if math.isfinite(value) else None)
+    return baselines[0], baselines[1]
+
+
+def modifier_delivery_receipt(
+    compilers: Iterable["WalkCompiler"],
+) -> str | None:
+    """Refuse an armed modifier the compiled walk cannot classify against.
+
+    An armed cross-participant modifier declares which damage classes and
+    which **attack classes** it applies to (D-04), and the kernel answers
+    the second question with :func:`~..survival.actions.attack_class_of`,
+    which reads two per-packet delivery flags.  The engine's light tuple
+    ledger carries neither: it is the score-only shape for a fight nothing
+    reads per event, and there is no ``is_ability`` on a positional row to
+    read.
+
+    Those two facts meet across compilers, which is why this is asked of
+    the assembled set rather than inside one of them: a roster ally's
+    curse is armed in the invariant panel while the packets it amplifies
+    come from the candidate's own fresh result.  Either half alone is
+    fine — a light ledger with no modifier over it, or a modifier over
+    enriched rows — and only the pair is unrepresentable.
+
+    Fail closed rather than approximate: reading the flags' ``False``
+    default as "this packet was neither an attack nor a spell" would amp
+    exactly the auto-attack rows and quietly drop every ability row, which
+    is a modifier the score path priced differently from the walk with
+    nothing saying so.
+    """
+    if not any(compiler.staged_modifier for compiler in compilers):
+        return None
+    if not any(compiler.unclassified_delivery for compiler in compilers):
+        return None
+    return "modifier_over_light_ledger"
+
+
 def revive_candidate_actions(
     actions: Iterable[SurvivalAction],
     combatants: Iterable[Any],
@@ -367,6 +431,8 @@ class WalkCompiler:
         "auto_strikes_into",
         "coverage",
         "next_aidx",
+        "unclassified_delivery",
+        "staged_modifier",
     )
 
     def __init__(self, first_aidx: int = 0) -> None:
@@ -379,6 +445,18 @@ class WalkCompiler:
         )
         self.coverage: list[dict[str, Any]] = []
         self.next_aidx = first_aidx
+        # Whether this compiler consumed an engine result whose rows cannot
+        # say how a packet was delivered — the light tuple ledger, which
+        # carries no ``is_ability``/``basic_attack`` at all.  Read by the
+        # walk assembly, which refuses to stage an armed damage modifier
+        # over rows no attack-class restriction can be evaluated against.
+        self.unclassified_delivery = False
+        # Whether this compiler staged an armed cross-participant damage
+        # modifier.  The other half of the same question, and separate from
+        # it because the two can land in different compilers: the roster
+        # panel arms an ally's curse and the candidate's own fresh result
+        # supplies the packets it applies to.
+        self.staged_modifier = False
 
     def add_packet(
         self,
@@ -470,6 +548,20 @@ class WalkCompiler:
                     event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
                     sequence=event.get("sequence"),
                     live_amp=event.get("_live_amp"),
+                    # How the packet was delivered, read off the same two
+                    # enriched fields ``action_from_event`` reads (H5).  An
+                    # armed damage modifier restricts itself by attack class
+                    # (D-04), so a compiled packet that could not say which
+                    # class it belongs to would be amplified differently on
+                    # the two paths.
+                    is_ability=bool(event.get("is_ability")),
+                    basic_attack=bool(event.get("basic_attack")),
+                    # ``_pair_packet`` stamps these only when the fight
+                    # published a finite figure, so ``get`` returning
+                    # ``None`` is the same absent-means-refuse the receipt
+                    # adapter reads off the same key.
+                    baseline_effective_armor=event.get("_baseline_effective_armor"),
+                    baseline_effective_mr=event.get("_baseline_effective_mr"),
                 )
             )
             if time_value <= duration:
@@ -649,6 +741,10 @@ class WalkCompiler:
         damage_phase = ordering_slot(TransitionRank.DAMAGE)
         known_ids = len(id_strings)
         aidx = self.next_aidx
+        # Per fight, not per event: the engine publishes one pair of final
+        # effective resistances for the whole pair fight, which is exactly
+        # what ``_pair_packet`` stamps onto every enriched event of it.
+        baseline_armor, baseline_mr = pair_resistance_baselines(result)
         if result.get("damage_events_tuple"):
             # The engine's light ledger rows: (sort_key, damage, damage_type,
             # source_key, raw_formula, raw_damage), guaranteed heal-free by
@@ -716,6 +812,17 @@ class WalkCompiler:
                         slot_of(event_id),
                         key[3],
                         live_amp_for(live_amps, row[2]),
+                        # A light ledger row carries no delivery metadata,
+                        # so neither flag can be answered from it.  That is
+                        # recorded once for the whole result below
+                        # (``unclassified_delivery``) rather than guessed
+                        # per row: a modifier restricted by attack class
+                        # must not read ``False`` as "this was neither an
+                        # attack nor a spell".
+                        False,
+                        False,
+                        baseline_armor,
+                        baseline_mr,
                     )
                 )
                 if time_value <= duration:
@@ -726,6 +833,7 @@ class WalkCompiler:
                     strikes_append((aidx, time_value, key[3], attacker_i))
                 aidx += 1
             self.next_aidx = aidx
+            self.unclassified_delivery = True
             self.coverage.append(result.get("timeline_coverage", {}))
             return
         heals = result.get("self_healing_events", [])
@@ -812,6 +920,10 @@ class WalkCompiler:
                     slot_of(event_id),
                     sequence,
                     live_amp_for(live_amps, damage_type),
+                    bool(event.get("is_ability")),
+                    bool(event.get("basic_attack")),
+                    baseline_armor,
+                    baseline_mr,
                 )
             )
             if time_value <= duration:
@@ -988,6 +1100,13 @@ class WalkCompiler:
             # Admitting a kind to compilation therefore lands two behaviour
             # changes, not one: read this line before widening that
             # receipt.
+            # ``ActionKind``'s own spelling, not a literal: the packet kind
+            # and the action kind are the same word by construction (the
+            # receipt adapter's classifier maps one to the other), and
+            # writing it twice is how the two would drift.
+            if kind == ActionKind.DAMAGE_MODIFIER.value:
+                self._add_damage_modifier(template, attacker_i, subject_i, index_of)
+                continue
             priority = support_transition_rank(template)
             aidx = self.next_aidx
             self.next_aidx += 1
@@ -1010,6 +1129,100 @@ class WalkCompiler:
                 )
             )
             self.support_entries.append((target_id, attacker_i, aidx, kind == "heal"))
+
+    def _add_damage_modifier(
+        self,
+        template: Mapping[str, Any],
+        attacker_i: int,
+        subject_i: int,
+        index_of: Mapping[str, int],
+    ) -> None:
+        """Compile one armed cross-participant damage modifier (H5).
+
+        The kernel has always applied these; until the H5 stage the compiler
+        refused to build one, so every amp holder was priced by the receipt
+        walk with ``support_kind=damage_modifier`` as its named cause.  This
+        is that branch, and it reads the same template fields
+        :func:`action_from_event` reads off the same packet, because the two
+        builders must produce the same tuple from the same dict or the two
+        walks disagree about a mechanic — failure mode C of the incident.
+
+        **The one thing it refuses is the aura.**  Whether a second holder
+        of one mechanic arms a second modifier on one subject is a declared
+        per-mechanic fact (D-66) and the receipt composition answers it with
+        an :class:`~.amp.ArmingLedger` built once per composed fight.  The
+        compiled path has no such moment: the roster panel is compiled once
+        per search and the candidate's own actions once per evaluation, so
+        an ``IDEMPOTENT_AURA`` whose two holders sit on opposite sides of
+        that split has no single ledger to collide in.  Rather than compile
+        a second curse the walk would have dropped, the aura keeps a named
+        refusal of its own.  ``PER_HOLDER`` needs none: its key carries the
+        holder, so its armings can never collide across holders, and a
+        second arming by *one* holder is a re-arm the kernel's own window
+        refresh already owns.
+        """
+        source = str(template.get("source", ""))
+        declared = arming_stacking().get(source)
+        if declared is not None and declared[1] is HolderStacking.IDEMPOTENT_AURA:
+            raise UncompilableActionError(
+                receipt=f"modifier_aura_arming={source}",
+                source=source,
+            )
+        priority = support_transition_rank(template)
+        aidx = self.next_aidx
+        self.next_aidx += 1
+        target_id = str(template["target"])
+        time_value = float(template.get("time", 0.0))
+        self.actions.append(
+            SurvivalAction(
+                sort_key=action_key(time_value, priority, target_id, template),
+                time=time_value,
+                phase=priority,
+                kind=ActionKind.DAMAGE_MODIFIER,
+                subject=subject_i,
+                attacker=attacker_i,
+                aidx=aidx,
+                amount=max(0.0, float(template.get("amount", 0.0) or 0.0)),
+                duration=max(0.0, float(template.get("duration", 0.0) or 0.0)),
+                persistent=bool(template.get("persistent")),
+                multiplier=float(template.get("multiplier", 1.0) or 1.0),
+                damage_reduction=bool(template.get("damage_reduction")),
+                next_event_only=bool(template.get("next_event_only")),
+                armor_reduction_percent=float(
+                    template.get("armor_reduction_percent", 0.0) or 0.0
+                ),
+                mr_reduction_percent=float(
+                    template.get("mr_reduction_percent", 0.0) or 0.0
+                ),
+                resistance_type=str(template.get("resistance_type", "")),
+                # The packet names its holder as a participant id because
+                # that is what a support author knows; the kernel's owner
+                # skip wants the roster slot, and an owner outside this
+                # roster resolves to ``-1`` — "this packet declares no
+                # holder" — exactly as ``action_from_event`` resolves it.
+                holder=index_of.get(str(template.get("owner", "")), -1),
+                damage_classes=declared_class_set(
+                    template.get("damage_classes"), DamageClass
+                ),
+                attack_classes=declared_class_set(
+                    template.get("attack_classes"), AttackClass
+                ),
+                source_key=str(template.get("source_key", "")),
+                source=source,
+                event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
+                sequence=template.get("sequence"),
+                duration_set="duration" in template,
+            )
+        )
+        # An armed modifier heals and shields nobody, and it is still support
+        # the holder provided: the receipt path sums ``applied_amount`` into
+        # ``support_value`` for every non-damage support packet, amps
+        # included (H3 is the open question about whether it *should*, not
+        # about whether it does).  So the entry is recorded with
+        # ``is_heal=False``, which is what keeps the compiled per-attacker
+        # support value equal to the walk's and the healing output untouched.
+        self.support_entries.append((target_id, attacker_i, aidx, False))
+        self.staged_modifier = True
 
     def add_thorns(
         self,
@@ -1288,6 +1501,8 @@ __all__ = [
     "action_from_event",
     "compile_program",
     "grey_health_heal_action",
+    "modifier_delivery_receipt",
+    "pair_resistance_baselines",
     "program_key",
     "revive_candidate_actions",
 ]

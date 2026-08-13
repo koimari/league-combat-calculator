@@ -109,6 +109,8 @@ from .program.compile import (
     WalkCompiler,
     action_from_event,
     grey_health_heal_action,
+    modifier_delivery_receipt,
+    pair_resistance_baselines,
     revive_candidate_actions,
 )
 from .program.views.survival import survival_rows as _survival_rows
@@ -249,14 +251,15 @@ def _pair_packet(  # pylint: disable=too-many-arguments
     # the same post-mitigation event after adding its sourced resistance
     # delta.  A missing value is deliberately left absent: the survival
     # walk then refuses to invent a mitigation ratio for that packet.
-    baseline_fields = []
-    for field in ("effective_armor", "effective_mr"):
-        try:
-            baseline = float(result[field])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if math.isfinite(baseline):
-            baseline_fields.append((f"_baseline_{field}", baseline))
+    baseline_armor, baseline_mr = pair_resistance_baselines(result)
+    baseline_fields = [
+        (key, value)
+        for key, value in (
+            ("_baseline_effective_armor", baseline_armor),
+            ("_baseline_effective_mr", baseline_mr),
+        )
+        if value is not None
+    ]
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -2881,14 +2884,33 @@ def _score_with_search_context(
             )
         else:
             first_defender_id = context.main_pair_params[0][0].participant_id
-            support_scan_events = [
-                {
-                    **event,
-                    "target": first_defender_id,
-                    "_event_id": f"main:{first_defender_id}:{index}",
-                }
-                for index, event in enumerate(first_result.get("damage_events", []))
-            ]
+            # The same preview skip ``_pair_packet`` makes, on the same
+            # rows, so the two paths scan one stream.  A pair-engine row
+            # the registry declares THEORETICAL is a preview of a number
+            # the coupled walk owns (D-62); the receipt path's scan never
+            # saw one, and until the H5 stage this path's extra row was
+            # inert because every template it could author was refused at
+            # compilation.  With armed modifiers compiling it is not: a
+            # preview row is a damage event, and Carve arms one stack per
+            # damage event, so the compiled walk armed an eleventh stack
+            # the walk never armed.
+            #
+            # ``continue`` rather than a filtered comprehension, exactly
+            # as in ``_pair_packet``: ``index`` is the per-pair event id
+            # and re-numbering the survivors would move every id after
+            # the first preview.
+            scan_previewed = pair_preview_sources(first_result.get("breakdown") or {})
+            support_scan_events = []
+            for index, event in enumerate(first_result.get("damage_events", [])):
+                if str(event.get("source_key", "")) in scan_previewed:
+                    continue
+                support_scan_events.append(
+                    {
+                        **event,
+                        "target": first_defender_id,
+                        "_event_id": f"main:{first_defender_id}:{index}",
+                    }
+                )
             support_templates = _support_effect_templates(
                 main,
                 first_result,
@@ -3017,6 +3039,19 @@ def _score_with_search_context(
                 grey_health_heal_action(heal_time, source, amount, index, aidx)
             )
 
+    # An armed damage modifier restricts itself by attack class, and the
+    # engine's light tuple ledger carries no per-packet delivery metadata to
+    # evaluate that against.  The two halves can land in different compilers
+    # — an ally's curse in the invariant panel, the packets it amplifies in
+    # the candidate's own fresh result — so the question is asked of the
+    # assembled set, once, here (H5).
+    delivery_receipt = modifier_delivery_receipt(
+        (fresh, context.base_compiler, panel.sig)
+    )
+    if delivery_receipt is not None:
+        raise UncompilableActionError(
+            receipt=delivery_receipt, source="damage_modifier"
+        )
     actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
     actions = coalesce_darius_q_heals(actions)
     # Sourced revives (champion passives) author one candidate per incoming
