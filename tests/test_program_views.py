@@ -32,9 +32,11 @@ from src.calculator.program.views import (
     LeafWriter,
     ViewTag,
     breakdown,
+    receipt,
     score,
     serialize_leaf,
     survival,
+    tdd,
 )
 from src.calculator.trigger_stream import ProjectionStarvation
 

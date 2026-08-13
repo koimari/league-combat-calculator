@@ -38,7 +38,8 @@ is now the criterion's one.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields, replace
+from types import MappingProxyType
 from typing import Any
 
 from ..survival.actions import SurvivalAction
@@ -93,6 +94,30 @@ class AttackerOutcome:
 
 
 @dataclass(frozen=True, slots=True)
+class ObjectiveFold:
+    """The ten aggregates the objective block publishes, summed once.
+
+    They were ten inline sums inside the receipt's return literal, which is
+    where a total quietly counting a member it should not have counted is
+    least visible.  Folding them here is what lets the TDD view publish them
+    without adding: a view that sums is a second producer of the total it
+    claims to project, and two producers of one total is the incident's own
+    shape at the aggregate.
+    """
+
+    main_team_damage_before_death: float
+    enemy_team_damage_before_death: float
+    surviving_main_team: int
+    focus_damage_before_death: float
+    focus_support_value: float
+    focus_healing: float
+    main_team_effective_health: float
+    enemy_team_effective_health: float
+    total_support_value: float
+    total_healing_reduced: float
+
+
+@dataclass(frozen=True, slots=True)
 class WalkResult:
     """Everything one walk produced, frozen at the moment it finished.
 
@@ -118,18 +143,18 @@ class WalkResult:
     outcomes: tuple[AttackerOutcome, ...] = ()
     grey_health: Mapping[str, Any] | None = None
     timeline_coverage: Mapping[str, Any] | None = None
+    damage_events: tuple[Mapping[str, Any], ...] = ()
+    healing_events: tuple[Mapping[str, Any], ...] = ()
+    support_events: tuple[Mapping[str, Any], ...] = ()
+    utility_by_actor: Mapping[str, Any] = MappingProxyType({})
+    target_allocation: Mapping[str, Any] | None = None
+    objective: ObjectiveFold | None = None
 
     def action_count(self) -> int:
         """How many transitions this walk consumed — the one-walk counter."""
         return len(self.actions)
 
-    def projected(
-        self,
-        *,
-        outcomes: Sequence[AttackerOutcome] | None = None,
-        grey_health: Mapping[str, Any] | None = None,
-        timeline_coverage: Mapping[str, Any] | None = None,
-    ) -> "WalkResult":
+    def projected(self, **folds: Any) -> "WalkResult":
         """The same walk, carrying a fold the composition derived from it.
 
         A new record rather than a mutation: the result is frozen because a
@@ -137,18 +162,21 @@ class WalkResult:
         wearing a projection's name, and a fold that could edit it in place
         would be the same thing one step earlier.
 
-        Every argument defaults to "unchanged" rather than to "cleared", so a
-        caller adding one fold cannot silently drop another.
+        Only the named folds move, so a caller adding one cannot silently drop
+        another -- and a fold this record does not declare raises here rather
+        than being carried as an attribute the views would never find.
         """
+        unknown = sorted(set(folds) - _FOLD_FIELDS)
+        if unknown:
+            raise TypeError(
+                "the walk result declares no fold named " + ", ".join(unknown)
+            )
         return replace(
             self,
-            outcomes=self.outcomes if outcomes is None else tuple(outcomes),
-            grey_health=self.grey_health if grey_health is None else grey_health,
-            timeline_coverage=(
-                self.timeline_coverage
-                if timeline_coverage is None
-                else timeline_coverage
-            ),
+            **{
+                name: tuple(value) if name in _SEQUENCE_FOLDS else value
+                for name, value in folds.items()
+            },
         )
 
 
@@ -185,4 +213,21 @@ def walk(
     )
 
 
-__all__ = ["AttackerOutcome", "WalkResult", "walk"]
+# Every field a composition may hand back after the kernel returned.  Derived
+# from the record rather than listed, so a fold added to ``WalkResult`` is
+# settable the moment it exists and a typo in a caller is a raise rather than
+# a silently ignored keyword.
+_FOLD_FIELDS = frozenset(
+    field.name
+    for field in fields(WalkResult)
+    if field.name not in {"actions", "states", "coverage", "rung", "duration"}
+)
+
+# The folds that are sequences.  Frozen means frozen: a list handed in here
+# would leave the "result" mutable through the caller's own variable, which is
+# the one thing freezing it was for.
+_SEQUENCE_FOLDS = frozenset(
+    {"outcomes", "damage_events", "healing_events", "support_events"}
+)
+
+__all__ = ["AttackerOutcome", "ObjectiveFold", "WalkResult", "walk"]

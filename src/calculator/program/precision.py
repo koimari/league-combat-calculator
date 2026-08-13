@@ -130,26 +130,123 @@ _BREAKDOWN_ROUNDING: dict[str, int] = {
     "healing_output": 1,
 }
 
+# The receipt view's own leaves, one table per published block.  The block
+# prefix is load-bearing rather than decorative: ``amount`` is published at
+# one digit on a healing row and at six on a support row, and
+# ``grey_health_stored`` at one on a damage row and at six on a survival row.
+# A flat registry would have had to guess which caller meant which, so the
+# key is the leaf's path in the payload and the collision check below is what
+# turns a future guess into an import error.
+_EVENTS_ROUNDING: dict[str, int] = {
+    "events.time": 3,
+    "events.damage": 1,
+    "events.raw_damage": 1,
+    "events.pair_damage": 1,
+    "events.overkill": 1,
+    "events.maw_lifeline_omnivamp_activated": 3,
+    "events.threshold_shield_expires_at": 3,
+    "events.redirected_amount": 1,
+    "events.redirect_fraction": 6,
+    "events.incoming_damage_multiplier": 3,
+    "events.incoming_damage_reduction": 1,
+    "events.wound_duration": 3,
+    "events.wound_until": 3,
+    "events.grey_health_stored": 1,
+    "events.live_amp_bonus": 1,
+}
+
+_HEALING_EVENTS_ROUNDING: dict[str, int] = {
+    "healing_events.time": 3,
+    "healing_events.amount": 1,
+    "healing_events.raw_amount": 1,
+    "healing_events.applied_amount": 1,
+    "healing_events.overheal": 1,
+    "healing_events.temporary_health": 1,
+    "healing_events.temporary_health_expires_at": 3,
+    "healing_events.reduced_amount": 1,
+    "healing_events.healing_reduction_factor": 3,
+    "healing_events.ichorshield_generated": 1,
+    "healing_events.ichorshield_total": 1,
+}
+
+_SUPPORT_EVENTS_ROUNDING: dict[str, int] = {
+    "support_events.time": 3,
+    "support_events.amount": 6,
+    "support_events.applied_amount": 6,
+    "support_events.duration": 3,
+    "support_events.expires_at": 3,
+    "support_events.bonus_attack_speed_percent": 6,
+    "support_events.on_hit_magic_damage": 6,
+    "support_events.ability_power": 6,
+    "support_events.ability_haste": 6,
+    "support_events.bonus_move_speed_percent": 6,
+    "support_events.slow_percent": 6,
+    "support_events.chain_fraction": 6,
+    "support_events.multiplier": 6,
+    "support_events.cooldown": 6,
+    "support_events.charges_consumed": 6,
+    "support_events.beam_delay": 6,
+    "support_events.armor_reduction_percent": 6,
+    "support_events.mr_reduction_percent": 6,
+    "support_events.stack_count": 6,
+    "support_events.current_mana": 6,
+    "support_events.mana_threshold": 6,
+    "support_events.nearby_enemy_count": 6,
+    "support_events.multi_target_multiplier": 6,
+    "support_events.cooldown_until": 6,
+    "support_events.gold_amount": 6,
+    "support_events.ward_uses": 6,
+    "support_events.quest_threshold": 6,
+    "support_events.minion_kills": 6,
+}
+
+# The TDD view's leaves -- the objective block's totals.
+_OBJECTIVE_ROUNDING: dict[str, int] = {
+    "objective.main_team_damage_before_death": 1,
+    "objective.enemy_team_damage_before_death": 1,
+    "objective.focus_damage_before_death": 1,
+    "objective.focus_support_value": 1,
+    "objective.focus_healing": 1,
+    "objective.main_team_effective_health": 1,
+    "objective.enemy_team_effective_health": 1,
+    "objective.total_support_value": 1,
+    "objective.total_healing_reduced": 1,
+}
+
+
 ROUNDING_BY_VIEW: Mapping[str, Mapping[str, int]] = MappingProxyType(
     {
         "survival": MappingProxyType(_SURVIVAL_ROUNDING),
         "breakdown": MappingProxyType(_BREAKDOWN_ROUNDING),
+        "receipt": MappingProxyType(
+            {**_EVENTS_ROUNDING, **_HEALING_EVENTS_ROUNDING, **_SUPPORT_EVENTS_ROUNDING}
+        ),
+        "tdd": MappingProxyType(_OBJECTIVE_ROUNDING),
     }
 )
 
 # One flat lookup for :func:`digits_for`, asserted disjoint at import: two
 # views declaring one leaf name at two precisions would make the flat answer
 # depend on merge order, which is a coin toss wearing a registry's name.
-_COLLISIONS = set(_SURVIVAL_ROUNDING) & set(_BREAKDOWN_ROUNDING)
-if _COLLISIONS:  # pragma: no cover - a declaration defect, not a runtime one
-    raise ValueError(
-        "two views declare a precision for the same leaf: "
-        + ", ".join(sorted(_COLLISIONS))
-    )
-
-ROUNDING: Mapping[str, int] = MappingProxyType(
-    {**_SURVIVAL_ROUNDING, **_BREAKDOWN_ROUNDING}
+_TABLES = (
+    _SURVIVAL_ROUNDING,
+    _BREAKDOWN_ROUNDING,
+    _EVENTS_ROUNDING,
+    _HEALING_EVENTS_ROUNDING,
+    _SUPPORT_EVENTS_ROUNDING,
+    _OBJECTIVE_ROUNDING,
 )
+_FLAT: dict[str, int] = {}
+for _table in _TABLES:
+    _COLLISIONS = set(_FLAT) & set(_table)
+    if _COLLISIONS:  # pragma: no cover - a declaration defect, not a runtime one
+        raise ValueError(
+            "two views declare a precision for the same leaf: "
+            + ", ".join(sorted(_COLLISIONS))
+        )
+    _FLAT.update(_table)
+
+ROUNDING: Mapping[str, int] = MappingProxyType(_FLAT)
 
 
 class UnregisteredField(KeyError):

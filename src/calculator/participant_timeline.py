@@ -124,9 +124,10 @@ from .program.compile import (
     revive_candidate_actions,
 )
 from .program.views import breakdown as _breakdown_view
+from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
-from .program.walk import AttackerOutcome, walk as _walk
+from .program.walk import AttackerOutcome, ObjectiveFold, walk as _walk
 from .work_counters import Rung, WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
@@ -886,12 +887,12 @@ def _support_effect_templates(
     templates = []
     for effect_index, effect in enumerate(effects):
         target_ids, target_policy = _support_target_ids(attacker, effect, all_actors)
-        for target_index, target_id in enumerate(target_ids):
+        for target_index, recipient_id in enumerate(target_ids):
             templates.append(
                 {
                     **effect,
                     "attacker": attacker.participant_id,
-                    "target": target_id,
+                    "target": recipient_id,
                     "target_policy": target_policy,
                     "_event_id": str(
                         effect.get(
@@ -929,8 +930,8 @@ def _support_effect_templates(
         applied_self_id = (
             f"{raw_id}:{first_defender_id}" if first_defender_id else str(raw_id)
         )
-        for ally_index, target_id in enumerate(target_ids):
-            if target_id == attacker.participant_id:
+        for ally_index, recipient_id in enumerate(target_ids):
+            if recipient_id == attacker.participant_id:
                 continue
             templates.append(
                 {
@@ -940,7 +941,7 @@ def _support_effect_templates(
                     # phase and counts toward the attacker's healing output.
                     "kind": "heal",
                     "attacker": attacker.participant_id,
-                    "target": target_id,
+                    "target": recipient_id,
                     "target_policy": target_policy,
                     "_event_id": f"{applied_self_id}:ally:{ally_index}",
                     "_source_event_id": applied_self_id,
@@ -4134,554 +4135,55 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         )
         for actor in all_actors
     }
-    return {
-        "duration": float(params.fight_duration_seconds),
-        "participants": [
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "level": actor.level,
-                "stats": dict(actor.stats),
-                "items": [item.get("name", "") for item in actor.items],
-                "survival": survival[actor.participant_id],
-            }
+    # Every aggregate the objective block publishes, summed once here.  The
+    # TDD view republishes them at their declared precisions and adds
+    # nothing: a view that sums is a second producer of the total it claims
+    # to project, which is the incident's own shape at the aggregate.
+    objective = ObjectiveFold(
+        main_team_damage_before_death=sum(
+            row["total_damage"]
+            for row in public_breakdown
+            if row["team"] in {"main", "ally"}
+        ),
+        enemy_team_damage_before_death=sum(
+            row["total_damage"] for row in public_breakdown if row["team"] == "enemy"
+        ),
+        surviving_main_team=sum(
+            1
             for actor in all_actors
-        ],
-        "breakdown": public_breakdown,
-        "events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "target": event.get("target"),
-                "source": event.get("source_key", ""),
-                "damage_type": event.get("damage_type", ""),
-                "damage": round(float(event.get("damage", 0.0)), 1),
-                "raw_damage": round(
-                    float(event.get("raw_damage", event.get("damage", 0.0))), 1
-                ),
-                "pair_damage": round(
-                    float(event.get("pair_damage", event.get("damage", 0.0))), 1
-                ),
-                "overkill": round(float(event.get("overkill", 0.0)), 1),
-                "event_precision": event.get("event_precision", "exact"),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"sequence": int(event["sequence"])}
-                    if event.get("sequence") is not None
-                    else {}
-                ),
-                **({"reactive": True} if event.get("_reactive") else {}),
-                **(
-                    {"spell_shield_source": str(event["spell_shield_source"])}
-                    if event.get("spell_shield_source")
-                    else {}
-                ),
-                **(
-                    {"threshold_shield_triggered": True}
-                    if event.get("threshold_shield_triggered")
-                    else {}
-                ),
-                **(
-                    {
-                        "reactive_shield_triggered": dict(
-                            event["reactive_shield_triggered"]
-                        )
-                    }
-                    if event.get("reactive_shield_triggered")
-                    else {}
-                ),
-                **(
-                    {
-                        "maw_lifeline_omnivamp_activated": round(
-                            float(event["maw_lifeline_omnivamp_activated"]), 3
-                        )
-                    }
-                    if event.get("maw_lifeline_omnivamp_activated") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "threshold_shield_expires_at": round(
-                            float(event["threshold_shield_expires_at"]), 3
-                        )
-                    }
-                    if event.get("threshold_shield_expires_at") is not None
-                    else {}
-                ),
-                **(
-                    {"threshold_health_triggered": True}
-                    if event.get("threshold_health_triggered")
-                    else {}
-                ),
-                # A live-predicate amplifier that rode this packet.  It is
-                # published because the bonus is folded into the host row's
-                # damage rather than filed as a source of its own, and a
-                # number with no rule beside it is exactly what this campaign
-                # exists to stop shipping.
-                **(
-                    {
-                        "live_amp": {
-                            "mechanic": str(event["live_amp_source"]),
-                            "bonus": round(float(event["live_amp_bonus"]), 1),
-                        }
-                    }
-                    if event.get("live_amp_source")
-                    else {}
-                ),
-                **(
-                    {"execute_triggered": True}
-                    if event.get("execute_triggered")
-                    else {}
-                ),
-                **(
-                    {"redirected_amount": round(float(event["_redirected_amount"]), 1)}
-                    if event.get("_redirected_amount") is not None
-                    else {}
-                ),
-                **(
-                    {"redirected_from": str(event["_redirected_from"])}
-                    if event.get("_redirected_from")
-                    else {}
-                ),
-                **(
-                    {"redirect_fraction": round(float(event["_redirect_fraction"]), 6)}
-                    if event.get("_redirect_fraction") is not None
-                    else {}
-                ),
-                **(
-                    {"redirect_source": str(event["redirect_source"])}
-                    if event.get("redirect_source")
-                    else {}
-                ),
-                **(
-                    {"redirect_pre_mitigation": True}
-                    if event.get("redirect_pre_mitigation")
-                    else {}
-                ),
-                **(
-                    {"redirect_attributed_to": str(event["redirect_attributed_to"])}
-                    if event.get("redirect_attributed_to")
-                    else {}
-                ),
-                **(
-                    {"redirect_range_units": int(event["redirect_range_units"])}
-                    if event.get("redirect_range_units") is not None
-                    else {}
-                ),
-                **(
-                    {"redirect_skipped_reason": str(event["redirect_skipped_reason"])}
-                    if event.get("redirect_skipped_reason")
-                    else {}
-                ),
-                **(
-                    {
-                        "incoming_damage_multiplier": round(
-                            float(event["incoming_damage_multiplier"]), 3
-                        )
-                    }
-                    if event.get("incoming_damage_multiplier") is not None
-                    else {}
-                ),
-                **(
-                    {"incoming_damage_source": str(event["incoming_damage_source"])}
-                    if event.get("incoming_damage_source")
-                    else {}
-                ),
-                **(
-                    {
-                        "incoming_damage_reduction": round(
-                            float(event["incoming_damage_reduction"]), 1
-                        )
-                    }
-                    if event.get("incoming_damage_reduction") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "support_damage_multiplier": dict(
-                            event["support_damage_multiplier"]
-                        )
-                    }
-                    if event.get("support_damage_multiplier")
-                    else {}
-                ),
-                **(
-                    {
-                        "support_damage_reduction": dict(
-                            event["support_damage_reduction"]
-                        )
-                    }
-                    if event.get("support_damage_reduction")
-                    else {}
-                ),
-                **(
-                    {
-                        "support_resistance_reduction": list(
-                            event["support_resistance_reduction"]
-                        )
-                    }
-                    if event.get("support_resistance_reduction")
-                    else {}
-                ),
-                **(
-                    {"support_on_hit_magic": list(event["support_on_hit_magic"])}
-                    if event.get("support_on_hit_magic")
-                    else {}
-                ),
-                **(
-                    {"targeting": dict(event["targeting"])}
-                    if isinstance(event.get("targeting"), Mapping)
-                    else {}
-                ),
-                **(
-                    {"deferred_from": str(event["_deferred_from"])}
-                    if event.get("_deferred_from")
-                    else {}
-                ),
-                **(
-                    {"wound_source": str(event["_wound_source"])}
-                    if event.get("_wound_source")
-                    else {}
-                ),
-                **(
-                    {
-                        "wound_duration": round(float(event["grievous_duration"]), 3),
-                        "wound_until": round(
-                            float(
-                                event.get(
-                                    "_wound_until",
-                                    float(event.get("time", 0.0))
-                                    + float(event["grievous_duration"]),
-                                )
-                            ),
-                            3,
-                        ),
-                    }
-                    if event.get("grievous_duration") is not None
-                    else {}
-                ),
-                **(
-                    {"healing_reduction": dict(event["healing_reduction"])}
-                    if event.get("healing_reduction")
-                    else {}
-                ),
-                **(
-                    {"venom": dict(event["venom"])}
-                    if event.get("venom") is not None
-                    else {}
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-                **(
-                    {"grey_health_stored": round(float(event["grey_health_stored"]), 1)}
-                    if event.get("grey_health_stored") is not None
-                    else {}
-                ),
-            }
-            for event in public_events
-        ],
-        "healing_events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "source": event.get("source", ""),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_target": str(event["trigger_target"])}
-                    if event.get("trigger_target") is not None
-                    else {}
-                ),
-                "amount": round(float(event.get("amount", 0.0)), 1),
-                "raw_amount": round(
-                    float(event.get("raw_amount", event.get("amount", 0.0))), 1
-                ),
-                "applied_amount": round(
-                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
-                ),
-                "overheal": round(
-                    float(
-                        event.get(
-                            "overheal",
-                            max(
-                                0.0,
-                                float(
-                                    event.get(
-                                        "reduced_amount", event.get("amount", 0.0)
-                                    )
-                                )
-                                - float(
-                                    event.get(
-                                        "applied_amount", event.get("amount", 0.0)
-                                    )
-                                ),
-                            ),
-                        )
-                    ),
-                    1,
-                ),
-                "temporary_health": round(float(event.get("temporary_health", 0.0)), 1),
-                **(
-                    {
-                        "temporary_health_expires_at": round(
-                            float(event["temporary_health_expires_at"]), 3
-                        )
-                    }
-                    if event.get("temporary_health_expires_at") is not None
-                    else {}
-                ),
-                "reduced_amount": round(
-                    float(event.get("reduced_amount", event.get("amount", 0.0))), 1
-                ),
-                "healing_reduction_factor": round(
-                    float(event.get("healing_reduction_factor", 1.0)), 3
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-                **({"grey_health": True} if event.get("_grey_health") else {}),
-                **(
-                    {"charges": int(event["charges"])}
-                    if event.get("charges") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "ichorshield_generated": round(
-                            float(event["ichorshield_generated"]), 1
-                        )
-                    }
-                    if event.get("ichorshield_generated") is not None
-                    else {}
-                ),
-                **(
-                    {"ichorshield_total": round(float(event["ichorshield_total"]), 1)}
-                    if event.get("ichorshield_total") is not None
-                    else {}
-                ),
-            }
-            for event in public_healing_events
-        ],
-        "support_events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "target": event.get("target"),
-                "recipient": event.get("target"),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"source_event_id": str(event["_source_event_id"])}
-                    if event.get("_source_event_id") is not None
-                    else {}
-                ),
-                "source": event.get("source", ""),
-                "kind": event.get("kind", ""),
-                "amount": round(float(event.get("amount", 0.0)), 6),
-                "applied_amount": round(
-                    float(event.get("applied_amount", event.get("amount", 0.0))), 6
-                ),
-                # Present only on an arming a declared ``IDEMPOTENT_AURA``
-                # collapsed into an earlier holder's (D-66).  Absent
-                # everywhere else, so the key's presence *is* the statement
-                # and a zero applied amount never has to be interpreted.
-                **({"dedupe": event["dedupe"]} if event.get("dedupe") else {}),
-                "target_scope": event.get("target_scope", ""),
-                "target_policy": event.get("target_policy", ""),
-                **(
-                    {
-                        key: round(float(event[key]), 6)
-                        for key in (
-                            "bonus_attack_speed_percent",
-                            "on_hit_magic_damage",
-                            "ability_power",
-                            "ability_haste",
-                            "bonus_move_speed_percent",
-                            "slow_percent",
-                            "chain_fraction",
-                            "multiplier",
-                            "cooldown",
-                            "charges_consumed",
-                            "beam_delay",
-                            "armor_reduction_percent",
-                            "mr_reduction_percent",
-                            "stack_count",
-                            "current_mana",
-                            "mana_threshold",
-                            "nearby_enemy_count",
-                            "multi_target_multiplier",
-                            "cooldown_until",
-                            "gold_amount",
-                            "ward_uses",
-                            "quest_threshold",
-                            "minion_kills",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                **(
-                    {
-                        key: bool(event[key])
-                        for key in (
-                            "damage_reduction",
-                            "next_event_only",
-                            "all_sources",
-                            "cleanse",
-                            "persistent",
-                            "completion_granted",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                **(
-                    {"trigger": str(event["trigger"])}
-                    if event.get("trigger") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        key: str(event[key])
-                        for key in (
-                            "resistance_type",
-                            "owner",
-                            "range_assumption",
-                            "trigger_kind",
-                            "source_url",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                **(
-                    {"duration": round(float(event["duration"]), 3)}
-                    if event.get("duration") is not None
-                    else {}
-                ),
-                **(
-                    {"expires_at": round(float(event["expires_at"]), 3)}
-                    if event.get("expires_at") is not None
-                    else {}
-                ),
-                **(
-                    {"venom": dict(event["venom"])}
-                    if event.get("venom") is not None
-                    else {}
-                ),
-                **(
-                    {"source_revision_id": int(event["source_revision_id"])}
-                    if event.get("source_revision_id") is not None
-                    else {}
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-            }
-            for event in public_support_events
-        ],
-        "utility_outcomes": {
-            "contract": "utility_outcomes_v1",
-            "participants": {
-                actor.participant_id: utility_by_actor[actor.participant_id]
-                for actor in all_actors
-            },
-            "focus": utility_by_actor.get(focus_participant_id, {}),
-            "metric_note": (
-                "Utility dimensions are reported in their native units. The "
-                "calculator does not convert movement, cleanse, vision, or "
-                "economy into TDD or a guessed common scalar."
-            ),
-        },
-        "target_allocation": _target_allocation_receipt(
-            public_events, len(enemy_actors), public_breakdown
+            if actor.team in {"main", "ally"}
+            and survival[actor.participant_id]["survived_window"]
         ),
-        "objective": {
-            "main_team_damage_before_death": round(
-                sum(
-                    row["total_damage"]
-                    for row in public_breakdown
-                    if row["team"] in {"main", "ally"}
-                ),
-                1,
-            ),
-            "enemy_team_damage_before_death": round(
-                sum(
-                    row["total_damage"]
-                    for row in public_breakdown
-                    if row["team"] == "enemy"
-                ),
-                1,
-            ),
-            "surviving_main_team": sum(
-                1
-                for actor in all_actors
-                if actor.team in {"main", "ally"}
-                and survival[actor.participant_id]["survived_window"]
-            ),
-            "focus_participant_id": focus_participant_id,
-            "focus_damage_before_death": round(
-                float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0,
-                1,
-            ),
-            "focus_survival": focus_survival,
-            "focus_support_value": round(focus_support, 1),
-            "focus_utility_outcomes": utility_by_actor.get(focus_participant_id, {}),
-            "focus_healing": round(focus_healing, 1),
-            "main_team_effective_health": round(
-                sum(
-                    float(survival[actor.participant_id]["effective_health"])
-                    for actor in all_actors
-                    if actor.team in {"main", "ally"}
-                ),
-                1,
-            ),
-            "enemy_team_effective_health": round(
-                sum(
-                    float(survival[actor.participant_id]["effective_health"])
-                    for actor in all_actors
-                    if actor.team == "enemy"
-                ),
-                1,
-            ),
-            "total_support_value": round(sum(support_by_attacker.values()), 1),
-            "total_healing_reduced": round(
-                sum(float(state["healing_reduced"]) for state in survival.values()),
-                1,
-            ),
-        },
-        "timeline_coverage": combine_timeline_coverages(
-            coverage_reports,
-            target_count=len(coverage_reports),
+        focus_damage_before_death=(
+            float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0
         ),
-    }
+        focus_support_value=focus_support,
+        focus_healing=focus_healing,
+        main_team_effective_health=sum(
+            float(survival[actor.participant_id]["effective_health"])
+            for actor in all_actors
+            if actor.team in {"main", "ally"}
+        ),
+        enemy_team_effective_health=sum(
+            float(survival[actor.participant_id]["effective_health"])
+            for actor in all_actors
+            if actor.team == "enemy"
+        ),
+        total_support_value=sum(support_by_attacker.values()),
+        total_healing_reduced=sum(
+            float(state["healing_reduced"]) for state in survival.values()
+        ),
+    )
+    return _receipt_view.receipt(
+        program,
+        walk_result.projected(
+            damage_events=public_events,
+            healing_events=public_healing_events,
+            support_events=public_support_events,
+            utility_by_actor=utility_by_actor,
+            target_allocation=_target_allocation_receipt(
+                public_events, len(enemy_actors), public_breakdown
+            ),
+            objective=objective,
+        ),
+    )
