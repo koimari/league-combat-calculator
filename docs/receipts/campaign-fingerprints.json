@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_src_tree": "b2d419a6eabb30fa49c8f3da5616d774fea2bf86",
+  "captured_at_src_tree": "cb724d9a1e6247ce362c3796d628e1e638a2637c",
   "notes": [
     "The sole home of every golden shape count in the campaign. No plan document states one; every consumer reads this file.",
     "This receipt holds the ONE Phase 0A capture (R-10), re-read on the 0A tip at that phase barrier, plus the 0B phase-boundary reading beside it -- Phase 0's single re-capture of the three golden blocks (R-17, D-97) and the one refresh of every other block against the tree the six corrections produced. Every non-golden block below was measured on the tree recorded in captured_at_src_tree and on no other; each golden block additionally carries its own src_tree_sha, the tree its baseline file was captured on, and at this boundary the two agree. The mid-phase reading a668b91, the capture a0db656 and the 0A barrier refresh bbc0d5d are superseded in place, and the last notes list every value that moved with its cause. Re-reading is not re-capturing: no counter, residual, rung histogram, winner, score or golden count moved at either 0A refresh, which is the numeric evidence that 0A moved no number. 0B is the opposite by design: six semantic corrections, each declaring in advance which baseline leaves and which bench counters it would move, and this refresh is where those declarations are settled. Baselines and this receipt move only in receipt-only commits (R-32), and only the integration agent writes this file outside R-32's three carved-out keys (R-34).",
@@ -21,7 +21,8 @@
     "Moved at the 0B PHASE BOUNDARY, against the 0A barrier refresh bbc0d5d, with one line of cause each (R-34). The golden blocks moved in the two re-capture commits before this one and their causes are in the note above; everything below moved here. captured_at_src_tree e6fc3b1 -> 8cac3f5 -- the phase tip's src tree, six semantic corrections later. tests.collected 5149 -> 5435 -- 286 node ids across 0B, itemised in the tests note. bench.syndra_mandate_3champ.pair_run_fight_calls 1922 -> 3014, residual 330 -> 1422 and rungs {compiled: 546, receipt_walk_candidate: 229} -> {receipt_walk_candidate: 775} -- C1's declared routing move, enumerated in advance in docs/receipts/expected-golden-diff-C1.json with these exact three values: once the Mandate holder keeps dict rows its Command packet exists, a damage_modifier is categorically unrepresentable in the compiled score kernel (D-101, H5 descoped), so every candidate falls back to the receipt walk (D-69) and prices one pair fight per enemy per evaluation instead of none. Its public_evaluations, measured_proposals, score_memo_misses, winner and score did not move, which is what makes it a routing change rather than a search change. bench wall_best_of_5_ms 2138.0 -> 2158.0, 2056.9 -> 2113.5, 968.9 -> 999.1 and 1204.4 -> 2169.9, and no_compiled.wall_ms 3567.4 -> 3662.5, 3409.0 -> 3542.1, 1429.9 -> 1503.8 and 1609.3 -> 1741.1 -- machine noise on the first three (at most 3.1%) and the routing move on the fourth (+80%, the receipt walk's cost, and it lands within 1% of that scenario's own no-compiled wall, which is what a fully receipt-walked scenario should read); wall is a ratchet, never a pass criterion (R-28). alloc peak_bytes 251698 -> 257458, 553700 -> 560868, 219579 -> 220635 and 230830 -> 390164, with observed_spread_bytes now 63 on all four -- the three legacy rises are sub-2.3% and are C3's typed class frozensets riding every packet and every SurvivalAction; syndra_mandate_3champ's 69% is the same routing move, the receipt walk allocating a ledger where the compiled kernel allocated none. No allocation gate exists before Phase 4 S4 (R-28), and C5's allowlist already recorded the legacy rises as measured at the C4 tip. pylint gains six rows -- cast_dependency.py 10.0, champions/syndra.py 10.0, damage.py 9.708066581306017, pipeline.py 9.807280513918629, rotation_resolver.py 9.767441860465116, scenario.py 9.72972972972973 -- the files 0B touched that R-32 forbade their own commits to floor; and three floors rise, itemised in the pylint note. Nothing else moved: every counter family, residual, rung histogram, determinism verdict, counter spread, winner, score, truncated and void flag on all three legacy scenarios, every no_compiled residual and rung histogram, corpus.non_legacy_count and every provenance class are byte-identical to bbc0d5d, re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json', the same command with '--no-compiled --repeats 1', 'bench_coupled_optimizer.py --alloc --json' three times, 'pylint_ratchet.py --scores' over the 25 files, 'pytest -q', 'repin_corpus.py' and 'golden_snapshot.py compare' against both re-captured baselines.",
     "PHASE 3 BOUNDARY re-capture, coupled jurisdiction only (R-11, R-17, D-97). Phases 2, 1, 3 and 5 merged since the 0B boundary and the pair baseline did not move at any of them: 'golden_snapshot.py compare scripts/golden_baseline.json' reports 'snapshot identical' on this tip, so the pair jurisdiction is NOT re-captured here and the golden block keeps its 0B src_tree_sha, which is the tree its file was captured on. The Shadowflame allowlist -- the one Phase 3 slice permitted a pair diff -- measured zero on both baselines, so nothing licenses a pair capture either. Coupled half: 'capture-coupled' and 'capture-coupled --exact' absorb 104 differing leaves, 102 of which qualify under R-15, and every one of the 102 carries an oracle receipt whose leaf_path is that path literally (R-19), verified against 'compare --report' at the phase tip before either capture ran. The 102 are exactly the union of three committed allowlists: expected-golden-diff-3.8-coverage-flip.json 24, expected-golden-diff-P5-dependencies.json 14 and expected-golden-diff-P5-seed-syndra.json 64. The other two differing leaves are the two snapshot counters umbrella criterion 4 disowns to this file. Verdicts stand as the investigators wrote them: 79 new_value_correct, 15 old_value_correct and 8 both_wrong; the 23 dissents are adjudicated in the allowlists that carry them (3.8's 'dissents' block) and in escalated-defects-P5-retire.json, and five of them remain live defects that this re-capture makes silent in the compare -- which is why that artifact exists and why the integration report names them again.",
     "coupled_golden.leaves 14200 -> 14256 and numeric_leaves 8334 -> 8349, entries unchanged at 13, with one line of cause (R-34). The whole shape move is in three scenarios and no others -- syndra_derived_order_120 761 -> 780 leaves, syndra_derived_order_39 725 -> 743, syndra_derived_order_60 761 -> 780, numeric +5 each -- being Phase 5's seed retirement: the rotation receipt now derives what a hand seed used to state, so consume, setup, sources and the five aoe counts arrive as rows, and the five aoe counts are exactly the 15 numeric leaves. The dependency ledgers Phase 5's resolver publishes reach all thirteen scenarios but add leaves only where an edge exists: in the other ten every ledger is an empty list, which is a container and not a leaf. Phase 3's 3.8 coverage flip moves 24 item_coverage reason strings in place and moves no count. coupled_golden_exact moves no value at all -- its 82 leaves are byte-identical and only git_head and src_tree_sha changed in the file, which is the evidence that no computed number moved anywhere in the coupled snapshot. Both src_tree_sha fields 8cac3f5 -> b2d419a, the tree both captures read.",
-    "Moved at the PHASE 3 BOUNDARY refresh, against the 0B boundary reading 4bc1572, with one line of cause each (R-34). The two coupled baselines and their golden blocks moved in the commit before this one and their causes are the two notes above; everything below moved here. Four phases merged since 0B -- Phase 2's trigger bus, Phase 1's coverage evidence, Phase 3's behaviour rules and Phase 5's cast dependencies -- and the headline of this reading is what did NOT move: every counter family, the residual, the rung histogram, the winner, the score, the timeline_complete flag, the truncated and void flags and every no_compiled residual and rung histogram are byte-identical to 4bc1572 on all four scenarios, re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json' and the same command with '--no-compiled --repeats 1'. The optimizer does exactly the work it did before those four phases, and every determinism verdict is 'exact' with spread 0 again; only the cost of that work moved. captured_at_src_tree 8cac3f5 -> b2d419a -- the tip's src tree ('git rev-parse HEAD:src'), which agrees with both coupled blocks because the re-capture read this tree; the golden block's src_tree_sha deliberately lags it, because the pair baseline had nothing to absorb and was not re-captured, so that field still names the tree its own file was captured on. tests.collected 5435 -> 7104 -- 1669 node ids across the four phases, measured on the tip with 'pytest -q' rather than summed from commit bodies, with skipped and xfailed still 0, which is R-01 row 1's other half. frontier stops being empty and stops being deferred by rule: counters 1-4 are Phase 3's, produced by 'scripts/behavior_frontier.py --check' on this tip, and counters 5-7 stay absent because scripts/migration_frontier.py (Phase 4) does not exist. counter_4's bare 30 is the GROSS count of uninterpreted (family, lane) pairs; the two numbers Phase 3's criterion 4 is read against are pair_engine_net 0 and receipt_walk_net 0, the latter net of the 14 committed deferral rows umbrella Amendment B rules onto docs/behavior-frontier.json, which is where every exclusion, deferral and reason lives (D-40, R-36). bench wall_best_of_5_ms 2158.0 -> 3347.7, 2113.5 -> 3309.1, 999.1 -> 1457.6 and 2169.9 -> 4463.8, and no_compiled.wall_ms 3662.5 -> 6790.7, 3542.1 -> 6723.1, 1503.8 -> 2631.4 and 1741.1 -> 3589.1 -- a uniform 1.46x-2.06x on every scenario and both routings, which is a per-unit-work cost rather than a search change, because every counter beside it is identical. Profiled rather than guessed: 'bench_coupled_optimizer.py --profile --scenario mundo_3champ' reads item_behavior_catalog.behavior_rules at 142203 calls and 0.742 s cumulative inside a 3.831 s request, with registry_entries at 144744 calls inside it -- Phase 3's per-owner rule catalog consulted once per item lookup on the hot path, memoized per (owner, data_version) but not free to call. Wall is a ratchet and never a pass criterion (R-28), and no Phase 4 stage baseline exists yet to hold it against, so this refresh records it and the integration report escalates it as a Phase 4 finding rather than absorbing it. alloc peak_bytes 257458 -> 262196, 560868 -> 570394, 220635 -> 224655 and 390164 -> 394016 -- +1.0% to +1.8%, the same declaration layers allocating per evaluation, every rise far inside Phase 4 S4's 15% margin, which is not yet a gate; observed_spread_bytes 63 -> 0 on cassiopeia_3champ and 63 on the other three, this session's three captures rather than 4bc1572's, and the alloc note above already states that field is a within-session figure and not a tolerance. pylint gains 172 rows and raises 14 floors, and no recorded floor fell -- 'pylint_ratchet.py --check' was green on the 25 old rows before this refresh. The row set is the pylint note's own rule re-read on this tip, 'git diff --name-only 584071e..HEAD -- src/*.py scripts/*.py', which is 197 files: 172 of them are files some campaign slice touched and R-01 row 7 was not guarding. The 14 rises are recorded at their new value, so a later commit landing any of them back at its 0B score fails a check that was green before: scripts/golden_snapshot.py, src/app.py, ability_spec.py (now a perfect 10.0), damage.py, data_registry.py, item_support_effects.py, optimizer.py, participant_timeline.py, pipeline.py, rotation_resolver.py, survival/actions.py, survival/compile.py, survival/receipt_state.py and survival/transitions.py. One cost is disclosed rather than left to be discovered: --check runs one pylint subprocess per row, so R-01 row 7 now takes minutes rather than seconds, and that is the price of D-99's per-file rule over 197 touched files. corpus.non_legacy_count stays 18 -- 'scripts/repin_corpus.py' re-probed all eighteen receipts against this tip's engine and rewrote nothing, because the anchor is the merge-base src tree (R-21) and no receipt stopped reproducing; the re-probe is the verification, the unchanged file is its result. Nothing else in this file moved: every counter family value, prior, tolerance, provenance class, rung histogram, determinism verdict, spread, winner, score, truncated flag, no_compiled residual and rung histogram, demonstrated_red entry and the whole golden block are byte-identical to 4bc1572."
+    "Moved at the PHASE 3 BOUNDARY refresh, against the 0B boundary reading 4bc1572, with one line of cause each (R-34). The two coupled baselines and their golden blocks moved in the commit before this one and their causes are the two notes above; everything below moved here. Four phases merged since 0B -- Phase 2's trigger bus, Phase 1's coverage evidence, Phase 3's behaviour rules and Phase 5's cast dependencies -- and the headline of this reading is what did NOT move: every counter family, the residual, the rung histogram, the winner, the score, the timeline_complete flag, the truncated and void flags and every no_compiled residual and rung histogram are byte-identical to 4bc1572 on all four scenarios, re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json' and the same command with '--no-compiled --repeats 1'. The optimizer does exactly the work it did before those four phases, and every determinism verdict is 'exact' with spread 0 again; only the cost of that work moved. captured_at_src_tree 8cac3f5 -> b2d419a -- the tip's src tree ('git rev-parse HEAD:src'), which agrees with both coupled blocks because the re-capture read this tree; the golden block's src_tree_sha deliberately lags it, because the pair baseline had nothing to absorb and was not re-captured, so that field still names the tree its own file was captured on. tests.collected 5435 -> 7104 -- 1669 node ids across the four phases, measured on the tip with 'pytest -q' rather than summed from commit bodies, with skipped and xfailed still 0, which is R-01 row 1's other half. frontier stops being empty and stops being deferred by rule: counters 1-4 are Phase 3's, produced by 'scripts/behavior_frontier.py --check' on this tip, and counters 5-7 stay absent because scripts/migration_frontier.py (Phase 4) does not exist. counter_4's bare 30 is the GROSS count of uninterpreted (family, lane) pairs; the two numbers Phase 3's criterion 4 is read against are pair_engine_net 0 and receipt_walk_net 0, the latter net of the 14 committed deferral rows umbrella Amendment B rules onto docs/behavior-frontier.json, which is where every exclusion, deferral and reason lives (D-40, R-36). bench wall_best_of_5_ms 2158.0 -> 3347.7, 2113.5 -> 3309.1, 999.1 -> 1457.6 and 2169.9 -> 4463.8, and no_compiled.wall_ms 3662.5 -> 6790.7, 3542.1 -> 6723.1, 1503.8 -> 2631.4 and 1741.1 -> 3589.1 -- a uniform 1.46x-2.06x on every scenario and both routings, which is a per-unit-work cost rather than a search change, because every counter beside it is identical. Profiled rather than guessed: 'bench_coupled_optimizer.py --profile --scenario mundo_3champ' reads item_behavior_catalog.behavior_rules at 142203 calls and 0.742 s cumulative inside a 3.831 s request, with registry_entries at 144744 calls inside it -- Phase 3's per-owner rule catalog consulted once per item lookup on the hot path, memoized per (owner, data_version) but not free to call. Wall is a ratchet and never a pass criterion (R-28), and no Phase 4 stage baseline exists yet to hold it against, so this refresh records it and the integration report escalates it as a Phase 4 finding rather than absorbing it. alloc peak_bytes 257458 -> 262196, 560868 -> 570394, 220635 -> 224655 and 390164 -> 394016 -- +1.0% to +1.8%, the same declaration layers allocating per evaluation, every rise far inside Phase 4 S4's 15% margin, which is not yet a gate; observed_spread_bytes 63 -> 0 on cassiopeia_3champ and 63 on the other three, this session's three captures rather than 4bc1572's, and the alloc note above already states that field is a within-session figure and not a tolerance. pylint gains 172 rows and raises 14 floors, and no recorded floor fell -- 'pylint_ratchet.py --check' was green on the 25 old rows before this refresh. The row set is the pylint note's own rule re-read on this tip, 'git diff --name-only 584071e..HEAD -- src/*.py scripts/*.py', which is 197 files: 172 of them are files some campaign slice touched and R-01 row 7 was not guarding. The 14 rises are recorded at their new value, so a later commit landing any of them back at its 0B score fails a check that was green before: scripts/golden_snapshot.py, src/app.py, ability_spec.py (now a perfect 10.0), damage.py, data_registry.py, item_support_effects.py, optimizer.py, participant_timeline.py, pipeline.py, rotation_resolver.py, survival/actions.py, survival/compile.py, survival/receipt_state.py and survival/transitions.py. One cost is disclosed rather than left to be discovered: --check runs one pylint subprocess per row, so R-01 row 7 now takes minutes rather than seconds, and that is the price of D-99's per-file rule over 197 touched files. corpus.non_legacy_count stays 18 -- 'scripts/repin_corpus.py' re-probed all eighteen receipts against this tip's engine and rewrote nothing, because the anchor is the merge-base src tree (R-21) and no receipt stopped reproducing; the re-probe is the verification, the unchanged file is its result. Nothing else in this file moved: every counter family value, prior, tolerance, provenance class, rung histogram, determinism verdict, spread, winner, score, truncated flag, no_compiled residual and rung histogram, demonstrated_red entry and the whole golden block are byte-identical to 4bc1572.",
+    "PHASE 4 BOUNDARY refresh, non-golden blocks only, against the Phase 3 boundary reading, with one line of cause each (R-34). What did NOT move is the headline and it is a numeric statement, not a claim: public_evaluations, measured_proposals, score_memo_misses, the winner, the score, timeline_complete, the truncated and void flags, every determinism verdict ('exact', spread 0 over five isolated repeats), every no_compiled residual and rung histogram, corpus.non_legacy_count, the alloc block, the pylint block and every provenance class are byte-identical to the Phase 3 boundary reading on all four scenarios -- re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json', the same command with '--no-compiled', 'pylint_ratchet.py --check', 'pytest -q' and 'repin_corpus.py --check'. Phase 4 changed how the optimizer's work is routed and not how much of it there is. bench.pair_run_fight_calls 2735 -> 2727, 3127 -> 3118, 1446 -> 1424 and 3014 -> 1690, with residual 87 -> 79, 28 -> 19, 34 -> 12 and 1422 -> 98 and the rung histograms moving 4, 3, 11 and 662 candidates from receipt_walk_candidate to compiled -- the H5 stage's compiled-lane flip, whose own receipt (docs/receipts/expected-golden-diff-P4-S7H5-kernel.json) declared in advance both the direction and the ceiling: 'at most' 17 / 13 / 16 / 670 candidates per scenario, being the subset of each scenario's fallbacks whose named receipt was support_kind=damage_modifier, and all four moves land inside it. The same receipt declared public_evaluations, measured_proposals, score_memo_misses, winner and score unchanged, and all five are. syndra_mandate_3champ is the scenario R-27 added for exactly this: 1422 was the number the campaign carried 'for the life of H5' and H5's life ended at that stage. bench wall_best_of_5_ms 3347.7 -> 3800.8, 3309.1 -> 3796.6, 1457.6 -> 1591.1 and 4463.8 -> 2159.3, and no_compiled.wall_ms 6790.7 -> 7429.4, 6723.1 -> 7790.0, 2631.4 -> 2811.8 and 3589.1 -> 3992.6 -- wall is a ratchet and never a pass criterion (R-28), and the gate it is actually read against is wall{stage}, which this refresh does not touch: P4-S10's ceiling is 4156.6 ms on cassiopeia_5champ and this session reads 3796.6. The one large move is syndra_mandate_3champ's -51.6%, the same routing change the counters record. tests.collected 7104 -> 7838, measured on the tip with 'pytest -q --collect-only' rather than summed from commit bodies, with skipped and xfailed still 0 -- this is the re-pin docs/receipts/escalated-defects-P4-S10.json's fifth entry named as its one exit, and that entry retires in the same commit with its gate inverted. captured_at_src_tree b2d419a -> cb724d9 -- the tip's src tree ('git rev-parse HEAD:src'). THE THREE GOLDEN BLOCKS DO NOT MOVE HERE and their src_tree_sha fields deliberately lag captured_at_src_tree, for a reason this note must not leave to be discovered: the Phase 4 boundary re-capture has not happened. 'compare scripts/golden_baseline.json' reports 'snapshot identical', so the pair jurisdiction has nothing to absorb (the same case as the Phase 3 boundary, where the golden block also kept its own tree). The coupled jurisdiction has 145 differing leaves and 127 qualifying ones, and R-19 forbids the re-capture while 60 of them lack an oracle receipt certifying the value it would pin: the population is enumerated, dated and gated at docs/receipts/escalated-defects-P4-boundary.json. So coupled_golden and coupled_golden_exact still describe the files they name, which is the property tests/test_golden_snapshot.py::TestFingerprintsReceipt asserts, and the day the investigator pass lands, the re-capture commit moves those blocks and this note gets its successor."
   ],
   "provenance": {
     "golden": "VERIFIED",
@@ -75,21 +76,21 @@
         "prior": 1249
       },
       "pair_run_fight_calls": {
-        "value": 2735,
+        "value": 2727,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 2735
       },
       "residual": {
-        "value": 87,
+        "value": 79,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 87
       },
       "rungs": {
         "value": {
-          "compiled": 1074,
-          "receipt_walk_candidate": 175
+          "compiled": 1078,
+          "receipt_walk_candidate": 171
         },
         "provenance": "VERIFIED",
         "tolerance": 0
@@ -107,7 +108,7 @@
       },
       "score": 4003.1,
       "wall_best_of_5_ms": {
-        "value": 3347.7,
+        "value": 3800.8,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -134,7 +135,7 @@
         "rungs": {
           "receipt_walk_gate": 1249
         },
-        "wall_ms": 6790.7
+        "wall_ms": 7429.4
       }
     },
     "cassiopeia_5champ": {
@@ -157,21 +158,21 @@
         "prior": 967
       },
       "pair_run_fight_calls": {
-        "value": 3127,
+        "value": 3118,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 3127
       },
       "residual": {
-        "value": 28,
+        "value": 19,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 28
       },
       "rungs": {
         "value": {
-          "compiled": 833,
-          "receipt_walk_candidate": 134
+          "compiled": 836,
+          "receipt_walk_candidate": 131
         },
         "provenance": "VERIFIED",
         "tolerance": 0
@@ -189,7 +190,7 @@
       },
       "score": 5010.8,
       "wall_best_of_5_ms": {
-        "value": 3309.1,
+        "value": 3796.6,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -216,7 +217,7 @@
         "rungs": {
           "receipt_walk_gate": 967
         },
-        "wall_ms": 6723.1
+        "wall_ms": 7790.0
       }
     },
     "mundo_3champ": {
@@ -239,21 +240,21 @@
         "prior": 577
       },
       "pair_run_fight_calls": {
-        "value": 1446,
+        "value": 1424,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 1446
       },
       "residual": {
-        "value": 34,
+        "value": 12,
         "provenance": "VERIFIED",
         "tolerance": 0,
         "prior": 34
       },
       "rungs": {
         "value": {
-          "compiled": 489,
-          "receipt_walk_candidate": 88
+          "compiled": 500,
+          "receipt_walk_candidate": 77
         },
         "provenance": "VERIFIED",
         "tolerance": 0
@@ -271,7 +272,7 @@
       },
       "score": 3305.0,
       "wall_best_of_5_ms": {
-        "value": 1457.6,
+        "value": 1591.1,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -298,7 +299,7 @@
         "rungs": {
           "receipt_walk_gate": 577
         },
-        "wall_ms": 2631.4
+        "wall_ms": 2811.8
       }
     },
     "syndra_mandate_3champ": {
@@ -318,18 +319,19 @@
         "tolerance": 0
       },
       "pair_run_fight_calls": {
-        "value": 3014,
+        "value": 1690,
         "provenance": "VERIFIED",
         "tolerance": 0
       },
       "residual": {
-        "value": 1422,
+        "value": 98,
         "provenance": "VERIFIED",
         "tolerance": 0
       },
       "rungs": {
         "value": {
-          "receipt_walk_candidate": 775
+          "compiled": 662,
+          "receipt_walk_candidate": 113
         },
         "provenance": "VERIFIED",
         "tolerance": 0
@@ -347,7 +349,7 @@
       },
       "score": 4642.3,
       "wall_best_of_5_ms": {
-        "value": 4463.8,
+        "value": 2159.3,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -374,7 +376,7 @@
         "rungs": {
           "receipt_walk_gate": 775
         },
-        "wall_ms": 3589.1
+        "wall_ms": 3992.6
       }
     }
   },
@@ -561,7 +563,7 @@
     }
   },
   "tests": {
-    "collected": 7104,
+    "collected": 7838,
     "skipped": 0,
     "xfailed": 0
   },

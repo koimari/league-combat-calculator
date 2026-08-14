@@ -9,20 +9,21 @@ somebody authors ``CcScope``, the matching test goes red -- which is the
 point: an entry retires *with* the inversion of its own test, never by being
 deleted.
 
-One entry has since done exactly that.  S10 unified the compiler's two row
-readers after an R-35 verifier reported criterion 2 undischarged on them,
-and the entry moved to ``retired`` carrying what the lane measured; the test
-that reproduced it is inverted below rather than removed, so the artifact
-and the tree still say the same thing about a row whose answer changed.
+Two entries have since done exactly that.  S10 unified the compiler's two
+row readers after an R-35 verifier reported criterion 2 undischarged on
+them; and the Phase 4 boundary integration re-pinned ``tests.collected``,
+which is the one exit the second entry named.  Both moved to ``retired``
+carrying what the lane measured, and the tests that reproduced them are
+inverted below rather than removed, so the artifact and the tree still say
+the same thing about a row whose answer changed.
 
-Two of the five open entries began as deletion-frontier rows cleanup cannot
-close; the other three are gaps a later reader found in what S10 shipped --
-an instrument that holds one scenario set while a criterion names another, a
-fallback reason that is required at construction and published nowhere, and
-R-01 row 1's pinned count sitting hundreds of tests behind the suite.  What
-the five have in common is not their subject: it is that closing any of them
-is a write outside this lane's ownership -- one of R-32's five baselines, or
-L0's harness contract.
+Two of the four open entries began as deletion-frontier rows cleanup cannot
+close; the other two are gaps a later reader found in what S10 shipped -- an
+instrument that holds one scenario set while a criterion names another, and
+a fallback reason that is required at construction and published nowhere.
+What the four have in common is not their subject: it is that closing any of
+them is a write outside this lane's ownership -- one of R-32's five
+baselines, or L0's harness contract.
 """
 
 from __future__ import annotations
@@ -68,7 +69,6 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
         "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
         "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
-        "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
     ]
 
 
@@ -76,7 +76,8 @@ def test_a_retired_entry_says_how_it_closed_and_what_gates_it_now() -> None:
     """Retirement is a record, not a deletion — the artifact's own rule."""
     retired = receipt()["retired"]
     assert [entry["id"] for entry in retired] == [
-        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
+        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names",
+        "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
     ]
     for entry in retired:
         assert entry["retired"] and entry["retired_by"]
@@ -298,21 +299,21 @@ def test_the_counter_sink_declares_no_field_a_reason_could_go_in() -> None:
 # --- R-01 row 1's pinned half ------------------------------------------------
 
 
-def test_the_pinned_collected_count_is_still_the_one_the_entry_names() -> None:
-    """The entry's reproducer, and its own expiry.
+def test_the_pinned_collected_count_moved_off_the_number_the_entry_named() -> None:
+    """The inversion of that entry's reproducer, kept rather than deleted.
 
-    R-01 row 1's second half compares ``collected`` against a pinned count,
-    and that pin is the integration agent's under R-32 -- an implementation
-    lane may not move it. So the lane's obligation is to keep the gap
-    *visible*, which means the entry names the pinned value and this asserts
-    the file still holds it. The day the integration agent re-pins, this goes
-    red and the entry has to retire with the number that was written, which
-    is the inversion the entry declares.
+    While the entry stood, this asserted ``tests.collected`` was still the
+    stale ``pinned_value`` -- the lane's way of keeping a gap it could not
+    close visible. The Phase 4 boundary integration re-pinned the count, so
+    the assertion is inverted here in the same commit that retired the entry:
+    the pin is no longer the number the entry named, and the retired record
+    still carries what it was. Deleting the test would have closed the entry
+    by forgetting it.
     """
     entry = next(
-        defect
-        for defect in receipt()["defects"]
-        if defect["id"]
+        record
+        for record in receipt()["retired"]
+        if record["id"]
         == "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale"
     )
     fingerprints = json.loads(
@@ -321,9 +322,9 @@ def test_the_pinned_collected_count_is_still_the_one_the_entry_names() -> None:
         )
     )
     tests_block = fingerprints["tests"]
-    assert tests_block["collected"] == entry["pinned_value"]
-    # The half of the row that is live: a test quietly becoming a skip still
-    # fails, because both of these are pinned at zero and still are.
+    assert tests_block["collected"] != entry["pinned_value"]
+    assert tests_block["collected"] == entry["re_pinned_value"]
+    # The half of the row that was live all along: a test quietly becoming a
+    # skip still fails, because both of these are pinned at zero and still are.
     assert tests_block["skipped"] == 0
     assert tests_block["xfailed"] == 0
-    assert entry["observed_value"] > entry["pinned_value"]

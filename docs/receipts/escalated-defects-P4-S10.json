@@ -68,25 +68,6 @@
       "for_the_phase_owner": "Two exits. Either L0 adds a reason-bearing field to the sink and the harness (a `Counter[str]` of receipts beside `rungs` reads naturally and needs no baseline move, since fingerprints pins counter *values* and not the report's key set), or the phase records that the reason is an authoring-time invariant only -- constructible, required, never published -- and criterion 16's 'with a named receipt' is read at the decision rather than at the histogram, which is how `tests/test_amp_kernel.py` already reads it.",
       "reproducer": "`grep -rn 'reason_of' src/` returns the definition in `program/rung.py` and no call site. `work_counters.WorkCounterSink` declares five fields and none of them holds a string.",
       "reproducer_after_closure": "Inverted: `src/` reads `reason_of` (or the decision's `reason`) at the recording site, and the sink declares the field it writes it to."
-    },
-    {
-      "id": "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
-      "dated": "2026-08-14",
-      "raised_by": "the S10 lane, carried forward from dbb6517's commit body so it stops being commit-body-only",
-      "what": "R-01 row 1 has two halves -- 'green' and '`collected` = the pinned count + declared new'. Only the first is checkable at HEAD. `docs/receipts/campaign-fingerprints.json` pins `tests.collected` at 7104; `pytest -q` reports 7767. Every S10 commit carries its own `pytest N passed` line, so the per-commit delta is on the record, but the pin itself has not moved since it was captured and no gate compares the two.",
-      "pinned_value": 7104,
-      "observed_value": 7767,
-      "observed_at": "2026-08-14, HEAD of the S10 repair pass",
-      "why": "`campaign-fingerprints.json` is one of R-32's five baselines. The rule's carve-out lets the owning lane write `wall{stage}`, `alloc{scenario}` and `demonstrated_red{gate}` and nothing else; `tests.collected` is not among them, so an implementation lane moving it would be exactly the baseline-inside-a-semantic-commit move R-17 and D-97 forbid.",
-      "what_is_nevertheless_true": [
-        "The suite half of row 1 is green and measured at every commit: 7767 passed, 0 skipped, 0 xfailed.",
-        "`skipped` and `xfailed` are pinned at 0 and are still 0, so the half of the row that catches 'a test quietly becoming a skip' is live.",
-        "The delta is accounted for commit by commit: the S10 chain runs 7721 -> 7728 -> 7731 -> 7743 -> 7748 -> 7753 -> 7754 -> 7757, and this repair pass adds ten to reach 7767."
-      ],
-      "why_this_lane_may_not_fix_it": "R-32: baselines never move inside a semantic commit, and `campaign-fingerprints.json`'s non-carved-out keys are the integration agent's. The lane that would have to re-pin is X, on the integrated tip, per R-34.",
-      "for_the_phase_owner": "One exit: the integration agent re-pins `tests.collected` on the integrated tip with one line of cause, as R-34 already requires of every moved value. Nothing else needs deciding -- this entry exists so the gap is an artifact rather than a sentence in a commit body that the next re-capture absorbs.",
-      "reproducer": "`python -c \"import json;print(json.load(open('docs/receipts/campaign-fingerprints.json'))['tests'])\"` prints collected 7104, and `pytest -q` prints 7767 passed. The gate below asserts the pinned value is still the one this entry names.",
-      "reproducer_after_closure": "Inverted: the pinned `tests.collected` no longer equals this entry's `pinned_value`, which fails the gate and forces the entry to retire with the count the integration agent wrote."
     }
   ],
   "retired": [
@@ -109,6 +90,31 @@
       "how_it_closed": "`add_engine_result` now reads both row shapes in ONE loop. The two readers were never duplicated *logic*, which is what the entry said -- but they were fifty duplicated *lines* of tail apiece, and that tail is now written once. What survives is a two-arm read of the two representations, in the one place they differ: a light row spells its time at `row[0][0]` and a dict row at `row['time']`. Each of the four differences the entry listed is preserved exactly and named at the line that preserves it: the light shape skips `unrepresentable_damage_receipt` (the fields it reads are the enrichment a light row omits, and `ledger_projection` selects that shape only where the adequacy conditions already exclude what the check catches); it sets `unclassified_delivery`; its `basic_attack` is False so only the explicit auto stream triggers Thorns; and it reaches the heal loop as a proven no-op rather than by an early return, because `pipeline.py` sets `self_healing_events = []` on the same three lines that set `damage_events_tuple`.",
       "what_the_lane_measured": "The reason the entry gave for refusing was performance, and performance is measurable. R-01 row 8 on all four bench scenarios: every counter family, every residual, every winner and every score identical to S10's declared values (cassiopeia_5champ 1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131). R-01 row 11 (`--no-compiled`) exits 0 with an empty `routing_divergences`. Wall best-of-3 isolated on cassiopeia_5champ is 3834.6 ms against this stage's declared baseline of 3778.7 ms and its ceiling of 4156.6 ms -- 1.5% over the baseline, and the verifier independently measured 3827.5 ms on the parent tree, so the unification's own share is 0.2%, which is repeat noise. Golden is byte-identical and the coupled compare reports the same 145 allowlisted differences, path for path.",
       "gate_after_closure": "tests/test_program_deletion_frontier.py::test_the_compiler_reads_its_two_row_shapes_in_one_loop -- one loop over the damage events, one call each to the constructor, the wound tuple and the live-amp lookup. Two loops show two of each, which is the inversion this entry's own rule requires."
+    },
+    {
+      "id": "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
+      "dated": "2026-08-14",
+      "raised_by": "the S10 lane, carried forward from dbb6517's commit body so it stops being commit-body-only",
+      "what": "R-01 row 1 has two halves -- 'green' and '`collected` = the pinned count + declared new'. Only the first is checkable at HEAD. `docs/receipts/campaign-fingerprints.json` pins `tests.collected` at 7104; `pytest -q` reports 7767. Every S10 commit carries its own `pytest N passed` line, so the per-commit delta is on the record, but the pin itself has not moved since it was captured and no gate compares the two.",
+      "pinned_value": 7104,
+      "observed_value": 7767,
+      "observed_at": "2026-08-14, HEAD of the S10 repair pass",
+      "why": "`campaign-fingerprints.json` is one of R-32's five baselines. The rule's carve-out lets the owning lane write `wall{stage}`, `alloc{scenario}` and `demonstrated_red{gate}` and nothing else; `tests.collected` is not among them, so an implementation lane moving it would be exactly the baseline-inside-a-semantic-commit move R-17 and D-97 forbid.",
+      "what_is_nevertheless_true": [
+        "The suite half of row 1 is green and measured at every commit: 7767 passed, 0 skipped, 0 xfailed.",
+        "`skipped` and `xfailed` are pinned at 0 and are still 0, so the half of the row that catches 'a test quietly becoming a skip' is live.",
+        "The delta is accounted for commit by commit: the S10 chain runs 7721 -> 7728 -> 7731 -> 7743 -> 7748 -> 7753 -> 7754 -> 7757, and this repair pass adds ten to reach 7767."
+      ],
+      "why_this_lane_may_not_fix_it": "R-32: baselines never move inside a semantic commit, and `campaign-fingerprints.json`'s non-carved-out keys are the integration agent's. The lane that would have to re-pin is X, on the integrated tip, per R-34.",
+      "for_the_phase_owner": "One exit: the integration agent re-pins `tests.collected` on the integrated tip with one line of cause, as R-34 already requires of every moved value. Nothing else needs deciding -- this entry exists so the gap is an artifact rather than a sentence in a commit body that the next re-capture absorbs.",
+      "reproducer": "`python -c \"import json;print(json.load(open('docs/receipts/campaign-fingerprints.json'))['tests'])\"` prints collected 7104, and `pytest -q` prints 7767 passed. The gate below asserts the pinned value is still the one this entry names.",
+      "reproducer_after_closure": "Inverted: the pinned `tests.collected` no longer equals this entry's `pinned_value`, which fails the gate and forces the entry to retire with the count the integration agent wrote.",
+      "retired": "2026-08-14",
+      "retired_by": "the Phase 4 boundary integration, in the receipt-only commit that re-pinned tests.collected in docs/receipts/campaign-fingerprints.json",
+      "re_pinned_value": 7838,
+      "how_it_closed": "Exactly the one exit the entry named: the integration agent re-pinned `tests.collected` on the tip with one line of cause (R-34), which is a write to one of R-32's five baselines and therefore never the S10 lane's. The pin moved 7104 -> 7838 and `skipped` and `xfailed` stayed 0, so both halves of R-01 row 1 now read against a number the tip reproduces.",
+      "what_the_lane_measured": "`pytest -q` on the boundary tip: 7838 collected, 7838 passed, 0 skipped, 0 xfailed. The entry was raised at 7767 against a pin of 7104; the difference between 7767 and the re-pinned figure is the boundary's own two commits, whose new node ids are declared in their bodies.",
+      "gate_after_closure": "tests/test_escalated_defects_p4_s10.py::test_the_pinned_collected_count_moved_off_the_number_the_entry_named -- the inversion of the entry's own reproducer: the pin is asserted to be no longer `pinned_value` and to be exactly `re_pinned_value`, with skipped and xfailed still 0."
     }
   ]
 }
