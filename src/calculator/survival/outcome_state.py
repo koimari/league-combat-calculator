@@ -220,6 +220,7 @@ class OutcomeLedger:
         "_fields",
         "_adjustments",
         "_status",
+        "_unidentified_applied",
     )
 
     records_event_fields = True
@@ -258,6 +259,7 @@ class OutcomeLedger:
         self._adjustments: dict[int, list[Adjustment]] = {}
         self._status: dict[int, str] = {}
         self._applied_by: dict[tuple[Any, ...], int] = {}
+        self._unidentified_applied: list[int] = []
 
     # -- observation -------------------------------------------------------
     def write(self, action: SurvivalAction, **fields: Any) -> None:
@@ -283,11 +285,30 @@ class OutcomeLedger:
         than checked afterwards: a second producer of an applied number for
         one ``(mechanic, subject, event_id)`` is a double count, and a double
         count that raises is one nobody has to notice.
+
+        **An action carrying no event id is outside the rule, and says so.**
+        The key's third component is the event the contribution is *for*, so
+        an action at ``NO_SLOT`` has no "one event" for a second producer to
+        contribute to twice, and two such actions are two events nobody
+        numbered rather than one event priced twice.  Keying them all under
+        the same absent id would make the second heal of a hand-authored
+        fixture a double count -- a rule reporting a defect it invented.
+        So they are counted instead of claimed, and
+        :meth:`unidentified_contributions` publishes how many, because "the
+        rule did not range over this" is exactly the fact this campaign
+        refuses to let a silence carry.
         """
+        if action.event_slot == NO_SLOT:
+            self._unidentified_applied.append(slot)
+            return
         key = (action.source_key, action.subject, action.event_slot)
         first = self._applied_by.setdefault(key, slot)
         if first != slot:
             raise DuplicateApplied(key, first, slot)
+
+    # pylint: disable=unused-argument  # protocol shape
+    def restore(self, action: SurvivalAction, **fields: Any) -> None:
+        """An input, not an outcome.  Dropped, and that is the whole point."""
 
     def annotate(self, action: SurvivalAction, **fields: Any) -> None:
         """Diagnostics.  An outcome is a number, so these are dropped."""
@@ -453,6 +474,17 @@ class OutcomeLedger:
         a rule nobody can count.
         """
         return dict(self._applied_by)
+
+    def unidentified_contributions(self) -> tuple[int, ...]:
+        """Every applied slot the uniqueness rule could not range over.
+
+        The rule's domain, published beside the rule.  A walk whose actions
+        all carry event ids returns the empty tuple, and that emptiness is
+        the statement "D-62 covered this fight entirely"; a non-empty one
+        names the slots it did not, so what a rule did *not* reach is a
+        number a reader can ask for rather than a silence.
+        """
+        return tuple(self._unidentified_applied)
 
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""

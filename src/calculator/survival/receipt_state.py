@@ -14,6 +14,7 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
 from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
+from .outcome_state import OutcomeLedger
 from .transitions import participant_pools
 from ..data_registry import data_version
 
@@ -355,6 +356,8 @@ class ReceiptLedger:
         "healing",
         "annotations_written",
         "compile_event",
+        "outcomes",
+        "next_aidx",
     )
 
     # Event writes always persist on this adapter; annotations only when
@@ -382,6 +385,20 @@ class ReceiptLedger:
         and ``TransitionContext``'s regeneration windows arrive by.  A
         default would let a caller that forgot it schedule nothing and look
         like a fight in which no trigger authored a heal.
+
+        ``outcomes`` is the write-once companion (D-62, D-64).  Every
+        observation this adapter makes onto an event dict is made a second
+        time onto :class:`~survival.outcome_state.OutcomeLedger`, which
+        answers a question the event dict structurally cannot: an event dict
+        takes the *last* write, so a field two rules answer differently
+        serializes as whichever ran second and neither rule is wrong at any
+        single line.  The companion refuses the second write and names both
+        values, and its ``applied`` claim refuses a second contribution for
+        one ``(mechanic, subject, event_id)``.  It is built here rather than
+        by the composition because this is the object every write already
+        passes through: a ledger a caller has to remember to attach is one a
+        caller can forget, and the rule would then hold over the walks
+        somebody wired and not over the walks somebody adds.
         """
         self.compile_event = compile_event
         self.annotating = annotating
@@ -392,15 +409,36 @@ class ReceiptLedger:
         self.index_of = index_of
         self.expanded_healing = expanded_healing
         self.healing = healing
+        self.outcomes = OutcomeLedger(annotating=annotating)
+        # Walk-authored recovery is compiled after the composition allocated
+        # its slots, so the counter continues where the composition stopped.
+        # Derived rather than passed: a slot number handed in beside the list
+        # it indexes is two facts that can disagree.
+        self.next_aidx = len(actions)
 
     # -- observation -------------------------------------------------------
     def write(self, action: SurvivalAction, **fields: Any) -> None:
         """Unconditional packet writes the authoritative walk always makes."""
+        self.outcomes.write(action, **fields)
+        if action.event is not None:
+            action.event.update(fields)
+
+    def restore(self, action: SurvivalAction, **fields: Any) -> None:
+        """Put an input back on a packet a later transition will price.
+
+        The event dict takes it, because that is the packet the walk reads.
+        The outcome ledger does not, because it is not an outcome: the
+        transition that prices this packet writes the number it produced a
+        few frames later, and recording both would make one question have
+        two answers — which is precisely what the write-once ledger exists
+        to refuse, so it must not be handed a false positive to refuse.
+        """
         if action.event is not None:
             action.event.update(fields)
 
     def annotate(self, action: SurvivalAction, **fields: Any) -> None:
         """Annotate-gated diagnostics only the serialized receipt reads."""
+        self.outcomes.annotate(action, **fields)
         if action.event is not None and self.annotating:
             action.event.update(fields)
 
@@ -417,7 +455,18 @@ class ReceiptLedger:
         ``preserve_reason`` keeps an earlier ``skipped_reason`` (the
         Knight's Vow gate stamps ``holder_health_gate`` on the cancelled
         child before its own skip).
+
+        The refusal reaches the companion ledger before the early return,
+        because an action with no event dict is still an action the walk
+        refused: the receipt has nowhere to put that fact and the outcome
+        ledger does.
         """
+        self.outcomes.skip(
+            action,
+            reason,
+            damage_phase=damage_phase,
+            preserve_reason=preserve_reason,
+        )
         if action.event is None:
             return
         if damage_phase:
@@ -472,7 +521,9 @@ class ReceiptLedger:
             self.index_of[recipient_id],
             self.index_of,
             subject_id=recipient_id,
+            aidx=self.next_aidx,
         )
+        self.next_aidx += 1
         insertion = max(self.current_index + 1, 0)
         while (
             insertion < len(self.actions)

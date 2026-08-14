@@ -32,6 +32,14 @@ Ledger observation contract (the only adapter difference):
   diagnostics (``pair_damage``, ``live_damage``, ``overkill``,
   ``raw_amount``, ``healing_reduction``, ``venom``, ...) that only the
   serialized receipt reads;
+* ``ctx.ledger.restore(action, **fields)`` — an **input** the walk puts back
+  onto a packet a later transition will price, not an outcome a transition
+  produced.  Knight's Vow's holder gate is the one caller: it cancels the
+  redirect child and puts the unredirected amount back on the parent so the
+  damage transition prices it.  It rides ``write``'s wire on both adapters
+  and changes nothing they do — the separation exists for the write-once
+  outcome ledger, which otherwise sees the restored input and the priced
+  outcome as two answers to one question and refuses the second;
 * ``ctx.ledger.mark_applied`` / ``mark_blocked`` — trigger-linkage status;
 * ``ctx.ledger.schedule_heal(event, recipient_id)`` — walk-authored
   recovery packets (receipt inserts beside the current action; score
@@ -1937,7 +1945,7 @@ def run_survival_walk(
                     ctx.ledger.write(child, damage=0.0)
                     ctx.ledger.write(child, skipped_reason="holder_health_gate")
                     restored = max(0.0, action.redirect_original_damage)
-                    ctx.ledger.write(
+                    ctx.ledger.restore(
                         action,
                         damage=restored,
                         _redirected_amount=0.0,

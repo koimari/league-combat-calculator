@@ -53,6 +53,16 @@ class ScoreLedger:
         elif "applied_amount" in fields:
             self._record(action, fields["applied_amount"])
 
+    def restore(self, action: SurvivalAction, **fields: Any) -> None:
+        """A packet input put back, observed exactly as a write is here.
+
+        The score adapter keeps one number per slot and the last writer
+        wins, so an input restore and the outcome that follows it are
+        indistinguishable by construction — which is why the channel is
+        separate at the interface rather than at this implementation.
+        """
+        self.write(action, **fields)
+
     def _record(self, action: SurvivalAction, amount: float) -> None:
         if 0 <= action.aidx < self.n_actions:
             self.applied[action.aidx] = amount

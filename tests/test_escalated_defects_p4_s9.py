@@ -4,10 +4,13 @@ An escalation living only in a commit body is absorbed by the next baseline
 re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
 artifact nothing runs is prose in a JSON file, which is why it has this.
 
-Each defect declares a reproducer, and each reproducer runs here.  The day
-somebody wires the outcome ledger into the walk these go red -- which is the
-point: the entry retires *with* the inversion of its own test, not by being
-deleted.
+Each defect declares a reproducer, and each reproducer runs here.  The entry
+retires *with* the inversion of its own test, not by being deleted -- and
+half of it has: the outcome ledger is the receipt walk's companion since
+2026-08-14, so the construction-site reproducer is gone and the assertion
+that replaced it names the site.  What is still open is emission, and
+:func:`test_every_published_disposition_is_measured` is the reproducer that
+still reproduces.  Red on *that* one means the entry is closing.
 """
 
 from __future__ import annotations
@@ -87,13 +90,8 @@ def test_every_published_disposition_is_measured(scenario: str) -> None:
     }
 
 
-def test_the_outcome_ledger_is_constructed_nowhere_but_its_own_module() -> None:
-    """The second half: the one component that produces the other three.
-
-    ``OutcomeLedger.quantity`` answers ``StructuralZero`` for a refused
-    transition and ``Starved`` for one nothing wrote.  No walk runs on it, so
-    those answers reach no payload.
-    """
+def _outcome_ledger_sites() -> dict[str, int]:
+    """Every ``OutcomeLedger(...)`` construction expression under ``src/``."""
     sites = {}
     for path in sorted(SRC.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -106,7 +104,57 @@ def test_the_outcome_ledger_is_constructed_nowhere_but_its_own_module() -> None:
         )
         if count:
             sites[path.relative_to(SRC).as_posix()] = count
-    assert sites == {}
+    return sites
+
+
+def test_the_outcome_ledger_is_the_receipt_walks_companion() -> None:
+    """The second half, inverted: this reproducer no longer reproduces.
+
+    It read "no walk runs on it, so ``StructuralZero`` and ``Starved`` reach
+    no payload".  The first clause is now false — the receipt adapter builds
+    one and drives it from every write, annotation and refusal, so the
+    write-once rule and D-62's uniqueness range over real fights.  The second
+    clause is still true and is what keeps this entry open, which is why the
+    assertion moved rather than the file being deleted: an entry retires
+    *with* the inversion of its own test, and only half of this one inverted.
+    """
+    assert _outcome_ledger_sites() == {"survival/receipt_state.py": 1}
+
+
+def test_a_live_walk_fills_the_ledger_the_site_builds() -> None:
+    """A construction site nothing drives would be the same gap, relocated."""
+    from src.calculator.survival.receipt_state import ReceiptLedger
+
+    snapshot = _golden_snapshot()
+    definition = next(
+        item
+        for item in snapshot.COUPLED_SCENARIOS
+        if item.name == "cleaver_bloodsong_roster"
+    )
+    built: list[ReceiptLedger] = []
+
+    class Capturing(ReceiptLedger):
+        """The production ledger, keeping the ones a real walk builds."""
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            built.append(self)
+
+    from src.calculator import participant_timeline
+
+    original = participant_timeline.ReceiptLedger
+    participant_timeline.ReceiptLedger = Capturing
+    try:
+        snapshot.coupled_entry(definition)
+    finally:
+        participant_timeline.ReceiptLedger = original
+    assert built, "the coupled walk built no receipt ledger"
+    assert any(ledger.outcomes.applied_contributions() for ledger in built)
+    assert any(
+        ledger.outcomes.get(slot).was_skipped
+        for ledger in built
+        for slot in ledger.outcomes.slots()
+    )
 
 
 def test_the_serializer_can_nevertheless_express_all_four() -> None:

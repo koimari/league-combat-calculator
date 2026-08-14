@@ -1,33 +1,59 @@
 {
-  "artifact": "escalated_defects",
-  "slice": "P4-S9",
-  "why_this_file_exists": "S9 published a four-member disposition vocabulary on three payloads and claimed the wire shape as operational. It is not: every leaf every production path emits today is MEASURED, because the one component that produces StructuralZero, Withheld and Starved -- survival/outcome_state.OutcomeLedger -- is not the ledger any walk runs with. The serializer supports all four and is unit-tested on all four; no request can reach three of them. That is a real gap between what the commit bodies say and what the tree does, and it is written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs (R-16 Shape).",
-  "how_an_entry_closes": "An entry moves from defects[] to retired[] only when the contradiction is resolved in the tree, and only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it.",
-  "gate": "tests/test_escalated_defects_p4_s9.py",
-  "defects": [
-    {
-      "id": "no_production_path_emits_a_non_measured_disposition",
-      "dated": "2026-08-13",
-      "raised_by": "the R-35 verifier for slice group S9, confirmed by the remediation lane before its first src/ edit, and re-raised unchanged by the second R-35 pass on 2026-08-13",
-      "what": "Every dispositions entry on every payload the calculator serves is MEASURED. The three other members are reachable from serialize_leaf and from OutcomeLedger.quantity, and from nowhere a request goes.",
-      "why": "LeafBlock.put has exactly one caller -- measured -- which constructs Measured(amount=float(value)). No view, no bis.py path and no optimizer path ever constructs a Withheld, a StructuralZero or a Starved for publication. The record that does produce them is OutcomeLedger, whose quantity() answers Measured / StructuralZero / Starved from what the walk wrote; it has no construction site in src/ outside its own module, so the walk runs on ScoreLedger and ReceiptLedger and the outcome ledger's dispositions never reach a view. AttackerOutcome and ObjectiveFold carry plain floats, so whatever disposition a number had is discarded before the projection.",
-      "what_is_nevertheless_true": [
-        "The wire shape is real and complete: serialize_leaf emits all four, a WITHHELD leaf is absent with its receipt-bearing entry present, and static/js/app.js renders that case as a named refusal with live call sites (tests/test_program_views.py).",
-        "Every published number on all four payload surfaces carries exactly one entry, both directions, asserted against live runs: /api/calculate's whole response (987 leaves across its two maps, 3999a96), its combat receipt, /api/bis and /api/optimize (tests/test_payload_dispositions.py).",
-        "Quantity.__add__ propagates dispositions through a sum and Tagged.__add__ propagates the view tag, both unit-tested over the member matrix.  Since 3a1bf82 the view-tag half also has production callers -- the BIS objective folds its score through ranked_total out of Tagged parts whose tags come from the payload's own map, and the two ranking surfaces refuse a previewed block on the way in.  That half of the earlier 'a type nothing on the serving path uses' finding is closed.",
-        "What remains unclosed is only the disposition half: every value flowing through the algebra in production is Measured, because the record that produces the other three is not the record any walk runs on."
-      ],
-      "why_this_lane_may_not_fix_it": "Making a request emit a non-MEASURED leaf means running the walk on the outcome ledger -- replacing or joining ScoreLedger/ReceiptLedger with OutcomeLedger inside survival/transitions -- and then teaching AttackerOutcome and ObjectiveFold to carry Quantity rather than float. That is a kernel-ledger change and a fold-type change across the composition, neither of which is S9's content: S9 is declared a pure stage whose subject is the five views. Doing it inside a slice labelled pure is precisely the mislabelling the stage table exists to prevent.",
-      "for_the_phase_owner": "Either S10 schedules the ledger join and the fold retyping, or the phase records that criterion 19's end-to-end backstop is discharged by fixture alone and says so in the umbrella. An implementation lane may not choose which.",
-      "reproducer": "Run a live coupled receipt (scripts/golden_snapshot.coupled_entry on any combat-carrying scenario) and collect {entry['disposition'] for entry in combat['dispositions'].values()}: the set is exactly {'MEASURED'}. Separately, an AST scan for OutcomeLedger( construction expressions over src/calculator finds none outside survival/outcome_state.py.",
-      "reproducer_after_closure": "Inverted: at least one production payload carries an entry whose disposition is not MEASURED, and the walk constructs an OutcomeLedger.",
-      "re_raised": {
-        "dated": "2026-08-13",
-        "by": "the second R-35 verifier for slice group S9",
-        "finding": "Criterion 4's OutcomeLedger clause is met as a unit test and by no walk: grep -rn 'OutcomeLedger(' src/ returns nothing, so the uniqueness rule never fires over a real fight.",
-        "what_the_remediation_lane_did": "Nothing to this entry.  The two clauses of criterion 4 that had an implementable gap -- the ranking surfaces never reading a view tag, and the fold algebra having no production caller -- were closed in 3a1bf82.  This entry's fix is unchanged in kind: it is a kernel-ledger join and a fold retyping, and this lane may not smuggle either into a stage the phase table declares pure."
-      }
-    }
-  ],
-  "retired": []
+ "artifact": "escalated_defects",
+ "slice": "P4-S9",
+ "why_this_file_exists": "S9 published a four-member disposition vocabulary on three payloads and claimed the wire shape as operational. It is not: every leaf every production path emits today is MEASURED, because the one component that produces StructuralZero, Withheld and Starved -- survival/outcome_state.OutcomeLedger -- is not the ledger any walk runs with. The serializer supports all four and is unit-tested on all four; no request can reach three of them. That is a real gap between what the commit bodies say and what the tree does, and it is written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs (R-16 Shape).",
+ "how_an_entry_closes": "An entry moves from defects[] to retired[] only when the contradiction is resolved in the tree, and only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it.",
+ "gate": "tests/test_escalated_defects_p4_s9.py",
+ "defects": [
+  {
+   "id": "no_production_path_emits_a_non_measured_disposition",
+   "dated": "2026-08-13",
+   "raised_by": "the R-35 verifier for slice group S9, confirmed by the remediation lane before its first src/ edit, and re-raised unchanged by the second R-35 pass on 2026-08-13",
+   "what": "No dispositions entry on any payload the calculator serves is anything but MEASURED. The record that produces the other three, survival.outcome_state.OutcomeLedger, is now the receipt walk's companion and is filled by every real fight -- so the write-once rule and D-62's uniqueness are enforced over production numbers -- but no view reads its quantities onto a leaf, so the three other dispositions still reach no payload.",
+   "why": "LeafBlock.put has exactly one caller -- measured -- which constructs Measured(amount=float(value)). The receipt view publishes a refused row's outcome fields through that same call: a transition the walk refused writes damage/applied_amount/overkill as a MEASURED 0.0 and carries its skipped_reason beside them as a raw string, which is a declared zero wearing a measured zero's entry. AttackerOutcome and ObjectiveFold still carry plain floats, so a disposition would not survive the projection even where a view asked for one.",
+   "what_is_nevertheless_true": [
+    "The wire shape is real and complete: serialize_leaf emits all four, a WITHHELD leaf is absent with its receipt-bearing entry present, and static/js/app.js renders that case as a named refusal with live call sites (tests/test_program_views.py).",
+    "Every published number on all four payload surfaces carries exactly one entry, both directions, asserted against live runs: /api/calculate's whole response (987 leaves across its two maps, 3999a96), its combat receipt, /api/bis and /api/optimize (tests/test_payload_dispositions.py).",
+    "Quantity.__add__ propagates dispositions through a sum and Tagged.__add__ propagates the view tag, both unit-tested over the member matrix.  Since 3a1bf82 the view-tag half also has production callers -- the BIS objective folds its score through ranked_total out of Tagged parts whose tags come from the payload's own map, and the two ranking surfaces refuse a previewed block on the way in.  That half of the earlier 'a type nothing on the serving path uses' finding is closed.",
+    "What remains unclosed is only the disposition half: every value flowing through the algebra in production is Measured, because the record that produces the other three is not the record any walk runs on."
+   ],
+   "why_this_lane_may_not_fix_it": "The remaining half is blocked on an adjudication ruling rather than on effort: every one of its 38 qualifying occurrences is a text_change that R-19 sends to an oracle, and R-18's export cannot brief an oracle on a question about the campaign's own disposition vocabulary. Landing it anyway would mean either re-capturing a baseline over 38 unanswered qualifying occurrences, which R-19's last sentence forbids, or filing 38 receipts on a question no investigator was given the evidence to answer, which is the oracle shopping the R-15/R-18 amendment made unwritable.",
+   "for_the_phase_owner": "Either S10 schedules the ledger join and the fold retyping, or the phase records that criterion 19's end-to-end backstop is discharged by fixture alone and says so in the umbrella. An implementation lane may not choose which.",
+   "reproducer": "Run a live coupled receipt (scripts/golden_snapshot.coupled_entry on any combat-carrying scenario) and collect the disposition of every entry in combat['dispositions']: the set is exactly {'MEASURED'}, including on the 24 rows whose skipped_reason says the walk refused them.",
+   "reproducer_after_closure": "Inverted: at least one production payload carries an entry whose disposition is not MEASURED -- specifically, a refused row's outcome fields carry STRUCTURAL_ZERO with the walk's own refusal as the reason.",
+   "re_raised": {
+    "dated": "2026-08-14",
+    "by": "the R-35 verifier for slice group campaign-close",
+    "finding": "Umbrella criterion 1's production clause and criterion 8's one-APPLIED-per-key clause both rest on OutcomeLedger, which had no construction site in src/, so neither ranged over a real fight.",
+    "what_the_remediation_lane_did": "Closed criterion 8's clause outright by joining the ledger to the receipt walk, and reduced criterion 1's to the emission half with the block named exactly and the footprint measured."
+   },
+   "what_closed_and_when": {
+    "dated": "2026-08-14",
+    "by": "the remediation lane for slice group campaign-close, answering the R-35 verifier that reported umbrella criteria 1 and 8 NOT DISCHARGED",
+    "closed": [
+     "The construction-site half. survival/receipt_state.ReceiptLedger builds an OutcomeLedger and drives it from write, annotate and skip, so an AST scan for OutcomeLedger construction expressions over src/calculator names a production site and every /api/calculate request fills one.",
+     "D-62's uniqueness now fires over real fights rather than over fixtures: measured on the five committed coupled scenarios, ten ledgers record 314 slots, claim 290 applied contributions with 0 unidentified, and observe 24 refusals -- the same 24 rows the committed coupled baseline publishes with a skipped_reason.",
+     "Two defects the join surfaced, each landed as its own commit: _WRITE_ALIASES mapped the diagnostic live_damage onto the applied outcome field, and the kernel's trigger arm overwrote an already-stamped refusal reason with the consequence that followed from it."
+    ],
+    "gate_inversion": "test_the_outcome_ledger_is_the_receipt_walks_companion replaces test_the_outcome_ledger_is_constructed_nowhere_but_its_own_module and asserts the resolved property instead of the reproducer."
+   },
+   "what_is_still_open_and_what_blocks_it": {
+    "open": "No production payload carries a non-MEASURED dispositions entry.",
+    "the_change_itself": "The receipt view publishes a refused transition's outcome fields as StructuralZero(reason=<the walk's refusal>) read from the outcome ledger, instead of Measured(0.0). The published number does not move: StructuralZero.read() is 0.0. Only the entry moves -- disposition MEASURED -> STRUCTURAL_ZERO, plus a reason key beside it.",
+    "measured_footprint": {
+     "instrument": "a scan of scripts/golden_coupled_baseline.json for rows carrying skipped_reason and the published outcome-field dispositions entries beside them",
+     "refused_rows": 24,
+     "refused_outcome_leaves": 38,
+     "by_section": {
+      "events": 28,
+      "healing_events": 10
+     },
+     "diff_shape": "38 text_change transitions on the entries' disposition strings, and 38 absent_to_value transitions on the reason keys beside them"
+    },
+    "what_blocks_it": "Adjudication, not budget -- a sharper statement of the block than the 'a slice no phase budgeted' this entry carried before. R-15 qualifies a leaf for investigation when its transition is anything other than 'value', so each of the 38 disposition strings is a text_change and owes an oracle receipt under R-19. The R-15 amendment of 2026-08-14 adjudicates by citation only a MEMBERSHIP transition (value_to_absent / absent_to_value), which covers the 38 reason keys and explicitly does not reach the 38 disposition strings. And no oracle can answer one: R-18's export is exactly data/ and docs/math-foundations.md, and no cached wiki text and no formula in math-foundations decides whether a zero the walk refused is MEASURED or STRUCTURAL_ZERO -- that is a question about this campaign's own vocabulary, which is the one thing the export exists to keep out of an investigator's hands. So the slice cannot land under the rules as they stand: it needs a ruling on how a disposition transition is adjudicated, and a ruling is not an implementation lane's to write.",
+    "what_would_close_it": "An umbrella amendment extending citation adjudication to a disposition transition that is the ruled consequence of a declared change -- D-72 names the single writer and the invariant table names the four spellings -- after which the view change above is one commit with a 76-path allowlist and no oracle owed. Retyping AttackerOutcome and ObjectiveFold to carry Quantity remains a separate and larger question, and is not needed for the receipt view's own leaves."
+   }
+  }
+ ],
+ "retired": []
 }

@@ -2430,6 +2430,17 @@ def _simulate_survival(
                 )
             )
     actions.sort(key=itemgetter(0))
+    # Ledger slots, allocated once the total order is fixed.  The score
+    # adapter has always carried them (its parallel arrays *are* indexed by
+    # them); the receipt adapter left every action at ``NO_SLOT`` because the
+    # event dict it annotates is addressed by identity instead.  That made
+    # the receipt walk unaddressable to any slot-keyed observer, and the
+    # write-once outcome ledger (D-62, D-64) is exactly such an observer — it
+    # silently recorded nothing, which is this campaign's own failure shape
+    # inside the record built to refuse it.  Allocating after the sort keeps
+    # the slot in walk order, so a reader can put a refusal back where the
+    # walk made it.
+    actions = [action._replace(aidx=slot) for slot, action in enumerate(actions)]
 
     # Knight's Vow's holder gate keys the child (redirected) action by its
     # parent's event id — the clone's ``_trigger_event_id`` — so the shared

@@ -428,3 +428,125 @@ class TestTheDiagnosticAnnotationsAreNotOutcomes:
         ledger.annotate(packet, overkill=750.0)
         outcome = ledger.get(0)
         assert (outcome.applied, outcome.overkill) == (250.0, 750.0)
+
+
+class TestTheReceiptWalkRunsIt:
+    """The join, over real fights rather than over fixtures.
+
+    Both properties above are refusals, and a refusal that never ranges over
+    a real fight is indistinguishable from one that cannot fire.  So this
+    class asserts the ledger is the receipt adapter's companion, that a live
+    coupled walk actually fills it, and that D-62's uniqueness is enforced on
+    the production object rather than on a ledger a test built.
+    """
+
+    @staticmethod
+    def capturing_ledger(monkeypatch):
+        """Drive the real coupled walk, keeping every ledger it builds."""
+        import importlib.util
+        import sys
+        from pathlib import Path
+
+        from src.calculator import participant_timeline
+        from src.calculator.survival import receipt_state
+
+        built: list[receipt_state.ReceiptLedger] = []
+
+        class Capturing(receipt_state.ReceiptLedger):
+            """The production ledger, with a list of the ones a walk made."""
+
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                built.append(self)
+
+        monkeypatch.setattr(participant_timeline, "ReceiptLedger", Capturing)
+        root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "golden_snapshot", root / "scripts" / "golden_snapshot.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules.setdefault("golden_snapshot", module)
+        spec.loader.exec_module(module)
+        definition = next(
+            item
+            for item in module.COUPLED_SCENARIOS
+            if item.name == "cleaver_bloodsong_roster"
+        )
+        module.coupled_entry(definition)
+        return built
+
+    def test_the_receipt_adapter_carries_one(self) -> None:
+        """The construction site the escalation's reproducer looked for."""
+        from src.calculator.survival import receipt_state
+
+        ledger = receipt_state.ReceiptLedger(
+            actions=[], index_of={}, compile_event=lambda *a, **k: None
+        )
+        assert isinstance(ledger.outcomes, outcome_state.OutcomeLedger)
+
+    def test_a_live_fight_fills_it(self, monkeypatch) -> None:
+        """A real coupled walk writes outcomes, so the rules have a domain."""
+        built = self.capturing_ledger(monkeypatch)
+        assert built, "the coupled walk built no receipt ledger"
+        assert any(list(ledger.outcomes.slots()) for ledger in built)
+
+    def test_a_live_fight_claims_applied_contributions(self, monkeypatch) -> None:
+        """D-62's uniqueness ranges over real keys, not over fixture keys."""
+        built = self.capturing_ledger(monkeypatch)
+        claimed = {
+            key: slot
+            for ledger in built
+            for key, slot in ledger.outcomes.applied_contributions().items()
+        }
+        assert claimed, "no applied contribution was claimed over a real fight"
+
+    def test_a_live_fight_records_the_walks_refusals(self, monkeypatch) -> None:
+        """A refusal reaches the ledger, which is where a declared zero is born."""
+        built = self.capturing_ledger(monkeypatch)
+        refused = [
+            ledger.outcomes.get(slot).skipped_reason
+            for ledger in built
+            for slot in ledger.outcomes.slots()
+            if ledger.outcomes.get(slot).was_skipped
+        ]
+        assert refused, "the coupled corpus refused no transition"
+        assert all(reason for reason in refused)
+
+    def test_the_production_ledger_refuses_a_double_count(self) -> None:
+        """R-05's seam: the live path's uniqueness fails on demand."""
+        from src.calculator.survival import receipt_state
+
+        ledger = receipt_state.ReceiptLedger(
+            actions=[], index_of={}, compile_event=lambda *a, **k: None
+        )
+        first = SurvivalAction(
+            kind=ActionKind.DAMAGE,
+            aidx=0,
+            event_slot=7,
+            source_key="mandate",
+            subject=1,
+            event={},
+        )
+        second = SurvivalAction(
+            kind=ActionKind.DAMAGE,
+            aidx=1,
+            event_slot=7,
+            source_key="mandate",
+            subject=1,
+            event={},
+        )
+        ledger.write(first, damage=40.0)
+        with pytest.raises(outcome_state.DuplicateApplied):
+            ledger.write(second, damage=40.0)
+
+    def test_the_production_ledger_refuses_a_second_answer(self) -> None:
+        """The write-once half, on the object the walk actually drives."""
+        from src.calculator.survival import receipt_state
+
+        ledger = receipt_state.ReceiptLedger(
+            actions=[], index_of={}, compile_event=lambda *a, **k: None
+        )
+        packet = SurvivalAction(kind=ActionKind.DAMAGE, aidx=0, event={})
+        ledger.write(packet, overkill=1.0)
+        with pytest.raises(outcome_state.OutcomeRewritten):
+            ledger.write(packet, overkill=2.0)
