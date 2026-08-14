@@ -1,0 +1,78 @@
+{
+  "artifact": "leaf_classification",
+  "slice": "P4D",
+  "cluster_id": "P4C-C3-s6s7-events-82-ordinal-reindexed-record",
+  "dated": "2026-08-14",
+  "what_this_is": "Not a verdict. A classification receipt: it records that the two leaves below are not value adjudications at all, so the dissenting verdicts filed against them do not stand as findings about the tree. R-15's 2026-08-14 amendment rules that a membership transition which is the ruled consequence of a declared change is adjudicated by CITATION, not by verdict, and this is that citation.",
+  "rules": [
+    "R-15, amended 2026-08-14 (docs/plans/silent-failure-runbook.md, *Independent investigation*): adjudicated by citation, not by verdict; both guards checked below.",
+    "R-19 / the R-15/R-18 amendment's adjudication clause 3: a superseding receipt names the specific defect in the brief it replaces and names what it supersedes; the superseded receipts are never edited and never deleted."
+  ],
+  "category_error": {
+    "name": "ordinal substitution",
+    "one_sentence": "Both leaves were produced by an ordinal-keyed diff pairing two DIFFERENT events, so the pair `old -> new` never named one quantity for anyone to be right or wrong about.",
+    "detail": "The pre-change list holds main:enemy:Aatrox:33 at ordinal 82 -- a zero-damage skipped_reason=attacker_dead expose_weakness_Bloodsong row -- and the post-change list holds main:enemy:Aatrox:35 there, a Jax E cast, because two earlier members are gone. `damage_type physical -> magic` and `sequence 34 -> 7` are the two records' own unrelated fields set side by side. Neither offered new value is a value of the event the old value came from."
+  },
+  "leaves_reclassified": [
+    {
+      "was_addressed_as": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/damage_type",
+      "was_reported_as": "text_change, physical -> magic",
+      "supersedes": "docs/receipts/oracle-P4C-C3-s6s7-events-82-ordinal-reindexed-record-leaf1.json",
+      "superseded_verdict": "old_value_correct"
+    },
+    {
+      "was_addressed_as": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/sequence",
+      "was_reported_as": "value, 34 -> 7",
+      "supersedes": "docs/receipts/oracle-P4C-C3-s6s7-events-82-ordinal-reindexed-record-leaf2.json",
+      "superseded_verdict": "old_value_correct"
+    }
+  ],
+  "prior_chain": {
+    "also_superseded_through_the_pass_above": [
+      "docs/receipts/oracle-S6S7-leaf10.json",
+      "docs/receipts/oracle-S6S7-leaf30.json"
+    ],
+    "note": "Every receipt in the chain stands unedited and keeps its own verdict. None of them was wrong about what it was shown: oracle-S6S7-leaf10 and -leaf30 both wrote the substitution hazard into their own text as a caveat, and the P4C pass demonstrated it by identity. What is corrected here is the question, not their arithmetic."
+  },
+  "defect_in_the_prior_brief": {
+    "clause": "R-19 / adjudication clause 3 -- a re-run or a supersession must cite the specific defect in the brief it replaces.",
+    "defect": "The brief could not have been well posed at any effort, because the leaf it named did not exist as a value question. Both prior briefs addressed a list member by ordinal, with no event identity and no list length, while R-18's export withholds the tree that would expose the substitution. The P4C pass repaired the brief -- it addressed the record by event_id main:enemy:Aatrox:33 and carried the amendment's timestamp, ordinal and trigger context -- and reached the only answer that brief admits: the offered new value belongs to another record. That is a statement about the REPORT, and R-19's verdict set has no member for it, so it was spelled `old_value_correct` and tallied as a dissent against the tree. The remaining defect was therefore in the instrument, not in the brief: an ordinal-keyed report manufactures leaf pairs that no brief can pose.",
+    "recorded_as": "escalated-defects-S6S7-oracle.json::ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events, whose for_the_owner asked exactly this and which an implementation lane could not answer."
+  },
+  "the_instrument_fix": {
+    "commit": "c57a902",
+    "what": "scripts/golden_snapshot.py::leaf_report pairs list members carrying event_id by that identity and never by list position; a member only one side holds is one membership transition.",
+    "measured_after": {
+      "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]",
+      "identity": "main:enemy:Aatrox:33",
+      "transition": "value_to_absent",
+      "sibling_removal": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[83], identity main:enemy:Aatrox:34, value_to_absent",
+      "the_record_the_ordinal_used_to_substitute": "main:enemy:Aatrox:35 has NO differing leaf at all -- field for field it is what the baseline holds at ordinal 84.",
+      "how_measured": "scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json, read through tests/test_coupled_golden_allowlist.py::standing_coupled_diffs on this tip."
+    }
+  },
+  "ruling_cited": {
+    "ruling": "The Phase 4 S7 Bloodsong authority move: bloodsong.expose_weakness from SPLIT to COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW.",
+    "openable_at": [
+      "docs/plans/2026-08-08-silent-failure-campaign.md -- Amendment D, 2026-08-13, which rules the constructible member",
+      "docs/receipts/expected-golden-diff-P4-S7-bloodsong.json -- the slice receipt that landed it and already claims these two removals at the ordinals the positional report spelled"
+    ],
+    "why_it_decides_the_leaf": "The two removed rows are zero-damage attacker_dead rows the pair preview authored into the roster timeline and the coupled walk no longer does. Their absence is what the authority move says. No cached wiki text and no formula in docs/math-foundations.md decides whether a row exists -- that is a modelling ruling, which is why the amendment sends it to a citation instead of to an oracle."
+  },
+  "guards": {
+    "membership_transition_as_the_identity_keyed_report_classifies_it": true,
+    "cited_ruling_is_openable": true,
+    "note": "Both of R-15's amended guards are checked rather than asserted: the transition above is value_to_absent under identity pairing -- it is not a value re-spelled as a removal by an ordinal shift, which is exactly what the pre-fix report was doing -- and both citations name a committed file a reader can open."
+  },
+  "allowlist_entry": {
+    "receipt": "docs/receipts/expected-golden-diff-P4D-identity-keyed-report.json",
+    "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]",
+    "status": "NOT_OWED_RULED_MEMBERSHIP"
+  },
+  "effect": {
+    "on_the_two_leaves": "They are no longer open value adjudications and owe no oracle receipt. The compare no longer spells them at all.",
+    "on_the_entry": "escalated-defects-S6S7-oracle.json::ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events stays OPEN. Its reproducer -- a list whose members carry no identity -- still reproduces, because positional pairing is still what such a list gets, and how_an_entry_closes forbids retiring an entry whose reproducer still fires.",
+    "on_the_baselines": "None. No baseline moves in the commit that lands this (R-17, R-32, D-97).",
+    "on_the_thirteen_boundary_dissents": "None. C3 is the S6/S7 ledger's, not the boundary's; the boundary's enumeration still reads thirteen."
+  }
+}

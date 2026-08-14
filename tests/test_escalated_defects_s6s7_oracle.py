@@ -191,10 +191,17 @@ class TestOrdinalAddressingSubstitutesEvents:
     def test_one_inserted_member_reports_every_later_member_as_a_change(self):
         """The oracle is handed two values that describe two different events.
 
-        ``leaf_report`` pairs ``events[n]`` with ``events[n]``, so removing or
-        inserting an earlier member re-labels every later one.  S6/S7 removed
-        two events from one scenario, and two of this pass's four dissents are
-        readings of that substitution rather than of a wrong number.
+        ``leaf_report`` pairs ``events[n]`` with ``events[n]`` **for a list
+        whose members carry no identity**, so removing or inserting an earlier
+        member re-labels every later one.  S6/S7 removed two events from one
+        scenario, and two of this pass's four dissents are readings of that
+        substitution rather than of a wrong number.
+
+        The members below carry no ``event_id`` on purpose: that is the
+        residual this entry still names.  The identity-bearing case — every
+        event-family list in the coupled snapshot — is remedied, and the
+        entry's ``ruled_and_remedied`` block records it; see
+        ``TestTheIdentityKeyedReportRemediesTheIdentityBearingCase``.
         """
         old = {
             "combat": {
@@ -288,3 +295,168 @@ class TestTheVerdictSetCannotSayNoEvidence:
                 "not excludable",
             )
         )
+
+    def test_the_ruled_subclass_is_reclassified_and_the_rest_is_not(self):
+        """R-15's amendment answers one subclass of this gap, and says which.
+
+        A leaf whose value a *ruling* removed is adjudicated by citing that
+        ruling.  A leaf that is merely undecidable from the evidence tree —
+        ``oracle-S6S7-leaf30``'s ``sequence`` — is not, so the entry stays
+        open with its own reproducer intact.  Both halves are asserted, or
+        "narrowed" would be indistinguishable from "closed".
+        """
+        entry = _entry_by_id(
+            "the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide"
+        )
+        block = entry["narrowed_by_a_ruling"]
+        body = _classification(C4_CLASSIFICATION)
+        assert block["reclassifies"]["receipt"].endswith(C4_CLASSIFICATION)
+        assert body["leaves_reclassified"][0]["supersedes"].endswith(
+            "oracle-S6S7-leaf24.json"
+        )
+        # The superseded receipt stands, unedited, with its own verdict.
+        superseded = json.loads(
+            (RECEIPTS / "oracle-S6S7-leaf24.json").read_text(encoding="utf-8")
+        )
+        assert superseded["verdict"] == "old_value_correct"
+        # ...and the leaf that is *not* ruled keeps the entry open.
+        assert "oracle-S6S7-leaf30" in block["why_this_entry_stays_open"]
+        assert (
+            "the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide"
+            in _ids()
+        )
+
+
+# ---------------------------------------------------------------------------
+# The two reclassifications: a ruled membership transition is adjudicated by
+# citation, and the instrument no longer manufactures the leaves it replaced.
+# ---------------------------------------------------------------------------
+
+C3_CLASSIFICATION = "classification-P4D-C3-events-82-ordinal-substitution.json"
+C4_CLASSIFICATION = (
+    "classification-P4D-C4-support-events-owner-ruled-field-removal.json"
+)
+P4D_ALLOWLIST = "expected-golden-diff-P4D-identity-keyed-report.json"
+COUPLED_BASELINE = ROOT / "scripts" / "golden_coupled_baseline.json"
+
+
+def _entry_by_id(entry_id):
+    for entry in _entries():
+        if entry["id"] == entry_id:
+            return entry
+    raise AssertionError(f"{entry_id} is not an open entry of this ledger")
+
+
+def _classification(name):
+    return json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+
+
+def _allowlisted():
+    body = json.loads((RECEIPTS / P4D_ALLOWLIST).read_text(encoding="utf-8"))
+    return set(body["expected_diff_paths"]["coupled_golden"])
+
+
+def _standing():
+    """Every standing coupled diff, keyed by path — the live report."""
+    baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+    current = gs.rebuild_for(baseline)
+    for snapshot in (baseline, current):
+        for key in gs.COMPARE_EXCLUDED_PROVENANCE:
+            snapshot.get("metadata", {}).pop(key, None)
+    return {diff.path: diff for diff in gs.leaf_report(baseline, current)}
+
+
+class TestARuledMembershipTransitionIsAdjudicatedByCitation:
+    """R-15's 2026-08-14 amendment, exercised on the two leaves it was ruled for.
+
+    A classification receipt is not a verdict: it records that the leaf was
+    never a value question, cites the ruling that produced the absence, and
+    points at the allowlist entry that is therefore its whole receipt.  The
+    gate asserts each of those four things, and asserts the superseded
+    receipts still stand with their own verdicts — the supersession discipline
+    that keeps a reclassification from being a quiet deletion.
+    """
+
+    @pytest.mark.parametrize("name", [C3_CLASSIFICATION, C4_CLASSIFICATION])
+    def test_it_is_a_classification_and_not_a_verdict(self, name):
+        body = _classification(name)
+        assert body["artifact"] == "leaf_classification"
+        assert "verdict" not in body
+        assert body["category_error"]["name"] in (
+            "ordinal substitution",
+            "ruled field removal",
+        )
+
+    @pytest.mark.parametrize("name", [C3_CLASSIFICATION, C4_CLASSIFICATION])
+    def test_it_names_the_defect_in_the_brief_it_replaces(self, name):
+        """Clause 3: a supersession that names no defect is oracle shopping."""
+        body = _classification(name)
+        assert body["defect_in_the_prior_brief"]["defect"]
+
+    @pytest.mark.parametrize("name", [C3_CLASSIFICATION, C4_CLASSIFICATION])
+    def test_every_superseded_receipt_stands_unedited_with_its_verdict(self, name):
+        body = _classification(name)
+        superseded = [leaf["supersedes"] for leaf in body["leaves_reclassified"]]
+        superseded += body.get("prior_chain", {}).get(
+            "also_superseded_through_the_pass_above", []
+        )
+        assert superseded
+        for path in superseded:
+            filed = json.loads((RECEIPTS / Path(path).name).read_text(encoding="utf-8"))
+            assert filed["verdict"] in ("old_value_correct", "both_wrong")
+
+    @pytest.mark.parametrize("name", [C3_CLASSIFICATION, C4_CLASSIFICATION])
+    def test_the_cited_ruling_is_one_a_reader_can_open(self, name):
+        """R-15's second guard: never 'ruled elsewhere'."""
+        for citation in _classification(name)["ruling_cited"]["openable_at"]:
+            target = ROOT / citation.split(" -- ")[0].strip()
+            assert target.exists(), citation
+
+    @pytest.mark.parametrize("name", [C3_CLASSIFICATION, C4_CLASSIFICATION])
+    def test_the_allowlist_entry_is_the_receipt(self, name):
+        body = _classification(name)
+        assert body["allowlist_entry"]["path"] in _allowlisted()
+        assert body["allowlist_entry"]["status"] == "NOT_OWED_RULED_MEMBERSHIP"
+
+
+class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
+    """The measured half: the report no longer spells the reclassified leaves.
+
+    Read off the live compare rather than off the receipts, because a
+    reclassification whose own instrument still produces the leaf it
+    reclassified is prose.
+    """
+
+    def test_the_ordinal_addressed_leaves_are_no_longer_reported(self):
+        standing = _standing()
+        for path in (
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/damage_type",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/sequence",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/owner",
+        ):
+            assert path not in standing, path
+
+    def test_each_reclassified_leaf_is_one_membership_transition(self):
+        standing = _standing()
+        for name in (C3_CLASSIFICATION, C4_CLASSIFICATION):
+            measured = _classification(name)["the_instrument_fix"]["measured_after"]
+            diff = standing[measured["path"]]
+            assert diff.transition == measured["transition"]
+            assert diff.identity == measured["identity"]
+
+    def test_the_record_the_ordinal_substituted_has_no_differing_leaf(self):
+        """main:enemy:Aatrox:35 was compared against another event; it is unmoved."""
+        assert not [
+            diff
+            for diff in _standing().values()
+            if diff.identity == "main:enemy:Aatrox:35"
+        ]
+
+    def test_the_entry_records_the_remedy_and_stays_open(self):
+        entry = _entry_by_id(
+            "ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events"
+        )
+        block = entry["ruled_and_remedied"]
+        assert block["commit"]
+        assert C3_CLASSIFICATION in block["reclassification"]
+        assert "reproducer still reproduces" in block["why_this_entry_stays_open"]
