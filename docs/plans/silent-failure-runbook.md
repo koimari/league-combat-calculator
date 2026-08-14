@@ -151,6 +151,43 @@ R-20's second half — **when `<n>` is not knowable before the edit, declare the
 >    names no defect in the brief it replaces is oracle shopping, and this clause is what makes it
 >    unwritable rather than merely discouraged.
 
+> **Amendment R-15 — 2026-08-14, a membership transition a ruling already decided.** R-15 classifies
+> a diff and R-19 sends every qualifying one to an oracle. Two standing dissents are the same shape,
+> and it is a shape no oracle can answer: a **membership transition that is the ruled consequence of
+> a declared change** — an authority move that drops a row from an event list, D-07's
+> `owner`-present-iff-`SPLIT` dropping a field from a packet record. The old value stood because the
+> old rule put it there and the new absence *is* what the ruling says; no cached wiki text and no
+> quoted formula decides that. An investigator handed the pair `old value → <absent>` must still
+> return a member of R-19's three-way set, so it certifies the old value, and a dissent that means
+> "no evidence exists" is then indistinguishable in a tally from one that means "the tree is wrong".
+> **Ruling:** such a leaf is adjudicated **by citation, not by verdict**. Its allowlist entry names
+> the ruling that removed it — a decision id, or a recorded authority move — and that citation is the
+> receipt; no oracle receipt is owed on it, and one may not be filed as though the question were a
+> value question. Two guards keep this from widening into a blanket. The transition must be a
+> membership transition (`value_to_absent` / `absent_to_value`) **as the identity-keyed
+> `leaf_report` classifies it**, so a value that merely moved cannot be re-spelled as a removal by
+> an ordinal shift. And the cited ruling must be one a reader can open — a decision id in the
+> umbrella, or a committed slice receipt naming the move — never "ruled elsewhere". A leaf whose
+> citation fails either guard is an ordinary qualifying occurrence and owes its investigator.
+
+> **Amendment R-18 — 2026-08-14, a brief may carry a certified fact.** The amendment above rules
+> that a series brief carries the sibling facts that did **not** move, read from the committed
+> pre-change baseline. A re-posed brief has a second need that same sentence forbids: the sibling
+> that **did** move, and whose movement an earlier investigator has **already certified**. Withheld,
+> the brief poses a question whose premise is false — this is exactly how one sustained dissent was
+> reached, on a record whose siblings the brief called unmoved when the compare says three of them
+> re-split. **Ruling:** a brief may carry a sibling fact that is itself certified by a committed
+> oracle receipt, cited **by receipt path**, and the citation travels into the receipt the brief
+> produces. A certified fact is *not the fix's word*: it is an independent verdict already filed
+> against the same tree, which is why it may cross the line that keeps `src/` and the post-change
+> baseline out of an investigator's hands. The chain is bounded, and each bound is what keeps it
+> from becoming a back door for the answer: only a `new_value_correct` verdict certifies; only the
+> leaf that receipt adjudicates is certified, never its neighbours; the certified value is quoted
+> with its receipt path so the next reader can open it; and a certified fact whose receipt is later
+> superseded stops certifying, so every brief that cited it is re-posed rather than left standing on
+> a withdrawn premise. **The export still does not move** — `data/` and `docs/math-foundations.md`,
+> built by R-18's one `git archive` command, remain the whole of the tree an investigator sees.
+
 ### E9 corpus discipline
 
 **R-21 — The staleness anchor is the merge-base `src/` tree, supplied to both readers *and the writer* by one function.** D-100 moves the assert off HEAD; verified `tests/test_e9_corpus.py:412-416` *also* selects the executed `_PINNED` set by comparing each scenario's `src` tree to HEAD's, and the assert itself is `:443-452`. Moving only the assert would leave the receipt suite selecting zero scenarios and passing by testing nothing — the campaign's own failure shape inside the campaign's own gate. **The writer takes the same anchor**: `repin(*, at="merge-base", check=False)` is the default, because writing HEAD's sha while comparing against the merge base makes `--check` fail the moment `src/` diverges, including on the comment-only commit Phase 0's criterion 1 requires to pass. One function, three call sites.
