@@ -722,22 +722,21 @@ class WalkCompiler:
         previewed = pair_preview_sources(result.get("breakdown") or {})
         order_a, order_b = participant_order(attacker_id)
         # The event-id *string* stays in the sort key (position 6) and the
-        # action carries only its slot, so both loops below intern once per
-        # row.  Bound to a local because these two loops build tens of
-        # thousands of actions per request.
+        # action carries only its slot, so the loop below interns once per
+        # row.  Bound to a local because it builds tens of thousands of
+        # actions per request.
         slot_of = EVENT_SLOTS.slot
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
         strikes_append = self.auto_strikes_into[defender_i].append
         # Engine damage arms at the damage rank, on both the tuple ledger and
-        # the dict one.  These two inline tuples are ``action_key``'s output
+        # the dict one.  The inline tuple below is ``action_key``'s output
         # written by hand, so element 1 is that function's element 1: the
         # rank's ordering slot, which for ``DAMAGE`` is the rank itself.
-        # Named once per call rather than per action: these two loops build
-        # tens of thousands of sort keys per request, and the alternative — a
-        # bare ordinal in tuple position 1 — is a phase nobody can grep for,
-        # which is exactly how both branches escaped the first migration
-        # pass.
+        # Named once per call rather than per action: this loop builds tens
+        # of thousands of sort keys per request, and the alternative — a bare
+        # ordinal in tuple position 1 — is a phase nobody can grep for, which
+        # is exactly how both row shapes escaped the first migration pass.
         damage_phase = ordering_slot(TransitionRank.DAMAGE)
         known_ids = len(id_strings)
         aidx = self.next_aidx
@@ -745,124 +744,84 @@ class WalkCompiler:
         # effective resistances for the whole pair fight, which is exactly
         # what ``_pair_packet`` stamps onto every enriched event of it.
         baseline_armor, baseline_mr = pair_resistance_baselines(result)
-        if result.get("damage_events_tuple"):
-            # The engine's light ledger rows: (sort_key, damage, damage_type,
-            # source_key, raw_formula, raw_damage), guaranteed heal-free by
-            # the pipeline's tuple-ledger predicate, so no trigger linkage
-            # can exist.  Every field below reads the same engine value the
-            # dict path would.
-            for index, row in enumerate(result.get("damage_events", [])):
-                key = row[0]
-                time_value = key[0]
-                source_key = row[3]
-                if source_key in previewed:
-                    # ``continue`` rather than a filtered list, exactly as in
-                    # ``_pair_packet``: ``index`` is the per-pair event id and
-                    # re-numbering the survivors would move every public id
-                    # downstream of the first preview.
-                    continue
-                raw_formula = row[4]
-                raw_damage = row[5]
-                if index < known_ids:
-                    event_id = id_strings[index]
-                else:
-                    event_id = f"{attacker_id}:{defender_id}:{index}"
-                    id_strings.append(event_id)
-                    known_ids += 1
-                live_formula = (
-                    raw_formula if callable(raw_formula) and raw_damage > 0 else None
-                )
-                grievous = grievous_by_dtype.get(row[2])
-                wound = (
-                    champion_wound_tuple(champion_wounds, source_key, row[1])
-                    if champion_wounds
-                    else None
-                )
-                actions_append(
-                    compiled_damage_action(
-                        (
-                            time_value,
-                            damage_phase,
-                            key[3],
-                            order_a,
-                            order_b,
-                            defender_id,
-                            event_id,
-                            source_key,
-                        ),
-                        time_value,
-                        (
-                            ActionKind.PLAIN_DAMAGE
-                            if live_formula is None
-                            and grievous is None
-                            and wound is None
-                            else ActionKind.DAMAGE
-                        ),
-                        defender_i,
-                        attacker_i,
-                        aidx,
-                        row[1],
-                        row[2],
-                        live_formula,
-                        raw_damage,
-                        grievous,
-                        wound,
-                        source_key,
-                        source_key,
-                        slot_of(event_id),
-                        key[3],
-                        live_amp_for(live_amps, row[2]),
-                        # A light ledger row carries no delivery metadata,
-                        # so neither flag can be answered from it.  That is
-                        # recorded once for the whole result below
-                        # (``unclassified_delivery``) rather than guessed
-                        # per row: a modifier restricted by attack class
-                        # must not read ``False`` as "this was neither an
-                        # attack nor a spell".
-                        False,
-                        False,
-                        baseline_armor,
-                        baseline_mr,
-                    )
-                )
-                if time_value <= duration:
-                    order_append((aidx, time_value))
-                # Light tuple ledgers intentionally omit per-event metadata;
-                # only their explicit auto stream can trigger Thorns.
-                if source_key == "auto_attacks":
-                    strikes_append((aidx, time_value, key[3], attacker_i))
-                aidx += 1
-            self.next_aidx = aidx
-            self.unclassified_delivery = True
-            self.coverage.append(result.get("timeline_coverage", {}))
-            return
+        # **Two row shapes, one reader.**  The engine publishes its damage
+        # ledger either as enriched dicts or — for a score-only request whose
+        # adequacy conditions hold — as light positional rows ``(sort_key,
+        # damage, damage_type, source_key, raw_formula, raw_damage)``.  Those
+        # are two *representations of one ledger*, so what differs between
+        # them is how a field is spelled and nothing else: the block below is
+        # the whole of the difference, and every line after it is one tail
+        # both shapes reach.  It used to be two loops with fifty duplicated
+        # lines each, which is how a fix applied to one of them could miss
+        # the other for a whole migration.
+        light = bool(result.get("damage_events_tuple"))
+        # A light ledger declares no self-heals, so the heal loop below is
+        # provably a no-op for it rather than skipped by an early return:
+        # ``pipeline.py`` sets ``self_healing_events = []`` on the same three
+        # lines that set ``damage_events_tuple``, and the comment there says
+        # the empty list is the exact value ``derive_self_healing`` would
+        # have returned.  Reading it here rather than branching around it is
+        # what lets the linkage index, the heals and the coverage append be
+        # written once.
         heals = result.get("self_healing_events", [])
         # The trigger-linkage index costs a key tuple per damage event, so
-        # a fight with no self-heals (most candidates) never builds it.
+        # a fight with no self-heals (most candidates, and every light
+        # ledger) never builds it.
         aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
         aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
-        for index, event in enumerate(result.get("damage_events", [])):
-            if "sequence" not in event:
-                # See action_key: pair-local event ids stay order-irrelevant
-                # only while every engine event carries its per-fight sequence.
-                raise ValueError(
-                    f"{attacker_id} damage event {event.get('source_key', '')!r} "
-                    "has no sequence; the walk's tie-break order would depend on "
-                    "event-id numbering"
-                )
-            # The engine ledger writes these five fields unconditionally
-            # (damage.add / add_declared_events), so index them directly.
-            time_value = event["time"]
-            sequence = event["sequence"]
-            source_key = event["source_key"]
+        for index, row in enumerate(result.get("damage_events", [])):
+            if light:
+                key = row[0]
+                time_value = key[0]
+                sequence = key[3]
+                source_key = row[3]
+            else:
+                if "sequence" not in row:
+                    # See action_key: pair-local event ids stay
+                    # order-irrelevant only while every engine event carries
+                    # its per-fight sequence.
+                    raise ValueError(
+                        f"{attacker_id} damage event {row.get('source_key', '')!r} "
+                        "has no sequence; the walk's tie-break order would depend "
+                        "on event-id numbering"
+                    )
+                # The engine ledger writes these three fields unconditionally
+                # (damage.add / add_declared_events), so index them directly.
+                time_value = row["time"]
+                sequence = row["sequence"]
+                source_key = row["source_key"]
             if source_key in previewed:
-                # See the tuple branch above: the id is positional, so a
-                # preview is skipped in place rather than filtered out.
+                # ``continue`` rather than a filtered list, exactly as in
+                # ``_pair_packet``: ``index`` is the per-pair event id and
+                # re-numbering the survivors would move every public id
+                # downstream of the first preview.
                 continue
-            damage_type = event["damage_type"]
-            damage = event["damage"]
-            raw_formula = event.get("raw_formula")
-            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
+            if light:
+                damage_type = row[2]
+                # One number for both readers: a light row's damage is the
+                # engine's own, and the clamp below belongs to the dict
+                # shape, whose ``damage`` field can carry a negative for a
+                # transition the wound tuple still prices at face value.
+                wound_damage = damage = row[1]
+                raw_formula = row[4]
+                raw_damage = row[5]
+                source = source_key
+                # A light ledger row carries no delivery metadata, so
+                # neither flag can be answered from it.  That is recorded
+                # once for the whole result below (``unclassified_delivery``)
+                # rather than guessed per row: a modifier restricted by
+                # attack class must not read ``False`` as "this was neither
+                # an attack nor a spell".
+                is_ability = basic_attack = False
+            else:
+                damage_type = row["damage_type"]
+                wound_damage = row["damage"]
+                damage = wound_damage if wound_damage > 0.0 else 0.0
+                raw_formula = row.get("raw_formula")
+                raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
+                source = str(row.get("source", source_key))
+                is_ability = bool(row.get("is_ability"))
+                basic_attack = bool(row.get("basic_attack"))
             if index < known_ids:
                 event_id = id_strings[index]
             else:
@@ -873,21 +832,26 @@ class WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
-            # Issue #137: fail closed on damage transitions the score kernel
-            # cannot stage (execute thresholds, redirects, deferred batches,
-            # stack self-shields) instead of silently erasing them.
-            damage_receipt = unrepresentable_damage_receipt(event)
-            if damage_receipt is not None:
-                raise UncompilableActionError(
-                    receipt=damage_receipt,
-                    source=str(event.get("source", source_key)),
-                )
+            if not light:
+                # Issue #137: fail closed on damage transitions the score
+                # kernel cannot stage (execute thresholds, redirects,
+                # deferred batches, stack self-shields) instead of silently
+                # erasing them.  A light row cannot answer the question —
+                # the fields the check reads are the enrichment it omits —
+                # and it does not have to: ``ledger_projection`` selects the
+                # light shape only for a request whose adequacy conditions
+                # already exclude every transition this would catch.
+                damage_receipt = unrepresentable_damage_receipt(row)
+                if damage_receipt is not None:
+                    raise UncompilableActionError(
+                        receipt=damage_receipt,
+                        source=source,
+                    )
             wound = (
-                champion_wound_tuple(champion_wounds, source_key, damage)
+                champion_wound_tuple(champion_wounds, source_key, wound_damage)
                 if champion_wounds
                 else None
             )
-            source = str(event.get("source", source_key))
             actions_append(
                 compiled_damage_action(
                     (
@@ -909,7 +873,7 @@ class WalkCompiler:
                     defender_i,
                     attacker_i,
                     aidx,
-                    damage if damage > 0.0 else 0.0,
+                    damage,
                     damage_type,
                     live_formula,
                     raw_damage,
@@ -920,8 +884,8 @@ class WalkCompiler:
                     slot_of(event_id),
                     sequence,
                     live_amp_for(live_amps, damage_type),
-                    bool(event.get("is_ability")),
-                    bool(event.get("basic_attack")),
+                    is_ability,
+                    basic_attack,
                     baseline_armor,
                     baseline_mr,
                 )
@@ -932,9 +896,13 @@ class WalkCompiler:
                 time_key = trigger_time_key(time_value)
                 aidx_by_key[(source_key, time_key, sequence)] = aidx
                 aidx_by_source_time[(source_key, time_key)].append(aidx)
-            if source_key == "auto_attacks" or event.get("basic_attack"):
+            # A light ledger omits per-event metadata, so ``basic_attack`` is
+            # False for it and only its explicit auto stream triggers Thorns
+            # — the same sentence the two loops used to say twice.
+            if source_key == "auto_attacks" or basic_attack:
                 strikes_append((aidx, time_value, sequence, attacker_i))
             aidx += 1
+        self.unclassified_delivery = self.unclassified_delivery or light
         self.next_aidx = aidx
         for heal_index, event in enumerate(heals):
             # Issue #137: fail closed on any heal transition the score

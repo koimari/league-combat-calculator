@@ -5,9 +5,15 @@ re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
 artifact nothing runs is prose in a JSON file, which is why it has this.
 
 Each defect declares a reproducer and each reproducer runs here.  The day
-somebody authors ``CcScope`` or unifies the compiler's two row readers, the
-matching test goes red -- which is the point: an entry retires *with* the
-inversion of its own test, never by being deleted.
+somebody authors ``CcScope``, the matching test goes red -- which is the
+point: an entry retires *with* the inversion of its own test, never by being
+deleted.
+
+One entry has since done exactly that.  S10 unified the compiler's two row
+readers after an R-35 verifier reported criterion 2 undischarged on them,
+and the entry moved to ``retired`` carrying what the lane measured; the test
+that reproduced it is inverted below rather than removed, so the artifact
+and the tree still say the same thing about a row whose answer changed.
 """
 
 from __future__ import annotations
@@ -50,9 +56,23 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
     """A gate that drifted off its entries is a gate for nothing."""
     assert [defect["id"] for defect in receipt()["defects"]] == [
         "the_first_defender_scan_survives_because_ccscope_was_never_authored",
-        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names",
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
     ]
+
+
+def test_a_retired_entry_says_how_it_closed_and_what_gates_it_now() -> None:
+    """Retirement is a record, not a deletion — the artifact's own rule."""
+    retired = receipt()["retired"]
+    assert [entry["id"] for entry in retired] == [
+        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
+    ]
+    for entry in retired:
+        assert entry["retired"] and entry["retired_by"]
+        assert entry["how_it_closed"] and entry["what_the_lane_measured"]
+        assert entry["gate_after_closure"]
+        # The reproducer it declared has to be the one that stopped
+        # reproducing, so the entry still names it.
+        assert entry["reproducer"] and entry["reproducer_after_closure"]
 
 
 # --- the first-defender scan -------------------------------------------------
@@ -105,15 +125,42 @@ def test_the_score_paths_support_scan_still_indexes_pair_zero() -> None:
     )
 
 
-# --- the compiler's two row readers ------------------------------------------
+# --- the compiler's two row readers, retired ---------------------------------
 
 
-def test_the_compiler_still_reads_two_row_shapes() -> None:
+def test_the_compiler_still_knows_which_row_shape_it_holds() -> None:
+    """Retiring the row did not delete the light ledger, and must not.
+
+    The entry's own ``reproducer_after_closure`` offers two inversions --
+    "reads one row shape, **or** the frontier row names the constructor".
+    What landed is neither restatement: one loop, one tail, and a two-arm
+    read of the two representations.  ``damage_events_tuple`` is therefore
+    still consulted, exactly once, and a reader that stopped consulting it
+    would be compiling light rows as dicts.
+    """
     compiler = _source("program", "compile.py")
-    assert 'result.get("damage_events_tuple")' in compiler
+    assert compiler.count('result.get("damage_events_tuple")') == 1
 
 
-def test_but_both_branches_end_in_the_one_constructor() -> None:
+def test_the_row_shapes_no_longer_have_a_loop_each() -> None:
+    """The inversion: one damage loop, where the entry reproduced two."""
+    tree = ast.parse(_source("program", "compile.py"))
+    function = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "add_engine_result"
+    )
+    loops = [
+        node
+        for node in ast.walk(function)
+        if isinstance(node, ast.For)
+        and "damage_events" in ast.dump(node.iter)
+        and "damage_events_tuple" not in ast.dump(node.iter)
+    ]
+    assert len(loops) == 1
+
+
+def test_the_one_loop_ends_in_the_one_constructor() -> None:
     """The half S4 did close, asserted so the entry cannot overstate itself."""
     tree = ast.parse(_source("program", "compile.py"))
     function = next(

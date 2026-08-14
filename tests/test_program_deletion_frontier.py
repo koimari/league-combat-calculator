@@ -5,20 +5,22 @@ is deliberately a second file rather than an extension of it: the two lists
 have different owners, and a phase able to edit another phase's frontier
 could retire a name by moving it.
 
-Seven of Phase 4's nine rows are closed.  Three of those were closed by a
+Eight of Phase 4's nine rows are closed.  Three of those were closed by a
 stage that pinned them where it worked, and re-asserting them here would give
 one absence two homes — the drift this campaign exists to remove, aimed at
 itself.  Those three are carried by :data:`PINNED_ELSEWHERE`, which is
 checked rather than recited: each names the file and the test that holds it,
-and a row whose test has been renamed or deleted fails here.  The other four
+and a row whose test has been renamed or deleted fails here.  The other five
 are asserted below, each under the stage that closed it.
 
-**Two rows are open**, and they are named here rather than left out, because
-a frontier that lists only its successes is a progress report.  Both are
-carried by ``docs/receipts/escalated-defects-P4-S10.json`` with a dated
-reason, a reproducer and a live gate, and this file asserts that the
-artifact still holds exactly those two — so a row cannot be dropped from
-both places at once.
+**One row is open**, and it is named here rather than left out, because a
+frontier that lists only its successes is a progress report.  It is carried
+by ``docs/receipts/escalated-defects-P4-S10.json`` with a dated reason, a
+reproducer and a live gate, and this file asserts that the artifact still
+holds exactly it — so a row cannot be dropped from both places at once.
+:data:`RETIRED_ROWS` is the other direction: a row that *was* escalated and
+has since closed stays named here, against the artifact's ``retired`` list,
+so "how many rows are open" has one answer and not two.
 
 The nine rows, and where each is read:
 
@@ -34,7 +36,8 @@ The nine rows, and where each is read:
 * ``_score_with_search_context``'s bespoke result assembly — S9, replaced by
   the score view — here
 * ``_packet_typed_actions`` and ``packet["_typed"]`` — S10 — here
-* ``WalkCompiler``'s duplicated dict/tuple branches — **open** — escalated
+* ``WalkCompiler``'s duplicated dict/tuple branches — S10, unified into one
+  loop with one tail — here
 * the hardcoded first-defender scan — **open** — escalated
 
 Rows that are somebody else's are named as *not* Phase 4's, because a
@@ -60,11 +63,20 @@ TESTS = ROOT / "tests"
 #: carries each.  Asserted against the artifact rather than described, so a
 #: row cannot quietly leave both the frontier and the escalation.
 OPEN_ROWS: dict[str, str] = {
-    "WalkCompiler's duplicated dict/tuple branches": (
-        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
-    ),
     "the hardcoded first-defender scan": (
         "the_first_defender_scan_survives_because_ccscope_was_never_authored"
+    ),
+}
+
+#: Rows this frontier closed *after* escalating them, and the escalation
+#: entry each retired.  A closed row leaves ``OPEN_ROWS`` and arrives here
+#: rather than simply vanishing: the artifact's own rule is that an entry
+#: retires with the inversion of its test, never by deletion, and a frontier
+#: that dropped the row would leave the artifact the only place the history
+#: existed.
+RETIRED_ROWS: dict[str, str] = {
+    "WalkCompiler's duplicated dict/tuple branches": (
+        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
     ),
 }
 
@@ -96,6 +108,8 @@ def test_every_open_row_is_carried_by_the_escalation_artifact() -> None:
     )
     carried = {defect["id"] for defect in receipt["defects"]}
     assert set(OPEN_ROWS.values()) <= carried
+    assert set(RETIRED_ROWS.values()) <= {defect["id"] for defect in receipt["retired"]}
+    assert not set(RETIRED_ROWS.values()) & carried
 
 
 def _holders(name: str) -> list[str]:
@@ -116,6 +130,40 @@ def _function(module_path: Path, name: str) -> ast.AST:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name == name
     )
+
+
+# --- S10: the compiler's two row readers, retired ----------------------------
+
+
+def test_the_compiler_reads_its_two_row_shapes_in_one_loop() -> None:
+    """The row ``RETIRED_ROWS`` names, read off the tree that closed it.
+
+    Not "no ``damage_events_tuple`` mention" — the light ledger is a live
+    representation and the reader has to know which one it holds.  What the
+    row was about is *duplication*, so what is asserted is the shape that
+    ends it: one loop over the damage events, one call to the constructor,
+    one call to each of the two appenders the tail performs.  Two loops
+    would show two of each.
+    """
+    from src.calculator.program import compile as compile_module
+
+    function = _function(Path(compile_module.__file__), "add_engine_result")
+    damage_loops = [
+        node
+        for node in ast.walk(function)
+        if isinstance(node, ast.For)
+        and "damage_events" in ast.dump(node.iter)
+        and "damage_events_tuple" not in ast.dump(node.iter)
+    ]
+    assert len(damage_loops) == 1
+    calls = [
+        node.func.id
+        for node in ast.walk(damage_loops[0])
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    ]
+    assert calls.count("compiled_damage_action") == 1
+    assert calls.count("champion_wound_tuple") == 1
+    assert calls.count("live_amp_for") == 1
 
 
 # --- the rows another stage pinned where it worked ---------------------------

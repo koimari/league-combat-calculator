@@ -543,24 +543,28 @@ def test_the_action_carries_a_rank_and_not_a_float() -> None:
 def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
     """The hand-written sort keys consume the same fold.
 
-    ``program/compile.py`` writes ``action_key``'s output by hand for its two
-    hot loops, so element 1 must be an ``ordering_slot(...)`` — directly or
+    ``program/compile.py`` writes ``action_key``'s output by hand for its hot
+    loop, so element 1 must be an ``ordering_slot(...)`` — directly or
     through one bound name.  A bare rank there would sort a reactive
     strike-back after a late barrier that ``action_key`` ties, and only the
     compiled-vs-receipt equivalence suite could ever see it.
 
     The file is ``program/compile.py`` since Phase 4 S4 moved the one
-    constructor there, and the count is four: the two hot loops plus the two
-    the relocated builders carry.  It was briefly five, because S4's
+    constructor there, and the count is **three**: the one hot loop plus the
+    two the relocated builders carry.  It was briefly five, because S4's
     ``compile_program`` assembled its own key -- the phase's declared entry
     point being exactly where a bare rank would next appear.  That one now
     calls ``action_key``, which is the stronger version of this guard: a key
-    that is never rebuilt cannot fold its rank the wrong way.
+    that is never rebuilt cannot fold its rank the wrong way.  It was four
+    until S10 unified ``add_engine_result``'s two row readers into one loop
+    with one tail, and the hand-written key that left is the point of the
+    unification rather than a casualty of it: one fewer place a rank can be
+    folded the wrong way is one fewer place this test has to catch it.
     """
     compile_py = PROGRAM / "compile.py"
     rules = _population_rules(_population())
     tuples = _sort_key_tuples(ast.parse(compile_py.read_text(encoding="utf-8")), rules)
-    assert len(tuples) == 4
+    assert len(tuples) == 3
     for tup, slot in tuples:
         assert _folds_to_slot(tup.elts[1], rules.bound), (slot, tup.elts[1].lineno)
 
