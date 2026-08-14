@@ -111,8 +111,11 @@ class TestTheLadderIsReachableFromProduction:
 
     The composition now constructs the decision and records
     :func:`~program.rung.counter_label` of it.  The published labels are
-    byte-identical; what changed is that the reason travels with the
-    decision, and that the clause above is now falsifiable.
+    byte-identical; what changed is that the clause above is falsifiable.
+    The reason rides on the decision object and is *not* published — the
+    counter sink has four counters and no reason field — so no test here
+    claims it is, and the sink field that would carry it is a dated row on
+    ``docs/receipts/escalated-defects-P4-S10.json``.
     """
 
     @staticmethod
@@ -132,10 +135,43 @@ class TestTheLadderIsReachableFromProduction:
         ]
 
     def test_every_member_of_the_union_is_constructed_in_src(self) -> None:
-        """A four-state ladder with three reachable states is a three-state one."""
+        """A four-state ladder with three reachable states is a three-state one.
+
+        The member list is read off ``rung.RUNGS``, never typed here.  A
+        typed triple is how this test came to assert three quarters of its
+        own name: ``CompiledFull`` was the fourth member of a union whose
+        production path the test claimed to check, and it had zero
+        construction sites in ``src/`` while this passed.
+        """
         source = self._timeline_source()
-        for member in ("CompiledFast", "ReceiptWalk", "SearchPoisoned"):
-            assert self._constructions(source, member), member
+        for member in rung.RUNGS:
+            assert self._constructions(source, member.__name__), member.__name__
+
+    def test_the_two_compiled_rungs_are_the_panel_miss_and_the_panel_hit(self) -> None:
+        """``CompiledFull`` is the evaluation that built the panel it walked.
+
+        Read off the guard rather than off the class name, in the idiom the
+        ``SearchPoisoned`` test below uses: the two constructions sit in one
+        conditional expression whose test is the signature-panel cache
+        lookup, so a later edit that made ``CompiledFull`` unreachable —
+        constructing it unconditionally, or under some other question —
+        fails here rather than quietly restoring the three-state ladder.
+        """
+        source = self._timeline_source()
+        chosen = [
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.IfExp)
+            and isinstance(node.orelse, ast.Call)
+            and isinstance(node.orelse.func, ast.Name)
+            and node.orelse.func.id == "CompiledFull"
+        ]
+        assert len(chosen) == 1, "the two compiled rungs are not one decision"
+        decision = chosen[0]
+        assert isinstance(decision.body, ast.Call)
+        assert isinstance(decision.body.func, ast.Name)
+        assert decision.body.func.id == "CompiledFast"
+        assert "panel" in ast.dump(decision.test)
 
     def test_the_histogram_key_is_never_recorded_directly(self) -> None:
         """One projection, so a label cannot be chosen beside its decision."""
@@ -214,6 +250,60 @@ class TestTheLadderIsReachableFromProduction:
         )
         assert sink.rungs[str(Label.SEARCH_POISONED)] == 0
         assert sum(sink.rungs.values()) == 1
+
+    def test_the_fourth_state_is_reached_by_a_real_evaluation(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The source guard above, confirmed against a running search.
+
+        Two evaluations through one :class:`CoupledSearchContext`: the first
+        compiles the defensive signature's panel and the second clones it.
+        The decision rides on the walk that priced each, so it is read off
+        the ``rung`` the composition hands the kernel — the production
+        value, not a re-derivation of it.
+        """
+        from src.calculator import participant_timeline as timeline
+        from scripts.bench_coupled_optimizer import WorkCounters
+        from src.calculator.data_fetcher import get_champion, get_item_by_name
+        from src.calculator.defensive_effects import resolve_starting_defenses
+        from src.calculator.pipeline import FightParams
+        from src.calculator.scenario import ChampionLoadout
+        from src.calculator.stats import calculate_total_stats
+
+        seen: list[str] = []
+        real_walk = timeline._walk  # pylint: disable=W0212
+
+        def observing_walk(*args, **kwargs):
+            seen.append(type(kwargs["rung"]).__name__)
+            return real_walk(*args, **kwargs)
+
+        monkeypatch.setattr(timeline, "_walk", observing_walk)
+
+        champion = get_champion("Ahri")
+        params = FightParams.from_request(
+            {"fight_mode": "time_based", "fight_duration": 8, "role": "mid"},
+            deterministic=True,
+        )
+        enemies = [ChampionLoadout(champion="Aatrox", level=18, role="top").resolve()]
+        context = timeline.CoupledSearchContext(work_counters=WorkCounters())
+        cache: dict = {}
+        for name in ("Rabadon's Deathcap", "Void Staff"):
+            items = [get_item_by_name(name)]
+            stats = calculate_total_stats(champion, 18, items, role="mid")
+            timeline.build_participant_timeline(
+                champion,
+                18,
+                items,
+                params,
+                main_stats=stats,
+                main_defenses=resolve_starting_defenses("Ahri", 18, stats, items),
+                enemies=enemies,
+                allies=[],
+                include_receipt=False,
+                pair_result_cache=cache,
+                search_context=context,
+            )
+        assert seen == ["CompiledFull", "CompiledFast"]
 
     def test_the_gate_refusal_carries_a_named_reason(self) -> None:
         """A gate fallback is a ``ReceiptWalk`` too, so it owes a receipt."""

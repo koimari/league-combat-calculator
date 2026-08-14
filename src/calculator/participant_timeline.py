@@ -117,10 +117,12 @@ from .program.dependency import (
 from .program.identity import MechanicId
 from .program.rung import (
     CompiledFast,
+    CompiledFull,
     FallbackScope,
     ReceiptWalk,
     SearchPoisoned,
     counter_label,
+    gate_rung,
 )
 from .program.compile import (
     WalkCompiler,
@@ -2947,6 +2949,16 @@ def _score_with_search_context(
     all_actors = [main, *roster]
     signature = _defensive_signature(main)
     panel = context.panels.get(signature)
+    # Which of the two compiled rungs this evaluation takes, decided where
+    # the difference between them actually happens.  ``CompiledFull`` is the
+    # evaluation that had to *build* this defensive signature's panel — it
+    # compiled the roster's actions rather than cloning a cached set — and
+    # every later evaluation on the same signature is ``CompiledFast``.  The
+    # two share one published label, so this split moves no counter; what it
+    # buys is that the residual (R-25) has a decision to name when panel
+    # reuse stops happening, instead of a histogram still reading 100%
+    # compiled.
+    compiled_rung = CompiledFast() if panel is not None else CompiledFull()
     if panel is None:
         try:
             panel = _build_signature_panel(
@@ -3227,13 +3239,23 @@ def _score_with_search_context(
     base = context.base_compiler
     coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
     program = roster_program(all_actors)
-    walk_result = _walk(actions, ctx, counters=context.work_counters).projected(
+    walk_result = _walk(
+        actions, ctx, counters=context.work_counters, rung=compiled_rung
+    ).projected(
         grey_health=grey_summary or None,
         timeline_coverage=combine_timeline_coverages(
             coverage_reports,
             target_count=len(coverage_reports),
         ),
     )
+    # The compiled rungs are recorded here rather than by the caller because
+    # this is the only frame that knows *which* of the two it took, and the
+    # decision rides on the walk result that priced the evaluation rather
+    # than being spelled a second time beside it.  The caller records the
+    # fallback rungs, which are the ones it knows: one rung per evaluation
+    # either way, because a return from here and an exception out of here
+    # are exclusive.
+    record_rung(context.work_counters, counter_label(walk_result.rung))
     # ``DISCARD``: these rows are the composition's own working copy.  The
     # score view re-projects them for the payload it returns and the receipt
     # view for the one it returns; recording a third map here would be a
@@ -3523,9 +3545,15 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             # zero construction sites in ``src/`` -- a ladder D-69 ruled, that
             # no production path could reach, so "``SearchPoisoned`` appears
             # only for genuine invariant errors" was a clause nothing could
-            # fail.  The receipt the exception carries is the reason, so the
-            # decision names *which* declaration refused rather than only
-            # that one did.
+            # fail.  The receipt the exception carries is the reason, and it
+            # is carried on the decision rather than dropped at the raise --
+            # but the published sink holds four counters and no reason field,
+            # so the only reader of it today is ``counter_label``'s choice of
+            # scope.  Saying that plainly because the alternative is a
+            # comment claiming a fallback names which declaration refused
+            # when the histogram it feeds still says only that one did; the
+            # sink field that would publish it is the harness's (R-24) and
+            # is a dated row on ``escalated-defects-P4-S10.json``.
             decision = (
                 SearchPoisoned(exc.receipt)
                 if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
@@ -3533,7 +3561,9 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             )
             record_rung(work_counters, counter_label(decision))
         else:
-            record_rung(work_counters, counter_label(CompiledFast()))
+            # No rung recorded here: ``_score_with_search_context`` already
+            # recorded the compiled one it took, which is the only frame
+            # that can tell ``CompiledFast`` from ``CompiledFull``.
             return scored
     elif patch is None:
         # One rung per evaluation, recorded by that evaluation's first pass.
@@ -3541,12 +3571,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # one, so recording its gate refusal would enter one evaluation in
         # the four-state histogram twice and break the property that the
         # histogram accounts for 100% of evaluations.
-        record_rung(
-            work_counters,
-            counter_label(
-                ReceiptWalk(_GATE_REFUSAL_RECEIPT, FallbackScope.REQUEST_GATE)
-            ),
-        )
+        # ``gate_rung`` rather than the ``ReceiptWalk(..., REQUEST_GATE)`` it
+        # returns: the builder exists for exactly this decision, and spelling
+        # it out here would be the second spelling of one decision that the
+        # bridge in ``program/rung`` exists to prevent.
+        record_rung(work_counters, counter_label(gate_rung(_GATE_REFUSAL_RECEIPT)))
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
