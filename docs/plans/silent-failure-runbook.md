@@ -91,6 +91,66 @@ Why: an oracle that has read the fix is not an oracle — and exporting the work
 
 R-20's second half — **when `<n>` is not knowable before the edit, declare the population and measure it first.** Some corrections change which rows a baseline holds, so their occurrence count cannot be read off the pre-change tree by inspection. Such a slice declares the **qualifying population** instead: a set enumerated from committed artifacts — the baseline files, the scenario set, the registries — **before the slice's first `src/` edit**, whose size is then written into the `Expected qualifying occurrences` line and into the commit body, and whose membership bounds what may qualify. Any occurrence outside the enumerated population is an unexpected one and stops the slice exactly as an over-count would. Measure, then mutate, then pin: enumerating after the edit measures the fix rather than predicting it, and a slice carrying neither a number nor a pinned population has not declared a gate. Where a slice's occurrences are per scenario, the population is enumerated per scenario and the line carries the per-scenario breakdown.
 
+> **Amendment R-15/R-18 — 2026-08-14, briefing a leaf that cannot be judged alone.** The Phase 4
+> boundary's investigator pass returned a dissent cluster, and the pass's own escalation
+> (`docs/receipts/escalated-defects-P4-boundary.json`, the live entry
+> `thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value`) names the cause as a defect in the
+> **brief** rather than in any verdict: R-18 hands an investigator a leaf path and two values, and for
+> one member of a **repeated-source series** that triple does not determine a question. A
+> repeated-source series is a run of leaves the same mechanic produces into one record — successive
+> rows of a same-source list, successive arms of one debuff, or the fields of a record whose siblings
+> did not move. Handed one such member alone, an investigator cannot know *which* arming, tick or
+> event of the sequence it is pricing; it prices the series' first member, or the series entire, and
+> is right about a question nobody asked. Every arm of the amendment follows from that one diagnosis.
+>
+> **The export does not move.** It stays exactly `data/` and `docs/math-foundations.md`, built by
+> R-18's one `git archive` command, which remains that command's sole home. An oracle that has read
+> the fix is not an oracle, and every widening the dissents suggested would have handed one
+> `scripts/` — the committed baselines, which hold the very reading the pass exists to check
+> independently.
+>
+> **The brief carries the question.** For a leaf that is one member of a repeated-source series, the
+> brief additionally carries a *question specification*: the committed scenario parameters, and the
+> leaf's position and context within its series — timestamp, ordinal, trigger context, and the sibling
+> facts that did **not** move. Every one of those facts is read from the committed **pre-change**
+> baseline receipt and the committed scenario definitions, and from nowhere else. They are facts of
+> the **question**, never facts of the **fix**: the pre-change tree is the side the investigator is
+> asked to adjudicate *against*, so stating it in full poses the question and discloses no answer,
+> while a post-change sibling would be the answer and is forbidden by the same sentence that keeps
+> `src/` out of the export. That line — pre-change side and scenario definition may be quoted,
+> post-change side may not — is the whole of what the brief gains.
+>
+> **The unit of investigation is the series.** Given that brief the investigator computes the
+> **entire** series from scratch, member by member, from the cached wiki text and
+> `docs/math-foundations.md`, and issues **one verdict per leaf** from R-19's closed set. One
+> computation, one receipt per leaf: a cluster's verdicts are then mutually consistent by
+> construction rather than by luck, which is why this is an amendment to R-15 as well as to R-18 —
+> R-15 still decides which leaves qualify, and the qualifying members of one series are briefed once
+> and answered together rather than parcelled out to independent investigators who cannot see each
+> other's arithmetic.
+>
+> **Adjudication of a dissent.** A verdict for the old value is a stop (R-19), and how a stop is
+> cleared is ruled here, so that clearing one can never become a search for a friendlier oracle.
+>
+> 1. **A mechanic-level dissent cluster is re-adjudicated as one well-posed whole-series
+>    investigation**, by a **fresh** investigator that has read neither the prior receipts nor the
+>    escalation that collected them. The cluster is the unit: re-running a single member under the
+>    same underdetermined brief reproduces the defect and buys nothing.
+> 2. **A sustained dissent re-opens the producing correction as a ruled `src/` fix.** If the
+>    whole-series verdict again certifies the old value, the correction that moved those leaves is
+>    what is wrong, and it re-opens as its own ruled slice carrying its own
+>    `Expected qualifying occurrences` line (R-20). It is **never** absorbed into a baseline: a
+>    re-capture over a sustained dissent makes the baseline assert a number an independent oracle has
+>    twice said is wrong — an unexplained value wearing a gate's authority, which is the campaign's
+>    own failure shape.
+> 3. **A verdict is never re-run merely because it dissents.** Disagreement is not a defect. Every
+>    re-run must cite the **specific defect in the prior brief** — the underdetermined question, named
+>    concretely — and that citation is written **into the receipt that supersedes the prior one**,
+>    together with the name of the receipt superseded. The superseded receipt is never edited and
+>    never deleted; both stand, and the supersession states its own cause. A re-run whose receipt
+>    names no defect in the brief it replaces is oracle shopping, and this clause is what makes it
+>    unwritable rather than merely discouraged.
+
 ### E9 corpus discipline
 
 **R-21 — The staleness anchor is the merge-base `src/` tree, supplied to both readers *and the writer* by one function.** D-100 moves the assert off HEAD; verified `tests/test_e9_corpus.py:412-416` *also* selects the executed `_PINNED` set by comparing each scenario's `src` tree to HEAD's, and the assert itself is `:443-452`. Moving only the assert would leave the receipt suite selecting zero scenarios and passing by testing nothing — the campaign's own failure shape inside the campaign's own gate. **The writer takes the same anchor**: `repin(*, at="merge-base", check=False)` is the default, because writing HEAD's sha while comparing against the merge base makes `--check` fail the moment `src/` diverges, including on the comment-only commit Phase 0's criterion 1 requires to pass. One function, three call sites.
