@@ -711,6 +711,21 @@ def test_a_refused_survival_leaf_is_not_read_as_a_zero() -> None:
     assert "leafText(null, healthPath, healthDispositions)" in row
 
 
+def test_the_enemy_predicate_has_one_home() -> None:
+    """Which row is an enemy is answered in one place.
+
+    ``enemyHealthRemaining`` needed each enemy's roster *index* to build its
+    dispositions path and re-spelled the filter inline to get it, leaving the
+    shared helper with one fewer caller and the predicate with two copies --
+    character-for-character the same, and free to drift from the next commit
+    onwards.  ``enemyRows`` carries the index, and ``enemyParticipants`` is
+    its projection.
+    """
+    source = APP_JS.read_text(encoding="utf-8")
+    assert source.count('row.team === "enemy"') == 1
+    assert _js_call_sites(source, "enemyRows") >= 2
+
+
 def test_the_page_has_a_rule_for_what_a_refusal_looks_like() -> None:
     """A marker with no style is a word that reads as a value."""
     css = (

@@ -2881,8 +2881,19 @@ function prototypeParticipants(result) {
   return result?.combat?.participants || [];
 }
 
+/** Every enemy participant, with the roster index its leaf paths are keyed by.
+    One predicate, because a dispositions path is `participants[i].survival.x`
+    and a caller that needed `i` re-spelled the filter inline to get it — two
+    copies of "which row is an enemy", identical until the day one of them is
+    updated. */
+function enemyRows(result) {
+  return (result?.combat?.participants || [])
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+}
+
 function enemyParticipants(result) {
-  return (result?.combat?.participants || []).filter((row) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+  return enemyRows(result).map(({ row }) => row);
 }
 
 function enemyEffectiveHealth(result) {
@@ -2896,11 +2907,8 @@ function enemyEffectiveHealth(result) {
 }
 
 function enemyHealthRemaining(result) {
-  const participants = result?.combat?.participants || [];
   const dispositions = result?.combat?.dispositions || null;
-  const enemyIndexes = participants
-    .map((row, index) => ({ row, index }))
-    .filter(({ row }) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+  const enemyIndexes = enemyRows(result);
   if (!enemyIndexes.length) return "";
   // A total that reads one refused member as zero is a total that quietly
   // counted a number nobody produced. If any enemy's ending health was
