@@ -142,10 +142,16 @@ class Invalidator(Enum):
     nothing writes: this is not a `data/` file at all."""
 
     OBJECT_IDENTITY = "object_identity"
-    """Nothing but the identity guard in front of the key — the honest
-    spelling of a memo that is not invalidated at all.  Every member is a
-    row on the deferred table with an issue reference, so this reads as the
-    gap it is rather than as a design."""
+    """An address is part of what selects the entry — the honest spelling of
+    a memo the counter alone does not determine.  Declared *alongside*
+    ``DATA_VERSION`` where a memo carries both (``_CAST_ORDER_PARAMS_MEMO``
+    keys on ``(data_version(), id(params), order)``), and alone where the
+    address is the whole key.  Every member alone is a row on the deferred
+    table with an issue reference; every member paired with ``DATA_VERSION``
+    is outside migration frontier counter 7's scanned trees and names its
+    owning lane.  Either way this reads as the gap it is rather than as a
+    design, which is the reason not to let the counter member stand for the
+    whole key."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,6 +189,16 @@ def _governed(*invalidators: Invalidator):
 
 
 _version_keyed = _governed(Invalidator.DATA_VERSION)
+
+# The generation *and* an address, which is three memos: they key on
+# ``(data_version(), id(x), ...)`` behind a strong-reference guard.  Spelled
+# as its own builder so the pairing is a declaration a reader can grep for
+# rather than a detail inside a reason string — a memo whose key is half an
+# address and which declares only the counter reads as value-keyed, and
+# migration frontier counter 7 does not scan any of the three.
+_keyed_on_an_address_too = _governed(
+    Invalidator.DATA_VERSION, Invalidator.OBJECT_IDENTITY
+)
 
 
 # ── who keys on the counter ──────────────────────────────────────────────
@@ -224,8 +240,13 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
         "catalog the cache generation counts; read inside two fight loops, so "
         "the derivation is memoized rather than re-scanned per candidate"
     ),
-    "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": _version_keyed(
-        "derived cast-order params; the order was resolved from cached ability data"
+    "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": _keyed_on_an_address_too(
+        "derived cast-order params; the order was resolved from cached ability "
+        "data — and the key is (data_version(), id(params), order) with a "
+        "strong-reference guard, so the address is half of it. Declared rather "
+        "than implied: pipeline.py is outside migration frontier counter 7's "
+        "scanned trees ({survival,program} and stats.py) and outside this "
+        "lane's edit scope, so counter 7 reading 0 says nothing about it"
     ),
     "calculator.stats._ITEM_STATS_MEMO": _version_keyed(
         "one cached item's extracted stat block"
@@ -233,11 +254,13 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
     "calculator.stats._ITEM_STATS_VALIDATION_MEMO": _version_keyed(
         "the schema verdict on one cached item's stat map"
     ),
-    "calculator.support_effects._SUPPORT_ATTRS_MEMO": _version_keyed(
-        "whether a cached champion carries any support attribute"
+    "calculator.support_effects._SUPPORT_ATTRS_MEMO": _keyed_on_an_address_too(
+        "whether a cached champion carries any support attribute; keyed "
+        "(data_version(), id(champion_data)) with a strong-reference guard"
     ),
-    "calculator.support_effects._SUPPORT_PROFILE_MEMO": _version_keyed(
-        "one cached ability's shield/heal attribute names and target scope"
+    "calculator.support_effects._SUPPORT_PROFILE_MEMO": _keyed_on_an_address_too(
+        "one cached ability's shield/heal attribute names and target scope; "
+        "keyed (data_version(), id(ability)) with a strong-reference guard"
     ),
     "calculator.survival.receipt_state._STATE_PROTO_MEMO": _version_keyed(
         "a participant's survival prototype, derived from cached item stats"

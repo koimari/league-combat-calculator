@@ -2723,3 +2723,42 @@ def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
             assert response.status_code == expected, (endpoint, extra)
             if expected == 400:
                 assert "top" in response.get_json()["error"]
+
+
+def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch):
+    """The serving-path arm S10's ``SumPlan`` added, asserted at the endpoint.
+
+    ``program/views/receipt`` builds a :class:`SumPlan` over the three
+    published panels, and the plan refuses at construction when one panel
+    published an event id twice.  That is a *new failure mode on the serving
+    path*: a receipt with that defect used to serve, and now it does not.
+    Deliberate — a panel repeating its own id has no benign reading and no
+    symptom — but a refusal nobody has watched fire is a refusal nobody
+    knows the shape of, so this fires it and pins the shape: a named 400
+    carrying the panel and the id, never a 500 and never a served payload.
+
+    Cross-panel sharing is the other case and is deliberately not tested
+    here as a failure: it is recorded in ``SumPlan.shared`` and it serves.
+    """
+    from src.calculator.program.views import receipt as receipt_view
+
+    real_rows = receipt_view._damage_event_rows  # pylint: disable=W0212
+
+    def duplicating_rows(events, writer, section):
+        rows = real_rows(events, writer, section)
+        return [*rows, dict(rows[0])] if rows else rows
+
+    monkeypatch.setattr(receipt_view, "_damage_event_rows", duplicating_rows)
+
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "fight_mode": "time_based",
+            "fight_duration": 8,
+            "enemies": [{"champion": "Aatrox", "level": 18, "role": "top"}],
+        },
+    )
+    assert response.status_code == 400
+    assert "twice" in response.get_json()["error"]

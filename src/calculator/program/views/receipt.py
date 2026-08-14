@@ -461,9 +461,23 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     # D-65: the three panels are three sources a reader unions, and what
     # kept that union from double-counting was a comment.  Building the plan
     # *is* the check -- ``SumPlan`` refuses at construction -- so a receipt
-    # whose panels shared an event id fails here rather than serving a total
-    # that counted one event twice.  Discarded rather than published: what
-    # it declares is a property of the payload below, not a leaf of it.
+    # **one of whose panels published an event id twice** fails here rather
+    # than serving rows that repeat.  Not a shared id across two panels:
+    # that is a support packet that delivered damage, it is recorded in
+    # ``SumPlan.shared`` and it serves.  Discarded rather than published:
+    # what it declares is a property of the payload below, not a leaf of it.
+    #
+    # **This is a refusal on the serving path**, so say so: a receipt that
+    # served before and repeats an id within one panel now raises out of
+    # ``/api/calculate`` instead.  Deliberate and fail-closed -- a panel
+    # repeating its own id has no benign reading and no symptom, which is
+    # exactly the shape that must not serve -- and empty in practice: no
+    # production total folds over ``SumPlan.ids``, so nothing published
+    # today was double-counting and nothing published today can trip it.
+    # The permanent red is ``tests/test_program_precision.py``'s
+    # ``DuplicateSumMember`` pair; the endpoint's own arm -- a named 400,
+    # never a 500 and never a served payload -- is asserted in
+    # ``tests/test_app.py``.
     sum_plan(
         {
             "events": events,

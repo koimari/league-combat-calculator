@@ -182,6 +182,15 @@ def _record_key(item_data: Mapping[str, Any]) -> tuple[int, int] | None:
     fixture declares no id, and filing every such fixture under one key would
     serve one test's stats to another.
 
+    **Three records are refused, not two.**  A missing id and a non-integer
+    id are the obvious pair; a ``bool`` id is the third, and it is excluded
+    explicitly because ``True == 1`` and ``hash(True) == hash(1)``, so a
+    fixture spelling one would not get its own entry — it would silently
+    share the entry of the item whose id is 1.  No row in
+    ``data/items.json`` has a bool id, so this refusal has never fired; it
+    is named here because an unnamed third case in a two-case docstring is
+    the drift this campaign is about, at the smallest scale it occurs.
+
     Two costs the value key trades for correctness, named here because they
     are the kind a benchmark notices and a reader does not.
 

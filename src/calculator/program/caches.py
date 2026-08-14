@@ -1,14 +1,28 @@
 """What a cache is keyed on, and what makes its answer stale.
 
-Eleven memos across the serving path key on ``id()`` — the address of a
-mutable object — and each one re-verifies identity against a strong reference
-so an address reused after a collection cannot serve somebody else's value.
-That guard makes them *safe*; it does not make them *correct*.  An address is
-not derived from the value it stands for, so an object mutated in place keeps
-its key and keeps its cached answer, and the answer is now a number no rule
+Eleven memos across the serving path used to key on ``id()`` — the address of
+a mutable object — each re-verifying identity against a strong reference so an
+address reused after a collection could not serve somebody else's value.  That
+guard makes them *safe*; it does not make them *correct*.  An address is not
+derived from the value it stands for, so an object mutated in place keeps its
+key and keeps its cached answer, and the answer is now a number no rule
 computed against the inputs it claims.
 
-Three rules close that, and this module is where they are written down.
+**Where that stands at S10, because this file is the worst place to describe a
+tree that no longer exists.**  Migration frontier counter 7 — ``id()``-keyed
+caches whose key is not derived from the served value, over
+``src/calculator/{survival,program}`` and ``stats.py`` — reads **0**.  It is a
+scoped counter, and outside its trees ten address-keyed sites survive:
+``pipeline.py:1001``, ``support_effects.py:183`` and ``:226``, and seven in
+``champions/`` (``engine.py``, ``slotlib.py``).  Every one of them is a row in
+``data_registry``'s tables with an owner and a reason, and the three that pair
+an address with the cache generation say ``OBJECT_IDENTITY`` beside
+``DATA_VERSION`` rather than letting the counter member stand for the whole
+key — which is what "every cache declares ``invalidated_by``" has to mean if
+a scoped zero is not to read as a global one.
+
+Three rules close the general case, and this module is where they are written
+down.
 
 1. **A cache key is a value derived from the object the cache serves**, and
    the served value is immutable.  ``id()`` survives only as a fast path in
