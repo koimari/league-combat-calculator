@@ -92,22 +92,55 @@ _SEGMENT = re.compile(r"([^\[\]]+)((?:\[\d+\])*)")
 _MISSING = object()
 
 
-def _superseding_value(path: str, recorded):
-    """What a later committed allowlist says this leaf moved on to, if any.
+def _resolve_supersession(path: str, recorded, blocks):
+    """What an allowlist that **declares** it supersedes this ledger says.
 
-    R-17's allowlists are the campaign's forward record of an expected move,
-    so a leaf a boundary pinned and a later slice moved again has its
-    successor written down before the move rather than after it.  Returns
-    *recorded* unchanged when no allowlist claims the path, so the caller's
-    assertion is the boundary's own by default.
+    A boundary receipt pins a leaf's certified value, and a later slice may
+    move that leaf again.  Which claim wins is decided by the claim, never by
+    the claimant's filename: a row supersedes this ledger's pin exactly when
+    it carries a ``supersedes`` block naming this receipt and this entry.  An
+    allowlist that merely happens to mention the same path — every R-17
+    allowlist states an old and a new value for every path it claims — is not
+    a claim on the boundary and does not override it.
+
+    Two claimants on one path is a contradiction, not a precedence question,
+    so it raises rather than picking one.  *blocks* is the ``(name, parsed
+    allowlist)`` sequence, taken as an argument so the negatives below can
+    pose both failures without writing a file into ``docs/receipts/``.
     """
-    for receipt in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
-        block = json.loads(receipt.read_text(encoding="utf-8"))
-        values = block.get("expected_diff_values") or {}
-        row = values.get(path)
-        if isinstance(row, dict) and "new" in row:
-            return row["new"]
-    return recorded
+    claims = [
+        (name, row)
+        for name, block in blocks
+        for claimed, row in (block.get("expected_diff_values") or {}).items()
+        if claimed == path
+        and isinstance(row, dict)
+        and isinstance(row.get("supersedes"), dict)
+        and row["supersedes"].get("receipt") == RECEIPT.name
+        and row["supersedes"].get("entry") == RETIRED_ID
+    ]
+    if not claims:
+        return recorded
+    if len(claims) > 1:
+        raise AssertionError(
+            f"{path}: {sorted(name for name, _ in claims)} each claim to "
+            f"supersede {RETIRED_ID}; supersession is not a precedence question"
+        )
+    name, row = claims[0]
+    assert "new" in row, f"{name} claims to supersede {path} without a new value"
+    return row["new"]
+
+
+def _committed_allowlists():
+    """Every committed R-17 allowlist, as ``(filename, parsed block)``."""
+    return [
+        (receipt.name, json.loads(receipt.read_text(encoding="utf-8")))
+        for receipt in sorted(RECEIPTS.glob("expected-golden-diff-*.json"))
+    ]
+
+
+def _superseding_value(path: str, recorded):
+    """``_resolve_supersession`` over the committed allowlists."""
+    return _resolve_supersession(path, recorded, _committed_allowlists())
 
 
 def _ledger():
@@ -452,14 +485,15 @@ class TestTheOwedPopulationIsAnswered:
         exactly the ``new_value`` each row's receipt certified — including the
         removals, which are absent from it.
 
-        Unless a **later** committed allowlist claims the same path and
-        declares what it moves it to, which is how a leaf legitimately moves
-        again after a boundary: the closing re-capture moved
+        Unless a committed allowlist **declares** that it supersedes this
+        entry on that path, which is how a leaf legitimately moves again after
+        a boundary: the closing re-capture moved
         ``/metadata/fingerprint/leaves`` a second time, because H2's two
         published fields are two more leaves.  Reading the successor from the
         allowlist rather than editing this row is the whole discipline —
         a row is superseded by a claim somebody committed in advance, never
-        by a number somebody updated afterwards.
+        by a number somebody updated afterwards, and never by an allowlist
+        that merely spells the same path.
         """
         baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         leaf = _population()[index]
@@ -480,6 +514,79 @@ class TestTheOwedPopulationIsAnswered:
             and _superseding_value(path, leaf["new_value"]) is not leaf["new_value"]
         }
         assert claimed == {"/metadata/fingerprint/leaves"}
+
+    def test_the_one_live_claim_declares_what_it_supersedes(self):
+        """The claim is a declaration in the tree, not an inference here."""
+        claimants = [
+            name
+            for name, block in _committed_allowlists()
+            for path, row in (block.get("expected_diff_values") or {}).items()
+            if path == "/metadata/fingerprint/leaves"
+            and isinstance(row, dict)
+            and isinstance(row.get("supersedes"), dict)
+        ]
+        assert claimants == ["expected-golden-diff-P4-H2-ccscope.json"]
+        claim = next(
+            row["supersedes"]
+            for name, block in _committed_allowlists()
+            if name == claimants[0]
+            for path, row in block["expected_diff_values"].items()
+            if path == "/metadata/fingerprint/leaves"
+        )
+        assert claim["receipt"] == RECEIPT.name
+        assert claim["entry"] == RETIRED_ID
+        assert claim["why"].strip()
+
+    def test_an_allowlist_that_only_spells_the_path_does_not_supersede(self):
+        """The filename-order accident this resolution replaced.
+
+        An R-17 allowlist states an old and a new value for every path it
+        claims, so "some allowlist mentions this path" was true of any slice
+        that moved the leaf for its own reasons — and the old resolution
+        returned whichever such file sorted first.  A row that declares
+        nothing is now inert.
+        """
+        blocks = [
+            (
+                "expected-golden-diff-AAAA-earlier-alphabetically.json",
+                {"expected_diff_values": {"/x": {"old": 1, "new": 999}}},
+            )
+        ]
+        assert _resolve_supersession("/x", 7, blocks) == 7
+
+    def test_two_declared_claimants_on_one_path_raise(self):
+        """A second claimant is a contradiction, never a precedence question."""
+        claim = {"receipt": RECEIPT.name, "entry": RETIRED_ID, "why": "test"}
+        blocks = [
+            (
+                f"expected-golden-diff-{tag}.json",
+                {"expected_diff_values": {"/x": {"new": value, "supersedes": claim}}},
+            )
+            for tag, value in (("aaa", 1), ("bbb", 2))
+        ]
+        with pytest.raises(AssertionError, match="not a precedence question"):
+            _resolve_supersession("/x", 7, blocks)
+
+    def test_a_claim_naming_another_entry_does_not_reach_this_one(self):
+        """Supersession is per entry, so a sibling ledger's claim is inert."""
+        blocks = [
+            (
+                "expected-golden-diff-elsewhere.json",
+                {
+                    "expected_diff_values": {
+                        "/x": {
+                            "new": 999,
+                            "supersedes": {
+                                "receipt": RECEIPT.name,
+                                "entry": "some_other_entry",
+                                "why": "test",
+                            },
+                        }
+                    }
+                },
+            )
+        ]
+        assert _resolve_supersession("/x", 7, blocks) == 7
 
     def test_the_population_is_the_size_the_entry_declares(self):
         assert len(_population()) == 60

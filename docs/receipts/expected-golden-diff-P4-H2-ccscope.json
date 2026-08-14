@@ -87,7 +87,12 @@
     "/metadata/fingerprint/leaves": {
       "old": 23308,
       "new": 23310,
-      "why": "The two added fields, and nothing else. numeric_leaves does not move: both are strings."
+      "why": "The two added fields, and nothing else. numeric_leaves does not move: both are strings.",
+      "supersedes": {
+        "receipt": "escalated-defects-P4-boundary.json",
+        "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+        "why": "That entry pins the value each of the sixty boundary leaves was certified at, and this leaf is one of them. This slice moves it again, so the successor is declared here -- in advance, by name -- rather than by editing the boundary row afterwards. The declaration is what makes the supersession resolvable: a second allowlist that merely states this path is not a claim on the boundary, and a second allowlist that declares one is a contradiction the gate refuses rather than an ordering it resolves."
+      }
     }
   },
   "oracle_pass": {
