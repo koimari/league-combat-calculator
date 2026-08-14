@@ -600,3 +600,96 @@ def test_the_algebra_is_frozen_so_a_fold_cannot_mutate_its_operands() -> None:
     for member in (MEASURED, STRUCTURAL, WITHHELD, STARVED):
         with pytest.raises(Exception):
             member.disposition = Disposition.MEASURED  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# Criterion 19's source half: nothing folds a quantity outside the algebra
+# ---------------------------------------------------------------------------
+
+#: Every ``.read()`` on a quantity in ``src/``, by module, with why it is
+#: there.  The population is small on purpose: reading a quantity is how a
+#: disposition gets discarded, so each read is a place the propagation row
+#: stops, and the set of those places is the check.
+DECLARED_QUANTITY_READS: dict[str, int] = {
+    # The algebra itself: one read per operand inside ``__add__``, plus the
+    # two summed reads.  This is the only module allowed to read two
+    # quantities into one arithmetic expression, because that expression *is*
+    # the propagation row.
+    "calculator/ability_spec.py": 3,
+    # The total, after the fold: ``ranked_total`` folds first and reads the
+    # answer, so a withheld member has already made the total withheld and
+    # the read is what turns that into the caller's named refusal.
+    "calculator/program/build.py": 1,
+    # One leaf, at the moment it is published.  ``serialize_leaf`` is the one
+    # producer of a payload number and its entry, so this is where a quantity
+    # legitimately becomes a float.
+    "calculator/program/views/__init__.py": 1,
+}
+
+
+def _quantity_read_sites() -> dict[str, list[int]]:
+    """Every zero-argument ``.read()`` call under ``src/calculator``.
+
+    ``data_updater``'s file-handle read is excluded by shape rather than by
+    name: it takes a stream, not a quantity, and lives in a module that never
+    imports the algebra, so the population is "modules that can hold a
+    quantity" and the check cannot be dodged by renaming a file.
+    """
+    root = Path(__file__).resolve().parent.parent / "src"
+    found: dict[str, list[int]] = {}
+    for path in sorted((root / "calculator").rglob("*.py")):
+        source = path.read_text(encoding="utf-8")
+        if "ability_spec import" not in source and path.name != "ability_spec.py":
+            continue
+        if not any(
+            name in source for name in ("Quantity", "Measured", "Withheld", "Starved")
+        ):
+            continue
+        lines = [
+            node.lineno
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "read"
+            and not node.args
+            and not node.keywords
+        ]
+        if lines:
+            found[path.relative_to(root).as_posix()] = lines
+    return found
+
+
+def test_every_quantity_read_in_src_is_one_of_the_declared_ones() -> None:
+    """A fourth reader is a fourth place a disposition can be dropped."""
+    measured = {module: len(lines) for module, lines in _quantity_read_sites().items()}
+    assert measured == DECLARED_QUANTITY_READS
+
+
+def test_only_the_algebra_folds_two_quantities_into_one_expression() -> None:
+    """Criterion 19's source assertion, as the shape it forbids.
+
+    A view or a ledger that adds two ``read()`` values has re-implemented
+    ``__add__`` without the propagation row: five measured components and one
+    withheld one would fold to a measured total that counted the withheld
+    member as zero, which is the incident at the aggregate and is exactly what
+    the type exists to make unrepresentable.
+    """
+    root = Path(__file__).resolve().parent.parent / "src"
+    offenders: list[tuple[str, int]] = []
+    for module in _quantity_read_sites():
+        source = (root / module).read_text(encoding="utf-8")
+        for node in ast.walk(ast.parse(source)):
+            if not isinstance(node, (ast.BinOp, ast.AugAssign)):
+                continue
+            reads = [
+                child
+                for child in ast.walk(node)
+                if isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Attribute)
+                and child.func.attr == "read"
+            ]
+            if reads:
+                offenders.append((module, node.lineno))
+    assert [module for module, _ in offenders] == [
+        "calculator/ability_spec.py"
+    ], offenders

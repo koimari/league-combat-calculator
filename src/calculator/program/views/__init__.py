@@ -46,6 +46,7 @@ __all__ = [
     "RankingWriter",
     "UnrankableNumber",
     "name_every_number",
+    "published_quantity",
     "published_tag",
     "refuse_previewed",
     "serialize_leaf",
@@ -153,6 +154,47 @@ def published_tag(
     except (KeyError, TypeError):
         raise UnrankableNumber(surface, "a number no entry names", [path]) from None
     return ViewTag(entry["view_tag"])
+
+
+def published_quantity(
+    dispositions: Mapping[str, Mapping[str, object]],
+    path: str,
+    value: float,
+    *,
+    surface: str,
+) -> Quantity:
+    """The quantity the payload published at *path* — disposition and all.
+
+    The companion of :func:`published_tag`, and the half without which
+    :class:`Quantity`'s propagation never reaches a serving surface.  A
+    ``WITHHELD`` leaf is **absent** from the payload by ruling, so a consumer
+    that reads it as ``payload.get(path, 0.0)`` gets a zero no rule computed
+    and folds it into a total that then claims to be measured — the incident,
+    at the aggregate, inside the one surface the algebra exists to protect.
+    Reading the entry rather than the leaf is what makes the refusal
+    propagate.
+
+    ``STRUCTURAL_ZERO`` folds as ``0.0`` and therefore cannot move a number;
+    it is reconstructed anyway so the total's disposition is derived from what
+    the payload said rather than from what the caller assumed.  ``STARVED``
+    never reaches a payload — :func:`serialize_leaf` raises while producing
+    it — so an entry claiming it is a malformed payload and is refused here
+    rather than reconstructed into a raise somewhere further along.
+    """
+    try:
+        entry = dispositions[path]
+    except (KeyError, TypeError):
+        raise UnrankableNumber(surface, "a number no entry names", [path]) from None
+    disposition = entry.get("disposition")
+    if disposition == Disposition.WITHHELD.value:
+        return Withheld(receipts=tuple(entry.get("receipts") or ()))
+    if disposition == Disposition.STRUCTURAL_ZERO.value:
+        return StructuralZero(reason=str(entry.get("reason") or ""))
+    if disposition != Disposition.MEASURED.value:
+        raise UnrankableNumber(
+            surface, f"a {disposition!r} disposition no payload may carry", [path]
+        )
+    return Measured(amount=value)
 
 
 @dataclass(frozen=True, slots=True)

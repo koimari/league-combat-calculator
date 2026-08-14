@@ -557,3 +557,125 @@ class TestTheTwoScoreServingPayloads:
             assert isinstance(row["gold"], int)
             assert json.dumps(row["gold"]) == str(row["gold"])
         assert not any(path.endswith(".gold") for path in payload["dispositions"])
+
+
+class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
+    """Criterion 19's end-to-end backstop, over a real roster receipt.
+
+    The unit half of the criterion — ``Quantity.__add__`` over the full
+    member x member matrix — lives in ``tests/test_ability_spec``.  This is
+    the half that says the algebra is actually *on* the serving path: a
+    roster whose payload carries one ``WITHHELD`` component, and a total that
+    refuses rather than ranking the candidate on a number nobody computed.
+
+    The withholding is injected rather than produced, and that is a fact
+    about the tree and not a weakness of the fixture: no rule in ``src/``
+    constructs a ``Withheld`` quantity today, so a fixture that waited for
+    one would be a test of nothing.  What it exercises is the path a real
+    withheld leaf will take — absent from the payload, present in the
+    ``dispositions`` map with its receipts — which is exactly the shape
+    ``serialize_leaf`` produces and the only shape a consumer can meet.
+
+    The trap it closes is the incident's own: a withheld leaf is *absent*, so
+    every ``payload.get(path, 0.0)`` on a serving surface reads a zero no
+    rule computed, and a fold of five measured components and that zero is a
+    ``MEASURED`` total that silently counted the refusal as nothing.
+    """
+
+    LEAF = "objective.focus_damage_before_death"
+    RECEIPT = "coverage: this fixture withheld the focus damage"
+
+    def _withheld_receipt(self) -> tuple[dict, str]:
+        """A live roster receipt with one component withheld the ruled way."""
+        combat = dict(_combat())
+        objective = dict(combat["objective"])
+        # A withheld leaf is absent from the payload while its entry stays.
+        objective.pop("focus_damage_before_death", None)
+        combat["objective"] = objective
+        combat["dispositions"] = {
+            **combat["dispositions"],
+            self.LEAF: {
+                "disposition": "WITHHELD",
+                "view_tag": "applied",
+                "receipts": [self.RECEIPT],
+            },
+        }
+        return combat, objective["focus_participant_id"]
+
+    def _score(self, combat: Mapping, focus_id: str):
+        from src.calculator.bis import bis_objective_score
+
+        focus = next(
+            row for row in combat["participants"] if row["participant_id"] == focus_id
+        )
+        return bis_objective_score(
+            "overall",
+            subject_team="main",
+            focus_id=focus_id,
+            combat=combat,
+            objective=combat["objective"],
+            focus=focus,
+        )
+
+    def test_the_total_refuses_and_names_the_member_it_swallowed(self) -> None:
+        from src.calculator.ability_spec import WithheldHasNoValue
+
+        combat, focus_id = self._withheld_receipt()
+        with pytest.raises(WithheldHasNoValue) as raised:
+            self._score(combat, focus_id)
+        assert self.RECEIPT in str(raised.value)
+
+    def test_a_total_over_a_withheld_member_is_itself_withheld(self) -> None:
+        """The disposition, not just the raise: the propagation row, live."""
+        from src.calculator.ability_spec import Disposition, Measured
+        from src.calculator.program.build import Tagged, fold_tagged
+        from src.calculator.program.views import ViewTag, published_quantity
+
+        combat, _ = self._withheld_receipt()
+        withheld = published_quantity(
+            combat["dispositions"], self.LEAF, 0.0, surface="the fixture"
+        )
+        total = fold_tagged(
+            [
+                Tagged(Measured(amount=1200.0), ViewTag.APPLIED),
+                Tagged(withheld, ViewTag.APPLIED),
+                Tagged(Measured(amount=340.0), ViewTag.APPLIED),
+            ]
+        )
+        assert total.quantity.disposition is Disposition.WITHHELD
+        assert total.quantity.receipts == (self.RECEIPT,)
+
+    def test_the_absent_leaf_would_otherwise_have_folded_as_a_zero(self) -> None:
+        """R-05: the red this gate reproduces on demand.
+
+        The payload has no number at that path, so the serving surface's own
+        ``.get(..., 0.0)`` yields ``0.0`` -- and folding *that* gives a
+        perfectly well-formed ``MEASURED`` total that counted a refusal as
+        nothing.  Asserting it here is what stops the check above from being
+        satisfied by a payload that simply had no withheld member.
+        """
+        from src.calculator.ability_spec import Disposition, Measured
+        from src.calculator.program.build import Tagged, fold_tagged
+        from src.calculator.program.views import ViewTag
+
+        combat, _ = self._withheld_receipt()
+        assert "focus_damage_before_death" not in combat["objective"]
+        assert float(combat["objective"].get("focus_damage_before_death", 0.0)) == 0.0
+        naive = fold_tagged(
+            [
+                Tagged(Measured(amount=1200.0), ViewTag.APPLIED),
+                Tagged(Measured(amount=0.0), ViewTag.APPLIED),
+                Tagged(Measured(amount=340.0), ViewTag.APPLIED),
+            ]
+        )
+        assert naive.quantity.disposition is Disposition.MEASURED
+        assert naive.quantity.read() == 1540.0
+
+    def test_the_unwithheld_roster_still_scores(self) -> None:
+        """The positive control: the refusal is the withholding, not the path."""
+        combat = _combat()
+        score, metric, _components, _ = self._score(
+            combat, combat["objective"]["focus_participant_id"]
+        )
+        assert isinstance(score, float)
+        assert metric

@@ -26,13 +26,13 @@ from .optimizer import (
     get_eligible_legendaries,
     optimizer_supported_items,
 )
-from .ability_spec import Measured
 from .pipeline import DEFAULT_FIGHT_DURATION
 from .program.build import Tagged, ranked_total
 from .program.views import (
     RankingWriter,
     UnrankableNumber,
     name_every_number,
+    published_quantity,
     published_tag,
     refuse_previewed,
 )
@@ -415,9 +415,17 @@ def bis_objective_score(
     survival_path = _focus_survival_path(combat, focus)
 
     def part(path: str, value: float) -> Tagged:
-        """One published number, carrying what its own entry says it means."""
+        """One published number, carrying what its own entry says it means.
+
+        Both halves come from the entry: what the number *means* (its view)
+        and whether there is a number at all (its disposition).  The second
+        matters because a withheld leaf is absent from the payload, so the
+        ``.get(..., 0.0)`` above it reads a zero no rule computed; taking the
+        quantity from the entry is what makes the fold propagate the refusal
+        instead of ranking the candidate on it.
+        """
         return Tagged(
-            Measured(amount=value),
+            published_quantity(dispositions, path, value, surface=BIS_SURFACE),
             published_tag(dispositions, path, surface=BIS_SURFACE),
         )
 
