@@ -1,0 +1,86 @@
+{
+  "receipt_id": "oracle-P4-R18-amend-leaf0",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-14",
+  "scenario": "score_event_scan_holder",
+  "leaf_path": "/coupled_scenarios/score_event_scan_holder/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": {
+    "breakdown[0].effective_health": {
+      "disposition": "MEASURED",
+      "view_tag": "applied"
+    },
+    "breakdown[0].healing_output": {
+      "disposition": "MEASURED",
+      "view_tag": "applied"
+    }
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "scope_honored": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were not read."
+  },
+  "independent_computation": {
+    "nature_of_leaf": "This leaf is not a game quantity. It carries no damage, stat, resistance, cooldown or gold number. It is a per-field provenance annotation map: for two receipt fields of the first combat breakdown row it records (a) a disposition ('MEASURED') and (b) a view tag ('applied'). No arithmetic value exists to recompute.",
+    "step_1_search_data_cache": {
+      "action": "Exhaustive recursive search of the exported data/ tree (champions.json, items.json, runes.json, atoms/, item-atoms/, wiki/, wiki-atoms/, bin/, champion-audit/, practice-corpus/, worklists/, economics-sourced.json, onhit-matrix.json, staleness.json) for the tokens 'disposition', 'MEASURED', 'view_tag', 'scan_holder', 'coupled_scenarios', 'effective_health', 'healing_output'.",
+      "result": "Zero hits for every token except the generic word 'breakdown' (which occurs only as practice-corpus 'kind': 'breakdown_source' and unrelated prose). The scenario id 'score_event_scan_holder' does not appear anywhere in the cached wiki data.",
+      "conclusion": "The cached wiki text defines no disposition vocabulary and no such scenario, so no numeric or textual value for this leaf can be derived from data/."
+    },
+    "step_2_search_math_foundations": {
+      "action": "Full read of docs/math-foundations.md (524 lines) plus token search for 'disposition', 'view_tag', 'MEASURED', 'provenance'.",
+      "result": "No disposition/view-tag taxonomy is defined anywhere in the document. The document does, however, fix the semantics of both annotated fields and it does use the 'applied' vs 'not applied' distinction as a load-bearing engine concept.",
+      "conclusion": "The leaf's value cannot be *computed* from a quoted formula; it can only be *adjudicated for consistency* against the documented semantics of the two fields it annotates."
+    },
+    "step_3_semantic_adjudication": {
+      "effective_health": {
+        "documented_semantics": "Section 5 audit table, BIS-score row: the receipt is an accumulation of total resources over the simulated walk, explicitly NOT the closed-form EHP identity and NOT remaining health.",
+        "why_MEASURED_fits": "A quantity accumulated by walking the simulated fight (health pool plus shields plus heals plus grey health actually consumed) is produced by measurement of the walk, not by evaluating a closed-form identity. The closed-form alternative that would justify a 'derived' disposition is the Section 2.1 identity EHP(R) = H0 * (1 + R/100); the document explicitly disclaims that reading for this receipt ('total resources', not remaining health, and the tiebreak is an infinitesimal regularizer only). MEASURED is therefore the disposition consistent with the sourced semantics.",
+        "why_applied_fits": "Total-resources accounting counts resources that were actually spent/absorbed along the walk: shield absorption is the clipping identity absorbed = min(shield, damage) with absorbed + overkill = damage, and grey health is the saturating accumulator pool = min(cap, ratio * sum of post-mitigation incoming). Both are realized-in-window quantities, i.e. the 'applied' view, not a potential/authored view."
+      },
+      "healing_output": {
+        "documented_semantics": "Section 5 audit table, Grievous Wounds row: healing in the survival walk is multiplied by the strongest-wins factor 0.60 via min of factors, with duration refresh via max and the boundary convention that a heal landing exactly at window expiry is un-reduced.",
+        "why_MEASURED_fits": "Healing output is only knowable by walking the event ledger: which heals land inside which wound windows, which factor is strongest at that instant, and where the expiry boundary falls. It is an outcome of the simulation, not a formula evaluated on stats.",
+        "why_applied_fits": "The engine's own vocabulary in the same table separates authored-but-not-realized from realized: the Revive row reads 'Candidate revive authored after every damage event, applied only when dead ... post-window revives visible but not applied'. 'applied' is thus the documented tag for the realized view. Healing after Grievous-Wounds reduction and overheal clipping is exactly that realized view."
+      },
+      "old_value_assessment": "The old state omitted the block entirely, i.e. it asserted nothing about how these two receipt fields were produced or which view they report. Given that math-foundations.md flags effective_health as the field most easily misread ('total resources', not remaining health), leaving it un-annotated is the state the sources argue against: the annotation records precisely the distinction the document had to spell out in prose. Absence is not contradicted by any source, but it is strictly less informative and does not encode the documented semantics.",
+      "both_wrong_assessment": "Rejected. Neither annotated pair contradicts any cached wiki text or any formula in math-foundations.md; both tags are the ones the document's own semantics imply. There is no third value that the permitted sources point to."
+    },
+    "limits_of_this_adjudication": "Honest scope statement: because the disposition/view-tag vocabulary is defined nowhere in the permitted evidence tree, this verdict is a consistency judgement against documented field semantics, not an arithmetic recomputation. It cannot confirm that the engine in fact measures (rather than derives) these two fields at runtime, since src/ was out of scope by runbook. If the engine were shown to compute effective_health from the closed-form EHP(R) = H0*(1+R/100) identity rather than by accumulating resources along the walk, the disposition MEASURED would be wrong and the leaf would need re-adjudication; the document explicitly disclaims that reading, which is the basis for the verdict below."
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, BIS score row",
+      "quote": "BIS score (`_evaluate_build_uncached`) | finite-horizon renewal-reward functional: cumulative damage until death; EHP\u00b71e-9 lexicographic tiebreak | EXACT* | *the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is \"total resources\", not remaining health"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Revive row",
+      "quote": "Candidate revive authored after every damage event, applied only when dead \u2014 exact earliest-trigger semantics; post-window revives visible but not applied"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Grievous Wounds row",
+      "quote": "multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max` | EXACT | Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Shield absorption row",
+      "quote": "clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage\u2212absorbed)`; `absorbed+overkill = damage`"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, Grey health row",
+      "quote": "saturating accumulator `pool = min(cap, ratio\u00b7\u03a3 post-mitigation incoming)`"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1",
+      "quote": "post = raw \u00b7 m(R)  \u27fa  raw = post \u00b7 (1 + R/100) = post \u00b7 EHP_multiplier(R), EHP(R) = H\u2080 \u00b7 (1 + R/100)."
+    },
+    {
+      "source": "data/ (whole exported cache, negative evidence)",
+      "quote": "Recursive search returns zero occurrences of 'disposition', 'MEASURED', 'view_tag', 'coupled_scenarios', 'score_event_scan_holder', 'effective_health' or 'healing_output' in any cached wiki file."
+    },
+    {
+      "source": "data/atoms/atoms.schema.json (negative evidence)",
+      "quote": "The only provenance vocabulary in the cache is the atom schema's provenance object requiring 'wiki' and 'binary'; it defines no MEASURED/derived disposition enum and no view tags."
+    }
+  ],
+  "verdict": "new_value_correct"
+}

@@ -1,0 +1,103 @@
+{
+  "receipt": "oracle-P4-R18-amend-leaf2",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-14",
+  "investigator": "fresh oracle subagent; evidence tree built ONLY via `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never read",
+  "scenario": "score_plain_tuple",
+  "leaf_path": "/coupled_scenarios/score_plain_tuple/combat/dispositions",
+
+  "old_value": "<absent>",
+  "new_value": {
+    "breakdown[0].effective_health": { "disposition": "MEASURED", "view_tag": "applied" },
+    "breakdown[0].healing_output": "<supplied to the oracle in truncated form: `\"breakdown[0].healing_output\": ...`; judged on the same {disposition: MEASURED, view_tag: applied} shape as the sibling key>"
+  },
+
+  "what_this_leaf_is": "Engine-internal receipt metadata: a per-field provenance/disposition annotation on the combat receipt (which class the value belongs to, and which view of the value the receipt exposes). It is NOT a game quantity — no damage, heal, stat or threshold number moves with it.",
+
+  "independent_computation": {
+    "limitation_stated_first": "Neither of the permitted oracle sources defines a `disposition` taxonomy or a `view_tag` axis. A case-sensitive scan of the entire exported tree returns ZERO occurrences of `disposition`, `view_tag`, `MEASURED`, `UNMEASURED`, `score_plain_tuple`, `coupled_scenarios`, `healing_output`, and `breakdown[0]`. The only `effective_health` occurrence in the whole export is one line of docs/math-foundations.md. Therefore the literal string value of this leaf is NOT recomputable from cached wiki text or from a quoted formula. What follows is the strongest independent check the sources do support: recomputing the two annotated quantities from first principles and testing whether the two labels are consistent with, or contradicted by, what the sources say those quantities are.",
+
+    "step_1_effective_health_is_an_exact_closed_form_not_an_approximation": {
+      "quoted_identity": "docs/math-foundations.md Sec. 2.1: `post = raw · m(R)  ⟺  raw = post · (1 + R/100) = post · EHP_multiplier(R), EHP(R) = H₀ · (1 + R/100)`, with `m(R) = 100 / (100 + R)`.",
+      "audit_class": "docs/math-foundations.md Sec. 5 rates `Resistance mitigation (apply_resistance)` — the identity `m(R)=100/(100+R)`; EHP round-trip `raw = post·(1+R/100)` — as **EXACT**, not APPROX.",
+      "worked_example_from_cached_wiki_data": {
+        "source": "data/champions.json -> Aatrox.stats (health.flat 650, health.perLevel 114, armor.flat 38, armor.perLevel 4.8)",
+        "growth_formula_quoted": "base + growth × (level − 1) × (0.7025 + 0.0175 × (level − 1))  [math-foundations Sec. 5 row `Stat growth (growth_stat)`, verdict EXACT]",
+        "level": 18,
+        "growth_factor_at_L18": "(0.7025 + 0.0175 × 17) = 0.7025 + 0.2975 = 1.0 exactly",
+        "health_L18": "650 + 114 × 17 × 1.0 = 650 + 1938 = 2588.0",
+        "armor_L18": "38 + 4.8 × 17 × 1.0 = 38 + 81.6 = 119.6",
+        "mitigation_multiplier": "m(119.6) = 100 / (100 + 119.6) = 0.4553734…",
+        "effective_health_physical": "EHP = 2588.0 × (1 + 119.6/100) = 2588.0 × 2.196 = 5683.248",
+        "conclusion": "effective_health is a deterministic closed form over sourced stats, reproducible to the last decimal from the cache alone. It carries no defaulted player option, no tuning constant, and no undocumented estimate — i.e. it is not in the APPROX class (Sec. 5: burn GCD spread, Black Cleaver stack constant, Terminus pen average, DoT even split, stat rounding) and not in the non-computed BOUNDARY class (Sec. 1.3: executes are 'priced as a display row and does *not* add execute damage to totals' — 'the kill boundary is documented, not double-counted')."
+      },
+      "view_axis": "`(1 + R/100)` IS the resistance-applied view of health; the un-applied view is the bare `H₀ = 2588.0`. A receipt that reports 5683.248 is by construction reporting the applied view, so `view_tag: \"applied\"` is the tag the identity itself dictates.",
+      "the_one_doc_caveat_checked_and_cleared": "Sec. 5, row `BIS score (_evaluate_build_uncached)`: '*the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is \"total resources\", not remaining health.' This caveat is about EHP being a *pool* rather than a *remaining-health* readout, and about the `EHP·1e-9` lexicographic tiebreak — neither statement conflicts with labelling the field exactly-computed, and 'total resources' is precisely the mitigation-applied pool `H₀·(1+R/100)` computed above. No contradiction with either label."
+    },
+
+    "step_2_healing_output_is_likewise_exact_and_reported_post_reduction": {
+      "quoted_identity": "docs/math-foundations.md Sec. 5, row `Grievous Wounds (healing_reduction.py, survival walk)`: 'multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max`' — verdict **EXACT**; edge case: 'Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule)'.",
+      "computation": "applied_heal = raw_heal × min_over_active_sources(factor_i), with factor = 0.60 for a standard Grievous Wounds source and 1.0 with none. The operator is a fixed multiplicative constant with an exact strongest-wins composition — an exactly evaluated quantity, again not APPROX and not BOUNDARY.",
+      "view_axis": "The number a receipt exposes after that factor is the *applied* heal; the pre-factor number is the raw heal. `view_tag: \"applied\"` names the post-reduction view, which is the one that is conserved against the survival walk (Sec. 5 shield row: `absorbed + overkill = damage`, the same applied-ledger discipline).",
+      "conclusion": "Same disposition class and same view tag as effective_health — the new value assigning both keys the identical `{MEASURED, applied}` pair is internally coherent with the sources."
+    },
+
+    "step_3_should_the_leaf_exist_at_all_i_e_was_absent_correct": "docs/math-foundations.md Sec. 4 is explicit that the deterministic number 'claims nothing about' variance/model error/distributional shape, and that 'unmodeled mechanics … fail closed or are disclosed; the number is only as good as the reviewed module set'. Sec. 5's whole apparatus is a per-family EXACT/APPROX disclosure table whose stated purpose is that no approximation is 'silently presented as exact'. Pinning that same per-field disclosure into the golden baseline is what makes a silent reclassification (a field quietly moving from exact to estimated) show up as a visible diff instead of vanishing. The permitted sources therefore give a positive reason for the annotation to be pinned and give NO reason for it to be absent. `<absent>` is the weaker of the two candidates.",
+
+    "step_4_falsification_attempts_that_failed": [
+      "Scanned every file in the export (data/**, docs/math-foundations.md) for a competing taxonomy that the labels might violate. The only adjacent vocabulary found is the project's *certainty* axis in data/worklists/p5-ux-task.md and data/worklists/p7-validation-task.md ('exact|estimate|boundary'). Both annotated fields fall in that vocabulary's EXACT bucket ('fully sourced formula, no options' / 'every damaging/heal row is a sourced formula with no player-controlled default'), i.e. the highest-confidence bucket — consistent with MEASURED and inconsistent with the estimate/boundary buckets.",
+      "Checked whether MEASURED might mean 'verified against the live game', which these synthetic scenarios are not. The project's game-verification vocabulary is a separate axis and lives elsewhere (data/practice-corpus/scenarios.json: `verified_tiers`, per-scenario `tier`, `practice_tool_steps`); `score_plain_tuple` is absent from that corpus. The pairing with `view_tag` (a raw-vs-applied view axis) shows the disposition axis is engine-side provenance, not game verification. This falsification attempt does not land, but it is the residual risk noted below.",
+      "Checked whether a 'plain tuple' scoring path could make a `breakdown[0]` annotation spurious. The leaf path itself is `/coupled_scenarios/score_plain_tuple/combat/…`, i.e. the scenario demonstrably carries a `combat` receipt with a `breakdown`; 'plain tuple' describes the score return shape (cf. math-foundations Sec. 3.1 `score + EHP·1e-9`, a two-component score), not the absence of a receipt. Not falsified."
+    ]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Sec. 2.1 (The 100/(100+R) identity)",
+      "quote": "post = raw · m(R)  ⟺  raw = post · (1 + R/100) = post · EHP_multiplier(R), EHP(R) = H₀ · (1 + R/100). A target with H₀ health and resistance R survives exactly H₀·(1+R/100) raw damage."
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 5 formula-audit table, row 'Resistance mitigation (apply_resistance)'",
+      "quote": "m(R)=100/(100+R); EHP round-trip raw = post·(1+R/100); sigmoid family — **EXACT**"
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 5 formula-audit table, row 'Stat growth (growth_stat)'",
+      "quote": "base + growth·(L−1)·(0.7025 + 0.0175·(L−1)) — **EXACT**"
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 5 formula-audit table, row 'Grievous Wounds (healing_reduction.py, survival walk)'",
+      "quote": "multiplicative factor 0.60 (40% reduction); strongest-wins composition via min of factors; duration refresh via max — **EXACT**. Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule)."
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 5 formula-audit table, row 'BIS score (_evaluate_build_uncached)'",
+      "quote": "*the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is \"total resources\", not remaining health"
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 4 (Variance and confidence) and Sec. 5 audit conclusion",
+      "quote": "unmodeled mechanics … fail closed or are disclosed; the number is only as good as the reviewed module set. … The approximations found are all documented in code … none is silently presented as exact."
+    },
+    {
+      "source": "data/champions.json -> Aatrox.stats (cached wiki data)",
+      "quote": "health.flat 650, health.perLevel 114, armor.flat 38, armor.perLevel 4.8"
+    },
+    {
+      "source": "data/worklists/p7-validation-task.md line 22 (cached project worklist, permitted data/ path)",
+      "quote": "EXACT when every damaging/heal row is a sourced formula with no player-controlled default (no options); ESTIMATE when the module uses a defaulted option (stacks/procs/uptime) or a documented approximation (burn GCD spread, Black Cleaver average sta…"
+    },
+    {
+      "source": "data/worklists/p5-ux-task.md line 18 (cached project worklist, permitted data/ path)",
+      "quote": "the breakdown/ability rows render a certainty chip next to each damage/heal number: EXACT (fully sourced formula, no options), ESTIMATE (uses a defaulted player-controlled option), BOUNDARY (documented non-computed mechanic)."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json (negative evidence)",
+      "quote": "keys: schema_version, purpose, verified_tiers, scenarios, receipts — 22 game-verified scenarios; `score_plain_tuple` is not among them, confirming this leaf is not a game-measurement claim."
+    }
+  ],
+
+  "residual_risk": "The disposition enum's own definition lives outside the permitted evidence tree. If `MEASURED` were defined to mean 'empirically observed against the live game' rather than 'produced by the engine's exact computation on this run', both annotated fields would be mislabeled and the correct verdict would flip to both_wrong. The co-occurring `view_tag` (a raw-vs-applied *view* axis) and the fact that the project keeps game verification on a separate, explicitly-named axis (`verified_tiers` / `tier` in data/practice-corpus/scenarios.json) both argue against that reading, but this oracle cannot close it from data/ + docs/math-foundations.md alone.",
+
+  "verdict": "new_value_correct",
+  "verdict_basis": "Not recomputable as a literal string from the permitted sources (no disposition taxonomy exists in data/ or docs/math-foundations.md). Judged instead on the substance of the claim: both annotated quantities were independently recomputed from cached wiki stats and quoted formulas — effective_health = H₀·(1+R/100) (Aatrox L18: 2588.0 × 2.196 = 5683.248) and applied_heal = raw_heal × min(factors) — and both are rated **EXACT** by the formula-audit table, both are reported in their resistance-/reduction-applied view, and both sit in the highest-confidence bucket of the project's own certainty vocabulary. Every falsification attempt failed, and the sources give a positive reason (the disclosure discipline of Sec. 4/Sec. 5) for the annotation to be pinned in the baseline rather than absent. `<absent>` is unsupported; the new value is consistent with, and unfalsified by, every source available to this oracle.",
+
+  "committed": false
+}

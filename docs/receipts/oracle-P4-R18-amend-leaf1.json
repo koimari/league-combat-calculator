@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-P4-R18-amend-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-14",
+  "scenario": "score_event_view_holder",
+  "leaf_path": "/coupled_scenarios/score_event_view_holder/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": {
+    "breakdown[0].effective_health": {
+      "disposition": "MEASURED",
+      "view_tag": "applied"
+    },
+    "breakdown[0].healing_output": "<elided in the question statement as '...'; not available to this oracle>"
+  },
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "read": [
+      "docs/math-foundations.md (all 523 lines)",
+      "data/README.md",
+      "data/atoms/atoms.schema.json",
+      "data/atoms/autoresearch-review.md",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md",
+      "recursive greps over the whole data/ tree"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/",
+      "git history", "the diff", "the plan"
+    ],
+    "note": "The scratch directory also contained a stray syndra.json left over from an earlier session (mtime predates this export). It is NOT part of the git-archive export and was excluded from all reasoning."
+  },
+
+  "independent_computation": {
+    "conclusion": "NOT ORACLE-COMPUTABLE FROM THE PERMITTED EVIDENCE BASE.",
+    "work_shown": [
+      "Step 1 - Classify the leaf. The value is not a quantity. It is a map from breakdown-row identifiers ('breakdown[0].effective_health', 'breakdown[0].healing_output') to a pair of engine taxonomy labels: a 'disposition' ('MEASURED') and a 'view_tag' ('applied'). There is no damage, health, resistance, cooldown or gold number in it, so no wiki stat line and no formula can produce it arithmetically.",
+      "Step 2 - Search the permitted sources for the vocabulary that would define these labels. Case-insensitive recursive grep over the entire exported data/ tree and docs/math-foundations.md for 'disposition', 'MEASURED', 'view_tag', 'view holder', 'score_event', 'coupled_scenarios' returned ZERO definitional hits. The only 'measured' hits are the English word in data/atoms/autoresearch-review.md ('Measured metrics (independent verification)'), unrelated to a disposition enum. data/champions.json contains no token matching 'disposition*'. The scenario id 'score_event_view_holder' appears nowhere under data/ (the only scenario corpus in the export, data/practice-corpus/scenarios.json, uses ids of the form 'cp21-ziggs-outer-blast' and does not contain it).",
+      "Step 3 - Search docs/math-foundations.md for a quoted formula that yields a disposition or a view tag. The document states identities for damage, mitigation, penetration, DoT partitioning, proc counting, shields, grey health, revive and the BIS score. None of them has a metadata/label codomain. The formula-audit table (Section 5) assigns EXACT/APPROX verdicts to engine families, not dispositions to breakdown rows; the two vocabularies are disjoint.",
+      "Step 4 - Consistency test instead of derivation. Since no derivation exists, the strongest available oracle test is whether the new value CONTRADICTS anything the permitted sources assert. Two documented semantics bear on it: (a) the engine already distinguishes values that are authored/visible from values that are applied - math-foundations.md line 475 (Revive row): 'Candidate revive authored after every damage event, applied only when dead - exact earliest-trigger semantics; post-window revives visible but not applied'; and Section 1.3: the execute threshold is 'priced as a display row and does not add execute damage to totals ... the kill boundary is documented, not double-counted'. A per-row view_tag whose value is 'applied' is therefore a distinction the documented model genuinely makes, not an invented one. (b) The healing side has an applied-vs-raw distinction too - line 472 (Grievous Wounds row): 'multiplicative factor 0.60 (40% reduction); strongest-wins composition via min of factors' - so a 'healing_output' row carrying an 'applied' view is coherent with the documented model.",
+      "Step 5 - Look for a contradiction on the effective_health row specifically. math-foundations.md line 476 (BIS score row) warns: \"`effective_health` receipt is 'total resources', not remaining health.\" This is a warning about what the LABEL effective_health denotes, not about which view of it is stored. A view_tag of 'applied' does not assert 'remaining health', so no contradiction is established. This is nonetheless the single place where the new value could be wrong in a way the permitted sources would care about, and it is flagged below as the residual risk.",
+      "Step 6 - Evaluate the old value. '<absent>' asserts nothing, so it cannot be contradicted either. But absence is not neutral for THIS scenario: the scenario is named 'score_event_view_holder', i.e. it exists to pin the score-event view holder. A golden that carries no dispositions leaf for the scenario named after that mechanism pins nothing about the thing under test, which is the anomalous state of the two."
+    ],
+    "computed_value": null,
+    "why_null": "The leaf is engine receipt metadata (a provenance/view taxonomy). Its correct value is fixed by the engine's own receipt design, which lives in src/ and tests/ - both outside this oracle's permitted evidence tree by construction. No cached wiki text and no formula in docs/math-foundations.md constrains it numerically or enumerationally."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md",
+      "line": 475,
+      "quote": "Candidate revive authored after every damage event, applied only when dead - exact earliest-trigger semantics; post-window revives visible but not applied",
+      "bears_on": "establishes that 'applied' is a real, documented view distinction in the engine's receipts (visible/authored vs applied)"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "line": 476,
+      "quote": "BIS score (`_evaluate_build_uncached`) | finite-horizon renewal-reward functional: cumulative damage until death; EHP*1e-9 lexicographic tiebreak | EXACT* | *the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is \"total resources\", not remaining health",
+      "bears_on": "the only statement in the permitted sources about the effective_health receipt row; constrains its DENOTATION, not its disposition/view_tag"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "lines": "156-160",
+      "quote": "The engine prices the threshold as a display row and does *not* add execute damage to totals (`_add_execute_display`) - the kill boundary is documented, not double-counted.",
+      "bears_on": "second documented instance of a receipt row that is displayed but not applied - the distinction a view_tag encodes"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "line": 472,
+      "quote": "Grievous Wounds (`healing_reduction.py`, survival walk) | multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max` | EXACT",
+      "bears_on": "healing has a documented raw-vs-applied gap, so an 'applied' view on healing_output is coherent"
+    },
+    {
+      "source": "data/ (entire exported tree, recursive case-insensitive grep)",
+      "quote": "no occurrence of 'disposition', 'view_tag', 'view holder', 'score_event', or 'coupled_scenarios'; 'MEASURED' occurs only as the English word in data/atoms/autoresearch-review.md line 22 ('## 1. Measured metrics (independent verification)')",
+      "bears_on": "negative result: the cached wiki data defines none of this leaf's vocabulary, so it cannot adjudicate the leaf"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "quote": "scenario ids are of the form 'cp21-ziggs-outer-blast', 'cp21-bis-utility-ahri'; 'score_event_view_holder' is absent",
+      "bears_on": "the only scenario corpus in the permitted tree does not define this scenario"
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_confidence": "low",
+  "verdict_basis": "Consistency, not derivation. The new value contradicts nothing in the permitted evidence base and encodes a distinction (applied vs authored/displayed) that docs/math-foundations.md explicitly documents the engine as making. The old value (<absent>) is equally uncontradicted but pins nothing for a scenario whose entire subject is the score-event view holder, so between the two the populated map is the defensible state. 'both_wrong' would require positive evidence the new labels are wrong; this oracle found none, and asserting it would be unsupported.",
+  "oracle_computable": false,
+  "caveats": [
+    "This leaf is engine receipt metadata, not a game quantity. An independent oracle restricted to data/ and docs/math-foundations.md structurally cannot compute it; the verdict above is a consistency check and must not be read as numeric confirmation.",
+    "The question statement elided the value of 'breakdown[0].healing_output' as '...'. This oracle never saw that sub-value and therefore cannot vouch for it at all; the verdict covers only the 'breakdown[0].effective_health' entry and the presence/shape of the map.",
+    "Residual risk: docs/math-foundations.md line 476 warns that the effective_health receipt means 'total resources', not remaining health. If the engine's 'applied' view_tag is defined to mean 'the post-application/remaining value', tagging effective_health 'applied' would collide with that warning. Verifying that requires reading the disposition enum's definition in src/, which is outside this oracle's mandate. RECOMMENDATION: have a non-blinded reviewer confirm the enum semantics against line 476.",
+    "Verdict is on the value's correctness only. This oracle takes no position on whether the leaf should have been added to the golden baseline in this change."
+  ],
+  "committed": false
+}
