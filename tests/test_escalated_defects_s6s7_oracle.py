@@ -419,16 +419,31 @@ class TestARuledMembershipTransitionIsAdjudicatedByCitation:
         assert body["allowlist_entry"]["status"] == "NOT_OWED_RULED_MEMBERSHIP"
 
 
-class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
-    """The measured half: the report no longer spells the reclassified leaves.
+def _cleaver(section):
+    """One list out of the re-captured coupled baseline's cleaver scenario."""
+    baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+    return baseline["coupled_scenarios"]["cleaver_bloodsong_roster"]["combat"][section]
 
-    Read off the live compare rather than off the receipts, because a
-    reclassification whose own instrument still produces the leaf it
-    reclassified is prose.
+
+class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
+    """The measured half, now read off the baseline the boundary capture pinned.
+
+    These assertions read the live compare while the re-capture was blocked:
+    a reclassification whose own instrument still produced the leaf it
+    reclassified would have been prose.  The Phase 4 boundary re-capture
+    absorbed those membership transitions, so the compare is clean and every
+    "the report no longer spells it" assertion would now pass whatever the
+    instrument did — the vacuously-green shape this campaign exists to kill.
+    They are therefore turned over onto the committed baseline, which is where
+    the remedy now lives: the record the ordinal was substituting is what the
+    baseline holds at that ordinal, and the removed identities are gone from
+    the list rather than re-spelled as value changes.  The compare being clean
+    is asserted rather than assumed, so a dirty one fails here too.
     """
 
     def test_the_ordinal_addressed_leaves_are_no_longer_reported(self):
         standing = _standing()
+        assert standing == {}, "the coupled compare is not clean"
         for path in (
             "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/damage_type",
             "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/sequence",
@@ -436,21 +451,50 @@ class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
         ):
             assert path not in standing, path
 
-    def test_each_reclassified_leaf_is_one_membership_transition(self):
-        standing = _standing()
-        for name in (C3_CLASSIFICATION, C4_CLASSIFICATION):
-            measured = _classification(name)["the_instrument_fix"]["measured_after"]
-            diff = standing[measured["path"]]
-            assert diff.transition == measured["transition"]
-            assert diff.identity == measured["identity"]
+    def test_each_reclassified_leaf_is_pinned_as_the_membership_it_became(self):
+        """The inversion: the baseline holds the post-membership record itself."""
+        c3 = _classification(C3_CLASSIFICATION)["the_instrument_fix"]["measured_after"]
+        events = _cleaver("events")
+        identities = [event.get(gs.IDENTITY_FIELD) for event in events]
+        assert c3["identity"] not in identities, c3["identity"]
+        assert "main:enemy:Aatrox:34" not in identities
+        ordinal = int(c3["path"].rsplit("[", 1)[1].rstrip("]"))
+        assert events[ordinal][gs.IDENTITY_FIELD] == "main:enemy:Aatrox:35"
 
-    def test_the_record_the_ordinal_substituted_has_no_differing_leaf(self):
-        """main:enemy:Aatrox:35 was compared against another event; it is unmoved."""
-        assert not [
-            diff
-            for diff in _standing().values()
-            if diff.identity == "main:enemy:Aatrox:35"
+        c4 = _classification(C4_CLASSIFICATION)["the_instrument_fix"]["measured_after"]
+        support = _cleaver("support_events")
+        ordinal = int(c4["path"].rsplit("/", 1)[0].rsplit("[", 1)[1].rstrip("]"))
+        assert ordinal >= len(support), c4["path"]
+        armings = [
+            row for row in support if row.get("source") == "Bloodsong — Expose Weakness"
         ]
+        assert [row[gs.IDENTITY_FIELD] for row in armings] == [
+            "enemy:Aatrox:support:0",
+            "enemy:Aatrox:support:1",
+            c4["identity"],
+        ]
+        assert not [row for row in armings if "owner" in row]
+
+    def test_the_record_the_ordinal_substituted_is_field_for_field_unmoved(self):
+        """main:enemy:Aatrox:35 was compared against another event; it is unmoved.
+
+        Its pre-capture reading is quoted by the classification receipt as
+        "field for field it is what the baseline holds at ordinal 84", so the
+        baseline is asked for exactly that: the record now standing where the
+        substitution was reported carries the identity the ordinal displaced.
+        """
+        quoted = _classification(C3_CLASSIFICATION)["the_instrument_fix"][
+            "measured_after"
+        ]["the_record_the_ordinal_used_to_substitute"]
+        assert "main:enemy:Aatrox:35" in quoted
+        events = _cleaver("events")
+        matching = [
+            event
+            for event in events
+            if event.get(gs.IDENTITY_FIELD) == "main:enemy:Aatrox:35"
+        ]
+        assert len(matching) == 1
+        assert events.index(matching[0]) == len(events) - 1
 
     def test_the_entry_records_the_remedy_and_stays_open(self):
         entry = _entry_by_id(

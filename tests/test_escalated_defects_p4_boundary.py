@@ -1,30 +1,33 @@
-"""The Phase 4 boundary's 60 verdicts are in, and 13 of them say do not pin it.
+"""The Phase 4 boundary re-capture landed, and this file is what inverted with it.
 
 R-19 forbids re-capturing a baseline while any qualifying occurrence lacks an
 independent verdict, and it forbids moving one onto a value a verdict says is
-wrong.  The first prohibition is discharged: the investigator pass filed all
-60 receipts, every one certifying by value the reading the live compare holds,
-so ``the_phase_4_boundary_recapture_is_owed_60_oracle_receipts`` retires and
-the assertion that used to say "no owed leaf has a covering receipt" is
-inverted rather than deleted.  The second prohibition is now the live one:
-13 of the 60 verdicts are ``old_value_correct``, so the coupled baseline still
-may not move, and the successor entry
-``thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value`` is what says
-so.
+wrong.  Both prohibitions are now discharged, and both entries this ledger
+carries are retired rather than deleted:
 
-The reproducers this file carries are therefore three, and all three must hold
-while the successor stands: every owed leaf now carries a receipt certifying
-the current value; the dissent enumeration is exactly the pass's non-
-``new_value_correct`` verdicts, read from the receipts and never from the
-ledger's own prose; and every one of the 60 recorded ``old_value`` readings
-still reproduces against the committed coupled baseline, which is the machine
-statement that no re-capture has happened.
+* ``the_phase_4_boundary_recapture_is_owed_60_oracle_receipts`` retired when
+  the investigator pass filed all 60 receipts.
+* ``thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value`` retires
+  here.  Its thirteen dissents stand unedited — clause 3 forbids touching a
+  filed receipt — and every one of them is **superseded on its own leaf** by a
+  committed whole-series re-adjudication carrying ``new_value_correct``, the
+  last of them the C2R round that answered the one cluster that had sustained.
 
-A fourth reproducer joins them once the amendment's clause 1 is exercised: the
-re-adjudication pass that supersedes those verdicts is checked against its own
-receipts — one cluster per dissent class, the thirteen covered exactly once,
-each re-run naming the defect in the brief it replaces (clause 3), and the
-entry still open because two of the thirteen are sustained.
+So the assertions invert rather than disappear.  Where this file used to say
+"the committed baseline still holds the old value", it now says the
+re-captured baseline holds exactly the value each receipt certified — the same
+60 leaves, the same recorded values, read the other way round.  Where it used
+to say "a sustained dissent is recorded as owing a ruled slice", it now says
+that cluster is itself superseded, so the amendment's clause 2 is never
+reached and no correction re-opens.  And where two reproducers read the live
+compare for facts the C2 brief got wrong, they read the re-captured baseline
+for the same facts, because the compare they were reading is now clean by
+construction.
+
+What does **not** invert is the enumeration: the thirteen rows are still
+exactly the ``oracle-P4B-*.json`` receipts whose verdict is not
+``new_value_correct``, read from the receipts and never from the ledger's own
+prose, because the receipts were never edited.
 
 One thing this file reads differently from the scan that produced the retired
 entry's published figures: a receipt's leaf path may sit at the top level or
@@ -94,8 +97,13 @@ def _entry():
 
 
 def _dissent():
-    """The open entry: the verdicts that keep the re-capture blocked."""
-    for entry in _ledger()["defects"]:
+    """The successor entry: the verdicts that once kept the re-capture blocked.
+
+    Retired at the boundary re-capture, so it is read out of ``retired`` — and
+    read by name from the whole ledger, so an entry silently dropped from both
+    lists fails here rather than passing as "not open".
+    """
+    for entry in _ledger()["retired"] + _ledger()["defects"]:
         if entry["id"] == DISSENT_ID:
             return entry
     raise AssertionError(f"{DISSENT_ID} is neither open nor retired by name")
@@ -408,22 +416,42 @@ class TestTheOwedPopulationIsAnswered:
             ]
 
     @pytest.mark.parametrize("index", range(60))
-    def test_the_committed_baseline_still_holds_the_old_value(self, index):
-        """R-19's real subject: no re-capture has happened, dissents or not."""
+    def test_the_recaptured_baseline_now_holds_the_new_value(self, index):
+        """The inversion R-19 was holding back: the re-capture landed.
+
+        This assertion read ``old_value`` and asserted the baseline had not
+        moved for as long as any of the 60 lacked a covering verdict.  It is
+        turned over rather than deleted, against the same 60 rows and the same
+        recorded values: the committed baseline now holds, leaf for leaf,
+        exactly the ``new_value`` each row's receipt certified — including the
+        removals, which are absent from it.
+        """
         baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         leaf = _population()[index]
         found = _reportable(_resolve(baseline, leaf["leaf_path"]))
-        if leaf["transition"] == "absent_to_value":
+        if leaf["transition"] == "value_to_absent":
             assert found is _MISSING, leaf["leaf_path"]
         else:
-            assert _same_value(found, leaf["old_value"]), leaf["leaf_path"]
+            assert found is not _MISSING, leaf["leaf_path"]
+            assert _same_value(found, leaf["new_value"]), leaf["leaf_path"]
 
     def test_the_population_is_the_size_the_entry_declares(self):
         assert len(_population()) == 60
 
 
-class TestTheThirteenDissentsBlockTheRecapture:
-    """The successor entry: a verdict for the old value is a stop, not a note."""
+class TestTheThirteenDissentsAreSupersededAndTheRecaptureLanded:
+    """A verdict for the old value was a stop; it is cleared, never absorbed.
+
+    Three of these four assertions are the ones this class always carried and
+    they are untouched, because nothing they read has changed: the thirteen
+    receipts stand unedited with their verdicts, and the rows still quote them
+    faithfully.  The fourth is the inversion — where the class used to prove
+    the baseline had *not* moved onto a dissented value, it now proves that
+    every dissented leaf was first superseded by a committed
+    ``new_value_correct`` re-adjudication on that same leaf, and that the value
+    the re-captured baseline holds is that superseding receipt's, not the
+    dissent's.  A re-capture over an unsuperseded dissent would fail here.
+    """
 
     def test_the_enumeration_is_exactly_the_passes_dissenting_verdicts(self):
         """Read from the receipts, so the ledger cannot under-report itself."""
@@ -476,6 +504,39 @@ class TestTheThirteenDissentsBlockTheRecapture:
         stated = _dissent()["how_a_dissent_is_contradicted"]
         assert set(stated) >= {"contradicted_by", "mutually_exclusive_with"}
 
+    def test_no_dissented_leaf_was_pinned_without_a_superseding_verdict(self):
+        """The inversion, and the one assertion that could still stop a capture.
+
+        For each of the thirteen: some receipt other than the dissent itself
+        adjudicates the same leaf, carries ``new_value_correct``, and names the
+        dissent it supersedes; and the value the re-captured baseline holds is
+        the one that superseding receipt certified.  A baseline moved onto a
+        value only the dissent's own path ever carried fails on both halves.
+        """
+        baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+        by_name = {
+            path.name: json.loads(path.read_text(encoding="utf-8"))
+            for path in RECEIPTS.glob("oracle-*.json")
+        }
+        for row in _dissent()["dissenting_population"]:
+            superseding = [
+                (name, body)
+                for name, body in by_name.items()
+                if name != row["receipt"]
+                and _receipt_leaf(body)[0] == row["leaf_path"]
+                and body.get("verdict") == "new_value_correct"
+                and row["receipt"] in json.dumps(body)
+            ]
+            assert superseding, row["receipt"]
+            found = _reportable(_resolve(baseline, row["leaf_path"]))
+            for name, body in superseding:
+                certified = _receipt_leaf(body)[1]
+                if row["transition"] == "value_to_absent":
+                    assert found is _MISSING, name
+                else:
+                    assert _same_value(certified, found), name
+            assert not _same_value(row["old_value"], found), row["leaf_path"]
+
 
 class TestTheDissentsAreReAdjudicatedUnderTheAmendment:
     """The superseding pass, read from its receipts and not from its prose.
@@ -523,13 +584,18 @@ class TestTheDissentsAreReAdjudicatedUnderTheAmendment:
             for field in fields:
                 assert body[field]["defect"], f"{name}'s {field} names no defect"
 
-    def test_a_sustained_dissent_is_recorded_as_owing_a_ruled_slice(self):
-        """R-19's stop, kept a stop: sustained means re-opened, never absorbed."""
+    def test_the_round_still_records_what_it_found_including_its_sustain(self):
+        """The round's own arithmetic is history and does not move with the entry.
+
+        This block recorded 11 resolved and 2 sustained, and it still does:
+        rewriting it once a later round answered the sustain would describe a
+        pass that did not happen.  What the clause-2 obligation it wrote down
+        turned into is the *next* test's subject, not this one's.
+        """
         block = _readjudication()
         sustained = [
             row for row in block["clusters"] if row["verdict"] != "new_value_correct"
         ]
-        assert sustained, "a block with no dissent left would have retired the entry"
         assert block["net_effect_on_the_thirteen"]["sustained"] == sum(
             row["leaves"] for row in sustained
         )
@@ -544,7 +610,37 @@ class TestTheDissentsAreReAdjudicatedUnderTheAmendment:
         obliges = block["what_the_sustained_dissent_now_obliges"]
         assert "Expected qualifying occurrences" in obliges
         assert "never absorbed into a baseline" in obliges
-        assert DISSENT_ID in {entry["id"] for entry in _ledger()["defects"]}
+
+    def test_every_sustained_cluster_was_answered_before_the_baseline_moved(self):
+        """The inversion: clause 2 is never reached because nothing sustained.
+
+        This assertion used to read "a block with no dissent left would have
+        retired the entry" and required a sustained cluster to exist.  The
+        entry is retired, so it is turned over: every cluster this round
+        sustained carries a committed later round, that round's receipts all
+        certify the new value on the same leaves, and only then does the entry
+        appear in ``retired``.  A sustain with no answering round fails here
+        and the re-capture is unwritable.
+        """
+        block = _readjudication()
+        sustained = [
+            row for row in block["clusters"] if row["verdict"] != "new_value_correct"
+        ]
+        answered = _dissent()["the_sustained_dissent_is_re_posed"]["the_round_landed"]
+        assert sorted(answered["answers_clusters"]) == sorted(
+            row["cluster_id"] for row in sustained
+        )
+        members = _superseding(answered["cluster_id"])
+        assert members, answered["cluster_id"]
+        assert {body["verdict"] for _, body in members} == {"new_value_correct"}
+        assert {body["leaf"] for _, body in members} == {
+            row["leaf_path"]
+            for row in _dissent()["dissenting_population"]
+            if row["receipt"]
+            in {name for cluster in sustained for name in cluster["supersedes"]}
+        }
+        assert DISSENT_ID in {entry["id"] for entry in _ledger()["retired"]}
+        assert DISSENT_ID not in {entry["id"] for entry in _ledger()["defects"]}
 
 
 class TestTheOtherJurisdictionIsClean:
@@ -572,7 +668,7 @@ class TestTheOtherJurisdictionIsClean:
         )
 
 
-class TestTheProtocolGapIsRuledAndTheEntryStillStands:
+class TestTheProtocolGapIsRuledAndTheRulingWasNotTheArithmetic:
     """The third owner decision is answered in the runbook — and only that one.
 
     The dissent cluster named a protocol gap: a brief carrying only a leaf path
@@ -626,29 +722,43 @@ class TestTheProtocolGapIsRuledAndTheEntryStillStands:
         )
 
     def test_the_ruling_did_not_retire_the_entry_that_cites_it(self):
-        """A protocol answer is not the inversion this entry closes on."""
-        ledger = _ledger()
-        assert DISSENT_ID in {entry["id"] for entry in ledger["defects"]}
-        assert DISSENT_ID not in {entry["id"] for entry in ledger["retired"]}
+        """A protocol answer is not the inversion this entry closed on.
+
+        The entry is retired now, so the half that could go stale is the half
+        this test keeps: what retired it is named, and it is not this ruling.
+        The ruling supplied a well-posed brief; the arithmetic that brief
+        produced is what cleared the stop, and the entry says so by name.
+        """
         ruling = _dissent()[RULING_FIELD]
         assert "stand exactly where they were" in ruling["why_this_entry_stays_open"]
         assert ruling["gate"].endswith(type(self).__name__)
+        rounds = _dissent()["retired_by_these_rounds"]
+        assert rounds
+        for named in rounds:
+            assert (RECEIPTS / named).exists(), named
+            body = json.loads((RECEIPTS / named).read_text(encoding="utf-8"))
+            assert body["verdict"] == "new_value_correct", named
 
 
-class TestTheSustainedDissentIsRePosedAndNotAdjudicated:
-    """C2's re-posing: a named brief defect, a measured refutation, no verdict.
+class TestTheSustainedDissentWasRePosedAndThenAnswered:
+    """C2's re-posing, and the round it handed the question to.
 
     Clause 3 makes a re-run writable only when it cites the *specific* defect
     in the brief it replaces, and an implementation lane may record such a
-    defect without deciding the question.  This gate holds both halves apart:
-    every quoted premise really is in the receipt it is quoted from and really
-    is refuted by the live compare, and no verdict is written here.
+    defect without deciding the question.  That separation is unchanged and
+    still asserted: every quoted premise really is in the receipt it is quoted
+    from, and the re-posing itself writes no verdict.
+
+    What inverts is where the refuting facts are read.  They were read off the
+    live compare, which the re-capture has since emptied by construction, so
+    they are read off the re-captured baseline instead — the same paths, the
+    same recorded values, now on the side of the arrow the baseline holds.
     """
 
-    def test_the_re_posing_is_recorded_on_the_open_entry(self):
+    def test_the_re_posing_is_recorded_on_the_retired_entry(self):
         block = _dissent()["the_sustained_dissent_is_re_posed"]
         assert block["dated"] == "2026-08-14"
-        assert DISSENT_ID in {entry["id"] for entry in _ledger()["defects"]}
+        assert DISSENT_ID in {entry["id"] for entry in _ledger()["retired"]}
 
     def test_every_quoted_premise_is_in_the_receipt_it_is_quoted_from(self):
         """A quotation nothing opens is prose; these open the C2 receipts."""
@@ -664,37 +774,52 @@ class TestTheSustainedDissentIsRePosedAndNotAdjudicated:
         ):
             assert all(fragment in body for body in bodies), fragment
 
-    def test_each_refuting_fact_is_the_live_compare_reading(self):
-        """The premise is refuted by measurement, not by assertion."""
+    def test_each_refuting_fact_is_the_recaptured_baseline_reading(self):
+        """The premise is refuted by measurement, not by assertion.
+
+        Read off the baseline rather than off the compare, because the compare
+        this once read is clean now: the totals the C2 brief called unmoved are
+        recorded as ``old -> new`` and the committed baseline holds ``new``.
+        """
         block = _dissent()["the_sustained_dissent_is_re_posed"][
             "refuted_by_the_compare"
         ]
-        standing = _standing_by_path()
+        baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         claimed = block["the_totals_the_brief_called_unmoved"]
         assert claimed
+        assert not _standing_by_path(), "the coupled compare is not clean"
         for line in claimed:
             path, values = line.split(": ")
             old, new = (part.strip() for part in values.split("->"))
-            diff = standing[path]
-            assert (str(diff.old), str(diff.new)) == (old, new), line
+            found = _reportable(_resolve(baseline, path))
+            assert _same_value(found, float(new)), line
+            assert not _same_value(found, float(old)), line
 
     def test_the_three_re_split_siblings_are_really_three_and_really_moved(self):
+        """The identities the brief owed, read off the record the capture pinned."""
         block = _dissent()["the_sustained_dissent_is_re_posed"][
             "refuted_by_the_compare"
         ]
         siblings = block["the_sibling_heals_that_re_split"]
         assert len(siblings) == 3
-        standing = _standing_by_path()
+        baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         prefix = "/coupled_scenarios/cleaver_bloodsong_roster/combat/"
-        for ordinal, identity in (
-            (25, "enemy:Aatrox:heal:8:main"),
-            (31, "enemy:Aatrox:heal:11:main"),
-            (55, "enemy:Aatrox:heal:20:main"),
+        for line, (ordinal, identity) in zip(
+            siblings,
+            (
+                (25, "enemy:Aatrox:heal:8:main"),
+                (31, "enemy:Aatrox:heal:11:main"),
+                (55, "enemy:Aatrox:heal:20:main"),
+            ),
         ):
+            assert f"healing_events[{ordinal}]" in line and identity in line, line
+            record = _resolve(baseline, f"{prefix}healing_events[{ordinal}]")
+            assert record is not _MISSING
+            assert record[gs.IDENTITY_FIELD] == identity
             for field in ("applied_amount", "overheal"):
-                diff = standing[f"{prefix}healing_events[{ordinal}]/{field}"]
-                assert diff.transition == "value"
-                assert diff.identity == identity
+                recorded = line.split(f"{field} ")[1].split("->")[1]
+                expected = float(recorded.split(",")[0].strip())
+                assert _same_value(record[field], expected), (line, field)
 
     def test_every_certified_fact_carries_a_committed_new_value_correct_receipt(self):
         """The chain rule's bound: only a new_value_correct verdict certifies."""
@@ -710,8 +835,15 @@ class TestTheSustainedDissentIsRePosedAndNotAdjudicated:
                 body = json.loads((RECEIPTS / name.strip()).read_text(encoding="utf-8"))
                 assert body["verdict"] == "new_value_correct", name
 
-    def test_no_verdict_is_written_and_the_dissent_is_still_sustained(self):
-        """The load-bearing negative: the next round owns the answer."""
+    def test_no_verdict_was_written_here_and_the_next_round_wrote_one(self):
+        """The load-bearing negative, kept — plus the round that owned the answer.
+
+        The re-posing still writes no verdict and the C2 receipts still read
+        ``old_value_correct`` unedited, which is clause 3's never-edit rule
+        holding.  What is added is the other half: the round it handed the
+        question to is committed, is a different pass, and answered every leaf
+        the sustained cluster held.
+        """
         block = _dissent()["the_sustained_dissent_is_re_posed"]
         assert "verdict" not in block
         assert "SUSTAINED" in block["what_this_does_not_decide"]
@@ -725,6 +857,26 @@ class TestTheSustainedDissentIsRePosedAndNotAdjudicated:
             body = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
             assert body["verdict"] == "old_value_correct"
 
-    def test_no_baseline_may_move_on_the_strength_of_this(self):
+        landed = block["the_round_landed"]
+        assert landed["cluster_id"] != cluster["cluster_id"]
+        members = _superseding(landed["cluster_id"])
+        assert sorted(name for name, _ in members) == sorted(landed["receipts"])
+        for name, body in members:
+            assert body["verdict"] == "new_value_correct", name
+            assert body["prior_brief_defect_superseded"]["defect"], name
+
+    def test_the_baseline_moved_only_after_that_round_landed(self):
+        """The sentence that forbade a capture, and the condition that lifted it.
+
+        The re-posing's own words are unedited — it decided nothing and licensed
+        no capture — so the assertion becomes the ordering: the answering round
+        is committed, and the value the baseline holds is the one that round
+        certified rather than the one the sustain defended.
+        """
         block = _dissent()["the_sustained_dissent_is_re_posed"]
         assert "stand exactly where they were" in block["what_this_does_not_decide"]
+        baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+        for name, body in _superseding(block["the_round_landed"]["cluster_id"]):
+            found = _reportable(_resolve(baseline, body["leaf"]))
+            assert _same_value(body["new_value"], found), name
+            assert not _same_value(body["old_value"], found), name
