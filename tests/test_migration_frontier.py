@@ -30,8 +30,10 @@ def test_the_three_counters_reproduce_the_declared_baselines() -> None:
 
     Counter 5's 9 and counter 6's 118 are the numbers Phase 4 declared before
     its first commit; counter 7's baseline is measured by this script on its
-    first run by rule, so what is asserted here is that it is positive — a
-    counter whose target is 0 and whose baseline is 0 states nothing.
+    first run by rule, and S10 re-keyed the three sites it found onto values,
+    so the counter is asserted at its target *and* its recorded baseline is
+    asserted positive — a counter whose target is 0 and whose baseline is 0
+    states nothing.
 
     Counter 5 is asserted at its **target** rather than at its baseline
     since Phase 4 S4 moved the eight remaining construction expressions into
@@ -45,7 +47,8 @@ def test_the_three_counters_reproduce_the_declared_baselines() -> None:
     assert report.counter_5 == migration_frontier.COUNTER_5_TARGET
     assert report.counter_6_kernel <= migration_frontier.COUNTER_6_KERNEL_BASELINE
     assert report.counter_6_program == 0
-    assert report.counter_7 > 0
+    assert report.counter_7 == migration_frontier.COUNTER_7_TARGET
+    assert migration_frontier.COUNTER_7_BASELINE > 0
 
 
 def test_counter_6_counts_text_and_records_the_ast_call_count_beside_it() -> None:

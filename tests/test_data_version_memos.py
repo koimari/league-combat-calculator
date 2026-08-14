@@ -25,6 +25,7 @@ from __future__ import annotations
 import ast
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -37,6 +38,22 @@ from src.calculator import (
 )
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
+
+
+def _combatant_stub() -> SimpleNamespace:
+    """The two attributes the survival prototype's key reads, and no more."""
+    from src.calculator.defensive_effects import StartingDefenses
+
+    return SimpleNamespace(
+        defenses=StartingDefenses(),
+        stats={
+            "armor": 40.0,
+            "magic_resistance": 32.0,
+            "bonus_armor": 0.0,
+            "bonus_magic_resistance": 0.0,
+        },
+    )
+
 
 MEMO_SUFFIXES = ("_MEMO", "_CACHE")
 
@@ -340,26 +357,69 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
     }
 
 
-def test_state_proto_memo_key_carries_the_version() -> None:
-    """The survival prototype memo keys on the version and on every input.
+def test_state_proto_memo_key_carries_the_version_and_every_input() -> None:
+    """The survival prototype memo keys on values, and on all of them.
 
     The key gained the compiled below-half healing bonus when 3.9 made that
-    number a parameter rather than a read: the prototype is no longer
-    determined by the combatant and the generation alone, and a key that
-    stopped short of its inputs would serve one participant's state to a
-    caller that asked with another bonus — silently, which is the whole
+    number a parameter rather than a read, and lost ``id(combatant)`` at
+    Phase 4 S10, which is where migration frontier counter 7 reached zero.
+    A key that stopped short of its inputs would serve one participant's
+    state to a caller that asked with another — silently, which is the whole
     failure this campaign is about.
 
-    Asserted over source rather than through an import: ``receipt_state``
-    is on the front-door frontier under Phase 4's name, and importing it
-    here would silently claim this file as its front door.
+    Read through the key function rather than off the source text: what the
+    key must contain is a set of values, and a text match cannot say whether
+    two of them are the same one.
     """
+    from src.calculator.survival import receipt_state
+
+    key = receipt_state._state_proto_key(  # pylint: disable=protected-access
+        _combatant_stub(), 0.25
+    )
+    assert key[0] == data_registry.data_version()
+    assert 0.25 in key
+    assert len(key) == 3 + len(receipt_state._STATE_KEY_STATS)
+
+
+def test_the_state_proto_key_covers_every_stat_the_prototype_reads() -> None:
+    """A read the key cannot see is the one way a value key goes wrong.
+
+    The population is every ``combatant.stats.get("...")`` in the module,
+    read off the AST, so a field the construction starts consuming without
+    joining ``_STATE_KEY_STATS`` fails here rather than serving one
+    participant's resistances to another with the same defences.
+    """
+    from src.calculator.survival import receipt_state
+
     source = (SRC_ROOT / "calculator" / "survival" / "receipt_state.py").read_text(
         encoding="utf-8"
     )
-    assert (
-        "memo_key = (data_version(), id(combatant), below_half_healing_bonus)" in source
-    )
+    read = {
+        node.args[0].value
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and isinstance(node.func.value, ast.Attribute)
+        and node.func.value.attr == "stats"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+    }
+    assert read == set(receipt_state._STATE_KEY_STATS)  # pylint: disable=W0212
+
+
+def test_a_combatant_whose_defences_are_only_an_address_is_not_memoized() -> None:
+    """``id()`` may not come back wearing a namespace.
+
+    A frozen dataclass hashes by field; a ``SimpleNamespace`` hashes by
+    address.  Keying on the second would put an identity key back in the
+    memo under a better name, so such a combatant is refused a key.
+    """
+    from src.calculator.survival import receipt_state
+
+    stub = _combatant_stub()
+    stub.defenses = SimpleNamespace(magic_shield=0.0)
+    assert receipt_state._state_proto_key(stub, 0.0) is None  # pylint: disable=W0212
 
 
 def test_cast_order_params_memo_key_carries_the_version() -> None:

@@ -29,12 +29,10 @@
       "what": "round outside the precision registry: 0 call expressions within program/, a non-increasing textual ratchet within survival/"
     },
     "counter_7": {
-      "by_file": {
-        "calculator/stats.py": 2,
-        "calculator/survival/receipt_state.py": 1
-      },
+      "baseline": 3,
+      "by_file": {},
       "target": 0,
-      "value": 3,
+      "value": 0,
       "what": "id()-keyed cache sites whose key is not derived from the served value, over survival, program, stats.py"
     }
   },

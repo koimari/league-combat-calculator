@@ -133,6 +133,15 @@ COUNTER_7_TREES = (
 )
 COUNTER_7_TARGET = 0
 
+# What the script measured the first time it ran, carried so that reaching
+# the target stays a statement.  It is a recorded measurement and not a typed
+# figure: the receipt this script wrote before Phase 4 S10 read three sites —
+# ``stats.py``'s two item memos and ``survival/receipt_state.py``'s state
+# prototype memo — and S10 is the commit that re-keyed all three onto values.
+# A counter whose target is zero and whose baseline is also zero says only
+# that nobody ever wrote the code it forbids.
+COUNTER_7_BASELINE = 3
+
 # Sites whose ``id()`` is a fast path in front of a key derived from the
 # served value.  Empty today: every live site re-verifies identity against a
 # strong reference, which proves the entry is not stale but does not make the
@@ -327,6 +336,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
                 ),
                 "value": report.counter_7,
                 "target": COUNTER_7_TARGET,
+                "baseline": COUNTER_7_BASELINE,
                 "by_file": _by_file(report.counter_7_sites),
             },
         },

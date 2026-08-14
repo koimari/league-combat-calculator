@@ -18,25 +18,64 @@ from .transitions import participant_pools
 from ..data_registry import data_version
 
 # The optimizer rebuilds every participant's state once per candidate
-# evaluation, but the construction below derives only from the combatant's
-# fixed defenses/stats/items.  The prototype memo is identity-keyed with a
-# strong reference (the same recycling guard as the item-stats memo), keyed
-# on the cache generation the item stats came from (D-49), and bounded
-# because candidate combatants churn per evaluation.  Container
-# keys are derived from the prototype itself, so a new mutable field can
-# never be silently shared between clones.
-_STATE_PROTO_MEMO: dict[
-    tuple[int, int, float], tuple[Any, dict[str, Any], list[str]]
-] = {}
+# evaluation, but the construction below derives from exactly seven values:
+# the cache generation (D-49), the combatant's ``defenses`` record, the four
+# resistance stats read at the bottom of the prototype, and the compiled
+# below-half healing bonus.  Those seven **are** the key (Phase 4's cache
+# rule, migration frontier counter 7): the memo used to key on
+# ``id(combatant)`` with a strong-reference recycling guard, which is safe
+# and is not a value — an address says nothing about the state it stands
+# for, so a combatant mutated in place kept its entry, and two candidates
+# whose defenses were identical each paid for their own construction.
+#
+# The key is a value, so no re-verification is needed on a hit and no entry
+# holds a combatant alive.  The memo stays bounded because the population is
+# now defence records rather than roster slots and a long search meets many.
+_STATE_PROTO_MEMO: dict[tuple[Any, ...], tuple[dict[str, Any], list[str]]] = {}
 _STATE_PROTO_MEMO_LIMIT = 512
+
+#: The stat fields the prototype reads, in key order.  Named once: a field
+#: the construction starts reading without joining this tuple is a value the
+#: key cannot see, which is the one way a value key goes wrong.
+_STATE_KEY_STATS = (
+    "armor",
+    "magic_resistance",
+    "bonus_armor",
+    "bonus_magic_resistance",
+)
+
+
+def _state_proto_key(
+    combatant: Any, below_half_healing_bonus: float
+) -> tuple[Any, ...] | None:
+    """The prototype's value key, or ``None`` when this combatant has none.
+
+    ``defenses`` carries the key's weight and enters it whole, which is legal
+    only because it is a frozen dataclass: those hash and compare by field,
+    which is what makes an object a value.  Anything else — a namespace a
+    unit fixture built, a stub — hashes by identity, and keying on that would
+    be ``id()`` wearing a better name, so such a combatant is not memoized at
+    all rather than filed under an address.
+    """
+    defenses = combatant.defenses
+    params = getattr(type(defenses), "__dataclass_params__", None)
+    if params is None or not params.frozen:
+        return None
+    stats = combatant.stats
+    return (
+        data_version(),
+        defenses,
+        below_half_healing_bonus,
+        *(stats.get(field) for field in _STATE_KEY_STATS),
+    )
 
 
 def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
     """One participant's canonical survival state (issue #137).
 
-    Clones the memoized prototype for this combatant: fresh shield pools,
-    fresh containers, shared scalars — field-for-field identical to an
-    uncached construction (issue #171).
+    Clones the memoized prototype for this combatant's defence record:
+    fresh shield pools, fresh containers, shared scalars — field-for-field
+    identical to an uncached construction (issue #171).
 
     ``below_half_healing_bonus`` is the compiled form of this participant's
     declared below-half healing bonus, and it is a **parameter** rather than
@@ -47,18 +86,19 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
     on the bonus being positive, so an absent bonus and a declared zero are
     the same number and the same answer.
     """
-    memo_key = (data_version(), id(combatant), below_half_healing_bonus)
-    memo = _STATE_PROTO_MEMO.get(memo_key)
-    if memo is None or memo[0] is not combatant:
+    memo_key = _state_proto_key(combatant, below_half_healing_bonus)
+    memo = None if memo_key is None else _STATE_PROTO_MEMO.get(memo_key)
+    if memo is None:
         proto = _build_state_uncached(combatant, below_half_healing_bonus)
         container_keys = [
             key for key, value in proto.items() if value.__class__ in (list, set, dict)
         ]
-        if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
-            _STATE_PROTO_MEMO.clear()
-        _STATE_PROTO_MEMO[memo_key] = (combatant, proto, container_keys)
+        if memo_key is not None:
+            if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
+                _STATE_PROTO_MEMO.clear()
+            _STATE_PROTO_MEMO[memo_key] = (proto, container_keys)
     else:
-        proto, container_keys = memo[1], memo[2]
+        proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
     # so every caller gets a clone with its own pools and containers.
     pools = participant_pools(combatant)
@@ -76,6 +116,9 @@ def _build_state_uncached(
     combatant: Any, below_half_healing_bonus: float
 ) -> dict[str, Any]:
     """The canonical state construction the prototype memo clones.
+
+    Every stat it reads is named in :data:`_STATE_KEY_STATS`; a read added
+    here without joining that tuple is an input the key cannot see.
 
     Ported verbatim from the former authoritative walk's state
     initialisation; the score adapter arms the same shape so both adapters

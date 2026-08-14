@@ -147,24 +147,45 @@ def get_champion_base_stats(
 
 # The optimizer recomputes candidate stats thousands of times over the same
 # cached item dicts, so the pure extraction below is memoized by
-# ``(data_version(), id(item_data))``.  Each entry keeps a strong
-# reference to its source dict and is re-verified on every hit, so a recycled
-# ``id()`` cannot serve stale stats; the version component retires every entry
-# a cache refresh derived from the cache it replaced (D-49).  It is
+# ``(data_version(), item_id)`` — a value derived from the record the cache
+# serves, never the record's address (Phase 4's cache rule, migration
+# frontier counter 7).  The pair is a value key because the data layer owns
+# the corpus: within one generation an item id names exactly one cached
+# record, every refresh goes through ``data_updater`` and moves the version
+# (D-49), and nothing may mutate a cached record in place (CLAUDE.md rule 2).
+# Each entry still keeps a strong reference to the record it was derived from
+# and re-checks it on the way out, so two records that somehow shared an id
+# would recompute rather than serve each other's stats.
+#
+# A record that declares no id is not memoized at all: sparse unit fixtures
+# are exactly those records, and a key derived from nothing is one entry
+# every fixture in the suite would share.
+#
 # The write goes through ``store_for_generation`` because this memo has no
 # size bound: prefixing the key made a superseded entry unreachable but not
 # collected, so the first write of a new generation drops the old one.  The
 # read stays a bare key lookup — a hit has already matched the live
 # generation, and this is one of the optimizer's inner loops.
 _ITEM_STATS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], dict[str, float]]] = {}
-# Cached item records are immutable for the lifetime of one calculation/data
-# snapshot. Keep the validated item and its nested stats map alive so coupled
-# optimizer searches do not walk the same schema thousands of times. A data
-# refresh creates new item/stat dictionaries and therefore cannot reuse this
-# entry; synthetic sparse fixtures continue to bypass the cache below.
+# The schema verdict on the same record, keyed the same way.  Keep the
+# validated item and its nested stats map alive so coupled optimizer searches
+# do not walk the same schema thousands of times.
 _ITEM_STATS_VALIDATION_MEMO: dict[
     tuple[int, int], tuple[dict[str, Any], Mapping[str, Any]]
 ] = {}
+
+
+def _record_key(item_data: Mapping[str, Any]) -> tuple[int, int] | None:
+    """One cached item record's value key, or ``None`` when it has none.
+
+    ``None`` is a refusal to cache rather than a shared bucket: a synthetic
+    fixture declares no id, and filing every such fixture under one key would
+    serve one test's stats to another.
+    """
+    item_id = item_data.get("id")
+    if not isinstance(item_id, int) or isinstance(item_id, bool):
+        return None
+    return (data_version(), item_id)
 
 
 def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
@@ -180,8 +201,8 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
         return
     item_name = str(item_data.get("name") or "unknown item")
     raw_stats = item_data.get("stats")
-    memo_key = (data_version(), id(item_data))
-    memo = _ITEM_STATS_VALIDATION_MEMO.get(memo_key)
+    memo_key = _record_key(item_data)
+    memo = None if memo_key is None else _ITEM_STATS_VALIDATION_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data and memo[1] is raw_stats:
         return
     if not isinstance(raw_stats, Mapping):
@@ -217,7 +238,10 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
                     f"Cached item {item_name} stat {stat_name}.{component} "
                     "must be finite"
                 )
-    store_for_generation(_ITEM_STATS_VALIDATION_MEMO, memo_key, (item_data, raw_stats))
+    if memo_key is not None:
+        store_for_generation(
+            _ITEM_STATS_VALIDATION_MEMO, memo_key, (item_data, raw_stats)
+        )
 
 
 def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
@@ -232,8 +256,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         same cached item.
     """
     _validate_cached_item_stats(item_data)
-    memo_key = (data_version(), id(item_data))
-    memo = _ITEM_STATS_MEMO.get(memo_key)
+    memo_key = _record_key(item_data)
+    memo = None if memo_key is None else _ITEM_STATS_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data:
         return memo[1]
     stats = item_data.get("stats", {})
@@ -294,7 +318,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "omnivamp_percent",
         extracted["omnivamp_percent"],
     )
-    store_for_generation(_ITEM_STATS_MEMO, memo_key, (item_data, extracted))
+    if memo_key is not None:
+        store_for_generation(_ITEM_STATS_MEMO, memo_key, (item_data, extracted))
     return extracted
 
 
