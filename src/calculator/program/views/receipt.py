@@ -29,15 +29,52 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ...survival.outcome_state import outcome_quantity
 from ..build import Program
 from ..precision import round_field, sum_plan
 from ..walk import WalkResult
-from . import LeafWriter
+from . import LeafBlock, LeafWriter
 from .breakdown import breakdown_leaves
 from .survival import participant_paths, survival_leaves
 from .tdd import tdd_leaves
 
 __all__ = ["receipt"]
+
+
+def _outcome(leaf: LeafBlock, key: str, value: float, refusal: str | None) -> None:
+    """Publish one outcome field, naming which of the two answers it is.
+
+    The three panels below publish four numbers a transition produces about
+    a subject, and until this existed every one of them went out
+    ``MEASURED`` — including on a row the walk *refused*, where the zero was
+    put there by the refusal rather than by any rule that ran.  That is the
+    campaign's own invariant broken inside the campaign's own receipt: a
+    number no rule computed, indistinguishable from a computed zero, with
+    the refusal sitting one key away as a bare string.
+
+    The verdict is :func:`~survival.outcome_state.outcome_quantity`'s, so the
+    published entry says what the write-once ledger would say about the same
+    transition; ``serialize_leaf`` remains the single writer of both the leaf
+    and its entry.  A refused row's number does not move — ``StructuralZero``
+    reads as ``0.0`` and it is only reached on a zero — so what changes is
+    what the payload *says* about it, which is exactly what the invariant
+    asked for.
+    """
+    leaf.put(key, outcome_quantity(value, refusal))
+
+
+def _refusal(event: Mapping[str, Any]) -> str | None:
+    """This row's refusal, or ``None`` if the walk priced it.
+
+    Read once per row and passed down rather than re-tested at each outcome
+    field, so a panel cannot end up publishing one of its numbers as declared
+    and the next as measured on the same refused transition.  Empty and
+    missing are the same answer: a refusal with no reason names nothing, and
+    the campaign's word for a zero with no receipt is the thing this is here
+    to remove.
+    """
+    reason = event.get("skipped_reason")
+    return str(reason) if reason else None
 
 
 # The support row's three key families, named rather than inline: a support
@@ -104,13 +141,17 @@ def _damage_event_rows(
     for index, event in enumerate(events):
         row: dict[str, Any] = {}
         leaf = writer.block(row, f"{prefix}[{index}]")
+        refusal = _refusal(event)
         leaf.measured("time", round_field("events.time", float(event.get("time", 0.0))))
         leaf.raw("attacker", event.get("attacker"))
         leaf.raw("target", event.get("target"))
         leaf.raw("source", event.get("source_key", ""))
         leaf.raw("damage_type", event.get("damage_type", ""))
-        leaf.measured(
-            "damage", round_field("events.damage", float(event.get("damage", 0.0)))
+        _outcome(
+            leaf,
+            "damage",
+            round_field("events.damage", float(event.get("damage", 0.0))),
+            refusal,
         )
         leaf.measured(
             "raw_damage",
@@ -126,9 +167,11 @@ def _damage_event_rows(
                 float(event.get("pair_damage", event.get("damage", 0.0))),
             ),
         )
-        leaf.measured(
+        _outcome(
+            leaf,
             "overkill",
             round_field("events.overkill", float(event.get("overkill", 0.0))),
+            refusal,
         )
         leaf.raw("event_precision", event.get("event_precision", "exact"))
         if event.get("_event_id") is not None:
@@ -280,6 +323,7 @@ def _healing_event_rows(
     for index, event in enumerate(events):
         row: dict[str, Any] = {}
         leaf = writer.block(row, f"{prefix}[{index}]")
+        refusal = _refusal(event)
         leaf.measured(
             "time", round_field("healing_events.time", float(event.get("time", 0.0)))
         )
@@ -302,12 +346,14 @@ def _healing_event_rows(
                 float(event.get("raw_amount", event.get("amount", 0.0))),
             ),
         )
-        leaf.measured(
+        _outcome(
+            leaf,
             "applied_amount",
             round_field(
                 "healing_events.applied_amount",
                 float(event.get("applied_amount", event.get("amount", 0.0))),
             ),
+            refusal,
         )
         leaf.measured(
             "overheal",
@@ -376,6 +422,7 @@ def _support_event_rows(
     for index, event in enumerate(events):
         row: dict[str, Any] = {}
         leaf = writer.block(row, f"{prefix}[{index}]")
+        refusal = _refusal(event)
         leaf.measured(
             "time", round_field("support_events.time", float(event.get("time", 0.0)))
         )
@@ -394,12 +441,14 @@ def _support_event_rows(
             "amount",
             round_field("support_events.amount", float(event.get("amount", 0.0))),
         )
-        leaf.measured(
+        _outcome(
+            leaf,
             "applied_amount",
             round_field(
                 "support_events.applied_amount",
                 float(event.get("applied_amount", event.get("amount", 0.0))),
             ),
+            refusal,
         )
         # Present only on an arming a declared ``IDEMPOTENT_AURA``
         # collapsed into an earlier holder's (D-66).  Absent

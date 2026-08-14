@@ -62,25 +62,28 @@ def test_no_allowance_outlives_the_site_it_excuses(scan) -> None:
     assert scan.report()["stale_allowances"] == []
 
 
-def test_the_forced_restatements_are_criterion_4s_counted_residue(scan) -> None:
-    """G5, pinned as a number rather than as a sentence in a report.
+def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> None:
+    """Amendment H's carve-out, pinned as a number rather than as a sentence.
 
     These rows are the sites that really do state a committed baseline's shape
     count, each because another rule left no way not to.  The count is asserted
     so that adding one more is a failing test rather than a habit.
 
     It fell from sixteen across nine sources to eleven across six at the
-    campaign-close coupled re-capture, and the cause is worth stating because
-    it looks like a discharge and is not: the scan reads the *live* counts, so
-    a receipt restating a figure a re-capture superseded stops being a site.
-    The criterion binds a count of a **committed** baseline, and a superseded
-    figure is no longer one.
+    campaign-close coupled re-capture — the scan reads the *live* counts, so a
+    receipt restating a figure a re-capture superseded stops being a site — and
+    rose by one when the disposition slice's allowlist claimed the shape
+    counter its own thirty-eight added keys move.  That rise is the carve-out
+    working rather than widening: R-17 obliges an allowlist to state both sides
+    of every path it claims, and Amendment H admits exactly that shape, inside
+    the artifact adjudicating that leaf and agreeing with the committed
+    receipt.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 11
+    assert block["forced_restatements"] == 12
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 6
+    assert len({row.source for row in forced}) == 7
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

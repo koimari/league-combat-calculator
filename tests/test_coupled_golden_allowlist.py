@@ -129,3 +129,62 @@ def test_every_receipt_names_the_baseline_it_landed_against(receipt):
     block = json.loads(receipt.read_text(encoding="utf-8"))
     landed = block.get("landed_against", {})
     assert landed.get("coupled_golden") == "scripts/golden_coupled_baseline.json"
+
+
+def _disposition_entry_claims() -> dict[str, str]:
+    """Every claimed diff on a ``dispositions`` entry, mapped to its receipt."""
+    return {
+        path: receipt
+        for path, receipt in allowlisted_coupled_paths().items()
+        if "/combat/dispositions/" in path
+    }
+
+
+def _described_leaf(entry_path: str) -> str:
+    """The payload leaf a claimed ``dispositions`` entry describes.
+
+    ``/…/combat/dispositions/events[57].damage/disposition`` describes
+    ``/…/combat/events[57].damage`` — the map is keyed by the path a reader
+    walks to reach the leaf, which is what makes this derivable rather than
+    declared.
+    """
+    scenario, _, rest = entry_path.partition("/combat/dispositions/")
+    leaf = rest.rsplit("/", 1)[0]
+    return f"{scenario}/combat/{leaf}"
+
+
+def test_a_claimed_disposition_transition_names_the_leaf_it_describes():
+    """Amendment E's third guard, half one: the receipt states the leaf.
+
+    A citation adjudicates a change in what a payload *says about* a number.
+    Which number is not left to a reader to work out from a path: the
+    allowlist names it, with the value it holds on both sides, or the claim
+    is not one this guard can check.
+    """
+    for path, receipt_name in _disposition_entry_claims().items():
+        if not path.endswith("/disposition"):
+            continue
+        block = json.loads((RECEIPTS / receipt_name).read_text(encoding="utf-8"))
+        described = block.get("described_leaves", {}).get("leaves", {})
+        assert path in described, f"{receipt_name} claims {path} and describes no leaf"
+        assert described[path]["describes"] == _described_leaf(path)
+
+
+def test_a_claimed_disposition_transition_moves_no_number():
+    """Amendment E's third guard, half two: and the leaf did not move.
+
+    This is the guard that separates the ruling from a loophole.  Citation
+    adjudication is available *because* nothing an oracle could price
+    changed; the moment the described leaf is itself in the difference set,
+    the occurrence is a value question, owes its investigator under R-19,
+    and no citation reaches it.  Asserted against ``compare``'s own
+    difference set rather than against the receipt's word for it.
+    """
+    moved = {diff.path for diff in standing_coupled_diffs()}
+    for path in _disposition_entry_claims():
+        if not path.endswith("/disposition"):
+            continue
+        assert _described_leaf(path) not in moved, (
+            f"{path} is claimed as a disposition transition, but the leaf it "
+            f"describes moved — that is a value question and owes an oracle"
+        )

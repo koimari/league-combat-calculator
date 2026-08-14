@@ -1,10 +1,11 @@
 {
  "artifact": "escalated_defects",
  "slice": "P4-S9",
- "why_this_file_exists": "S9 published a four-member disposition vocabulary on three payloads and claimed the wire shape as operational. It is not: every leaf every production path emits today is MEASURED, because the one component that produces StructuralZero, Withheld and Starved -- survival/outcome_state.OutcomeLedger -- is not the ledger any walk runs with. The serializer supports all four and is unit-tested on all four; no request can reach three of them. That is a real gap between what the commit bodies say and what the tree does, and it is written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs (R-16 Shape).",
+ "why_this_file_exists": "S9 published a four-member disposition vocabulary on three payloads and claimed the wire shape as operational. It is not: every leaf every production path emits today is MEASURED, because the one component that produces StructuralZero, Withheld and Starved -- survival/outcome_state.OutcomeLedger -- is not the ledger any walk runs with. The serializer supports all four and is unit-tested on all four; no request can reach three of them. That is a real gap between what the commit bodies say and what the tree does, and it is written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs (R-16 Shape). -- CLOSED 2026-08-14: the entry is in retired[] with its gate inverted rather than deleted, so the gap, the block that held it and the ruling that released it stay readable together.",
  "how_an_entry_closes": "An entry moves from defects[] to retired[] only when the contradiction is resolved in the tree, and only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it.",
  "gate": "tests/test_escalated_defects_p4_s9.py",
- "defects": [
+ "defects": [],
+ "retired": [
   {
    "id": "no_production_path_emits_a_non_measured_disposition",
    "dated": "2026-08-13",
@@ -37,23 +38,17 @@
     ],
     "gate_inversion": "test_the_outcome_ledger_is_the_receipt_walks_companion replaces test_the_outcome_ledger_is_constructed_nowhere_but_its_own_module and asserts the resolved property instead of the reproducer."
    },
-   "what_is_still_open_and_what_blocks_it": {
-    "open": "No production payload carries a non-MEASURED dispositions entry.",
-    "the_change_itself": "The receipt view publishes a refused transition's outcome fields as StructuralZero(reason=<the walk's refusal>) read from the outcome ledger, instead of Measured(0.0). The published number does not move: StructuralZero.read() is 0.0. Only the entry moves -- disposition MEASURED -> STRUCTURAL_ZERO, plus a reason key beside it.",
-    "measured_footprint": {
-     "instrument": "a scan of scripts/golden_coupled_baseline.json for rows carrying skipped_reason and the published outcome-field dispositions entries beside them",
-     "refused_rows": 24,
-     "refused_outcome_leaves": 38,
-     "by_section": {
-      "events": 28,
-      "healing_events": 10
-     },
-     "diff_shape": "38 text_change transitions on the entries' disposition strings, and 38 absent_to_value transitions on the reason keys beside them"
-    },
-    "what_blocks_it": "Adjudication, not budget -- a sharper statement of the block than the 'a slice no phase budgeted' this entry carried before. R-15 qualifies a leaf for investigation when its transition is anything other than 'value', so each of the 38 disposition strings is a text_change and owes an oracle receipt under R-19. The R-15 amendment of 2026-08-14 adjudicates by citation only a MEMBERSHIP transition (value_to_absent / absent_to_value), which covers the 38 reason keys and explicitly does not reach the 38 disposition strings. And no oracle can answer one: R-18's export is exactly data/ and docs/math-foundations.md, and no cached wiki text and no formula in math-foundations decides whether a zero the walk refused is MEASURED or STRUCTURAL_ZERO -- that is a question about this campaign's own vocabulary, which is the one thing the export exists to keep out of an investigator's hands. So the slice cannot land under the rules as they stand: it needs a ruling on how a disposition transition is adjudicated, and a ruling is not an implementation lane's to write.",
-    "what_would_close_it": "An umbrella amendment extending citation adjudication to a disposition transition that is the ruled consequence of a declared change -- D-72 names the single writer and the invariant table names the four spellings -- after which the view change above is one commit with a 76-path allowlist and no oracle owed. Retyping AttackerOutcome and ObjectiveFold to carry Quantity remains a separate and larger question, and is not needed for the receipt view's own leaves."
-   }
+   "what_closed_and_when_the_emission_half_closed": {
+    "dated": "2026-08-14",
+    "by": "the remediation lane for slice group campaign-close, on the ruling the campaign owed itself",
+    "what_unblocked_it": "The umbrella's Amendment E of 2026-08-14 -- a disposition transition is adjudicated by citation, not by verdict, under three guards, the third being that the leaf the entry describes may not move. Before it, all 76 occurrences were text_change transitions R-19 sent to an investigator R-18's export could not brief, and the slice had no legal landing. The block this entry named was adjudication, and adjudication is what moved.",
+    "the_change": "program/views/receipt.py publishes the three panels' outcome fields through survival.outcome_state.outcome_quantity, so a transition the walk refused carries StructuralZero with the walk's own refusal as the reason instead of a Measured zero with the refusal one key away as a bare string.",
+    "the_published_numbers_did_not_move": "StructuralZero.read() is 0.0 and the branch is only reached on a zero. Measured: 76 differing leaves against the committed coupled baseline, every one of them an entry of the dispositions map; zero numeric leaves; the pair baseline reads 'snapshot identical'; scripts/golden_coupled_exact.json reproduces every per-attacker total unchanged.",
+    "landed_as": "one commit against the committed baselines plus docs/receipts/expected-golden-diff-campaign-close-dispositions.json (R-17), which enumerates all 76 paths, both sides of each, and the leaf each entry describes with the value it holds on both sides.",
+    "gate_inversion": "test_a_refused_row_publishes_a_declared_zero replaces test_every_published_disposition_is_measured and asserts the resolved property: every refusal-zeroed outcome field on a refused row is STRUCTURAL_ZERO carrying that row's own skipped_reason, and a priced row's is still MEASURED.",
+    "what_is_still_not_claimed": "AttackerOutcome and ObjectiveFold still carry plain floats, and WITHHELD and STARVED still reach no production leaf of the receipt view. This entry was about the emission of a non-MEASURED disposition by a production path, and that is what closed; the fold retyping is named here so nobody reads this closure as more than it is."
+   },
+   "reproducer_now": "Inverted, and it is the entry's own reproducer_after_closure: run a live coupled receipt on cleaver_bloodsong_roster and collect the disposition of every entry in combat['dispositions']. The set is {'MEASURED', 'STRUCTURAL_ZERO'}, and every one of the 38 outcome leaves on the 24 rows carrying a skipped_reason is STRUCTURAL_ZERO with that row's refusal as its reason."
   }
- ],
- "retired": []
+ ]
 }

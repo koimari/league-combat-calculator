@@ -1,16 +1,19 @@
-"""S9's escalation, gated: the four-disposition wire shape is not operational.
+"""S9's escalation, gated: the four-disposition wire shape, now operational.
 
 An escalation living only in a commit body is absorbed by the next baseline
 re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
 artifact nothing runs is prose in a JSON file, which is why it has this.
 
 Each defect declares a reproducer, and each reproducer runs here.  The entry
-retires *with* the inversion of its own test, not by being deleted -- and
-half of it has: the outcome ledger is the receipt walk's companion since
-2026-08-14, so the construction-site reproducer is gone and the assertion
-that replaced it names the site.  What is still open is emission, and
-:func:`test_every_published_disposition_is_measured` is the reproducer that
-still reproduces.  Red on *that* one means the entry is closing.
+retires *with* the inversion of its own test, not by being deleted, and both
+its halves now have.  The construction-site half inverted when the outcome
+ledger became the receipt walk's companion; the emission half inverted when
+the receipt view began publishing a refused transition's outcome fields as
+the declared zeros they are.  So the assertions below state the resolved
+property: a refused row publishes ``STRUCTURAL_ZERO`` carrying the walk's own
+refusal, and a priced row still publishes ``MEASURED``.  Red here now means a
+production path stopped naming its refusals, which is the regression this
+whole campaign is about.
 """
 
 from __future__ import annotations
@@ -51,9 +54,17 @@ def test_every_open_defect_carries_a_reproducer_and_a_date() -> None:
         assert defect["why_this_lane_may_not_fix_it"]
 
 
-def test_the_open_defect_is_the_one_this_file_reproduces() -> None:
-    """A gate that drifted off its entry is a gate for nothing."""
-    assert [defect["id"] for defect in receipt()["defects"]] == [
+def test_the_retired_entry_is_the_one_this_file_inverts() -> None:
+    """A gate that drifted off its entry is a gate for nothing.
+
+    The entry moved from ``defects`` to ``retired`` rather than being
+    deleted, so this reads the list it is actually in.  ``defects`` is empty
+    and that emptiness is asserted here rather than inferred: an entry
+    quietly reopening under a new id would otherwise be invisible to the
+    file that gates it.
+    """
+    assert receipt()["defects"] == []
+    assert [defect["id"] for defect in receipt()["retired"]] == [
         "no_production_path_emits_a_non_measured_disposition"
     ]
 
@@ -69,25 +80,78 @@ def _golden_snapshot():
     return module
 
 
-@pytest.mark.parametrize(
-    "scenario", ("mandate_abyssal_curse_roster", "cleaver_bloodsong_roster")
-)
-def test_every_published_disposition_is_measured(scenario: str) -> None:
-    """The first half of the reproducer, against a live run.
+#: The row keys a refusal zeroes, per panel.  ``ReceiptLedger.skip`` writes
+#: exactly these, which is why they are the fields whose zero belongs to the
+#: refusal rather than to a rule that ran.
+_REFUSAL_ZEROED = {
+    "events": ("damage", "overkill"),
+    "healing_events": ("applied_amount",),
+    "support_events": ("applied_amount",),
+}
 
-    Red on this test means a production path finally emits a disposition
-    that is not ``MEASURED`` -- which is the defect closing, not a
-    regression.  Retire the entry and invert this assertion.
-    """
+
+def _combat(scenario: str) -> dict:
+    """One committed coupled scenario's combat receipt, from a live run."""
     snapshot = _golden_snapshot()
     definition = next(
         item for item in snapshot.COUPLED_SCENARIOS if item.name == scenario
     )
-    combat = snapshot.coupled_entry(definition)["combat"]
-    assert combat["dispositions"], "a vacuous map proves nothing either way"
-    assert {entry["disposition"] for entry in combat["dispositions"].values()} == {
-        "MEASURED"
-    }
+    return snapshot.coupled_entry(definition)["combat"]
+
+
+@pytest.mark.parametrize(
+    "scenario", ("mandate_abyssal_curse_roster", "cleaver_bloodsong_roster")
+)
+def test_a_refused_row_publishes_a_declared_zero(scenario: str) -> None:
+    """The reproducer, inverted, against a live run.
+
+    It used to read "the disposition set is exactly ``{MEASURED}``, including
+    on the rows whose ``skipped_reason`` says the walk refused them".  Now
+    the refusal is what the entry says: a refused row's outcome fields carry
+    ``STRUCTURAL_ZERO`` and the reason beside them is the walk's own, so a
+    reader of the map can tell a number no rule computed from a computed
+    zero without reading a sibling string and knowing what it implies.
+
+    Both scenarios run, and one of them has no refusal at all — which is the
+    other half of the property: a priced row is still ``MEASURED``, so this
+    is a distinction being drawn rather than a relabelling of everything.
+    """
+    combat = _combat(scenario)
+    entries = combat["dispositions"]
+    assert entries, "a vacuous map proves nothing either way"
+    for panel, fields in _REFUSAL_ZEROED.items():
+        for index, row in enumerate(combat.get(panel, ())):
+            for field in fields:
+                if field not in row:
+                    continue
+                entry = entries[f"{panel}[{index}].{field}"]
+                if row.get("skipped_reason") and not row[field]:
+                    assert entry["disposition"] == "STRUCTURAL_ZERO"
+                    assert entry["reason"] == row["skipped_reason"]
+                else:
+                    assert entry["disposition"] == "MEASURED"
+                    assert "reason" not in entry
+
+
+def test_the_declared_zero_reaches_a_payload_at_all() -> None:
+    """The entry's own ``reproducer_after_closure``, asserted as a number.
+
+    The test above is total over the panels and would pass vacuously on a
+    roster where nothing is ever refused.  This is the non-vacuity: a
+    committed scenario emits a non-``MEASURED`` disposition, so the campaign's
+    claim that three of the four spellings are reachable on a served payload
+    is a fact about a run rather than about a unit fixture.
+    """
+    combat = _combat("cleaver_bloodsong_roster")
+    spellings = {entry["disposition"] for entry in combat["dispositions"].values()}
+    assert "STRUCTURAL_ZERO" in spellings
+    declared = [
+        entry
+        for entry in combat["dispositions"].values()
+        if entry["disposition"] == "STRUCTURAL_ZERO"
+    ]
+    assert len(declared) == 38
+    assert all(entry["reason"] for entry in declared)
 
 
 def _outcome_ledger_sites() -> dict[str, int]:
@@ -108,15 +172,16 @@ def _outcome_ledger_sites() -> dict[str, int]:
 
 
 def test_the_outcome_ledger_is_the_receipt_walks_companion() -> None:
-    """The second half, inverted: this reproducer no longer reproduces.
+    """The other half, inverted: this reproducer no longer reproduces.
 
     It read "no walk runs on it, so ``StructuralZero`` and ``Starved`` reach
-    no payload".  The first clause is now false — the receipt adapter builds
-    one and drives it from every write, annotation and refusal, so the
-    write-once rule and D-62's uniqueness range over real fights.  The second
-    clause is still true and is what keeps this entry open, which is why the
-    assertion moved rather than the file being deleted: an entry retires
-    *with* the inversion of its own test, and only half of this one inverted.
+    no payload".  Both clauses are now false — the receipt adapter builds one
+    and drives it from every write, annotation and refusal, so the write-once
+    rule and D-62's uniqueness range over real fights; and the verdict that
+    record applies to a refused slot is the verdict the receipt view now
+    publishes.  Pinned to one site rather than merely to a non-zero count: a
+    second construction site would be a second ledger, and two ledgers
+    observing one walk is the shape D-64 exists to refuse.
     """
     assert _outcome_ledger_sites() == {"survival/receipt_state.py": 1}
 

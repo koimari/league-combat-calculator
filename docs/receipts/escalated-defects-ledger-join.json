@@ -14,9 +14,9 @@
    "why_it_is_filed_rather_than_fixed": "Both available fixes are rulings rather than lane edits. Widening the boundary to catch these is a second member of the single-catch rule D-25 states, and a lane may not extend that rule. Absorbing them instead of raising would restore the last-write-wins the join was landed to replace, which is the campaign's own failure shape. What a lane may do is measure the reachable set and say so, which is this entry.",
    "measured": {
     "raise_sites": [
-     "src/calculator/survival/outcome_state.py:276 -- OutcomeRewritten, a second write to one outcome field",
-     "src/calculator/survival/outcome_state.py:307 -- DuplicateApplied, a second APPLIED claim for one key",
-     "src/calculator/survival/outcome_state.py:343 -- OutcomeRewritten, a second un-preserved skip"
+     "src/calculator/survival/outcome_state.py:311 -- OutcomeRewritten, a second write to one outcome field",
+     "src/calculator/survival/outcome_state.py:342 -- DuplicateApplied, a second APPLIED claim for one key",
+     "src/calculator/survival/outcome_state.py:378 -- OutcomeRewritten, a second un-preserved skip"
     ],
     "construction_sites_in_src": [
      "src/calculator/survival/receipt_state.py:412"

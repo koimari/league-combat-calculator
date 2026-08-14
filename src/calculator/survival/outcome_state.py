@@ -50,7 +50,42 @@ __all__ = [
     "OutcomeLedger",
     "OutcomeRewritten",
     "UnwrittenAdjustment",
+    "outcome_quantity",
 ]
+
+
+def outcome_quantity(value: Any, skipped_reason: str | None) -> Quantity:
+    """One outcome field's quantity, given the walk's verdict on its transition.
+
+    The two answers a refusal makes different, written once so that the
+    ledger and the projection that publishes the ledger's numbers cannot
+    reach different conclusions about one transition:
+
+    * the walk priced the transition, so a rule ran and produced this number
+      — ``Measured``, zero included;
+    * the walk refused it and named a reason, so the zero standing where the
+      number would have been is the *declaration's* answer and the reason is
+      its receipt — ``StructuralZero`` (D-24, D-72).
+
+    The one case where both readings are available is a refused transition
+    whose field still carries a number, and it resolves to ``Measured``
+    deliberately.  That number was produced by the rule that priced the
+    packet before a later gate refused to *deliver* it; calling it a
+    declared zero would publish ``0.0`` where a computed value stands, and a
+    disposition that moves a published number is a re-label with a value
+    change hiding inside it.  Naming which of the two a leaf is may never
+    change what the leaf says.
+
+    A module-level function rather than a ledger method because its two
+    callers hold the same fact in two shapes: the ledger holds an action
+    slot's written fields, and the serialized receipt holds the event row
+    the same transition wrote.  ``ReceiptLedger`` drives both from one
+    ``skip``, so the reason either one reads is the same reason — but only
+    one of them can be reached through a slot.
+    """
+    if skipped_reason is not None and not value:
+        return StructuralZero(reason=str(skipped_reason))
+    return Measured(amount=float(value or 0.0))
 
 
 class AdjustmentReason(Enum):
@@ -436,10 +471,10 @@ class OutcomeLedger:
             )
         recorded = self._fields.get(action_slot, {})
         if field in recorded:
-            return Measured(amount=float(recorded[field] or 0.0))
+            return outcome_quantity(recorded[field], None)
         skipped_reason = recorded.get("skipped_reason")
         if skipped_reason is not None:
-            return StructuralZero(reason=str(skipped_reason))
+            return outcome_quantity(0.0, skipped_reason)
         return Starved(
             field=field,
             producer=f"action slot {action_slot}",
