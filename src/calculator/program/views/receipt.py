@@ -30,7 +30,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ..build import Program
-from ..precision import round_field
+from ..precision import round_field, sum_plan
 from ..walk import WalkResult
 from . import LeafWriter
 from .breakdown import breakdown_leaves
@@ -451,15 +451,29 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     root.measured("duration", float(result.duration))
     root.raw("participants", _participant_rows(program, rows, writer))
     root.raw("breakdown", breakdown_leaves(program, result, writer))
-    root.raw("events", _damage_event_rows(result.damage_events, writer, "events"))
-    root.raw(
-        "healing_events",
-        _healing_event_rows(result.healing_events, writer, "healing_events"),
+    events = _damage_event_rows(result.damage_events, writer, "events")
+    healing_events = _healing_event_rows(
+        result.healing_events, writer, "healing_events"
     )
-    root.raw(
-        "support_events",
-        _support_event_rows(result.support_events, writer, "support_events"),
+    support_events = _support_event_rows(
+        result.support_events, writer, "support_events"
     )
+    # D-65: the three panels are three sources a reader unions, and what
+    # kept that union from double-counting was a comment.  Building the plan
+    # *is* the check -- ``SumPlan`` refuses at construction -- so a receipt
+    # whose panels shared an event id fails here rather than serving a total
+    # that counted one event twice.  Discarded rather than published: what
+    # it declares is a property of the payload below, not a leaf of it.
+    sum_plan(
+        {
+            "events": events,
+            "healing_events": healing_events,
+            "support_events": support_events,
+        }
+    )
+    root.raw("events", events)
+    root.raw("healing_events", healing_events)
+    root.raw("support_events", support_events)
     root.raw("utility_outcomes", _utility_block(program, result, writer))
     root.structure("target_allocation", result.target_allocation)
     root.raw("objective", tdd_leaves(program, result, writer, rows))
