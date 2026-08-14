@@ -47,7 +47,7 @@ from src.calculator.application_errors import ApplicationError
 # this one line carries the disable rather than the whole block, because
 # widening it is another lane's file to change.
 from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
-    ProjectionStarvation,
+    StarvedSignal,
 )
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
@@ -561,14 +561,20 @@ def _internal_error(error):
 
 
 def _within_starvation_boundary(view):
-    """Wrap one view in the campaign's single ``ProjectionStarvation`` catch.
+    """Wrap one view in the campaign's single ``StarvedSignal`` catch.
 
-    A ``ProjectionStarvation`` means a projection and a consumer disagree
-    about what a result can answer — a programming error, not a data
-    condition — so it is raised lazily on the first read and handled in
-    exactly one place, here, where it becomes a 500 carrying the ``STARVED``
-    receipt (D-25).  Everywhere else it propagates: a named refusal that is
-    quietly absorbed is the zero this campaign exists to kill.
+    A ``StarvedSignal`` means a leaf has no value a rule computed and the
+    only honest answer is to say so — either because a projection cannot
+    answer the question a consumer asked, or because a write-once record
+    holds two answers to one question and so can answer neither.  Both are
+    programming errors rather than data conditions, both are raised where
+    they are discovered, and both are handled in exactly one place: here,
+    where they become a 500 carrying the ``STARVED`` receipt (D-25, as the
+    umbrella's Amendment G reads its "exactly one catch" — one *place*, not
+    one exception type).  Everywhere else they propagate: a named refusal
+    that is quietly absorbed is the zero this campaign exists to kill, and
+    an absorbed ``OutcomeRewritten`` in particular is the last-write-wins the
+    write-once ledger was landed to replace.
 
     One wrapper over every registered view rather than one ``except`` per
     route, because "exactly one catch" is the rule and repeating it would be
@@ -579,7 +585,7 @@ def _within_starvation_boundary(view):
     def _guarded(*args, **kwargs):
         try:
             return view(*args, **kwargs)
-        except ProjectionStarvation as starved:
+        except StarvedSignal as starved:
             _capture_exception(starved)
             return (
                 jsonify(
@@ -2062,8 +2068,9 @@ def api_update_data():
 
 
 # The request boundary, applied once every route above is registered: the
-# single ``except ProjectionStarvation`` in ``src/`` reaches every endpoint
-# from here, and a source assertion allowlists it and forbids every other.
+# single ``except StarvedSignal`` in ``src/`` reaches every endpoint from
+# here, and a source assertion allowlists it and forbids every other — over
+# the class, so a member added later is converted rather than newly anonymous.
 for _endpoint, _view in list(app.view_functions.items()):
     app.view_functions[_endpoint] = _within_starvation_boundary(_view)
 

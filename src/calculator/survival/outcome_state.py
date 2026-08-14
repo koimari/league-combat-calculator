@@ -40,6 +40,7 @@ from typing import Any
 
 from .actions import NO_SLOT, SurvivalAction
 from ..ability_spec import Measured, Quantity, Starved, StructuralZero
+from ..trigger_stream import StarvedSignal
 
 __all__ = [
     "Adjustment",
@@ -116,11 +117,18 @@ OUTCOME_FIELDS: tuple[str, ...] = (
 )
 
 
-class OutcomeRewritten(RuntimeError):
+class OutcomeRewritten(StarvedSignal):
     """A transition answered a question another transition already answered.
 
     Carries the slot, the field and both values, because "a field was
     written twice" without them is a report nobody can act on.
+
+    A member of :class:`~trigger_stream.StarvedSignal` since the umbrella's
+    Amendment G: two rules answered one question differently, so this record
+    cannot answer it, and a leaf with no answer a rule computed is exactly
+    what ``STARVED`` names.  Before the amendment this reached a request as a
+    bare 500 — a failure with no receipt and no named field, which is the
+    shape the boundary exists to prevent.
     """
 
     def __init__(self, slot: int, field: str, old: Any, new: Any) -> None:
@@ -128,15 +136,20 @@ class OutcomeRewritten(RuntimeError):
             f"action slot {slot} already recorded {field}={old!r}; a second "
             f"write of {new!r} would replace an answer rather than revise it. "
             f"A revision goes through OutcomeLedger.adjust with an "
-            f"AdjustmentReason."
+            f"AdjustmentReason.",
+            field,
+            f"action slot {slot}",
+            (
+                f"two rules answered this field for one transition — {old!r} "
+                f"and {new!r} — so the ledger holds no single answer to publish"
+            ),
         )
         self.slot = slot
-        self.field = field
         self.old = old
         self.new = new
 
 
-class DuplicateApplied(RuntimeError):
+class DuplicateApplied(StarvedSignal):
     """Two producers claimed the same applied contribution (D-62).
 
     "A sum may never mix views" forbids adding a pair-engine preview to a
@@ -158,23 +171,35 @@ class DuplicateApplied(RuntimeError):
             f"two applied contributions for mechanic {mechanic!r} on subject "
             f"{subject} at event {event}: action slots {first} and {second}. "
             "At most one applied contribution exists per "
-            "(mechanic, subject, event_id) across all producers (D-62)"
+            "(mechanic, subject, event_id) across all producers (D-62)",
+            "applied",
+            f"{mechanic!r} on subject {subject} at event {event}",
+            (
+                f"action slots {first} and {second} both claimed this "
+                "contribution, so the applied number for the key is a double "
+                "count rather than an answer"
+            ),
         )
         self.key = key
         self.first = first
         self.second = second
 
 
-class UnwrittenAdjustment(RuntimeError):
+class UnwrittenAdjustment(StarvedSignal):
     """An adjustment named a field no transition had produced a value for."""
 
     def __init__(self, slot: int, field: str) -> None:
         super().__init__(
             f"action slot {slot} has no recorded {field} to adjust; an "
-            f"adjustment revises an answer and cannot invent one"
+            f"adjustment revises an answer and cannot invent one",
+            field,
+            f"action slot {slot}",
+            (
+                "the adjustment revises an answer this ledger never recorded, "
+                "so there is no value for the revision to replace"
+            ),
         )
         self.slot = slot
-        self.field = field
 
 
 @dataclass(frozen=True, slots=True)

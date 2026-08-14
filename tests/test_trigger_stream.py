@@ -1754,28 +1754,50 @@ def test_a_seventh_producer_with_no_scenario_fails_capture(monkeypatch):
         )
 
 
-def except_projection_starvation_sites(
+#: Every spelling that catches a member of the ``STARVED`` class.  The base
+#: and its members are listed together because D-25's rule is about *where* a
+#: named refusal is converted, so catching a subclass somewhere else evades it
+#: exactly as catching the base would (umbrella Amendment G).
+_STARVED_CLASS_NAMES = frozenset(
+    {
+        "StarvedSignal",
+        "ProjectionStarvation",
+        "OutcomeRewritten",
+        "DuplicateApplied",
+        "UnwrittenAdjustment",
+    }
+)
+
+
+def except_starved_signal_sites(
     sources: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
-    """Every ``except ProjectionStarvation`` clause in ``src/`` (D-25)."""
+    """Every clause in ``src/`` catching a ``STARVED`` signal (D-25)."""
     sites = []
     for path, text in sorted((sources or live_sources()).items()):
         for node in ast.walk(ast.parse(text)):
             if not isinstance(node, ast.ExceptHandler) or node.type is None:
                 continue
-            names = [
+            names = {
                 handled.id
                 for handled in ast.walk(node.type)
                 if isinstance(handled, ast.Name)
-            ]
-            if "ProjectionStarvation" in names:
+            }
+            if names & _STARVED_CLASS_NAMES:
                 sites.append(path)
     return tuple(sites)
 
 
-def test_exactly_one_projection_starvation_catch_exists():
-    """D-25 — allowlisted by source assertion, and every other forbidden."""
-    assert except_projection_starvation_sites() == ("src/app.py",)
+def test_exactly_one_starved_signal_catch_exists():
+    """D-25 — allowlisted by source assertion, and every other forbidden.
+
+    Over the class rather than over one name.  Amendment G reads "exactly one
+    catch" as one *place*, which is only enforceable if catching a member
+    somewhere else is as red as catching the base: an absorbed
+    ``OutcomeRewritten`` is the last-write-wins the write-once ledger exists
+    to refuse, and it would be invisible to a scan keyed on one spelling.
+    """
+    assert except_starved_signal_sites() == ("src/app.py",)
 
 
 def test_the_single_catch_has_a_permanent_injection_seam():
@@ -1791,7 +1813,31 @@ def test_the_single_catch_has_a_permanent_injection_seam():
         "    except ProjectionStarvation:\n"
         "        return 0.0\n",
     )
-    assert except_projection_starvation_sites(injected) == (
+    assert except_starved_signal_sites(injected) == (
+        "src/app.py",
+        "src/calculator/economy.py",
+    )
+
+
+def test_the_seam_catches_a_swallowed_ledger_raise_too():
+    """The widening the class buys, injected: a member, not the base.
+
+    Without this the generalisation would be untested in the direction that
+    matters — the one where somebody absorbs a contested outcome under a name
+    D-25 never mentioned.
+    """
+    injected = _with(
+        live_sources(),
+        "src/calculator/economy.py",
+        "from .survival.outcome_state import OutcomeRewritten\n"
+        "\n"
+        "def swallow(run):\n"
+        "    try:\n"
+        "        return run()\n"
+        "    except OutcomeRewritten:\n"
+        "        return 0.0\n",
+    )
+    assert except_starved_signal_sites(injected) == (
         "src/app.py",
         "src/calculator/economy.py",
     )
@@ -2483,7 +2529,7 @@ class TestTheEscalatedDefectIsStillTracked:
             ts.is_immobilizing_event({"cc_kind": kind})
         assert not isinstance(excinfo.value, ts.ProjectionStarvation)
         assert entry["live_signature"]["caught_at_the_request_boundary"] is False
-        assert except_projection_starvation_sites() == ("src/app.py",)
+        assert except_starved_signal_sites() == ("src/app.py",)
 
     def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
         """What the endpoint actually does with it — measured, not reasoned.
