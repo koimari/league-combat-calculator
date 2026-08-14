@@ -318,6 +318,61 @@
         "owner_decisions_now_answered": "for_the_owner (1): discharged for all eleven leaves it named. Its first option — re-run under a brief carrying the sibling values the verdict turns on — was taken and certifies the new value, so its second option does not arise and the S7 rearm correction is not re-opened by them. for_the_owner (2): discharged as a re-run; its verdict is sustained, which is clause 2's input rather than its close. (3) was ruled on 2026-08-14 in the_third_owner_decision_is_now_ruled.",
         "what_the_sustained_dissent_now_obliges": "Clause 2: a sustained dissent re-opens the producing correction as its own ruled src/ slice carrying its own `Expected qualifying occurrences` line (R-20), and is never absorbed into a baseline. Both leaves are claimed by two committed allowlists — expected-golden-diff-P4-S7-bloodsong.json and expected-golden-diff-P4-S7-rearm.json — so WHICH correction moved the split is the first thing that slice measures; naming it here would be an implementation lane ruling a question it may not.",
         "gate": "tests/test_escalated_defects_p4_boundary.py::TestTheDissentsAreReAdjudicatedUnderTheAmendment"
+      },
+      "the_sustained_dissent_is_re_posed": {
+        "dated": "2026-08-14",
+        "what_this_is": "A record, not an adjudication. It states the specific defect in the P4C-C2 brief that licenses one more round under clause 3, and hands the next round the true moved-sibling set. It writes NO verdict: the C2 verdict above still reads old_value_correct, the two leaves are still SUSTAINED, and the re-posed round may sustain the dissent again. An implementation lane recording a defect in a brief is not an implementation lane overruling an oracle.",
+        "licence": "The R-15/R-18 amendment's adjudication clause 3: a verdict is never re-run merely because it dissents, and every re-run must cite the SPECIFIC defect in the prior brief. That citation is below, and it is a false premise rather than a disagreement.",
+        "the_prior_brief_defect": {
+          "one_sentence": "The brief told the investigator that the record's siblings had not moved. Three of them had, and so had the two whole-fight totals the brief closed its arithmetic on.",
+          "quoted_from_the_prior_receipts": [
+            "'Set applied[39] = 211.0 with all 63 other heal records unmoved (the diff population touches only applied_amount and overheal of record [39]; the five same-timestamp siblings are unmoved)' -- oracle-P4C-C2-...-leaf1.json and -leaf2.json, step3_pinning_the_missing_health_before_the_series.counterfactual_test_of_the_new_split",
+            "'participants[2]/survival/damage_taken would have to be 4014.5, not the UNMOVED 4074.9' -- the same block",
+            "'Baseline: 2588 = 2588 - 4074.9 + SUM(applied) => SUM(applied) = 4074.9, exactly the recorded healing_received 4074.9' -- constraint_C, the closure the whole computation rests on"
+          ],
+          "why_it_is_a_defect_and_not_a_disagreement": "Every one of those is a statement about which OTHER leaves moved -- a fact of the question, which the brief owed the investigator and got wrong. The five same-timestamp siblings really are unmoved, so that half of the premise holds; the whole-fight closure does not, because the two totals it closes on both moved and three same-source heals at other timestamps re-split. An investigator cannot detect this: R-18's export withholds scripts/, so the compare that shows it is exactly what it may not read."
+        },
+        "refuted_by_the_compare": {
+          "how_measured": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json on this tip, read leaf by leaf; identities from the identity-keyed report (c57a902).",
+          "the_totals_the_brief_called_unmoved": [
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/damage_taken: 4074.9 -> 4041.9",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/healing_received: 4074.9 -> 4041.9",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/health_damage: 4074.9 -> 4041.9",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/overhealing: 1714.1 -> 1747.2",
+            "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/effective_health: 6662.9 -> 6629.9"
+          ],
+          "the_sibling_heals_that_re_split": [
+            "healing_events[25], event_id enemy:Aatrox:heal:8:main, t=2.16, Deathbringer Stance, amount 359.4 unmoved: applied_amount 322.0 -> 337.2, overheal 37.4 -> 22.2",
+            "healing_events[31], event_id enemy:Aatrox:heal:11:main, t=3.23, Deathbringer Stance, amount 359.4 unmoved: applied_amount 326.8 -> 312.7, overheal 32.6 -> 46.7",
+            "healing_events[55], event_id enemy:Aatrox:heal:20:main, t=6.47, Deathbringer Stance, amount 359.4 unmoved: applied_amount 261.8 -> 287.9, overheal 97.6 -> 71.5"
+          ],
+          "the_record_under_adjudication": "healing_events[39], event_id enemy:Aatrox:heal:14:main, t=4.31, Deathbringer Stance, amount 359.4 unmoved: applied_amount 271.4 -> 211.0, overheal 88.0 -> 148.4 -- the same shape as its three siblings, which is what the brief's 'only record [39] moved' hid.",
+          "what_still_holds": "The five same-timestamp records [36] [37] [38] [40] [41] are genuinely unmoved, and every `amount` / `raw_amount` in the series is unmoved at 359.4 / 280.1 / 57.5 / 44.8 / 31.8 / 31.4. The re-posed brief keeps those facts; they were never the defect."
+        },
+        "the_certified_facts_the_next_round_may_carry": {
+          "rule": "R-18's 2026-08-14 amendment, the certified-fact chain: a brief may carry a sibling fact that is itself certified by a committed oracle receipt, cited by receipt path. Only new_value_correct certifies, only the adjudicated leaf is certified, and a fact whose receipt is later superseded stops certifying.",
+          "why_this_round_needs_them": "The heal series is clipped by the room the healed unit has, and the room is fixed by the damage it took. The brief may no longer assert that damage was unmoved -- so it must state what it now is, and every one of those leaves has already been adjudicated by an independent investigator.",
+          "moved_damage_on_the_healed_unit_every_leaf_certified_new_value_correct": [
+            "events[23]/damage 50.7 -> 45.9 -- oracle-P4B-leaf34.json",
+            "events[28]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf52.json",
+            "events[30]/damage 157.8 -> 170.4 -- oracle-S6S7-leaf71.json",
+            "events[35]/damage 90.1 -> 53.4 -- oracle-P4B-leaf23.json",
+            "events[37]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf55.json",
+            "events[39]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf58.json",
+            "events[40]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf61.json",
+            "events[46]/damage 128.9 -> 53.4 -- oracle-P4B-leaf19.json",
+            "events[48]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf64.json",
+            "events[50]/damage 94.1 -> 101.7 -- oracle-S6S7-leaf67.json",
+            "events[59]/damage 94.1 -> 101.7 -- oracle-P4B-leaf40.json, oracle-S6S7-leaf41.json",
+            "events[61]/damage 138.6 -> 149.7 -- oracle-P4B-leaf46.json, oracle-S6S7-leaf47.json",
+            "events[62]/damage 94.1 -> 101.7 -- oracle-P4B-leaf43.json, oracle-S6S7-leaf44.json"
+          ],
+          "the_fold_behind_the_three_drops": "The three damage drops are the Carve de-duplication the P4C C1 whole-series pass certified new_value_correct across eleven leaves (oracle-P4C-C1-carve-rearm-series-cleaver-bloodsong-leaf1.json … -leaf11.json), superseding six P4B dissents on the same rows. That is the movement the C2 brief could not see and the reason the healed unit's room changed at all.",
+          "arithmetic_stated_but_not_adjudicated": "The thirteen certified damage moves sum 1318.9 -> 1286.4, a delta of -32.5 at the baseline's two decimals, beside a recorded damage_taken move of -33.0 and four applied_amount moves summing -33.2. Reconciling those three figures is the re-posed question's work, not this record's: stated here only so the next brief starts from measured leaves rather than from an assumption about them."
+        },
+        "what_the_next_round_owes": "One well-posed whole-series investigation over healing_events[25] / [31] / [39] / [55] -- the four Deathbringer Stance heals on `main` whose split moved -- briefed with the true moved-sibling set above, the certified damage facts cited by receipt path, and every fact of the question read from the committed pre-change baseline as the amendment requires. One verdict per leaf from R-19's closed set. It supersedes oracle-P4C-C2-...-leaf1/-leaf2 by naming the defect quoted above, and both prior receipts stand unedited.",
+        "what_this_does_not_decide": "Whether the split moved correctly. The dissent stays SUSTAINED until a well-posed round says otherwise; if it sustains again, clause 2 applies unchanged and the producing correction re-opens as its own ruled src/ slice with its own `Expected qualifying occurrences` line. Nothing here re-opens it, and nothing here permits a baseline re-capture: scripts/golden_coupled_baseline.json, scripts/golden_coupled_exact.json and the golden blocks of campaign-fingerprints.json stand exactly where they were.",
+        "gate": "tests/test_escalated_defects_p4_boundary.py::TestTheSustainedDissentIsRePosedAndNotAdjudicated"
       }
     }
   ],

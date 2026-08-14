@@ -191,6 +191,25 @@ def _readjudication():
     return _dissent()["re_adjudicated_under_the_amendment"]
 
 
+def _this_c2_pass():
+    """The two P4C receipts whose brief the re-posing names a defect in."""
+    return sorted(path.name for path in RECEIPTS.glob(f"{SUPERSEDING_PREFIX}C2-*.json"))
+
+
+def _standing_by_path():
+    """Every standing coupled diff, keyed by path — the live compare.
+
+    Read rather than restated: a refutation quoted out of a commit body is
+    the prose this ledger exists to keep out of the evidence chain.
+    """
+    baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+    current = gs.rebuild_for(baseline)
+    for snapshot in (baseline, current):
+        for key in gs.COMPARE_EXCLUDED_PROVENANCE:
+            snapshot.get("metadata", {}).pop(key, None)
+    return {diff.path: diff for diff in gs.leaf_report(baseline, current)}
+
+
 def _superseding(cluster_id=None):
     """``[(name, receipt)]`` from the superseding pass, one cluster or all."""
     members = []
@@ -614,3 +633,98 @@ class TestTheProtocolGapIsRuledAndTheEntryStillStands:
         ruling = _dissent()[RULING_FIELD]
         assert "stand exactly where they were" in ruling["why_this_entry_stays_open"]
         assert ruling["gate"].endswith(type(self).__name__)
+
+
+class TestTheSustainedDissentIsRePosedAndNotAdjudicated:
+    """C2's re-posing: a named brief defect, a measured refutation, no verdict.
+
+    Clause 3 makes a re-run writable only when it cites the *specific* defect
+    in the brief it replaces, and an implementation lane may record such a
+    defect without deciding the question.  This gate holds both halves apart:
+    every quoted premise really is in the receipt it is quoted from and really
+    is refuted by the live compare, and no verdict is written here.
+    """
+
+    def test_the_re_posing_is_recorded_on_the_open_entry(self):
+        block = _dissent()["the_sustained_dissent_is_re_posed"]
+        assert block["dated"] == "2026-08-14"
+        assert DISSENT_ID in {entry["id"] for entry in _ledger()["defects"]}
+
+    def test_every_quoted_premise_is_in_the_receipt_it_is_quoted_from(self):
+        """A quotation nothing opens is prose; these open the C2 receipts."""
+        prior = [
+            json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            for name in _this_c2_pass()
+        ]
+        bodies = [json.dumps(body) for body in prior]
+        for fragment in (
+            "with all 63 other heal records unmoved",
+            "not the UNMOVED 4074.9",
+            "exactly the recorded healing_received 4074.9",
+        ):
+            assert all(fragment in body for body in bodies), fragment
+
+    def test_each_refuting_fact_is_the_live_compare_reading(self):
+        """The premise is refuted by measurement, not by assertion."""
+        block = _dissent()["the_sustained_dissent_is_re_posed"][
+            "refuted_by_the_compare"
+        ]
+        standing = _standing_by_path()
+        claimed = block["the_totals_the_brief_called_unmoved"]
+        assert claimed
+        for line in claimed:
+            path, values = line.split(": ")
+            old, new = (part.strip() for part in values.split("->"))
+            diff = standing[path]
+            assert (str(diff.old), str(diff.new)) == (old, new), line
+
+    def test_the_three_re_split_siblings_are_really_three_and_really_moved(self):
+        block = _dissent()["the_sustained_dissent_is_re_posed"][
+            "refuted_by_the_compare"
+        ]
+        siblings = block["the_sibling_heals_that_re_split"]
+        assert len(siblings) == 3
+        standing = _standing_by_path()
+        prefix = "/coupled_scenarios/cleaver_bloodsong_roster/combat/"
+        for ordinal, identity in (
+            (25, "enemy:Aatrox:heal:8:main"),
+            (31, "enemy:Aatrox:heal:11:main"),
+            (55, "enemy:Aatrox:heal:20:main"),
+        ):
+            for field in ("applied_amount", "overheal"):
+                diff = standing[f"{prefix}healing_events[{ordinal}]/{field}"]
+                assert diff.transition == "value"
+                assert diff.identity == identity
+
+    def test_every_certified_fact_carries_a_committed_new_value_correct_receipt(self):
+        """The chain rule's bound: only a new_value_correct verdict certifies."""
+        block = _dissent()["the_sustained_dissent_is_re_posed"][
+            "the_certified_facts_the_next_round_may_carry"
+        ]
+        lines = block[
+            "moved_damage_on_the_healed_unit_every_leaf_certified_new_value_correct"
+        ]
+        assert lines
+        for line in lines:
+            for name in line.split(" -- ")[1].split(", "):
+                body = json.loads((RECEIPTS / name.strip()).read_text(encoding="utf-8"))
+                assert body["verdict"] == "new_value_correct", name
+
+    def test_no_verdict_is_written_and_the_dissent_is_still_sustained(self):
+        """The load-bearing negative: the next round owns the answer."""
+        block = _dissent()["the_sustained_dissent_is_re_posed"]
+        assert "verdict" not in block
+        assert "SUSTAINED" in block["what_this_does_not_decide"]
+        cluster = next(
+            row
+            for row in _readjudication()["clusters"]
+            if row["cluster_id"] == "P4C-C2"
+        )
+        assert cluster["verdict"] == "old_value_correct"
+        for name in _this_c2_pass():
+            body = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            assert body["verdict"] == "old_value_correct"
+
+    def test_no_baseline_may_move_on_the_strength_of_this(self):
+        block = _dissent()["the_sustained_dissent_is_re_posed"]
+        assert "stand exactly where they were" in block["what_this_does_not_decide"]
