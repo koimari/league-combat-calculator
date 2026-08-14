@@ -388,3 +388,43 @@ class TestAtMostOneAppliedContribution:
         ledger = outcome_state.OutcomeLedger()
         ledger.skip(self.contribution(0, source="mandate", subject=1, event=7), "gated")
         assert ledger.applied_contributions() == {}
+
+
+class TestTheDiagnosticAnnotationsAreNotOutcomes:
+    """``pair_damage`` and ``live_damage`` are one annotation's two halves.
+
+    Both are the packet's value *before* absorption; the applied outcome is
+    what consumed shield and health.  Mapping either onto ``applied`` makes
+    one question answerable twice, with two numbers that agree only while
+    nothing overkills.
+    """
+
+    @staticmethod
+    def packet():
+        """One damage action addressed at a real ledger slot."""
+        return SurvivalAction(
+            kind=ActionKind.DAMAGE, aidx=0, event_slot=3, source_key="q", subject=1
+        )
+
+    def test_neither_half_of_the_pair_maps_onto_an_outcome_field(self) -> None:
+        aliases = outcome_state.OutcomeLedger._WRITE_ALIASES
+        assert "live_damage" not in aliases
+        assert "pair_damage" not in aliases
+
+    def test_the_annotation_and_the_applied_write_do_not_collide(self) -> None:
+        """The live sequence: annotate the diagnostics, then write the outcome."""
+        ledger = outcome_state.OutcomeLedger(annotating=True)
+        packet = self.packet()
+        ledger.annotate(packet, pair_damage=300.0, live_damage=240.0)
+        ledger.write(packet, damage=180.0, _applied_to_health=150.0)
+        assert ledger.get(0).applied == 180.0
+
+    def test_the_applied_outcome_is_the_absorbed_one_not_the_live_one(self) -> None:
+        """Overkill is where the two numbers part, so it is where this is read."""
+        ledger = outcome_state.OutcomeLedger(annotating=True)
+        packet = self.packet()
+        ledger.annotate(packet, live_damage=1000.0)
+        ledger.write(packet, damage=250.0)
+        ledger.annotate(packet, overkill=750.0)
+        outcome = ledger.get(0)
+        assert (outcome.applied, outcome.overkill) == (250.0, 750.0)

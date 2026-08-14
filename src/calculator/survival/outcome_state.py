@@ -229,10 +229,22 @@ class OutcomeLedger:
     # four outcome fields -- one mapping, so a kernel rename is one edit and
     # an unmapped kwarg is ignored here rather than silently becoming a
     # fifth outcome field.
+    #
+    # ``live_damage`` is **not** here, and the omission is the ruling rather
+    # than an oversight.  ``transitions`` writes it once, at the one
+    # ``annotate`` call that also writes ``pair_damage``, and its own module
+    # docstring lists the pair with ``overkill`` under *diagnostics*: it is
+    # the packet's value after live re-pricing and **before** absorption,
+    # while the applied outcome is what consumed shield and health, written
+    # a few lines later as ``damage``.  The two are equal exactly when
+    # nothing overkilled, which is why mapping both onto ``applied`` read as
+    # harmless for as long as no walk drove this ledger -- and why it was a
+    # question answered twice with two numbers the moment one did.
+    # ``pair_damage``, the same annotation's other half, was already
+    # unmapped; this is its sibling joining it.
     _WRITE_ALIASES: Mapping[str, str] = {
         "damage": "applied",
         "applied_amount": "applied",
-        "live_damage": "applied",
         "_applied_to_health": "to_health",
         "overkill": "overkill",
         "shield_absorbed": "absorbed",
