@@ -27,6 +27,26 @@ DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
 RETIRED_FRONT_DOOR_REGISTRY = "SUBSTANTIAL_MODULE" + "_FRONT_DOORS"
 SCANNED_TREES = ("src", "tests", "scripts")
 
+#: The phrase every `FRONT_DOOR_FRONTIER` departure comment carries.  One
+#: spelling, because the frontier's arithmetic is `six minus these`, and a
+#: departure written in a second phrase would be a member that left without
+#: the count noticing.  Split so this constant is not itself a match.
+DEPARTURE_MARKER = "left this " + "frontier at"
+
+#: How a frontier comment spells a count, so both readers below resolve one.
+_NUMBER_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
 
 @dataclass(frozen=True, slots=True)
 class FrontierEntry:
@@ -42,17 +62,27 @@ class FrontierEntry:
 # frontier the measuring tool owns can be driven to zero by editing the tool.
 #
 # It is pinned by **set equality**, so it shrinks by edit and never silently
-# grows.  It has shrunk twice.  The same derivation reports ten members
-# against the pre-campaign tree and six after Phase 0's and Phase 2's new
-# suites imported `survival/{accumulate, actions, compile, transitions}`
-# directly; S10's score-ledger front door took the sixth, leaving the **four**
-# below.  That is the frontier working, and it is why neither the ten nor the
-# six is written down anywhere as a target.
+# grows.  The same derivation reports ten members against the pre-campaign
+# tree and **six** after Phase 0's and Phase 2's new suites imported
+# `survival/{accumulate, actions, compile, transitions}` directly.  Two have
+# left since, each with a departure comment at the foot of the dict --
+# `survival.receipt_state` at Phase 4 S4 and `survival.score_state` at S10 --
+# leaving the **four** below.  That is the frontier working, and it is why
+# neither the ten nor the six is written down anywhere as a target.
 #
-# The count above is a fact about the dict beneath it, so it is asserted
-# rather than described -- `test_the_frontier_comment_counts_its_own_members`
-# below.  A comment that outran its own table is the shape this campaign is
-# about, and a frontier's own file is the worst place to leave one.
+# Both counts above are facts about what follows, so both are asserted rather
+# than described -- `test_the_frontier_comment_counts_its_own_members` reads
+# the four against `len`, and the six against `six minus the departures named
+# below`.  The sentence used to say S10's departure "took the sixth", which
+# skipped S4's and made the arithmetic 10 -> 6 -> 4 with a member missing;
+# the guard checked only the word `four`, so the one number it did not read
+# was the one that was wrong.  A comment that outran its own table is the
+# shape this campaign is about, and a frontier's own file is the worst place
+# to leave one -- twice, one line apart.
+#
+# `DEPARTURE_MARKER` is the phrase those comments share and the thing the
+# arithmetic counts, so it is a constant rather than a spelling each comment
+# is trusted to repeat.
 FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     "application_errors": FrontierEntry(
         owning_phase="none — pre-campaign debt",
@@ -159,22 +189,34 @@ def test_the_frontier_comment_counts_its_own_members() -> None:
     text and compared against ``len``, so the sentence cannot drift again
     without this failing.
     """
-    words = {
-        "one": 1,
-        "two": 2,
-        "three": 3,
-        "four": 4,
-        "five": 5,
-        "six": 6,
-        "seven": 7,
-        "eight": 8,
-        "nine": 9,
-        "ten": 10,
-    }
+    words = _NUMBER_WORDS
     source = Path(__file__).read_text(encoding="utf-8")
     claim = re.search(r"leaving the \*\*(\w+)\*\*", source)
     assert claim is not None, "the comment no longer states a count"
     assert words[claim.group(1)] == len(FRONT_DOOR_FRONTIER)
+
+
+def test_the_frontier_comment_adds_up_from_its_own_departures() -> None:
+    """The other number in that comment, which nothing was reading.
+
+    The sentence states where the frontier stood after Phase 0's and Phase
+    2's suites and then names the members that left, one departure comment
+    each.  Those are three claims -- a starting count, a set of departures
+    and a remainder -- and only the remainder was checked, which is how the
+    starting count came to describe 10 -> 6 -> 4 while the tree walked
+    10 -> 6 -> 5 -> 4: `survival.receipt_state`'s S4 departure was skipped,
+    in the commit that fixed exactly this defect one line above.
+
+    So the arithmetic is the assertion: the stated six, minus the departures
+    the file actually names, is the length of the dict.
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    stated = re.search(r"and \*\*(\w+)\*\* after Phase 0's", source)
+    assert stated is not None, "the comment no longer states where it started"
+    # The marker constant is spelled in halves, so it is not itself a match.
+    departures = source.count(DEPARTURE_MARKER)
+    assert departures > 0, "no departure is named"
+    assert _NUMBER_WORDS[stated.group(1)] - departures == len(FRONT_DOOR_FRONTIER)
 
 
 def scanned_sources() -> dict[str, str]:
