@@ -293,11 +293,18 @@ COMPARE_EXCLUDED_PROVENANCE: frozenset[str]   # metadata keys compare ignores: g
 Transition = Literal["value", "zero_to_value", "value_to_zero", "value_to_error", "error_to_value",
                      "absent_to_value", "value_to_absent", "text_change"]
 
+IDENTITY_FIELD = "event_id"                   # the field a list member carries when it has a
+                                              # stable identity: origin id + that origin's ordinal
+
 @dataclass(frozen=True, slots=True)
 class LeafDiff:
-    """One differing golden leaf, classified for triage."""
+    """One differing golden leaf, classified for triage.
+
+    ``identity`` is the ``event_id`` of the record the leaf sits inside, when that
+    record has one, so a report — and the brief built from it — names which event it
+    is talking about rather than only which ordinal the baseline stored it at."""
     path: str; section: str; old: float | str | None; new: float | str | None
-    abs_delta: float; percent: float; transition: Transition
+    abs_delta: float; percent: float; transition: Transition; identity: str | None = None
 
 def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
     """The leaf/entry counts plus src_tree_sha — the one source of those figures.
@@ -308,7 +315,15 @@ def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
     on its first run.  A test asserts the excluded key set is exactly
     COMPARE_EXCLUDED_PROVENANCE's, so the two cannot drift apart."""
 def leaf_report(old: Mapping, new: Mapping) -> tuple[LeafDiff, ...]:
-    """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|."""
+    """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
+
+    List members carrying IDENTITY_FIELD are paired by that identity and never by
+    position: a removal or an insertion is one membership transition, and the members
+    that survive it compare against themselves rather than against whichever record
+    the shift slid into their place.  A member both sides hold keeps the *baseline's*
+    ordinal in its path, which is the address every committed allowlist and receipt
+    already spells.  Fail-closed: a list with a duplicate or a missing identity is
+    paired positionally, never half by identity and half by position."""
 def qualifies_for_investigation(diff: LeafDiff) -> bool:
     """R-15's threshold — the one predicate that decides an investigator is owed."""
 def capture_coupled(scenarios: Sequence[CoupledScenario], *, producers: frozenset[str],

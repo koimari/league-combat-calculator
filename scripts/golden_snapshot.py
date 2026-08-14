@@ -480,10 +480,24 @@ class _Absent:  # pylint: disable=too-few-public-methods
 
 ABSENT = _Absent()
 
+# The field a snapshot list member carries when it has a stable identity of
+# its own: the event's origin — the attacker or holder id — plus that
+# origin's ordinal, which is what ``program.identity.event_id_text`` writes
+# and what nothing about a *list position* can change.  Members of a list
+# every one of whose members carries this are paired by it; see
+# ``_identity_index``.
+IDENTITY_FIELD = "event_id"
+
 
 @dataclass(frozen=True, slots=True)
 class LeafDiff:
-    """One differing golden leaf, classified for triage."""
+    """One differing golden leaf, classified for triage.
+
+    ``identity`` is the ``event_id`` of the record the leaf sits inside when
+    that record has one, so a report — and the investigator brief built from
+    it — names *which* event it is talking about rather than only which
+    ordinal the baseline happened to store it at.
+    """
 
     path: str
     section: str
@@ -492,6 +506,7 @@ class LeafDiff:
     abs_delta: float
     percent: float
     transition: Transition
+    identity: str | None = None
 
 
 def _is_error(value):
@@ -522,33 +537,101 @@ def _classify(old, new):
     return "text_change", 0.0, math.inf
 
 
-def _leaf_diffs(path, old, new, out):
+def _identity(member):
+    """One list member's stable identity, or ``None`` when it has none."""
+    if isinstance(member, Mapping):
+        value = member.get(IDENTITY_FIELD)
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def _identity_index(members):
+    """``{identity: position}`` for a list whose every member is identified.
+
+    ``None`` when any member carries no identity or two members share one.
+    Partial or ambiguous indexing is refused rather than half-applied: a list
+    matched by identity where it can be and by position where it cannot is
+    exactly the substitution this indexing exists to end.
+    """
+    index = {}
+    for position, member in enumerate(members):
+        identity = _identity(member)
+        if identity is None or identity in index:
+            return None
+        index[identity] = position
+    return index
+
+
+def _identity_keyed_diffs(path, old, new, out):
+    """Diff two identity-bearing lists by identity, never by list position.
+
+    A member both sides hold is compared field by field under the
+    *baseline's* index, so a leaf keeps the address every committed
+    allowlist, receipt and oracle brief already spells.  A member only one
+    side holds is **one membership transition** at the record —
+    ``value_to_absent`` for a removal, ``absent_to_value`` for an addition,
+    both already in R-15's closed transition set — instead of a run of
+    manufactured value changes against whichever record the shift slid into
+    its place.
+
+    Returns False when either side cannot be indexed, leaving the caller to
+    fall back to positional pairing.
+    """
+    old_index = _identity_index(old)
+    new_index = _identity_index(new)
+    if old_index is None or new_index is None:
+        return False
+    for identity, position in old_index.items():
+        member_path = f"{path}[{position}]"
+        if identity in new_index:
+            _leaf_diffs(
+                member_path, old[position], new[new_index[identity]], out, identity
+            )
+        else:
+            out.append(_leaf_diff(member_path, old[position], ABSENT, identity))
+    for identity, position in new_index.items():
+        if identity not in old_index:
+            out.append(
+                _leaf_diff(f"{path}[{position}]", ABSENT, new[position], identity)
+            )
+    return True
+
+
+def _leaf_diffs(path, old, new, out, identity=None):
     """Collect one LeafDiff per differing leaf, recursing through containers."""
     if _is_error(old) != _is_error(new):
-        out.append(_leaf_diff(path, old, new))
+        out.append(_leaf_diff(path, old, new, identity))
         return
     if isinstance(old, Mapping) and isinstance(new, Mapping):
         for key in sorted(set(old) | set(new)):
             _leaf_diffs(
-                f"{path}/{key}", old.get(key, ABSENT), new.get(key, ABSENT), out
+                f"{path}/{key}",
+                old.get(key, ABSENT),
+                new.get(key, ABSENT),
+                out,
+                identity,
             )
         return
     if isinstance(old, list) and isinstance(new, list):
+        if _identity_keyed_diffs(path, old, new, out):
+            return
         for index in range(max(len(old), len(new))):
             _leaf_diffs(
                 f"{path}[{index}]",
                 old[index] if index < len(old) else ABSENT,
                 new[index] if index < len(new) else ABSENT,
                 out,
+                identity,
             )
         return
     if old is ABSENT or new is ABSENT or old != new:
         # A container facing a scalar is a shape change, reported once at the
         # node rather than fanned out into leaves that have no counterpart.
-        out.append(_leaf_diff(path, old, new))
+        out.append(_leaf_diff(path, old, new, identity))
 
 
-def _leaf_diff(path, old, new):
+def _leaf_diff(path, old, new, identity=None):
     transition, abs_delta, percent = _classify(old, new)
     return LeafDiff(
         path=path,
@@ -558,6 +641,7 @@ def _leaf_diff(path, old, new):
         abs_delta=abs_delta,
         percent=percent,
         transition=transition,
+        identity=identity,
     )
 
 
@@ -569,10 +653,20 @@ def _reportable(value):
 
 
 def leaf_report(old, new):
-    """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|."""
+    """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
+
+    List members that carry an ``event_id`` are paired by that identity and
+    never by position, so a removal or an insertion is one membership
+    transition rather than a run of value changes against the record the
+    shift slid into its place (R-15).
+    """
     diffs = []
     _leaf_diffs("", old, new, diffs)
-    return tuple(sorted(diffs, key=lambda d: (d.section, -abs(d.percent), d.path)))
+    return tuple(
+        sorted(
+            diffs, key=lambda d: (d.section, -abs(d.percent), d.path, d.identity or "")
+        )
+    )
 
 
 def qualifies_for_investigation(diff):

@@ -184,6 +184,173 @@ class TestLeafReport:
 
 
 # ---------------------------------------------------------------------------
+# Identity-keyed list matching: a removal is a membership transition, never a
+# run of value changes against the record the shift slid into its place.
+# ---------------------------------------------------------------------------
+
+
+def _events(*rows):
+    """A snapshot fragment holding one identity-bearing event list."""
+    return {
+        "s": {
+            "events": [
+                {"event_id": f"main:enemy:Aatrox:{ordinal}", **fields}
+                for ordinal, fields in rows
+            ]
+        }
+    }
+
+
+def _without_identity(document):
+    """The same fragment with every ``event_id`` stripped."""
+    return {
+        "s": {
+            "events": [
+                {k: v for k, v in row.items() if k != gs.IDENTITY_FIELD}
+                for row in document["s"]["events"]
+            ]
+        }
+    }
+
+
+_THREE_ROWS = _events(
+    (31, {"damage": 10.0, "source": "W"}),
+    (33, {"damage": 20.0, "source": "expose_weakness_Bloodsong"}),
+    (35, {"damage": 30.0, "source": "E"}),
+)
+_MIDDLE_REMOVED = _events(
+    (31, {"damage": 10.0, "source": "W"}),
+    (35, {"damage": 30.0, "source": "E"}),
+)
+
+
+class TestIdentityKeyedListMatching:
+    """R-15's membership transitions, keyed on the event's own identity.
+
+    A slice that removes a row from an event list shifts every later ordinal.
+    Paired by position, that manufactures value diffs between two *different*
+    events — the defect that produced two dissenting oracle verdicts about a
+    comparison with no referent.  Paired by ``event_id`` — the attacker's id
+    and that attacker's ordinal, which no list position can change — the same
+    removal is one ``value_to_absent`` membership transition and the surviving
+    rows compare against themselves.
+    """
+
+    def test_a_removed_member_is_one_membership_transition(self):
+        (diff,) = gs.leaf_report(_THREE_ROWS, _MIDDLE_REMOVED)
+        assert diff.transition == "value_to_absent"
+        assert diff.path == "/s/events[1]"
+        assert diff.identity == "main:enemy:Aatrox:33"
+
+    def test_the_removal_reports_no_value_change_on_the_survivor(self):
+        """The whole point: nothing is said about the row that moved up."""
+        paths = [diff.path for diff in gs.leaf_report(_THREE_ROWS, _MIDDLE_REMOVED)]
+        assert "/s/events[2]/damage" not in paths
+        assert "/s/events[2]/source" not in paths
+
+    def test_the_same_removal_without_identities_manufactures_value_changes(self):
+        """R-05's permanent negative: the defect, reproducible on demand.
+
+        Identical fixture, ``event_id`` stripped, so the only difference is
+        whether the members can be paired by identity.  Positional pairing
+        reports the surviving row as *changes* to the removed row — two
+        different events compared as one — which is the red this check exists
+        to keep out of the report.
+        """
+        diffs = gs.leaf_report(
+            _without_identity(_THREE_ROWS), _without_identity(_MIDDLE_REMOVED)
+        )
+        by_path = {diff.path: (diff.old, diff.new, diff.transition) for diff in diffs}
+        assert by_path["/s/events[1]/damage"] == (20.0, 30.0, "value")
+        assert by_path["/s/events[1]/source"] == (
+            "expose_weakness_Bloodsong",
+            "E",
+            "text_change",
+        )
+        assert by_path["/s/events[2]"][2] == "value_to_absent"
+        assert len(diffs) > 1
+
+    def test_an_added_member_is_absent_to_value_at_its_own_ordinal(self):
+        (diff,) = gs.leaf_report(_MIDDLE_REMOVED, _THREE_ROWS)
+        assert diff.transition == "absent_to_value"
+        assert diff.path == "/s/events[1]"
+        assert diff.identity == "main:enemy:Aatrox:33"
+
+    def test_a_reordered_list_reports_nothing(self):
+        """Identity outranks position: the same events in another order are the same."""
+        shuffled = {"s": {"events": list(reversed(_THREE_ROWS["s"]["events"]))}}
+        assert gs.leaf_report(_THREE_ROWS, shuffled) == ()
+
+    def test_a_matched_member_keeps_the_baselines_address(self):
+        """A moved field is reported where the *baseline* holds it.
+
+        Committed allowlists, oracle receipts and escalation ledgers all
+        address leaves by the baseline's ordinal, so identity decides *what*
+        is compared and the baseline still decides where the leaf is spelled.
+        """
+        moved = _events(
+            (31, {"damage": 10.0, "source": "W"}),
+            (35, {"damage": 99.0, "source": "E"}),
+        )
+        diffs = gs.leaf_report(_THREE_ROWS, moved)
+        by_path = {diff.path: diff for diff in diffs}
+        assert by_path["/s/events[2]/damage"].old == 30.0
+        assert by_path["/s/events[2]/damage"].new == 99.0
+        assert by_path["/s/events[2]/damage"].identity == "main:enemy:Aatrox:35"
+
+    def test_every_leaf_under_an_identified_record_carries_that_identity(self):
+        moved = _events(
+            (31, {"damage": 10.0, "source": "W"}),
+            (33, {"damage": 20.0, "source": "expose_weakness_Bloodsong"}),
+            (35, {"damage": 31.0, "source": "E"}),
+        )
+        (diff,) = gs.leaf_report(_THREE_ROWS, moved)
+        assert diff.identity == "main:enemy:Aatrox:35"
+
+    def test_a_duplicate_identity_falls_back_to_position(self):
+        """Fail closed: an ambiguous index is refused, never half-applied."""
+        duplicated = {
+            "s": {
+                "events": [
+                    {"event_id": "main:enemy:Aatrox:31", "damage": 10.0},
+                    {"event_id": "main:enemy:Aatrox:31", "damage": 20.0},
+                ]
+            }
+        }
+        other = {
+            "s": {
+                "events": [
+                    {"event_id": "main:enemy:Aatrox:31", "damage": 10.0},
+                    {"event_id": "main:enemy:Aatrox:31", "damage": 25.0},
+                ]
+            }
+        }
+        (diff,) = gs.leaf_report(duplicated, other)
+        assert diff.path == "/s/events[1]/damage"
+        assert diff.identity is None
+
+    def test_a_list_of_unidentified_members_still_pairs_by_position(self):
+        """The fallback is the old behaviour, unchanged for every other list."""
+        old = {"s": {"rows": [{"a": 1.0}, {"a": 2.0}]}}
+        new = {"s": {"rows": [{"a": 1.0}, {"a": 3.0}]}}
+        (diff,) = gs.leaf_report(old, new)
+        assert diff.path == "/s/rows[1]/a"
+
+    def test_a_membership_transition_qualifies_for_investigation(self):
+        """R-15 already carries both members of the closed transition set."""
+        (diff,) = gs.leaf_report(_THREE_ROWS, _MIDDLE_REMOVED)
+        assert gs.qualifies_for_investigation(diff)
+
+    def test_the_report_file_carries_the_identity(self, tmp_path):
+        report = gs._write_report(
+            tmp_path / "r.json",
+            gs.leaf_report(_THREE_ROWS, _MIDDLE_REMOVED),
+            gs.PAIR_SNAPSHOT_KIND,
+        )
+        assert report["diffs"][0]["identity"] == "main:enemy:Aatrox:33"
+
+
+# ---------------------------------------------------------------------------
 # The coupled baseline (R-11, R-12)
 # ---------------------------------------------------------------------------
 
