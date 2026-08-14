@@ -143,6 +143,19 @@ def reason_of(rung: Rung) -> str:
     return getattr(rung, "reason", "")
 
 
+def counter_entry(rung: Rung) -> tuple[CounterRung, str]:
+    """One decision as the two things a counter sink records: label and cause.
+
+    The bridge, in one expression, so a call site never spells the decision
+    twice.  ``counter_label`` says *which* of the four published keys the
+    evaluation is entered under and :func:`reason_of` says *why*, and a
+    reader who has only the first has the histogram D-69 exists to replace:
+    it names that a fallback happened and whose refusal it was, never which
+    declaration refused.
+    """
+    return counter_label(rung), reason_of(rung)
+
+
 def histogram(rungs: Iterable[Rung]) -> Counter:
     """The four-state histogram, keyed by published label.
 
@@ -169,6 +182,7 @@ __all__ = [
     "ReceiptWalk",
     "Rung",
     "SearchPoisoned",
+    "counter_entry",
     "counter_label",
     "gate_rung",
     "histogram",

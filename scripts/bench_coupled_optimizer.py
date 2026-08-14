@@ -244,15 +244,29 @@ class WorkCounters:
     #: criterion 3 pins the report's shape at.
     walk_invocations: int = 0
     rungs: Counter[str] = field(default_factory=Counter)
+    #: Why each fallback happened, keyed by the declaration that refused.
+    #: ``rungs`` is keyed by published label and a label is four closed
+    #: strings, so the *cause* D-69 asks a histogram to name has nowhere else
+    #: to go.  Its total is the fallback count, not the evaluation count:
+    #: a compiled rung has no cause to name and contributes no key.
+    rung_receipts: Counter[str] = field(default_factory=Counter)
 
     def as_dict(self) -> dict[str, Any]:
-        """JSON-ready counters, rungs included."""
+        """JSON-ready counters, rungs and their receipts included.
+
+        ``rung_receipts`` joins the published shape rather than staying a
+        debug field, because a reason nobody can read is the defect this
+        counter was added to close.  It moves no pinned value: the
+        fingerprints receipt pins counter *values* per scenario, and a new
+        key beside them is not one of those values.
+        """
         return {
             "public_evaluations": self.public_evaluations,
             "measured_proposals": self.measured_proposals,
             "score_memo_misses": self.score_memo_misses,
             "pair_run_fight_calls": self.pair_run_fight_calls,
             "rungs": dict(sorted(self.rungs.items())),
+            "rung_receipts": dict(sorted(self.rung_receipts.items())),
         }
 
 
@@ -294,6 +308,7 @@ def report_from_response(
         "counters": counters.as_dict(),
         "residual": residual(counters, _enemy_count(scenario)),
         "rungs": dict(sorted(counters.rungs.items())),
+        "rung_receipts": dict(sorted(counters.rung_receipts.items())),
         "timeline_complete": bool(
             body.get("search_timeline_coverage", {}).get("complete", False)
         ),

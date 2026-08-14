@@ -174,14 +174,24 @@ class TestTheLadderIsReachableFromProduction:
         assert "panel" in ast.dump(decision.test)
 
     def test_the_histogram_key_is_never_recorded_directly(self) -> None:
-        """One projection, so a label cannot be chosen beside its decision."""
+        """One projection, so a label cannot be chosen beside its decision.
+
+        The projection is ``counter_entry`` — the bridge that hands the sink
+        the label *and* the cause off one decision.  Requiring it rather than
+        ``counter_label`` is what keeps the published reason from being
+        optional at a call site: a recording that spelled the label alone
+        would compile, count, and publish a fallback with no declaration
+        named, which is exactly the defect the receipts counter closed.
+        """
         source = self._timeline_source()
         assert "Rung." not in source
         for call in self._constructions(source, "record_rung"):
-            label = call.args[1]
-            assert isinstance(label, ast.Call), ast.dump(label)
-            assert isinstance(label.func, ast.Name), ast.dump(label)
-            assert label.func.id == "counter_label", ast.dump(label)
+            assert len(call.args) == 2, ast.dump(call)
+            entry = call.args[1]
+            assert isinstance(entry, ast.Starred), ast.dump(entry)
+            assert isinstance(entry.value, ast.Call), ast.dump(entry)
+            assert isinstance(entry.value.func, ast.Name), ast.dump(entry)
+            assert entry.value.func.id == "counter_entry", ast.dump(entry)
 
     def test_search_poisoned_is_constructed_only_on_an_invariant_failure(self) -> None:
         """The clause, read off the guard rather than off the class name.

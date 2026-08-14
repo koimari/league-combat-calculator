@@ -5312,6 +5312,7 @@ class TestCatalystIsTwoPassesAndNotARecursion:
             pair_run_fight_calls: int = 0
             walk_invocations: int = 0
             rungs: Counter = field(default_factory=Counter)
+            rung_receipts: Counter = field(default_factory=Counter)
 
         two_pass = Sink()
         self._timeline(search_context=CoupledSearchContext(work_counters=two_pass))

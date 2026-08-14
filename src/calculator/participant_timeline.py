@@ -122,7 +122,7 @@ from .program.rung import (
     FallbackScope,
     ReceiptWalk,
     SearchPoisoned,
-    counter_label,
+    counter_entry,
     gate_rung,
 )
 from .program.compile import (
@@ -3332,7 +3332,7 @@ def _score_with_search_context(
     # fallback rungs, which are the ones it knows: one rung per evaluation
     # either way, because a return from here and an exception out of here
     # are exclusive.
-    record_rung(context.work_counters, counter_label(walk_result.rung))
+    record_rung(context.work_counters, *counter_entry(walk_result.rung))
     # ``DISCARD``: these rows are the composition's own working copy.  The
     # score view re-projects them for the payload it returns and the receipt
     # view for the one it returns; recording a third map here would be a
@@ -3616,27 +3616,21 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             # failures fall back per evaluation.
             if exc.invariant:
                 search_context.uncompilable = True
-            # The rung is a *decision* with a reason, and the histogram key
-            # is its projection (``counter_label``).  Recording the label
-            # directly is what left ``program/rung``'s four-member union with
-            # zero construction sites in ``src/`` -- a ladder D-69 ruled, that
-            # no production path could reach, so "``SearchPoisoned`` appears
-            # only for genuine invariant errors" was a clause nothing could
-            # fail.  The receipt the exception carries is the reason, and it
-            # is carried on the decision rather than dropped at the raise --
-            # but the published sink holds four counters and no reason field,
-            # so the only reader of it today is ``counter_label``'s choice of
-            # scope.  Saying that plainly because the alternative is a
-            # comment claiming a fallback names which declaration refused
-            # when the histogram it feeds still says only that one did; the
-            # sink field that would publish it is the harness's (R-24) and
-            # is a dated row on ``escalated-defects-P4-S10.json``.
+            # The rung is a *decision* with a reason, and the published
+            # histogram key is only its label.  ``counter_entry`` hands the
+            # sink both, so the reason the exception carried reaches a reader
+            # instead of stopping at this frame: ``rung_receipts`` is keyed
+            # by the declaration that refused, and its total is the fallback
+            # count.  Recording the label alone is what left the reason
+            # travelling exactly one expression, which was a dated row on
+            # ``escalated-defects-P4-S10.json`` until the sink grew the field
+            # to carry it.
             decision = (
                 SearchPoisoned(exc.receipt)
                 if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
                 else ReceiptWalk(exc.receipt, FallbackScope.CANDIDATE)
             )
-            record_rung(work_counters, counter_label(decision))
+            record_rung(work_counters, *counter_entry(decision))
         else:
             # No rung recorded here: ``_score_with_search_context`` already
             # recorded the compiled one it took, which is the only frame
@@ -3652,7 +3646,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # returns: the builder exists for exactly this decision, and spelling
         # it out here would be the second spelling of one decision that the
         # bridge in ``program/rung`` exists to prevent.
-        record_rung(work_counters, counter_label(gate_rung(_GATE_REFUSAL_RECEIPT)))
+        record_rung(work_counters, *counter_entry(gate_rung(_GATE_REFUSAL_RECEIPT)))
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,

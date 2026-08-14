@@ -54,7 +54,7 @@ class Rung(StrEnum):
 
 
 class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
-    """What the optimizer needs of a work-counter sink: five mutable fields.
+    """What the optimizer needs of a work-counter sink: six mutable fields.
 
     A structural type with no methods is the whole point — the sink is data,
     and demanding two public methods of it would only invite behaviour into
@@ -63,6 +63,18 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
     ``public_evaluations`` is deliberately absent: that figure is published
     in the optimizer's own response and the harness reads it there, so no
     counting site in ``src/`` can disagree with it.
+
+    ``rung_receipts`` is the *cause* the four-state histogram cannot carry.
+    ``rungs`` is keyed by published label, and D-69's whole argument is that
+    a histogram must name why a fallback happened — but a label is a closed
+    vocabulary of four strings and a reason is a sentence, so they cannot be
+    the same key.  A ``ReceiptWalk`` or a ``SearchPoisoned`` reaches a reader
+    with *which declaration refused* only because this field exists; without
+    it the reason travelled exactly as far as one expression and
+    ``program.rung.reason_of`` had no caller in ``src/``.  Compiled rungs
+    contribute nothing to it, which is why it is a separate counter and not
+    a widening of ``rungs``: its total is the fallback count and its keys are
+    the declarations that caused them.
 
     ``walk_invocations`` is the structural half of Phase 4's one-walk
     property.  Source counting says there is one ``run_survival_walk`` call
@@ -79,12 +91,23 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
     pair_run_fight_calls: int
     walk_invocations: int
     rungs: Counter[str]
+    rung_receipts: Counter[str]
 
 
-def record_rung(sink: WorkCounterSink | None, rung: Rung) -> None:
-    """Attribute one coupled evaluation to the engine that priced it."""
+def record_rung(sink: WorkCounterSink | None, rung: Rung, receipt: str = "") -> None:
+    """Attribute one coupled evaluation to the engine that priced it, and why.
+
+    ``receipt`` is the named cause a failure rung carries and the empty
+    string for a compiled one — ``program.rung.counter_entry`` produces the
+    pair, so the label and the reason come off one decision rather than
+    being spelled twice at a call site.  An empty receipt records nothing:
+    a compiled evaluation has no cause to name, and a key for it would make
+    ``rung_receipts`` total the evaluations rather than the fallbacks.
+    """
     if sink is not None:
         sink.rungs[str(rung)] += 1
+        if receipt:
+            sink.rung_receipts[receipt] += 1
 
 
 def record_walk(sink: WorkCounterSink | None) -> None:

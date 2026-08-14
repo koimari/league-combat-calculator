@@ -69,7 +69,6 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
     assert [defect["id"] for defect in receipt()["defects"]] == [
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
         "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
-        "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
     ]
 
 
@@ -80,6 +79,7 @@ def test_a_retired_entry_says_how_it_closed_and_what_gates_it_now() -> None:
         "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names",
         "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
         "the_first_defender_scan_survives_because_ccscope_was_never_authored",
+        "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
     ]
     for entry in retired:
         assert entry["retired"] and entry["retired_by"]
@@ -292,14 +292,15 @@ def test_the_exact_baseline_is_unrounded_where_the_other_one_rounds() -> None:
 # --- the fallback reason nothing publishes -----------------------------------
 
 
-def test_no_src_call_site_reads_a_rung_reason() -> None:
-    """The entry's reproducer, as a shape rather than as a grep in prose.
+def test_a_src_call_site_reads_the_rung_reason() -> None:
+    """The entry's reproducer, inverted, as a shape rather than as a grep.
 
-    ``program/rung.reason_of`` exists so a fallback can name which
-    declaration refused.  Nothing in ``src/`` calls it, and nothing reads
-    ``.reason`` off a decision either -- the recording site keeps
-    ``counter_label(decision)`` and drops the object.  The day a sink field
-    carries it, this goes red, which is the inversion the entry declares.
+    It read: ``program/rung.reason_of`` exists so a fallback can name which
+    declaration refused, and nothing in ``src/`` calls it -- the recording
+    site kept ``counter_label(decision)`` and dropped the object.  The reason
+    now travels the whole way: ``counter_entry`` reads it and the two
+    recording sites hand it to the sink, so a fallback in a published report
+    names the declaration that caused it.
     """
     readers = set()
     for path in sorted(SRC.rglob("*.py")):
@@ -310,14 +311,21 @@ def test_no_src_call_site_reads_a_rung_reason() -> None:
             if (
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Name)
-                and node.func.id == "reason_of"
+                and node.func.id in {"reason_of", "counter_entry"}
             ):
                 readers.add(path.relative_to(SRC).as_posix())
-    assert not readers, readers
+    assert readers == {"participant_timeline.py"}, readers
 
 
-def test_the_counter_sink_declares_no_field_a_reason_could_go_in() -> None:
-    """Why it is nobody's oversight: there is no field, and the file is L0's."""
+def test_the_counter_sink_declares_the_field_a_reason_goes_in() -> None:
+    """The other half, inverted: the sink has somewhere to put the cause.
+
+    ``rungs`` is keyed by one of four published labels and cannot hold a
+    sentence, which is why "the reason has nowhere to go" was true rather
+    than careless.  ``rung_receipts`` is that somewhere, and it is asserted
+    as an exact field set so a seventh member is a decision somebody makes
+    rather than one that arrives.
+    """
     from src.calculator.work_counters import WorkCounterSink
 
     declared = set(WorkCounterSink.__annotations__)
@@ -327,7 +335,35 @@ def test_the_counter_sink_declares_no_field_a_reason_could_go_in() -> None:
         "pair_run_fight_calls",
         "walk_invocations",
         "rungs",
+        "rung_receipts",
     }
+
+
+def test_the_published_report_carries_the_causes_beside_the_histogram() -> None:
+    """And it reaches a reader: the harness publishes the counter.
+
+    A field on a protocol nothing serialized would be the same defect one
+    layer further out.  The bench report is where a rung is read, so this
+    asserts the receipts ride beside the histogram in the shape ``as_dict``
+    publishes.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "bench_coupled_optimizer", ROOT / "scripts" / "bench_coupled_optimizer.py"
+    )
+    bench = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("bench_coupled_optimizer", bench)
+    spec.loader.exec_module(bench)
+
+    from src.calculator.program.rung import ReceiptWalk, counter_entry
+    from src.calculator.work_counters import record_rung
+
+    counters = bench.WorkCounters()
+    record_rung(counters, *counter_entry(ReceiptWalk("Imperial Mandate - Command")))
+    published = counters.as_dict()
+    assert published["rungs"] == {"receipt_walk_candidate": 1}
+    assert published["rung_receipts"] == {"Imperial Mandate - Command": 1}
 
 
 # --- R-01 row 1's pinned half ------------------------------------------------

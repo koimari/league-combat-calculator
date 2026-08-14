@@ -44,7 +44,7 @@ Every commit in the campaign is judged by one named gate set whose baselines wer
 
 | Counter family | Prior (`cassiopeia_3champ` / `cassiopeia_5champ` / `mundo_3champ`) | Producer today | Class |
 |---|---|---|---|
-| public evaluations | 1324 / 1033 / 706 | `bench_coupled_optimizer.py:326` (`body["evaluations"]`) | VERIFIED (3champ), CARRIED (others) |
+| public evaluations | 1324 / 1033 / 706 | `bench_coupled_optimizer.py:341` (`body["evaluations"]`) | VERIFIED (3champ), CARRIED (others) |
 | measured proposals | 1306 / 1015 / 688 | none | PRIOR |
 | score-memo misses | 1249 / 967 / 577 | none (`_PurchaseSearch._score_memo`, `optimizer.py:915`, is unobserved) | PRIOR |
 | pair `run_fight` calls | 2735 / 3127 / 1446 | none | PRIOR |

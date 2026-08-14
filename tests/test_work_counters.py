@@ -54,6 +54,7 @@ class _Sink:
     pair_run_fight_calls: int = 0
     walk_invocations: int = 0
     rungs: Counter = field(default_factory=Counter)
+    rung_receipts: Counter = field(default_factory=Counter)
 
 
 def _enemies(count: int = 1):

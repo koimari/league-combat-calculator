@@ -328,18 +328,46 @@ class TestAllocationReading:
 class TestWorkCounters:
     """The sink's own shape — it is what the receipt is written from."""
 
-    def test_as_dict_carries_the_four_families_and_the_rungs(self, bench):
+    def test_as_dict_carries_the_four_families_the_rungs_and_their_causes(self, bench):
         counters = bench.WorkCounters(
             public_evaluations=1,
             measured_proposals=2,
             score_memo_misses=3,
             pair_run_fight_calls=4,
-            rungs=Counter({"compiled": 5}),
+            rungs=Counter({"compiled": 5, "receipt_walk_candidate": 2}),
+            rung_receipts=Counter({"Imperial Mandate - Command": 2}),
         )
         assert counters.as_dict() == {
             "public_evaluations": 1,
             "measured_proposals": 2,
             "score_memo_misses": 3,
             "pair_run_fight_calls": 4,
-            "rungs": {"compiled": 5},
+            "rungs": {"compiled": 5, "receipt_walk_candidate": 2},
+            "rung_receipts": {"Imperial Mandate - Command": 2},
         }
+
+    def test_a_compiled_rung_contributes_no_cause(self, bench):
+        """The counter totals fallbacks, not evaluations.
+
+        A compiled evaluation has no declaration to name, so recording an
+        empty key for it would make ``rung_receipts`` a second, worse copy of
+        ``rungs`` — and would hide the one number this field exists to give:
+        how many fallbacks each named declaration caused.
+        """
+        from src.calculator.program.rung import (
+            CompiledFast,
+            ReceiptWalk,
+            counter_entry,
+        )
+        from src.calculator.work_counters import record_rung
+
+        counters = bench.WorkCounters()
+        record_rung(counters, *counter_entry(CompiledFast()))
+        record_rung(
+            counters, *counter_entry(ReceiptWalk("Bloodsong - Expose Weakness"))
+        )
+        assert counters.rung_receipts == Counter({"Bloodsong - Expose Weakness": 1})
+        assert (
+            sum(counters.rung_receipts.values())
+            == counters.rungs["receipt_walk_candidate"]
+        )
