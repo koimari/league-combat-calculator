@@ -1,0 +1,101 @@
+{
+  "receipt_id": "oracle-P4-integration-final-leaf8",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md`, no src/, tests/, scripts/, plans, receipts, or history read)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/dispositions",
+  "scenario": "syndra_custom_order_60",
+  "old_value": "<absent> (key not present in the combat block)",
+  "new_value": "S9 dispositions map — 178 entries, each {disposition, view_tag}",
+  "verdict": "new_value_correct",
+
+  "verdict_scope": {
+    "what_is_verified": "The leaf's KIND is grounded: a per-row trust disposition + view tag is exactly the artifact the repo's own P4 trust-label contract specifies, the disposition vocabulary is sourced, and Syndra's cached audit entry independently predicts that this scenario must carry non-'exact' dispositions. The cardinality 178 is consistent with (inside) the event/row envelope I derived from the cached data and the quoted renewal-schedule formula.",
+    "what_is_NOT_verified": "The exact integer 178 and the per-key disposition/view_tag values cannot be recomputed from cached wiki text or from any formula in docs/math-foundations.md. The map's keys enumerate engine-internal combat rows for one scenario; their number depends on the scenario's roster/fight tuple and on the row-splitting convention, both of which live in source files this runbook forbids reading. This verdict is therefore 'no contradiction found + shape and magnitude corroborated', not 'digit-for-digit reproduced'.",
+    "confidence": "medium"
+  },
+
+  "independent_computation": {
+    "step_0_is_the_leaf_wiki_derivable": {
+      "check": "grep -r -i 'disposition' and 'view_tag' over the entire exported evidence tree (data/**, docs/math-foundations.md)",
+      "result": "zero hits for either term",
+      "consequence": "No cached wiki value and no formula in docs/math-foundations.md asserts a damage/heal quantity for this leaf. The leaf is an ANNOTATION layer over rows the engine already emits; it makes no numeric damage claim that the wiki cache could contradict. Correspondingly, the old value <absent> is not an independently computed 'correct' value either — it is the pre-feature state of the snapshot."
+    },
+
+    "step_1_what_a_disposition_is_grounded_to": {
+      "source": "data/worklists/p5-ux-task.md line 'Trust labels UI (P4)' and data/worklists/p7-validation-task.md items 5-6",
+      "quote_p5": "the breakdown/ability rows render a certainty chip next to each damage/heal number: EXACT (fully sourced formula, no options), ESTIMATE (uses a defaulted player-controlled option), BOUNDARY (documented non-computed mechanic). The chip reads a new backend field 'certainty' on each ability row",
+      "quote_p7": "GET /api/certainty?champion= -> {\"champion\": \"...\", \"slots\": {\"Q\": {\"certainty\": \"exact|estimate|boundary\", \"reason\": \"...\"}}} — derive per ability: EXACT when every damaging/heal row is a sourced formula with no player-controlled default (no options); ESTIMATE when the module uses a defaulted option (stacks/procs/uptime) or a documented approximation ...; BOUNDARY when a documented non-computed mechanic exists ... Source: the champion module's ASSUMPTIONS/OPTIONS + the audit entries (data/champion-audit/batch-p1-*.json).",
+      "conclusion": "A per-row {disposition, view_tag} pair carried on the combat block is the direct integration form of this contract (disposition = the certainty class; view_tag = which rendered view/row the chip attaches to). The leaf's SHAPE is therefore corroborated by the repo's own cached specification, independent of the change under test."
+    },
+
+    "step_2_syndra_specific_prediction_from_the_cache": {
+      "source": "data/champion-audit/batch-6.json -> 'Syndra' (and data/champion-audit/batch-e9-1.json -> 'Syndra')",
+      "quotes": [
+        "module_slots.modeled = [P, Q, Q2, W, E, R]",
+        "module_slots.out_of_scope = [\"E/W CC (stun, knockback, slow - utility only)\", \"R 100-splinter execute (documented not modeled)\"]",
+        "gap_summary: \"... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters, kills below 15% max HP) is explicitly documented as not modeled ...\"",
+        "batch-e9-1: \"E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).\""
+      ],
+      "derived_prediction": "Applying the P7 derivation rules to these cached audit facts, a Syndra scenario CANNOT be an all-'exact' map: the splinters option (0-120) and the user-set r_spheres count are player-controlled defaults -> ESTIMATE for the P AP-buff row, the Q2 second-charge row, the W 60-splinter true-damage row and the R per-sphere rows; the R 100-splinter execute is a documented non-computed mechanic -> BOUNDARY. A populated dispositions map on this scenario is therefore the expected outcome, and an <absent> map would leave those documented option/boundary rows unlabelled — the exact condition the P4 contract exists to remove.",
+      "cross_check_of_the_cached_rows": "data/champions.json 'Syndra' carries 10 leveling rows: P 'Per-Level Scaling'; Q 'Magic Damage'; W 'Magic Damage', 'Bonus True Damage', 'Total Mixed Damage'; E 'Magic Damage'; R 'Ability Haste', 'Magic Damage per Sphere', 'Minimum Magic Damage', 'Maximum Magic Damage'. The W 'Bonus True Damage' and the R per-sphere/min/max trio are precisely the option-gated rows the audit names."
+    },
+
+    "step_3_cardinality_envelope_for_178": {
+      "purpose": "178 cannot be recomputed exactly, but it can be tested against every catalog cardinality the cache CAN produce, and against the fight-schedule envelope the quoted formula produces.",
+      "test_a_is_178_a_catalog_count": {
+        "counts_computed_from_the_export": {
+          "champions (data/champions.json)": 173,
+          "items (data/items.json)": 324,
+          "items with modes['classic sr 5v5']": 237,
+          "  ... & no championRestriction": 232,
+          "  ... & shop.purchasable": 207,
+          "  ... & not removed": 207,
+          "  ... & no acquisitionNote": 188,
+          "legendary rank within that pool": 107,
+          "runes (data/runes.json)": 17,
+          "atom-summary families": {"crowd-control-mobility": 167, "damage": 173, "heal-shield": 116, "interaction": 71, "stack-transform-summon-resource": 165},
+          "audit module_slots entries": {"modeled": 165, "out_of_scope": 137},
+          "bin/behavior-index.json": 203
+        },
+        "exhaustive_filter_sweep": "All 2^7 - 1 combinations of the natural item-availability predicates (SR mode, no champion restriction, purchasable, not removed, no acquisition note, non-consumable, has effects) were enumerated; the attainable counts are {135,136,140,142,148,149,154,155,157,159,160,162,169,170,182,183,184,187,188,190,197,198,199,202,203,207,208,209,210,212,214,215,219,220,221,232,235,237,239,240,241,248,249,263,265,266,267,268,271,272,288,290,293,294,319,324}. 178 is NOT attainable.",
+        "result": "178 corresponds to no cache-wide catalog (not items, not champions, not runes, not atoms, not audit slots). It is therefore a SCENARIO-LOCAL row count, exactly as a per-combat-row annotation map should be — a cache-wide count here would have been the falsifying signature (it would mean the map was keyed off a catalog rather than off the rows actually simulated)."
+      },
+      "test_b_fight_schedule_envelope": {
+        "formula_quoted": "docs/math-foundations.md 1.1: \"N(T) = floor(AS * u * T)  (damage.py: num_auto_attacks = floor(...))\" and \"the cast epochs of a solo ability are 0, c_i, 2c_i, ... - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion\". Stat growth per CLAUDE.md domain block: base + growth * (L-1) * (0.7025 + 0.0175*(L-1)); attack speed: base_AS + AS_ratio * (bonus_percent/100).",
+        "syndra_stats_from_data_champions_json": {"attackSpeed.flat": 0.658, "attackSpeed.perLevel": 2, "attackSpeedRatio.flat": 0.625, "cooldowns": {"Q": [7,7,7,7,7], "W": [12,11,10,9,8], "E": [15,15,15,15,15], "R": [120,100,80]}},
+        "work": [
+          "bonus AS% at level 18 = 2 * (18-1) * (0.7025 + 0.0175*17) = 34 * 1.0000 = 34.00%",
+          "AS = 0.658 + 0.625 * 0.34 = 0.87050",
+          "autos over a 60 s window, u = 1: N(60) = floor(0.87050 * 60) = floor(52.23) = 52",
+          "cast epochs strictly inside [0,60): Q (cd 7) -> 0,7,...,56 = 9 casts; W rank 5 (cd 8) -> 0,8,...,56 = 8; E (cd 15) -> 0,15,30,45 = 4; R rank 3 (cd 80) -> 0 = 1. Total 22 casts (upper bound; shared-timeline mutual exclusion can only reduce it).",
+          "=> <= 74 attacker-side damage-bearing events per defender in a 60 s window before item procs, on-hits and DoT ticks."
+        ],
+        "roster_envelope": "Summing leveling rows per champion over data/champions.json gives 2037 rows / 173 champions = 11.77 rows per champion (median 11, min 4, max 39). A coupled 5v5 roster is therefore ~118 ability rows before item/rune/proc rows.",
+        "result": "178 sits inside both readings: ~74 attacker events x ~2.4 defenders/targets, or a ~118-row coupled-roster ability set plus item/rune/on-hit/DoT rows. It is neither impossibly small (a 1v1 ability-only map would be ~10-25) nor impossibly large (the 60 s single-attacker event ceiling is ~74 per target). No contradiction."
+      }
+    },
+
+    "step_4_negative_checks_performed": [
+      "No damage, heal, resistance, penetration or stat number in the cache is altered by an annotation map; the leaf carries no quantity that 100/(100+R), the penetration order, the crit multiplier, the lethality rule or the stat-growth formula could falsify.",
+      "The leaf is additive (absent -> present). Nothing in docs/math-foundations.md sections 0-5 (semantics of the deterministic number, expected damage, resistance/penetration, BIS, variance/confidence, formula-audit table) requires the combat block to omit annotation fields, and the section 4/5 'what the deterministic single number does and does not claim' framing argues FOR carrying per-row certainty, not against it.",
+      "Caveat recorded honestly: data/worklists/p7-validation-task.md gates the ORIGINAL P4 backend task with 'golden compare identical (no engine change)'. That task put certainty on a separate /api/certainty endpoint, so its gate does not speak to a later integration that serializes dispositions onto the combat payload; a golden diff there is expected, not a violation. Flagged rather than treated as evidence either way."
+    ]
+  },
+
+  "sources_quoted": [
+    {"path": "docs/math-foundations.md", "section": "1.1 Renewal theory for cast + auto timing schedules", "used_for": "N(T) = floor(AS * u * T) and the deterministic shared-timeline cast epochs used for the 60 s event envelope"},
+    {"path": "docs/math-foundations.md", "section": "3.1 Exact formulation", "used_for": "candidate-pool cardinality language (|L| = 116 legendary in the cache; '~96' role-scoped) — checked against 178 and excluded"},
+    {"path": "data/champions.json", "key": "Syndra.stats / Syndra.abilities", "used_for": "base AS 0.658, AS ratio 0.625, +2%/level growth, Q/W/E/R cooldowns, and the 10 leveling rows (incl. W 'Bonus True Damage' and R 'Magic Damage per Sphere')"},
+    {"path": "data/champion-audit/batch-6.json", "key": "Syndra", "used_for": "module_slots modeled/out_of_scope, splinters option (0-120), user-set sphere count, 'R 100-splinter execute (documented not modeled)' — the independent prediction that this scenario must carry estimate/boundary dispositions"},
+    {"path": "data/champion-audit/batch-e9-1.json", "key": "Syndra", "used_for": "confirmation of the splinters option and r_spheres option"},
+    {"path": "data/worklists/p5-ux-task.md", "section": "Trust labels UI (P4)", "used_for": "the EXACT / ESTIMATE / BOUNDARY vocabulary and the per-row chip contract"},
+    {"path": "data/worklists/p7-validation-task.md", "section": "P4 items 5-6", "used_for": "the per-row certainty derivation rules and their stated evidence base (module ASSUMPTIONS/OPTIONS + champion-audit batches)"},
+    {"path": "data/items.json, data/runes.json, data/atoms/atom-summary.json, data/bin/behavior-index.json", "used_for": "catalog-cardinality sweep proving 178 is not any cache-wide catalog count"}
+  ],
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "path": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle8",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  }
+}

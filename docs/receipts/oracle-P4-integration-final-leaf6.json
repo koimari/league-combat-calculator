@@ -1,0 +1,91 @@
+{
+  "receipt": "oracle-P4-integration-final-leaf6",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/score_plain_tuple/combat/dispositions",
+  "scenario": "score_plain_tuple",
+  "old_value": "<absent> (leaf not present in the prior golden baseline)",
+  "new_value": "S9 dispositions map: 133 entries, each of shape {disposition, view_tag}",
+  "verdict": "new_value_correct",
+  "verdict_scope": "STRUCTURAL ONLY. The presence of a per-row disposition/view-tag map on the combat readout is affirmatively supported by documentation inside the permitted evidence tree, and nothing in that tree contradicts the new value. The specific cardinality (133) and the per-entry disposition/view_tag pairs are NOT independently reproducible from data/ or docs/math-foundations.md and were NOT certified by this oracle.",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle6",
+    "contents": "data/ (champions.json 173 champions, items.json 324 items, runes.json 17 keystones, atoms/, item-atoms/ 324, wiki-atoms/, champion-audit/ 14 batches, practice-corpus/scenarios.json, worklists/ 54 files, staleness.json, economics-sourced.json, onhit-matrix.json) + docs/math-foundations.md (523 lines)",
+    "not_read": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff, the plan"
+  },
+
+  "independent_computation": {
+    "step_1_direct_lookup": {
+      "method": "Case-insensitive recursive grep of the entire evidence tree for the leaf's own vocabulary.",
+      "queries": ["disposition", "view_tag", "view.tag", "score_plain_tuple", "S9"],
+      "result": "ZERO matches for every query, in data/ and in docs/math-foundations.md.",
+      "conclusion": "The leaf's key names exist nowhere in the cached wiki corpus or the math document. This is not a wiki-derived quantity; it is engine/presentation vocabulary."
+    },
+    "step_2_cardinality_search": {
+      "method": "Recursive walk of every .json file under data/ (all 350+ files), reporting any dict or list whose length is exactly 133; then a widened census for lengths 120-150.",
+      "result_exact_133": "0 containers of size 133 anywhere in data/.",
+      "result_120_to_150": "exactly one container: data/item-atoms/item-atom-summary.json -> /stack-transform-summon-resource, list of 132 (semantically unrelated to dispositions).",
+      "conclusion": "No cached collection has 133 members, so 133 is not a direct read-through of any wiki table."
+    },
+    "step_3_reconstruction_attempts": {
+      "method": "Tried to compose 133 from the natural candidate pools the engine is documented to iterate over, using the item-availability rule (SR mode flag + champion restriction + acquisition note) and the audit slot tables.",
+      "computations": [
+        "items.json by rank (all modes): LEGENDARY 127, DISTRIBUTED 58, EPIC 46, STARTER 20, CONSUMABLE 19, BOOTS 16, BASIC 15, TURRET 7, TRINKET 6, MINION 5, POTION 2, rank-less 3.",
+        "Summoner's Rift filter (modes['classic sr 5v5'] == true AND removed == false): LEGENDARY 117, EPIC 45, BOOTS 15, BASIC 15, STARTER 13, TURRET 7, CONSUMABLE 7, MINION 5, TRINKET 5, DISTRIBUTED 3, POTION 2, rank-less 3.",
+        "SR legendary champion-restricted: 0. SR legendary with an acquisitionNote: 6 (Bounty of Worlds, Celestial Opposition, Dream Maker, Zaz'Zak's Realmspike, Solstice Sleigh, Bloodsong - all 'Requires completion of the support quest for Runic Compass'). Multitool and Ghostcrawlers are Arena-only (classic sr 5v5 = false).",
+        "SR boots: 15 = Boots (t1) + 7 tier-2 (Berserker's Greaves, Gluttonous Greaves, Boots of Swiftness, Sorcerer's Shoes, Plated Steelcaps, Mercury's Treads, Ionian Boots of Lucidity) + 7 tier-3 (Immortal Path, Swiftmarch, Crimson Lucidity, Gunmetal Greaves, Chainlaced Crushers, Armored Advance, Spellslinger's Shoes). The 7 tier-2 matches the doc's 'x7 boot choices'.",
+        "SR legendary (117) + SR boots (15) = 132, NOT 133.",
+        "SR legendary (117) + every BOOTS-rank item including Arena-only Ghostcrawlers (16) = 133 - an exact hit, but it requires an inconsistent filter (mode-filtered legendaries, unfiltered boots), so it is a coincidence-grade match, not a derivation.",
+        "champion-audit slot dispositions across all 14 batches: 173 champions, 1015 slot rows, {modeled 784, out_of_scope 198, no_damage 33}; champions with any non-modeled slot 115, with out_of_scope 96, with no_damage 21. None is 133.",
+        "docs/math-foundations.md formula-audit table (Section 5) carries 24 labeled rows (EXACT / APPROX), not 133."
+      ],
+      "conclusion": "No sourced construction reproduces 133. The map is keyed by something defined outside the evidence tree (the scenario's own input tuple and the per-row readout the engine builds from it), so its cardinality cannot be recomputed here."
+    },
+    "step_4_what_is_adjudicable": {
+      "finding": "The leaf is a labeling/annotation map, not a damage number. Two documented facts inside the permitted tree bear on whether it belongs on the combat readout at all:",
+      "a": "data/worklists/p5-ux-task.md item 5 and data/worklists/p7-validation-task.md items 5-6 define P4 'trust labels' as a designed feature of the readout: every damage/heal row carries a certainty value (exact | estimate | boundary) plus a UI chip. A per-row {disposition, view_tag} map on /combat is exactly that contract's data shape - disposition = the certainty value, view_tag = the chip/view grouping.",
+      "b": "docs/math-foundations.md Section 5 states the governing rule that no family may be presented unlabeled: 'APPROX = documented approximation (never silently presented as exact)'. An unlabeled readout (the old <absent> state) is the state that rule argues against.",
+      "c": "Because the leaf carries no numeric magnitude, its addition cannot move any damage total. It is consistent with a labels-only change under the golden-gate semantics in CLAUDE.md ('a pure refactor must show zero diffs'), where the only diff is a new non-numeric leaf."
+    },
+    "step_5_residual_risk": {
+      "risk_1": "Cardinality unverified. If the true labelable-row count for this scenario is not 133, this oracle would not have caught it - no cached source pins that count.",
+      "risk_2": "Per-entry correctness unverified. Whether each entry's disposition (exact/estimate/boundary-class) matches the underlying row's sourcing status depends on champion-module ASSUMPTIONS/OPTIONS, which live in src/ and were deliberately not read.",
+      "risk_3": "Scope question. The scenario name 'score_plain_tuple' plausibly denotes a scoring path whose return shape is a plain tuple; if the scenario exists specifically to pin a minimal return shape, attaching a 133-entry map under /combat could be scope creep rather than a fix. The leaf path places the map under /combat (the readout) rather than under the score, which argues against this reading, but the scenario's definition lives in tests/ and was not read."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/worklists/p5-ux-task.md (line 5)",
+      "quote": "Trust labels UI (P4): the breakdown/ability rows render a certainty chip next to each damage/heal number: EXACT (fully sourced formula, no options), ESTIMATE (uses a defaulted player-controlled option), BOUNDARY (documented non-computed mechanic). The chip reads a new backend field 'certainty' on each ability row"
+    },
+    {
+      "source": "data/worklists/p7-validation-task.md (P4 section, item 5)",
+      "quote": "GET /api/certainty?champion= -> {\"champion\": \"...\", \"slots\": {\"Q\": {\"certainty\": \"exact|estimate|boundary\", \"reason\": \"...\"}}} - derive per ability: EXACT when every damaging/heal row is a sourced formula with no player-controlled default (no options); ESTIMATE when the module uses a defaulted option (stacks/procs/uptime) or a documented approximation ...; BOUNDARY when a documented non-computed mechanic exists"
+    },
+    {
+      "source": "docs/math-foundations.md Section 5 (legend)",
+      "quote": "Legend: EXACT = instantiates the identity exactly under the deterministic model; APPROX = documented approximation (never silently presented as exact)."
+    },
+    {
+      "source": "docs/math-foundations.md Section 3.1",
+      "quote": "`L` = eligible legendary items (116 in the current cache; the public coverage receipt reports the role-scoped subset ...); ... `|L| = 116`, so a 5-slot build has C(116, 5) ~ 1.60 x 10^8 subsets (x7 boot choices ~ 1.12 x 10^9 loadouts)",
+      "note": "Recomputed from data/items.json: SR-legal legendaries = 117 (the doc's 116 is one off against the current cache), tier-2 boot choices = 7 (matches). Recorded as an aside; it does not bear on this leaf."
+    },
+    {
+      "source": "data/items.json (recomputed, not quoted)",
+      "quote": "modes flag 'classic sr 5v5', championRestriction, acquisitionNote, rank - used for the SR-legal pool arithmetic above"
+    },
+    {
+      "source": "data/champion-audit/batch-*.json (14 files, recomputed)",
+      "quote": "per-champion 'slots' dispositions with values modeled / out_of_scope / no_damage - 1015 rows over 173 champions"
+    }
+  ],
+
+  "asides": [
+    "docs/math-foundations.md Section 3.1 states |L| = 116 eligible legendary items; the current cache yields 117 SR-legal LEGENDARY-rank items (127 total, 10 not SR-legal). The stated search-space figure C(116,5) is therefore one item stale. Off-task, flagged only.",
+    "Only 6 SR legendaries carry an acquisitionNote (all the Runic Compass support-quest line); zero SR legendaries carry a championRestriction. Any availability logic keyed on champion restriction for legendaries is currently a no-op on Summoner's Rift."
+  ]
+}

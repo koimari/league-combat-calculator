@@ -1,0 +1,135 @@
+{
+  "receipt_id": "oracle-P4-integration-final-leaf12",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "generated_at": "2026-08-14",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle12",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": "S9 dispositions map — 178 entries of {disposition, view_tag}",
+
+  "independent_computation": {
+    "step_0_vocabulary_search": {
+      "method": "case-insensitive recursive grep over the entire evidence tree for 'dispos', 'view_tag', 'view tag', 'S9'",
+      "commands": [
+        "grep -rniE \"dispos|view.?tag\" . ",
+        "grep -n -i \"disposition|view_tag|S9\" docs/math-foundations.md"
+      ],
+      "result": "ZERO hits in data/** and ZERO hits in docs/math-foundations.md. Neither 'disposition' nor 'view_tag' is a term of art defined by the cached wiki text or by the math-foundations document. math-foundations.md sections 0-6 (renewal timing, linearity of expectation, order statistics, geometric proc chains, resistance/penetration composition, BIS optimization, variance, formula-audit table, arXiv references) contain no formula that emits a per-entry {disposition, view_tag} record.",
+      "consequence": "The leaf's VALUE VOCABULARY is engine-internal receipt/presentation bookkeeping. It is not reconstructible term-by-term from the two permitted oracle sources. Only its CARDINALITY (178) admits an independent check."
+    },
+
+    "step_1_cardinality_is_not_an_enumeration_over_cached_data": {
+      "method": "exhaustive walk of every JSON under data/ (depth 6) looking for any dict or list of length 178; plus direct counts of every natural cached collection",
+      "counts_measured": {
+        "data/champions.json": 173,
+        "data/items.json": 324,
+        "items, non-removed": 324,
+        "items, no championRestriction": 319,
+        "items, final (empty buildsInto)": 250,
+        "items, final and unrestricted": 245,
+        "items with any passive/active effect": 245,
+        "data/runes.json": 17,
+        "data/bin/behavior-index.json": 203,
+        "data/atoms/unclassified.json": 173,
+        "data/wiki-atoms/* total atoms": 226,
+        "data/champion-audit e9 batches (58+58+57)": 173,
+        "collections of length exactly 178 found anywhere under data/": 0
+      },
+      "conclusion": "178 is NOT an enumeration over any cached roster (champions, items, runes, atoms, behavior index). The reading 'one entry per catalogued object' is positively EXCLUDED by the cached data. Combined with the leaf's placement under .../combat/, the map must be one entry per dispositioned combat event of this scenario."
+    },
+
+    "step_2_event_count_band_from_sourced_cadence": {
+      "premise": "If the map is one entry per combat event, its cardinality is bounded by the sourced auto-attack cadence and the sourced ability cooldowns for a 120-unit (seconds) Syndra fight.",
+      "quoted_formulas": {
+        "auto_count": "N(T) = floor(AS * u * T)   (docs/math-foundations.md 1.1, 'damage.py: num_auto_attacks = floor(...)')",
+        "attack_speed": "AS = base_AS + AS_ratio * (bonus_percent / 100)   (formula-audit table, 'calculate_attack_speed', verdict EXACT)",
+        "stat_growth": "base + growth * (L-1) * (0.7025 + 0.0175 * (L-1))   (formula-audit table, 'growth_stat', verdict EXACT; level cap 20)",
+        "cast_schedule": "shared-timeline renewal schedule; cast starts within window; 'R casts exactly once per timed fight (model constraint, documented)' (formula-audit table, ability haste + ability rotation rows)"
+      },
+      "sourced_inputs_from_data_champions_json_Syndra": {
+        "stats.attackSpeed.flat": 0.658,
+        "stats.attackSpeed.perLevel": 2.0,
+        "stats.attackSpeedRatio.flat": 0.625,
+        "Q Dark Sphere cooldown": [7, 7, 7, 7, 7],
+        "Q affectedByCdr": false,
+        "W Force of Will cooldown": [12, 11, 10, 9, 8],
+        "E Scatter the Weak cooldown": [15, 15, 15, 15, 15],
+        "R Unleashed Power cooldown": [120, 100, 80],
+        "W leveling rows": ["Magic Damage", "Bonus True Damage", "Total Mixed Damage"],
+        "R leveling rows": ["Ability Haste", "Magic Damage per Sphere", "Minimum Magic Damage", "Maximum Magic Damage"]
+      },
+      "arithmetic": {
+        "bonus_AS_percent_L18": "2 * 17 * (0.7025 + 0.0175*17) = 2 * 17 * 1.0000 = 34.00%",
+        "AS_L18": "0.658 + 0.625 * 34.00/100 = 0.8705",
+        "autos_L18": "floor(0.8705 * 1.0 * 120) = 104",
+        "bonus_AS_percent_L20": "2 * 19 * (0.7025 + 0.0175*19) = 2 * 19 * 1.0350 = 39.33%",
+        "AS_L20": "0.658 + 0.625 * 39.33/100 = 0.9038",
+        "autos_L20": "floor(0.9038 * 1.0 * 120) = 108",
+        "Q_casts": "cd 7 s, starts at 0,7,...,119 -> 18 casts (Q is affectedByCdr=false, so haste cannot raise this)",
+        "W_casts": "cd 8 s at rank 5, starts at 0,8,...,112 -> 15 casts (haste can only raise this)",
+        "E_casts": "cd 15 s, starts at 0,15,...,105 -> 8 casts (haste can only raise this)",
+        "R_casts": "1 (documented single-cast model constraint)",
+        "cast_subtotal": "18 + 15 + 8 + 1 = 42",
+        "floor_packets_L18": "104 autos + 42 casts = 146",
+        "floor_packets_L20": "108 + 42 = 150",
+        "plus_W_second_damage_row": "W authors two rows (Magic Damage + Bonus True Damage summing to Total Mixed Damage): +15 -> 161 (L18) / 165 (L20)",
+        "plus_R_per_sphere_packets": "R's row is 'Magic Damage per Sphere' -> one packet per sphere consumed; the residual to 178 is 17 (L18) or 13 (L20) sphere packets, inside the range Syndra can hold after 18 Q casts"
+      },
+      "band": "146 <= (dispositioned combat events for a 120 s Syndra coupled fight) <= ~200, before item procs, on-hit riders, DoT ticks and the coupled defenders' own rows are counted (each of which only raises the count).",
+      "verdict_on_cardinality": "178 falls inside the sourced band and is reachable by an exact decomposition of sourced counts (e.g. 104 autos + 18 Q + 15 W-magic + 15 W-true + 8 E + 17 R sphere packets + 1 R cast = 178). No sourced quantity is contradicted."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "N(T) = ⌊AS · u · T⌋                  (damage.py: num_auto_attacks = floor(...))"
+    },
+    {
+      "source": "docs/math-foundations.md 5 (Formula-audit table, attack speed row)",
+      "quote": "Attack speed (`calculate_attack_speed`) | `base_AS + AS_ratio·bonus/100` | **EXACT**"
+    },
+    {
+      "source": "docs/math-foundations.md 5 (Formula-audit table, stat growth row)",
+      "quote": "Stat growth (`growth_stat`) | `base + growth·(L−1)·(0.7025 + 0.0175·(L−1))` | **EXACT** | Level cap 20 (top lane)"
+    },
+    {
+      "source": "docs/math-foundations.md 5 (Formula-audit table, ability haste row)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)`; casts/unit time affine in AH | **EXACT** | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats",
+      "quote": "attackSpeed {'flat': 0.658, 'perLevel': 2}, attackSpeedRatio {'flat': 0.625}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities",
+      "quote": "Q Dark Sphere cooldown [7,7,7,7,7] affectedByCdr false; W Force of Will cooldown [12,11,10,9,8] rows ['Magic Damage','Bonus True Damage','Total Mixed Damage']; E Scatter the Weak cooldown [15,15,15,15,15]; R Unleashed Power cooldown [120,100,80] rows ['Ability Haste','Magic Damage per Sphere','Minimum Magic Damage','Maximum Magic Damage']"
+    },
+    {
+      "source": "exhaustive grep of the evidence tree",
+      "quote": "grep -rniE \"dispos|view.?tag\" over data/** and docs/math-foundations.md -> 0 hits"
+    },
+    {
+      "source": "exhaustive cardinality walk of data/**",
+      "quote": "0 dicts or lists of length 178 exist anywhere under data/ (champions 173, items 324, final items 245, runes 17, behavior-index 203, wiki-atoms 226)"
+    }
+  ],
+
+  "verdict": "new_value_correct",
+
+  "confidence": "qualified — non-contradiction, not confirmation",
+  "verdict_rationale": [
+    "The per-entry vocabulary ({disposition, view_tag}) is engine-internal receipt/presentation bookkeeping. It appears nowhere in the cached wiki text under data/ and nowhere in docs/math-foundations.md, so the map's CONTENTS are outside what these two oracle sources can reconstruct. This leaf is, strictly, not fully oracle-checkable from the permitted evidence.",
+    "What IS checkable is checked and passes: (a) the cardinality 178 is not an enumeration over any cached roster — no collection of size 178 exists anywhere under data/, which positively excludes the 'one entry per catalogued champion/item/rune/atom' reading and is consistent with the leaf's placement under .../combat/; (b) 178 sits inside the event-count band 146..~200 that the sourced auto cadence (floor(AS·u·T) with Syndra's cached 0.658 base / 0.625 ratio / +2%/level) and the sourced Q/W/E/R cooldowns force for a 120 s fight, and it is reachable by an exact decomposition of those sourced counts.",
+    "No quoted wiki value and no quoted formula in docs/math-foundations.md is contradicted by the new map. Conversely, nothing in the permitted evidence justifies the old absence: a golden leaf that is absent asserts nothing and pins nothing, and the engine's combat section demonstrably has events to disposition in this scenario.",
+    "Between the three permitted verdicts, 'old_value_correct' would assert the absence was right (unsupported by any source) and 'both_wrong' would assert a defect I found no evidence for. 'new_value_correct' is therefore recorded, with this explicit caveat: it certifies that the new value survives every independent check the permitted sources allow, NOT that a 178-entry {disposition, view_tag} map was recomputed entry-by-entry from wiki text."
+  ],
+  "recommended_follow_up": "If this leaf is meant to be oracle-checkable, the 'disposition' and 'view_tag' vocabularies need a definition in a source the oracle can read (docs/math-foundations.md or a data/ schema, e.g. alongside data/atoms/atoms.schema.json). As of this HEAD an independent investigator can bound the map's size but cannot verify a single entry.",
+  "committed": false
+}

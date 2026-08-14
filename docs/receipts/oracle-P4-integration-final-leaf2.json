@@ -1,0 +1,124 @@
+{
+  "receipt_id": "oracle-P4-integration-final-leaf2",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated_at": "2026-08-14",
+  "scenario": "dream_maker_roster",
+  "leaf_path": "/coupled_scenarios/dream_maker_roster/combat/dispositions",
+  "old_value": "<absent> (leaf did not exist in the prior golden baseline)",
+  "new_value": "S9 dispositions map — 531 entries, each of shape {disposition, view_tag}",
+  "verdict": "new_value_correct",
+  "verdict_strength": "NON-REFUTATION, NOT A POSITIVE DERIVATION",
+  "verdict_caveat": "The oracle could not derive this leaf from the sourced evidence, and could not refute it either. This leaf is oracle-inert under runbook R-18/R-19: it carries no wiki-sourced number and instantiates no formula in docs/math-foundations.md, so there is no independent computation that could confirm or contradict it. The verdict records only that nothing in the cached wiki data or the math foundations contradicts the new value; it must NOT be read as confirmation that the 531 entries or their disposition/view_tag values are right.",
+
+  "evidence_tree": {
+    "construction": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "read": ["data/** (all cached wiki/game JSON + READMEs)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_vocabulary_search": {
+      "method": "case-insensitive recursive grep over the entire evidence tree",
+      "commands": [
+        "grep -rn -i 'disposition' .    -> 0 hits",
+        "grep -rn -i 'view_tag|viewtag' . -> 0 hits",
+        "grep -rn '531' data/worklists data/README.md docs/ -> 0 hits"
+      ],
+      "result": "Neither the term 'disposition' nor 'view_tag' occurs anywhere in data/ or docs/math-foundations.md. The vocabulary of this leaf is defined entirely outside the sourced evidence, so its per-entry values cannot be checked against any wiki text."
+    },
+
+    "step_2_cardinality_search": {
+      "goal": "Test whether 531 is a roster cardinality the cache determines.",
+      "direct_container_scan": {
+        "method": "recursive walk of every *.json under data/, flagging any dict or list of length exactly 531",
+        "result": "0 containers of length 531 anywhere in data/."
+      },
+      "cache_cardinalities_measured": {
+        "champions (data/champions.json)": 173,
+        "champion ability slots (P/Q/W/E/R rows)": 865,
+        "champion ability entries": 937,
+        "champion effect descriptions": 2570,
+        "champion leveling rows": 2037,
+        "items (data/items.json)": 324,
+        "items purchasable": 290,
+        "item passives": 306,
+        "item actives": 48,
+        "item passive+active branches": 361,
+        "item atoms (data/atoms/items.json)": 1663,
+        "unique item atom_ids": 53,
+        "keystone runes (data/runes.json)": 17,
+        "decomposed CharacterRecords (data/bin README)": 203,
+        "atom-summary rows (all six families)": 730,
+        "classification-report atoms_classified": 5372
+      },
+      "derived_cardinalities_measured": {
+        "abilities with a damageType": 692,
+        "damaging, non-passive-targeting abilities": 598,
+        "damaging abilities in Q/W/E/R slots": 602,
+        "unique (champion, slot) pairs with damage": 651,
+        "unique Q/W/E/R (champion, slot) pairs with damage": 565,
+        "unique (champion, slot) pairs with damage affecting enemies": 590,
+        "abilities with AoE-ish spellEffects": 352
+      },
+      "exhaustive_predicate_sweep": {
+        "method": "all 1..5-way conjunctions of {has damageType, slot != P, targeting != Passive, affects Enemies, has leveling, AoE, spellshieldable} over both ability rows and unique champion-slot pairs; also all 2- and 3-term sums of the 17 cache cardinalities above",
+        "nearest_hits": [542, 537, 535, 534, 533],
+        "exact_hits_at_531": 0,
+        "conclusion": "531 is not produced by any natural filter over the cached roster. Several unrelated predicates land within 1-2% of it (533-542), which means a coincidental near-match would prove nothing even if one had been exact. The roster the map is built over is defined in code the oracle is forbidden to read."
+      }
+    },
+
+    "step_3_formula_search": {
+      "source": "docs/math-foundations.md",
+      "sections_checked": ["0. Semantics of the deterministic single number", "1-4 (all modeling families)", "5. Formula-audit table (every engine family enumerated)"],
+      "result": "The formula-audit table enumerates every engine family and the identity each instantiates (resistance mitigation, penetration, stat growth, attack speed, ability haste, auto/renewal counting, crit expectation, rotation scheduling, DoT partition, stacking DoT, on-hit stacking, phantom hits, burn, grievous wounds, shield absorption, grey health, revive, BIS score, stat rounding, Terminus/BC ramps). None of them emits a disposition/view_tag classification map, and no section defines a 'dispositions' output. The document's stated output contract is a single number plus named receipts (`_grey_health_receipts`, `effective_health`), so an auxiliary receipt-shaped leaf is not unprecedented in kind — but this specific one has no stated identity to check against."
+    },
+
+    "step_4_scenario_semantics": {
+      "note": "The scenario name is the only interpretable anchor. Dream Maker (data/items.json id 3870, 400g, Classic SR 5v5 only) is a support-quest item whose passive text is quoted below. Its Purple Bubble grants the *ally* bonus magic damage on their next damaging attack or ability, reduced to 33.3% for AoE damage against non-champions — a rule whose application genuinely does need a per-ability disposition (full / AoE-reduced / non-damaging). That makes a per-ability disposition map a coherent thing for this scenario to emit, and is the strongest circumstantial support the evidence tree offers. It does not, however, fix the roster size: the plausible per-ability roster sizes from the cache are 692 / 602 / 598 / 565, none of which is 531.",
+      "practice_corpus_check": "data/practice-corpus/scenarios.json holds 22 verifiable scenarios; 'dream_maker_roster' is not among them, so there is no player-verifiable expected output for it in the cache."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "id 3870, passives[0].branches[0] (Dream Maker)",
+      "quote": "Every 8 seconds, you gain a ''Blue Dream Bubble'' and a ''Purple Dream Bubble''. Granting a {{tip|heal}} or {{tip|shield}} to an allied champion ''(excluding yourself)'' causes you to grant both of your ''Dream Bubbles'' to them, empowering them for 3 seconds. The ''Blue Bubble'' reduces the damage of the next attack or spell they receive from non-{{tip|minions}} by {{pp|50 to 194 for 13|1;7 to 18|type=your level}} and the ''Purple Bubble'' grants them {{as|{{pp|40 to 160 for 13|1;7 to 18|type=your level}} '''bonus''' magic damage}} on their next damaging attack or ability, with the latter reduced to {{fd|33.3}}% for [[area of effect]] damage against non-champions."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "id 3870, stats / shop / modes / acquisitionNote",
+      "quote": "goldPer10 flat 9.0; health flat 200.0; healthRegen percent 75.0; manaRegen percent 75.0; shop.prices.total 400, sell 160; modes {'classic sr 5v5': true, 'aram': false, 'nb': false, 'ar': false}; acquisitionNote 'Requires completion of the support quest for {{ii|Runic Compass}}...'"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 0, Semantics of the deterministic single number",
+      "quote": "The engine runs with `deterministic=True` in every scoring path (optimizer, BIS, golden corpus) ... The output is a single number T = E[ D | model, config ] (point estimate under the expectation heuristic)."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 5, Formula-audit table, audit conclusion",
+      "quote": "Every *core* formula family instantiates its stated identity exactly under the deterministic model ... No combat formula was found mathematically wrong, so **no combat-number change was made**."
+    },
+    {
+      "path": "data/README.md",
+      "locator": "Item source fields table",
+      "quote": "`passives[].branches`, `active[].branches` | Wiki `description`, `description2`, ... | The **complete** text of one effect; replaces the old single `effects` string, which truncated multi-branch passives"
+    },
+    {
+      "path": "data/practice-corpus/scenarios.json",
+      "locator": "purpose",
+      "quote": "Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log)."
+    }
+  ],
+
+  "residual_risks_for_the_parent_agent": [
+    "CARDINALITY UNPINNED: 531 matches no roster cardinality the cache determines (nearest natural candidates: 565 damaging Q/W/E/R champion-slot pairs, 598 damaging non-passive abilities, 602 damaging Q/W/E/R abilities, 692 abilities with a damageType). Whoever can read the code should confirm 531 equals the intended roster size by construction, not by inspection of the snapshot it produced.",
+    "SELF-CERTIFYING LEAF: because neither 'disposition' nor 'view_tag' is defined in any cached source, this leaf can never be falsified by the wiki cache. A golden gate whose diff includes 531 self-defined rows adds churn the numeric-regression gate cannot adjudicate. Consider whether a count + hash summary belongs under /combat/ and the full map under a receipts subtree.",
+    "NOT IN THE VERIFIABLE CORPUS: 'dream_maker_roster' has no entry in data/practice-corpus/scenarios.json, so no in-game Practice Tool observation backs any part of this scenario."
+  ],
+
+  "committed": false
+}

@@ -1,0 +1,141 @@
+{
+  "receipt_id": "oracle-P4-integration-final-leaf0",
+  "runbook": "R-18 / R-19 independent oracle",
+  "generated_at": "2026-08-14",
+  "investigator": "fresh oracle subagent; no knowledge of the change, plan, or diff",
+
+  "scope_discipline": {
+    "evidence_tree_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_p4_final",
+    "files_in_export": 437,
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (including scripts/golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / diff / plan"
+    ]
+  },
+
+  "leaf": {
+    "path": "/coupled_scenarios/catalyst_roster/combat/dispositions",
+    "scenario": "catalyst_roster",
+    "old_value": "<absent> (leaf did not exist in the prior golden baseline)",
+    "new_value": "S9 dispositions map — 690 entries, each of shape {disposition, view_tag}",
+    "value_kind": "non-numeric classification / presentation map; carries no damage, stat, or timing quantity"
+  },
+
+  "independent_computation": {
+    "objective": "Reconstruct the 690-entry dispositions map, or at minimum its cardinality and vocabulary, from cached wiki text under data/ and/or a quoted formula in docs/math-foundations.md.",
+    "result": "NOT RECONSTRUCTIBLE from the permitted sources. No definition, no enumeration domain, and no formula for this leaf exists in data/ or docs/math-foundations.md.",
+
+    "step_1_vocabulary_search": {
+      "method": "case-insensitive recursive grep over the entire 437-file export (data/ + docs/math-foundations.md)",
+      "occurrences": {
+        "disposition": 0,
+        "view_tag": 0,
+        "catalyst_roster": 0,
+        "coupled_scenarios": 0,
+        "S9": 0
+      },
+      "conclusion": "The leaf's own vocabulary has zero grounding in cached wiki text or the math document. Neither the key set nor the value vocabulary of the map is specified by any permitted source."
+    },
+
+    "step_2_formula_search": {
+      "method": "read docs/math-foundations.md in full (523 lines; sections 0-6, including the Section 5 formula-audit table covering every engine family)",
+      "finding": "The document specifies only quantitative identities — renewal counting N(T)=floor(AS*u*T), linearity of expectation for multi-hit/DoT/procs, mitigation m(R)=100/(100+R), pen composition, growth_stat, effective_cooldown, BIS score, shield clipping, grey health, revive. Section 4 ('Variance and confidence') is the closest thing to a classification concept and it discusses conformal prediction over a validation corpus, not a per-entity disposition map.",
+      "conclusion": "No quoted formula in docs/math-foundations.md yields a dispositions map, a view_tag, or the number 690."
+    },
+
+    "step_3_cardinality_reconstruction": {
+      "method": "Enumerated every natural cardinality in the cached data that a 690-entry per-entity map could plausibly range over, plus an exhaustive structural scan of every JSON in the export for any dict/list of length 690 or any integer literal 690.",
+      "candidate_universes_computed_from_cache": {
+        "champions (data/champions.json)": 173,
+        "champion ability slots, P+Q+W+E+R (173 x 5)": 865,
+        "champion ability slots, non-passive (173 x 4)": 692,
+        "champion ability objects, all": 937,
+        "champion ability objects, non-passive": 756,
+        "champion abilities carrying a damageType": 692,
+        "champion abilities with leveling rows": 806,
+        "items (data/items.json)": 324,
+        "items flagged 'classic sr 5v5'": 237,
+        "items purchasable": 290,
+        "items sr+notremoved+purchasable+unrestricted+no-acquisition-note": 188,
+        "item passives + actives": 354,
+        "item effect branches": 361,
+        "item EPIC rank": 46,
+        "item LEGENDARY rank": 127,
+        "keystone runes (data/runes.json)": 17,
+        "onhit-matrix champions": 31,
+        "bin/behavior-index entries": 203,
+        "wiki/article-index entries": 4231,
+        "atoms classified (classification-report)": 5372,
+        "champion-audit e9 slot verdicts (modeled 662 / out_of_scope 171 / no_damage 32)": 865
+      },
+      "exhaustive_structural_scan": "Walked every JSON file in the export. Exactly four occurrences of the integer 690 exist anywhere in the cache, all unrelated coincidences: /Garen/stats/health/flat, /Evelynn/abilities/P[0]/effects[1]/leveling[0]/modifiers[0]/values[22], and two Leblanc R leveling modifier values. ZERO dicts and ZERO lists of length 690 exist in the entire cache.",
+      "conclusion": "690 matches no cached-data cardinality. The nearest neighbours are 692 (= 173 x 4 non-passive ability slots, which coincidentally also equals the count of abilities carrying a damageType) and 865 (= 173 x 5 total slots). 690 = 2*3*5*23; the factor 23 corresponds to nothing in the cache. The map is therefore engine-produced state whose domain is decided in src/ (unreadable to this oracle), not a projection of any cached wiki universe."
+    },
+
+    "step_4_vocabulary_plausibility": {
+      "finding": "Although the token 'disposition' is absent, the repo's own cached audit data uses exactly a disposition-shaped taxonomy for per-ability coverage: data/champion-audit/batch-e9-*.json carries a 'slots' object per champion whose values are drawn from {'modeled', 'out_of_scope', 'no_damage'}. Across the export these tokens occur 1146 / 347 / 33 times.",
+      "example_quote": "data/champion-audit/batch-e9-1.json, Aatrox: {\"verdict\": \"ok\", \"module\": \"aatrox.py\", \"slots\": {\"P\": \"modeled\", \"Q\": \"modeled\", \"W\": \"modeled\", \"E\": \"out_of_scope\", \"R\": \"modeled\"}}",
+      "conclusion": "A per-entity {disposition, view_tag} map is coherent with an established repo taxonomy, so the new leaf's SHAPE is consistent with the codebase's own conventions. Its CONTENTS and cardinality remain unverifiable from the cache."
+    },
+
+    "step_5_falsification_attempt": {
+      "question": "Does the new value contradict any cached wiki value or any identity quoted in docs/math-foundations.md?",
+      "answer": "No. The leaf contains no numeric quantity. It asserts no damage, stat, resistance, penetration, cooldown, or timing value, so there is no wiki number and no documented identity it can disagree with. Every numeric anchor in docs/math-foundations.md Section 5 is untouched by a classification map.",
+      "answer_to_converse": "Equally, nothing in the permitted evidence establishes that this leaf SHOULD be absent. The golden snapshot is a pin on engine output, and CLAUDE.md's stated gate semantics ('a behavior fix re-captures the baseline with every diff explained') expressly contemplate the baseline gaining leaves when engine output grows. An additive, non-numeric leaf is a legitimate baseline diff, not a per-se defect."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/ (git archive of HEAD), 437 files",
+      "used_for": "exhaustive vocabulary grep and cardinality enumeration",
+      "quote": "grep -ril over the full export: 'disposition' 0 files, 'view_tag' 0 files, 'catalyst_roster' 0 files, 'coupled_scenarios' 0 files"
+    },
+    {
+      "source": "data/champions.json",
+      "used_for": "champion / ability-slot universe",
+      "quote": "173 champions; every champion carries all five slots P/Q/W/E/R; 865 slot entries; 937 ability objects; 756 non-passive ability objects; 692 abilities carry a damageType (MAGIC 416, PHYSICAL 237, OTHER 25, TRUE 14)"
+    },
+    {
+      "source": "data/items.json",
+      "used_for": "item universe",
+      "quote": "324 items; 237 flagged modes['classic sr 5v5']; 290 purchasable; 306 passives + 48 actives = 354 effects; 361 passives[].branches/active[].branches entries"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json (Aatrox entry)",
+      "used_for": "the repo's existing disposition-shaped taxonomy",
+      "quote": "\"slots\": {\"P\": \"modeled\", \"Q\": \"modeled\", \"W\": \"modeled\", \"E\": \"out_of_scope\", \"R\": \"modeled\"} — across all three e9 batches: 662 modeled, 171 out_of_scope, 32 no_damage, total 865"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 'Formula-audit table' and Section 4 'Variance and confidence'",
+      "used_for": "search for any formula producing a dispositions map",
+      "quote": "\"Legend: EXACT = instantiates the identity exactly under the deterministic model; APPROX = documented approximation (never silently presented as exact).\" — the table's rows are exclusively quantitative engine families (mitigation, penetration, growth_stat, attack speed, ability haste, renewal counting, crit expectation, DoT partition, on-hit stacking, phantom hits, burn, grievous wounds, shield clipping, grey health, revive, BIS score, stat rounding, Terminus/BC ramps). No row, and no other section, defines a disposition, a view tag, or any per-entity classification map."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 0",
+      "used_for": "confirming the golden corpus pins engine output rather than wiki-derived constants only",
+      "quote": "\"The engine runs with deterministic=True in every scoring path (optimizer, BIS, golden corpus)\""
+    },
+    {
+      "source": "CLAUDE.md gate semantics (project instruction, quoted from the session context, not from the evidence tree)",
+      "used_for": "framing what a legitimate golden diff is",
+      "quote": "\"a pure refactor must show zero diffs, while a behavior fix re-captures the baseline with every diff explained in the commit\""
+    }
+  ],
+
+  "verdict": "new_value_correct",
+
+  "verdict_basis": "NON-REFUTATION, not positive recomputation. State this plainly: this oracle could not independently compute the 690-entry map, because the leaf is a non-numeric classification/presentation structure whose domain and vocabulary are defined in src/ and appear nowhere in the cached wiki text or in docs/math-foundations.md. Within the permitted evidence there is (a) nothing the new value contradicts — it asserts no wiki-derivable quantity, so no cached value and no documented identity is put at risk; (b) nothing establishing that the leaf should be absent — an additive leaf is exactly the kind of baseline diff the golden gate contemplates for a behavior addition; and (c) positive shape corroboration — a per-entity {disposition, view_tag} map matches the repo's own established coverage taxonomy in data/champion-audit ('modeled' / 'out_of_scope' / 'no_damage'). 'old_value_correct' would require asserting the map is spurious, and 'both_wrong' would require evidence of error; I found neither. Hence new_value_correct, with the caveat below carried explicitly.",
+
+  "caveats_and_open_items": [
+    "UNRESOLVED QUANTITATIVE FACT: the cardinality 690 matches NO universe in the cached data. Nearest neighbours are 692 (173 champions x 4 non-passive ability slots, which also happens to equal the count of abilities carrying a damageType) and 865 (173 x 5 total slots). The two-entry gap between 690 and 692 is unexplained by anything in data/. If the map is intended to range over non-passive champion ability slots, the reviewer with src/ access should confirm which two entries are absent and that their absence is deliberate rather than a silent drop.",
+    "690 = 2*3*5*23. The prime factor 23 corresponds to no cardinality in the cache, which weakly argues the domain is NOT a simple champions-x-slots or items-x-something product.",
+    "This oracle verified only that the new leaf is unfalsifiable from cached wiki text and the math document. It did NOT verify the correctness of any individual disposition or view_tag value, nor that the map's key set is complete. Those require the engine source, which runbook R-18/R-19 forbids this investigator from reading.",
+    "Because the leaf is non-numeric, its presence in the numeric regression baseline means future genuine combat-number diffs will be accompanied by classification churn. That is a gate-ergonomics observation for the change author, outside this oracle's verdict."
+  ]
+}

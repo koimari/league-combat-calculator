@@ -1,0 +1,108 @@
+{
+  "receipt": "oracle-P4-integration-final-leaf10",
+  "runbook": "R-18 / R-19 independent oracle",
+  "generated_at": "2026-08-14",
+  "investigator": "fresh oracle subagent; evidence tree built ONLY with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/dispositions",
+  "old_value": "<absent> (leaf did not exist in the prior golden baseline)",
+  "new_value": "S9 dispositions map — 178 entries, each of shape {disposition, view_tag}",
+
+  "leaf_kind": "non-numeric label/presentation leaf. It carries no game-derived quantity (no damage, heal, stat, resistance, penetration, cooldown or gold number). Nothing in it is a claim about League of Legends game data.",
+
+  "independent_computation": {
+    "step_1_vocabulary_search": {
+      "action": "grep -rn 'disposition' and 'view_tag'/'viewTag' across the ENTIRE exported evidence tree (data/**, docs/math-foundations.md)",
+      "result": "0 hits, in any file, in any casing variant",
+      "consequence": "no cached wiki text and no formula in docs/math-foundations.md defines a `disposition` or a `view_tag`, so no entry of this map is derivable from the oracle evidence tree. The map cannot be recomputed entry-by-entry from game data — there is no game data behind it."
+    },
+    "step_2_cardinality_falsification_attempt": {
+      "action": "test whether 178 corresponds to any catalog in the cache, which would make the key space checkable",
+      "measurements": {
+        "champions in data/champions.json": 173,
+        "champions in data/staleness.json": 173,
+        "items in data/items.json": 324,
+        "items with SR mode 'classic sr 5v5'": 324,
+        "items available after rule-6 filter (no championRestriction, no acquisitionNote)": 288,
+        "of those, items with combat effects (noEffects false)": 237,
+        "LEGENDARY items": 127,
+        "EPIC items": 46,
+        "BOOTS items": 16,
+        "keystone runes in data/runes.json": 17,
+        "spell traits in data/wiki-atoms/spell-tags.json": 60,
+        "behavior-index characters (incl. non-SR ruby_/strawberry_ variants)": 203,
+        "mid role-compatible BIS candidates pinned by the corpus scenario cp21-bis-utility-ahri": 96,
+        "Syndra ability rows in data/champions.json (P/Q/W/E/R, one spell each)": 5,
+        "exhaustive scan for any collection of length 178 anywhere in data/**.json": "none found"
+      },
+      "result": "178 matches NO catalog in the cache and no sum of catalogs that has a domain meaning",
+      "consequence": "the key space is not a data catalog (champions/items/runes/atoms). It is consistent with a per-scenario key space (one entry per rendered combat row / event across the coupled participants of this one scenario), which the oracle evidence tree does not contain. Cardinality therefore neither confirms nor falsifies the leaf. Note this DOES rule out one failure mode: the map is not a mis-sized copy of the champion list (173) or the item list (324/288)."
+    },
+    "step_3_contract_consistency": {
+      "action": "check whether a per-row {label, view} pair is the documented intent of the P4 workstream, using only cached worklist text and the math doc",
+      "finding": "yes — the P4 trust-label contract quoted in data/worklists/p5-ux-task.md specifies exactly a per-row certainty label plus the view that renders it, and docs/math-foundations.md is built on the same 'every family is labeled' principle (EXACT / APPROX verdicts in the Section 5 audit table). A dispositions map alongside the combat payload is the shape those sources describe.",
+      "consequence": "the new leaf is consistent with the documented contract; the old absent state simply predates the feature and asserts nothing."
+    },
+    "step_4_contradiction_check": {
+      "action": "look for any cached source that assigns this leaf a different value, or any numeric claim inside the map that could disagree with the wiki cache",
+      "result": "none. The leaf holds only labels and view tags; no cached source assigns it any value at all, and no number in it can conflict with data/champions.json, data/items.json or data/runes.json.",
+      "consequence": "there is no evidence of error in the new value, and none in favour of the absent state."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/README.md (lines 1-14)",
+      "quote": "The calculator's champion/item data cache — the single source the app reads. ... `champions.json`, `items.json`, `runes.json` — patch-stamped wiki data ... `runes.json` holds the 17 keystones",
+      "used_for": "establishing what the cache can and cannot adjudicate: it holds game numbers, not presentation labels"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 0 (Semantics of the deterministic single number)",
+      "quote": "The validity of replacing `E[f(X)]` by `f(E[X])` is the one place the engine is genuinely approximate: it is exact for affine `f` (linearity of expectation) and biased for strictly convex/concave `f` (Jensen). Every family below is labeled accordingly.",
+      "used_for": "the doc's own principle that each modeling family carries a certainty label; the audit table in Section 5 realizes it as EXACT / APPROX verdicts. A per-row disposition is the same idea pushed to the combat payload."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 4 (Variance and confidence)",
+      "quote": "Model error: unmodeled mechanics (champions without named modules, coarse event ordering, vision boundaries such as Pyke's out-of-vision grey-health consume) fail closed or are disclosed; the number is only as good as the reviewed module set.",
+      "used_for": "disclosure of model status alongside the number is the documented obligation; a dispositions map is a disclosure channel, not a numeric claim"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 audit conclusion",
+      "quote": "No combat formula was found mathematically wrong, so **no combat-number change was made**",
+      "used_for": "confirming that the label layer is explicitly separate from the number layer in this codebase's own math contract"
+    },
+    {
+      "source": "data/worklists/p5-ux-task.md (P4 trust-labels deliverable)",
+      "quote": "Trust labels UI (P4): the breakdown/ability rows render a certainty chip next to each damage/heal number: EXACT (fully sourced formula, no options), ESTIMATE (uses a defaulted player-controlled option), BOUNDARY (documented non-computed mechanic). The chip reads a new backend field 'certainty' on each ability row",
+      "used_for": "the documented P4 contract is a per-row label consumed by a specific view — i.e. exactly {disposition, view_tag} in shape"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json, scenario cp21-bis-utility-ahri",
+      "quote": "\"certified\": \"95 certified of 96 mid role-compatible candidates\"",
+      "used_for": "the mid-role candidate catalogue is 96, one of the cardinality checks that rules out an item-catalogue key space for the 178 entries"
+    },
+    {
+      "source": "data/items.json + data/champions.json (computed)",
+      "quote": "324 items (all carry mode 'classic sr 5v5'); 288 after removing the 5 champion-restricted and 34 acquisition-note items; 173 champions",
+      "used_for": "cardinality falsification attempt — 178 is none of these"
+    }
+  ],
+
+  "verification_scope_and_limits": {
+    "what_was_verified": [
+      "no cached source (wiki text, item/champion/rune cache, math doc) assigns this leaf any value, so nothing in the evidence tree contradicts the new value",
+      "the leaf carries no game-derived quantity, so no wiki number can be violated by it",
+      "the {disposition, view_tag} shape matches the P4 trust-label contract documented in the cached worklist",
+      "178 is not a mis-sized stand-in for the champion catalogue (173), the item catalogue (324), the SR-available item set (288) or the mid BIS candidate set (96)"
+    ],
+    "what_could_NOT_be_verified": [
+      "the individual 178 entries — which key gets which disposition, and which view_tag each carries. These have no referent in cached game data; they can only be checked against the engine's own labeling rules, which live in src/ and are out of bounds for this runbook.",
+      "the exact cardinality 178: the key space appears to be per-scenario combat rows, which the evidence tree does not contain."
+    ],
+    "verdict_basis": "The oracle's job is to catch a game-data-wrong value. This leaf makes no game-data claim; the evidence tree contradicts nothing in it, and the old state (absence) is not a competing correct value — it is the pre-feature state. The verdict is therefore 'new_value_correct' in the sense of 'no error detectable and consistent with the documented contract', NOT an entry-level certification of all 178 labels."
+  },
+
+  "verdict": "new_value_correct",
+
+  "recommendation_for_the_gate": "Because this leaf is non-numeric and per-scenario, the golden gate cannot oracle it against the cache. If entry-level assurance is wanted, it should come from a unit test over the labeling rule (every rendered combat row gets exactly one disposition, drawn from the closed P4 vocabulary, with a view_tag naming a declared view), not from the golden snapshot."
+}

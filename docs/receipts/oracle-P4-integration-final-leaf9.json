@@ -1,0 +1,113 @@
+{
+  "receipt": "oracle-P4-integration-final-leaf9",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/dispositions",
+  "scenario": "syndra_custom_order_120",
+  "old_value": "<absent>",
+  "new_value": "S9 dispositions map — 178 entries, each of shape {disposition, view_tag}",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle9",
+    "read_scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were not read"
+  },
+  "independent_computation": {
+    "question": "Does the cached wiki text or a documented formula determine a 178-entry {disposition, view_tag} map for this scenario?",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Vocabulary search across the whole export for the leaf's own concepts.",
+        "command": "grep -rniI \"disposition|view_tag\" data/ docs/math-foundations.md",
+        "result": "Zero hits for 'disposition' and zero for 'view_tag' anywhere in data/ or docs/math-foundations.md. The only nearby vocabulary is the coverage word 'withheld' (data/champion-audit/batch-2.json, data/practice-corpus/scenarios.json, data/worklists/e9-*.md), which is a per-item/per-ability coverage verdict, not a keyed map of this shape."
+      },
+      {
+        "step": 2,
+        "action": "Cardinality search: walk every JSON in the export and flag any dict or list of exactly 178 members, at any depth.",
+        "result": "0 structures of cardinality 178 found in the entire data/ cache. The 178 count is therefore not a direct projection of any cached wiki collection."
+      },
+      {
+        "step": 3,
+        "action": "Enumerate every plausible cached population that a per-entry disposition map could range over, to test whether 178 is reproducible.",
+        "counts": {
+          "champions in data/champions.json": 173,
+          "items in data/items.json": 324,
+          "items legal on 'classic sr 5v5'": 237,
+          "SR items not champion-restricted": 232,
+          "SR items carrying at least one passive/active": 176,
+          "SR items with effects, champion-restricted removed": 171,
+          "SR items with effects, boots removed": 167,
+          "SR tier-2 + tier-3 items": 171,
+          "SR tier-3 + tier-4 items": 122,
+          "SR item passive effects": 230,
+          "SR item active effects": 31,
+          "SR passive+active effects (total)": 261,
+          "SR effect branches (passives[].branches + active[].branches)": 268,
+          "compiled keystone runes in data/runes.json": 17,
+          "Syndra ability entries in data/champions.json (P,Q,W,E,R)": 5,
+          "item-atom files in data/item-atoms/": 325,
+          "champion-spell-atom families in data/wiki-atoms/": 38
+        },
+        "result": "No population, and no natural sum of populations, equals 178. Nearest neighbours are 176 (SR items with effects) and 173 (champions); neither is derivable to 178 by any rule stated in the cache."
+      },
+      {
+        "step": 4,
+        "action": "Check whether docs/math-foundations.md documents an engine family that emits dispositions.",
+        "result": "Section 5 'Formula-audit table' enumerates every engine family (resistance mitigation, penetration, stat growth, attack speed, ability haste, auto DPS/renewal counting, crit expectation, ability rotation, DoT totals and ledgers, on-hit stacking, phantom hits, burn items, grievous wounds, shield absorption, grey health, revive, BIS score, stat rounding, Terminus/BC ramps). Every row's output is a number or a numeric identity. No row produces a keyed disposition/view-tag structure, and the document's own scope statement is numeric: 'T = E[ D | model, config ] (point estimate under the expectation heuristic)'."
+      },
+      {
+        "step": 5,
+        "action": "Determine the kind of quantity the leaf is.",
+        "result": "A map of {disposition, view_tag} pairs is coverage/presentation bookkeeping — for each considered effect it records how the engine treated it and where the UI should surface it. It is not a wiki-sourced game quantity and no documented formula produces it. Precedent for pinning such non-numeric verdicts as expected output does exist in the cache: data/practice-corpus/scenarios.json line 59-60 pins \"certified\": \"95 certified of 96 mid role-compatible candidates\" and \"withheld_before_timeline\": [], and line 902 pins \"champion_matrix\": \"173/173 certified on 820acbc3\" — i.e. disposition-style verdicts are legitimate pinned expectations in this project, even though their values are engine facts rather than wiki facts."
+      }
+    ],
+    "computed_value": "UNDETERMINED from the permitted sources. The oracle sources fix no value for this leaf: they neither yield a 178-entry dispositions map nor require the leaf to be absent.",
+    "falsification_attempts": [
+      "No wiki number is contradicted by the change (the leaf carries no damage/stat/penetration quantity).",
+      "No domain rule from the cache (crit 200%, percent-then-flat penetration, lethality 1:1, growth formula, 100/(100+R)) is touched by this leaf.",
+      "No cached collection of size 178 exists that the map could be checked against entry-by-entry, so no individual entry could be shown wrong.",
+      "No source states that combat output must not carry a dispositions map."
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md §0",
+      "quote": "The output is a single number\n```\nT = E[ D | model, config ]      (point estimate under the expectation heuristic)\n```"
+    },
+    {
+      "source": "docs/math-foundations.md §5 (Formula-audit table legend)",
+      "quote": "Legend: **EXACT** = instantiates the identity exactly under the deterministic model; **APPROX** = documented approximation (never silently presented as exact). All game-rule claims were cross-checked against the League Wiki (armor/penetration, movement speed, crit, grievous wounds, executes)."
+    },
+    {
+      "source": "docs/math-foundations.md §5 (audit conclusion)",
+      "quote": "No combat formula was found mathematically wrong, so **no combat-number change was made**"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json:59-60",
+      "quote": "\"certified\": \"95 certified of 96 mid role-compatible candidates\", \"withheld_before_timeline\": []"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json:902",
+      "quote": "\"champion_matrix\": \"173/173 certified on 820acbc3\""
+    },
+    {
+      "source": "data/champion-audit/batch-2.json:251",
+      "quote": "\"E\": \"out_of_scope (no enemy damage; Supercharge AS/stealth window withheld — documented)\""
+    },
+    {
+      "source": "data/champions.json (Syndra)",
+      "quote": "abilities: P 'Transcendent', Q 'Dark Sphere', W 'Force of Will', E 'Scatter the Weak', R 'Unleashed Power' — 5 ability entries"
+    },
+    {
+      "source": "data/items.json (modes table, per project rule 6)",
+      "quote": "237 of 324 items carry modes['classic sr 5v5'] = true; 176 of those carry at least one passives[]/active[] entry"
+    }
+  ],
+  "verdict": "new_value_correct",
+  "verdict_basis": "Not-refuted, not positively-derived. This leaf is engine coverage/presentation metadata, outside the authority of the two permitted oracle sources: 'disposition' and 'view_tag' appear nowhere in the wiki cache or in docs/math-foundations.md, no cached collection has cardinality 178, and the documented formula families all emit numbers. The change therefore contradicts no wiki fact and no quoted formula, while nothing in the sources requires the leaf to stay absent; the cache's own practice-corpus precedent shows disposition-style verdicts are legitimate pinned expectations. I record new_value_correct because no defect is demonstrable, NOT because the 178 entries were independently reproduced.",
+  "confidence": "low — negative evidence only",
+  "caveats": [
+    "The entry count (178) could not be reproduced from any cached population; the nearest cached counts are 176 (SR items carrying effects) and 173 (champions). If the map is intended to range over one of those populations, the off-by-2/off-by-5 gap is worth an in-repo check by a reviewer with source access.",
+    "Per-entry disposition and view_tag strings were not verified individually; the oracle sources contain no ground truth for them.",
+    "This verdict cannot be read as certification that the dispositions map is semantically right — only that no permitted source falsifies it."
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "receipt_id": "oracle-P4-integration-final-leaf11",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/combat/dispositions",
+  "scenario": "syndra_derived_order_60",
+  "old_value": "<absent>",
+  "new_value": "S9 dispositions map, 178 entries of {disposition, view_tag}",
+  "verdict": "new_value_correct",
+  "confidence": "low - not independently derivable from the permitted sources; verdict rests on absence of any contradiction",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "contents": [
+      "data/ (champions.json 173 champions, items.json 324 items, runes.json 17 runes, atoms/, wiki-atoms/, item-atoms/, bin/, champion-audit/, practice-corpus/, worklists/, wiki/)",
+      "docs/math-foundations.md (523 lines)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "summary": "The leaf is not a physics quantity. It is a classification/presentation structure (a map of {disposition, view_tag} pairs). No cached wiki text and no formula in docs/math-foundations.md defines, constrains, or yields such a map, so no value for this leaf can be derived from the permitted sources. What can be established is (a) hard negative evidence that the concept is absent from every source, (b) that no principled derivation of the entry count 178 exists in the cached data, and (c) that 178 is not refuted as an order of magnitude for a 60-unit coupled Syndra timeline.",
+
+    "step_1_term_search": {
+      "method": "case-insensitive recursive grep over the entire export",
+      "queries": ["disposition", "view_tag", "derived_order", "S9", "syndra_derived_order"],
+      "result": "zero hits for every query, in data/ and in docs/math-foundations.md alike",
+      "implication": "Neither the wiki cache nor the math foundations document assigns dispositions or view tags to anything. There is no oracle source for this leaf."
+    },
+
+    "step_2_formula_coverage_check": {
+      "source": "docs/math-foundations.md Section 5 'Formula-audit table'",
+      "method": "The table enumerates every engine family, the identity it instantiates, and its EXACT/APPROX verdict: resistance mitigation, penetration, percent reduction on negative armor, stat growth, attack speed, ability haste, auto DPS/auto count, crit expectation, ability rotation casts, DoT totals, stacking DoT, ability DoT event authoring, on-hit stacking, phantom hits, burn/DoT items, grievous wounds, shield absorption, grey health, revive, BIS score, stat rounding, Terminus/BC ramps.",
+      "result": "No family in the table produces, names, or bounds a 'dispositions' output. The document's audit conclusion is explicit that P2 made 'no combat-number change'. Nothing in it can confirm or refute this leaf.",
+      "quote": "\"Audit conclusion. Every *core* formula family instantiates its stated identity exactly under the deterministic model ... No combat formula was found mathematically wrong, so **no combat-number change was made**\""
+    },
+
+    "step_3_entry_count_search": {
+      "goal": "Test whether the entry count 178 is derivable from cached source data (which would identify the map's domain and make the leaf checkable).",
+      "structural_scan": "Walked every JSON file under data/ and reported any dict or list of length 178. Result: none. No cached collection has 178 members.",
+      "candidate_domains_tested": [
+        {"domain": "champions in data/champions.json", "count": 173, "match": false},
+        {"domain": "items in data/items.json", "count": 324, "match": false},
+        {"domain": "keystone runes in data/runes.json", "count": 17, "match": false},
+        {"domain": "unique wiki atoms across data/wiki-atoms/*.json", "count": 185, "match": false},
+        {"domain": "total atom records across data/wiki-atoms/*.json", "count": 226, "match": false},
+        {"domain": "spell-tags entries", "count": 60, "match": false},
+        {"domain": "champion ability entries (all champions)", "count": 937, "match": false},
+        {"domain": "champion ability effect rows (all champions)", "count": 2570, "match": false},
+        {"domain": "Syndra JSON leaves / ability leaves / stat leaves", "count": "589 / 436 / 128", "match": false},
+        {"domain": "items with modes['classic sr 5v5'] true", "count": 237, "match": false},
+        {"domain": "SR-legal and purchasable", "count": 209, "match": false},
+        {"domain": "SR-legal, purchasable, no championRestriction", "count": 207, "match": false},
+        {"domain": "SR-legal, purchasable, no championRestriction, no acquisitionNote (the CLAUDE.md rule-6 availability triple)", "count": 188, "match": false}
+      ],
+      "brute_force": "Enumerated all 2047 conjunctions of 11 natural item predicates (SR mode, purchasable, no champion restriction, no acquisition note, no requiredChampion, no requiredAlly, has effects, not trinket, not consumable/potion, not minion/turret, no sourceWarnings). Exactly 16 conjunctions land in 177-179, collapsing to two distinct 178-member sets: {SR and hasEffects and not consumable/potion} and {SR and no championRestriction and hasEffects and not trinket}. The two sets differ by 18 members (symmetric difference includes 3901/3902/3903 Gustwalker-line, 3330 Scarecrow Effigy, 3340/3363/3364 trinkets, 2003/2031/2055 consumables). Both admit TURRET and MINION rank items (7 + 5) that no player build can hold, so neither is a defensible 'items an ordinary SR build may hold' set under CLAUDE.md rule 6. Conclusion: hitting 178 by item filtering is a coincidence of the search space, not a derivation.",
+      "conclusion": "178 has no principled derivation from the cached data. The map's domain cannot be identified from the permitted sources."
+    },
+
+    "step_4_order_of_magnitude_sanity_check": {
+      "purpose": "Since the count cannot be derived, test only whether 178 is plainly impossible for a coupled Syndra timeline over a 60-unit window (which would force a 'both_wrong' verdict).",
+      "attack_speed": {
+        "formula_quoted": "docs/math-foundations.md Section 5: attack speed = base_AS + AS_ratio x bonus/100; stat growth = base + growth x (L-1) x (0.7025 + 0.0175 x (L-1))",
+        "inputs_from_data": "data/champions.json Syndra.stats: attackSpeed.flat = 0.658, attackSpeed.perLevel = 2, attackSpeedRatio.flat = 0.625",
+        "bonus_as_percent_at_L18": "2 x 17 x (0.7025 + 0.0175 x 17) = 2 x 17 x 1.0 = 34.0",
+        "total_as": "0.658 + 0.625 x 0.34 = 0.8705",
+        "auto_count": "N(T) = floor(AS x u x T) = floor(0.8705 x 1.0 x 60) = 52  [renewal counting identity, math-foundations Section 1.1]"
+      },
+      "cast_counts": {
+        "cooldowns_from_data": "data/champions.json Syndra.abilities: Q 7s (all ranks), W 12/11/10/9/8s, E 15s, R 120/100/80s",
+        "shared_timeline_upper_bounds_over_60": "Q floor(60/7)+1 = 9, W (rank5, 8s) floor(60/8)+1 = 8, E floor(60/15)+1 = 5, R = 1 (math-foundations Section 5: 'R casts exactly once per timed fight (model constraint, documented)')",
+        "subtotal": "approximately 23 casts"
+      },
+      "result": "Syndra alone authors on the order of 52 + 23 = 75 primary events before multi-hit expansion, DoT tick partitions, item procs and per-defender re-pricing. A coupled scenario re-prices every participant pair (data/atoms/autoresearch-review.md: 'the coupled ledger re-prices defenders past the first (defender_index > 0)'), so a per-event disposition map in the 150-200 range is consistent in magnitude. 178 is therefore not refuted, but neither is it pinned - any count in that band would be equally consistent."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "docs/math-foundations.md",
+      "section": "5. Formula-audit table",
+      "quote": "Attack speed (`calculate_attack_speed`) | `base_AS + AS_ratio*bonus/100` | EXACT",
+      "used_for": "step 4 attack-speed derivation"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "section": "5. Formula-audit table",
+      "quote": "Stat growth (`growth_stat`) | `base + growth*(L-1)*(0.7025 + 0.0175*(L-1))` | EXACT",
+      "used_for": "step 4 bonus attack speed at level 18"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "section": "1.1 Renewal theory for cast + auto timing schedules",
+      "quote": "N(T) = floor(AS * u * T)   (damage.py: num_auto_attacks = floor(...))",
+      "used_for": "step 4 auto count over the 60-unit window"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "section": "5. Formula-audit table / Audit conclusion",
+      "quote": "No combat formula was found mathematically wrong, so no combat-number change was made",
+      "used_for": "step 2 - the document's own family inventory contains no 'dispositions' family"
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Syndra.stats",
+      "quote": "attackSpeed.flat = 0.658, attackSpeed.perLevel = 2, attackSpeedRatio.flat = 0.625",
+      "used_for": "step 4 attack-speed inputs"
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Syndra.abilities",
+      "quote": "Q Dark Sphere cooldown [7,7,7,7,7]; W Force of Will [12,11,10,9,8]; E Scatter the Weak [15,15,15,15,15]; R Unleashed Power [120,100,80]",
+      "used_for": "step 4 cast-count bounds"
+    },
+    {
+      "path": "data/items.json",
+      "key": "modes / championRestriction / acquisitionNote / rank / shop.purchasable",
+      "quote": "modes = {'classic sr 5v5': bool, 'aram': bool, 'nb': bool, 'ar': bool}",
+      "used_for": "step 3 item-domain counting under CLAUDE.md rule 6"
+    },
+    {
+      "path": "data/atoms/autoresearch-review.md",
+      "line": 95,
+      "quote": "the coupled ledger re-prices defenders past the first (`defender_index > 0`)",
+      "used_for": "step 4 - why a coupled scenario multiplies event count beyond the attacker's own schedule"
+    },
+    {
+      "path": "data/worklists/p2-math-task.md",
+      "line": 3,
+      "quote": "a BIS optimizer ranking ~96 candidate item builds against a coupled participant event timeline",
+      "used_for": "step 3 - ruling out the BIS candidate set (~96) as the map's domain"
+    }
+  ],
+
+  "verdict_reasoning": {
+    "why_not_both_wrong": "'both_wrong' asserts positive knowledge that the 178-entry map is incorrect. No permitted source contradicts it: the term does not appear in the cache, no derivable count refutes 178, and the order-of-magnitude check for a 60-unit coupled Syndra timeline is consistent with a map of that size.",
+    "why_not_old_value_correct": "'old_value_correct' asserts the leaf should remain absent. Absence of a golden leaf is not a positive claim about game behavior, and nothing in the wiki cache or math-foundations.md requires this field to be unemitted. Objecting to snapshot surface area would be a design opinion, not an oracle finding.",
+    "why_new_value_correct": "The remaining verdict is the one consistent with the evidence: the new value stands unrefuted. This is an unrefuted-not-verified result, not a confirmation.",
+    "caveat": "This leaf is outside the oracle's competence as scoped by R-18/R-19. A {disposition, view_tag} map is engine/presentation classification metadata; it has no wiki text or quoted formula behind it. Entry-level correctness (which key carries which disposition, and which view_tag) cannot be checked from data/ or docs/math-foundations.md by construction, and should be gated by a schema/enumeration test in the engine's own suite rather than by a source oracle."
+  }
+}
