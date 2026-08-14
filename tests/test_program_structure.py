@@ -53,6 +53,21 @@ def _repo_path(path: Path) -> str:
     return path.relative_to(ROOT / "src").as_posix()
 
 
+def _called_name(node: ast.Call) -> str:
+    """What one call expression spells, bare name or dotted attribute alike.
+
+    Both spellings, because a gate that counted only ``f(...)`` is silent on
+    the one rewrite that would defeat it: ``import transitions`` and call
+    ``transitions.f(...)``.  The counting rule is stated here so the number
+    a criterion is read against is reproducible (R-29).
+    """
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return ""
+
+
 def _construction_sites(callee: str) -> dict[str, int]:
     """Every call expression under ``src/calculator`` spelling *callee*."""
     tally: dict[str, int] = {}
@@ -61,13 +76,39 @@ def _construction_sites(callee: str) -> dict[str, int]:
         count = sum(
             1
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == callee
+            if isinstance(node, ast.Call) and _called_name(node) == callee
         )
         if count:
             tally[_repo_path(path)] = count
     return tally
+
+
+class TestOneWalkCallSite:
+    """Criterion 1's first clause, as a gate rather than as a measurement.
+
+    "Exactly one ``run_survival_walk(`` call site in ``src/``, inside
+    ``program/walk.py`` (baseline two)" was true at the end of S10 and
+    nothing in the tree said so: a second composition that entered the
+    kernel directly would have landed fully green.  The runtime counter
+    (``walk_invocations``) does not cover it either — it counts entries
+    through :func:`program.walk.walk`, and a caller that skipped the seam
+    would increment nothing at all.
+
+    The dispatch-ladder gate in ``tests/test_deletion_frontier`` is a
+    different property: one *definition*, in the module that owns the
+    kernel.  One definition with two callers is exactly the arrangement
+    this campaign exists to end.
+    """
+
+    WALK_HOME = "calculator/program/walk.py"
+
+    def test_the_kernel_has_exactly_one_caller_and_it_is_the_seam(self) -> None:
+        assert _construction_sites("run_survival_walk") == {self.WALK_HOME: 1}
+
+    def test_the_seam_is_what_the_rest_of_the_tree_calls(self) -> None:
+        """A seam nobody enters would satisfy the count above vacuously."""
+        entries = _construction_sites("_walk")
+        assert entries.get("calculator/participant_timeline.py", 0) >= 2
 
 
 class TestOneConstructor:

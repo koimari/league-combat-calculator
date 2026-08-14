@@ -300,6 +300,52 @@ class TestOneWalkPerPassAtRuntime:
         assert sink.walk_invocations == 1
         assert sink.walk_invocations <= budget
 
+    def test_the_compiled_routing_also_enters_the_kernel_once_per_pass(self) -> None:
+        """The counter is threaded into both routings; both are fixtured.
+
+        ``_score_with_search_context`` passes ``context.work_counters`` to
+        the seam exactly as the composition path does, so the compiled lane
+        has the same one-walk-per-pass obligation -- and a counter that is
+        threaded but never read on one of two routings is a counter nobody
+        would notice losing.  The rung assertion is what makes the walk
+        count mean anything here: without it a fallback to the receipt walk
+        would satisfy ``walk_invocations == 1`` while measuring the routing
+        this test does not name.
+        """
+        from src.calculator.data_fetcher import get_champion, get_item_by_name
+        from src.calculator.defensive_effects import resolve_starting_defenses
+        from src.calculator.participant_timeline import (
+            CoupledSearchContext,
+            build_participant_timeline,
+        )
+        from src.calculator.pipeline import FightParams
+        from src.calculator.scenario import ChampionLoadout
+        from src.calculator.stats import calculate_total_stats
+        from src.calculator.work_counters import Rung
+
+        champion = get_champion("Ahri")
+        items = [get_item_by_name("Luden's Echo")]
+        stats = calculate_total_stats(champion, 13, items, role="mid")
+        enemies = [ChampionLoadout(champion="Aatrox", level=13, role="top").resolve()]
+        sink = self._sink()
+        build_participant_timeline(
+            champion,
+            13,
+            items,
+            FightParams.from_request(
+                {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+            ),
+            main_stats=stats,
+            main_defenses=resolve_starting_defenses("Ahri", 13, stats, items),
+            enemies=enemies,
+            allies=[],
+            include_receipt=False,
+            pair_result_cache={},
+            search_context=CoupledSearchContext(work_counters=sink),
+        )
+        assert sink.rungs[str(Rung.COMPILED)] == 1
+        assert sink.walk_invocations == 1
+
     def test_with_no_sink_installed_the_counter_costs_one_is_none_test(self) -> None:
         """R-24's other half: the seam is inert when nobody is measuring."""
         ctx, _ = one_participant_context()
@@ -328,23 +374,25 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
     identity: the record every view of one request reads has to be *the*
     walk the kernel produced, and not an equal one.
 
-    **The criterion says "the same object (``is``)" and the composition
-    hands its views a chain of frozen descendants, so that is what is
-    asserted here and the difference is written down rather than absorbed.**
-    ``WalkResult`` is frozen precisely so a view cannot be a sixth producer
-    of numbers, which means a fold added after the walk -- the attacker
-    outcomes derived from the breakdown, the public event lists derived from
-    the receipt composition -- can only arrive as ``replace``.  Three folds
-    land between the first view and the last, so no two views can literally
-    receive one object without the folds being computed before the views
-    that produce them, which is circular.
+    **The criterion says "the same object (``is``)", and it is asserted on
+    ``is``.**  What carries the identity is
+    :class:`~src.calculator.program.walk.WalkOrigin`, minted once per entry
+    into the kernel and carried unchanged by every descendant, because the
+    *record* cannot be the object: ``WalkResult`` is frozen precisely so a
+    view cannot be a sixth producer of numbers, so a fold added after the
+    walk -- the attacker outcomes derived from the breakdown, the public
+    event lists derived from the receipt composition -- can only arrive as
+    ``replace``.  Three folds land between the first view and the last, so
+    no two views can receive one *record* without the folds being computed
+    before the views that produce them, which is circular.  The token is the
+    part of the record that has no such obligation, and "one walk" is
+    exactly what it says.
 
-    What identity is available is exactly what "one walk" means: every view
-    input carries the kernel's own ``actions``, ``states`` and ``survival``
-    **by identity**, and there is exactly one record they all descend from,
-    which is the one ``walk()`` returned.  A second walk fails that as
-    surely as it fails ``is``; a re-projection does not, and a re-projection
-    is not a second engine.
+    Two independent readings, so neither carries it alone: every view input
+    carries the kernel's own ``origin`` object by identity, and its own
+    ``actions``, ``states`` and ``survival`` by identity too.  A second walk
+    fails both; a re-projection fails neither, and a re-projection is not a
+    second engine.
     """
 
     @staticmethod
@@ -402,6 +450,13 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
         assert len(walked) == 1
         assert [len(records) for records in seen.values()] == [1, 1, 1]
 
+    def test_every_view_is_given_the_same_walk_object(self, monkeypatch) -> None:
+        """The criterion's ``is``, on the object that can carry it."""
+        walked, seen = self._one_request(monkeypatch)
+        kernel = walked[0]
+        for name, records in seen.items():
+            assert records[0].origin is kernel.origin, name
+
     def test_every_view_reads_that_walks_own_actions_states_and_folds(
         self, monkeypatch
     ) -> None:
@@ -413,11 +468,26 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
             assert given.states is kernel.states, name
             assert given.survival is kernel.survival, name
 
+    def test_a_projection_keeps_the_origin_it_descends_from(self) -> None:
+        """``projected`` is a descendant of one walk, not a new one."""
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(5.0)], ctx)
+        assert result.projected(damage_events=()).origin is result.origin
+
+    def test_a_projection_may_not_re_mint_the_origin(self) -> None:
+        """Otherwise a second walk could be laundered into a projection."""
+        ctx, _ = one_participant_context()
+        result = walk_module.walk([damage_action(5.0)], ctx)
+        with pytest.raises(TypeError, match="declares no fold named origin"):
+            result.projected(origin=walk_module.WalkOrigin())
+
     def test_a_second_walk_would_not_pass_that(self, monkeypatch) -> None:
         """R-05: the check ships with a red it can produce on demand.
 
         Two walks of the same fight are equal and are not identical, which
-        is the whole reason the assertion is written on identity.
+        is the whole reason the assertion is written on identity.  The
+        origin is ``compare=False`` exactly so this fixture can be both at
+        once: equal as a result, and a second entry into the kernel.
         """
         walked, _ = self._one_request(monkeypatch)
         kernel = walked[0]
@@ -431,3 +501,13 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
         )
         assert second == kernel
         assert second.actions is not kernel.actions
+        assert second.origin is not kernel.origin
+
+    def test_two_entries_into_the_kernel_mint_two_origins(self) -> None:
+        """The token is per entry, so a second walk cannot borrow the first's."""
+        first_ctx, _ = one_participant_context()
+        second_ctx, _ = one_participant_context()
+        first = walk_module.walk([damage_action(5.0)], first_ctx)
+        second = walk_module.walk([damage_action(5.0)], second_ctx)
+        assert first.origin is not second.origin
+        assert first.origin != second.origin

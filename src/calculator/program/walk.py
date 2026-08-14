@@ -37,8 +37,9 @@ is now the criterion's one.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, field, fields, replace
 from types import MappingProxyType
 from typing import Any
 
@@ -174,6 +175,40 @@ class ObjectiveFold:
     total_healing_reduced: float
 
 
+# One entry into the kernel, one number.  Process-local and monotonic, so a
+# walk's identity is also readable — "walk 3 of this process" — rather than
+# only comparable.
+_WALK_SEQUENCE = itertools.count(1)
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class WalkOrigin:
+    """*Which* entry into the kernel a result and its projections came from.
+
+    Criterion 1 asks that the record feeding the score view and the receipt
+    view of one request be **the same object (``is``)**, and a frozen result
+    that gains folds after the walk cannot be: ``projected`` returns a
+    descendant, so the last view and the first hold two records by
+    construction (that is criterion 3's own layering — a view receives
+    leaves, and a leaf derived after the walk can only arrive as a new
+    record).
+
+    This is the object that *can* be identical, and it is the one the
+    criterion is actually about.  :func:`walk` mints one per entry into the
+    kernel and every descendant carries it unchanged, so "these two
+    projections came from one walk" is an ``is`` on a token rather than an
+    inference from three field identities.  Two walks mint two tokens and
+    fail it; a re-projection does not, and a re-projection is not a second
+    engine.
+
+    ``eq=False`` makes identity the only comparison: two entries into the
+    kernel are two walks even when every number they produced agrees, which
+    is precisely the case the criterion exists to catch.
+    """
+
+    sequence: int = field(default_factory=lambda: next(_WALK_SEQUENCE))
+
+
 @dataclass(frozen=True, slots=True)
 class WalkResult:
     """Everything one walk produced, frozen at the moment it finished.
@@ -190,12 +225,21 @@ class WalkResult:
     on the result rather than passed beside it because a view takes exactly
     ``(Program, WalkResult)``, and a number a view publishes that reached it
     by some other route is a number no counter can trace to this walk.
+
+    ``origin`` is which walk this record descends from — see
+    :class:`WalkOrigin`.  It is ``compare=False`` because two walks that
+    produced identical numbers *are* equal as results and are not the same
+    walk, and collapsing those two questions into one operator would make
+    the R-05 negative below untypable: the fixture's hand-built second
+    record has to be equal to the kernel's and identifiable as a second
+    entry, at the same time.
     """
 
     actions: tuple[SurvivalAction, ...]
     states: tuple
     coverage: tuple
     rung: Rung
+    origin: WalkOrigin = field(default_factory=WalkOrigin, compare=False)
     duration: float = 0.0
     survival: tuple[SurvivalFold, ...] = ()
     outcomes: tuple[AttackerOutcome, ...] = ()
@@ -289,10 +333,22 @@ def walk(
 # settable the moment it exists and a typo in a caller is a raise rather than
 # a silently ignored keyword.
 _FOLD_FIELDS = frozenset(
-    field.name
-    for field in fields(WalkResult)
-    if field.name
-    not in {"actions", "states", "coverage", "rung", "duration", "survival"}
+    record_field.name
+    for record_field in fields(WalkResult)
+    if record_field.name
+    not in {
+        "actions",
+        "states",
+        "coverage",
+        "rung",
+        # Not a fold: the walk's identity.  A composition that could re-mint
+        # it through ``projected`` could launder a second walk into looking
+        # like a projection of the first, which is the one thing the token
+        # exists to make impossible.
+        "origin",
+        "duration",
+        "survival",
+    }
 )
 
 # The folds that are sequences.  Frozen means frozen: a list handed in here
