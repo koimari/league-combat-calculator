@@ -642,6 +642,46 @@ COUNTER_4_DEFERRALS: Mapping[str, str] = {
     )
 }
 
+# ── the stages the campaign has shipped, and what a passed stage owes ──────
+#
+# A deferral is a promise with a creditor and a due date.  The gate below
+# already refuses a row whose gap the tree no longer holds and a row the
+# tree's own receipt dates elsewhere; what it could not see is the third way a
+# deferral goes wrong, which is the way this one did: **the stage arrives and
+# the row does not retire.**  Phase 4 S3 shipped, then S4 through S10, then the
+# phase boundary, and fourteen rows still record S3 as the stage that retires
+# them.  Amendment B's second sentence -- "Phase 4's exit re-asserts them
+# retired" -- was therefore unmet for the length of a whole phase with nothing
+# saying so, which is a promise quietly turning into a habit.
+#
+# So a shipped stage is declared here, and every row recording one is
+# **overdue**: still deferred, still netted out of the counter, and now named
+# as a debt with a blocker rather than a schedule.  The gate refuses an overdue
+# row that is not declared overdue, so the next stage that passes without
+# retiring its rows fails on the commit that passes it.
+COMPLETED_STAGES: Mapping[str, str] = {
+    "Phase 4 S3 — one kernel, five views": (
+        "shipped, and the phase ran on through S10 and its boundary; the "
+        "OutcomeLedger end-of-walk projection that would have given each of "
+        "these families a receipt-walk interpreter of its own is the half of "
+        "escalated-defects-P4-S9.json that is still open"
+    ),
+}
+
+#: What each overdue row is waiting on.  One entry per completed stage, naming
+#: the artifact a reader can open — never "ruled elsewhere".
+OVERDUE_BLOCKERS: Mapping[str, str] = {
+    "Phase 4 S3 — one kernel, five views": (
+        "docs/receipts/escalated-defects-P4-S9.json, entry "
+        "no_production_path_emits_a_non_measured_disposition: the ledger is "
+        "the receipt walk's companion since 2026-08-14, but no view projects "
+        "its quantities, so no family gained a receipt-walk interpreter and "
+        "these rows cannot retire.  Re-dating them is a ruling, not a lane's "
+        "edit: Amendment B names the retiring stage"
+    ),
+}
+
+
 TARGET_CRITERIA: Mapping[str, str] = {
     "counter_1": "criterion 1: runtime item-name dispatch reaches zero",
     "counter_2": (
@@ -714,6 +754,9 @@ def deferral_block() -> dict[str, Any]:
             "recorded_stage": stage,
             "reason": row.reason if row is not None else "",
             "retires_at": row.retires_at if row is not None else "",
+            "overdue": stage in COMPLETED_STAGES,
+            "overdue_because": COMPLETED_STAGES.get(stage, ""),
+            "blocked_on": OVERDUE_BLOCKERS.get(stage, ""),
         }
     return {
         "rule": (
@@ -783,6 +826,40 @@ def _deferral_failures(
                 f"counter 4: {key} is deferred to {row['recorded_stage']!r} and "
                 f"the tree's receipt says {row['retires_at']!r}"
             )
+        failures.extend(_overdue_failures(key, row, recorded.get("rows", {})))
+    return failures
+
+
+def _overdue_failures(
+    key: str, row: Mapping[str, Any], committed_rows: Mapping[str, Any]
+) -> list[str]:
+    """A deferral whose stage has shipped is a debt, and must say so.
+
+    Three clauses, and the first is the one Amendment B's exit sentence needed
+    and never had: a row recording a completed stage must be declared overdue
+    with a blocker a reader can open, and the committed receipt must agree.  A
+    row that quietly outlives its own due date is how "deferred to the stage
+    that can close it" becomes "deferred".
+    """
+    stage = row["recorded_stage"]
+    failures: list[str] = []
+    if stage in COMPLETED_STAGES:
+        if not row["overdue"] or not row["blocked_on"]:
+            failures.append(
+                f"counter 4: {key} is deferred to {stage!r}, which has shipped, "
+                "and is not declared overdue with a blocker"
+            )
+    elif row["overdue"]:
+        failures.append(
+            f"counter 4: {key} is declared overdue but {stage!r} is not a "
+            "completed stage"
+        )
+    committed = committed_rows.get(key)
+    if isinstance(committed, Mapping) and committed.get("overdue") != row["overdue"]:
+        failures.append(
+            f"counter 4: {key}'s committed receipt says overdue="
+            f"{committed.get('overdue')!r} and the tree says {row['overdue']!r}"
+        )
     return failures
 
 

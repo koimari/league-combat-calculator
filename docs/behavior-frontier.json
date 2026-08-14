@@ -130,71 +130,113 @@
         },
         "rows": {
           "active_cast/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "cast_proc/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "charged_strike/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "combat_state/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "crit_profile/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "damage_routing/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "delta_amp/receipt_walk": {
-            "reason": "the walk never reads an amp declaration: a holder-side amp reaches it already priced, inside the pair engine's damage rows, and a cross-participant one reaches it as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
+            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "on_hit_strike/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "opening_defense/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "periodic/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "resistance_shred/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "secondary_target/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "spellblade/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "threshold_defense/receipt_walk": {
+            "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the ledger is the receipt walk's companion since 2026-08-14, but no view projects its quantities, so no family gained a receipt-walk interpreter and these rows cannot retire.  Re-dating them is a ruling, not a lane's edit: Amendment B names the retiring stage",
+            "overdue": true,
+            "overdue_because": "shipped, and the phase ran on through S10 and its boundary; the OutcomeLedger end-of-walk projection that would have given each of these families a receipt-walk interpreter of its own is the half of escalated-defects-P4-S9.json that is still open",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
             "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
@@ -329,14 +371,14 @@
             ]
           },
           "delta_amp/compiled_score_walk": {
-            "reason": "the walk never reads an amp declaration: a holder-side amp reaches it already priced, inside the pair engine's damage rows, and a cross-participant one reaches it as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
             "via": [
               "pair_engine"
             ]
           },
           "delta_amp/receipt_walk": {
-            "reason": "the walk never reads an amp declaration: a holder-side amp reaches it already priced, inside the pair engine's damage rows, and a cross-participant one reaches it as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
             "via": [
               "pair_engine"

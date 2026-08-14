@@ -815,3 +815,56 @@ def test_a_receipt_missing_the_targets_section_fails_closed() -> None:
     del committed["targets"]["targets"]["counter_3"]
     failures = behavior_frontier.check(report, committed)
     assert any("counter_3 is not in the committed receipt" in f for f in failures)
+
+
+def test_every_deferral_to_a_shipped_stage_is_declared_overdue() -> None:
+    """Amendment B's exit sentence, as a state a reader can read.
+
+    "Phase 4's exit re-asserts them retired" was unmet for a whole phase with
+    nothing in the tree saying so.  Now every row whose stage has shipped
+    carries ``overdue`` and a blocker naming an artifact a reader can open.
+    """
+    rows = _receipt()["counters"]["counter_4"]["deferrals"]["rows"]
+    overdue = {key: row for key, row in rows.items() if row["overdue"]}
+    assert overdue, "no row is overdue, so this clause is asserting nothing"
+    for key, row in overdue.items():
+        assert row["recorded_stage"] in behavior_frontier.COMPLETED_STAGES, key
+        assert row["blocked_on"].startswith("docs/receipts/"), key
+        assert row["overdue_because"], key
+
+
+def test_a_row_whose_stage_shipped_without_saying_so_fails_the_gate() -> None:
+    """R-05: the red for the third way a deferral goes wrong.
+
+    The gate already refuses a row whose gap is gone and a row the tree dates
+    elsewhere.  This is the one it could not see: the due date passes and the
+    row says nothing.
+    """
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    key = "delta_amp/receipt_walk"
+    for block in (committed, fresh):
+        row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
+        row["overdue"] = False
+        row["blocked_on"] = ""
+
+    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+
+    assert any("is not declared overdue with a blocker" in f for f in failures)
+
+
+def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
+    """The other direction: overdue is a fact about a stage, not a mood."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    key = "periodic/receipt_walk"
+    for block in (committed, fresh):
+        row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
+        row["recorded_stage"] = "a stage that has not shipped"
+        row["retires_at"] = "a stage that has not shipped"
+
+    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+
+    assert any("is not a completed stage" in f for f in failures)
