@@ -15,12 +15,14 @@ and the entry moved to ``retired`` carrying what the lane measured; the test
 that reproduced it is inverted below rather than removed, so the artifact
 and the tree still say the same thing about a row whose answer changed.
 
-Two of the four open entries began as deletion-frontier rows cleanup cannot
-close; the other two are gaps a later reader found in what S10 shipped -- an
-instrument that holds one scenario set while a criterion names another, and a
-fallback reason that is required at construction and published nowhere.  What
-the four have in common is not their subject: it is that closing them is a
-write outside this lane's ownership.
+Two of the five open entries began as deletion-frontier rows cleanup cannot
+close; the other three are gaps a later reader found in what S10 shipped --
+an instrument that holds one scenario set while a criterion names another, a
+fallback reason that is required at construction and published nowhere, and
+R-01 row 1's pinned count sitting hundreds of tests behind the suite.  What
+the five have in common is not their subject: it is that closing any of them
+is a write outside this lane's ownership -- one of R-32's five baselines, or
+L0's harness contract.
 """
 
 from __future__ import annotations
@@ -66,6 +68,7 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
         "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
         "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
+        "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
     ]
 
 
@@ -290,3 +293,37 @@ def test_the_counter_sink_declares_no_field_a_reason_could_go_in() -> None:
         "walk_invocations",
         "rungs",
     }
+
+
+# --- R-01 row 1's pinned half ------------------------------------------------
+
+
+def test_the_pinned_collected_count_is_still_the_one_the_entry_names() -> None:
+    """The entry's reproducer, and its own expiry.
+
+    R-01 row 1's second half compares ``collected`` against a pinned count,
+    and that pin is the integration agent's under R-32 -- an implementation
+    lane may not move it. So the lane's obligation is to keep the gap
+    *visible*, which means the entry names the pinned value and this asserts
+    the file still holds it. The day the integration agent re-pins, this goes
+    red and the entry has to retire with the number that was written, which
+    is the inversion the entry declares.
+    """
+    entry = next(
+        defect
+        for defect in receipt()["defects"]
+        if defect["id"]
+        == "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale"
+    )
+    fingerprints = json.loads(
+        (ROOT / "docs" / "receipts" / "campaign-fingerprints.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    tests_block = fingerprints["tests"]
+    assert tests_block["collected"] == entry["pinned_value"]
+    # The half of the row that is live: a test quietly becoming a skip still
+    # fails, because both of these are pinned at zero and still are.
+    assert tests_block["skipped"] == 0
+    assert tests_block["xfailed"] == 0
+    assert entry["observed_value"] > entry["pinned_value"]

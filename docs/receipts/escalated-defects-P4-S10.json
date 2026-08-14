@@ -1,7 +1,7 @@
 {
   "artifact": "escalated_defects",
   "slice": "P4-S10",
-  "why_this_file_exists": "S10 is the stage that drives Phase 4's deletion frontier to target. Seven of its nine rows are closed and asserted. Two are not, and neither is closeable as cleanup: one needs a vocabulary S7 was ruled to author and did not, and the other is not the duplication its name says it is. Writing that down as a dated, gated artifact rather than as commit-body prose is R-16's Shape rule -- prose is what the next baseline re-capture absorbs. A third entry is a pointer, not a defect: S9's open escalation named S10 in its for_the_phase_owner line, and this records exactly which half of it S10 closed and which half it may not. Two later entries are not deletion-frontier rows at all: they are gaps a fresh reader found in what S10 shipped -- the bit-exactness clause naming a scenario set the exact baseline does not hold, and the fallback reason that every failure rung is required to carry and that nothing publishes. They are here for the same reason as the first two: closing either is a write outside an implementation lane's ownership (one of R-32's five baselines, and L0's harness contract), and an escalation living only in a commit body is what the next re-capture absorbs.",
+  "why_this_file_exists": "S10 is the stage that drives Phase 4's deletion frontier to target. Seven of its nine rows are closed and asserted. Two are not, and neither is closeable as cleanup: one needs a vocabulary S7 was ruled to author and did not, and the other is not the duplication its name says it is. Writing that down as a dated, gated artifact rather than as commit-body prose is R-16's Shape rule -- prose is what the next baseline re-capture absorbs. A third entry is a pointer, not a defect: S9's open escalation named S10 in its for_the_phase_owner line, and this records exactly which half of it S10 closed and which half it may not. Two later entries are not deletion-frontier rows at all: they are gaps a fresh reader found in what S10 shipped -- the bit-exactness clause naming a scenario set the exact baseline does not hold, and the fallback reason that every failure rung is required to carry and that nothing publishes. They are here for the same reason as the first two: closing either is a write outside an implementation lane's ownership (one of R-32's five baselines, and L0's harness contract), and an escalation living only in a commit body is what the next re-capture absorbs. A fifth entry is R-01 row 1's own pinned half: the suite is green and measured at every commit, but `tests.collected` is pinned at a number the tree left behind, and the pin is the integration agent's.",
   "how_an_entry_closes": "An entry moves from defects[] to retired[] only when the contradiction is resolved in the tree, and only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. Deleting an entry is not closing it.",
   "gate": "tests/test_escalated_defects_p4_s10.py",
   "defects": [
@@ -68,6 +68,25 @@
       "for_the_phase_owner": "Two exits. Either L0 adds a reason-bearing field to the sink and the harness (a `Counter[str]` of receipts beside `rungs` reads naturally and needs no baseline move, since fingerprints pins counter *values* and not the report's key set), or the phase records that the reason is an authoring-time invariant only -- constructible, required, never published -- and criterion 16's 'with a named receipt' is read at the decision rather than at the histogram, which is how `tests/test_amp_kernel.py` already reads it.",
       "reproducer": "`grep -rn 'reason_of' src/` returns the definition in `program/rung.py` and no call site. `work_counters.WorkCounterSink` declares five fields and none of them holds a string.",
       "reproducer_after_closure": "Inverted: `src/` reads `reason_of` (or the decision's `reason`) at the recording site, and the sink declares the field it writes it to."
+    },
+    {
+      "id": "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
+      "dated": "2026-08-14",
+      "raised_by": "the S10 lane, carried forward from dbb6517's commit body so it stops being commit-body-only",
+      "what": "R-01 row 1 has two halves -- 'green' and '`collected` = the pinned count + declared new'. Only the first is checkable at HEAD. `docs/receipts/campaign-fingerprints.json` pins `tests.collected` at 7104; `pytest -q` reports 7767. Every S10 commit carries its own `pytest N passed` line, so the per-commit delta is on the record, but the pin itself has not moved since it was captured and no gate compares the two.",
+      "pinned_value": 7104,
+      "observed_value": 7767,
+      "observed_at": "2026-08-14, HEAD of the S10 repair pass",
+      "why": "`campaign-fingerprints.json` is one of R-32's five baselines. The rule's carve-out lets the owning lane write `wall{stage}`, `alloc{scenario}` and `demonstrated_red{gate}` and nothing else; `tests.collected` is not among them, so an implementation lane moving it would be exactly the baseline-inside-a-semantic-commit move R-17 and D-97 forbid.",
+      "what_is_nevertheless_true": [
+        "The suite half of row 1 is green and measured at every commit: 7767 passed, 0 skipped, 0 xfailed.",
+        "`skipped` and `xfailed` are pinned at 0 and are still 0, so the half of the row that catches 'a test quietly becoming a skip' is live.",
+        "The delta is accounted for commit by commit: the S10 chain runs 7721 -> 7728 -> 7731 -> 7743 -> 7748 -> 7753 -> 7754 -> 7757, and this repair pass adds ten to reach 7767."
+      ],
+      "why_this_lane_may_not_fix_it": "R-32: baselines never move inside a semantic commit, and `campaign-fingerprints.json`'s non-carved-out keys are the integration agent's. The lane that would have to re-pin is X, on the integrated tip, per R-34.",
+      "for_the_phase_owner": "One exit: the integration agent re-pins `tests.collected` on the integrated tip with one line of cause, as R-34 already requires of every moved value. Nothing else needs deciding -- this entry exists so the gap is an artifact rather than a sentence in a commit body that the next re-capture absorbs.",
+      "reproducer": "`python -c \"import json;print(json.load(open('docs/receipts/campaign-fingerprints.json'))['tests'])\"` prints collected 7104, and `pytest -q` prints 7767 passed. The gate below asserts the pinned value is still the one this entry names.",
+      "reproducer_after_closure": "Inverted: the pinned `tests.collected` no longer equals this entry's `pinned_value`, which fails the gate and forces the entry to retire with the count the integration agent wrote."
     }
   ],
   "retired": [
