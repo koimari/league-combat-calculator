@@ -3,9 +3,262 @@
   "slice": "P4-boundary",
   "dated": "2026-08-14",
   "why_this_file_exists": "The Phase 4 boundary is where R-17's committed baselines are re-captured. The pair baseline is clean and could move today; the coupled baseline may not, because R-19 forbids a re-capture while any qualifying occurrence lacks an oracle receipt and 60 of them do. That is not a defect in the tree: every one of the 145 differing coupled leaves is claimed by a committed allowlist, and the two S7 allowlists that own 59 of the 60 say so themselves (expected-golden-diff-P4-S7-bloodsong.json's oracle_receipts.status is 'OWED, NOT FILED'; expected-golden-diff-P4-S7-rearm.json's oracle_pass.status is 'OWED'). What has no artifact until this file is the boundary's own population: the S6/S7 oracle pass filed 82 receipts against the values the tree held on 2026-08-13, and the S7 rearm correction, the H5 stage and S9 moved 23 of those leaves again afterwards, so a receipt existing on a leaf path is no longer evidence that the value a re-capture would pin was ever adjudicated. Written down as a dated, gated artifact rather than as commit-body prose, because prose is exactly what the next baseline re-capture absorbs (R-16).",
-  "how_an_entry_closes": "An entry moves from defects[] to retired[] only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. For the entry below that means every leaf in owed_population carries a receipt whose certified new_value is the value the re-captured baseline holds, at which point the gate's no-covering-receipt assertion goes red and the entry retires carrying the population it named. Deleting an entry is not closing it.",
+  "how_an_entry_closes": "An entry moves from defects[] to retired[] only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. For the entry below that means every leaf in owed_population carries a receipt whose certified new_value is the value the re-captured baseline holds, at which point the gate's no-covering-receipt assertion goes red and the entry retires carrying the population it named. Deleting an entry is not closing it. A retirement is not a release: the entry below retired on the day its receipts were filed, and the property it was protecting -- the committed coupled baseline still holding its old values -- is asserted by the same gate on behalf of its successor.",
   "gate": "tests/test_escalated_defects_p4_boundary.py",
   "defects": [
+    {
+      "id": "thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value",
+      "dated": "2026-08-14",
+      "raised_by": "The R-18/R-19 investigator pass over the Phase 4 boundary's owed population, docs/receipts/oracle-P4B-leaf0.json through leaf59.json. 47 verdicts are new_value_correct; the 13 enumerated below are old_value_correct; none is both_wrong.",
+      "what": "R-19's verdict set makes old_value_correct a stop: a leaf whose independent verdict certifies the OLD value may not be pinned by a re-capture. 13 of the 60 boundary leaves carry that verdict, so scripts/golden_coupled_baseline.json and scripts/golden_coupled_exact.json may not be re-captured, and the golden blocks of docs/receipts/campaign-fingerprints.json may not be refreshed, while this entry stands. The pair jurisdiction is unaffected and owes nothing (D-93).",
+      "why_it_matters": "The re-capture is the moment a diff becomes the campaign's authority. Absorbing 13 dissents into it would make the baseline assert 13 numbers an independent oracle said were wrong -- the campaign's own failure shape, an unexplained value wearing a gate's authority -- and it would do so irreversibly, because every later slice's diffs are read against whatever the baseline says.",
+      "why_this_lane_may_not_fix_it": "Every one of the 13 bears on a landed, separately ruled correction, not on anything this lane wrote. Eleven of them fall inside expected-golden-diff-P4-S7-rearm.json's declared population -- the S7 rearm correction ruled by D-13/D-62/D-66/D-92, itself raised by an oracle's both_wrong verdict (docs/receipts/oracle-S6S7-leaf46.json) and pinned by tests/test_modifier_rearm.py. Reverting it from a receipt-only commit would re-open a ruled decision and re-arm the defect it fixed; an implementation lane may do neither. The remaining two describe a heal whose amount did not move at all. So the disposition is escalation: the receipts are filed and committed, the verdicts are recorded verbatim, and the baselines stay exactly where they are.",
+      "what_the_lane_measured": {
+        "why_this_block_exists": "Not to overrule a verdict -- an implementation lane may not -- but to hand the owner the arithmetic that decides each dissent, computed from the committed baseline that R-18's evidence tree deliberately withholds from an investigator. Read it as the brief for the re-run, not as an adjudication.",
+        "the_shared_blind_spot": "R-18's export is exactly data/ and docs/math-foundations.md -- never scripts/. Every one of the 13 turns on a SIBLING value in the same record: what else the support_resistance_reduction list holds, what the other two members of an event's damage triple say, whether the heal's amount moved. Those siblings live in scripts/golden_coupled_baseline.json, so no investigator could read them, and 10 of the 13 wrote the missing fact down as their own stated falsifier. This is the hazard escalated-defects-S6S7-oracle.json already carries as `ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events`, in its second form: not a leaf paired with the wrong referent, but a leaf whose referent cannot be judged alone.",
+        "carve_rearm_dedupe": {
+          "dissenting_leaves": 10,
+          "what_the_baseline_holds": "scripts/golden_coupled_baseline.json, cleaver_bloodsong_roster, events[46], support_resistance_reduction: eight entries, every one of them source 'Black Cleaver -- Carve', type 'armor_reduction_percent', with fractions 0.06, 0.12, 0.18, 0.24, 0.30, 0.30, 0.30, 0.30 -- one row per arming of one unique per-target debuff, each carrying the cumulative fraction at that arming. events[23] holds three such rows and events[35] holds six.",
+          "the_arithmetic": "Composing those eight arms multiplicatively, each against the same target armor A, gives (100+A)/(100+(1-f)A) per row; the product equals 2.4139 at A = 85.0, and 128.9 / 53.4 = 2.4139 -- the old-to-new ratio of the same event's damage triple, to four decimals. The old leaf is the composed product of the duplicate rows. One Carve instance is capped by its own cached wiki text at 30% armor reduction, whose supremum amplification is 1/0.7 = 1.4286, so 2.4139 is a provable breach of the item's own ceiling.",
+          "what_each_dissent_says_would_flip_it": "That support_resistance_reduction[0] is itself a Black Cleaver -- Carve row, making the removals a de-duplication rather than a deletion. It is: the same pass certifies [0]'s fraction moving 0.06 -> 0.30 and its factor 1.03 -> 1.20 as new_value_correct (oracle-P4B-leaf15/16/17/30/31), and four removals in those very same lists are certified new_value_correct too (oracle-P4B-leaf2/8/9/11), on reasoning the other ten could not reach from the evidence they were given."
+        },
+        "events_46_damage_triple": {
+          "dissenting_leaves": 1,
+          "what_the_baseline_holds": "events[46] carries damage = pair_damage = raw_damage = 128.9 in the old tree and 53.4 in the new one -- one number, three leaves. oracle-P4B-leaf19 (damage) and oracle-P4B-leaf20 (pair_damage) certify 53.4; oracle-P4B-leaf21 (raw_damage) certifies 128.9, on the reading that a raw_damage leaf is pre-mitigation.",
+          "the_arithmetic": "That reading cannot separate the three: raw_damage equals damage in BOTH trees, so there is no pre/post distinction at this event to appeal to, and 128.9 / 53.4 is the same 2.4139 the duplicate-Carve product yields at A = 85.0. Two of the three verdicts on one number stand against the third."
+        },
+        "healing_events_39_split": {
+          "dissenting_leaves": 2,
+          "what_the_baseline_holds": "healing_events[39] holds amount = raw_amount = 359.4, applied_amount = 271.4, overheal = 88.0, healing_reduction_factor = 1.0. The diff report moves only the split: applied_amount 271.4 -> 211.0 and overheal 88.0 -> 148.4. amount and raw_amount are not in the report at all.",
+          "the_arithmetic": "271.4 + 88.0 = 359.4 and 211.0 + 148.4 = 359.4. The heal is the same size in both trees; only how much of it landed changed, which is what participants[2]/survival/damage_taken 4074.9 -> 4041.9 and participants[2]/survival/overhealing 1714.1 -> 1747.2 record. oracle-P4B-leaf18 concludes the heal grew by a factor of 1.686 and oracle-P4B-leaf29 concludes the same heal fell by 22.3%; both premises are contradicted by the unmoved amount, and by each other."
+        }
+      },
+      "what_is_nevertheless_true": [
+        "All 60 receipts are committed and not one is edited: every verdict is recorded as its investigator wrote it, the 13 included.",
+        "Every one of the 60 certifies, by value, the reading the live compare holds, so the coverage question the retired entry asked is answered.",
+        "The pair baseline still reports zero diffs and zero qualifying leaves, so D-93's other jurisdiction owes nothing and is not held up by this entry.",
+        "No src/ file moves in the commit that lands this, and no baseline moves in it either (R-17, R-32, D-97)."
+      ],
+      "classes": {
+        "carve_rearm_dedupe": "The S7 rearm correction folded a repeated arming of ONE holder's Black Cleaver Carve on ONE subject into one live modifier, so the support_resistance_reduction list lost its duplicate rows and its surviving row [0] took the pooled fraction.",
+        "events_46_damage_triple": "events[46]'s damage / pair_damage / raw_damage triple, one number in the old tree and one in the new, adjudicated three times.",
+        "healing_events_39_split": "healing_events[39]'s applied_amount / overheal split, whose two members sum to the same unmoved amount in both trees."
+      },
+      "dissenting_population": [
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[1]",
+          "receipt": "oracle-P4B-leaf0.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.07, \"fraction\": 0.12, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf17.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[2]",
+          "receipt": "oracle-P4B-leaf1.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.11, \"fraction\": 0.18, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf17.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[2]",
+          "receipt": "oracle-P4B-leaf3.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.11, \"fraction\": 0.18, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf15.json",
+            "oracle-P4B-leaf30.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[3]",
+          "receipt": "oracle-P4B-leaf4.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.15, \"fraction\": 0.24, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf15.json",
+            "oracle-P4B-leaf30.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[4]",
+          "receipt": "oracle-P4B-leaf5.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf15.json",
+            "oracle-P4B-leaf30.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[5]",
+          "receipt": "oracle-P4B-leaf6.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf2.json",
+            "oracle-P4B-leaf15.json",
+            "oracle-P4B-leaf30.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[1]",
+          "receipt": "oracle-P4B-leaf7.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.07, \"fraction\": 0.12, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf16.json",
+            "oracle-P4B-leaf31.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[4]",
+          "receipt": "oracle-P4B-leaf10.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf16.json",
+            "oracle-P4B-leaf31.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[6]",
+          "receipt": "oracle-P4B-leaf12.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf16.json",
+            "oracle-P4B-leaf31.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[7]",
+          "receipt": "oracle-P4B-leaf13.json",
+          "verdict": "old_value_correct",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "class": "carve_rearm_dedupe",
+          "contradicted_by": [
+            "oracle-P4B-leaf8.json",
+            "oracle-P4B-leaf9.json",
+            "oracle-P4B-leaf11.json",
+            "oracle-P4B-leaf16.json",
+            "oracle-P4B-leaf31.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
+          "receipt": "oracle-P4B-leaf18.json",
+          "verdict": "old_value_correct",
+          "old_value": 88.0,
+          "new_value": 148.4,
+          "transition": "value",
+          "class": "healing_events_39_split",
+          "contradicted_by": [],
+          "mutually_exclusive_with": [
+            "oracle-P4B-leaf29.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/raw_damage",
+          "receipt": "oracle-P4B-leaf21.json",
+          "verdict": "old_value_correct",
+          "old_value": 128.9,
+          "new_value": 53.4,
+          "transition": "value",
+          "class": "events_46_damage_triple",
+          "contradicted_by": [
+            "oracle-P4B-leaf19.json",
+            "oracle-P4B-leaf20.json"
+          ],
+          "mutually_exclusive_with": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount",
+          "receipt": "oracle-P4B-leaf29.json",
+          "verdict": "old_value_correct",
+          "old_value": 271.4,
+          "new_value": 211.0,
+          "transition": "value",
+          "class": "healing_events_39_split",
+          "contradicted_by": [],
+          "mutually_exclusive_with": [
+            "oracle-P4B-leaf18.json"
+          ]
+        }
+      ],
+      "reproducer": "tests/test_escalated_defects_p4_boundary.py::TestTheThirteenDissentsBlockTheRecapture -- the 13 rows are exactly the docs/receipts/oracle-P4B-*.json files whose verdict is not new_value_correct, each row's recorded verdict is the one its receipt carries, each dissenting leaf is a member of the retired entry's owed_population, and every row names at least one receipt from the same pass certifying the contrary. Together with TestTheOwedPopulationIsAnswered::test_the_committed_baseline_still_holds_the_old_value, which asserts all 60 old readings still reproduce against the committed coupled baseline, that is the machine statement that the re-capture has not happened.",
+      "reproducer_after_closure": "Inverted: no docs/receipts/oracle-P4B-*.json carries a verdict other than new_value_correct, the enumeration goes empty, and the entry retires naming the ruling that resolved each class -- at which point the committed baseline stops holding the old values and the same gate's baseline-unmoved assertion inverts with it.",
+      "for_the_owner": "Three decisions, one per class, none of them an implementation lane's. (1) The ten carve_rearm_dedupe dissents and the events[46] raw_damage one: either re-run those 11 under a brief that hands the investigator the sibling values its verdict turns on -- the whole support_resistance_reduction list, the whole damage triple -- or rule the S7 rearm correction re-opened, which is a D-13/D-62/D-66 question and moves tests/test_modifier_rearm.py. (2) The two healing_events[39] dissents: re-run with the record's unmoved `amount` in the brief. (3) Whether R-18's export stays exactly data/ plus docs/math-foundations.md when the leaf under adjudication is one member of a repeated-source list or of a multi-field record -- this is the second realization of the hazard escalated-defects-S6S7-oracle.json raised on 2026-08-13, and it is a runbook change (R-15/R-18), not a phase's. Until all three are answered: no coupled baseline re-capture, and no golden-block refresh of campaign-fingerprints.json.",
+      "how_a_dissent_is_contradicted": {
+        "contradicted_by": "Receipts from this same pass that certify the contrary on the leaf the dissent turns on -- the surviving support_resistance_reduction[0] row, an adjacent removal in the same list, or another member of the same damage triple. Every name here carries the verdict new_value_correct.",
+        "mutually_exclusive_with": "Two dissents whose premises cannot both hold. oracle-P4B-leaf18 concludes healing_events[39]'s heal grew by a factor of 1.686 and oracle-P4B-leaf29 concludes the same heal fell by 22.3%; the record's `amount` is 359.4 in both trees, so neither premise holds and they refute each other before the baseline refutes them both. The relation is symmetric and the gate asserts it.",
+        "why_a_row_may_carry_only_one": "A dissent needs a stated contradiction, not a particular kind of one. Requiring a contrary sibling everywhere would have forced a false one onto the healing pair, which no receipt in the pass actually provides."
+      }
+    }
+  ],
+  "retired": [
     {
       "id": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
       "dated": "2026-08-14",
@@ -35,8 +288,53 @@
           "covered_by_a_receipt_certifying_the_current_value": 64,
           "declared_not_owed_by_a_committed_allowlist": 3,
           "owed": 60,
-          "of_the_owed_carrying_a_stale_receipt_on_the_same_path": 23,
-          "unclaimed_by_any_committed_allowlist": 0
+          "of_the_owed_carrying_a_stale_receipt_on_the_same_path": 24,
+          "unclaimed_by_any_committed_allowlist": 0,
+          "correction": {
+            "why": "The classification behind the published figures read each receipt's leaf path from a top-level `leaf_path` key. Six committed receipts nest it under a `leaf` object instead, so the scan could not see them, and a receipt it cannot see is a receipt it reports as absent -- the campaign's own failure shape inside the campaign's own coverage check. Re-measured here with a reader that accepts both shapes, which is also what the gate now uses.",
+            "figures_as_published": {
+              "covered_by_a_receipt_certifying_the_current_value": 64,
+              "owed": 60,
+              "of_the_owed_carrying_a_stale_receipt_on_the_same_path": 23
+            },
+            "figures_re_measured": {
+              "covered_by_a_receipt_certifying_the_current_value": 68,
+              "truly_owed": 56,
+              "of_the_owed_carrying_a_stale_receipt_on_the_same_path": 24,
+              "arithmetic": "68 covered + 3 declared_not_owed + 56 truly owed = 127 qualifying, the same total the published figures reach by counting 4 of the covered as owed."
+            },
+            "already_covered_before_the_pass": {
+              "count": 4,
+              "what_it_means": "Four leaves the pass was run over already carried a receipt certifying the current value. They are not a miss and they are not waste: the fresh receipt and the prior one were written by different investigators from the same evidence tree, and on all four they agree on both the value and the verdict (new_value_correct). Read them as the pass's own reproducibility check.",
+              "pairs": [
+                {
+                  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner",
+                  "prior": [
+                    "oracle-S6S7-leaf29.json"
+                  ]
+                },
+                {
+                  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/raw_damage",
+                  "prior": [
+                    "oracle-S6S7-leaf60.json"
+                  ]
+                },
+                {
+                  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[40]/raw_damage",
+                  "prior": [
+                    "oracle-S6S7-leaf63.json"
+                  ]
+                },
+                {
+                  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/raw_damage",
+                  "prior": [
+                    "oracle-S6S7-leaf69.json"
+                  ]
+                }
+              ]
+            },
+            "why_the_population_is_not_shrunk": "`owed_population` records the 60 leaves the R-18 pass was actually run over, and rewriting it to 56 after the fact would describe a pass that did not happen. The published figures stay as published, the corrected ones sit beside them, and the gate asserts both -- R-06's provenance discipline applied to a count the campaign produced about itself."
+          }
         }
       },
       "why_one_leaf_states_a_shape_number": "One member of the population is /metadata/fingerprint/leaves, and R-18 hands an investigator the leaf path and its two values, so this file records them. That is umbrella criterion 4's exemption and not a breach of it: these are a diff report's readings of one qualifying leaf — a measurement — and not a restatement of a committed baseline's shape. The sole home of the committed counts is docs/receipts/campaign-fingerprints.json, which every consumer reads by field; the precedent is docs/receipts/oracle-S9-leaf10.json, which had to state the same two values to adjudicate the same leaf.",
@@ -88,7 +386,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[2]",
@@ -99,7 +398,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[1]",
@@ -110,7 +410,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[2]",
@@ -121,7 +422,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[3]",
@@ -132,7 +434,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[4]",
@@ -143,7 +446,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[5]",
@@ -154,7 +458,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[1]",
@@ -165,7 +470,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[2]",
@@ -176,7 +482,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[3]",
@@ -187,7 +494,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[4]",
@@ -198,7 +506,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[5]",
@@ -209,7 +518,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[6]",
@@ -220,7 +530,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[7]",
@@ -231,7 +542,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner",
@@ -242,7 +554,10 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-bloodsong.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": [
+            "oracle-S6S7-leaf29.json"
+          ]
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[0]/fraction",
@@ -253,7 +568,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/fraction",
@@ -264,7 +580,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[0]/fraction",
@@ -275,7 +592,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
@@ -289,7 +607,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf40.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/damage",
@@ -300,7 +619,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/pair_damage",
@@ -311,7 +631,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/raw_damage",
@@ -322,7 +643,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[31]/overheal",
@@ -334,7 +656,10 @@
             "expected-golden-diff-P4-S7-bloodsong.json",
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf33.json"
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/damage",
@@ -345,7 +670,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/pair_damage",
@@ -356,7 +682,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/raw_damage",
@@ -367,7 +694,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[25]/overheal",
@@ -381,7 +709,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf36.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/sources[1]/total_damage",
@@ -392,7 +721,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[55]/overheal",
@@ -406,7 +736,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf35.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount",
@@ -418,7 +749,8 @@
             "expected-golden-diff-P4-S7-bloodsong.json",
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[0]/factor",
@@ -429,7 +761,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/factor",
@@ -440,7 +773,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/outgoing_damage_before_death",
@@ -451,7 +785,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/total_damage",
@@ -462,7 +797,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/damage",
@@ -473,7 +809,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/pair_damage",
@@ -484,7 +821,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/raw_damage",
@@ -495,7 +833,8 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-rearm.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/raw_damage",
@@ -506,7 +845,10 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-bloodsong.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": [
+            "oracle-S6S7-leaf60.json"
+          ]
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[40]/raw_damage",
@@ -517,7 +859,10 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-bloodsong.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": [
+            "oracle-S6S7-leaf63.json"
+          ]
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/raw_damage",
@@ -528,7 +873,10 @@
           "allowlists_that_claim_it": [
             "expected-golden-diff-P4-S7-bloodsong.json"
           ],
-          "stale_receipt_on_the_same_path": []
+          "stale_receipt_on_the_same_path": [],
+          "covering_receipt_that_predated_the_pass": [
+            "oracle-S6S7-leaf69.json"
+          ]
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/damage",
@@ -542,7 +890,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf41.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/pair_damage",
@@ -556,7 +905,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf42.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/raw_damage",
@@ -570,7 +920,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf43.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/damage",
@@ -584,7 +935,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf44.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/pair_damage",
@@ -598,7 +950,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf45.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/raw_damage",
@@ -612,7 +965,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf46.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/damage",
@@ -626,7 +980,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf47.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/pair_damage",
@@ -640,7 +995,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf48.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[1]/total_damage",
@@ -654,7 +1010,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf51.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[2]/total_damage",
@@ -668,7 +1025,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf73.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[0]/total_damage",
@@ -682,7 +1040,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf50.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/outgoing_damage_before_death",
@@ -696,7 +1055,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf74.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/total_damage",
@@ -710,7 +1070,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf75.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/objective/focus_damage_before_death",
@@ -724,7 +1085,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf76.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/health_damage",
@@ -738,7 +1100,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf77.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/incoming_damage",
@@ -752,7 +1115,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf78.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/objective/main_team_damage_before_death",
@@ -766,7 +1130,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf81.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/damage_taken",
@@ -780,7 +1145,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf79.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/health_damage",
@@ -794,7 +1160,8 @@
           ],
           "stale_receipt_on_the_same_path": [
             "oracle-S6S7-leaf80.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         },
         {
           "leaf_path": "/metadata/fingerprint/leaves",
@@ -805,13 +1172,16 @@
           "allowlists_that_claim_it": [],
           "stale_receipt_on_the_same_path": [
             "oracle-S9-leaf10.json"
-          ]
+          ],
+          "covering_receipt_that_predated_the_pass": []
         }
       ],
       "reproducer": "tests/test_escalated_defects_p4_boundary.py::TestTheOwedPopulationIsStillOwed — every leaf in owed_population still has no docs/receipts/oracle-*.json certifying its new_value, and every one of their old_value readings still reproduces against the committed scripts/golden_coupled_baseline.json, which is the assertion that the baseline did not move while the receipts were owed.",
       "reproducer_after_closure": "Inverted: the receipts exist, the gate's no-covering-receipt assertion fails, and the entry retires carrying the population it named while the integration agent re-captures both baselines and refreshes the golden blocks of campaign-fingerprints.json.",
-      "for_the_owner": "Spawn the R-18 investigator pass over owed_population — one fresh Opus 5 per leaf, tree export built by R-18's one git archive command — file each verdict at docs/receipts/oracle-P4-boundary-<leaf-slug>.json, then re-capture scripts/golden_baseline.json, scripts/golden_coupled_baseline.json and scripts/golden_coupled_exact.json in baseline-only commits (R-17/R-32) and move this entry to retired[]. Two of the three dissents already on escalated-defects-S6S7-oracle.json bear on how that pass is briefed: these leaf paths address list members by ordinal, and 15 of the 60 are value_to_absent."
+      "for_the_owner": "Spawn the R-18 investigator pass over owed_population — one fresh Opus 5 per leaf, tree export built by R-18's one git archive command — file each verdict at docs/receipts/oracle-P4-boundary-<leaf-slug>.json, then re-capture scripts/golden_baseline.json, scripts/golden_coupled_baseline.json and scripts/golden_coupled_exact.json in baseline-only commits (R-17/R-32) and move this entry to retired[]. Two of the three dissents already on escalated-defects-S6S7-oracle.json bear on how that pass is briefed: these leaf paths address list members by ordinal, and 15 of the 60 are value_to_absent.",
+      "retired_on": "2026-08-14",
+      "resolved_by": "The R-18 investigator pass over owed_population: 60 fresh receipts, one per owed leaf, at docs/receipts/oracle-P4B-leaf0.json through docs/receipts/oracle-P4B-leaf59.json, filed in the receipt-only commit that also lands this retirement. Every one of the 60 certifies, by value, exactly the reading `compare scripts/golden_coupled_baseline.json` holds on this tip, so the coverage this entry was owed exists and the gate's no-covering-receipt assertion is inverted rather than deleted.",
+      "resolution": "Owed, then filed: this entry's own condition is discharged and nothing more. The tally is 47 new_value_correct and 13 old_value_correct, and R-19 makes a dissent a stop, so the re-capture this entry was blocking is STILL blocked -- by the successor entry `thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value`, which enumerates the 13 and which the same gate keeps live. Retiring this one while the baselines stay put is the distinction the artifact exists to draw: the receipts were owed and are no longer owed; the numbers are adjudicated and 13 of the verdicts say do not pin them. On the 23 leaves whose `stale_receipt_on_the_same_path` is non-empty the fresh receipt supersedes the S6/S7 or S9 one on the same path -- the stale receipt certified the value the tree held before the rearm correction, the H5 stage and S9 moved that leaf again -- and the gate asserts the two certify different values, so a supersession can never be read as agreement. One correction rides this retirement and is recorded in `measured.coupled_golden.correction`: the scan that produced the published figures read only a top-level `leaf_path`, so it missed six receipts that nest theirs under `leaf`. Four of the 60 were therefore already covered before the pass ran -- by receipts that agree with the fresh ones on both value and verdict -- and one more leaf's stale receipt went unrecorded. The true boundary reading is 68 covered, 3 not owed and 56 owed; the gate's reader now accepts both shapes so the miscount cannot recur."
     }
-  ],
-  "retired": []
+  ]
 }

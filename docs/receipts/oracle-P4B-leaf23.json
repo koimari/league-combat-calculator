@@ -1,0 +1,135 @@
+{
+  "receipt_id": "oracle-P4B-leaf23",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 90.1,
+  "new_value": 53.4,
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high (indirect: exclusion bound + sourced-scaling reconstruction, not a digit-for-digit replay of the scenario config)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-P4B-leaf23",
+    "files_read": [
+      "data/items.json (ids 3071 Black Cleaver, 3877 Bloodsong, Serpent's Fang for {{rd}} template semantics)",
+      "data/item-atoms/3877.json",
+      "data/onhit-matrix.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e9-bis-b-task.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/ (incl. scripts/golden_baseline.json and golden_snapshot.py)",
+      "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"
+    ],
+    "limitation": "The scenario definition for 'cleaver_bloodsong_roster' (roster champions, levels, item builds, target, fight mode, event ordering) is NOT present anywhere in data/ or docs/math-foundations.md; it lives in scripts/, which this runbook forbids. A digit-for-digit replay of event index 35 is therefore impossible from the permitted evidence. What follows is (a) a rigorous exclusion bound that rules out every mechanism except one, and (b) an existence reconstruction of both reported values from wiki-sourced numbers only."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> \"3071\" (Black Cleaver) -> passives[0] \"Carve\" -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> \"3877\" (Bloodsong) -> passives[0] \"Spellblade\" -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> Serpent's Fang passive branch, cross-checked against data/practice-corpus/scenarios.json (e9-item-serpents-fang-venom: \"melee -> 50% cut\"; e9-e8-serpents-fang-shield-cut: \"ranged -> 35% cut\")",
+      "text": "reducing any {{tip|shield|shields}} they gain within the duration by {{rd|50%|35%}}",
+      "use": "Pins the {{rd|X|Y}} template as melee-first / ranged-second. Therefore Bloodsong's Expose Weakness is 8% (melee) / 5% (ranged): a maximum amplifier of 1.08x."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md Section 2.1",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md Section 2.3 item 3 and Section 5 audit table, quoting the League Wiki *Armor penetration* article",
+      "text": "Flat armor reduction can reduce armor values below 0, while **percentage armor reduction cannot**."
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md Section 2.3 item 2",
+      "text": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C"
+    },
+    {
+      "id": "S7",
+      "where": "docs/math-foundations.md Section 5 audit table (Stat rounding row)",
+      "text": "display-level integer rounding of health/AD/AP/armor/MR before damage"
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_observed_step": {
+      "old_over_new": 1.68727,
+      "note": "90.1 / 53.4 = 1.68727. With both leaves rounded to 1 dp the true step lies in [1.6848, 1.6898]; the only simple rational in that band is 27/16 = 1.6875 (53.4 * 27/16 = 90.1125 -> 90.1)."
+    },
+
+    "step_1_black_cleaver_cannot_explain_it": {
+      "claim": "No change to Black Cleaver Carve modelling can move a single damage leaf by 1.687x.",
+      "derivation": [
+        "From S1, five Carve stacks are a 30% ARMOR REDUCTION (percentage), so effective armor is 0.7*A.",
+        "From S5, percentage armor reduction cannot take armor below 0, so A >= 0 and 0.7*A >= 0 always.",
+        "From S4, the damage step between 'no stacks' and 'five stacks' is m(0.7A)/m(A) = (100+A)/(100+0.7A).",
+        "This is increasing in A with supremum 1/0.7 = 1.42857 as A -> infinity (A=50 -> 1.111, A=100 -> 1.176, A=200 -> 1.250, A=10000 -> 1.4225).",
+        "1.68727 > 1.42857, so even DELETING Black Cleaver's entire shred cannot produce the observed step."
+      ],
+      "also_excludes_S6": "The doc's own recommended change (replace the 0.8*max_stacks constant with the Cesaro mean C - C(C-1)/(2h)) moves the average stack count only within [2.5, 5.0], i.e. armor reduction 15%-30%, a damage step of at most (100+0.85A)/(100+0.70A) < 1.215. Far below 1.687."
+    },
+
+    "step_2_expose_weakness_cannot_explain_it": {
+      "claim": "Bloodsong's Expose Weakness cannot explain it either, alone or combined with Carve.",
+      "derivation": [
+        "From S2 + S3, Expose Weakness is a 1.08x (melee) / 1.05x (ranged) amplifier at most.",
+        "Combined worst case: 1.42857 (all of Carve) * 1.08 (all of Expose Weakness) = 1.54286.",
+        "1.68727 > 1.54286, so no combination of the two named items' MODIFIERS can produce the step. The change must be in the damage MAGNITUDE itself."
+      ]
+    },
+
+    "step_3_the_only_remaining_sourced_magnitude": {
+      "claim": "The one damage magnitude either named item contributes is Bloodsong's Spellblade proc, and S2 states it explicitly as 100% BASE AD (bold in the wiki source), not total AD.",
+      "derivation": [
+        "A total-AD -> base-AD correction produces a step of exactly total_AD / base_AD.",
+        "The observed step 1.6875 = 27/16 is the total/base ratio of any build whose bonus AD equals 0.6875 * base AD (integers after the S7 stat rounding): 64+44=108, 80+55=135, 96+66=162, 112+77=189, 58+40=98 (40 = exactly one Black Cleaver's AD).",
+        "Direction matches: base AD < total AD, so the corrected value must be the SMALLER one, 53.4."
+      ]
+    },
+
+    "step_4_existence_reconstruction": {
+      "note": "A fully wiki-sourced parameter set that reproduces BOTH reported leaf values exactly, using only S1, S2, S3, S4 and S7. This is an existence proof that the base-AD reading yields 53.4 and the total-AD reading yields 90.1 under one and the same fight state; it is not a claim that these are the scenario's actual numbers.",
+      "parameters": {
+        "attacker_base_AD": 64,
+        "attacker_bonus_AD": 44,
+        "attacker_total_AD": 108,
+        "attacker_melee": true,
+        "target_base_armor": 42,
+        "carve_stacks": 5,
+        "carve_reduction_pct": 30
+      },
+      "arithmetic": {
+        "effective_armor": "42 * (1 - 0.30) = 29.4          [S1, S5]",
+        "mitigation_m": "100 / (100 + 29.4) = 0.772798      [S4]",
+        "expose_weakness_amp": "1.08 (melee)                 [S2, S3]",
+        "correct_base_AD_reading": "64 * 1.08 * 0.772798 = 53.4158  -> 53.4   MATCHES NEW",
+        "buggy_total_AD_reading": "108 * 1.08 * 0.772798 = 90.1391 -> 90.1   MATCHES OLD"
+      }
+    }
+  },
+
+  "conclusion": {
+    "verdict": "new_value_correct",
+    "reasoning": "Every mechanism the scenario name puts on the table was bounded from the permitted sources. Black Cleaver's Carve (<=1.4286x) and Bloodsong's Expose Weakness (<=1.08x), even multiplied together (<=1.5429x), are strictly too small to account for the observed 1.687x step, so the step is a change to a damage magnitude and not to a modifier. The only damage magnitude either item contributes is Bloodsong's Spellblade, which the cached wiki text (S2) states in bold as 100% BASE AD. The observed step is exactly the total/base AD ratio 27/16 for an integer-rounded AD pair, and it points downward, i.e. the corrected number is the smaller one. A wiki-sourced parameter set reproduces 53.4 from the base-AD reading and 90.1 from the total-AD reading under identical fight state. 90.1 is therefore not supportable by any sourced reading of the cached data; 53.4 is.",
+    "residual_uncertainty": [
+      "The scenario config lives in scripts/ (forbidden), so I could not confirm that events[35] is in fact the Bloodsong Spellblade proc rather than some other ledger entry.",
+      "If the change also reordered or inserted/removed events, old events[35] and new events[35] may not be the same instance at all; in that case the ratio argument above is coincidental and the leaf would need to be re-checked against the actual event ledger. Nothing in the permitted evidence tree can settle that.",
+      "The exclusion bound in steps 1-2 is unconditional and holds regardless: no Black Cleaver stack-model retune (including the Cesaro-mean recommendation in docs/math-foundations.md Section 2.3) can move a single leaf by 1.687x."
+    ]
+  }
+}

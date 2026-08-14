@@ -1,0 +1,122 @@
+{
+  "receipt": "oracle-P4B-leaf37",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/raw_damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-tree",
+    "read_only_from": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item 3877 \u2192 passives[0] (name \"Spellblade\", unique) \u2192 branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "why": "Bloodsong is the only amplifier-bearing item named by the scenario; Expose Weakness is a target-side amp on ALL incoming damage."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "item 3071 \u2192 passives (Carve, Fervor) \u2192 branches",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks. / Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.",
+      "why": "Rules Black Cleaver OUT as the cause: Carve is armor REDUCTION and Fervor is movement speed. Neither can move a pre-mitigation raw_damage leaf \u2014 they only move the mitigated number."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "items 6333 (Death's Dance) {{rd|30%|10%}}, 6695 (Serpent's Fang) {{rd|50%|35%}}, 3074/3077 (Ravenous Hydra/Tiamat) {{rd|40% AD|20% AD}}",
+      "quote": "{{rd|<melee value>|<ranged value>}}",
+      "why": "Establishes the wiki template convention: the FIRST argument of {{rd|..|..}} is the melee value, the second the ranged value."
+    },
+    {
+      "id": "S4",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenario id \"e9-item-serpents-fang-venom\" \u2192 expected.formula",
+      "quote": "Katarina (melee) Serpent's Fang: Ahri's Fimbulwinter Everlasting shield (180.235, charm-triggered under the F3-derived E-first order) is cut by the melee 50% while venom is active -> 90.1175 applied",
+      "why": "In-repo corroboration that the project itself reads the first {{rd|}} argument as the melee value for the ITEM HOLDER."
+    },
+    {
+      "id": "S5",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenarios e9-e3-varus-blight-detonation, e9-e5-sion-decimating-smash",
+      "quote": "\"raw_damage\": 353.7 ... \"post-mitigation vs 52 MR = 232.7\"  /  \"fully charged Decimating Smash (350 + 240% AD (136) = 676.4 raw) mitigates at Ahri's shredded armor 92 x 0.75 = 69 -> 676.4 x 100/169 = 400.2\"",
+      "why": "Pins the ledger convention: raw_damage is the PRE-mitigation number; resistance/shred effects never touch it. So the observed raw_damage move must be a damage-amplifier, not a penetration/reduction change."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a72.1 and \u00a75 formula-audit table, row \"Resistance mitigation (apply_resistance)\"",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py); post = raw \u00b7 m(R)",
+      "why": "Confirms raw is the input to mitigation, i.e. amplifiers that scale the damage instance land in raw_damage, mitigation lands in `damage`."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a72.3 item 2 and \u00a75 row \"Terminus/BC ramps (average_pen, average_reduction)\"",
+      "quote": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8\u00b7max_stacks constant ... APPROX \u2014 m(R) convex \u21d2 averaging understates ramp damage (Jensen)",
+      "why": "The other candidate explanation for a Black-Cleaver-named diff (the documented Ces\u00e0ro-mean recommendation) is explicitly an ARMOR-REDUCTION change; it moves post-mitigation `damage`, never `raw_damage`. Rules it out for this leaf."
+    },
+    {
+      "id": "S8",
+      "file": "data/items.json + data/runes.json",
+      "locator": "exhaustive grep for \"increased damage\" across the whole item and rune cache",
+      "quote": "Other 8% amplifiers found: Riftmaker 4633 (\"2% ... stacking up to 4 times for a total of 8% increased damage\") and the Press-the-Attack keystone (\"grant you 8% increased damage against champions\").",
+      "why": "Neither is named by the scenario (Riftmaker is an AP item; no keystone appears in the scenario id), so Bloodsong's Expose Weakness is the only 8% amp in play."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_moving_quantity": "raw_damage is pre-mitigation (S5, S6). Of the two items the scenario names, Black Cleaver contributes only armor reduction + movement speed (S2, S7) \u2014 neither can move a pre-mitigation number. Bloodsong contributes exactly one damage-instance modifier: Expose Weakness, a target-side amplifier on damage 'from all sources' (S1).",
+    "step_2_bound_the_implied_multiplier": {
+      "note": "Golden leaves are stored to 1 decimal, so solve for the multiplier band consistent with the rounding, not for 101.7/94.1 naively.",
+      "pre_amp_true_value_v": "old 94.1 \u21d2 v \u2208 [94.05, 94.15)",
+      "amped_true_value_u": "new 101.7 \u21d2 u \u2208 [101.65, 101.75)",
+      "implied_multiplier": "u/v \u2208 (101.65/94.15, 101.75/94.05) = (1.07966, 1.08187)",
+      "naive_ratio": "101.7 / 94.1 = 1.080765"
+    },
+    "step_3_match_against_sourced_values": {
+      "melee_8_percent": "1.08 \u2208 (1.07966, 1.08187) \u2014 MATCH",
+      "ranged_5_percent": "1.05 \u2209 band \u2014 rejected (94.13 \u00d7 1.05 = 98.84 \u2192 would print 98.8)",
+      "other_candidates_tested": "1.06, 1.07, 1.10, 1.12, 1.20 all fall outside the band; no other sourced amplifier value lands inside it."
+    },
+    "step_4_forward_check": {
+      "pre_amp_raw_v": "101.7 / 1.08 = 94.1667; intersected with the old-leaf rounding band [94.05, 94.15) \u21d2 v \u2208 [94.12, 94.15), e.g. v \u2248 94.13",
+      "v_times_1_08": "94.13 \u00d7 1.08 = 101.6604 \u2192 rounds to 101.7  \u2713",
+      "v_rounds_to_old": "94.13 \u2192 rounds to 94.1  \u2713",
+      "conclusion": "A single unrounded pre-amp value v \u2248 94.13 reproduces BOTH printed leaves exactly: 94.1 without Expose Weakness, 101.7 with the melee 8% Expose Weakness. The old leaf is the un-amplified value; the new leaf is the correctly amplified one."
+    },
+    "step_5_rule_semantics": {
+      "does_expose_weakness_apply_here": "Yes. S1 says 'take {{rd|8%|5%}} increased damage from all sources' for 4 seconds \u2014 it is a debuff on the TARGET, so it amplifies every damage instance in the roster's ledger while active, not only the Bloodsong holder's own hits.",
+      "which_rd_argument": "The melee one, 8%. Template convention pinned by S3 and corroborated in-repo by S4. Bloodsong is the AD/fighter support-quest upgrade whose Spellblade pays 100% BASE AD \u2014 the melee branch is the one a Black-Cleaver-carrying physical-damage roster instantiates.",
+      "why_raw_and_not_post": "In League a 'takes X% increased damage' amplifier scales the damage instance before resistances; multiplication is commutative for the final number, but the ledger places it in raw (S5/S6 show mitigation is applied to raw, never folded into it)."
+    },
+    "computed_correct_value": 101.7,
+    "computed_correct_value_expression": "v \u00d7 (1 + 0.08) with v \u2248 94.13 (the un-amplified pre-mitigation damage) = 101.66 \u2192 101.7 at the golden's 1-decimal precision"
+  },
+
+  "residual_uncertainty": {
+    "statement": "The runbook forbids reading the scenario definition (src/, tests/, scripts/), so the attack type of the Bloodsong HOLDER in this roster could not be read directly \u2014 only inferred.",
+    "the_one_way_this_flips": "If the Bloodsong holder in cleaver_bloodsong_roster is a RANGED champion, the sourced amp is the second {{rd|}} argument, 5%, giving 94.13 \u00d7 1.05 = 98.84 \u2192 98.8. In that case neither 94.1 nor 101.7 would be right and the verdict would be both_wrong.",
+    "why_melee_is_the_supported_reading": [
+      "Bloodsong's Spellblade pays 100% BASE AD and is the AD/fighter branch of the support-quest upgrade line (data/items.json 3867 Bounty of Worlds \u2192 Bloodsong / Celestial Opposition / Dream Maker / Solstice Sleigh / Zaz'Zak's Realmspike) \u2014 the melee engage/fighter support branch.",
+      "The scenario's other named item, Black Cleaver, is a melee-fighter physical-damage item (400 HP / 40 AD / 20 AH, stacking armor shred on physical damage).",
+      "The observed shift lands exactly on the melee value and nowhere near the ranged one; a wrong-branch bug would have produced 98.8, not 101.7."
+    ]
+  },
+
+  "cross_checks_performed": [
+    "Grepped the entire item cache and rune cache for competing 8% amplifiers: only Riftmaker (AP, stacking 2%/s to 8%) and the Press-the-Attack keystone; neither is named by the scenario.",
+    "Verified Black Cleaver has no damage-dealing component at all (data/item-atoms/3071.json atoms: stats.health, stats.attack-damage, stats.ability-haste, stack-transform-summon-resource.stack, crowd-control-mobility.movement-speed, damage.resistance-mitigation) \u2014 so it cannot author or scale a raw_damage leaf.",
+    "Checked docs/math-foundations.md \u00a72.3's outstanding Black Cleaver Ces\u00e0ro-mean recommendation and confirmed it is an armor-reduction (post-mitigation) change, not a raw-damage one.",
+    "Scanned all 173 champions' stat growth (base + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121)), docs/math-foundations.md \u00a75) for a base/total AD equal to 94.1 or 101.7 to test an alternative 'the leaf is a raw base-AD row' hypothesis; the only exact hit (Aphelios base AD at L18 = 94.100) fails the forward check, since 94.100 \u00d7 1.08 = 101.628 \u2192 101.6 \u2260 101.7, whereas v \u2248 94.13 reproduces both leaves. Hypothesis rejected."
+  ]
+}

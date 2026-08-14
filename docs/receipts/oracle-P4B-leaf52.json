@@ -1,0 +1,90 @@
+{
+  "receipt_id": "oracle-P4B-leaf52",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/total_damage",
+  "old_value": 3226.1,
+  "new_value": 3310.1,
+  "verdict": "new_value_correct",
+  "confidence": "medium-high (direction and magnitude verified against source; absolute value not reproducible from the permitted evidence tree)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle52",
+    "read": ["data/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/staleness.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "limitation": "The scenario input tuple for 'cleaver_bloodsong_roster' does not exist anywhere under data/ (searched: practice-corpus/scenarios.json, worklists/, champion-audit/, atoms/ - zero hits for 'cleaver_bloodsong' or 'coupled_scenarios'). The golden scenario definitions live in scripts/, which R-18 forbids. The absolute total therefore cannot be re-derived end-to-end; the computation below verifies the model constants, the closed form, the sign of the change, and the magnitude band."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "extracted": {"max_stacks_C": 5, "reduction_per_stack_pct": 6, "max_reduction_pct": 30, "stack_duration_s": 6}
+    },
+    {
+      "source": "data/items.json -> id 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "extracted": {"spellblade_bonus": "100% base AD physical on-hit", "expose_weakness_amp_melee_pct": 8, "expose_weakness_amp_ranged_pct": 5, "amp_duration_s": 4, "internal_cd_s": 1.5}
+    },
+    {
+      "source": "data/items.json - {{rd|A|B}} template orientation cross-check (melee value first)",
+      "quote": "Tiamat / Ravenous Hydra / Stridebreaker Cleave: '{{rd|40% AD|20% AD}}'; Death's Dance: '{{rd|30%|10%}}'; Titanic Hydra: '{{rd|1%|{{fd|0.5}}...'",
+      "extracted": "rd renders melee-first, ranged-second; therefore Bloodsong's Expose Weakness is 8% for a melee holder, 5% for a ranged holder."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.3 item 2 (pre-change state of the engine)",
+      "quote": "**Black Cleaver average stacks** (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes. ... this is a documented tuning constant, not a theorem. **Recommendation:** replace the constant with the closed-form Cesaro mean when a champion module needs exact BC numbers (a candidate P3 item; changing it re-tunes every BC fight in the corpus ...)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, last row",
+      "quote": "| Terminus/BC ramps (`average_pen`, `average_reduction`) | Cesaro mean of the per-hit ramp | **APPROX** | m(R) convex => averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, +/-20% at extremes (Section 2.3) |"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_closed_form_rederived_from_scratch": {
+      "claim": "Cesaro mean of the capped stack ramp min(k, C) over h hits equals C - C(C-1)/(2h) for h >= C.",
+      "derivation": "sum_{k=1..h} min(k,C) = sum_{k=1..C} k + (h-C)*C = C(C+1)/2 + hC - C^2 = hC - C^2/2 + C/2 = hC - C(C-1)/2.  Divide by h:  mean = C - C(C-1)/(2h).",
+      "result": "CONFIRMED - the closed form in docs/math-foundations.md is correct."
+    },
+    "step_2_constant_vs_closed_form_with_the_wiki_C": {
+      "wiki_C": 5,
+      "old_constant_model": "0.8 * C = 4.000 stacks -> 4 * 6% = 24.00% armor reduction",
+      "new_closed_form": "5 - 10/h stacks -> 6% * (5 - 10/h) armor reduction",
+      "crossover": "5 - 10/h = 4  <=>  h = 10 exactly, which reproduces the doc's own statement 'the constant model equals the exact mean at ~10 autos'. This independently confirms C = 5 is the max-stack count the doc and the wiki text agree on.",
+      "sign": "For h > 10 hits the exact mean EXCEEDS 4.0 stacks, so armor reduction rises and post-mitigation damage RISES. The observed change is an increase (+84.0, +2.604%), i.e. the correct sign for a long coupled roster fight."
+    },
+    "step_3_magnitude_band": {
+      "observed_ratio_point": 1.0260376,
+      "observed_ratio_bounds_after_0.1_rounding": [1.0260062, 1.0260690],
+      "method": "m(R)=100/(100+R); R = A*(1 - 0.06*s) for target armor A and average Carve stacks s. Solve m(R_new)/m(R_old) = observed ratio for s_new, then invert s = C - C(C-1)/(2h) for h.",
+      "table": [
+        {"target_armor": 80,  "R_old": 60.8,  "R_new": 56.72,  "new_reduction_pct": 29.10, "implied_avg_stacks": 4.850, "implied_hits_h": 66.7},
+        {"target_armor": 100, "R_old": 76.0,  "R_new": 71.53,  "new_reduction_pct": 28.47, "implied_avg_stacks": 4.744, "implied_hits_h": 39.1},
+        {"target_armor": 104, "R_old": 79.0,  "R_new": 74.50,  "new_reduction_pct": 28.37, "implied_avg_stacks": 4.728, "implied_hits_h": 36.8},
+        {"target_armor": 120, "R_old": 91.2,  "R_new": 86.35,  "new_reduction_pct": 28.04, "implied_avg_stacks": 4.674, "implied_hits_h": 30.7},
+        {"target_armor": 150, "R_old": 114.0, "R_new": 108.57, "new_reduction_pct": 27.62, "implied_avg_stacks": 4.603, "implied_hits_h": 25.2},
+        {"target_armor": 200, "R_old": 152.0, "R_new": 145.61, "new_reduction_pct": 27.20, "implied_avg_stacks": 4.533, "implied_hits_h": 21.4}
+      ],
+      "reading": "Across the whole plausible level-18 armor range the change implies 4.53-4.85 average Carve stacks, i.e. 21-67 physical hits on the first defender. Every implied value sits strictly inside the legal range (<= 5 stacks, <= 30% reduction) and corresponds to a sustained multi-hit coupled fight. No armor value in range forces an illegal (>5 stack / >30%) reduction, so the new number cannot be an overshoot past the item's own cap."
+    },
+    "step_4_alternative_mechanism_tested_and_partially_excluded": {
+      "hypothesis": "The change is instead a Bloodsong 'Expose Weakness' branch correction, 5% (ranged) -> 8% (melee).",
+      "test": "If the amp applied to the whole leaf total, the ratio would be exactly 1.08/1.05 = 1.0285714, giving 3318.3.",
+      "result": "EXCLUDED - 1.0285714 lies outside the rounding-implied ratio band [1.0260062, 1.0260690]. Only a partial-coverage variant (amped fraction f = 0.907 of the total, i.e. a ~9% unamped prefix before the first Spellblade-empowered auto) would fit, which is possible but less parsimonious than the Cesaro replacement that docs/math-foundations.md explicitly queues as the pending fix.",
+      "note_either_way": "Both candidate mechanisms move the number UP toward the wiki-sourced value (6%/stack x 5 stacks = 30% cap; 8% melee Expose Weakness). Nothing in data/items.json or docs/math-foundations.md supports the lower old value as the source-correct one."
+    },
+    "step_5_residual_caveat": {
+      "statement": "Even the exact Cesaro-mean model is still an averaging approximation: m(R) is convex in R (Section 2.1/2.3), so replacing the per-hit ramp by its mean UNDERSTATES the true per-hit sum by Jensen. The truly exact per-swing evaluation would be slightly HIGHER than 3310.1, never lower. This makes 3226.1 strictly further from truth than 3310.1 under either model, and rules out 'old_value_correct'. It also means the residual error of 3310.1 is second-order in the ramp spread and inherent to the documented average-stack family, not a defect of this leaf."
+    }
+  },
+
+  "conclusion": "The old value 3226.1 encodes the 0.8*max_stacks tuning constant (4.00 stacks / 24% armor reduction), which docs/math-foundations.md itself labels 'a documented tuning constant, not a theorem' and which is exact only at h ~ 10 hits. The new value 3310.1 is consistent - in sign, and in magnitude for every plausible target armor - with the doc's own recommended replacement, the closed-form Cesaro mean C - C(C-1)/(2h) evaluated with the wiki's C = 5 stacks at 6% each, on a coupled roster fight of 21-67 physical hits. The competing 'universal 8%/5% Expose Weakness' explanation is arithmetically excluded. Convexity of m(R) further guarantees the true value is above, not below, the averaged one. Verdict: new_value_correct.",
+
+  "not_committed": true
+}

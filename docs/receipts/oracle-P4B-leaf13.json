@@ -1,0 +1,102 @@
+{
+  "receipt_id": "oracle-P4B-leaf13",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[7]",
+  "old_value": {
+    "factor": 1.2,
+    "fraction": 0.3,
+    "source": "Black Cleaver — Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "verdict": "old_value_correct",
+
+  "independent_computation": {
+    "step_1_stack_value": {
+      "claim": "Carve at full stacks reduces the target's armor by 30%.",
+      "work": "Cached wiki text for item 3071 passive 'Carve': 6% armor reduction per stack, stacking up to 5 times. 5 x 0.06 = 0.30.",
+      "result": "fraction = 0.3  (matches the old leaf exactly)"
+    },
+    "step_2_who_it_applies_to": {
+      "claim": "Carve is a reduction of the TARGET's armor stat, so every attacker hitting that target sees the reduced armor — including an ally support who does not own the item.",
+      "work": [
+        "data/items.json[3071].simpleDescription: 'Dealing physical damage to enemy champions reduces their Armor' — the effect writes the target's Armor stat, it is not an attacker-side penetration.",
+        "docs/math-foundations.md §2.2/§2.3 keeps the two halves separate on exactly this basis: penetration is attacker-side and floors at 0, while 'Only armor/magic *reduction* effects can push resistance negative' — i.e. reduction mutates the target's resistance value itself.",
+        "The roster's support carries Bloodsong, whose Spellblade proc deals '100% base AD bonus physical damage' (data/items.json[3877]) — physical damage, so the target's armor is on the support's damage path and a 30% armor reduction is load-bearing for the support's numbers."
+      ],
+      "result": "An armor_reduction_percent entry sourced to the ally's Black Cleaver legitimately belongs in the support's resistance-reduction view of the shared target."
+    },
+    "step_3_factor_cross_check": {
+      "claim": "The old leaf's `factor` is exactly the damage amplification implied by its own `fraction` under the engine's documented resistance identity — the two fields are mutually consistent, which an artifact/garbage entry would not be.",
+      "work": [
+        "m(R) = 100/(100+R)  (docs/math-foundations.md §2.1).",
+        "amplification = m(R_after)/m(R_before) = (100+R)/(100 + R(1-f)) with f = 0.3.",
+        "Setting that equal to 1.2:  100+R = 1.2(100+0.7R) = 120+0.84R  ⇒  0.16R = 20  ⇒  R = 125.0 exactly.",
+        "Sanity of the fit: amp(100)=1.17647, amp(110)=1.18644, amp(125)=1.20000, amp(150)=1.21951 — 1.2 is hit only at R = 125, a round scenario-grade armor value; 125 → 87.5 armor after the 30% shred."
+      ],
+      "result": "factor = 1.2 is the exact, self-consistent consequence of fraction = 0.3 against 125 armor."
+    },
+    "step_4_timing": {
+      "claim": "5 stacks being up at event index 46 is consistent with the source text.",
+      "work": "Carve stacks last 6 seconds and refresh on every instance of physical damage to that champion; math-foundations §2.3(2) notes the stack duration '(6 s) is always longer than the engine's inter-swing interval for any realistic AS·u > 1/6, so expiry does not rescue the constant'. 46 events into a Black-Cleaver-holder's fight, the cap is held.",
+      "result": "Full-stack (0.3) is the expected steady-state value at this point in the timeline."
+    },
+    "conclusion": "Every field of the old leaf reproduces from cached source text plus the documented resistance identity: 5 x 6% = 30% armor reduction, target-side, therefore visible to the ally support, amplifying that support's physical damage by exactly 1.2x against 125 armor. Deleting the leaf removes a real, sourced game effect from the support's view and (if the factor is load-bearing) understates the support's physical damage by a factor of 1.2."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "id 3071 — Black Cleaver, passives[0] 'Carve' (unique: true), branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3071 — simpleDescription",
+      "quote": "Dealing physical damage to enemy champions reduces their Armor"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3877 — Bloodsong, passives 'Spellblade'",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§2.1 The 100/(100+R) identity",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§2.2 Penetration and reduction order",
+      "quote": "Only armor/magic *reduction* effects can push resistance negative; penetration floors at 0 (Section 2.2)."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§2.3(2) Black Cleaver average stacks",
+      "quote": "The stack *duration* (6 s) is always longer than the engine's inter-swing interval for any realistic AS·u > 1/6, so expiry does not rescue the constant — this is a documented tuning constant, not a theorem."
+    }
+  ],
+
+  "considered_and_rejected": [
+    {
+      "hypothesis": "Percentage armor reduction was correctly suppressed because the target's armor had already gone negative (docs/math-foundations.md §2.3(3): 'percentage armor reduction cannot' reduce armor below 0).",
+      "rejected_because": "The leaf's own factor is 1.2 > 1 against R = 125 > 0 — the armor at that step is solidly positive, so the negative-armor guard cannot be what fires here."
+    },
+    {
+      "hypothesis": "The support deals magic damage, so an armor entry is irrelevant.",
+      "rejected_because": "The roster's support item is Bloodsong, whose Spellblade proc is explicitly '''bonus''' physical damage; armor is on the support's damage path."
+    },
+    {
+      "hypothesis": "The support does not own Black Cleaver, so attributing Carve to the support is a mis-attribution.",
+      "rejected_because": "Carve reduces the TARGET's Armor stat ('reduces their Armor'), not the holder's penetration. A reduced target armor stat is a single shared number seen by every attacker on that target; excluding ally-sourced reduction from an ally's view would be the error, not the fix."
+    }
+  ],
+
+  "residual_uncertainty": {
+    "scope_of_this_oracle": "Per runbook, only data/ and docs/math-foundations.md were read. src/, tests/, scripts/golden_baseline.json, the diff, the plan and git history were NOT read, so the sibling entries support_resistance_reduction[0..6] are unknown to me.",
+    "the_one_scenario_that_would_flip_this": "If one of entries [0..6] is itself an identical 'Black Cleaver — Carve' armor_reduction_percent entry, then removing [7] is a correct de-duplication: data/items.json marks Carve \"unique\": true, and a unique target debuff does not stack with a second copy of itself (0.7 x 0.7 = 0.49 armor would be a double-shred bug). Absent visibility of the siblings I cannot confirm or exclude that, and I flag it as the sole path by which 'absent' could be right.",
+    "confidence": "moderate-high on the value itself (0.3 / 1.2 are exactly reproducible from source), moderate on the presence/absence question."
+  }
+}

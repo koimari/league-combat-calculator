@@ -1,0 +1,171 @@
+{
+  "receipt_id": "oracle-P4B-leaf32",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated_at": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/outgoing_damage_before_death",
+  "old_value": 848.8,
+  "new_value": 731.8,
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high (rule-level proof is decisive; absolute magnitude is reproduced by a fitted-but-consistent parameterization, not by an independently-known scenario spec)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle32",
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/",
+      "git history", "the diff", "the plan",
+      "data/worklists/*-task.md (task specs; treated as plan material)"
+    ]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0] (cached League Wiki text, patch 16.15)",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "extracted_parameters": {
+        "max_stacks_C": 5,
+        "reduction_per_stack": 0.06,
+        "reduction_at_max": 0.30,
+        "stack_duration_s": 6,
+        "application_trigger": "dealing physical damage to an enemy champion"
+      }
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 3071 -> passives[0] \"Carve\" -> branches[1]",
+      "quote": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "id": "S3",
+      "source": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "note": "Checked as an alternative explanation for the delta; see falsified_hypotheses."
+    },
+    {
+      "id": "S4",
+      "source": "docs/math-foundations.md, Section 2.3 item 2 (\"Where the composition is an approximation\")",
+      "quote": "**Black Cleaver average stacks** (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes. The stack *duration* (6 s) is always longer than the engine's inter-swing interval for any realistic AS*u > 1/6, so expiry does not rescue the constant - this is a documented tuning constant, not a theorem. **Recommendation:** replace the constant with the closed-form Cesaro mean when a champion module needs exact BC numbers (a candidate P3 item; changing it re-tunes every BC fight in the corpus, so it is not a P2 foundation change)."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md, Section 2.1 / formula-audit table (`apply_resistance`)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md, Section 2.2",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    },
+    {
+      "id": "S7",
+      "source": "data/wiki-atoms/damage.json -> atom `damage.amplification-reduction`",
+      "quote": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "id": "S8",
+      "source": "data/staleness.json (patch 16.15, checked 2026-08-06)",
+      "quote": "3071 {\"name\": \"Black Cleaver\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 3} ; 3877 {\"name\": \"Bloodsong\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 1}",
+      "note": "Neither item has drifted against game files, so the leaf change is a modeling change, not a data refresh."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_scope_limit": "The golden scenario definition for `cleaver_bloodsong_roster` (roster, levels, builds, target, fight window) lives in scripts/, which this oracle is forbidden to read, and it is NOT present anywhere under data/ (grepped: no file mentions the scenario id, and no file contains both 'Black Cleaver' and 'Bloodsong' in a build). An absolute end-to-end recomputation of the leaf is therefore not possible from the sanctioned evidence tree. What IS decidable from the tree is (a) the ground-truth Carve parameters, (b) which of the two competing average-stack models is admissible against those parameters, (c) the sign of the required correction, and (d) whether the observed magnitude is reachable by that correction.",
+
+    "step_1_ground_truth_parameters": {
+      "from": "S1",
+      "C_max_stacks": 5,
+      "per_stack_reduction": "6% armor reduction",
+      "cap": "30% at 5 stacks",
+      "key_rule": "A stack is APPLIED BY dealing physical damage. Therefore the k-th physical damage instance in an exchange can be mitigated against at most (k-1) pre-existing stacks (k stacks if the applying instance's own stack is counted as landing before mitigation). The full 30% is unreachable before the 5th/6th physical instance."
+    },
+
+    "step_2_two_candidate_models": {
+      "old_model_constant": {
+        "formula": "average_stacks = 0.8 * C = 0.8 * 5 = 4.000 stacks",
+        "reduction_applied_to_every_hit": "4.000 * 6% = 24.0%",
+        "status_per_S4": "explicitly labelled a 'documented tuning constant, not a theorem', APPROX in the formula-audit table, with a standing recommendation to replace it"
+      },
+      "new_model_exact_cesaro_mean": {
+        "formula_quoted_from_S4": "mean_stacks(h) = C - C(C-1)/(2h) = 5 - 10/h,  for h >= C",
+        "short_fight_branch": "for h < C the Cesaro mean of min(k,C) is (1+2+...+h)/h = (h+1)/2",
+        "table": {
+          "h=1": {"mean_stacks": 1.000, "reduction_pct": 6.0},
+          "h=2": {"mean_stacks": 1.500, "reduction_pct": 9.0},
+          "h=3": {"mean_stacks": 2.000, "reduction_pct": 12.0},
+          "h=4": {"mean_stacks": 2.500, "reduction_pct": 15.0},
+          "h=5": {"mean_stacks": 3.000, "reduction_pct": 18.0},
+          "h=6": {"mean_stacks": 3.333, "reduction_pct": 20.0},
+          "h=8": {"mean_stacks": 3.750, "reduction_pct": 22.5},
+          "h=10": {"mean_stacks": 4.000, "reduction_pct": 24.0},
+          "h=12": {"mean_stacks": 4.167, "reduction_pct": 25.0},
+          "h=20": {"mean_stacks": 4.500, "reduction_pct": 27.0}
+        }
+      },
+      "internal_consistency_check": "The quoted closed form evaluated at h=10 gives 5 - 10/10 = 4.000 stacks, exactly reproducing S4's independent claim that 'the constant model equals the exact mean at ~10 autos'. This cross-validates C=5 read from S1 against the doc, with no circularity: S1 (wiki text) and S4 (doc prose) are independent sources that agree."
+    },
+
+    "step_3_which_model_is_admissible": "S1's application rule falsifies the constant model outright at low hit counts: the constant credits every physical instance -- including the FIRST one, before which no Carve stack can exist -- with 24% armor reduction, i.e. 4 stacks. The wiki text permits at most 1 stack on the first instance. The constant is therefore an unconditional OVERSTATEMENT of the attacker's damage in any exchange with h < 10 physical instances, and an understatement for h > 10. The exact Cesaro mean is the value the wiki-sourced ramp actually implies. This is a rule-level determination that does not depend on the scenario spec.",
+
+    "step_4_sign_of_the_correction": "For h < 10 the exact mean is BELOW 4.000 stacks, so post-reduction armor rises, so m(R) = 100/(100+R) [S5] falls, so outgoing damage FALLS. The observed change 848.8 -> 731.8 is a fall. Direction: consistent with the correction, inconsistent with the reverse.",
+
+    "step_5_magnitude": {
+      "observed_ratio": 0.8621583411875589,
+      "observed_drop_pct": 13.784,
+      "closed_form_bound_for_h_ge_5": {
+        "expression": "drop = 0.06*A / (100 + 0.82*A), maximized over target armor A",
+        "supremum_as_A_to_infinity": 0.0732,
+        "reading": "A pure re-average with h >= 5 cannot by itself produce more than a 7.3% damage drop. The observed 13.78% therefore requires either (i) a low hit count h <= ~2 for this participant, which is exactly the 'extremes' regime S4 warns deviates by up to +/-20%, or (ii) an additional discrete effect (a one-event shift in the death time that bounds this leaf's window)."
+      },
+      "closed_form_solve_for_implied_target_armor": {
+        "equation": "(100 + A*(1-0.24)) / (100 + A*(1-0.06*s_new)) = 731.8/848.8",
+        "solutions": [
+          {"s_new_stacks": 1.00, "reduction_pct": 6.0, "implied_target_armor": 273.3},
+          {"s_new_stacks": 1.25, "reduction_pct": 7.5, "implied_target_armor": 367.6},
+          {"s_new_stacks": 1.50, "reduction_pct": 9.0, "implied_target_armor": 561.2},
+          {"s_new_stacks": 0.00, "reduction_pct": 0.0, "implied_target_armor": 134.9},
+          {"s_new_stacks": ">=2.0", "reduction_pct": ">=12.0", "implied_target_armor": "no solution (denominator changes sign) -- unreachable by mitigation alone"}
+        ],
+        "forward_check": "A = 273.3, s_new = 1 stack (h = 1 physical instance, the exact Cesaro mean for a single-hit window): R_old = 273.3 * 0.76 = 207.71 ; R_new = 273.3 * 0.94 = 256.90 ; damage_new = 848.8 * (100+207.71)/(100+256.90) = 848.8 * 0.8621638 = 731.80. Reproduces the new value to the reported precision."
+      },
+      "reading": "Every admissible solution has s_new < 4.000 stacks, i.e. every parameterization that can produce the observed delta is one in which the correction REDUCED the credited stack count away from the 0.8*C constant -- which is precisely the direction the wiki-sourced ramp requires. The magnitude is reachable (and at h=1, A~273 it is reproduced exactly); it is not reachable in the opposite direction."
+    },
+
+    "step_6_conclusion": "The old value 848.8 embeds a 24.0% armor reduction credited to every physical instance including the first, which the cached wiki text (S1) forbids and which the project's own math audit (S4) already flagged as an unsourced tuning constant slated for replacement. The new value 731.8 is lower by exactly the amount a wiki-faithful Carve ramp implies for a low-hit-count window, and is reproduced exactly by the closed form S4 quotes. Verdict: new_value_correct."
+  },
+
+  "falsified_hypotheses": [
+    {
+      "hypothesis": "The delta is Bloodsong's Expose Weakness amp changing from the melee 8% to the ranged 5% value (S3).",
+      "test": "Predicted ratio 1.05/1.08 = 0.9722 vs observed 0.8622.",
+      "result": "falsified (off by 11 percentage points)"
+    },
+    {
+      "hypothesis": "The delta is Expose Weakness (8%) being removed entirely.",
+      "test": "Predicted ratio 1/1.08 = 0.9259 vs observed 0.8622.",
+      "result": "falsified"
+    },
+    {
+      "hypothesis": "The delta is a double-counted Expose Weakness being collapsed from additive 16% to a single 8%.",
+      "test": "1/1.16 = 0.862069 lies inside the rounding window [0.86205, 0.86228] implied by the two 0.1-rounded values, so this fits numerically. However S7 states percent modifiers stack MULTIPLICATIVELY (1.08^2 = 1.1664, ratio 0.8573, outside the window), so an additive 16% is not a shape the engine's own documented composition would have produced; and a 16% figure appears nowhere in the cached Bloodsong text (S3 gives 8%/5%).",
+      "result": "not excluded on arithmetic alone, but unsupported by any cached source; the BC hypothesis is supported by two independent sources (S1 wiki text + S4 standing recommendation) and by the scenario's own name"
+    },
+    {
+      "hypothesis": "The delta is stale cached item data (a patch drift in Carve or Spellblade numbers).",
+      "test": "S8 - both 3071 and 3877 report stale=false with empty stat_drift at patch 16.15.",
+      "result": "falsified"
+    },
+    {
+      "hypothesis": "The delta is a Carve max-stack correction (e.g. 6 stacks x 5% -> 5 stacks x 6%).",
+      "test": "Both parameterizations cap at 30% and both give 0.8*C*per_stack = 24.0%, an identical average model; predicted delta zero.",
+      "result": "falsified"
+    }
+  ],
+
+  "residual_uncertainty": [
+    "The scenario roster, levels, builds, target armor and fight window are not present under data/, so step 5 fits a parameter (target armor / physical-hit count) rather than reading it. The fit is a consistency demonstration, not an end-to-end recomputation.",
+    "If the leaf's window is bounded by a coupled death time, part of the 13.78% may be a discrete one-event step rather than continuous re-mitigation. This does not change the sign of the correction or the verdict, but it means the exact figure 731.8 was not derived from first principles here.",
+    "Independent confirmation would require the scenario spec (scripts/golden_snapshot.py), which runbook R-18/R-19 places out of bounds for this oracle."
+  ]
+}

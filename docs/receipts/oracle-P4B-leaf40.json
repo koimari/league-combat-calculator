@@ -1,0 +1,105 @@
+{
+  "receipt_id": "oracle-P4B-leaf40",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle40",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "ref": "data/items.json -> id 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "use": "The only damage-amplifier mechanic carried by either item named in the scenario. Melee value 8%, ranged value 5%."
+    },
+    {
+      "ref": "data/items.json -- {{rd|melee|ranged}} convention, established from sibling entries",
+      "quote": "Tiamat / Ravenous Hydra \"Cleave\": {{rd|40% AD|20% AD}} ; Blade of the Ruined King \"Mist's Edge\": {{rd|9%|6%}} of the target's current health ; Phage \"Rage\": {{rd|20|10}} bonus movement speed",
+      "use": "All three are known melee/ranged splits with the melee figure first, so {{rd|8%|5%}} reads 8% melee / 5% ranged. 62 {{rd|..}} occurrences scanned; the first slot is uniformly the larger melee value."
+    },
+    {
+      "ref": "data/items.json -> id 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "use": "Bounds the competing hypothesis: the maximum Carve armor reduction is 30%."
+    },
+    {
+      "ref": "docs/math-foundations.md Sec 2.1",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... m(R) = 2 - 100/(100 - R) for R < 0",
+      "use": "Mitigation multiplier used to bound what an armor-side change can do to a damage number."
+    },
+    {
+      "ref": "docs/math-foundations.md Sec 2.3 item 2",
+      "quote": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C",
+      "use": "Defines the two candidate Black Cleaver stack models (4 stacks = 24% vs at most 5 stacks = 30%) that were tested and refuted."
+    },
+    {
+      "ref": "docs/math-foundations.md Sec 2.3 item 3",
+      "quote": "Negative-armor percentage reduction (reduce_resistance): the engine applies percentage reduction only while R > 0.",
+      "use": "Third candidate mechanism, tested and refuted."
+    }
+  ],
+
+  "independent_computation": {
+    "observed_ratio": 1.0807651434643997,
+    "rounding_consistent_ratio_band": {
+      "note": "Both leaves are reported to 1 decimal, so the true ratio lies in [101.65/94.15, 101.75/94.05].",
+      "low": 1.079660116834838,
+      "high": 1.0818713450292399
+    },
+    "hypotheses_tested": [
+      {
+        "mechanism": "Bloodsong 'Expose Weakness' 8% increased damage from all sources (melee value), applied to this event",
+        "ratio": 1.08,
+        "in_band": true,
+        "status": "ACCEPTED - unique in-band mechanism among the scenario's named items"
+      },
+      {
+        "mechanism": "Bloodsong 'Expose Weakness' at the ranged value (5%)",
+        "ratio": 1.05,
+        "in_band": false,
+        "status": "rejected"
+      },
+      {
+        "mechanism": "Expose Weakness melee/ranged branch corrected, 5% -> 8%",
+        "ratio": 1.0285714285714287,
+        "in_band": false,
+        "status": "rejected"
+      },
+      {
+        "mechanism": "Black Cleaver stack model: 0.8*5 = 4 stacks (24% armor reduction) -> full 5 stacks (30%)",
+        "formula": "ratio(R) = (100 + 0.76*R) / (100 + 0.70*R), monotone increasing in R",
+        "samples": {"R=80": 1.03077, "R=100": 1.03529, "R=150": 1.0439, "R=200": 1.05, "R=300": 1.05806, "sup R->inf": 1.0857142857142859},
+        "in_band": false,
+        "status": "rejected - reaching 1.0797 would need armor above ~1500; realistic champion armor (80-200) gives only 1.031-1.050. The Cesaro mean C - C(C-1)/(2h) = 5 - 10/h is itself < 5, so it cannot even reach the 30% bound."
+      },
+      {
+        "mechanism": "Negative-armor percentage-reduction guard (stop multiplying an already-negative armor)",
+        "formula": "ratio(A) = (2 - 100/(100+A)) / (2 - 100/(100+0.7*A)) for armor -A",
+        "max_over_A_in_0_1000": 1.06294,
+        "in_band": false,
+        "status": "rejected - the mechanism's global maximum is below the band"
+      }
+    ],
+    "forward_check": {
+      "statement": "new = old_unrounded * 1.08 must round to 101.7 while old_unrounded rounds to 94.1",
+      "admissible_old_interval": [94.1204, 94.15],
+      "worked_example": "94.14 * 1.08 = 101.6712 -> 101.7 (and 94.14 -> 94.1)",
+      "consistent": true
+    },
+    "conclusion": "The leaf moved by exactly one multiplicative 8% damage amplifier. 8% is the melee value of Bloodsong's 'Expose Weakness' debuff ('take 8%/5% increased damage from all sources' for 4 s), which is precisely the coupled cross-participant effect the scenario name advertises: the Bloodsong holder's Spellblade proc amplifies a roster ally's damage instance. The engine now applies it; previously it did not. No armor-side mechanism available to Black Cleaver (the other named item) can produce a +8.08% swing at any realistic resistance, and neither the ranged 5% branch nor a 5%->8% branch correction fits the rounding band."
+  },
+
+  "caveats": [
+    "The scenario definition (roster, levels, items, timeline) lives outside data/ and was therefore off-limits under R-18/R-19, so this receipt independently verifies the MULTIPLIER and its wiki source, not the absolute pre-amplifier damage of event[59]. The pre-amp base of ~94.14 is taken as given from the old baseline.",
+    "8% is the melee branch of {{rd|8%|5%}}. The verdict assumes the Bloodsong holder in this roster is a melee champion. If the holder were ranged, the sourced value would be 5% and the correct leaf would be ~98.8, not 101.7. Nothing readable under data/ names the roster, so this is the one unverified premise.",
+    "An 8% 'increased damage against champions' amplifier also exists on the Press the Attack keystone (data/runes.json), so 8% is corroborated as a real amp magnitude in the cached data even though Bloodsong is the source implicated by the scenario name."
+  ]
+}

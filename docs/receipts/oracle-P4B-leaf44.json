@@ -1,0 +1,120 @@
+{
+  "receipt": "oracle-P4B-leaf44",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/pair_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle44",
+    "not_consulted": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "items['3877'] (Bloodsong) -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "{{rd|melee|ranged}} template convention, cross-checked on entries with independently known values",
+      "quote": "Ravenous Hydra / Tiamat 'Cleave': {{rd|40% AD|20% AD}}; Titanic Hydra 'Cleave': {{rd|1%|{{fd|0.5}}%}} maximum health; Blade of the Ruined King 'Mist's Edge': {{rd|9%|6%}} of the target's current health",
+      "conclusion": "first argument = melee holder, second = ranged holder. Therefore Expose Weakness = 8% (melee Bloodsong holder) / 5% (ranged)."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "items['3071'] (Black Cleaver) -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S4",
+      "file": "data/wiki-atoms/damage.json",
+      "locator": "atom 'damage.modifier'",
+      "quote": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1 / audit table row 'Resistance mitigation'",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.2",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)  [flat reduction -> % reduction -> % penetration -> flat penetration]"
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes."
+    },
+    {
+      "id": "S8",
+      "file": "data/item-atoms/3071.json, data/item-atoms/3877.json",
+      "locator": "atom lists",
+      "quote": "Black Cleaver: stack-transform-summon-resource.stack 'Carve' + damage.resistance-mitigation 'Carve' (relations: damage.damage-instance, damage.armor-penetration). Bloodsong is item id 3877, a Spellblade support-quest upgrade (200 health, 9 gold/10, no combat stats beyond the proc)."
+    }
+  ],
+
+  "independent_computation": {
+    "note": "The golden scenario's own configuration (champions, levels, builds, event ledger) lives in scripts/, which this runbook forbids reading. The computation is therefore done on the leaf's implied multiplicative delta, which is identifiable without the scenario config: a single damage event's value can only move by a resistance change or a damage-modifier change, and both families have closed forms quoted above (S4-S6).",
+    "step_1_implied_ratio": {
+      "point_estimate": "101.7 / 94.1 = 1.0807651",
+      "rounding_band_at_0.1_display_precision": "[101.65/94.15, 101.75/94.05] = [1.0796601, 1.0818713]",
+      "reading": "the event's damage was multiplied by a factor in [1.07966, 1.08187]"
+    },
+    "step_2_candidate_A_expose_weakness": {
+      "hypothesis": "the event, dealt by a roster member other than / in addition to the Bloodsong holder, now receives Expose Weakness's 'increased damage from all sources' amplifier (S1), applied multiplicatively on the damage instance (S4).",
+      "sourced_factor_melee": 1.08,
+      "sourced_factor_ranged": 1.05,
+      "test": "1.08 lies inside the implied band [1.07966, 1.08187]; 1.05 lies far outside.",
+      "rounding_consistency": "if the unrounded old value u in [94.1204, 94.15) then 1.08*u in [101.650, 101.682) -> displays 101.7, while u displays 94.1. Self-consistent; no other sourced constant in the two named items lands inside the band.",
+      "verdict": "MATCHES"
+    },
+    "step_3_candidate_B_black_cleaver": {
+      "hypothesis": "the delta comes from Black Cleaver armor reduction instead (S3), i.e. R_old -> R_new with damage ratio (100+R_old)/(100+R_new) per S5.",
+      "algebra": "let S = pen-adjusted armor before % reduction = (A - r_flat)*(1 - p), f = flat pen, x = Carve reduction fraction, so R = S*(1-x) - f (S6). Requiring (100+R_old)/(100+R_new) = 1.08077 gives R_old - R_new = k*(100+R_old) with k = (r-1)/r = 0.0747296.",
+      "sub_case_documented_cesaro_upgrade": {
+        "change": "average stacks 0.8*5 = 4 (x_old = 24%) -> at most 5 stacks (x_new <= 30%), i.e. delta_x <= 0.06 (S7)",
+        "solve": "0.06*S = k*(100 + 0.76*S - f)  =>  S = 2331 (f=0), 2098 (f=10), 1865 (f=20), 1632 (f=30)",
+        "conclusion": "requires >1600 armor. IMPOSSIBLE - the documented BC stack-model refinement cannot produce an 8% jump on any real target."
+      },
+      "sub_case_cleaver_off_to_full": {
+        "change": "no Carve reduction (x_old = 0) -> full 5 stacks (x_new = 30%)",
+        "solve": "0.30*S = k*(100 + S - f)  =>  S = 33.2 (f=0), 29.9 (f=10), 26.5 (f=20), 23.2 (f=30)",
+        "conclusion": "would require the target's pen-adjusted armor to be ~23-33, i.e. a level-1-grade squishy. Possible only in a narrow, implausible window (+/-1 armor), and it would additionally require Carve to have been entirely absent from the old ledger of a scenario named 'cleaver_...'. REJECTED as the explanation."
+      },
+      "sub_case_single_stack_steps": {
+        "solve": "one extra 6% step: (100+S-f) = 1.08077*(100+0.94*S-f) has no non-negative solution; two extra steps need S ~ 161 with zero pen and exactly 12% reduction added - not reachable from the 4-stack constant model (max +1 stack, S7).",
+        "conclusion": "REJECTED"
+      },
+      "verdict": "DOES NOT MATCH"
+    },
+    "step_4_candidate_C_spellblade_row": {
+      "hypothesis": "the delta is Bloodsong's Spellblade on-hit (100% base AD, S1) newly added to this event.",
+      "test": "delta = 101.7 - 94.1 = 7.6 post-mitigation; against any realistic armor (60-160) that implies raw 12-20, versus a base AD of 50-70 for any champion in data/champions.json. Wrong order of magnitude, and a Spellblade row would be its own event, not a multiplicative rescale of a pair event.",
+      "verdict": "REJECTED"
+    },
+    "step_5_conclusion": {
+      "identified_mechanic": "Bloodsong 'Expose Weakness': target takes 8% increased damage from ALL SOURCES for 4 s (melee holder).",
+      "correct_value": "94.1 (unrounded ~94.12-94.15) x 1.08 = 101.65-101.68 -> 101.7",
+      "why_old_is_wrong": "the old leaf carried the un-amplified damage, i.e. the roster-wide 'from all sources' clause of S1 was not being applied to this pair's damage event; the wiki text is explicit that the debuff sits on the TARGET and amplifies every source, not only the Bloodsong holder's own damage.",
+      "why_new_is_right": "the new leaf equals the old one times exactly the wiki-sourced 8% amplifier, applied multiplicatively as S4 requires; the factor is inside the 0.1-display rounding band and no competing sourced constant is."
+    }
+  },
+
+  "residual_assumptions_and_falsifiers": [
+    "The 8% branch of {{rd|8%|5%}} is the MELEE holder's value (S2). If the scenario's Bloodsong carrier is a ranged champion, the sourced amplifier is 5% and the correct leaf would be ~98.8 - in that case BOTH values would be wrong. This is the single unverifiable input, because the scenario roster is defined in scripts/ (out of bounds for this runbook). Bloodsong is the Spellblade (100% base AD) branch of the support-quest line, which is the melee/AD-support pick, so the melee branch is the strongly favoured reading.",
+    "Assumes event[62] falls inside a live 4 s Expose Weakness window and after the 1.5 s proc cooldown; timestamps are not visible from data/. The observed factor being exactly the amplifier is itself the evidence that the engine placed it inside the window.",
+    "Assumes the golden leaf is displayed at 0.1 precision (both values carry one decimal). All band arithmetic above uses that assumption."
+  ]
+}

@@ -1,20 +1,31 @@
-"""The Phase 4 boundary re-capture is owed 60 oracle receipts, and says so.
+"""The Phase 4 boundary's 60 verdicts are in, and 13 of them say do not pin it.
 
 R-19 forbids re-capturing a baseline while any qualifying occurrence lacks an
-independent verdict.  On this tip the coupled comparison holds 127 qualifying
-leaves; 64 carry a receipt certifying the value a re-capture would pin, 3 are
-declared ``NOT_OWED_NO_OLD_VALUE`` by a committed allowlist, and 60 are owed.
-23 of those 60 carry a receipt on the same leaf path certifying a *different*
-value, because the S6/S7 oracle pass adjudicated the tree before the rearm
-correction, the H5 stage and S9 moved those leaves again — which is why this
-gate matches receipts by value and never by path alone.
+independent verdict, and it forbids moving one onto a value a verdict says is
+wrong.  The first prohibition is discharged: the investigator pass filed all
+60 receipts, every one certifying by value the reading the live compare holds,
+so ``the_phase_4_boundary_recapture_is_owed_60_oracle_receipts`` retires and
+the assertion that used to say "no owed leaf has a covering receipt" is
+inverted rather than deleted.  The second prohibition is now the live one:
+13 of the 60 verdicts are ``old_value_correct``, so the coupled baseline still
+may not move, and the successor entry
+``thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value`` is what says
+so.
 
-The reproducers are the two properties that must both hold while the entry
-stands: no leaf in the population has a covering receipt, and every leaf's
-recorded ``old_value`` still reproduces against the committed coupled
-baseline.  The second is the assertion that the baseline did not move while
-the receipts were owed; the first inverts the day the investigator pass files
-them, which is how the entry is closed deliberately rather than quietly.
+The reproducers this file carries are therefore three, and all three must hold
+while the successor stands: every owed leaf now carries a receipt certifying
+the current value; the dissent enumeration is exactly the pass's non-
+``new_value_correct`` verdicts, read from the receipts and never from the
+ledger's own prose; and every one of the 60 recorded ``old_value`` readings
+still reproduces against the committed coupled baseline, which is the machine
+statement that no re-capture has happened.
+
+One thing this file reads differently from the scan that produced the retired
+entry's published figures: a receipt's leaf path may sit at the top level or
+nested under a ``leaf`` object, and six committed receipts use the second
+shape.  Reading only the first reported four already-adjudicated leaves as
+owed and one stale receipt as absent, so ``_receipt_leaf`` accepts both and
+the entry carries the corrected figures beside the published ones.
 """
 
 from __future__ import annotations
@@ -35,7 +46,10 @@ RECEIPTS = ROOT / "docs" / "receipts"
 RECEIPT = RECEIPTS / "escalated-defects-P4-boundary.json"
 COUPLED_BASELINE = ROOT / "scripts" / "golden_coupled_baseline.json"
 
-ENTRY_ID = "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts"
+RETIRED_ID = "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts"
+DISSENT_ID = "thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value"
+PASS_PREFIX = "oracle-P4B-"
+
 REQUIRED = ("id", "dated", "raised_by", "what", "reproducer", "for_the_owner")
 REQUIRED_TO_RETIRE = ("retired_on", "resolved_by", "resolution")
 
@@ -48,10 +62,19 @@ def _ledger():
 
 
 def _entry():
-    for entry in _ledger()["defects"]:
-        if entry["id"] == ENTRY_ID:
+    """The retired entry: the receipts this boundary was owed."""
+    for entry in _ledger()["retired"]:
+        if entry["id"] == RETIRED_ID:
             return entry
-    raise AssertionError(f"{ENTRY_ID} is neither open nor retired by name")
+    raise AssertionError(f"{RETIRED_ID} is neither open nor retired by name")
+
+
+def _dissent():
+    """The open entry: the verdicts that keep the re-capture blocked."""
+    for entry in _ledger()["defects"]:
+        if entry["id"] == DISSENT_ID:
+            return entry
+    raise AssertionError(f"{DISSENT_ID} is neither open nor retired by name")
 
 
 def _population():
@@ -87,14 +110,44 @@ def _reportable(value):
     return gs._reportable(value)  # pylint: disable=protected-access
 
 
+def _receipt_leaf(receipt):
+    """One receipt's ``(leaf_path, new_value)``, under either shape it uses.
+
+    Most receipts carry both at the top level; three of this pass's nest them
+    under a ``leaf`` object.  Reading only the flat shape would report three
+    adjudicated leaves as uncovered, which is the failure this whole file
+    exists to make impossible.
+    """
+    if "leaf_path" in receipt:
+        return receipt["leaf_path"], receipt.get("new_value")
+    nested = receipt.get("leaf") or {}
+    return nested.get("path"), nested.get("new_value")
+
+
 def _certified_values(leaf_path):
     """Every ``new_value`` an oracle receipt certifies for one leaf path."""
     values = []
     for path in sorted(RECEIPTS.glob("oracle-*.json")):
-        receipt = json.loads(path.read_text(encoding="utf-8"))
-        if receipt.get("leaf_path") == leaf_path:
-            values.append((path.name, receipt.get("new_value")))
+        certified_path, certified = _receipt_leaf(
+            json.loads(path.read_text(encoding="utf-8"))
+        )
+        if certified_path == leaf_path:
+            values.append((path.name, certified))
     return values
+
+
+def _this_pass():
+    """Every receipt this investigator pass filed, by name."""
+    return sorted(path.name for path in RECEIPTS.glob(f"{PASS_PREFIX}*.json"))
+
+
+def _verdicts():
+    """``{receipt name: verdict}`` over this pass, read from the receipts."""
+    verdicts = {}
+    for name in _this_pass():
+        receipt = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+        verdicts[name] = receipt["verdict"]
+    return verdicts
 
 
 def _same_value(certified, recorded):
@@ -161,9 +214,43 @@ class TestTheLedgerIsWellFormed:
             if leaf["stale_receipt_on_the_same_path"]
         )
 
+    def test_the_corrected_counts_agree_with_the_rows_they_correct(self):
+        """A count the campaign published about itself gets the same treatment.
 
-class TestTheOwedPopulationIsStillOwed:
-    """The reproducer: 60 leaves, no covering verdict, baseline unmoved."""
+        The published figures were produced by a scan that could not see a
+        receipt nesting its leaf path, so they sit beside re-measured ones
+        rather than being quietly overwritten.  Both must reproduce from the
+        rows.
+        """
+        entry = _entry()
+        coupled = entry["measured"]["coupled_golden"]
+        correction = coupled["correction"]
+        published = correction["figures_as_published"]
+        remeasured = correction["figures_re_measured"]
+        already = sum(
+            1
+            for leaf in entry["owed_population"]
+            if leaf["covering_receipt_that_predated_the_pass"]
+        )
+        assert correction["already_covered_before_the_pass"]["count"] == already
+        assert remeasured["truly_owed"] == published["owed"] - already
+        assert (
+            remeasured["covered_by_a_receipt_certifying_the_current_value"]
+            == published["covered_by_a_receipt_certifying_the_current_value"] + already
+        )
+        assert (
+            remeasured["covered_by_a_receipt_certifying_the_current_value"]
+            + coupled["declared_not_owed_by_a_committed_allowlist"]
+            + remeasured["truly_owed"]
+            == coupled["qualifying_leaves"]
+        )
+        assert remeasured["of_the_owed_carrying_a_stale_receipt_on_the_same_path"] == (
+            coupled["of_the_owed_carrying_a_stale_receipt_on_the_same_path"]
+        )
+
+
+class TestTheOwedPopulationIsAnswered:
+    """The retirement: 60 leaves, one covering verdict each, baseline unmoved."""
 
     def test_every_owed_leaf_qualifies_under_r15(self):
         """A leaf that does not qualify is owed nothing and does not belong."""
@@ -179,27 +266,66 @@ class TestTheOwedPopulationIsStillOwed:
             )
             assert gs.qualifies_for_investigation(diff), leaf["leaf_path"]
 
-    def test_no_owed_leaf_has_a_receipt_certifying_its_new_value(self):
-        """Inverts the day the investigator pass files them (R-18/R-19)."""
-        covered = []
+    def test_every_owed_leaf_now_carries_a_receipt_certifying_its_new_value(self):
+        """The inversion R-18/R-19 asked for: coverage exists, by value."""
+        uncovered = []
         for leaf in _population():
-            for name, certified in _certified_values(leaf["leaf_path"]):
-                if _same_value(certified, leaf["new_value"]):
-                    covered.append((leaf["leaf_path"], name))
-        assert covered == [], (
-            "these leaves now carry a covering oracle receipt: the entry must "
-            f"retire and the baselines re-capture — {covered}"
+            covering = [
+                name
+                for name, certified in _certified_values(leaf["leaf_path"])
+                if _same_value(certified, leaf["new_value"])
+            ]
+            if not covering:
+                uncovered.append(leaf["leaf_path"])
+        assert uncovered == [], (
+            "these owed leaves still have no receipt certifying the value a "
+            f"re-capture would pin — {uncovered}"
         )
 
-    def test_a_stale_receipt_is_recorded_as_stale_and_not_as_coverage(self):
-        """23 leaves have a verdict on the path and none on the value."""
+    def test_the_pass_filed_exactly_one_receipt_per_owed_leaf(self):
+        filed = _this_pass()
+        assert len(filed) == len(_population())
+        paths = set()
+        for name in filed:
+            leaf_path, _ = _receipt_leaf(
+                json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            )
+            paths.add(leaf_path)
+        assert paths == {leaf["leaf_path"] for leaf in _population()}
+
+    def test_a_receipt_that_predates_the_pass_is_stale_or_corroborating(self):
+        """Every prior verdict on an owed path is classified, never ignored.
+
+        A receipt written before the rearm correction, the H5 stage and S9
+        moved these leaves certifies a value the tree no longer holds: the
+        fresh receipt supersedes it, and asserting the two certify *different*
+        values is what stops a supersession reading as a second agreeing
+        opinion.  A prior receipt that does certify the current value is the
+        other case — corroboration, recorded as such rather than counted as a
+        miss.
+        """
         for leaf in _population():
-            names = [name for name, _ in _certified_values(leaf["leaf_path"])]
-            assert names == leaf["stale_receipt_on_the_same_path"], leaf["leaf_path"]
+            prior = [
+                (name, value)
+                for name, value in _certified_values(leaf["leaf_path"])
+                if not name.startswith(PASS_PREFIX)
+            ]
+            stale = [
+                name
+                for name, value in prior
+                if not _same_value(value, leaf["new_value"])
+            ]
+            covering = [
+                name for name, value in prior if _same_value(value, leaf["new_value"])
+            ]
+            assert stale == leaf["stale_receipt_on_the_same_path"], leaf["leaf_path"]
+            assert covering == leaf["covering_receipt_that_predated_the_pass"], leaf[
+                "leaf_path"
+            ]
 
     @pytest.mark.parametrize("index", range(60))
     def test_the_committed_baseline_still_holds_the_old_value(self, index):
-        """R-19's real subject: the baseline did not move while this was owed."""
+        """R-19's real subject: no re-capture has happened, dissents or not."""
         baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         leaf = _population()[index]
         found = _reportable(_resolve(baseline, leaf["leaf_path"]))
@@ -210,6 +336,61 @@ class TestTheOwedPopulationIsStillOwed:
 
     def test_the_population_is_the_size_the_entry_declares(self):
         assert len(_population()) == 60
+
+
+class TestTheThirteenDissentsBlockTheRecapture:
+    """The successor entry: a verdict for the old value is a stop, not a note."""
+
+    def test_the_enumeration_is_exactly_the_passes_dissenting_verdicts(self):
+        """Read from the receipts, so the ledger cannot under-report itself."""
+        measured = sorted(
+            name
+            for name, verdict in _verdicts().items()
+            if verdict != "new_value_correct"
+        )
+        recorded = sorted(row["receipt"] for row in _dissent()["dissenting_population"])
+        assert recorded == measured
+        assert len(measured) == 13
+
+    def test_each_recorded_verdict_is_the_verdict_its_receipt_carries(self):
+        verdicts = _verdicts()
+        for row in _dissent()["dissenting_population"]:
+            assert row["verdict"] == verdicts[row["receipt"]], row["receipt"]
+            assert row["verdict"] in {"old_value_correct", "both_wrong"}
+
+    def test_every_dissenting_leaf_is_a_member_of_the_owed_population(self):
+        owed = {leaf["leaf_path"]: leaf for leaf in _population()}
+        for row in _dissent()["dissenting_population"]:
+            leaf = owed.get(row["leaf_path"])
+            assert leaf is not None, row["leaf_path"]
+            assert row["old_value"] == leaf["old_value"]
+            assert row["new_value"] == leaf["new_value"]
+            assert row["transition"] == leaf["transition"]
+
+    def test_every_dissent_states_a_contradiction_of_one_of_the_two_kinds(self):
+        """A dissent nothing stands against is a finding, not a conflict."""
+        verdicts = _verdicts()
+        entry = _dissent()
+        classes = entry["classes"]
+        rows = {row["receipt"]: row for row in entry["dissenting_population"]}
+        for name, row in rows.items():
+            assert row["class"] in classes, row["class"]
+            assert row["contradicted_by"] or row["mutually_exclusive_with"], name
+            for other in row["contradicted_by"]:
+                assert other in verdicts, other
+                assert verdicts[other] == "new_value_correct", other
+                assert other != name
+            for other in row["mutually_exclusive_with"]:
+                assert other in rows, f"{other} is not a dissent of this pass"
+                assert other != name
+                assert name in rows[other]["mutually_exclusive_with"], (
+                    f"{name} claims mutual exclusion with {other} and {other} "
+                    "does not say the same; the relation is symmetric"
+                )
+
+    def test_the_two_contradiction_kinds_are_documented_by_the_entry(self):
+        stated = _dissent()["how_a_dissent_is_contradicted"]
+        assert set(stated) >= {"contradicted_by", "mutually_exclusive_with"}
 
 
 class TestTheOtherJurisdictionIsClean:

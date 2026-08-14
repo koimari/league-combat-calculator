@@ -1,0 +1,71 @@
+{
+  "receipt": "oracle-P4B-leaf14",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner",
+  "old_value": "main",
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "question": "Should the coupled combat ledger carry a sixth support event owned by the main (attacker-side) participant in a Black Cleaver + Bloodsong roster fight?",
+  "independent_computation": {
+    "step_1_what_a_support_event_is": {
+      "claim": "In this engine a `support_event` is a heal/shield ledger entry (self-targeted or ally-targeted), not a damage/amp/shred entry.",
+      "evidence": [
+        "data/worklists/e8d-task.md: 'ALLY-SUPPORT heals/shields (champion emits a support event targeting allies; the ledger already tracks support_shield_received / support heals from items — reuse the same event shape)'",
+        "data/champion-audit/batch-p1-1.json (Akshan): 'API evidence: one \\'Dirty Fighting (3-Stack Shield)\\' support event at 280.0, support_shield_received 280.0; passive_procs=0 emits none.'",
+        "data/champion-audit/batch-p1-3.json (Lux): 'W Prismatic Barrier shields Lux ... emitted as a self-targeted support shield'"
+      ],
+      "consequence": "An event's `owner` names the participant whose heal/shield it is. A main-owned support event therefore requires the main participant to actually emit a heal or a shield in this fight."
+    },
+    "step_2_items_in_this_scenario_grant_no_heal_or_shield": {
+      "black_cleaver": {
+        "source": "data/items.json id 3071 passives[].branches",
+        "Carve": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.",
+        "Fervor": "Dealing physical damage grants you 20 bonus movement speed for 2 seconds.",
+        "heal_or_shield": false
+      },
+      "bloodsong": {
+        "source": "data/items.json id 3877 passives[].branches / active[].branches / stats",
+        "Spellblade": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8%/5% (melee/ranged) increased damage from all sources (1.5 second cooldown, starts after using the empowered attack).",
+        "Ward": "Consumes a charge to place a Stealth Ward at the target location.",
+        "stats": "200 health, 75% base health regen, 75% base mana regen, 9 gold/10s",
+        "heal_or_shield": false,
+        "note": "Bloodsong is the only one of the five Bounty of Worlds upgrades with no heal/shield/bonus-health payload — Celestial Opposition, Dream Maker and Solstice Sleigh (data/items.json 3876 'Going Sledding': bonus health to you and the most wounded ally) do have one, Zaz'Zak's and Bloodsong do not. So the item side of this scenario cannot author a support event for anyone, main or ally."
+      },
+      "conclusion": "Neither named item can author a heal/shield event for the main participant. Any main-owned support event must come from the main champion's own kit."
+    },
+    "step_3_the_form_champion_that_pairs_with_black_cleaver_has_no_heal_or_shield": {
+      "champion": "Gnar (Black Cleaver is his signature item; the branch under test is form/Mega-shaped, and Gnar is the only Black-Cleaver-core form champion in the roster)",
+      "source": "data/champions.json -> Gnar.abilities",
+      "kit_scan": {
+        "P Rage Gene": "Rage generation + form switch + per-form stat bonuses. No heal, no shield.",
+        "Q Boomerang Throw / Boulder Toss": "physical damage + slow. No heal, no shield.",
+        "W Hyper / Wallop": "3rd-stack bonus magic damage + movement speed / stun. No heal, no shield.",
+        "E Hop / Crunch": "leap, damage, slow, attack speed. No heal, no shield.",
+        "R GNAR!": "knock-away, damage, slow/stun. No heal, no shield."
+      },
+      "mega_transform_health_is_not_a_heal": {
+        "quote_1": "data/champions.json Gnar P notes: 'Mega Gnar's gained health is not affected by healing modifiers such as Grievous Wounds and those from items and runes.'",
+        "quote_2": "data/champions.json Gnar P notes: 'When returning to Mini Gnar, Gnar will only retain his current health percentage, not current health total.'",
+        "quote_3": "data/champions.json Gnar P effects: 'Gnar gains different stat bonuses based on whether he is in Mini or Mega form.'",
+        "reading": "The Mega-form health is a max-health stat delta whose current-health share rides along proportionally (the repo's own taxonomy calls this heal-shield.max-health-increase-restores-current, e.g. data/item-atoms/3877.json). It is explicitly outside healing-modifier space (immune to Grievous Wounds / heal-and-shield power) and reverts by percentage, which is the defining behaviour of a max-health buff and NOT of a heal. Emitting it as a support (heal/shield) event would put it inside the heal ledger, where healing_reduction.py's 0.60 Grievous factor and heal-and-shield power would be free to touch it (docs/math-foundations.md, 'Grievous Wounds ... multiplicative factor 0.60 ... strongest-wins composition') — a modelling error the wiki text forbids. CLAUDE.md corroborates the intended modelling: 'Mega's deltas are base stats, not bonus.'"
+      }
+    },
+    "step_4_result": "There is no cached source under data/ that authorizes a heal or shield owned by the main participant in a Black Cleaver + Bloodsong roster fight: neither item grants one, and the form champion's kit grants none in either form, while the Mega transform's health gain is a stat delta the wiki explicitly excludes from healing. The correct support_events list for this scenario therefore contains only the ally-side entries; index [5] (a main-owned entry) should not exist, so its `owner` leaf is correctly absent."
+  },
+  "sources_quoted": [
+    "data/items.json id 3071 (Black Cleaver) passives[0..1].branches — Carve 6% per stack up to 30%; Fervor 20 MS",
+    "data/items.json id 3877 (Bloodsong) passives[0].branches — Spellblade 100% base AD on-hit + Expose Weakness 8%/5% for 4s, 1.5s cooldown; active[0].branches — Ward; stats — 200 HP / 75% HP regen / 75% mana regen / 9 gp10",
+    "data/items.json id 3867 (Bounty of Worlds) passives[0].branches — the five upgrade choices; id 3876 (Solstice Sleigh) 'Going Sledding'; id 3870 (Dream Maker); id 3871 (Zaz'Zak's Realmspike) — contrast set showing Bloodsong is the no-heal/no-shield upgrade",
+    "data/champions.json Gnar.abilities P/Q/W/E/R descriptions and P notes (Mega health not affected by healing modifiers; returns retaining health percentage; per-form stat bonuses)",
+    "data/worklists/e8d-task.md — definition of a support event as an ally/self heal-or-shield event feeding support_shield_received",
+    "data/champion-audit/batch-p1-1.json (Akshan) and batch-p1-3.json (Lux) — support events are heal/shield payloads, self-targeted ones included",
+    "docs/math-foundations.md §5 — Grievous Wounds / shield rows, confirming the heal-shield ledger is the modifier-bearing path that a stat delta must stay out of"
+  ],
+  "confidence": "medium-high",
+  "residual_uncertainty": [
+    "The scenario's exact roster (champion names, levels, fight window) is defined in scripts//tests/, which this runbook forbids reading, so the main champion's identity is inferred from the item pairing (Black Cleaver core) rather than read. The step-2 argument is champion-independent (neither named item can author a support event for the main); step 3 is the champion-specific leg.",
+    "If the main participant in this scenario were instead a champion with a genuine self-heal or self-shield ability, a main-owned support event could be legitimate and the verdict would flip to old_value_correct. Nothing under data/ names such a champion for this scenario."
+  ],
+  "notes": "No files outside the `git archive HEAD data docs/math-foundations.md` export were read; no src/, tests/, scripts/, docs/plans/, docs/receipts/, diff or history was consulted. Nothing committed."
+}

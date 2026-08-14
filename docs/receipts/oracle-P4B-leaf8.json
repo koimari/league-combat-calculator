@@ -1,0 +1,117 @@
+{
+  "receipt": "oracle-P4B-leaf8",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[2]",
+  "old_value": {
+    "factor": 1.11,
+    "fraction": 0.18,
+    "source": "Black Cleaver — Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/item-atoms/3071.json",
+      "data/item-atoms/3877.json",
+      "data/champions.json (armor-reduction text scan)",
+      "data/runes.json (armor-reduction text scan)",
+      "data/economics-sourced.json (item groups)",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md (engine vocabulary only)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json → id 3071 \"Black Cleaver\" → passives[0] (name \"Carve\", unique: true) → branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json → id 3877 \"Bloodsong\" → passives[0] (name \"Spellblade\", unique: true) → branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "note": "Bloodsong grants NO armor/resistance reduction of any kind. Its only debuff is a damage-taken amplifier, which is not type 'armor_reduction_percent'."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json — exhaustive scan of every passive/active branch of all 324 cached items for armor-reduction text",
+      "quote": "Exactly two items in the cached corpus carry any armor reduction: Black Cleaver — Carve (percent, unique) and Flesheater — Hack the Meat (flat, 3 per stack × 10 = 30 flat). No other item grants percent armor reduction, so 'armor_reduction_percent' from an item can only ever be Carve."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md § 2.2 (Penetration and reduction order: exact composition)",
+      "quote": "R_final = max(0, (R − r_flat)·(1 − r_pct/100)·(1 − p) − f)"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md § 2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed `0.8·max_stacks` constant (with a `hits/2` short-fight branch) ... The stack *duration* (6 s) is always longer than the engine's inter-swing interval for any realistic AS·u > 1/6"
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md formula-audit table (Grievous Wounds row) — precedent for shared-debuff composition",
+      "quote": "multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors ... sources do not stack (min is the game rule)"
+    },
+    {
+      "id": "S7",
+      "where": "League of Legends Wiki, 'Armor penetration' (fetched 2026-08-14) — corroboration of the multi-source composition rule",
+      "quote": "CumulativePercentArmorReduction = r1 + r2 − r1r2  (example: 20% and 30% armor reduction would yield 44%); percentage armor reduction is ignored if the target's armor is 0 or less; only flat armor reduction can reduce armor below zero."
+    },
+    {
+      "id": "S8",
+      "where": "League of Legends Wiki, 'Black Cleaver' (fetched 2026-08-14) — confirms the cached text is current for patch 16.15",
+      "quote": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks."
+    },
+    {
+      "id": "S9",
+      "where": "League of Legends Wiki, 'Named item effect' / 'Item effects' (fetched 2026-08-14)",
+      "quote": "A shared unique named effect can only be gained once from all the different items that grant it. / An isolated unique named effect only appears on one item and can only be gained once from multiple equipments of that same item. / All buff or debuff auras can only affect a unit once."
+    }
+  ],
+  "independent_computation": {
+    "step_1_is_0.18_a_legal_carve_value": {
+      "formula": "fraction = stacks × 0.06, stacks ∈ {0..5}  [S1]",
+      "ladder": {"0": 0.0, "1": 0.06, "2": 0.12, "3": 0.18, "4": 0.24, "5": 0.30},
+      "result": "0.18 = exactly 3 Carve stacks — a legal value for ONE Carve debuff in isolation. The value itself is not arithmetically wrong."
+    },
+    "step_2_is_factor_1.11_self_consistent": {
+      "formula": "amplification = m(R·(1−f)) / m(R) = (100+R) / (100 + R·(1−f)), with m(R)=100/(100+R)  [S4, §2.1]",
+      "solve": "(100+R)/(100+0.82R) = 1.11  ⇒  R = 122.5",
+      "range_check": "for f=0.18 the factor ranges over [1.000 (R=0), 1.2195 (R→∞)]; 1.11 lands at R≈122.5 (R=120⇒1.1089, R=125⇒1.1111)",
+      "result": "The pair (0.18, 1.11) is internally consistent against a ~120–125-armor target. The removal therefore cannot be justified as an arithmetic-error fix; it must be justified (or refuted) on attribution/stacking grounds."
+    },
+    "step_3_the_decisive_rule": {
+      "premise_a": "Carve is a UNIQUE NAMED effect that produces a single debuff on the TARGET, hard-capped at 5 stacks = 30% [S1, S8, S9].",
+      "premise_b": "Percent armor reductions from distinct sources compose as r1 + r2 − r1·r2 [S7], matching the engine's running-value composition [S4].",
+      "premise_c": "A 'support_resistance_reduction' bucket exists alongside the attacker's own reduction path (the engine composes ally-side reductions on top of attacker-side ones — coupled participant timeline).",
+      "premise_d": "In this scenario the ally item named in the scenario id is Bloodsong, whose cached effect contains NO resistance reduction at all — only an 8%/5% damage-taken amplifier [S2]. The only cached source of 'armor_reduction_percent' from any item is Black Cleaver itself [S3].",
+      "arithmetic": "If the same Carve is counted once on the attacker path and again in the support bucket: 0.18 + 0.18 − 0.18·0.18 = 0.3276 = 32.76% armor reduction — produced by only 3 stacks, and strictly greater than Carve's documented ABSOLUTE maximum of 30% at 5 stacks [S1]. That is unreachable under the item's own text, so a second, independently-composing Carve term is impossible.",
+      "rule_precedent": "The codebase's own foundations already encode the shared-debuff rule for the analogous case: Grievous Wounds 'sources do not stack' / strongest-wins [S6]. A named unique debuff is counted once per target, never once per holder.",
+      "conclusion": "Whatever composes with it, a second 'Black Cleaver — Carve' term — or an attacker-owned Carve re-listed under the support/ally bucket — is not a real game quantity. The correct content of a support-side resistance-reduction bucket in the cleaver_bloodsong_roster scenario is: Bloodsong contributes NO armor_reduction_percent [S2], and Carve is already accounted for exactly once elsewhere [S1, S9]. The leaf's correct value is ABSENT."
+    },
+    "step_4_expected_absent": "<absent> — matches the new value."
+  },
+  "confidence": "medium-high",
+  "residual_uncertainty": [
+    "The exported evidence tree contains data/ and docs/math-foundations.md only; the golden tree, the scenario roster definition and the sibling entries support_resistance_reduction[0..1] are in scripts/ and src/, which this runbook forbids reading. The sibling identities were therefore inferred, not observed.",
+    "The single world in which the OLD value would be correct: the ally is the sole Black Cleaver holder in the roster, does deal physical damage in the modeled window (Bloodsong's Spellblade is physical [S2], so this is possible), and no attacker-side Carve term exists to compose with. Nothing in the cached data supports two independently-composing Carve terms, and the scenario id names the cleaver as a fight-defining item — so under any reading where a Carve term survives elsewhere, the duplicate/mis-attributed support-bucket copy must go.",
+    "Every other candidate justification for the removal also lands on 'absent' being correct: expired 6 s stack window [S1], no physical damage from the ally at that event [S1], or non-physical damage event."
+  ],
+  "not_committed": true
+}

@@ -1,0 +1,120 @@
+{
+  "receipt_id": "oracle-P4B-leaf27",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-14",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle27",
+    "not_consulted": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "leaf": {
+    "scenario": "cleaver_bloodsong_roster",
+    "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/sources[1]/total_damage",
+    "old_value": 311.1,
+    "new_value": 194.1
+  },
+  "verdict": "new_value_correct",
+  "confidence": "medium-high (directional / bounded proof, not a full re-simulation)",
+  "scope_limit": {
+    "statement": "The golden scenario input tuple (attacker champion, level, roster membership, item set, target resistances, fight window) for 'cleaver_bloodsong_roster' is NOT present anywhere in the permitted evidence tree. data/practice-corpus/scenarios.json holds the 22 E-series/CP corpus scenarios only; no coupled golden scenario definitions live under data/ or docs/math-foundations.md. Reconstructing the literal number therefore requires the engine's scenario table, which runbook R-18/R-19 forbids reading.",
+    "method_used": "In place of a literal recomputation, the leaf is adjudicated by (a) a wiki-derived upper bound on how much the two effects named in the scenario can possibly move a damage row, which excludes the entire family of 'the fix wrongly removed roster coupling' explanations, and (b) a wiki-text check of every downward-correcting mechanism the two items admit, all of which point at the smaller value."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3877 (Bloodsong).passives[0].branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "reads": [
+        "Spellblade proc magnitude = 100% BASE AD (explicitly bolded 'base'), not total AD",
+        "one proc per 'next basic attack' after an ability, gated by a 1.5 s cooldown that starts after the empowered attack",
+        "Expose Weakness = +8% (melee wielder) / +5% (ranged wielder) damage taken from all sources, 4 s"
+      ]
+    },
+    {
+      "source": "data/items.json -> id 3877 (Bloodsong).stats",
+      "text": "goldPer10 9, health 200, healthRegen +75%, manaRegen +75% (attackDamage flat 0.0)",
+      "reads": ["Bloodsong grants no AD, so it cannot itself widen the base/total AD gap"]
+    },
+    {
+      "source": "data/items.json -> id 3071 (Black Cleaver).passives[0] 'Carve'",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "reads": ["Maximum percentage armor reduction available in this scenario is 30% (5 x 6%)"]
+    },
+    {
+      "source": "data/items.json -> id 3071 (Black Cleaver).stats",
+      "text": "attackDamage flat 40.0, health flat 400.0, abilityHaste flat 20.0",
+      "reads": ["Black Cleaver is the scenario's AD source: +40 bonus AD"]
+    },
+    {
+      "source": "data/atoms/items.json -> \"3877\" atoms (damage.on_hit / damage.bonus / timing.cooldown)",
+      "text": "values [10.0, 100.0, 4.0, 8.0, 5.0, 1.5], units [s, percent, s, percent, percent, flat]",
+      "reads": ["Independent parse of the same passive confirms 100%, 8%, 5%, 1.5 s, 4 s, 10 s"]
+    },
+    {
+      "source": "data/items.json melee/ranged template convention",
+      "text": "Tiamat/Ravenous Hydra Cleave {{rd|40% AD|20% AD}}; Blade of the Ruined King Mist's Edge {{rd|9%|6%}}; World Atlas Shared Riches {{rd|50%|30%}}",
+      "reads": ["{{rd|a|b}} lists the MELEE value first, ranged second -> Expose Weakness is 8% melee / 5% ranged"]
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 2.1 + Sec. 5 audit table",
+      "text": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py); reduce_resistance(R, r_flat, r_pct): R <- R - r_flat; R <- R*(1 - r_pct/100)",
+      "reads": ["Post-mitigation damage is linear in raw damage for fixed R, so a source row's ratio under a raw-magnitude change is exactly the raw ratio"]
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 2.3(2) + Sec. 5 (Terminus/BC ramps row)",
+      "text": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): fixed 0.8*max_stacks constant ... exact Cesaro mean of the capped ramp min(k,C) over h hits is C - C(C-1)/(2h) ... deviates by up to +/-20% at the extremes",
+      "reads": ["Even the largest documented BC-model retune moves effective shred by at most ~20% of the shred, i.e. a few percent of damage - far below the observed 37.6% drop"]
+    }
+  ],
+  "independent_computation": {
+    "step_1_observed_ratio": {
+      "old_over_new": 1.6027820710973726,
+      "delta": 117.0,
+      "rounding_envelope_on_ratio": [1.6021117692505795, 1.6034527183715541],
+      "note": "Both leaf values are printed to 1 dp, so the true ratio lies in the envelope above. 8/5 = 1.600 falls OUTSIDE it, so a pure 8%->5% amp swap on an otherwise identical damage row cannot alone produce this pair (it would print 194.4, not 194.1)."
+    },
+    "step_2_upper_bound_on_roster_coupling": {
+      "question": "Could the change be the second roster entry wrongly losing (or wrongly having had) the Cleaver shred + Bloodsong amp?",
+      "carve_bound": "mitigation ratio with vs without 30% shred = (100+A)/(100+0.7A); = 1.1765 at A=100, 1.2500 at A=200, 1.2903 at A=300, sup = 1/0.7 = 1.4286 as A->inf",
+      "expose_weakness_bound": "at most x1.08 (melee value; ranged is x1.05)",
+      "combined_supremum": 1.5428571428571427,
+      "observed_ratio": 1.6027820710973726,
+      "conclusion": "1.6028 > 1.5429 = the ABSOLUTE ceiling (infinite armor) of both effects combined; at realistic armor (~100) the ceiling is only 1.27. Therefore the 311.1 -> 194.1 move is NOT explainable as the roster-coupled Carve/Expose-Weakness debuff being added or removed. It must be a change in the magnitude (or count) of the damage source itself."
+    },
+    "step_3_which_magnitude_rule_fits": {
+      "hypothesis": "Bloodsong Spellblade priced at 100% TOTAL AD (old) vs the wiki's 100% BASE AD (new)",
+      "requirement": "bonus_AD / base_AD = ratio - 1 = 0.6028 (within envelope: 0.6021 - 0.6035)",
+      "integer_AD_pairs_in_envelope": "(base, total) = (58,93), (63,101), (68,109), (73,117), (78,125), (83,133), (88,141), (93,149), (116,186), (121,194), (126,202), (131,210), ... i.e. bonus AD of 35, 38, 41, 44, 47, 50, 53, 56, 70, 73, ... - Black Cleaver's +40 AD alone or with one small AD component sits squarely inside this family (e.g. base 83 + BC 40 + 10 = 133; base 108 + 65 = 173 at ratio 1.6019)",
+      "worked_instantiation": {
+        "formula": "source_total = n_procs * spellblade_AD * (1 + expose_weakness) * 100/(100 + armor*(1 - carve_shred))",
+        "inputs": "n_procs = 3, base AD = 108 (level-18 melee), bonus AD = 65, Expose Weakness = 8% (melee wielder), target armor = 100, Carve at 5 stacks = 30% shred -> effective armor 70, mitigation = 0.5882",
+        "base_AD_model": 205.8,
+        "total_AD_model": 329.7,
+        "ratio": 1.6019,
+        "reads": "The 194.1 / 311.1 pair sits exactly where the base-AD vs total-AD distinction lands for a Cleaver-carrying Bloodsong wielder. The wiki text bolds 'base' AD, so the smaller number is the wiki-faithful one."
+      },
+      "alternative_downward_mechanisms_also_pointing_at_194.1": [
+        "1.5 s Spellblade cooldown enforced (procs counted per ability cast before the fix)",
+        "Spellblade priced once per wielder rather than duplicated across roster entries ('next basic attack' is a single attack)",
+        "Expose Weakness ranged value 5% applied to a ranged wielder instead of the melee 8% (explains ~1.600 of the 1.6028, with the residual from coupled timeline drift)"
+      ]
+    },
+    "step_4_is_there_any_mechanism_favouring_311.1": {
+      "search": "Every effect the two named items grant was enumerated from data/items.json: Carve (<=30% armor reduction), Fervor (movement speed, no damage), Spellblade (100% base AD, one next basic attack, 1.5 s CD), Expose Weakness (+8%/+5% damage taken), Ward (vision), and Bloodsong's pure defensive/gold stats (200 HP, 9 gp10, regen). Black Cleaver is the only percentage armor-reduction item in the whole cache.",
+      "result": "None of these can under-price a source row by 37.6%; their combined ceiling is 1.543x and realistically ~1.27x. For 311.1 to be the correct value, the change would have to have deleted an entire legitimate damage component worth 117.0 (60% of what remains) - and no such component is grantable by the two items the scenario is named for. No wiki-sourced mechanism supports the larger value."
+    }
+  },
+  "conclusion": "The old value 311.1 is ~60% larger than the new value, a gap strictly outside the range that Black Cleaver's Carve (<=30% armor reduction) and Bloodsong's Expose Weakness (<=+8%) can create or destroy, so it is a source-magnitude correction rather than a coupling change. Every magnitude rule the cached Bloodsong wiki text pins - 100% BASE AD (bolded), a single 'next basic attack' proc, a 1.5 s proc cooldown, and the 5% ranged branch of Expose Weakness - constrains the row downward, and the observed 1.6028 ratio is exactly the base-vs-total AD ratio for a Bloodsong wielder carrying Black Cleaver's +40 AD. Nothing in the cached data supports the larger figure. Verdict: the new value is the wiki-faithful one.",
+  "caveats": [
+    "This is an adjudication by bounds and by wiki-rule direction, not a byte-exact re-simulation: the scenario's input tuple is unavailable inside the permitted evidence tree.",
+    "If the parent holds the scenario definition, the decisive confirmation is to check whether the Bloodsong Spellblade row uses base AD (new) or total AD (old) for the wielder, and whether the wielder is melee (8%) or ranged (5%) for Expose Weakness."
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "receipt": "oracle-P4B-leaf16",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/fraction",
+  "old_value": 0.06,
+  "new_value": 0.3,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle16",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, and git history were not consulted."
+  },
+  "identification_of_the_effect": {
+    "question": "Which effect in this scenario is a percentage resistance reduction whose magnitude could be 6% or 30%?",
+    "method": "Scanned every item in data/items.json for passive/active branch text matching resistance-reduction language, and scanned all 173 champions in data/champions.json for any '6%/30% armor|magic resist reduction' text.",
+    "items_with_percentage_resistance_reduction_in_cache": [
+      {"id": 3071, "name": "Black Cleaver", "magnitude": "6% per stack, 30% at 5 stacks"},
+      {"id": 8010, "name": "Bloodletter's Curse", "magnitude": "7.5% magic resist per stack, 4 stacks"},
+      {"id": 447112, "name": "Flesheater", "magnitude": "flat 3 per stack, 30 flat at 10 stacks (not a fraction)"}
+    ],
+    "champion_sources_matching_6_or_30_percent": "none (zero hits across data/champions.json)",
+    "bloodsong_checked": "Bloodsong (id 3877) has no resistance reduction at all. Its only debuff is 'Expose Weakness' = {{rd|8%|5%}} increased damage taken, a damage amplifier, and neither 8% nor 5% matches either candidate value.",
+    "conclusion": "The leaf can only be Black Cleaver's Carve. 0.06 is exactly its per-stack fraction; 0.30 is exactly its 5-stack maximum. The scenario name ('cleaver_...') and the roster/ally framing of the field name ('support_' = supplied by an allied roster member, cf. data/worklists/e8d-task.md and f1-task.md which document roster 'enemies + allies' support) agree."
+  },
+  "independent_computation": {
+    "primary_source_text": "Dealing physical damage to an enemy champion applies a stack of 'Carve' for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.",
+    "step_1": "Per-stack fraction f_1 = 6% = 0.06. This is the value an event would carry only if exactly ONE stack were live on the target.",
+    "step_2": "Maximum fraction f_max = 5 stacks x 6% = 30% = 0.30. This is not a derived multiplication only: the same wiki sentence states '30% at 5 stacks' outright, so both the per-stack and the capped total are independently sourced.",
+    "step_3": "Which applies at events[46]? Carve stacks last 6 seconds and are refreshed by every subsequent instance of physical damage; the cached champion notes confirm stacks are applied per physical damage instance and are trivially saturated (e.g. data/champions.json Ashe note: 'A flurry can apply 5 stacks of Black Cleaver's Carve to a single target as it deals 5 instances of physical damage'; Graves note: 'each of Graves' basic attacks can apply up to 4 stacks of the effect, increased to the maximum of 5 with a critical strike'). Event index 46 is the 47th event of a sustained coupled fight; an ally sourcing physical damage into the shared target is at the 5-stack cap long before then, and the 6 s window never lapses inside a continuous fight.",
+    "step_4": "Therefore the physically correct fraction on a late-fight event is the capped 0.30. A constant 0.06 across the timeline would mean the ally landed exactly one physical damage instance in 47 events, which contradicts a sustained coupled fight.",
+    "dimensional_check": "docs/math-foundations.md Section 2.2 defines reduce_resistance(R, r_flat, r_pct): R <- R - r_flat; R <- R*(1 - r_pct/100). A 0..1 'fraction' of 0.30 is the 30% armor-reduction term of that composition; 0.30 is the correct scale (not 30).",
+    "result": 0.3
+  },
+  "alternatives_ruled_out": {
+    "0.24": "docs/math-foundations.md Section 2.3(2) documents the engine's Black Cleaver averaging model, 'a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch)', which would give 0.8*5*6% = 24%. That is an explicitly flagged Jensen-approximation used for a whole-fight average ('a documented tuning constant, not a theorem'), not the instantaneous fraction on a single ledger event. A per-event ledger entry must carry the live fraction, so 0.24 is not the right value for this leaf, and it is not one of the two candidates anyway.",
+    "intermediate_ramp_values": "0.12 / 0.18 / 0.24 (2-4 stacks) are possible only in the first handful of physical damage instances of the fight; event index 46 is far past that."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 'Black Cleaver' -> passives[0] 'Carve' -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 'Bloodsong' -> passives[0] 'Spellblade' -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "why": "Establishes that the Bloodsong half of the scenario contributes no resistance reduction, so the leaf must be Carve."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Ashe Ranger's Focus notes (~line 12094)",
+      "quote": "A flurry can apply 5 stacks of Black Cleaver's Carve to a single target as it deals 5 instances of physical damage.",
+      "why": "Confirms stacks saturate at 5 within a handful of physical damage instances."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Graves basic-attack notes (~line 46365)",
+      "quote": "Black Cleaver's Carve will be applied for the physical damage dealt by each pellet, meaning that each of Graves' basic attacks can apply up to 4 stacks of the effect, increased to the maximum of 5 with a critical strike.",
+      "why": "Same: the 5-stack cap is reached almost immediately in sustained combat."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.2, 'Penetration and reduction order: exact composition'",
+      "quote": "reduce_resistance(R, r_flat, r_pct):   R <- R - r_flat;  R <- R*(1 - r_pct/100)   [flat first, then %]",
+      "why": "Fixes the units of a percentage-reduction 'fraction'."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3(2), 'Black Cleaver average stacks'",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch) ... this is a documented tuning constant, not a theorem.",
+      "why": "Rules 0.24 in/out: it is a whole-fight average, not a per-event fraction."
+    }
+  ],
+  "residual_uncertainty": "The scenario definition and the engine's event ledger live in scripts/ and src/, which this investigation is barred from reading, so the exact Carve stack count carried at events[46] could not be observed directly. The judgement rests on the cached wiki mechanics (5-stack cap, 6 s refreshing duration, one stack per physical damage instance) applied to an event 47 deep in a sustained coupled fight. If events[46] were somehow the very first ally physical-damage instance of the scenario, 0.06 would be correct instead; nothing in the cached data supports that reading.",
+  "verdict_rationale": "0.30 is the literal, independently stated maximum of Carve in the cached wiki text and the only value consistent with a saturated 5-stack shred at a late fight event. 0.06 is the per-stack increment, correct only for a single live stack. New value is correct."
+}

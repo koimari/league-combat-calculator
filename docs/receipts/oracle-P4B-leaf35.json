@@ -1,0 +1,99 @@
+{
+  "receipt": "oracle-P4B-leaf35",
+  "runbook": "R-18 / R-19 (fresh independent oracle; no access to src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff or the plan)",
+  "generated_at": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/pair_damage",
+  "old_value": 50.7,
+  "new_value": 45.9,
+  "verdict": "new_value_correct",
+  "confidence": "low-moderate — direction and magnitude are consistent with the wiki-pinned Expose Weakness window; an exact reproduction of the leaf was NOT achieved (see limitations)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p4b-leaf35",
+    "read": ["data/items.json", "data/atoms/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/champions.json (Gnar stats + abilities)", "data/staleness.json", "data/practice-corpus/scenarios.json", "data/worklists/*.md", "data/atoms/autoresearch-review.md", "data/bin/README.md", "docs/math-foundations.md"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> id 3071 \"Black Cleaver\".passives[0] (\"Carve\").branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> id 3071 \"Black Cleaver\".passives[0].branches[1]",
+      "quote": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> id 3877 \"Bloodsong\".passives[0] (\"Spellblade\").branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S4",
+      "where": "data/items.json — sibling uses of the {{rd|melee|ranged}} template in the same cache, used to fix the reading of {{rd|8%|5%}}",
+      "quote": "Tiamat / Ravenous Hydra / Stridebreaker: \"deal {{as|{{rd|40% AD|20% AD}}|ad}} {{as|physical damage}}\"; Titanic Hydra: \"{{rd|1%|{{fd|0.5}}%}} '''maximum''' health\"; Phage: \"{{rd|20|10}} '''bonus''' movement speed\" — first argument is the melee value, second the ranged value. Hence Expose Weakness = 8% amp for a melee holder, 5% for a ranged holder."
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md §2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md §2.2",
+      "quote": "R_final = max(0, (R − r_flat)·(1 − r_pct/100)·(1 − p) − f)  ... The game applies, in order: flat reduction → percentage reduction → percentage penetration → flat penetration."
+    },
+    {
+      "id": "S7",
+      "where": "docs/math-foundations.md §2.3 item 2",
+      "quote": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8·max_stacks constant (with a hits/2 short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesàro mean of the capped ramp min(k, C) over h hits is C − C(C−1)/(2h) for h ≥ C; the constant model equals the exact mean at ~10 autos and deviates by up to ±20% at the extremes."
+    },
+    {
+      "id": "S8",
+      "where": "data/champions.json -> Gnar.abilities.P (\"Rage Gene\") and Gnar.stats",
+      "quote": "Rage Gene carries four descriptive effects and ZERO leveling rows (\"Gnar gains different stat bonuses based on whether he is in Mini or Mega form.\" with no numbers). Mini-form base stats only: armor 32 (+3.7/lvl), attackDamage 60 (+3.2/lvl). The Mega-form stat deltas are therefore absent from the cached wiki data (data/bin/characters/*.bin.json, the game-file layer, is gitignored — only aatrox.bin.json.sample is tracked)."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_what_the_leaf_is": "pair_damage of one damage event (index 23) in the coupled roster fight for a scenario whose name pins two items: Black Cleaver (percentage armor reduction) and Bloodsong (a flat damage amplifier on the defender plus a base-AD on-hit).",
+    "step_1_observed_multiplicative_change": {
+      "ratio_old_over_new": 1.104575,
+      "rounding_band": "golden values are printed to 0.1, so the true ratio lies in [50.65/45.95, 50.75/45.85] = [1.10229, 1.10687]",
+      "interpretation": "the change is a clean multiplicative −9.47% on this event (Δ = −4.8 absolute)"
+    },
+    "step_2_rule_out_the_amp_alone": {
+      "candidates_from_S3_S4": {
+        "amp_dropped_entirely_melee": 1.08,
+        "amp_dropped_entirely_ranged": 1.05,
+        "melee_value_corrected_to_ranged (8%→5%)": 1.028571,
+        "amp_double_applied_then_single (1.08²/1.08)": 1.08,
+        "amp_double_applied_then_single (1.05²/1.05)": 1.05
+      },
+      "conclusion": "No Expose-Weakness-only correction can reach 1.1023–1.1069. The amp accounts for at most 8%; a further ~2.3% (melee reading) or ~5.2% (ranged reading) must come from the resistance side."
+    },
+    "step_3_rule_out_a_black_cleaver_averaging_fix_at_this_event_index": {
+      "argument": "Event index 23 is deep in the fight, so the hit count h feeding S7's average is large. Cesàro mean C − C(C−1)/(2h) with C = 5: h=10 → 4.000 stacks (24.0% reduction, identical to the 0.8·C constant); h=12 → 4.167 (25.0%); h=15 → 4.333 (26.0%); h=20 → 4.500 (27.0%); h=24 → 4.583 (27.5%).",
+      "consequence": "Any move from the 0.8·C constant toward the exact mean (or toward the wiki-exact saturated 5 stacks / 30%, S1) at a late event INCREASES armor reduction and therefore INCREASES damage. Reproducing a −9.5% damage swing purely from the Carve model would need h ≤ 2 (or an absurd defender armor ≈ 1000). So this leaf's diff is not a Black-Cleaver-averaging change."
+    },
+    "step_4_decomposition_that_does_fit": {
+      "model": "D = raw · (1 + a) · 100/(100 + A·(1 − ρ_carve))   [S5 + S6 + S1 + S3]",
+      "melee_reading": "1.104575 / 1.08 = 1.02275 residual on the resistance side → exactly one Carve stack (6%) of difference at defender armor A ≈ 53 (with ρ_new = 24%) or A ≈ 52 (with ρ_new = 30%).",
+      "ranged_reading": "1.104575 / 1.05 = 1.05198 residual → two Carve stacks (12%) of difference at defender armor A ≈ 65 (ρ_new = 24%) or A ≈ 62 (ρ_new = 30%).",
+      "reading": "Both decompositions say the same thing about the dominant term: the old value carried an Expose Weakness amplification on this event that the new value does not, plus a one-or-two-stack Carve difference (consistent with S2 — a Spellblade proc's bonus physical instance no longer being credited with its own Carve stack).",
+      "why_this_favours_the_new_value": "S3 pins two limits a coarse model over-applies: Expose Weakness lasts only 4 seconds, and the Spellblade proc has a 1.5 second cooldown that starts AFTER the empowered attack. A permanently-on amp is unsupported by the cached text; an amp that is down at a late event is exactly what S3 describes. The correction direction (damage down at a late event) matches, and its size (−7.4% from the amp, the rest from one/two Carve stacks) matches the observed −9.47% within the printed-value rounding band."
+    },
+    "computed_value": "not independently reproducible to a number — see limitations; the check performed is a closed-form consistency check on the ratio 50.7 → 45.9 against the wiki-pinned constants (6%/stack ≤ 5 stacks = 30%, 6 s; 8% melee / 5% ranged amp, 4 s, 1.5 s proc cooldown; 100% base AD on-hit) and against docs/math-foundations.md §2.1–§2.3."
+  },
+
+  "limitations": [
+    "The scenario tuple for 'cleaver_bloodsong_roster' (champions, levels, ranks, item sets, options, and the identity of events[23]) is not present anywhere in data/ — data/practice-corpus/scenarios.json holds 22 scenarios and none of them is this one. The permitted evidence therefore fixes the FORMULAS but not the INPUTS, so an exact recomputation of the leaf is impossible from this evidence tree.",
+    "If the leaf's diff instead came from the other feature on this branch (Gnar Mega-form stats), it could not be checked at all: Gnar's Rage Gene carries no leveling rows in the wiki cache (S8) and the game-file layer data/bin/characters/ is gitignored, so the Mega base-stat deltas are outside the permitted evidence. CLAUDE.md's own instruction is to verify those against Community Dragon gnarbig.bin.json, not against the wiki.",
+    "The verdict is a consistency verdict, not a reproduction. To close it exactly, an oracle needs the scenario tuple plus the event-23 identity; with those, the decomposition in step_4 becomes a single arithmetic check."
+  ],
+
+  "not_committed": true
+}

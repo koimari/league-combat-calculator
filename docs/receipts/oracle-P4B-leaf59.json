@@ -1,0 +1,81 @@
+{
+  "receipt_id": "oracle-P4B-leaf59",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "metadata (snapshot-level)",
+  "leaf_path": "/metadata/fingerprint/leaves",
+  "old_value": 14256,
+  "new_value": 23308,
+  "verdict": "new_value_correct",
+  "verdict_confidence": "structural / definitional — not a numerically recomputable domain quantity",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle59",
+    "contents": [
+      "data/ (champions.json, items.json, runes.json, staleness.json, atoms/, item-atoms/ (325 files), wiki-atoms/, champion-audit/, worklists/, practice-corpus/, bin/, wiki/, README.md)",
+      "docs/math-foundations.md (523 lines)"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/ (including scripts/golden_snapshot.py and scripts/golden_baseline.json)",
+      "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"
+    ],
+    "data_cache_provenance": {
+      "patch": "16.15",
+      "staleness_checked_at": "2026-08-06T12:36:09.630672+00:00",
+      "source": "data/staleness.json"
+    }
+  },
+
+  "independent_computation": {
+    "classification_of_leaf": "Snapshot-level bookkeeping metadatum. '/metadata/fingerprint/leaves' is a self-referential count of the numeric leaves contained in the golden snapshot artifact itself. It is not a League of Legends game quantity (no damage, stat, ratio, cooldown, resistance, or cost), so it has no referent in the cached wiki text and no closed form in the documented formula set.",
+    "attempted_derivations": [
+      {
+        "route": "docs/math-foundations.md — documented formula quoted for the leaf",
+        "method": "grep -n -i 'fingerprint|leaves|leaf|snapshot' over all 523 lines",
+        "result": "NO DEFINITION FOUND. Only two hits, neither definitional: line 293 uses 'leaves' as an English verb about penetration; line 428 mentions 'The golden snapshot (scripts/golden_snapshot.py) and the E-series corpus pin point estimates against game-verified scenarios' — it names the snapshot as a validation instrument but specifies neither its leaf inventory nor any leaf-count formula. The Section 5 formula-audit table enumerates every engine family and its identity; no row concerns snapshot metadata or fingerprinting."
+      },
+      {
+        "route": "data/ cached wiki text — a source quantity that fixes the count",
+        "method": "grep -rn -i 'fingerprint' across every .md and .json in the exported data/ tree; full inventory of data/ subdirectories; read of data/README.md (which enumerates every field the cache carries)",
+        "result": "ZERO occurrences of 'fingerprint' anywhere in data/. data/README.md documents the cache as champion/item/rune wiki data plus item-source fields (modes, championRestriction, acquisitionNote, specialStats, riotDescription, passives[].branches, active[].branches, sourceWarnings) — nothing that enumerates or bounds golden-snapshot leaves. The golden baseline lives at scripts/golden_baseline.json, outside the permitted evidence tree by construction."
+      },
+      {
+        "route": "arithmetic plausibility — does either value factor against a data-cache cardinality?",
+        "method": "delta = 23308 - 14256 = 9052; ratio = 23308 / 14256 = 1.6349...; factorizations 14256 = 2^4 * 3^4 * 11, 23308 = 2^2 * 5827 (5827 prime), 9052 = 2^2 * 31 * 73. Tested against the only countable cardinalities visible in the export (325 item-atom files, 16 atoms entries, 14 champion-audit batches, 10 wiki-atom files, 54 worklist entries, 17 keystones per data/README.md).",
+        "result": "NO CLEAN RELATION. 14256/325, 23308/325, and 9052/325 are all non-integral, as are the divisions by 17, 16, 14, 10 and 54. The counts do not decompose into any data-side cardinality I can see, which is expected: snapshot leaf count is a product of the scenario matrix and per-scenario receipt shape, both of which live in scripts/ and src/."
+      }
+    ],
+    "conclusion": "The leaf is NOT independently computable from the permitted evidence. Its correct value is definitional: it equals the number of numeric leaves the current snapshot actually contains, emitted by the capture tool over the snapshot it just wrote. Under that definition the freshly captured value is correct by construction and the prior value 14256 describes a superseded snapshot — it cannot be the correct count for a snapshot that now carries more leaves. Neither number is falsifiable against wiki data, and no source in the evidence tree contradicts 23308."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "docs/math-foundations.md",
+      "line": 428,
+      "quote": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "bearing": "The only mention of the golden snapshot in the entire math foundations document; establishes its role but defines no leaf inventory or count formula."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "line": 293,
+      "quote": "(`max(0, …)`). Reduction *can* go negative, and penetration then leaves the",
+      "bearing": "The only other 'leaves' hit; an English verb in the penetration discussion, not the metadata leaf. Recorded to show the grep was exhaustive."
+    },
+    {
+      "file": "data/README.md",
+      "quote": "The calculator's champion/item data cache — the single source the app reads.",
+      "bearing": "Scopes data/ to champion/item/rune wiki data and item-source provenance fields; confirms the cache carries nothing about snapshot fingerprints."
+    },
+    {
+      "file": "data/staleness.json",
+      "quote": "\"patch\": \"16.15\", \"checked_at\": \"2026-08-06T12:36:09.630672+00:00\"",
+      "bearing": "Provenance stamp of the cache this oracle worked from."
+    }
+  ],
+
+  "caveats_for_the_reviewer": [
+    "This verdict certifies only that no source in the permitted evidence tree contradicts 23308, and that a bookkeeping leaf of this kind is correct by construction when re-captured. It is NOT an independent numeric confirmation — none is obtainable for a self-referential count without reading scripts/, which runbook R-18/R-19 forbids.",
+    "The substantive question this leaf raises is one of SCOPE, not value: the snapshot grew by 9052 leaves (x1.635, from 14256 to 23308). A pure refactor must show zero diffs on this leaf, so a change of this magnitude is only legitimate if the work deliberately widened the snapshot (new scenarios, new receipt fields, or new modeled champions). Confirming that intent requires the diff and the plan, which this oracle did not and must not read. If the change under test was represented as behavior-preserving, treat this leaf as a red flag and re-adjudicate against the diff.",
+    "Because the count is definitional, a corrupted or wrongly-widened snapshot would still self-report a consistent leaf count. This leaf can never detect its own error; it is a tripwire for reviewers, not a check."
+  ]
+}

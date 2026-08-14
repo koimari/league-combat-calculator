@@ -1,0 +1,84 @@
+{
+  "receipt": "oracle-P4B-leaf31",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/factor",
+  "old_value": 1.03,
+  "new_value": 1.2,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p4b",
+    "read": [
+      "data/items.json (3071 Black Cleaver, 3877 Bloodsong, 3118, 8010, 447112)",
+      "data/item-atoms/3877.json",
+      "data/champions.json (base armor + per-level growth, all 173 champions)",
+      "data/runes.json (to fix the {{rd|melee|ranged}} template convention)",
+      "data/practice-corpus/scenarios.json (no cleaver_bloodsong_roster entry)",
+      "docs/math-foundations.md sections 2.1-2.3, 5"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> item 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> item 3071 -> stats",
+      "text": "attackDamage.flat 40, health.flat 400, abilityHaste.flat 20 - Black Cleaver carries NO lethality and NO percent armor penetration, so the whole armor delta it produces is the Carve *reduction*."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> item 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md sec 2.1 (The 100/(100+R) identity)",
+      "text": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md sec 2.2 (Penetration and reduction order)",
+      "text": "reduce_resistance(R, r_flat, r_pct):   R <- R - r_flat;  R <- R*(1 - r_pct/100)   [flat first, then %]  ...  R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md sec 2.3 item 2 (Black Cleaver average stacks)",
+      "text": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C ... this is a documented tuning constant, not a theorem."
+    },
+    {
+      "id": "S7",
+      "where": "data/runes.json (Lethal Tempo, Fleet Footwork) - fixes the wiki template convention used in S3",
+      "text": "{{rd|6%|{{ap|6*0.8}}%}} and {{rd|10%|6%}} '''bonus''' AD  =>  {{rd|X|Y}} is X for melee, Y for ranged."
+    }
+  ],
+
+  "independent_computation": {
+    "what_the_leaf_must_be": "A dimensionless multiplier > 1 attached to a resistance-reduction entry on a coupled-timeline combat event, i.e. the damage amplification that the roster's supporting participant receives from a resistance-reduction debuff sitting on the target. (A multiplier applied to the resistance itself would be < 1 for a reduction; both old and new values are > 1, so the field is the damage-side amplification.)",
+    "step_1_identify_the_source": "The only resistance-reduction effect in scenario 'cleaver_bloodsong_roster' is Black Cleaver's Carve (S1). Bloodsong (S3) carries no resistance reduction at all - its Expose Weakness is a flat damage-taken amp of 8% melee / 5% ranged (S7 for the template), i.e. factors 1.08 / 1.05, neither of which is 1.03 or 1.2. Carve is a debuff on the *target*, so it amplifies every damage source on the roster, which is exactly the coupling this scenario exercises.",
+    "step_2_formula": "Amplification for any participant when the target's armor R is reduced by a fraction p:  factor = m(R*(1-p)) / m(R) = (100 + R) / (100 + R*(1-p)).  m from S4, the percent-reduction step R <- R*(1-r_pct/100) from S5. Black Cleaver adds no penetration (S2), so no max(0, ...) floor or flat term enters.",
+    "step_3_target_armor": "The scenario's roster target is a champion (Carve only stacks on enemy champions, S1). Level-18/20 champion base armor, computed from data/champions.json with the documented growth formula base + growth*(L-1)*(0.7025+0.0175*(L-1)), lands in a broad band; 84 champion/level combinations fall in 119-131 armor (e.g. Aatrox@18 119.6, Braum/Illaoi/Poppy@18 120.0, Malphite@18 124.15, Darius@18 125.4, Sejuani@18 126.65).",
+    "step_4_evaluate": {
+      "one_Carve_stack_6pct": {"R=119.6": 1.0338, "R=125.0": 1.0345, "R=130.33": 1.0351, "rounds_to": 1.03},
+      "four_stacks_24pct_engine_average_constant_0.8xmax": {"R=119.6": 1.1504, "R=125.0": 1.1538, "R=130.33": 1.1571, "rounds_to": 1.15},
+      "exact_Cesaro_mean_over_h=46_hits_28.7pct": {"R=125.0": 1.1897, "rounds_to": 1.19},
+      "five_stacks_max_30pct": {"R=119.6": 1.1953, "R=125.0": 1.2000, "R=130.33": 1.2045, "rounds_to": 1.2}
+    },
+    "step_5_conclusion": "Both the old and the new leaf are the SAME formula evaluated at the SAME target armor (any R in ~119-131, exactly 1.200000 at R = 125) and differ only in the Carve stack count credited to the supporting participant: old 1.03 = 1 stack (6% armor reduction), new 1.2 = 5 stacks (30%, the wiki-stated cap in S1). No other combination of the scenario's items reproduces this pair: Bloodsong's amp would be 1.08/1.05, and no reading of 'factor' as 1 + reduction-fraction or 1/(1 - reduction-fraction) matches either number against Carve's 6%/30%.",
+    "step_6_which_stack_count_is_right_at_events[46]": "Carve applies a stack on every instance of physical damage to the champion and lasts 6 s, refreshing (S1). By event index 46 of a continuous combat timeline the Cleaver holder has dealt physical damage many times over, so the debuff sitting on the target is at its 5-stack cap: 30% armor reduction, factor 1.20. A single stack (6%) is only correct for the very first physical hit of the fight, so 1.03 at event 46 credits the support with a debuff strength the target has long since exceeded - it is the stale/under-propagated value."
+  },
+
+  "residual_uncertainty": [
+    "The scenario definition (roster composition, target armor, fight length) lives in scripts//tests/, which this oracle is forbidden to read, so the target armor is pinned only to the band 119-131 that makes 1.2 the correct 2-dp rounding. Within that whole band the 5-stack answer rounds to 1.2 and the 1-stack answer rounds to 1.03, so the verdict does not depend on the exact champion.",
+    "If the coupled per-event field were meant to carry the fight-AVERAGED Carve strength rather than the instantaneous debuff, docs/math-foundations.md sec 2.3 (S6) would put it at 0.8*5 = 4 stacks = 24% -> ~1.15, and the exact Cesaro mean at h=46 hits (28.7%) -> ~1.19. Both of those are far closer to 1.2 than to 1.03, and the doc itself calls the 0.8 constant 'a documented tuning constant, not a theorem'. Under every stack model except literally-one-stack, the leaf lands in 1.15-1.20; nothing supports 1.03 at this event index."
+  ],
+
+  "verdict_rationale": "1.2 is the wiki-exact value of (100+R)/(100+0.7R) for a full 5-stack Carve (30% armor reduction, S1) against a level-18/20 champion target, using the engine's own m(R) and percent-reduction composition (S4, S5). 1.03 is the same formula at a single 6% stack, which cannot be the state of the debuff 46 events into the fight."
+}

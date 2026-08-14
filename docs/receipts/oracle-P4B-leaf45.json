@@ -1,0 +1,84 @@
+{
+  "receipt_id": "oracle-P4B-leaf45",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/raw_damage",
+  "old_value": 94.1,
+  "new_value": 101.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle45",
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "data/worklists/ (task statements — withheld to preserve independence)",
+      "git history / diff"
+    ]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> id 3877 (Bloodsong) -> passives[0] (\"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "reading": "Expose Weakness = +8% damage taken from ALL sources (melee holder) / +5% (ranged holder), 4 s, champions only."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json — cross-item calibration of the {{rd|a|b}} template argument order",
+      "quote": "Blade of the Ruined King :: {{rd|9%|6%}} · Ravenous Hydra :: {{rd|40% AD|20% AD}} · Titanic Hydra :: {{rd|4%|2%}} · Death's Dance :: {{rd|30%|10%}} · Hullbreaker :: {{rd|120%|{{ap|120*0.7}}...}}",
+      "reading": "Every calibration case has the known melee value first and the reduced ranged value second (BORK 9%/6% current-health on-hit, Hydra cleave 40%/20% AD). Therefore Bloodsong {{rd|8%|5%}} = 8% melee, 5% ranged — the melee branch is 8%."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> id 3071 (Black Cleaver) -> passives",
+      "quote": "Carve: Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks. / Fervor: Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.",
+      "reading": "The scenario's other named item is armor-reduction + movement speed ONLY. It changes the mitigation multiplier m(R), never a pre-mitigation raw_damage. So Black Cleaver is excluded as the cause of this leaf's move, leaving Bloodsong's Expose Weakness as the only damage-amplifying effect named by the scenario."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md §1.2 (Linearity of expectation) and §2.1 (the 100/(100+R) identity)",
+      "quote": "\"the mitigation operator `x |-> x*100/(100+R)` is *linear in raw damage* for a fixed resistance\" ; \"post = raw * m(R)\"",
+      "reading": "Because mitigation is linear in raw, folding a damage-taken amplifier into the event's raw_damage is exactly equivalent to applying it after mitigation. Authoring Expose Weakness inside raw_damage is therefore a legitimate placement, not a category error, and the pre-mitigation ledger value is expected to carry the +8%."
+    },
+    {
+      "id": "S5",
+      "where": "data/runes.json -> \"Press the Attack\" -> description (noted only to enumerate the other 8% amplifier in the cache)",
+      "quote": "The third stack consumes all stacks to deal ... '''bonus''' {{tip|adaptive damage}} and grant you 8% increased damage against champions until 5 seconds after exiting combat with them.",
+      "reading": "The only other +8% amplifier in the cache. It is also exactly 8%, so it does not change the numeric verdict; the scenario name attributes the amp to Bloodsong."
+    }
+  ],
+
+  "independent_computation": {
+    "method": "Ratio inversion under 1-decimal display rounding — identify the multiplier the leaf change encodes, then match it against the multipliers the cached wiki text licenses.",
+    "steps": [
+      "Point ratio: 101.7 / 94.1 = 1.0807651...",
+      "Both endpoints are 1-dp displays, so the true pre-amp raw B satisfies B in [94.05, 94.15) and the true amped raw N satisfies N in [101.65, 101.75).",
+      "Multiplier band: N/B in [101.65/94.15, 101.75/94.05] = [1.07966, 1.08187]. Width +/-0.11 percentage points.",
+      "Candidate multipliers from the cache: 1.05 (Bloodsong ranged) -> 98.8, EXCLUDED. 1.06 -> 99.7, EXCLUDED. 1.10 -> 103.5, EXCLUDED. 1.08 (Bloodsong melee / Expose Weakness) -> IN BAND, and it is the only round game constant inside it.",
+      "Consistency check with explicit rounding: a pre-amp raw of B = 94.13 displays as 94.1; 94.13 * 1.08 = 101.6604, which displays as 101.7. (The admissible band is B in [94.1204, 94.15), which is non-empty and rounds to 94.1 — so the pair (94.1, 101.7) is internally consistent with a single 8% multiplicative amp on a value the snapshot shows to one decimal.)",
+      "Counter-check: the ranged branch would give B * 1.05 = 98.8 for every B in the band — nowhere near 101.7. No-amp gives 94.1 (the old value)."
+    ],
+    "result": {
+      "implied_multiplier": 1.08,
+      "implied_multiplier_band": [1.07966, 1.08187],
+      "identified_as": "Bloodsong — Expose Weakness, melee branch of {{rd|8%|5%}}: target takes 8% increased damage from all sources for 4 s",
+      "expected_leaf_value": 101.7,
+      "worked_example": "94.13 (pre-amp, displays 94.1) x 1.08 = 101.66 -> 101.7"
+    }
+  },
+
+  "why_the_old_value_is_wrong": "94.1 is the un-amplified damage. The scenario deliberately carries Bloodsong, whose Spellblade proc inflicts Expose Weakness on a champion target for 4 s; while that debuff is up, every damage instance against that target — from all sources, which is why this is a *roster* / coupled scenario — must be scaled by 1.08 (melee holder). An event ledger that omits the amp understates the instance, and therefore the fight total, by exactly 8%.",
+
+  "assumptions_and_residual_risk": [
+    "The Bloodsong holder in this scenario is MELEE. This is what the 1.08 multiplier says, and it is the only self-consistent reading of the pair: the ranged branch (5%) would give 98.8, which is not the new value. It is also the only sensible build — Bloodsong requires the support-quest line and Black Cleaver is a melee-bruiser item, so a single build holding both is melee. If the roster's Bloodsong holder were in fact ranged, the correct value would be ~98.8 and the verdict would flip to both_wrong; nothing in data/ contradicts the melee reading.",
+    "Event[62] is assumed to fall inside the 4 s Expose Weakness window against a champion target (the debuff's own preconditions). The scenario cannot be inspected from the evidence tree, but any event NOT in the window would show no ratio change at all rather than a clean 1.08.",
+    "The amp is assumed to be applied once, in raw_damage, and not additionally at the post-mitigation stage. Per docs/math-foundations.md §1.2/§2.1 the two placements are equivalent for a fixed resistance, so a single application at either stage yields the same final damage; double application would have produced 1.08^2 = 1.1664, which is outside the observed band."
+  ]
+}

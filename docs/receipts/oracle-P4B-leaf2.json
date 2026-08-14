@@ -1,0 +1,72 @@
+{
+  "receipt": "oracle-P4B-leaf2",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[1]",
+  "old_value": {
+    "factor": 1.07,
+    "fraction": 0.12,
+    "source": "Black Cleaver — Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "step_1_what_carve_can_legally_be": {
+      "rule": "Carve grants 6% armor reduction per stack, stacks are applied to the ENEMY (a debuff on the target), stack up to 5 times, for a hard ceiling of 30%.",
+      "check": "0.12 / 0.06 = 2.0 stacks -> a legal per-instance fraction; 5 x 0.06 = 0.30 is the ceiling for ALL Carve on one target."
+    },
+    "step_2_internal_arithmetic_of_the_old_leaf": {
+      "identity": "damage amp from a % armor reduction f applied to armor X: factor = m(X(1-f)) / m(X) = (100 + X) / (100 + (1-f)X), with m(R) = 100/(100+R) (math-foundations 2.1)",
+      "solve": "1.07 = (100 + X) / (100 + 0.88X)  ->  100 + X = 107 + 0.9416X  ->  0.0584X = 7  ->  X = 119.86",
+      "tolerance": "factor rounded to 2 dp is consistent for X in [103.5, 138.9] armor",
+      "conclusion": "The pair (fraction 0.12, factor 1.07) is arithmetically self-consistent for a target carrying ~104-139 armor at that step. The leaf is NOT numerically malformed — its defect is structural (it is a SECOND, independent Carve instance), not a wrong number."
+    },
+    "step_3_the_structural_rule_that_kills_the_leaf": {
+      "rule_a": "Carve is a unique item passive (data/items.json 3071: passives[0].unique = true) and the stack counter lives on the TARGET (\"Dealing physical damage to an enemy champion applies a stack of Carve ... stacking up to 5 times\"). A target therefore carries exactly ONE Carve debuff, whoever applied the stacks; it does not instantiate once per Black-Cleaver holder.",
+      "rule_b": "Black Cleaver is the ONLY item in the cache that grants percentage armor reduction (exhaustive scan of every passives[].branches / active[].branches in data/items.json for armor-reduction text returned exactly two items: Black Cleaver — Carve (percent) and Flesheater — Hack the Meat (flat, 3 per stack). So a second `armor_reduction_percent` sourced \"Black Cleaver — Carve\" on the same target at the same event can only be a second instantiation of the same unique debuff.",
+      "rule_c_ceiling_breach": "Composing a second, independent 12% Carve instance multiplicatively on top of an existing Carve instance x gives total = 1 - (1-x)(0.88). This exceeds the sourced 30% ceiling for any x > 0.2045. Under the engine's own documented Black Cleaver model (math-foundations 2.3: fixed 0.8 x max_stacks = 4 stacks = 24%), x = 0.24 -> total = 0.3312 > 0.30 — a provable breach of the wiki-sourced cap.",
+      "scenario_context": "The scenario is named `cleaver_bloodsong_roster` and the leaf sits in the SUPPORT-applied reduction list of a coupled roster fight, i.e. a Carve instance already exists in the fight from the Cleaver the scenario is named for. Bloodsong itself grants no armor reduction — its combat effect is Spellblade + `Expose Weakness` (8%/5% increased damage taken), a damage amplifier, not an `armor_reduction_percent`. So `support_resistance_reduction` carrying a Black Cleaver — Carve entry alongside an already-present Carve instance double-counts one unique per-target debuff and inflates that event's damage by exactly the leaf's own factor, 1.07 (+7%)."
+    },
+    "correct_value": "absent — the support-side list must not carry a second, independently-composed Black Cleaver — Carve instance. The target's Carve is one debuff, one instance, 6% x min(stacks, 5) <= 30%, benefiting every attacker through the target's armor rather than being credited a second time per participant."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> item 3071 \"Black Cleaver\" -> passives[0] (name \"Carve\", unique: true) -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json -> item 3071 -> passives[0].branches[1]",
+      "text": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "source": "data/items.json -> item 3877 \"Bloodsong\" -> passives[0] (\"Spellblade\", unique: true) -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 (The 100/(100+R) identity)",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.3, item 2 (Black Cleaver average stacks)",
+      "text": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch)."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.2 (Penetration and reduction order)",
+      "text": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)  [percentage reductions compose multiplicatively on the running value]"
+    },
+    {
+      "source": "data/items.json exhaustive scan (all 209 items, every passives[].branches and active[].branches)",
+      "text": "Only two items carry armor-reduction text: Black Cleaver — Carve (percent) and Flesheater — Hack the Meat (flat 3/stack, max 10). No second source of `armor_reduction_percent` exists in the cache."
+    }
+  ],
+
+  "residual_uncertainty": {
+    "not_observable_from_the_permitted_evidence_tree": "The scenario's roster (who holds Black Cleaver, and the identity/value of the surviving entry support_resistance_reduction[0]) lives in tests/ and scripts/golden_baseline.json, both out of bounds for this oracle. The verdict therefore rests on the item-cache rule, not on the scenario's build sheet.",
+    "condition_under_which_the_old_value_would_have_been_right": "If NO other Carve instance existed anywhere in the fight (no Black Cleaver on the main attacker and none on any other participant) and an allied participant genuinely held Black Cleaver and dealt physical damage, then a single Carve entry in the support list would be game-correct — armor reduction is a target debuff and benefits every attacker. That reading is excluded here by the scenario's own name (`cleaver_...`) plus the fact that the removed entry was index [1] of a list whose index [0] survives, i.e. it was the second reduction applied to the same target at the same event.",
+    "known_understatement_that_this_leaf_does_not_fix": "Strictly, when two Black Cleaver holders attack one target the stacks POOL into the single 5-stack counter, so the surviving instance should reflect the pooled stack count (up to 6% x 5 = 30%), not one holder's count. Dropping the duplicate instance is the correct direction (it removes a ceiling-breaching double-count); any residual under-count would live in the surviving entry support_resistance_reduction[0], which is outside this leaf."
+  }
+}

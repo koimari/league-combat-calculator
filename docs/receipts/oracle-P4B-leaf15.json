@@ -1,0 +1,74 @@
+{
+  "receipt": "oracle-P4B-leaf15",
+  "runbook": "R-18 / R-19 (independent oracle, evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[0]/fraction",
+  "old_value": 0.06,
+  "new_value": 0.3,
+  "verdict": "new_value_correct",
+  "data_provenance": {
+    "cache_patch": "16.15",
+    "cache_checked_at": "2026-08-06T12:36:09.630672+00:00",
+    "black_cleaver_staleness": "data/staleness.json items['3071'] = {\"name\": \"Black Cleaver\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 3}"
+  },
+  "sources": [
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 \"Black Cleaver\" -> passives[0] (name \"Carve\", unique true) -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 \"Black Cleaver\" -> riotDescription",
+      "quote": "<passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 \"Bloodsong\" -> passives[0] (name \"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "why_quoted": "Bloodsong contributes a damage-taken amplifier, NOT a resistance reduction, so it cannot be the source of this leaf. Only the Cleaver holder in this roster supplies resistance reduction."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.2 \"Penetration and reduction order: exact composition\"",
+      "quote": "reduce_resistance(R, r_flat, r_pct):   R ← R − r_flat;  R ← R·(1 − r_pct/100)   [flat first, then %]",
+      "why_quoted": "Confirms the engine consumes a single percentage-reduction magnitude per reduction source; the stored `fraction` is that applied magnitude, not a per-stack rate."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3, item 2 (\"Black Cleaver average stacks\")",
+      "quote": "the established model uses a fixed `0.8·max_stacks` constant (with a `hits/2` short-fight branch) ... the exact Cesàro mean of the capped ramp `min(k, C)` over `h` hits is `C − C(C−1)/(2h)` for `h ≥ C`",
+      "why_quoted": "Considered and rejected as the governing model for this leaf — see alternatives_considered."
+    }
+  ],
+  "independent_computation": {
+    "step_1_identify_source": "In roster 'cleaver_bloodsong_roster' the only resistance-reduction effect available is Black Cleaver's Carve. An exhaustive scan of every passive/active branch in data/items.json for armor/magic-resist reduction returns exactly four items: 3071 Black Cleaver (6%/stack, 5 stacks, 30% armor), 8010 Bloodletter's Curse (7.5%/stack, 4 stacks -> 30% MAGIC resist), 447112 Flesheater (flat 3 per stack, Arena-only: modes['classic sr 5v5'] == false), 3118 Malignance (no resistance reduction; scorched zone). Neither the 6% per-stack figure nor an armor reduction is produced by anything but Black Cleaver.",
+    "step_2_wiki_arithmetic": "Per-stack fraction = 6% = 0.06. Cap = 5 stacks. Total at cap = 5 x 0.06 = 0.30, which matches the wiki's own stated total 'up to 30% at 5 stacks' exactly (self-consistent, so 30% is not a wiki typo).",
+    "step_3_semantics_of_the_leaf": "The leaf is attached to a single combat event (events[35]) inside a list named `support_resistance_reduction`, whose element field is `fraction`. Per docs/math-foundations.md 2.2, resistance reduction enters as R <- R*(1 - r_pct/100), i.e. one applied magnitude per source at the moment of mitigation. A per-event record therefore carries the reduction in force at that event, not the per-stack rate (a per-stack rate is not usable at a mitigation site without a co-located stack count, and no stack multiplier appears in the reduction composition).",
+    "step_4_stack_state_at_event_35": "Carve stacks on every physical-damage instance to the champion and lasts 6 s, reaching the 5-stack cap after 5 damage instances. Event index 35 is deep into a coupled roster timeline (>= 36 events), so the ally Cleaver holder is unambiguously at the 5-stack cap; math-foundations 2.3 also notes the 6 s stack duration exceeds any realistic inter-swing interval, so no expiry rescues a sub-cap value.",
+    "step_5_result": "correct fraction = 5 stacks x 6% = 30% = 0.30",
+    "computed_value": 0.3,
+    "diagnosis_of_old_value": "0.06 is exactly the per-stack rate. The old baseline recorded the per-stack rate where the applied reduction belongs — a 5x understatement of the shred (armor multiplier 0.94 instead of 0.70), which understates all physical damage routed through the coupled event."
+  },
+  "alternatives_considered": [
+    {
+      "candidate": 0.24,
+      "reasoning": "docs/math-foundations.md 2.3 documents `ArmorReductionEffect.average_reduction` as 0.8 x max_stacks (= 4 stacks -> 24%), and the closed-form Cesàro mean C - C(C-1)/(2h) equals 4 stacks at h = 10 autos.",
+      "rejected_because": "That is a fight-aggregate averaging model — it collapses the stack ramp into one number for a whole hit sequence. This leaf is state attached to one event in the per-event ledger, where the ramp is resolved explicitly rather than averaged; at event 35 the ramp is saturated. An averaged constant appearing on a single event would also be internally inconsistent with the ledger's early events."
+    },
+    {
+      "candidate": "0.06 as a per-stack rate with a sibling stack-count field",
+      "reasoning": "Would make the old value correct under a different schema reading.",
+      "rejected_because": "The field is named `fraction` on an entry in `support_resistance_reduction` — the reduction fraction, matching the r_pct/100 magnitude consumed by reduce_resistance. Nothing in the cached data or math-foundations describes a per-stack rate being carried to a mitigation site."
+    },
+    {
+      "candidate": "Bloodsong as the source (8%/5% Expose Weakness)",
+      "reasoning": "The scenario name mentions Bloodsong.",
+      "rejected_because": "Expose Weakness is a damage-taken amplifier, not a resistance reduction, and neither 0.06 nor 0.30 is derivable from 8%/5%."
+    }
+  ],
+  "notes": [
+    "Evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, and git history were not consulted.",
+    "The scenario/baseline JSON itself was never read — the value 0.30 is derived from the cached wiki text alone."
+  ]
+}

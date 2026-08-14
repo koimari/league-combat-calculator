@@ -1,0 +1,98 @@
+{
+  "receipt": "oracle-P4B-leaf5",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[4]",
+  "old_value": {
+    "factor": 1.2,
+    "fraction": 0.3,
+    "source": "Black Cleaver \u2014 Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-P4B",
+    "read": [
+      "data/items.json (3071 Black Cleaver, 3877 Bloodsong)",
+      "data/item-atoms/3877.json",
+      "data/wiki-atoms/damage.json (damage.penetration atom)",
+      "data/staleness.json (3071 freshness)",
+      "docs/math-foundations.md \u00a7\u00a7 2.1\u20132.3"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json \u2192 3071 Black Cleaver \u2192 passives[0] 'Carve' \u2192 branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json \u2192 3071 Black Cleaver \u2192 passives[0] 'Carve' \u2192 branches[1]",
+      "text": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json \u2192 atom 'damage.penetration' (\"Penetration and resistance reduction\")",
+      "text": "Effects that reduce the target's effective resistances before mitigation: percent penetration applies before flat penetration, results cannot go below 0, and only resistance reduction effects can drive armor/MR negative."
+    },
+    {
+      "source": "docs/math-foundations.md \u00a7 2.1 (line ~234)",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md \u00a7 2.2 (lines ~270\u2013285)",
+      "text": "The game applies, in order: flat reduction \u2192 percentage reduction \u2192 percentage penetration \u2192 flat penetration ... reduce_resistance(R, r_flat, r_pct): R \u2190 R \u2212 r_flat; R \u2190 R\u00b7(1 \u2212 r_pct/100) ... R_final = max(0, (R \u2212 r_flat)\u00b7(1 \u2212 r_pct/100)\u00b7(1 \u2212 p) \u2212 f)"
+    },
+    {
+      "source": "data/items.json \u2192 3877 Bloodsong \u2192 passives[0] 'Spellblade'",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "source": "data/staleness.json \u2192 \"3071\"",
+      "text": "{\"name\": \"Black Cleaver\", \"stale\": false, \"stat_drift\": {}, \"stats_checked\": 3, \"note\": \"\"}"
+    }
+  ],
+  "independent_computation": {
+    "step_1_magnitude": {
+      "rule": "Carve: 6% armor reduction per stack, max 5 stacks (cached wiki text, 3071).",
+      "arithmetic": "5 stacks x 6% = 30% -> fraction = 0.30",
+      "result": "fraction 0.30 is exactly the cached wiki cap; the old leaf's fraction is correct and no other Carve magnitude is reachable."
+    },
+    "step_2_who_benefits": {
+      "rule": "Carve is armor *reduction*, not armor *penetration*. Both the item text ('Each stack inflicts 6% armor reduction' - it inflicts on the target, it does not let the holder ignore armor) and the wiki-atom definition ('Effects that reduce the target's effective resistances before mitigation') make it a debuff that lowers the target's armor stat itself.",
+      "corroboration": "docs/math-foundations.md \u00a7 2.2 splits the pipeline exactly along this line: reduce_resistance(R, r_flat, r_pct) mutates the target's resistance R, while apply_armor_penetration(R, f, p) is applied per damage instance for the attacker holding the pen. Reduction lives on the target (team-wide); penetration lives on the attacker (personal). \u00a7 2.1 adds that only reduction can push R negative - a target-state property, not an attacker-state one.",
+      "conclusion": "A Carve shred on the enemy applies to every damage source hitting that enemy, including an ally support's damage. The support's resistance-reduction ledger therefore SHOULD carry a 'Black Cleaver - Carve' entry while stacks are up; deleting it removes a legitimate team-wide shred."
+    },
+    "step_3_factor_check": {
+      "rule": "m(R) = 100/(100+R) (\u00a7 2.1). Amplification from a p-fraction armor reduction on a target with pre-reduction armor A is m(A(1-p))/m(A) = (100+A)/(100+(1-p)A).",
+      "solve": "Set (100+A)/(100+0.7A) = 1.2 -> 100+A = 120+0.84A -> 0.16A = 20 -> A = 125.",
+      "check_table": [
+        "A=100, p=0.30 -> 1.1765",
+        "A=125, p=0.30 -> 1.2000  (exact match to the old leaf)",
+        "A=150, p=0.30 -> 1.2195",
+        "A=125, p=0.24 (0.8*max_stacks average model) -> 1.1538"
+      ],
+      "conclusion": "The old pair (fraction 0.30, factor 1.2) is internally exact under the engine's own documented m(R) identity for a 125-armor target: 225/187.5 = 1.2. It is arithmetically self-consistent, not a stale literal. The 4-stack average model (\u00a7 2.3 item 2, 0.8 x max_stacks = 24%) would have produced factor 1.1538, so the leaf was recorded from the exact 5-stack cap, which is what the wiki text licenses."
+    },
+    "conclusion": "Both components of the old leaf reproduce independently: fraction 0.30 = 5 x 6% from the cached Carve text, and factor 1.2 = (100+125)/(100+87.5) from the \u00a7 2.1 mitigation identity. Because armor reduction is a target-side debuff, the entry belongs in the support participant's ledger. The new value (absent) drops a real, correctly-valued effect."
+  },
+  "residual_uncertainty": {
+    "note": "The scenario definition lives outside the permitted evidence tree (src/, tests/, scripts/), so this oracle cannot see the other four entries of support_resistance_reduction, the roster's champions, or the target's armor. Two alternative readings would make the deletion correct, and neither is checkable from data/ or docs/math-foundations.md:",
+    "alternatives": [
+      "(a) index [4] was an exact duplicate of an earlier Carve entry already present at [0..3] (double-counted shred) - removing the duplicate would then be right, but the surviving entry's fraction must still be 0.30;",
+      "(b) the support's damage in this roster is entirely magic, in which case an armor_reduction_percent amplifier on it would be misapplied."
+    ],
+    "why_verdict_stands": "Neither alternative is supported by anything in the permitted sources, and reading (b) is contradicted by the roster's own support item: Bloodsong's Spellblade deals bonus *physical* damage on-hit, so the support does have an armor-mitigated damage component. On the evidence available, the leaf's value is right and its presence is right."
+  },
+  "verdict_enum": "old_value_correct"
+}

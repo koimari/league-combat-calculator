@@ -1,0 +1,159 @@
+{
+  "receipt": "oracle-P4B-leaf29",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 271.4,
+  "new_value": 211.0,
+  "verdict": "old_value_correct",
+  "confidence": "low",
+  "verdict_meaning": "This verdict records that the NEW value could not be independently corroborated from the permitted evidence, and that the one wiki-text argument the evidence does support points at the higher (old) figure. It is NOT a confirmed regression. Treat as 'change not corroborated — produce the scenario input tuple and the intended mechanism, then re-run the oracle'.",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p4b-leaf29",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "item 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "stats blocks of items 3071 and 3877",
+      "quote": "Black Cleaver stats = {attackDamage 40 flat, health 400 flat, abilityHaste 20 flat}; Bloodsong stats = {goldPer10 9, health 200 flat, healthRegen +75%, manaRegen +75%}. Both have lifesteal = omnivamp = healAndShieldPower = 0 in every stats block (item stats and per-passive stats)."
+    },
+    {
+      "id": "S4",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5, formula-audit table, Grievous Wounds row",
+      "quote": "Grievous Wounds (`healing_reduction.py`, survival walk) | multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max` | EXACT | Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule)"
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3, item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed `0.8·max_stacks` constant (with a `hits/2` short-fight branch). Under the engine's own ordering convention (4 leading ability hits apply stacks before the auto stream) the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes."
+    },
+    {
+      "id": "S7",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenario id \"e9-e8-morellonomicon-grievous\" -> expected.healing_events",
+      "quote": "{\"time\": 0.25, \"raw\": 277.8, \"applied\": 166.7, \"factor\": 0.6} ... formula: \"Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut).\"",
+      "why": "Pins the healing-event record shape used by the golden corpus: applied = raw x factor, and the only factor the corpus ever carries is 0.6."
+    },
+    {
+      "id": "S8",
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenario id \"e9-e1-aatrox-umbral-dash-heal\" -> expected.formula",
+      "quote": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4",
+      "why": "Canonical example of a damage-proportional heal: raw heal moves 1:1 with post-mitigation damage."
+    },
+    {
+      "id": "S9",
+      "file": "data/wiki-atoms/heal-shield.json",
+      "locator": "atom heal-shield.heal / heal-shield.heal-and-shield-power",
+      "quote": "Directly increase a unit's current health, capped at maximum health; negative heal values deal no damage and cannot kill. ... [HSP] stacks additively with itself but multiplicatively with other heal modifiers"
+    },
+    {
+      "id": "S10",
+      "file": "CLAUDE.md domain knowledge (restated in docs/math-foundations.md Section 5)",
+      "locator": "Stat growth row",
+      "quote": "base + growth * (L-1) * (0.7025 + 0.0175 * (L-1))",
+      "why": "At L18 the factor (0.7025 + 0.0175*17) = 1.0 exactly, so level-18 base armor = flat + 17 * perLevel."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_target_quantity": "applied_amount of a single healing event. Per S7 the golden healing-event record is applied = raw * factor.",
+    "step_1_ratio": {
+      "value": "211.0 / 271.4 = 0.7774503",
+      "rounding_band": "with both leaves rounded to 1 dp the true ratio lies in [210.95/271.45, 211.05/271.35] = [0.777123, 0.777778]",
+      "implied_drop": "22.255% (band 22.222% - 22.288%)"
+    },
+    "step_2_eliminate_the_healing_reduction_layer": {
+      "argument": "S4 fixes the ONLY healing-reduction mechanism in the engine as a multiplicative 0.60 with strongest-wins (min) composition and no stacking. For one event, any change in its wound state must therefore multiply applied_amount by exactly 0.60 (wound gained) or 1/0.60 = 1.6667 (wound lost). Composition changes cannot help either: min() over a set whose only member value is 0.60 can only ever yield 1.00 or 0.60.",
+      "check": "0.7774503 is neither 0.60 nor 1.6667 nor 1.00.",
+      "conclusion": "The healing-reduction factor did NOT change. The raw heal changed, by the same factor 0.7774503."
+    },
+    "step_3_locate_the_raw_heal": {
+      "argument": "Per S3, neither item named in the scenario id heals or carries any healing-side stat (no lifesteal, no omnivamp, no heal-and-shield-power) and neither passive text (S1, S2) mentions healing. So the heal is champion-sourced. The only route by which a Black-Cleaver/Bloodsong scenario can move a champion heal by 22.255% is a damage-proportional heal (S8: Aatrox Umbral Dash = 16% of post-mitigation damage) fed by a 22.255% change in post-mitigation damage.",
+      "required_damage_drop": "22.255%"
+    },
+    "step_4_mitigation_identity": {
+      "formula": "S5: post = raw * 100/(100+R). With armor reduction fraction f applied to target armor A, post ∝ 1/(100 + (1-f)A). Dropping a reduction f therefore multiplies damage by (100 + (1-f)A)/(100+A), i.e. a drop of f*A/(100+A)."
+    },
+    "step_5_eliminations": [
+      {
+        "hypothesis": "H1 - Black Cleaver stack-model retune (S6): 0.8*max_stacks constant (= 0.8*5 = 4 stacks = 24% armor reduction, per S1's '6% per stack, 5 stacks, 30% max') replaced by the Cesaro mean C - C(C-1)/(2h) = 5 - 10/h stacks.",
+        "max_possible_drop": "even the extreme retune 24% -> 0% reduction yields only 0.24*A/(100+A); reaching 22.255% needs A = 1275 armor.",
+        "verdict": "RULED OUT. At the largest level-18 base armor in the cache (Sejuani, 126.65) the retune can move damage by at most 13.4%; at A = 200 by at most 16.0%."
+      },
+      {
+        "hypothesis": "H2 - Bloodsong Expose Weakness amp alone (S2: 8% ranged-difference / 5%).",
+        "max_possible_drop": "1 - 1/1.08 = 7.41% (or 4.76% at the 5% value).",
+        "verdict": "RULED OUT by magnitude."
+      },
+      {
+        "hypothesis": "H3 - Carve removed entirely (30% -> 0%).",
+        "requirement": "0.30*A/(100+A) = 0.22255 -> A = 287.35 target armor.",
+        "verdict": "POSSIBLE only against a heavily itemized tank; the largest level-18 BASE armor in data/champions.json is 126.65 (Sejuani), so this needs ~160 bonus armor on the target."
+      },
+      {
+        "hypothesis": "H4 - Carve (30%) AND Expose Weakness both removed from this damage source.",
+        "requirement": "(100+0.7A)/((100+A)*1.08) = 0.77745 -> A = 114.8 (with the 8% value) or A = 157.9 (with the 5% value).",
+        "verdict": "CONSISTENT at ordinary level-18 armor values."
+      }
+    ],
+    "step_6_scan_for_an_exact_fit": {
+      "method": "Computed level-18 base armor for all 173 cached champions via S10 (= flat + 17*perLevel, since (0.7025+0.0175*17) = 1.0 exactly) and tested H3/H4 for an exact ratio match inside the rounding band.",
+      "result": "One hit: Tryndamere, A = 115, H4 with the 8% value -> 0.777347 (inside band).",
+      "significance": "NOT evidence. d(ratio)/dA ~ -6.0e-4 per armor point, so the rounding band is ~1.1 armor units wide; across 173 candidate armors one hit is the chance expectation. Recorded and discarded."
+    },
+    "step_7_what_the_wiki_text_says_about_the_surviving_hypotheses": {
+      "argument": "H3 and H4 both require the two items' effects to stop amplifying this participant's damage. Both effects are TARGET-side debuffs per the cached wiki text: Carve 'inflicts 6% armor reduction' on the enemy (armor is the target's own stat, so every attacker reads the reduced value), and Expose Weakness explicitly 'caus[es] them to take 8%:5% increased damage FROM ALL SOURCES' (S1, S2). In a roster fight the wiki therefore grants the amplification to every source, not just the wielder - which is the higher (old) figure.",
+      "counter_hypothesis_not_excluded": "The same 22.255% drop is equally consistent with the old value having granted the debuffs to a participant that never legitimately had them - e.g. a wielder who deals no physical damage (Carve never stacks), a Spellblade that is not up at this event (S2: 4 s Expose Weakness duration, 1.5 s cooldown, requires an ability cast then a basic attack within 10 s), or a debuff mis-attributed across teams. Nothing in data/ or docs/math-foundations.md distinguishes these from the wiki-contradicting reading."
+    },
+    "step_8_blocking_gap": {
+      "statement": "The leaf is NOT determinable from the permitted evidence. Reproducing an applied_amount requires the scenario's input tuple (participants and their teams, levels, ability ranks, per-participant item lists, fight mode and window, and which participant/event index 39 belongs to). That tuple is defined outside data/ and docs/math-foundations.md.",
+      "searches_run": [
+        "grep -ri 'cleaver_bloodsong_roster' over the whole exported data/ tree -> 0 hits",
+        "grep -ri 'roster' / 'golden' over data/ -> only unrelated worklist and audit prose",
+        "data/practice-corpus/scenarios.json holds 22 verification scenarios; none references Black Cleaver or Bloodsong, and none is this scenario",
+        "grep for '271.4' / '211.0' across data/ -> single unrelated hit (Skarner attack-speed prose in data/champions.json)"
+      ]
+    }
+  },
+
+  "what_would_settle_it": [
+    "The scenario input tuple for cleaver_bloodsong_roster (participants, teams, levels, ranks, per-participant items, fight mode/duration) and which participant healing_events[39] belongs to.",
+    "The sibling leaves of the same event: raw_amount, factor, source, time, trigger_source. If factor is unchanged (as step 2 proves it must be), raw_amount alone identifies whether the mechanism is Carve, Expose Weakness, both, or an unrelated damage-side change.",
+    "The target's total armor at the event time. H3 requires ~287; H4 requires ~115 (8%) or ~158 (5%). If the target's armor is ordinary and the drop is the full 22.255%, both item debuffs vanished from this source - which contradicts S1/S2's 'from all sources' / target-side-armor semantics unless the wielder legitimately never applied them."
+  ],
+
+  "conclusions_that_are_firm": [
+    "The healing-reduction (Grievous Wounds) layer is NOT the cause: 0.7774503 is not reachable from the documented 0.60 strongest-wins factor (S4).",
+    "Neither Black Cleaver nor Bloodsong touches healing directly (S1, S2, S3); the moved quantity is a damage-proportional champion heal.",
+    "The Black Cleaver average-stacks retune recommended in docs/math-foundations.md Section 2.3 (S6) CANNOT by itself produce this diff - it would need 1275 target armor. If the change under test is that retune, the diff has a second, undisclosed cause.",
+    "Bloodsong's Expose Weakness amp alone cannot produce it either (max 7.41%)."
+  ]
+}

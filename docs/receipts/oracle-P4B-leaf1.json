@@ -1,0 +1,113 @@
+{
+  "receipt": "oracle-P4B-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[2]",
+  "old_value": {
+    "factor": 1.11,
+    "fraction": 0.18,
+    "source": "Black Cleaver \u2014 Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "evidence_tree": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p4b",
+    "read": [
+      "data/items.json (3071 Black Cleaver, 3877 Bloodsong)",
+      "data/item-atoms/3071.json",
+      "data/champions.json (Carve interaction notes)",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "data/worklists/*.md (naming of the support ledger only)",
+      "docs/math-foundations.md \u00a72.1\u20132.3, \u00a75"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json \u2192 id 3071 \u201cBlack Cleaver\u201d \u2192 passives[0] \u201cCarve\u201d \u2192 branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json \u2192 id 3071 \u2192 riotDescription / simpleDescription",
+      "quote": "Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. (stacks 5 times). / \u201cDealing physical damage to enemy champions reduces their Armor\u201d",
+      "why": "Carve is written as a debuff on the TARGET's armor stat (a reduction), not as an attacker-side penetration. Target-side armor reduction therefore conditions every physical damage instance landed on that target during the 6 s window, from any damage source \u2014 including a teammate's."
+    },
+    {
+      "id": "S3",
+      "where": "docs/math-foundations.md \u00a72.2",
+      "quote": "The game applies, in order: flat reduction \u2192 percentage reduction \u2192 percentage penetration \u2192 flat penetration \u2026 reduce_resistance(R, r_flat, r_pct): R \u2190 R \u2212 r_flat; R \u2190 R\u00b7(1 \u2212 r_pct/100)",
+      "why": "Reduction operates on the target's resistance R (shared state); penetration is the attacker-side half. Confirms an armor-reduction term is a property of the defender, not of one attacker."
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md \u00a72.3 item 2 (Black Cleaver average stacks)",
+      "quote": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8\u00b7max_stacks constant (with a hits/2 short-fight branch) \u2026 the exact Ces\u00e0ro mean of the capped ramp min(k, C) over h hits is C \u2212 C(C\u22121)/(2h) for h \u2265 C"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md \u00a72.1",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S6",
+      "where": "data/items.json \u2192 id 3877 \u201cBloodsong\u201d \u2192 passives[0] \u201cSpellblade\u201d, active[0] \u201cWard\u201d",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} on-hit. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources (1.5 second cooldown\u2026)",
+      "why": "The scenario's support item contributes a damage-taken AMPLIFIER and a bonus PHYSICAL on-hit \u2014 it contributes no armor or MR reduction of its own, and its physical proc is armor-mitigated (so it is a beneficiary of any Carve stacks on the target)."
+    },
+    {
+      "id": "S7",
+      "where": "data/champions.json (Ashe Ranger's Focus note; Graves note; Senna note)",
+      "quote": "A flurry can apply 5 stacks of Black Cleaver's Carve to a single target as it deals 5 instances of physical damage. / Black Cleaver's Carve will be applied for the physical damage dealt by each pellet\u2026 / The bonus on-hit damage applies an additional stack of Black Cleaver's Carve.",
+      "why": "Carve is generated per physical-damage instance by the item holder and lives on the target as a stack count \u2014 a single shared debuff capped at 5 stacks, not a per-attacker private modifier."
+    },
+    {
+      "id": "S8",
+      "where": "data/champions.json (Garen Judgment note)",
+      "quote": "The armor reduction stacks multiplicatively with other percentage armor penetration effects.",
+      "why": "Composition rule for a percent armor reduction sitting alongside other multiplicative resistance terms \u2014 consistent with the leaf carrying both a `fraction` and a derived `factor`."
+    }
+  ],
+  "independent_computation": {
+    "step_1_legal_quanta": {
+      "rule": "Carve fraction = 0.06 \u00d7 stacks, stacks \u2208 {0..5} (S1)",
+      "quanta": [0.0, 0.06, 0.12, 0.18, 0.24, 0.3],
+      "result": "0.18 = 3 stacks \u00d7 6% is a legal, exactly-sourced Carve magnitude (cap 0.30 respected)."
+    },
+    "step_2_engine_average_model": {
+      "rule": "average_reduction = 0.06 \u00d7 min(0.8\u00b7max_stacks, hits/2) per S4, max_stacks = 5 (S1)",
+      "long_fight_branch": "0.8 \u00d7 5 = 4 stacks \u2192 fraction 0.24",
+      "short_fight_branch": "hits/2 with h = 6 \u2192 3 stacks \u2192 fraction 0.18",
+      "result": "0.18 is reproducible from the documented model for a 6-physical-hit actor (e.g. the doc's ordering convention of 4 leading ability hits + 2 autos). It is NOT reproducible for a long hit stream, where the documented constant gives 0.24."
+    },
+    "step_3_factor_consistency": {
+      "rule": "factor = m(A\u00b7(1\u2212f)) / m(A) with m(R) = 100/(100+R) (S3, S5), f = 0.18",
+      "worked": [
+        "A = 100 \u2192 82.0 armor \u2192 factor 1.0989",
+        "A = 120 \u2192 98.4 armor \u2192 factor 1.10887",
+        "A = 125 \u2192 102.5 armor \u2192 factor 1.11111",
+        "A = 130 \u2192 106.6 armor \u2192 factor 1.11326"
+      ],
+      "result": "factor 1.11 is self-consistent with fraction 0.18 for any target armor A \u2208 [111.8, 134.2] (the interval that rounds to 1.11). The old leaf is internally coherent; no arithmetic defect is detectable in it."
+    },
+    "step_4_should_the_entry_exist": {
+      "sourced_rule": "Carve is a reduction of the TARGET's armor (S1, S2, S3), generated per physical-damage instance by the Black Cleaver holder (S7), lasting 6 s. Unlike armor penetration \u2014 which docs/math-foundations.md \u00a72.2 keeps on the attacker side \u2014 a reduction changes the shared defender state, so every physical damage instance landed on that target while stacks are up is mitigated at the reduced armor, whoever throws it.",
+      "roster_facts": "The scenario roster contains a Black Cleaver (data/items.json 3071) and a Bloodsong (3877). Bloodsong's Spellblade proc is bonus PHYSICAL damage (S6), i.e. armor-mitigated damage that benefits from any Carve stacks on the target.",
+      "derivation": "Given a Black Cleaver in the roster and physical damage being dealt to the target in the fight, a non-zero Carve armor-reduction term is in effect for the roster's physical damage at that point in the timeline. Nothing in the cached wiki text or in docs/math-foundations.md derives 'no Carve reduction applies here'. Absence would require one of: (a) zero Carve stacks on the target at that event, (b) the event's damage not being armor-mitigated (magic/true), or (c) the leaf being a duplicate of a Carve term already applied in the same chain (Carve is a single target debuff capped at 5 stacks / 30% \u2014 it never applies twice). None of (a)\u2013(c) is derivable from data/ or docs/math-foundations.md.",
+      "correct_value": "present, type armor_reduction_percent, source 'Black Cleaver \u2014 Carve', fraction = 0.06 \u00d7 (Carve stacks on the target at that event) \u2208 {0.06, 0.12, 0.18, 0.24, 0.30}, factor = m(A(1\u2212fraction))/m(A). 0.18 / 1.11 is a legal and model-consistent instance of that form."
+    }
+  },
+  "verdict": "old_value_correct",
+  "confidence": "medium",
+  "reasoning_summary": "From the cached sources alone, Black Cleaver's Carve is a target-side armor reduction (6% per stack, max 5 stacks / 30%) generated by physical damage and therefore in effect for every physical damage instance on that target while it is stacked \u2014 including a support's Bloodsong Spellblade proc, which is itself bonus physical damage. The removed leaf is arithmetically self-consistent (0.18 = exactly 3 stacks; factor 1.11 = m(0.82A)/m(A) for target armor ~112\u2013134) and is reproducible from the engine's own documented average-stacks model (hits/2 branch at 6 hits, docs/math-foundations.md \u00a72.3). No cached wiki text or quoted formula yields 'absent'. I therefore score the deletion as the less defensible side.",
+  "caveats_and_falsifiers": [
+    "I could not read the scenario definition (it is not under data/; practice-corpus/scenarios.json has no cleaver_bloodsong_roster entry) or the golden tree itself, so I could not see sibling leaves [0] and [1], the event's damage type, or which roster member holds the Black Cleaver.",
+    "The verdict flips to new_value_correct if any of these hold and can be shown from the tree: (a) events[23] is magic or true damage, so an armor term is inert; (b) the same list already carries another 'Black Cleaver \u2014 Carve' entry \u2014 Carve is one debuff on the target, capped at 5 stacks/30%, so a second entry is a double count and must be deleted; (c) the same Carve reduction is already applied to that event elsewhere in the mitigation chain and this list is a duplicate application rather than a receipt.",
+    "Magnitude caveat: 0.18 corresponds to a 6-physical-hit actor under the documented hits/2 branch. Because Carve stacks belong to the TARGET and are generated by the Black Cleaver HOLDER's hits, a beneficiary-derived hit count would be the wrong basis; if the holder's stream is long, the documented model yields 0.24 (0.8 \u00d7 5 stacks), not 0.18. If the tree shows the 0.18 was computed from the beneficiary's own hit count while the holder was at 4+ average stacks, the honest verdict becomes both_wrong (entry should be present at the holder-derived fraction).",
+    "docs/math-foundations.md \u00a72.3 already flags the whole BC average-stacks constant as APPROX / a documented tuning constant, so any fraction in {0.18, 0.24} is model-tuning territory, not a hard game constant \u2014 the presence/absence question is the sharp one, and that is what this verdict answers."
+  ]
+}

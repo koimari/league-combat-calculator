@@ -1,0 +1,97 @@
+{
+  "receipt": "oracle-P4B-leaf55",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change under test)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/incoming_damage",
+  "old_value": 4074.9,
+  "new_value": 4041.9,
+  "delta": -33.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": ["data/items.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "data/onhit-matrix.json", "data/worklists/*.md", "data/champion-audit/*.json", "docs/math-foundations.md"],
+    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "limitation": "The export contains no scenario definition and no golden baseline (grep for 'cleaver_bloodsong' and 'coupled_scenarios' over data/ returns nothing). The scenario roster, levels, fight length and target resistances are therefore unknown, so the derivation below is a constrained reconstruction from the two published totals plus the cached wiki constants, not a full re-simulation."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> 3877 Bloodsong -> passives[0] (Spellblade) -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "reading": "{{rd|A|B}} is the wiki's melee/ranged split, melee value first. Expose Weakness = +8% damage taken if the Bloodsong wielder is melee, +5% if ranged. The amplifier is on the TARGET and applies to damage 'from all sources', i.e. to the whole roster's damage into that target while the 4 s debuff is up."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json — corroboration of the melee-first convention of {{rd|..|..}}",
+      "text": [
+        "Ravenous Hydra / Cleave: 'Basic attacks on-hit deal {{as|{{rd|40% AD|20% AD}}|ad}} physical damage to other enemies…' (Hydra cleave is 40% AD melee, 20% AD ranged)",
+        "Blade of the Ruined King / Mist's Edge: '…equal to {{as|{{rd|9%|6%}} of the target's current health}}' (9% melee, 6% ranged)",
+        "Death's Dance / Ignore Pain: 'Reduces {{rd|30%|10%}} of all post-mitigation physical and magic damage received…' (30% melee, 10% ranged)"
+      ],
+      "reading": "Three items whose melee/ranged asymmetry is unambiguous all put the melee value first, so {{rd|8%|5%}} = 8% melee / 5% ranged, and never 5%/8%."
+    },
+    {
+      "id": "S3",
+      "source": "data/items.json -> 3877 Bloodsong -> buildsFrom [3867 'Bounty of Worlds'] and its Upgrade passive; item stats = {health 200, goldPer10 9} (no AD, no AH)",
+      "text": "'You have completed the support quest and can now upgrade this item, Bounty of Worlds, for free into Bloodsong, Celestial Opposition, Dream Maker, Solstice Sleigh, or Zaz'Zak's Realmspike…'",
+      "reading": "Bloodsong is a support-quest upgrade; its holder in any roster scenario is the support slot, not the Black Cleaver carrier. Corroborated by data/worklists/e9-bis-b-task.md: 'Support starter upgrades withheld for ALL 173 champions: Bloodsong, Celestial Opposition, Dream Maker, Solstice Sleigh, Zaz'Zak's Realmspike'. The support-roster champions this repo exercises (data/champion-audit/batch-e9-3.json roster probes: Bard, Kayle, Milio, Nami, Sona, Yuumi; data/practice-corpus/scenarios.json ally: Lulu) are all ranged, so the ranged branch (5%) is the one a roster scenario resolves."
+    },
+    {
+      "id": "S4",
+      "source": "data/items.json -> 3071 Black Cleaver -> passives[0] (Carve) -> branches",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.",
+      "reading": "Current cache: 5 stacks x 6% = 30% max armor reduction (not the legacy 6 x 5%)."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md Section 2.3 item 2 and the Section 5 audit table row 'Terminus/BC ramps'",
+      "text": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch)… the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes… Recommendation: replace the constant with the closed-form Cesaro mean…",
+      "reading": "Used to test (and reject) Black Cleaver as the mechanism behind this leaf's delta — see alternatives_tested."
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md Section 2.1 / Section 5 audit table",
+      "text": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py); EHP round-trip raw = post*(1 + R/100)",
+      "reading": "The mitigation identity used in the Black Cleaver counter-check below."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_observed_delta": "4074.9 - 4041.9 = 33.0 (a 0.8098% drop; ratio new/old = 4041.9/4074.9 = 0.9919016).",
+    "step_2_candidate_constant": "The only pair of numbers anywhere in the two named items' cached wiki text separated by exactly 3 percentage points is Bloodsong's Expose Weakness amplifier {{rd|8%|5%}} (S1). Black Cleaver's constants (6% per stack, 5 stacks, 30% cap, 6 s) contain no 3 pp pair (S4).",
+    "step_3_solve_the_amplified_subtotal": "Model the leaf as incoming_damage = U + (1 + a) * S, where S is the post-mitigation damage taken inside the 4 s Expose Weakness window (amplified 'from all sources'), U is the unamplified remainder, and a is the amplifier. Then delta = (0.08 - 0.05) * S = 33.0  =>  S = 33.0 / 0.03 = 1100.0.",
+    "step_4_recover_the_remainder": "U = 4074.9 - 1.08 * 1100.0 = 4074.9 - 1188.0 = 2886.9.",
+    "step_5_reproduce_both_published_values": {
+      "melee_branch_8_percent": "2886.9 + 1.08 * 1100.0 = 4074.9  == old value (exact, no rounding slop)",
+      "ranged_branch_5_percent": "2886.9 + 1.05 * 1100.0 = 4041.9  == new value (exact, no rounding slop)"
+    },
+    "step_6_pick_the_branch": "Bloodsong can only be held by the support-quest slot (S3), and every support this repo drives through its roster/ally path is ranged. The wiki's ranged value is 5% (S1, S2). A fix that introduces the melee/ranged branch changes ONLY the scenarios whose wielder is ranged — which is exactly the situation that produces a diff here — and in those scenarios 5% is the wiki-correct amplifier. Direction of the observed change (damage down) matches 8% -> 5%; the reverse fix would have raised the leaf.",
+    "conclusion": "The wiki-correct value for a ranged Bloodsong wielder is 4041.9. The old 4074.9 is the value produced by using the melee (first) token of {{rd|8%|5%}} unconditionally — the 'index the first value' failure mode the repo's own rule 6 warns against."
+  },
+
+  "alternatives_tested": [
+    {
+      "hypothesis": "Black Cleaver armor-reduction model changed (30% -> 24%, i.e. dropping to the 0.8*max_stacks average).",
+      "test": "Treating the leaf as physical damage mitigated by 100/(100+A_eff) (S6): (100 + 0.70A) * (4074.9/4041.9) = 100 + 0.76A  =>  A = 15.0 armor.",
+      "outcome": "Rejected — 15 armor is not a plausible target armor for a late-game roster scenario."
+    },
+    {
+      "hypothesis": "Black Cleaver constant replaced by the documented Cesaro mean (S5): 4.0 stacks (24%) -> 3.75 stacks (22.5%) at h = 8 hits.",
+      "test": "(100 + 0.76A) * (4074.9/4041.9) = 100 + 0.775A  =>  A = 92.8 armor.",
+      "outcome": "Numerically possible (93 armor is realistic) but requires the ENTIRE 4 kilo-damage leaf to be physical with zero penetration, which a mixed roster fight is not; and it needs a free hit-count parameter. Weaker than the exact 3 pp Bloodsong fit, which needs no resistance assumption at all. Note this alternative also lands on new_value_correct, since it replaces a documented tuning constant with the exact Cesaro mean."
+    },
+    {
+      "hypothesis": "Expose Weakness was narrowed from 'all sources' to the wielder's own damage only (8% amp dropped from 412.5 of ally damage).",
+      "test": "delta = 0.08 * S' => S' = 412.5; U' = 4074.9 - 1.08*412.5 = 3629.4. Arithmetically consistent.",
+      "outcome": "Rejected on the wiki text: S1 says the debuff causes the target to 'take ... increased damage from all sources'. Narrowing it would be a regression, and only under this reading would the old value be correct. It is also implausible as a 0.8% effect — dropping the team-wide scope of a 4 s amp would move many more leaves, and by more."
+    }
+  ],
+
+  "caveats": [
+    "The scenario definition is outside the permitted evidence tree, so the amplified subtotal S = 1100.0 and remainder U = 2886.9 are recovered from the two published totals rather than independently simulated. Both totals are reproduced exactly (to the published 0.1) by a single integer subtotal under the two wiki constants, which is the strength of the fit.",
+    "If the Bloodsong wielder in this roster is in fact melee, the melee branch (8%) and hence the OLD value would be correct. Nothing in the permitted evidence names the wielder; the ranged conclusion rests on Bloodsong being a support-quest-only item (S3) and on every support in this repo's roster/ally probes being ranged."
+  ]
+}

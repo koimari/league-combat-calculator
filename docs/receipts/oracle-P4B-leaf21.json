@@ -1,0 +1,101 @@
+{
+  "receipt": "oracle-P4B-leaf21",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change)",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/raw_damage",
+  "scenario": "cleaver_bloodsong_roster",
+  "old_value": 128.9,
+  "new_value": 53.4,
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle21",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> \"3877\" (Bloodsong) .passives[0].branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).",
+      "use": "Bloodsong is the ONLY damage-producing item named by the scenario. Its damage term is exactly 100% of the wielder's BASE attack damage."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> \"3071\" (Black Cleaver) passives",
+      "quote": "Carve: Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks. / Fervor: Dealing physical damage grants you 20 bonus movement speed for 2 seconds. (stats: 40 AD, 400 health, 20 ability haste)",
+      "use": "Black Cleaver authors NO damage event of its own -- it only shreds armor (a post-raw, mitigation-side effect) and grants movement speed/stats. It therefore cannot be the source of a 'raw_damage' leaf. Every raw_damage in this scenario must come from the champion's own kit or from Bloodsong's Spellblade."
+    },
+    {
+      "id": "S3",
+      "source": "data/atoms/items.json -> \"3877\" atoms damage.on_hit / damage.physical / damage.bonus (Bloodsong.passives[0].branches[0])",
+      "quote": "values [10.0, 100.0, 4.0, 8.0, 5.0, 1.5], units [\"s\", \"percent\", \"s\", \"percent\", \"percent\", \"flat\"]",
+      "use": "Machine-extracted confirmation of S1: 10 s window, 100 percent (base AD) damage, 4 s Expose Weakness, 8%/5% melee/ranged amp, 1.5 s cooldown. The damage coefficient is 100 percent, with no second scaling term."
+    },
+    {
+      "id": "S4",
+      "source": "docs/math-foundations.md section 5 (Formula-audit table), row 'Stat growth (growth_stat)'",
+      "quote": "`base + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121))` | **EXACT** | Level cap 20 (top lane); formula season-volatile, single source of truth `MAX_LEVEL`",
+      "use": "The quoted base-stat growth law, and the statement that the only levels a golden fight can use are 1..18 (or 1..20 for top lane)."
+    },
+    {
+      "id": "S5",
+      "source": "data/champions.json -> Hecarim.stats.attackDamage",
+      "quote": "{\"flat\": 66, \"percent\": 0.0, \"perLevel\": 3.7, \"percentPerLevel\": 0.0}",
+      "use": "The base-AD inputs that reproduce 128.9 exactly."
+    },
+    {
+      "id": "S6",
+      "source": "data/champion-audit/batch-e9-2.json -> Hecarim",
+      "quote": "{\"verdict\": \"ok\", \"module\": \"hecarim.py\", \"slots\": {\"P\": \"modeled\", \"Q\": \"modeled\", \"W\": \"modeled\", \"E\": \"modeled\", \"R\": \"modeled\"}} ... \"P Warpath movement-speed AD, Q Rampage stacks (q_stacks), E charge-distance branch and R are modeled.\"",
+      "use": "Hecarim is a fully-modeled NAMED champion module, so he is a legal production attacker for a golden scenario; and his passive (Warpath: bonus AD from bonus movement speed) is precisely what makes Black Cleaver's Fervor coupling worth a dedicated 'cleaver' scenario."
+    },
+    {
+      "id": "S7",
+      "source": "data/items.json -- the complete Spellblade family (unique passive named 'Spellblade')",
+      "quote": "Dusk and Dawn 75% base AD (+10% AP magic) | Sheen 100% base AD | Trinity Force 200% base AD | Lich Bane 75% base AD (+45% AP magic) | Essence Reaver 125% base AD (+0-50% by crit chance) | Bloodsong 100% base AD | Iceborn Gauntlet 150% base AD | Divine Sunderer 180% base AD (+6%/4% max health)",
+      "use": "The exhaustive set of Spellblade coefficients {0.75, 1.00, 1.25, 1.50, 1.80, 2.00} used to test whether 53.4 could be ANY spellblade proc, not just Bloodsong's."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_only_computable_damage_term": "The scenario names two items. Black Cleaver authors no damage event (S2); Bloodsong's Spellblade is the one damage term either item contributes, and it is a pure '100% base AD' bonus-physical on-hit (S1, S3). A raw_damage leaf in a 'cleaver_bloodsong' scenario that equals a champion's base AD exactly is the signature of that proc: it carries NO bonus-AD term, so it is the one number in the fight that can land exactly on a base-stat value.",
+    "step_2_base_ad_law": "base_AD(L) = flat + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121))  [S4]. At L=18 the bracket is exactly 1.0, so base_AD(18) = flat + 17\u00b7growth.",
+    "step_3_evaluate_the_old_value": {
+      "claim": "128.9 is exactly a 100%-base-AD Spellblade proc.",
+      "hecarim_L18": "66 + 3.7\u00b717\u00b7(0.7025 + 0.0175\u00b717) = 66 + 3.7\u00b717\u00b71.0 = 66 + 62.9 = 128.900  (exact, S5)",
+      "other_exact_hits_at_the_level_cap_L20": {
+        "Maokai": "64 + 3.3\u00b719\u00b71.035 = 128.8945 -> 128.9",
+        "Pantheon": "64 + 3.3\u00b719\u00b71.035 = 128.8945 -> 128.9",
+        "Draven": "62 + 3.4\u00b719\u00b71.035 = 128.8610 -> 128.9",
+        "Kindred": "65 + 3.25\u00b719\u00b71.035 = 128.9112 -> 128.9"
+      },
+      "conclusion": "128.9 = 100% \u00d7 base AD for a legal production attacker at a legal level (Hecarim at 18 to the digit; Maokai/Pantheon/Draven/Kindred at the level-20 top-lane cap). It is exactly the value S1 prescribes."
+    },
+    "step_4_evaluate_the_new_value": {
+      "claim_tested": "Is 53.4 attainable as any Spellblade proc, i.e. 53.4 = k \u00b7 base_AD(L) for k in {0.75, 1.00, 1.25, 1.50, 1.80, 2.00} (S7)?",
+      "sweep": "All 173 champions in data/champions.json \u00d7 levels 1..20 \u00d7 all six Spellblade coefficients, tolerance \u00b10.05.",
+      "result_at_fight_levels": "ZERO matches at any level \u2265 11. The only matches at all are at levels 2-10 (e.g. Karthus L4 at 100%: 53.361; Karma/Renata/Sona L3 at 100%: 53.425; Karthus L10 / Miss Fortune L9 / Nautilus L5 at 75%). No golden combat scenario in this cache runs a participant at level 3-4 (the practice corpus in data/practice-corpus/scenarios.json is uniformly level 18).",
+      "why_it_is_impossible_at_18_20": "The smallest base AD at L18 in the whole cache is Senna's 50.0 (flat 50, growth 0); the next-smallest is Bel'Veth at 80.5, then Orianna 88.2. There is no champion between 50.0 and 80.5, so no champion's 100% proc can be 53.4, and 53.4/0.75 = 71.2, 53.4/1.25 = 42.7, 53.4/1.5 = 35.6, 53.4/1.8 = 29.7, 53.4/2.0 = 26.7 are all below the L18 floor as well.",
+      "amp_check": "Bloodsong's own Expose Weakness (8% melee / 5% ranged, S1/S3) cannot bridge the gap either: 128.9/1.08 = 119.35 and 128.9\u00b7(5/8) = 80.6, neither of which is 53.4; and the ratio 53.4/128.9 = 0.4143 matches no coefficient, amp, or melee/ranged split anywhere in the cached item text.",
+      "conclusion": "53.4 cannot be produced by Bloodsong's Spellblade \u2014 or by ANY spellblade item \u2014 for any champion at any level a golden fight uses."
+    },
+    "step_5_correct_value": "For the wielder whose base AD reproduces the old leaf (Hecarim at level 18, or Maokai/Pantheon/Draven/Kindred at the level-20 cap), the Bloodsong Spellblade raw damage is 100% \u00d7 base AD = 128.9. The old value matches the wiki formula exactly; the new value matches nothing derivable from the cache."
+  },
+
+  "confidence_and_caveats": {
+    "confidence": "medium-high",
+    "load_bearing_assumption": "That events[46] is (still) the Bloodsong Spellblade proc. The scenario definition lives in scripts//tests/ which this oracle is forbidden to read, so event identity was inferred, not observed. The inference rests on: (a) Bloodsong is the only damage source either named item contributes (S2 rules Black Cleaver out); (b) a Spellblade proc is the only fight term with no bonus-AD component, hence the only one that can land exactly on a base-stat value; (c) 128.9 IS exactly such a value for a fully-modeled named module (S5, S6).",
+    "alternative_reading_considered": "If the change removed the proc event entirely (e.g. Bloodsong withheld from a non-support wielder under the item_source rules), events[46] would now hold a DIFFERENT event and the leaf comparison would be an index shift rather than a value change. In that case the new number is not wrong so much as unanchored \u2014 but it still cannot be the Bloodsong proc the leaf used to hold, and nothing in data/ produces 53.4 for this scenario's named items. This does not change the verdict that 53.4 is not the correct value of a Bloodsong-proc leaf; it is the one scenario in which 'old_value_correct' would understate the situation.",
+    "checks_that_came_back_negative": [
+      "53.4 is not any champion's base AD at L18 or L20 (nor total AD with Black Cleaver's +40).",
+      "53.4 is not any keystone damage in data/runes.json at L18/L20 (Press the Attack 160.0, Electrocute 240.0, Aery 50.0, Comet 100.0).",
+      "53.4 is not reachable by any champion ability row in data/champions.json evaluated at L18 with bonus AD in {0, 40, 55, 95} and AP = 0 (only near-misses: Shaco E per-level 53.38, Yunara W rank 1 53.4 \u2014 neither champion is coupled to either named item, and Yunara's W is unrelated to a cleaver/bloodsong scenario).",
+      "53.4 is not reachable by scaling a spellblade proc by any on-hit effectiveness in data/onhit-matrix.json (0.25 / 0.30 / 0.75): 53.4/0.25 = 213.6, /0.30 = 178.0, /0.75 = 71.2 \u2014 none is a base AD at L18/L20.",
+      "grep of the whole data/ tree for the literals '53.4' and '128.9' returns nothing, so neither number is a pinned constant anywhere in the cache."
+    ]
+  },
+
+  "no_commit": true
+}

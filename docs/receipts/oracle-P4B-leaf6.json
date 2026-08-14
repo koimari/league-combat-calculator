@@ -1,0 +1,92 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh subagent; evidence tree built ONLY from `git archive --format=tar HEAD data docs/math-foundations.md`; src/, tests/, scripts/, docs/plans/, docs/receipts/, diff and git history were never read",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[5]",
+  "old_value": {
+    "factor": 1.2,
+    "fraction": 0.3,
+    "source": "Black Cleaver — Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent> (entry removed from the list)",
+  "independent_computation": {
+    "step_1_sourced_magnitude": {
+      "rule": "Carve stacks to 5, each stack inflicts 6% armor reduction",
+      "arithmetic": "5 stacks x 6% = 30% -> fraction = 0.30",
+      "cross_check": "the same wiki sentence states the total explicitly: 'up to 30% at 5 stacks'",
+      "conclusion": "fraction 0.3 is exactly the wiki-sourced maximum; it is neither an over- nor under-statement of Carve at full stacks"
+    },
+    "step_2_kind_of_effect": {
+      "rule": "Carve is worded as a debuff INFLICTED ON the enemy champion ('inflicts 6% armor reduction'), i.e. it lowers the target's armor stat. Penetration is worded as a stat GRANTED TO the wielder (Terminus: 'Dark hits grant 10% armor penetration and magic penetration').",
+      "engine_corroboration": "docs/math-foundations.md 2.2 keeps the two halves in different places for exactly this reason: `reduce_resistance(R, r_flat, r_pct)` mutates the target's resistance R, while `apply_{armor,magic}_penetration` is applied at the attacker's damage step; and 'Only armor/magic *reduction* effects can push resistance negative; penetration floors at 0' (2.1). A quantity that lives on the target is visible to every source of damage against that target.",
+      "conclusion": "an ally / support-layer consumer of the fight DOES benefit from Carve's armor reduction. There is no sourced rule making Carve's shred attacker-local, and no wording in the cached item text restricting the debuff to the Black Cleaver holder."
+    },
+    "step_3_factor_consistency": {
+      "definition_used": "for a target-side percentage armor reduction, the amplification of an ally's physical damage is amp = m(R')/m(R) = (100+R)/(100 + R*(1-fraction)), from the 100/(100+R) identity in docs/math-foundations.md 2.1",
+      "solve": "amp = 1.20 with fraction = 0.30  =>  100+R = 1.2*(100+0.7R)  =>  0.16R = 20  =>  R = 125.0 armor",
+      "plausibility": "base armor at level 18/20 for the champion pool in data/champions.json lands in that band for many bruiser/tank defenders (e.g. Darius L18 = 125.4 -> amp 1.2003; Sejuani L18 = 126.65 -> 1.2014; Leona L18 = 124.6 -> 1.1997)",
+      "conclusion": "the removed entry was arithmetically self-consistent: fraction 0.3 and factor 1.2 are the exact wiki value and its exact mitigation consequence against a ~125-armor defender, not a stale or fabricated pair"
+    },
+    "step_4_alternative_model_checked_and_rejected": {
+      "candidate": "docs/math-foundations.md 2.3 item 2 documents the engine's Black Cleaver damage model as a fixed 0.8 x max_stacks constant (0.8*5 = 4 stacks = 24%, fraction 0.24, amp 1.154 at R=125.4), with the exact Cesaro mean C - C(C-1)/(2h) for h >= C",
+      "why_rejected_as_the_target_value": "that constant is an average over a whole hit stream ('the exact Cesaro mean of the capped ramp min(k,C) over h hits'); it converges to the cap C = 5 as h grows. A per-event receipt at event index 35 - deep into the fight, after the stacks have long since capped - is correctly reported at the capped 5 stacks = 0.30, not at the whole-fight mean. So 0.3 is the right per-event number and 0.24 would be the right whole-fight-average number; the doc does not support replacing the entry with nothing either way."
+    },
+    "correct_value": {
+      "factor": 1.2,
+      "fraction": 0.3,
+      "source": "Black Cleaver — Carve",
+      "type": "armor_reduction_percent",
+      "statement": "a Carve armor-reduction record SHOULD be present, with fraction 0.30 (5 x 6%) and, at a ~125-armor defender, factor ~1.20"
+    }
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 Black Cleaver -> passives[Carve].branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3071 -> passives[Carve].branches[1]",
+      "quote": "Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "Terminus -> passives[Juxtaposition].branches[0] (wording contrast: penetration is granted to the wielder, reduction is inflicted on the target)",
+      "quote": "''Dark'' hits grant 10% {{as|armor penetration}} and {{as|magic penetration}}"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 3877 Bloodsong -> passives[Spellblade].branches[0] (the scenario's other named item; its proc is physical, so the support participant is an armor-facing consumer)",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "2.1 The 100/(100+R) identity",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "2.2 Penetration and reduction order",
+      "quote": "reduce_resistance(R, r_flat, r_pct):   R <- R - r_flat;  R <- R*(1 - r_pct/100)   [flat first, then %] / apply_{armor,magic}_penetration(R, f, p): R <- max(0, R*(1 - p) - f)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "2.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed `0.8*max_stacks` constant (with a `hits/2` short-fight branch) ... the exact Cesaro mean of the capped ramp `min(k, C)` over `h` hits is `C - C(C-1)/(2h)` for `h >= C`"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "stats.armor for the champion pool; growth applied as base + growth*(L-1)*(0.7025+0.0175*(L-1))",
+      "quote": "Darius L18 armor = 125.4 (base 39, growth 5.2) -> (100+125.4)/(100+0.7*125.4) = 1.2003"
+    }
+  ],
+  "verdict": "old_value_correct",
+  "verdict_rationale": "Every sourced quantity in the removed entry checks out: 5 x 6% = 30% is verbatim the cached Carve text, and 1.2 is exactly the amplification that a 30% armor reduction produces at ~125 armor under the engine's own 100/(100+R) identity. Carve is a target-side debuff (wiki wording 'inflicts ... armor reduction', and the engine's own separation of reduce_resistance from penetration), so a support/ally-facing consumer of the fight genuinely receives that benefit; deleting the record credits the shred to nobody, and no cached wiki text or quoted formula supports its absence.",
+  "caveats_and_residual_risk": [
+    "The export deliberately excludes scripts/golden_baseline.json, so the sibling entries support_resistance_reduction[0..4] were not visible. If index [5] were a byte-identical duplicate of another entry in the same list, the removal would instead be the correct application of the Carve branch 'Non-basic damage dealt on the same target may apply stacks only once per frame' (or a de-duplication against an armor reduction already applied in the mitigation path). Nothing in the leaf itself indicates duplication, and the entry's own numbers are correct, so the verdict is stated on the sourced content of the leaf.",
+    "Carve's 6 s stack duration cannot be checked against the event-35 timestamp from data/ alone; if more than 6 s had elapsed since the last physical damage instance on that defender the stacks would have expired and absence would be right. The event's neighbours are not readable under this runbook.",
+    "If the project instead wants the whole-fight averaged Black Cleaver model on this record rather than the per-event capped value, the correct fraction would be 0.24 (0.8 x 5 stacks x 6%, docs/math-foundations.md 2.3) with factor ~1.154 at 125 armor - still a present record, never an absent one."
+  ]
+}

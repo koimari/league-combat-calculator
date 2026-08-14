@@ -1,0 +1,119 @@
+{
+  "receipt": "oracle-P4B-leaf36",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff/plan/src/tests)",
+  "date": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/raw_damage",
+  "old_value": 50.7,
+  "new_value": 45.9,
+  "verdict": "new_value_correct",
+  "confidence": "medium",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p4b",
+    "read": ["data/items.json", "data/champions.json", "data/runes.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item 3071 \"Black Cleaver\" -> passives[0] \"Carve\" -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "item 3877 \"Bloodsong\" -> passives[0] \"Spellblade\" -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "item \"World Atlas\" -> passives \"Shared Riches\" -> branches[0] (used to decode the {{rd|a|b}} template)",
+      "quote": "Damaging a minion {{as|'''below''' {{rd|50%|30%}} of its '''maximum''' health}} with a [[basic attack]] ...",
+      "note": "The support-item minion-execute threshold is melee 50% / ranged 30% in game, so {{rd|A|B}} = A melee, B ranged. Corroborated by Ravenous Hydra/Tiamat Cleave {{rd|40% AD|20% AD}} and Death's Dance {{rd|30%|10%}}. Therefore Expose Weakness = +8% melee holder / +5% ranged holder."
+    },
+    {
+      "id": "S4",
+      "file": "data/items.json",
+      "locator": "item 3877 \"Bloodsong\" -> stats (and data/item-atoms/3877.json atoms)",
+      "quote": "stats: health.flat = 200.0, goldPer10.flat = 9.0; attackDamage.flat = 0.0 (no AD granted by the cached item)"
+    },
+    {
+      "id": "S5",
+      "file": "data/items.json",
+      "locator": "item 3071 \"Black Cleaver\" -> stats (and data/item-atoms/3071.json atoms)",
+      "quote": "stats: attackDamage.flat = 40.0, health.flat = 400.0, abilityHaste.flat = 20.0"
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1, 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... post = raw . m(R)  <=>  raw = post . (1 + R/100)"
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3 item 2, 'Black Cleaver average stacks'",
+      "quote": "the established model uses a fixed 0.8.max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C"
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, 'Stat rounding (calculate_total_stats)'",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage ... APPROX"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scope_the_lever": {
+      "claim": "Only one mechanic in this build can move a PRE-mitigation (raw) damage number.",
+      "work": [
+        "Black Cleaver / Carve (S1) is armor REDUCTION. Per S6 the engine's damage pipeline is post = raw * 100/(100+R): armor only enters through R. Changing Carve stacks (including the Cesaro-mean correction the doc recommends, S7) moves post-mitigation damage and can never move a raw_damage leaf.",
+        "Bloodsong / Spellblade (S2) contributes two things: a separate on-hit instance of 100% base AD, and 'Expose Weakness' = +8% (melee) / +5% (ranged) increased damage taken from all sources (S3). An 'increased damage taken' amp is the only multiplier in this build that scales a raw damage instance.",
+        "Bloodsong grants no AD (S4), so it cannot change any AD-scaled raw base either; Black Cleaver's 40 AD (S5) is unchanged by any wiki-side reading."
+      ],
+      "conclusion": "Any legitimate change to this leaf must be a change in the Expose Weakness amp factor applied to event 23."
+    },
+    "step_2_admissible_multiplier_family": {
+      "work": [
+        "Values are golden-rounded to 1 dp, so old in [50.65, 50.75) and new in [45.85, 45.95).",
+        "Observed ratio old/new therefore lies in [1.10229, 1.10687] (point estimate 50.7/45.9 = 1.10457).",
+        "Multipliers constructible from S2/S3: 1.05, 1.08, and their (buggy) compositions 1.05^2 = 1.1025, 1.08^2 = 1.1664, 1.05*1.08 = 1.134, additive doubles 1.10 / 1.13 / 1.16.",
+        "In-band ratios: 1.16/1.05 = 1.10476 (in band, comfortable overlap: base B in [43.67, 43.75]) and 1.05^2/1.00 = 1.1025 (in band only on a 0.01-wide knife edge, B in [45.94, 45.95)).",
+        "Out of band: 1.05 (2.9% swap 8%->5%), 1.08 (removing melee amp = -7.4%), 1/1.05 (-4.8%), 1.10, 1.13, 1.134, 1.16, 1.1664."
+      ],
+      "conclusion": "Every in-band reading has the OLD number carrying an over-applied Expose Weakness (either +16% = the melee 8% counted twice additively, or the ranged 5% counted twice multiplicatively), and the NEW number carrying either the single correct ranged 5% (B*1.05 = 45.9, B = 43.71) or no amp at all."
+    },
+    "step_3_direction_check": {
+      "work": [
+        "Every wiki-consistent correction available here is a REDUCTION of the raw number: 8% -> 5% (wrong side of {{rd|melee|ranged}}), double-count -> single count, or ally-coupled amp applied where it should not be.",
+        "There is no wiki-sourced reading in which the correct value EXCEEDS a single-amp application: max legitimate factor is 1.08 (melee) applied once.",
+        "50.7 = 45.9 * 1.10457 exceeds 1.08, so 50.7 cannot be a single, correctly-sided Expose Weakness application over any base that also produces 45.9."
+      ],
+      "conclusion": "50.7 is excluded as the correct value under the cached wiki text; old_value_correct is ruled out."
+    },
+    "step_4_best_fit": {
+      "preferred_reading": "raw = B * (1 + 0.05) with B ~= 43.71 (single, ranged-sided Expose Weakness on a ranged Bloodsong holder). The old value corresponds to B * 1.16, i.e. the melee 8% value applied twice additively (8% + 8%).",
+      "numbers": {
+        "B_from_new": "45.9 / 1.05 = 43.714",
+        "B_from_old": "50.7 / 1.16 = 43.707",
+        "agreement": "0.016% - within the 1 dp golden rounding of both leaves"
+      },
+      "alternate_reading": "raw = B (no amp) with B ~= 45.94, old = B * 1.05^2 = 50.65 (ranged 5% double-applied). Numerically admissible but only on a 0.01-wide window; under this reading the new value would be missing a legitimate amp."
+    },
+    "sanity_checks_run": [
+      "Bloodsong Spellblade base component (S2, 100% base AD) checked against every champion at every level 1-20 using the growth law base + growth*(L-1)*(0.7025+0.0175*(L-1)): no champion produces 45.9 or 50.7 as base AD at any plausible fight level (only Orianna L2 = 45.87 and Kennen L2 = 50.70 / Janna L3 = 50.69 land there), so neither leaf is a bare Spellblade proc.",
+      "Under the integer stat-rounding convention (S8) both leaves are consistent with 0.30 * AD for integer AD (153 -> 45.9 and 169 -> 50.7), i.e. a 16-AD stat swing; no item in this build (S4, S5) supplies a 16 AD delta, so an AD-stat explanation is not supported by the cached data.",
+      "Black Cleaver Cesaro-mean correction (S7) was checked and rejected as the cause: it moves R, hence post-mitigation damage only (S6), never raw."
+    ]
+  },
+
+  "residual_uncertainty": [
+    "The scenario definition for 'cleaver_bloodsong_roster' lives outside the permitted evidence tree (scripts/tests), so the identity of combat event 23 - which champion, which damage instance - could not be pinned from data/ alone. The verdict rests on the multiplier-family argument (step 2/3), which is identity-independent, not on reproducing the base damage B from first principles.",
+    "If the fix instead changed the base damage B (e.g. an event-ordering shift that makes events[23] a different instance), the multiplier analysis does not apply; in that case this receipt confirms only the direction, not the magnitude.",
+    "The knife-edge alternate reading (1.05^2 -> 1.00) would make the new value un-amped and therefore also wrong; it is disfavoured because it requires the pre-rounding old value to sit inside a 0.01-wide window, whereas the preferred reading has a wide, self-consistent overlap."
+  ]
+}

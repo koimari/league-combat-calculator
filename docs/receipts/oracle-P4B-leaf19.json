@@ -1,0 +1,102 @@
+{
+  "receipt": "oracle-P4B-leaf19",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change)",
+  "generated_at": "2026-08-14",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/damage",
+  "old_value": 128.9,
+  "new_value": 53.4,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle19",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "identification_of_the_leaf": {
+    "problem": "The golden scenario input tuple (roster, levels, builds) lives outside the permitted evidence tree - data/ contains no coupled-scenario definitions (grep for 'cleaver_bloodsong_roster' / 'coupled_scenarios' over data/ returns nothing). The event was therefore identified by numeric fingerprint against the cached wiki data.",
+    "fingerprint_1": "The scenario name pins two items. Of the two, only Bloodsong (id 3877) has a damage effect, and its damage term is stated as a pure base-AD quantity: '100% base AD bonus physical damage on-hit'. Black Cleaver (id 3071) has no damage term at all - only armor reduction and move speed.",
+    "fingerprint_2": "128.9 is EXACTLY the level-18 base attack damage of Hecarim, and it is the UNIQUE match in the entire cached champion table: scanning all 173 champions x levels 1-20 with the growth formula, |baseAD - 128.9| < 0.005 has exactly one solution (Hecarim, level 18). No champion has base AD 53.4 at any level, and no ability leveling row in data/champions.json carries the literal 128.9 or 53.4 (grep).",
+    "conclusion": "events[46] is the Bloodsong Spellblade proc of a level-18 Hecarim: raw = 100% base AD = 128.9. The old leaf recorded the RAW number; the new leaf records a post-mitigation number."
+  },
+
+  "independent_computation": {
+    "step_1_base_ad": {
+      "formula": "base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))",
+      "source": "data/champions.json -> Hecarim.stats.attackDamage = {flat: 66, perLevel: 3.7}",
+      "arithmetic": "66 + 3.7 * 17 * (0.7025 + 0.0175*17) = 66 + 3.7 * 17 * 1.0 = 66 + 62.9 = 128.9",
+      "result": 128.9
+    },
+    "step_2_raw_proc": {
+      "formula": "Spellblade bonus physical damage = 100% base AD",
+      "source": "data/items.json id 3877 (Bloodsong), passives[0] 'Spellblade', branches[0]",
+      "note": "The Expose Weakness amp (8%/5% increased damage taken) does NOT amplify this proc: the wiki text says the debuff is inflicted BY the empowered attack and its cooldown 'starts after using the empowered attack', so the applying hit is not itself amplified. No other multiplier applies (no crit on a Spellblade on-hit term).",
+      "result_raw": 128.9
+    },
+    "step_3_mitigation": {
+      "formula": "post = raw * m(R), m(R) = 100 / (100 + R)   [docs/math-foundations.md section 2.1]",
+      "penetration_composition": "R_final = max(0, (R - r_flat) * (1 - r_pct/100) * (1 - p) - f)   [section 2.2]",
+      "what_the_scenario_can_supply": "Black Cleaver contributes only percentage armor REDUCTION (6% per stack, max 30% at 5 stacks - data/items.json id 3071, passive 'Carve'). Neither Black Cleaver nor Bloodsong grants lethality, flat armor pen, or percent armor pen (both items' stats blocks have armorPenetration.flat = armorPenetration.percent = lethality = 0).",
+      "therefore": "R_eff >= 0.70 * A_defender > 0 for any champion defender at any level, so m(R) < 1 strictly.",
+      "old_value_test": "128.9 == raw exactly => it implies m(R) = 1.0 => R_eff = 0. Unreachable in this scenario: with no penetration in the build, driving a champion's armor to 0 is impossible (30% reduction on even the softest level-1 champion, ~20 armor, still leaves R_eff = 14 and post = 113.1). A post-mitigation damage leaf can therefore never equal 128.9 here. OLD VALUE IS THE UNMITIGATED RAW NUMBER.",
+      "new_value_test": "53.4 = 128.9 * 100/(100 + R) => R = 100*(128.9/53.4 - 1) = 141.39. Accounting for 1-decimal rounding of the leaf, R_eff lies in [141.16, 141.61].",
+      "attainability_of_R_141_4": "Attainable and unremarkable for a Cleaver-target tank in a roster: e.g. Sejuani at the level-20 cap has 141.17 base armor with no items at all; a level-18 Rammus/Camille/Rek'Sai (111.5) plus one 30-armor item = 141.5; Udyr/Wukong/Gangplank (110.9) + Thornmail (75) under Black Cleaver's 4-stack (24%) model = 141.28; Graves/Yone (111.2) + Thornmail under 24% = 141.51. Dozens of realistic (defender, item, Cleaver-stack) tuples land inside the rounding band.",
+      "result": "53.4 is the sourced post-mitigation value for R_eff ~ 141.4; 128.9 is the pre-mitigation raw."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "id 3877 'Bloodsong' -> passives[0].name = 'Spellblade' -> branches[0]",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3071 'Black Cleaver' -> passives[0].name = 'Carve' -> branches[0]",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Hecarim.stats.attackDamage",
+      "text": "{\"flat\": 66, \"perLevel\": 3.7}  ->  base AD(18) = 66 + 3.7*17*(0.7025+0.0175*17) = 128.9 (unique match to 128.9 across all 173 champions x levels 1-20)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "section 2.1 'The 100/(100+R) identity'",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)   ...   post = raw * m(R)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "section 2.2 'Penetration and reduction order: exact composition'",
+      "text": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)   ...   Penetration cannot reduce resistance below 0."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "section 2.3, item 2 (Black Cleaver average stacks)",
+      "text": "the established model uses a fixed 0.8*max_stacks constant (with a hits/2 short-fight branch) ... the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C - used above to bracket the effective shred between 24% and 30%."
+    }
+  ],
+
+  "alternatives_considered_and_rejected": [
+    {
+      "hypothesis": "The old value was correct post-mitigation damage and the new value over-mitigates (armor applied twice).",
+      "rejection": "That would require the raw to be 128.9 / m = 311.1 for the same R = 141.4, a number with no correspondence in the cached data, and it would leave the exact coincidence 128.9 == Hecarim base AD(18) - the one champion-level pair in 3,460 that matches, in a scenario named after the one item whose damage term is literally '100% base AD' - unexplained."
+    },
+    {
+      "hypothesis": "The fix swapped 100% TOTAL AD for 100% BASE AD (old = total, new = base).",
+      "rejection": "It would need bonus AD = 1.414 x base AD and would make the old value's exact equality with Hecarim's BASE AD accidental. Also inconsistent with a 2-item build (Black Cleaver's +40 AD alone gives a ratio of only 1.31). Rejected in favour of the raw-vs-mitigated reading, which explains the exact number."
+    },
+    {
+      "hypothesis": "A form-toggle flip (Mini/Mega Gnar and friends) explains the 2.41x drop.",
+      "rejection": "No Mini/Mega ability pair in data/champions.json produces a 2.414 ratio at a shared mitigation, and neither Gnar form value reproduces 128.9 exactly; the Bloodsong base-AD identity does, to the digit."
+    }
+  ],
+
+  "confidence_and_caveats": {
+    "what_is_proven": "128.9 is exactly the raw, unmitigated 100%-base-AD Bloodsong Spellblade quantity for a level-18 Hecarim, and no post-mitigation damage in a build whose only items are Black Cleaver + Bloodsong (zero penetration, at most 30% armor reduction) can equal its own raw value. The old leaf is therefore wrong on the sourced formulas alone.",
+    "what_is_inferred": "The exact defender/armor of the scenario is not recoverable from the permitted evidence, so 53.4 was validated by solving for the implied post-penetration armor (141.39, band [141.16, 141.61]) and confirming that value is attainable from cached champion armor growth plus cached item armor under the documented Black Cleaver stack models - not by re-running the full forward simulation.",
+    "residual_risk": "If the scenario's real defender armor were materially different from ~141.4, the new value would be wrong in magnitude while still being right in kind. The old value is wrong in kind and cannot be rescued by any defender choice."
+  }
+}

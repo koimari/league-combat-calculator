@@ -1,0 +1,128 @@
+{
+  "receipt": "oracle-P4B-leaf11",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[5]",
+  "old_value": {
+    "factor": 1.2,
+    "fraction": 0.3,
+    "source": "Black Cleaver \u2014 Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "not_consulted": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "id 3071 \u2192 name \"Black Cleaver\" \u2192 passives[0] (\"Carve\") \u2192 branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "id 3071 \u2192 shop.tags / shop.prices",
+      "quote": "tags: [\"FIGHTER\", \"ONHIT_EFFECTS\", \"ARMOR_PEN\", \"MOVEMENT\"]; prices.total: 3000"
+    },
+    {
+      "id": "S3",
+      "file": "data/items.json",
+      "locator": "id 3877 \u2192 name \"Bloodsong\" \u2192 passives[0] (\"Spellblade\") \u2192 branches[0]; acquisitionNote",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack). \u2014 acquisitionNote: \"Requires completion of the support quest for {{ii|Runic Compass}}, which transforms into {{ii|Bounty of Worlds}} afterwards to allow you to upgrade into this item for free.\""
+    },
+    {
+      "id": "S4",
+      "file": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.modifier vs atom damage.penetration",
+      "quote": "damage.modifier \u2014 \"Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.\" || damage.penetration \u2014 \"Effects that reduce the target's effective resistances before mitigation ... only resistance reduction effects can drive armor/MR negative.\""
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a7 2.1 / \u00a7 2.2",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... reduce_resistance(R, r_flat, r_pct): R \u2190 R \u2212 r_flat; R \u2190 R\u00b7(1 \u2212 r_pct/100) ... R_final = max(0, (R \u2212 r_flat)\u00b7(1 \u2212 r_pct/100)\u00b7(1 \u2212 p) \u2212 f)"
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a7 2.3 item 2, and \u00a7 5 audit row \"Terminus/BC ramps\"",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8\u00b7max_stacks` constant (with a `hits/2` short-fight branch) ... the exact Ces\u00e0ro mean of the capped ramp min(k, C) over h hits is C \u2212 C(C\u22121)/(2h) for h \u2265 C"
+    },
+    {
+      "id": "S7",
+      "file": "data/champions.json",
+      "locator": "Ashe (Ranger's Focus notes) and Graves (basic-attack notes)",
+      "quote": "\"A flurry can apply 5 stacks of Black Cleaver's Carve to a single target as it deals 5 instances of physical damage.\" ; \"each of Graves' basic attacks can apply up to 4 stacks of the effect, increased to the maximum of 5 with a critical strike.\""
+    },
+    {
+      "id": "S8",
+      "file": "data/worklists/e8d-task.md",
+      "locator": "ALLY-SUPPORT heals/shields section",
+      "quote": "The engine has derive_ally_effects / support entries (support_effects.py, item_support_effects.py) ... the ledger already tracks support_shield_received / support heals from items \u2014 reuse the same event shape ... assert in a /api/calculate fight WITH AN ALLY in the roster (enemies + allies lists are supported) that the ally's ledger receives the heal/shield."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_game_value_of_carve": {
+      "from": "S1 (corroborated by S7)",
+      "per_stack": 0.06,
+      "max_stacks": 5,
+      "cap_fraction": 0.30,
+      "duration_s": 6,
+      "note": "0.06 \u00d7 5 = 0.30. The old leaf's fraction 0.3 is therefore a game-legal number in isolation \u2014 it is the 5-stack cap, not an invented value. The defect is not the fraction."
+    },
+    "step_2_a_percent_armor_reduction_has_no_constant_damage_factor": {
+      "identity": "amp(R) = m(R\u00b7(1\u2212f)) / m(R) = (100 + R) / (100 + R\u00b7(1\u2212f))   [S5]",
+      "f": 0.30,
+      "table_amp_vs_armor": {
+        "R=0": 1.0,
+        "R=50": 1.111111,
+        "R=75": 1.147541,
+        "R=100": 1.176471,
+        "R=125": 1.2,
+        "R=150": 1.219512,
+        "R=200": 1.25,
+        "R\u2192\u221e": 1.428571
+      },
+      "solve_for_factor_1.2": "(100+R)/(100+0.7R) = 1.2  \u21d2  100 + R = 120 + 0.84R  \u21d2  0.16R = 20  \u21d2  R = 125 armor exactly",
+      "conclusion": "A 30% armor *reduction* cannot be represented as a resistance-independent multiplicative damage factor. The recorded factor 1.2 is correct only for a target sitting at exactly 125 armor at that event, and only if no penetration term intervenes (S5 makes the composition order-sensitive: reduction \u2192 %pen \u2192 flat pen). Carrying a scalar `factor` alongside `type: armor_reduction_percent` is the shape of a *second, multiplicative* application of a shred that the engine already applies inside reduce_resistance \u2014 i.e. double counting."
+    },
+    "step_3_engine_documented_bc_model_does_not_produce_0.30": {
+      "from": "S6",
+      "modeled_average_stacks": "0.8 \u00d7 max_stacks = 0.8 \u00d7 5 = 4 stacks",
+      "modeled_fraction": 0.24,
+      "amp_at_f_0.24": {"R=100": 1.136364, "R=125": 1.153846, "R=200": 1.190476},
+      "armor_needed_for_amp_1.2_at_f_0.24": 227.3,
+      "conclusion": "Even under the branch where an ally-sourced Carve legitimately belongs in this ledger, the documented BC model prices the shred at the averaged ramp (0.24, or the exact Ces\u00e0ro mean C \u2212 C(C\u22121)/(2h)), never at the 0.30 cap. The pair (0.30, 1.2) matches neither the averaged model nor a resistance-derived amplification at any plausible corpus armor."
+    },
+    "step_4_attribution_of_the_source_to_a_support_ledger": {
+      "field_semantics": "`support_*` in this ledger family means ally-provided (S8: derive_ally_effects / support_effects.py / item_support_effects.py, sibling field support_shield_received). So support_resistance_reduction = resistance reduction contributed to the subject by ALLY participants.",
+      "roster_reading": "Bloodsong is quest-locked to the support role (S3). Black Cleaver is a 3000 g FIGHTER-tagged legendary (S2) \u2014 not a support purchase. In a roster named for exactly these two items, Carve is the damage-dealing subject's own item and its shred belongs in the subject's own resistance path (reduce_resistance, S5), while the support's contribution is Bloodsong's *Expose Weakness*, which is an 8%/5% \"increased damage from all sources\" modifier \u2014 classified by the cached taxonomy as damage.modifier, \"distinct from resistances\" (S4), so it can never be a member of a resistance-reduction list.",
+      "conclusion": "A record sourced \"Black Cleaver \u2014 Carve\" inside an ally-contribution ledger credits the subject's own item to the support, and its scalar factor 1.2 re-applies a shred already resolved in the subject's mitigation. Removing it is the game-correct ledger."
+    },
+    "step_5_index_check": {
+      "observation": "The removed element sits at index [5] \u2014 the sixth member of the list \u2014 in a scenario whose entire named loadout is two items, only one of which (Black Cleaver) produces any resistance reduction at all. Carve is hard-capped at 5 stacks / 30% (S1, S7). Under either reading of the list (one record per Carve application, or one aggregate record per source) a sixth Carve-shaped entry at the cap is redundant: it is a stack the game cannot grant, or a second copy of a contribution already present.",
+      "conclusion": "Consistent with removal."
+    }
+  },
+
+  "verdict_reasoning": {
+    "old_value_correct": "Rejected. The only game rule that would justify a Black-Cleaver record in an ally-contribution ledger \u2014 armor *reduction* is a debuff on the target, so allies do benefit \u2014 requires an ALLY to hold a 3000 g fighter item next to the quest-locked support item (S2, S3). And even in that branch the recorded numbers fail: the engine's documented Carve model prices 0.8\u00b7max_stacks = 0.24, not the 0.30 cap (S6), and a percentage armor reduction admits no resistance-independent damage factor \u2014 1.2 holds only at exactly 125 armor (step 2). No source in the evidence tree makes the entry mandatory.",
+    "both_wrong": "Considered and rejected as unprovable. It would require me to name the correct replacement value; the sources support removal, not a substitute number.",
+    "new_value_correct": "Accepted. The subject's own Black Cleaver shred is resolved inside its own resistance composition (S5); the support's actual contribution in this roster is a damage modifier \"distinct from resistances\" (S3, S4) and thus not a member of this list; and the scalar `factor` attached to a `armor_reduction_percent` record is the signature of a second multiplicative application of an already-applied shred. Absence is the game-correct value."
+  },
+
+  "residual_uncertainty": {
+    "statement": "The evidence tree contains no scenario definition (roster composition lives outside data/), so I could not read which participant holds Black Cleaver. If the corpus roster in fact gives an ALLY the Black Cleaver, an ally-sourced shred record would legitimately belong in this list \u2014 but at the engine's documented averaged fraction (0.24) with a resistance-derived amplification, not (0.30, 1.2); in that branch the verdict would be `both_wrong`, and `old_value_correct` would still be excluded.",
+    "confidence": "medium-high on \"the old value is not correct\"; medium on \"absent is the exact right answer rather than a corrected entry\".",
+    "how_to_settle": "Confirm from the scenario definition whether Black Cleaver sits on the subject or on an ally participant."
+  }
+}

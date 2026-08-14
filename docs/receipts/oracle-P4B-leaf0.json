@@ -1,0 +1,82 @@
+{
+  "receipt": "oracle-P4B-leaf0",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_p4b",
+    "read": ["data/items.json", "data/item-atoms/3071.json", "data/item-atoms/3877.json", "data/wiki-atoms/damage.json", "data/practice-corpus/scenarios.json", "data/economics-sourced.json", "data/staleness.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[1]",
+  "old_value": {
+    "factor": 1.07,
+    "fraction": 0.12,
+    "source": "Black Cleaver \u2014 Carve",
+    "type": "armor_reduction_percent"
+  },
+  "new_value": "<absent>",
+  "sources_quoted": [
+    {
+      "source": "data/items.json \u2192 item 3071 Black Cleaver, passives[0] (name \"Carve\"), branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "source": "data/items.json \u2192 item 3071 Black Cleaver, riotDescription",
+      "quote": "Carve: Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. (stacks 5 times)."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json \u2192 atom damage.penetration (\"Penetration and resistance reduction\")",
+      "quote": "Effects that reduce the target's effective resistances before mitigation: percent penetration applies before flat penetration, results cannot go below 0, and only resistance reduction effects can drive armor/MR negative."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json \u2192 atom damage.resistance-mitigation",
+      "quote": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage."
+    },
+    {
+      "source": "docs/math-foundations.md \u00a72.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md \u00a72.2",
+      "quote": "reduce_resistance(R, r_flat, r_pct):   R \u2190 R \u2212 r_flat;  R \u2190 R\u00b7(1 \u2212 r_pct/100)   [flat first, then %]  \u2026 R_final = max(0, (R \u2212 r_flat)\u00b7(1 \u2212 r_pct/100)\u00b7(1 \u2212 p) \u2212 f)"
+    },
+    {
+      "source": "docs/math-foundations.md \u00a72.3 item 2 (Black Cleaver average stacks)",
+      "quote": "the established model uses a fixed `0.8\u00b7max_stacks` constant (with a `hits/2` short-fight branch) \u2026 the constant model equals the exact mean at ~10 autos and deviates by up to \u00b120% at the extremes \u2026 this is a documented tuning constant, not a theorem."
+    },
+    {
+      "source": "data/items.json \u2192 item 3877 Bloodsong, passives[0] (Spellblade), branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources"
+    }
+  ],
+  "independent_computation": {
+    "step_1_carve_magnitude": {
+      "rule": "Carve = 6% armor reduction per stack, max 5 stacks = 30% (cached wiki text + riotDescription for item 3071).",
+      "check_of_old_fraction": "0.12 = 2 stacks x 6% \u2014 an exactly representable Carve state (2 of 5 stacks). It is also what the engine's documented short-fight branch (`hits/2`) yields at 4 physical-damage instances; the constant model (0.8 x max_stacks = 4 stacks = 0.24) is the long-fight value. Per \u00a72.3 the BC stack average is explicitly an APPROX tuning constant with \u00b120% documented spread at the extremes, so a value in the 0.09\u20130.30 band is inside the documented modelling class, not a formula error."
+    },
+    "step_2_factor_consistency": {
+      "formula": "amplification from a p-fraction armor reduction against target armor A: f = m(A(1-p)) / m(A) = (100 + A) / (100 + (1-p)A), from m(R)=100/(100+R) (\u00a72.1) and reduce_resistance's multiplicative % step (\u00a72.2)",
+      "evaluated_at_p_0.12": {"A=100": 1.06383, "A=110": 1.06707, "A=120": 1.07004, "A=125": 1.07143, "A=130": 1.07276, "A=139": 1.07503},
+      "conclusion": "factor 1.07 pairs with fraction 0.12 for target armor A in ~[104, 139] \u2014 an ordinary level-18 armor value. The old entry's two numbers are mutually consistent under the repo's own resistance identity; nothing in the pair is arithmetically wrong.",
+      "counterfactual": "at max stacks (p=0.30) the same armor band would give f ~ 1.18-1.21, and at the 0.8*max_stacks constant (p=0.24) f ~ 1.15 \u2014 i.e. 1.07 is the partial-stack, not the saturated, reading."
+    },
+    "step_3_scope_of_the_debuff_the_decisive_question": {
+      "claim": "Carve is a debuff on the TARGET's armor, not an attacker-side penetration. The cached text says it 'reduces the target's Armor'; the atom taxonomy files it under damage.penetration/resistance reduction as an effect that 'reduce[s] the target's effective resistances before mitigation'; and \u00a72.2 applies reduce_resistance to R (the defender's resistance) before any attacker-scoped penetration term.",
+      "consequence": "Every damage source hitting that target while stacks are live \u2014 including allied champions who own no Black Cleaver \u2014 is mitigated by the reduced armor. Nothing in items.json, the atom taxonomy, or math-foundations.md conditions Carve on the identity of the damage source. Therefore, for a roster scenario in which one member carries Black Cleaver, an allied (support) physical-damage event that occurs while Carve stacks are live MUST carry a non-zero armor_reduction_percent contribution.",
+      "verdict_math": "Deleting the entry sets the support-side Carve contribution to fraction 0.00 / factor 1.00. That is not an approximation of 2 stacks (0.12) nor of any other live stack count \u2014 it is the categorical absence of a debuff the item text guarantees, and it understates the support's physical damage by the full ~7% factor at the scenario's target armor."
+    },
+    "residual_uncertainty": {
+      "unresolvable_from_the_permitted_evidence": "The oracle cannot see the scenario definition (it lives outside data/), so it cannot see (a) what occupies support_resistance_reduction[0], (b) whether combat event 23 is a physical- or magic-damage event, or (c) the fight timeline that fixes the true live stack count at that moment.",
+      "conditions_that_would_flip_the_verdict": [
+        "If index [0] is ALSO a 'Black Cleaver \u2014 Carve' armor_reduction_percent entry, then the list was double-counting a single unique target debuff (armor reduction from one Black Cleaver applies once, max 30%), and deleting the duplicate at [1] would be correct.",
+        "If event 23 is a magic-damage (or true-damage) event, an armor_reduction_percent row is inert there and its removal is cosmetic."
+      ],
+      "why_the_verdict_still_stands": "Both flip conditions require facts not present in data/ or docs/math-foundations.md, whereas the source-backed rule (target-side shred benefits all damage sources) is explicit. Judged on the permitted evidence alone, a live Carve shred visible to the roster's support is correct and its complete absence is not.",
+      "note_on_the_exact_stack_count": "2 stacks (0.12) at event index 23 is on the low side: a Black Cleaver holder applying one stack per physical-damage instance reaches the 5-stack cap within ~5 instances and the 6 s duration refreshes on every instance, so a team-wide shared debuff late in a fight would plausibly sit nearer 24-30%. That makes 0.12 a plausibly conservative value inside the documented APPROX class (\u00a72.3), not a demonstrable error \u2014 hence 'old_value_correct' rather than 'both_wrong'."
+    }
+  },
+  "verdict": "old_value_correct",
+  "verdict_summary": "Black Cleaver's Carve is a 6%-per-stack (max 5 stacks / 30%, 6 s) reduction of the TARGET's armor, so an allied support's physical damage against that target is mitigated by the reduced armor. The removed entry's numbers are internally consistent (0.12 = 2 x 6%; factor 1.07 = (100+A)/(100+0.88A) for A ~ 104-139), and its magnitude sits inside the documented BC stack-average approximation class. Deleting it drops the support-visible shred to zero, which contradicts the cached item text. Caveat: if support_resistance_reduction[0] is a second Carve row for the same unique item, the deletion would instead be a correct de-duplication \u2014 that fact is not visible from data/ or docs/math-foundations.md."
+}
