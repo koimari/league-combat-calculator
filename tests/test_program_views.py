@@ -863,6 +863,31 @@ def test_the_optimizers_discarded_rows_are_a_ranking_payload_too() -> None:
         DISCARD.block({}, "", ViewTag.THEORETICAL)
 
 
+def test_a_tag_can_only_enter_a_payload_through_block() -> None:
+    """The induction ``RankingWriter`` refuses on, asserted rather than believed.
+
+    Refusing a non-``APPLIED`` block is total over the payload only because
+    no deeper block can acquire a different tag: ``nested``, ``structure``
+    and the nested walk all pass the parent's own.  So every ``LeafBlock``
+    construction in ``src/`` lives in the writer's own module and passes
+    either ``self._tag`` or the tag ``block`` was handed -- and a fourth site
+    anywhere else would be a tag entering by a route the refusal never sees.
+    """
+    sites: list[tuple[str, str]] = []
+    for path in sorted((Path(survival.__file__).resolve().parents[2]).rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "LeafBlock"
+            ):
+                tag = node.args[-1]
+                sites.append((path.name, ast.unparse(tag)))
+    assert {name for name, _ in sites} == {"__init__.py"}
+    assert {spelling for _, spelling in sites} == {"self._tag", "tag"}
+
+
 def test_a_previewed_entry_makes_a_ranking_surface_refuse_the_payload() -> None:
     """The read half, over the map a published payload carries."""
     from src.calculator.program.views import UnrankableNumber, refuse_previewed
