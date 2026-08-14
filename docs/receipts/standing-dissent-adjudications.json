@@ -1,0 +1,248 @@
+{
+ "artifact": "standing_dissent_adjudications",
+ "rule": "R-19's blocking half, repo-wide: a standing adverse oracle verdict whose leaf a committed baseline holds a different value than is a baseline pinned over a dissent, which the R-15/R-18 amendment names as the campaign's own failure shape. Every member of that population owes a row here. A row is one of two kinds and there is no third, because 'we looked at it' is not an adjudication: a CITATION says no oracle was ever owed and names the ruling that decides the leaf; an OPEN_DEBT says one was, names what is owed under the amendment's two clauses, and names the artifact carrying it.",
+ "what_this_file_does_not_do": "It decides no dissent. Clearing one is a fresh whole-series re-adjudication or a ruled src/ correction, and neither is a scan's or a lane's to perform. What it removes is the population's ability to grow in silence: scripts/standing_dissent_scan.py --check fails on a member with no row, on a row whose dissent has cleared, and therefore on any future capture that pins over a standing verdict.",
+ "gate": "tests/test_standing_dissent_scan.py",
+ "measured_on_the_commit_that_lands_this": {
+  "oracle_receipts": 552,
+  "adverse_verdicts": 81,
+  "standing": 51,
+  "blocking": 28,
+  "by_kind": {
+   "citation": 6,
+   "open_debt": 22
+  }
+ },
+ "adjudications": [
+  {
+   "receipt": "oracle-C2-leaf3.json",
+   "kind": "open_debt",
+   "address": "combat/events[12]/support_damage_multiplier",
+   "what_is_owed": "The same two clauses, over the support-damage-multiplier series. The leaf the oracle certified a value for is absent from the committed baseline, which is the absorption in the other direction: the baseline dropped the number the oracle said was right.",
+   "why_it_is_a_debt_and_not_a_citation": "The certified value is a priced multiplier with a sourced derivation from data/items.json, so it is exactly the question an oracle can answer and did.",
+   "carried_by": "docs/receipts/escalated-defects-S6S7-oracle.json, entry support_damage_multiplier_publishes_one_of_several_applied_factors"
+  },
+  {
+   "receipt": "oracle-C6-leaf77.json",
+   "kind": "open_debt",
+   "address": "coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-C6-leaf8.json",
+   "kind": "open_debt",
+   "address": "coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-C6-leaf95.json",
+   "kind": "open_debt",
+   "address": "coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/slot",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P3-3.8-leaf24.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+   "what_is_owed": "A ruling on how a leaf whose value is a campaign-authored reason string is adjudicated at all. The R-19 verdict set has no member for 'the evidence tree cannot decide this', so an investigator handed a coverage reason must certify the old value.",
+   "why_it_is_a_debt_and_not_a_citation": "The shape is neither a membership transition nor a disposition transition, so neither the R-15 amendment nor the umbrella's Amendment E reaches it, and a lane may not widen either.",
+   "carried_by": "docs/receipts/escalated-defects-S6S7-oracle.json, entry the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide"
+  },
+  {
+   "receipt": "oracle-P4-integration-final-leaf1.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-72 and Phase 4 S9: the parallel `dispositions` map is a published block that did not exist when the baseline was captured, so `<absent> -> the map` is what the ruling says rather than a number anybody can price.",
+   "why_no_oracle_could_answer_it": "The receipt's own reasoning is the amendment's predicted failure reproduced verbatim: it grepped the R-18 export for 'disposition' and 'view_tag', found zero occurrences, and concluded the block should not exist. An investigator handed absent_to_value must still return a member of R-19's three-way set, so it certifies the old value, and a dissent meaning 'no evidence exists' is indistinguishable in a tally from one meaning 'the tree is wrong'.",
+   "the_receipt_is_not_deleted": "It stands. Clause 3 of the R-15/R-18 amendment forbids editing or deleting a filed receipt; what this row does is say the question was not a value question, which is the amendment's own remedy."
+  },
+  {
+   "receipt": "oracle-P5-resolver-leaf11.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-80/D-82 and Phase 5: the rotation `dependencies` ledger is a published block the declared cast-dependency vocabulary created. The receipt's own certified value says so in its own words -- '<absent> (leaf did not exist in the baseline)'.",
+   "why_no_oracle_could_answer_it": "Whether a resolver should publish a dependency ledger is a question about this campaign's own declarations, and R-18's export is data/ and docs/math-foundations.md. No cached wiki text decides it.",
+   "the_receipt_is_not_deleted": "It stands, unedited."
+  },
+  {
+   "receipt": "oracle-P5-resolver-leaf12.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/dependencies",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-80/D-82 and Phase 5: the rotation `dependencies` ledger is a published block the declared cast-dependency vocabulary created. The receipt's own certified value says so in its own words -- '<absent> (leaf did not exist in the baseline)'.",
+   "why_no_oracle_could_answer_it": "Whether a resolver should publish a dependency ledger is a question about this campaign's own declarations, and R-18's export is data/ and docs/math-foundations.md. No cached wiki text decides it.",
+   "the_receipt_is_not_deleted": "It stands, unedited."
+  },
+  {
+   "receipt": "oracle-P5-resolver-leaf13.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-80/D-82 and Phase 5: the rotation `dependencies` ledger is a published block the declared cast-dependency vocabulary created. The receipt's own certified value says so in its own words -- '<absent> (leaf did not exist in the baseline)'.",
+   "why_no_oracle_could_answer_it": "Whether a resolver should publish a dependency ledger is a question about this campaign's own declarations, and R-18's export is data/ and docs/math-foundations.md. No cached wiki text decides it.",
+   "the_receipt_is_not_deleted": "It stands, unedited."
+  },
+  {
+   "receipt": "oracle-P5-resolver-leaf3.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-80/D-82 and Phase 5: the rotation `dependencies` ledger is a published block the declared cast-dependency vocabulary created. The receipt's own certified value says so in its own words -- '<absent> (leaf did not exist in the baseline)'.",
+   "why_no_oracle_could_answer_it": "Whether a resolver should publish a dependency ledger is a question about this campaign's own declarations, and R-18's export is data/ and docs/math-foundations.md. No cached wiki text decides it.",
+   "the_receipt_is_not_deleted": "It stands, unedited."
+  },
+  {
+   "receipt": "oracle-P5-resolver-leaf4.json",
+   "kind": "citation",
+   "address": "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies",
+   "cited_ruling": "R-15 amendment, 2026-08-14 (runbook): a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict, and an oracle receipt may not be filed on one as though the question were a value question. The transition is value_to_absent/absent_to_value on a block the declared change created, and the ruling is one a reader can open.",
+   "the_declared_change": "D-80/D-82 and Phase 5: the rotation `dependencies` ledger is a published block the declared cast-dependency vocabulary created. The receipt's own certified value says so in its own words -- '<absent> (leaf did not exist in the baseline)'.",
+   "why_no_oracle_could_answer_it": "Whether a resolver should publish a dependency ledger is a question about this campaign's own declarations, and R-18's export is data/ and docs/math-foundations.md. No cached wiki text decides it.",
+   "the_receipt_is_not_deleted": "It stands, unedited."
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf1.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[2]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf10.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf13.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[0]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf16.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[1]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf26.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[1]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf27.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[2]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf28.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[3]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf29.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[4]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf35.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[2]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf36.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[3]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf37.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[4]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf42.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[1]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf43.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[2]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf44.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[3]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf53.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/passive",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf58.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/passive",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  },
+  {
+   "receipt": "oracle-P5-retire-leaf7.json",
+   "kind": "open_debt",
+   "address": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[0]",
+   "what_is_owed": "A whole-series re-adjudication of the Syndra rotation series by a fresh investigator (R-15/R-18 amendment, clause 1), and if that verdict again certifies the old value, the producing correction -- the seed retirement that derived Syndra's order from declared dependencies -- re-opens as its own ruled src/ slice with its own Expected qualifying occurrences line (clause 2).",
+   "why_it_is_a_debt_and_not_a_citation": "This is a real modelling disagreement about which ability the rotation casts, not a membership transition a ruling already decided. The certified and committed values are both orders a resolver could produce, so a citation would be a lane deciding a dissent, which the amendment reserves for a fresh investigator or a ruled correction.",
+   "carried_by": "docs/receipts/escalated-defects-P4-integration-final.json, entry standing_adverse_oracle_verdicts_are_invisible_to_every_r01_row, block the_blocking_population"
+  }
+ ]
+}
