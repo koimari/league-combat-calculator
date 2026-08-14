@@ -147,3 +147,65 @@ class TestTheThreeMovedTotalsAreWhatTheCorrectionSays:
         assert totals["combat/2:enemy:Aatrox/incoming"] == (
             moved["combat/2:enemy:Aatrox/incoming"]["new"]
         )
+
+
+class TestTheAllocationRemeasurement:
+    """The memory statement the ledger-join slice owed a reader.
+
+    An R-35 verifier observed three of the four bench allocation peaks sitting
+    above their pinned baselines with no commit body naming a memory effect,
+    and named the ``69e7323`` ledger join as the obvious candidate — a second
+    per-walk record on every serving path is exactly the shape that would do
+    it.  The re-measurement is recorded beside each pin rather than replacing
+    it: ``peak_bytes`` is a ratchet with a 15% margin and it holds, so moving
+    it would spend the evidence it exists to carry.
+
+    What is gated here is that the recorded numbers are arithmetically what
+    they claim, that every scenario carries one, and that no re-measurement
+    silently sits above the ceiling its own pin declares.
+    """
+
+    SCENARIOS = (
+        "cassiopeia_3champ",
+        "cassiopeia_5champ",
+        "mundo_3champ",
+        "syndra_mandate_3champ",
+    )
+
+    @property
+    def alloc(self) -> dict:
+        return _load(RECEIPT)["alloc"]
+
+    def test_every_pinned_scenario_carries_a_remeasurement(self):
+        assert set(self.alloc) == set(self.SCENARIOS)
+        for name in self.SCENARIOS:
+            recorded = self.alloc[name]["campaign_close_remeasurement"]
+            assert recorded["dated"] == "2026-08-14"
+            assert recorded["provenance"] == "VERIFIED"
+            assert recorded["command"].startswith("scripts/bench_coupled_optimizer.py")
+
+    def test_the_recorded_arithmetic_is_the_arithmetic_it_claims(self):
+        for name in self.SCENARIOS:
+            pin = self.alloc[name]
+            recorded = pin["campaign_close_remeasurement"]
+            assert recorded["delta_bytes"] == recorded["peak_bytes"] - pin["peak_bytes"]
+            assert recorded["ceiling_bytes"] == int(
+                pin["peak_bytes"] * (1 + pin["margin"])
+            )
+            assert recorded["delta_percent"] == pytest.approx(
+                100 * recorded["delta_bytes"] / pin["peak_bytes"], abs=0.005
+            )
+
+    def test_no_remeasurement_sits_above_the_ceiling_its_pin_declares(self):
+        """The ratchet, read from the receipt rather than from the note."""
+        for name in self.SCENARIOS:
+            recorded = self.alloc[name]["campaign_close_remeasurement"]
+            assert recorded["peak_bytes"] <= recorded["ceiling_bytes"], name
+
+    def test_the_named_candidate_is_recorded_as_ruled_out_by_measurement(self):
+        """A cause block that argues rather than measures is prose again."""
+        for name in self.SCENARIOS:
+            cause = self.alloc[name]["campaign_close_remeasurement"]["cause"]
+            assert "RULED OUT by measurement" in cause
+            assert "observed_spread_bytes" in cause
+            assert "unattributed" in cause

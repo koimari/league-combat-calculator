@@ -389,25 +389,65 @@
       "peak_bytes": 262196,
       "provenance": "VERIFIED",
       "margin": 0.15,
-      "observed_spread_bytes": 0
+      "observed_spread_bytes": 0,
+      "campaign_close_remeasurement": {
+        "dated": "2026-08-14",
+        "peak_bytes": 264372,
+        "delta_bytes": 2176,
+        "delta_percent": 0.83,
+        "ceiling_bytes": 301525,
+        "provenance": "VERIFIED",
+        "command": "scripts/bench_coupled_optimizer.py::allocation_probe over all four scenarios in one process, the order attach_allocation_peaks uses",
+        "cause": "Re-measured at the campaign-close remediation pass because an R-35 verifier observed three of the four peaks above their pins with no commit body naming a memory effect, and named the 69e7323 ledger join as the obvious candidate. The candidate is RULED OUT by measurement rather than by argument: with OutcomeLedger replaced by a null object of the same protocol -- the pre-join shape -- three isolated subprocess repeats per scenario move the peak by -63..+63 bytes, at or below the pinned observed_spread_bytes. The join costs no measurable peak. The residual drift is unattributed: this lane may not create a worktree and did not bisect. peak_bytes is NOT moved -- every measurement is inside the 15% margin, and re-pinning a ratchet that holds would spend the evidence it exists to carry."
+      }
     },
     "cassiopeia_5champ": {
       "peak_bytes": 570394,
       "provenance": "VERIFIED",
       "margin": 0.15,
-      "observed_spread_bytes": 63
+      "observed_spread_bytes": 63,
+      "campaign_close_remeasurement": {
+        "dated": "2026-08-14",
+        "peak_bytes": 571707,
+        "delta_bytes": 1313,
+        "delta_percent": 0.23,
+        "ceiling_bytes": 655953,
+        "provenance": "VERIFIED",
+        "command": "scripts/bench_coupled_optimizer.py::allocation_probe over all four scenarios in one process, the order attach_allocation_peaks uses",
+        "cause": "Re-measured at the campaign-close remediation pass because an R-35 verifier observed three of the four peaks above their pins with no commit body naming a memory effect, and named the 69e7323 ledger join as the obvious candidate. The candidate is RULED OUT by measurement rather than by argument: with OutcomeLedger replaced by a null object of the same protocol -- the pre-join shape -- three isolated subprocess repeats per scenario move the peak by -63..+63 bytes, at or below the pinned observed_spread_bytes. The join costs no measurable peak. The residual drift is unattributed: this lane may not create a worktree and did not bisect. peak_bytes is NOT moved -- every measurement is inside the 15% margin, and re-pinning a ratchet that holds would spend the evidence it exists to carry."
+      }
     },
     "mundo_3champ": {
       "peak_bytes": 224655,
       "provenance": "VERIFIED",
       "margin": 0.15,
-      "observed_spread_bytes": 63
+      "observed_spread_bytes": 63,
+      "campaign_close_remeasurement": {
+        "dated": "2026-08-14",
+        "peak_bytes": 226294,
+        "delta_bytes": 1639,
+        "delta_percent": 0.73,
+        "ceiling_bytes": 258353,
+        "provenance": "VERIFIED",
+        "command": "scripts/bench_coupled_optimizer.py::allocation_probe over all four scenarios in one process, the order attach_allocation_peaks uses",
+        "cause": "Re-measured at the campaign-close remediation pass because an R-35 verifier observed three of the four peaks above their pins with no commit body naming a memory effect, and named the 69e7323 ledger join as the obvious candidate. The candidate is RULED OUT by measurement rather than by argument: with OutcomeLedger replaced by a null object of the same protocol -- the pre-join shape -- three isolated subprocess repeats per scenario move the peak by -63..+63 bytes, at or below the pinned observed_spread_bytes. The join costs no measurable peak. The residual drift is unattributed: this lane may not create a worktree and did not bisect. peak_bytes is NOT moved -- every measurement is inside the 15% margin, and re-pinning a ratchet that holds would spend the evidence it exists to carry."
+      }
     },
     "syndra_mandate_3champ": {
       "peak_bytes": 394016,
       "provenance": "VERIFIED",
       "margin": 0.15,
-      "observed_spread_bytes": 63
+      "observed_spread_bytes": 63,
+      "campaign_close_remeasurement": {
+        "dated": "2026-08-14",
+        "peak_bytes": 250815,
+        "delta_bytes": -143201,
+        "delta_percent": -36.34,
+        "ceiling_bytes": 453118,
+        "provenance": "VERIFIED",
+        "command": "scripts/bench_coupled_optimizer.py::allocation_probe over all four scenarios in one process, the order attach_allocation_peaks uses",
+        "cause": "Re-measured at the campaign-close remediation pass because an R-35 verifier observed three of the four peaks above their pins with no commit body naming a memory effect, and named the 69e7323 ledger join as the obvious candidate. The candidate is RULED OUT by measurement rather than by argument: with OutcomeLedger replaced by a null object of the same protocol -- the pre-join shape -- three isolated subprocess repeats per scenario move the peak by -63..+63 bytes, at or below the pinned observed_spread_bytes. The join costs no measurable peak. The residual drift is unattributed: this lane may not create a worktree and did not bisect. peak_bytes is NOT moved -- every measurement is inside the 15% margin, and re-pinning a ratchet that holds would spend the evidence it exists to carry."
+      }
     }
   },
   "wall": {
