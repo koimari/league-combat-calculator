@@ -1,0 +1,16 @@
+{
+ "artifact": "campaign_stages",
+ "rule": "D-40: every frontier commits its exclusion lists beside its counters, diff-gated by set equality, rather than inside the tool that measures it. Counter 4's overdue rule (umbrella criterion 7, Amendment B) has exactly one trigger -- 'the stage this row defers to has shipped' -- which makes it the most load-bearing list of the three, and it lived as a literal dict inside scripts/behavior_frontier.py. It lives here now. What is NOT declared here is shippedness itself: each row names the slice tag the campaign's commit subjects carry, and the gate reads the tree for it, so a stage that ships makes its own rows overdue with nobody remembering to edit anything.",
+ "how_shipped_is_derived": "A stage has shipped when the campaign range holds a commit whose subject's trailing tag list carries its slice_tag AND a commit carrying its followed_by tag. Two conjuncts, because the first alone fires on the stage's own first commit -- a stage is not shipped while it is being shipped -- and the campaign's own convention is that the next stage's tag appears only once the previous one is done. The derived fact is the earliest sha carrying each tag, which is stable: later commits do not move it, so the frontier receipt does not churn on every commit.",
+ "campaign_range": "584071e..HEAD",
+ "why_a_deferral_may_not_name_an_undeclared_stage": "This is the hole the literal dict left. Nothing derived stage completion from the tree, so a future stage that shipped without retiring its rows produced exactly the silence the overdue rule was written to end -- unless a human remembered to add a line to the measuring tool first. Requiring every retires_at value to resolve to a row here inverts that: the stage record must exist before the deferral can, and from then on the tree decides when it comes due.",
+ "stages": [
+  {
+   "stage": "Phase 4 S3 — one kernel, five views",
+   "slice_tag": "S3",
+   "followed_by": "S4",
+   "note": "The stage counter 4's fourteen RECEIPT_WALK deferral rows name. It shipped, and Phase 4 ran on through S10 and its boundary without retiring them.",
+   "blocked_on": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition: the OutcomeLedger is the receipt walk's companion since 2026-08-14, but no view projects its quantities onto a leaf, so no family gained a receipt-walk interpreter and these rows cannot retire. Re-dating them is a ruling and not a lane's edit: Amendment B names the retiring stage."
+  }
+ ]
+}

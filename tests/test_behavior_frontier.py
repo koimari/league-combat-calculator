@@ -828,7 +828,7 @@ def test_every_deferral_to_a_shipped_stage_is_declared_overdue() -> None:
     overdue = {key: row for key, row in rows.items() if row["overdue"]}
     assert overdue, "no row is overdue, so this clause is asserting nothing"
     for key, row in overdue.items():
-        assert row["recorded_stage"] in behavior_frontier.COMPLETED_STAGES, key
+        assert row["recorded_stage"] in behavior_frontier.completed_stages(), key
         assert row["blocked_on"].startswith("docs/receipts/"), key
         assert row["overdue_because"], key
 
@@ -868,3 +868,54 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
     assert any("is not a completed stage" in f for f in failures)
+
+
+def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
+    """The clause that makes the overdue rule come due on its own.
+
+    ``COMPLETED_STAGES`` used to be a literal inside this module and was the
+    sole trigger of the overdue rule, so a stage could ship and every row
+    deferred to it stay silent until somebody remembered to edit the tool —
+    the failure shape the campaign is named after, one level up.  A deferral
+    may now only name a stage the committed record declares, and shippedness
+    is read from the tree from then on.
+    """
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    key = "spellblade/receipt_walk"
+    for block in (committed, fresh):
+        row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
+        row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"
+        row["retires_at"] = "Phase 9 S1 — a stage no record declares"
+
+    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+
+    assert any("campaign-stages.json declares" in f for f in failures)
+
+
+def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None:
+    """Both conjuncts, and neither of them a field somebody sets.
+
+    A stage is shipped when the campaign range carries its slice tag *and* its
+    declared successor's — the second conjunct is what stops a stage counting
+    as shipped on its own opening commit.
+    """
+    declared = behavior_frontier.declared_stages()
+    shipped = behavior_frontier.completed_stages()
+    assert set(shipped) <= set(declared)
+    assert "Phase 4 S3 — one kernel, five views" in shipped
+
+    tags = behavior_frontier._tag_first_seen()  # noqa: SLF001
+    for stage, row in declared.items():
+        assert "shipped" not in row, f"{stage} declares shippedness rather than a tag"
+        if stage in shipped:
+            assert row["slice_tag"] in tags and row["followed_by"] in tags
+            assert tags[row["slice_tag"]] in shipped[stage]
+
+
+def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:
+    """A stage record is only useful if its blocker names an artifact."""
+    for stage, row in behavior_frontier.declared_stages().items():
+        assert row["blocked_on"].startswith("docs/receipts/"), stage
+        assert row["slice_tag"] and row["followed_by"], stage

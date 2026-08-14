@@ -100,6 +100,8 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
+import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -654,32 +656,92 @@ COUNTER_4_DEFERRALS: Mapping[str, str] = {
 # retired" -- was therefore unmet for the length of a whole phase with nothing
 # saying so, which is a promise quietly turning into a habit.
 #
-# So a shipped stage is declared here, and every row recording one is
-# **overdue**: still deferred, still netted out of the counter, and now named
-# as a debt with a blocker rather than a schedule.  The gate refuses an overdue
-# row that is not declared overdue, so the next stage that passes without
-# retiring its rows fails on the commit that passes it.
-COMPLETED_STAGES: Mapping[str, str] = {
-    "Phase 4 S3 — one kernel, five views": (
-        "shipped, and the phase ran on through S10 and its boundary; the "
-        "OutcomeLedger end-of-walk projection that would have given each of "
-        "these families a receipt-walk interpreter of its own is the half of "
-        "escalated-defects-P4-S9.json that is still open"
-    ),
-}
+# So every row recording a shipped stage is **overdue**: still deferred, still
+# netted out of the counter, and now named as a debt with a blocker rather than
+# a schedule.
+#
+# Neither half of that lives here.  The stage records are committed beside the
+# counter at ``docs/receipts/campaign-stages.json`` (D-40 -- a counter's lists
+# may not live inside the tool that measures it, and "this stage shipped" is
+# the sole trigger of the rule), and shippedness is not declared even there:
+# each record names the slice tag the campaign's commit subjects carry, and
+# ``completed_stages`` reads the tree for it.  That is the difference between
+# a rule that comes due on its own and a rule that comes due when somebody
+# remembers to edit a dict -- the second is the failure shape this campaign is
+# named after, one level up.
+CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
 
-#: What each overdue row is waiting on.  One entry per completed stage, naming
-#: the artifact a reader can open — never "ruled elsewhere".
-OVERDUE_BLOCKERS: Mapping[str, str] = {
-    "Phase 4 S3 — one kernel, five views": (
-        "docs/receipts/escalated-defects-P4-S9.json, entry "
-        "no_production_path_emits_a_non_measured_disposition: the ledger is "
-        "the receipt walk's companion since 2026-08-14, but no view projects "
-        "its quantities, so no family gained a receipt-walk interpreter and "
-        "these rows cannot retire.  Re-dating them is a ruling, not a lane's "
-        "edit: Amendment B names the retiring stage"
-    ),
-}
+#: The commit the campaign is measured from; the same base the sole-home scan
+#: reads, so "the campaign range" means one range in both instruments.
+CAMPAIGN_BASE = "584071e"
+
+_SUBJECT_TAGS = re.compile(r"\(([^()]*)\)\s*$")
+
+
+def declared_stages() -> Mapping[str, Mapping[str, str]]:
+    """The committed stage records, keyed by the name a deferral spells."""
+    block = json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
+    return {row["stage"]: row for row in block["stages"]}
+
+
+def _tag_first_seen(base: str = CAMPAIGN_BASE) -> Mapping[str, str]:
+    """Every slice tag in the campaign range → the earliest sha carrying it.
+
+    A subject's tag list is its trailing parenthetical, comma separated:
+    ``feat(program): ... (P4-S9-ledger-join, 2/2b)``.  Earliest rather than
+    latest because the earliest sha is stable — later commits do not move it,
+    so a derived fact built on it does not churn the frontier receipt on every
+    commit.
+
+    Raises:
+        RuntimeError: git is unavailable or the range does not resolve.  Fail
+            closed: a stage-completion read that silently returns nothing
+            would report every overdue row as on schedule, which is the
+            silence this derivation exists to end.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "log", "--format=%h\x1f%s", f"{base}..HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise RuntimeError(
+            f"cannot read the campaign range {base}..HEAD: {error}"
+        ) from error
+    seen: dict[str, str] = {}
+    for line in completed.stdout.splitlines():  # newest first
+        sha, _, subject = line.partition("\x1f")
+        match = _SUBJECT_TAGS.search(subject)
+        if match is None:
+            continue
+        for tag in match.group(1).split(","):
+            seen[tag.strip()] = sha
+    return seen
+
+
+def completed_stages() -> Mapping[str, str]:
+    """Stage → why the **tree** says it shipped, for every declared stage.
+
+    Two conjuncts, both read from commit subjects: the stage's own slice tag
+    is present, and its declared successor's tag is too.  The first alone
+    fires on the stage's opening commit, and a stage is not shipped while it
+    is being shipped.
+    """
+    tags = _tag_first_seen()
+    shipped: dict[str, str] = {}
+    for stage, row in declared_stages().items():
+        own, after = tags.get(row["slice_tag"]), tags.get(row["followed_by"])
+        if own and after:
+            shipped[stage] = (
+                f"the campaign range carries the slice tag {row['slice_tag']!r} "
+                f"from {own} and its declared successor {row['followed_by']!r} "
+                f"from {after}, so the stage this row defers to has shipped and "
+                "the campaign ran on past it"
+            )
+    return shipped
 
 
 TARGET_CRITERIA: Mapping[str, str] = {
@@ -737,6 +799,10 @@ def deferral_block() -> dict[str, Any]:
     module owns is the *decision* to defer, which is the part a receipt has to
     carry because no code implies it.
     """
+    shipped = completed_stages()
+    blockers = {
+        stage: row.get("blocked_on", "") for stage, row in declared_stages().items()
+    }
     rows: dict[str, dict[str, str]] = {}
     for key, stage in sorted(COUNTER_4_DEFERRALS.items()):
         row = next(
@@ -754,9 +820,9 @@ def deferral_block() -> dict[str, Any]:
             "recorded_stage": stage,
             "reason": row.reason if row is not None else "",
             "retires_at": row.retires_at if row is not None else "",
-            "overdue": stage in COMPLETED_STAGES,
-            "overdue_because": COMPLETED_STAGES.get(stage, ""),
-            "blocked_on": OVERDUE_BLOCKERS.get(stage, ""),
+            "overdue": stage in shipped,
+            "overdue_because": shipped.get(stage, ""),
+            "blocked_on": blockers.get(stage, "") if stage in shipped else "",
         }
     return {
         "rule": (
@@ -835,15 +901,24 @@ def _overdue_failures(
 ) -> list[str]:
     """A deferral whose stage has shipped is a debt, and must say so.
 
-    Three clauses, and the first is the one Amendment B's exit sentence needed
-    and never had: a row recording a completed stage must be declared overdue
-    with a blocker a reader can open, and the committed receipt must agree.  A
-    row that quietly outlives its own due date is how "deferred to the stage
-    that can close it" becomes "deferred".
+    Four clauses.  The first is the one that makes the other three come due on
+    their own: a deferral may not name a stage no committed record declares,
+    so the record exists before the row does and the tree — not an edit to
+    this module — decides when the row goes overdue.  Then the row recording a
+    completed stage must be declared overdue with a blocker a reader can open,
+    an overdue claim on a live stage is refused, and the committed receipt must
+    agree.  A row that quietly outlives its own due date is how "deferred to
+    the stage that can close it" becomes "deferred".
     """
     stage = row["recorded_stage"]
     failures: list[str] = []
-    if stage in COMPLETED_STAGES:
+    if stage not in declared_stages():
+        failures.append(
+            f"counter 4: {key} is deferred to {stage!r}, which no row of "
+            "docs/receipts/campaign-stages.json declares; a stage nothing "
+            "records can never come due"
+        )
+    if stage in completed_stages():
         if not row["overdue"] or not row["blocked_on"]:
             failures.append(
                 f"counter 4: {key} is deferred to {stage!r}, which has shipped, "
