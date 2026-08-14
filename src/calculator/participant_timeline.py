@@ -114,7 +114,8 @@ from .program.dependency import (
     PassRequest,
     run_passes,
 )
-from .program.identity import MechanicId
+from .program.identity import MechanicId, PIdx
+from .program import route as program_route
 from .program.rung import (
     CompiledFast,
     CompiledFull,
@@ -745,22 +746,47 @@ def _warmog_heart_tick_events(
     return events
 
 
-def _first_pair_defender_id(
-    attacker: Combatant, all_actors: Iterable[Combatant]
+def _routed_pair_defender_id(
+    pair_defender_id: str | None, all_actors: Sequence[Combatant]
 ) -> str | None:
-    """The first defender in this attacker's ordered pair list.
+    """The pair fight a support scan's packets were priced in, resolved.
 
-    Mirrors the legacy attack groups (main/ally attack the enemies in
-    roster order; an enemy attacks the main first).  Used to reconstruct
-    the pair-enriched id of an attacker's applied self-heal copy so
-    fan-out clones can link back to it (``_source_event_id``).
+    The caller supplies the defender — it is the pair the engine result
+    actually came from, which the caller has in hand — and this resolves it
+    through :func:`program.route.resolve_route` under
+    :class:`program.route.PairDefender`, so the subject is bounded against
+    the roster and an id the roster does not hold raises
+    :class:`program.route.UnroutableEvent` instead of quietly addressing
+    somebody else's state.
+
+    It replaces a scan that re-derived the same fact independently, by
+    walking the roster for the first enemy.  Two derivations of one fact
+    that nothing forced to agree is exactly the shape this phase removes:
+    the answer is unchanged, and it now has one source.
+
+    ``None`` is the declared answer for an actor with no opponents — the
+    composition's fallback pass, where no pair fight exists to name — and is
+    the one case the policy has nothing to resolve.
     """
-    if attacker.team == "enemy":
-        return "main"
-    for actor in all_actors:
-        if actor.team == "enemy":
-            return actor.participant_id
-    return None
+    if pair_defender_id is None:
+        return None
+    slots = {
+        actor.participant_id: PIdx(index) for index, actor in enumerate(all_actors)
+    }
+    subject = slots.get(pair_defender_id)
+    if subject is None:
+        raise program_route.UnroutableEvent(
+            program_route.PairDefender(),
+            f"{pair_defender_id!r} is not a participant of this roster",
+        )
+    resolved = program_route.resolve_route(
+        program_route.PairDefender(),
+        program_route.RouteContext(
+            author=subject, holder=subject, pair_defender=subject
+        ),
+        roster_size=len(all_actors),
+    )
+    return all_actors[int(resolved[0])].participant_id
 
 
 def _support_target_ids(
@@ -838,6 +864,7 @@ def _support_effect_templates(
     result: Mapping[str, Any],
     all_actors: list[Combatant],
     *,
+    pair_defender_id: str | None,
     damage_events: Iterable[Mapping[str, Any]] | None = None,
     target_id: str | None = None,
 ) -> list[dict[str, Any]]:
@@ -847,6 +874,15 @@ def _support_effect_templates(
     and each cached pair result are fixed), so they ride the pair packet;
     application shallow-copies each one because the survival walk annotates
     its copy.
+
+    ``pair_defender_id`` is required and has no default: it names the pair
+    fight ``result`` was priced in, which every caller already knows, and the
+    heal fan-out below needs it to rebuild the pair-enriched id of the
+    attacker's applied self-heal copy.  It used to be re-derived here by
+    scanning the roster for the first enemy — a second derivation of a fact
+    the caller was holding, that nothing forced to agree with it.  ``None``
+    is the honest answer for an actor with no opponents and is why the
+    annotation is optional while the argument is not.
     """
     if attacker.team == "ally" and not getattr(
         attacker.request, "ally_effects_enabled", False
@@ -888,7 +924,7 @@ def _support_effect_templates(
     # recipient.  The clones are added BEFORE item support effects so item
     # passives that trigger off ally heals/shields (Moonstone Renewer) see
     # them, exactly like the scanner packets they replace.
-    first_defender_id = _first_pair_defender_id(attacker, all_actors)
+    applied_pair_defender = _routed_pair_defender_id(pair_defender_id, all_actors)
     for heal_index, heal_event in enumerate(result.get("self_healing_events", [])):
         if not isinstance(heal_event, Mapping):
             continue
@@ -904,7 +940,9 @@ def _support_effect_templates(
             f"{attacker.participant_id}:heal:{heal_index}"
         )
         applied_self_id = (
-            f"{raw_id}:{first_defender_id}" if first_defender_id else str(raw_id)
+            f"{raw_id}:{applied_pair_defender}"
+            if applied_pair_defender
+            else str(raw_id)
         )
         for ally_index, recipient_id in enumerate(target_ids):
             if recipient_id == attacker.participant_id:
@@ -966,8 +1004,16 @@ def _attach_support_effects(
     outgoing: dict[str, list[dict[str, Any]]] | None = None,
     incoming: dict[str, list[dict[str, Any]]] | None = None,
 ) -> None:
-    """Attach one actor's sourced shield/heal packets exactly once."""
-    for template in _support_effect_templates(attacker, result, all_actors):
+    """Attach one actor's sourced shield/heal packets exactly once.
+
+    The one caller is the composition's fallback pass — an actor whose
+    support schedule resolved with no opposing target selected — so there is
+    no pair fight to name and ``pair_defender_id`` is ``None`` by fact
+    rather than by omission.
+    """
+    for template in _support_effect_templates(
+        attacker, result, all_actors, pair_defender_id=None
+    ):
         packet = dict(template)
         support_effects[template["target"]].append(packet)
         if (
@@ -2729,6 +2775,11 @@ def _context_setup(
                     attacker,
                     packet["result"],
                     all_actors_by_index,
+                    # ``support_attached`` admits one pair per attacker, so
+                    # this is the first of ``base_pairs``' defenders for it —
+                    # the pair ``packet["result"]`` was priced in, taken from
+                    # the loop rather than re-derived from the roster.
+                    pair_defender_id=defender.participant_id,
                     damage_events=packet.get("events", ()),
                 )
                 packet["support"] = support_templates
@@ -2851,6 +2902,10 @@ def _build_signature_panel(
                 attacker,
                 packet["result"],
                 all_actors,
+                # The signature panel prices every enemy attacker against the
+                # candidate main and nobody else (``_pair_packet(..., "main")``
+                # above), so the pair this result came from is that one.
+                pair_defender_id=main.participant_id,
                 damage_events=packet.get("events", ()),
             )
             packet["support"] = support_templates
@@ -2989,6 +3044,12 @@ def _score_with_search_context(
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
+    # The defender ``first_result`` was priced against, captured beside it in
+    # the loop that produces it.  The score path used to re-read it as
+    # ``context.main_pair_params[0][0]`` — a second index into the same list,
+    # in a branch a hundred lines away from the loop, which nothing forced to
+    # stay pointing at the pair the result actually came from.
+    first_defender: Combatant | None = None
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
     for defender_index, (defender, pair_params) in enumerate(context.main_pair_params):
         result = _pair_run_fight(
@@ -3003,6 +3064,7 @@ def _score_with_search_context(
         )
         if first_result is None:
             first_result = result
+            first_defender = defender
         fresh.add_engine_result(
             result,
             "main",
@@ -3017,7 +3079,7 @@ def _score_with_search_context(
             champion_wounds=main_champion_wounds,
             live_amps=_live_amps_of(main, defender, params),
         )
-    if first_result is not None:
+    if first_result is not None and first_defender is not None:
         # The item support scan reads per-event target/id fields that only
         # pair enrichment adds (Black Cleaver Carve, Bloodsong), plus the
         # first pair's takedown synthesis.  Give it the same view the
@@ -3033,10 +3095,13 @@ def _score_with_search_context(
             # and a holder with no event-view item never reads the enriched
             # per-event copy — both scan the plain engine result.
             support_templates = _support_effect_templates(
-                main, first_result, all_actors
+                main,
+                first_result,
+                all_actors,
+                pair_defender_id=first_defender.participant_id,
             )
         else:
-            first_defender_id = context.main_pair_params[0][0].participant_id
+            first_defender_id = first_defender.participant_id
             # The same preview skip ``_pair_packet`` makes, on the same
             # rows, so the two paths scan one stream.  A pair-engine row
             # the registry declares THEORETICAL is a preview of a number
@@ -3068,6 +3133,7 @@ def _score_with_search_context(
                 main,
                 first_result,
                 all_actors,
+                pair_defender_id=first_defender_id,
                 damage_events=support_scan_events,
                 target_id=first_defender_id,
             )
@@ -3772,6 +3838,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                             attacker,
                             result,
                             all_actors,
+                            pair_defender_id=defender.participant_id,
                             damage_events=packet.get("events", ()),
                             target_id=defender.participant_id,
                         )

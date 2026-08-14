@@ -28,6 +28,14 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
+# R-17's allowlist reader, from its own home: a standing coupled diff is
+# legal exactly when a committed receipt claims it, and that predicate has
+# one implementation rather than one per gate that needs it.
+from tests.test_coupled_golden_allowlist import (  # noqa: E402
+    allowlisted_coupled_paths,
+    unexplained,
+)
+
 from src.calculator.ability_spec import AttackClass, DamageClass  # noqa: E402
 from src.calculator.survival.actions import SurvivalAction  # noqa: E402
 from src.calculator.survival.transitions import (  # noqa: E402
@@ -443,7 +451,15 @@ class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
 
     def test_the_ordinal_addressed_leaves_are_no_longer_reported(self):
         standing = _standing()
-        assert standing == {}, "the coupled compare is not clean"
+        # The instrument guard, stated as R-17 actually leaves it. Between two
+        # phase boundaries the compare *cannot* be empty -- a landed slice's
+        # allowlisted diffs are standing by design -- so demanding emptiness
+        # here would forbid every semantic slice until the next re-capture.
+        # What must hold, and what a broken instrument would break, is that
+        # every standing diff is claimed by a committed allowlist.
+        assert (
+            unexplained(tuple(standing.values()), allowlisted_coupled_paths()) == ()
+        ), "the coupled compare holds a diff no receipt claims"
         for path in (
             "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/damage_type",
             "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/sequence",

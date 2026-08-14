@@ -62,11 +62,7 @@ TESTS = ROOT / "tests"
 #: The rows this frontier has not closed, and the escalation entry that
 #: carries each.  Asserted against the artifact rather than described, so a
 #: row cannot quietly leave both the frontier and the escalation.
-OPEN_ROWS: dict[str, str] = {
-    "the hardcoded first-defender scan": (
-        "the_first_defender_scan_survives_because_ccscope_was_never_authored"
-    ),
-}
+OPEN_ROWS: dict[str, str] = {}
 
 #: Rows this frontier closed *after* escalating them, and the escalation
 #: entry each retired.  A closed row leaves ``OPEN_ROWS`` and arrives here
@@ -77,6 +73,9 @@ OPEN_ROWS: dict[str, str] = {
 RETIRED_ROWS: dict[str, str] = {
     "WalkCompiler's duplicated dict/tuple branches": (
         "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
+    ),
+    "the hardcoded first-defender scan": (
+        "the_first_defender_scan_survives_because_ccscope_was_never_authored"
     ),
 }
 

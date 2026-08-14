@@ -4,26 +4,28 @@ An escalation living only in a commit body is absorbed by the next baseline
 re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
 artifact nothing runs is prose in a JSON file, which is why it has this.
 
-Each defect declares a reproducer and each reproducer runs here.  The day
-somebody authors ``CcScope``, the matching test goes red -- which is the
-point: an entry retires *with* the inversion of its own test, never by being
-deleted.
+Each defect declares a reproducer and each reproducer runs here, so an entry
+retires *with* the inversion of its own test and never by being deleted.
 
-Two entries have since done exactly that.  S10 unified the compiler's two
+Three entries have since done exactly that.  S10 unified the compiler's two
 row readers after an R-35 verifier reported criterion 2 undischarged on
-them; and the Phase 4 boundary integration re-pinned ``tests.collected``,
-which is the one exit the second entry named.  Both moved to ``retired``
-carrying what the lane measured, and the tests that reproduced them are
-inverted below rather than removed, so the artifact and the tree still say
-the same thing about a row whose answer changed.
+them; the Phase 4 boundary integration re-pinned ``tests.collected``, which
+is the one exit the second entry named; and the first-defender scan row
+closed the way its own ``for_the_phase_owner`` demanded -- H2's recorded
+default shipped as its own semantic slice, ``CcScope`` authored, the Command
+mark routed to ``TriggerTarget``, the scan deleted, the disclosure
+published.  All three moved to ``retired`` carrying what the lane measured,
+and the tests that reproduced them are inverted below rather than removed,
+so the artifact and the tree still say the same thing about a row whose
+answer changed.
 
-Two of the four open entries began as deletion-frontier rows cleanup cannot
-close; the other two are gaps a later reader found in what S10 shipped -- an
-instrument that holds one scenario set while a criterion names another, and
-a fallback reason that is required at construction and published nowhere.
-What the four have in common is not their subject: it is that closing any of
-them is a write outside this lane's ownership -- one of R-32's five
-baselines, or L0's harness contract.
+One of the three open entries began as a deletion-frontier row cleanup
+cannot close; the other two are gaps a later reader found in what S10
+shipped -- an instrument that holds one scenario set while a criterion names
+another, and a fallback reason that is required at construction and
+published nowhere.  What the three have in common is not their subject: it
+is that closing any of them is a write outside this lane's ownership -- one
+of R-32's five baselines, or L0's harness contract.
 """
 
 from __future__ import annotations
@@ -65,7 +67,6 @@ def test_every_open_defect_carries_a_reproducer_and_a_date() -> None:
 def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
     """A gate that drifted off its entries is a gate for nothing."""
     assert [defect["id"] for defect in receipt()["defects"]] == [
-        "the_first_defender_scan_survives_because_ccscope_was_never_authored",
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
         "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
         "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
@@ -78,6 +79,7 @@ def test_a_retired_entry_says_how_it_closed_and_what_gates_it_now() -> None:
     assert [entry["id"] for entry in retired] == [
         "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names",
         "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
+        "the_first_defender_scan_survives_because_ccscope_was_never_authored",
     ]
     for entry in retired:
         assert entry["retired"] and entry["retired_by"]
@@ -95,47 +97,79 @@ def _source(*parts: str) -> str:
     return (SRC.joinpath(*parts)).read_text(encoding="utf-8")
 
 
-def test_no_cc_scope_vocabulary_exists_in_src() -> None:
-    """The shipped H2 default is a construction, and it is not constructed."""
-    holders = {
+def test_cc_scope_is_a_closed_vocabulary_in_src() -> None:
+    """The inversion: the shipped H2 default is now constructed.
+
+    ``CcScope`` is the union alias rather than a class, so the assertion is
+    on the alias and on every member the union closes over — a vocabulary
+    that named itself and left the members to a caller's imagination would
+    reproduce the row it retired.
+    """
+    scope = _source("program", "scope.py")
+    tree = ast.parse(scope)
+    assigned = {
+        target.id
+        for node in ast.walk(tree)
+        for target in (
+            node.targets
+            if isinstance(node, ast.Assign)
+            else [node.target] if isinstance(node, ast.AnnAssign) else []
+        )
+        if isinstance(target, ast.Name)
+    }
+    classes = {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+    assert {"CcScope", "CC_SCOPES"} <= assigned
+    assert {"SingleTarget", "MultiTarget", "Unreviewed"} <= classes
+    functions = {
+        node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+    }
+    assert {"reviewed_scope", "scope_policy"} <= functions
+
+
+def test_the_first_defender_scan_has_zero_occurrences() -> None:
+    """The inversion: no definition and no call, anywhere under ``src/``."""
+    hits = [
         path.relative_to(SRC).as_posix()
         for path in sorted(SRC.rglob("*.py"))
-        if "CcScope" in path.read_text(encoding="utf-8")
-    }
-    tree_defines_it = any(
-        isinstance(node, ast.ClassDef) and node.name == "CcScope"
-        for path in sorted(SRC.rglob("*.py"))
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-    )
-    assert holders, "the entry claims two mentions; zero would mean it drifted"
-    assert not tree_defines_it
+        if "_first_pair_defender_id" in path.read_text(encoding="utf-8")
+    ]
+    assert hits == []
 
 
-def test_the_first_defender_scan_is_still_defined_and_called() -> None:
-    """The row is open, and this is the shape that says so."""
+def test_the_score_paths_support_scan_no_longer_indexes_pair_zero() -> None:
+    """The other half of the same convention, inverted in the same commit.
+
+    The defender is captured beside ``first_result`` in the loop that
+    produces it, so the fact has one source instead of a second index into
+    the same list a hundred lines away.  Asserted over the AST rather than
+    over the text: the comment recording what the code used to do names the
+    retired expression, and a comment must never be able to fail a gate.
+    """
     timeline = _source("participant_timeline.py")
-    tree = ast.parse(timeline)
-    defined = [
+    subscripts = [
         node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == "_first_pair_defender_id"
+        for node in ast.walk(ast.parse(timeline))
+        if isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "main_pair_params"
     ]
-    called = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "_first_pair_defender_id"
-    ]
-    assert len(defined) == 1
-    assert called
+    assert subscripts == []
+    assert "first_defender = defender" in timeline
 
 
-def test_the_score_paths_support_scan_still_indexes_pair_zero() -> None:
-    """The other half of the same convention, in the other composition."""
-    assert "context.main_pair_params[0][0].participant_id" in _source(
-        "participant_timeline.py"
+def test_a_command_mark_routes_to_the_trigger_and_not_to_a_scan() -> None:
+    """Criterion 9's third clause, asserted where the mark is authored."""
+    tree = ast.parse(_source("item_support_effects.py"))
+    subjects = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_cc_mark_subjects"
     )
+    policies = {
+        node.attr for node in ast.walk(subjects) if isinstance(node, ast.Attribute)
+    }
+    assert "TriggerTarget" in policies
+    assert "resolve_route" in policies
 
 
 # --- the compiler's two row readers, retired ---------------------------------

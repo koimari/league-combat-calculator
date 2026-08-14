@@ -51,6 +51,14 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
+# R-17's allowlist reader, from its own home: a standing coupled diff is
+# legal exactly when a committed receipt claims it, and that predicate has
+# one implementation rather than one per gate that needs it.
+from tests.test_coupled_golden_allowlist import (  # noqa: E402
+    allowlisted_coupled_paths,
+    unexplained,
+)
+
 RECEIPTS = ROOT / "docs" / "receipts"
 RECEIPT = RECEIPTS / "escalated-defects-P4-boundary.json"
 COUPLED_BASELINE = ROOT / "scripts" / "golden_coupled_baseline.json"
@@ -787,7 +795,18 @@ class TestTheSustainedDissentWasRePosedAndThenAnswered:
         baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         claimed = block["the_totals_the_brief_called_unmoved"]
         assert claimed
-        assert not _standing_by_path(), "the coupled compare is not clean"
+        # The instrument guard, stated as R-17 actually leaves it. Between two
+        # phase boundaries the compare *cannot* be empty -- a landed slice's
+        # allowlisted diffs are standing by design -- so demanding emptiness
+        # here would forbid every semantic slice until the next re-capture.
+        # What must hold, and what a broken instrument would break, is that
+        # every standing diff is claimed by a committed allowlist and that
+        # none of them is on a total this test reads.
+        standing = _standing_by_path()
+        assert (
+            unexplained(tuple(standing.values()), allowlisted_coupled_paths()) == ()
+        ), "the coupled compare holds a diff no receipt claims"
+        assert not {line.split(": ")[0] for line in claimed} & set(standing)
         for line in claimed:
             path, values = line.split(": ")
             old, new = (part.strip() for part in values.split("->"))

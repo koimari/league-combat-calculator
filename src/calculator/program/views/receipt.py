@@ -86,6 +86,13 @@ _SUPPORT_LABEL_KEYS = (
     "range_assumption",
     "trigger_kind",
     "source_url",
+    # The two H2 fields.  ``cc_scope`` is the reviewed CcScope a crowd-control
+    # mark was routed under and ``cc_scope_disclosure`` is the sentence that
+    # qualifies it when the reading was the shipped default rather than a
+    # sourced one.  Published, because a routing assumption a receipt cannot
+    # state is a routing assumption nobody can check.
+    "cc_scope",
+    "cc_scope_disclosure",
 )
 
 

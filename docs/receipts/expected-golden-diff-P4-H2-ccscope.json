@@ -1,0 +1,103 @@
+{
+  "slice": "P4-H2-ccscope",
+  "dated": "2026-08-14",
+  "decisions": [
+    "H2",
+    "D-62",
+    "D-97"
+  ],
+  "correction": {
+    "one_sentence": "Which enemy a crowd-control mark lands on is a routing decision the ability's CcScope makes and resolve_route delivers, not the roster position a pair scan happened to stamp.",
+    "sites": [
+      "src/calculator/program/scope.py (new) -- the CcScope vocabulary and H2's shipped default",
+      "src/calculator/item_support_effects.py::_cc_mark_subjects -- the Command mark routed through route.TriggerTarget on the subjects the scope resolved",
+      "src/calculator/participant_timeline.py -- _first_pair_defender_id deleted, its fact passed from the pair it was priced in as a required keyword"
+    ],
+    "why_it_had_no_symptom": "The shipped default reproduces the scan's answer exactly, which is what 'deferred, default shipped' means: one target, the pair defender. What changes is that a reader can now see that it was a decision, and that nobody has read the wiki for the ability it was made about.",
+    "not_touched": "Command's authority. The umbrella's H2 row records it as staying SPLIT until the sourced reading lands, and this slice does not move it; damage._apply_command_amp stays as the pair-side preview and the packet still carries Authority.SPLIT."
+  },
+  "raised_by": {
+    "how": "An R-35 verifier on slice group P4-integration-final reported Phase 4 criterion 9 NOT DISCHARGED: resolve_route is total and fail-closed, but the first-defender scan still had occurrences, no CcScope existed, and no Command mark routed to TriggerTarget.",
+    "escalation": "docs/receipts/escalated-defects-P4-S10.json, the entry the_first_defender_scan_survives_because_ccscope_was_never_authored, which retires in the same commit with its three reproducers inverted."
+  },
+  "qualifying_population": {
+    "enumerated_before_the_src_edit": true,
+    "enumerated_from": "scripts/golden_coupled_baseline.json (committed), by walking all thirteen scenarios for any node whose source is 'Imperial Mandate - Command'.",
+    "rule": "Only a published Command mark can gain the two scope fields, because _packet writes them at the one site that authors that mark and the receipt view publishes them only when present. The enumeration is therefore total over the committed baseline and bounds what may qualify. Every other leaf this slice can reach is an id or a value the shipped default reproduces unchanged, so any movement there is an unexpected occurrence and stops the slice.",
+    "members": [
+      {
+        "scenario": "mandate_abyssal_curse_roster",
+        "path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]",
+        "source": "Imperial Mandate - Command",
+        "gains": [
+          "cc_scope",
+          "cc_scope_disclosure"
+        ]
+      }
+    ],
+    "not_a_member": {
+      "path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[4]/support_damage_multiplier",
+      "why": "The applied factor on a damage row, not the mark record; it carries no scope field and does not move."
+    },
+    "predicted": {
+      "expected_qualifying_occurrences": 2,
+      "scenarios_that_may_move": [
+        "mandate_abyssal_curse_roster"
+      ],
+      "scenarios_that_may_not": 12,
+      "golden": 0,
+      "coupled_exact": 0,
+      "numeric_leaves": 0
+    },
+    "measured": {
+      "occurrences_inside_the_population": 2,
+      "occurrences_outside_the_population": 0,
+      "golden": 0,
+      "coupled_exact": 0,
+      "numeric_leaves": 0,
+      "command": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json"
+    }
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 -- no baseline moves inside this commit"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope_disclosure"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves"
+    ],
+    "coupled_exact": {}
+  },
+  "expected_diff_values": {
+    "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope": {
+      "old": "<absent>",
+      "new": "SingleTarget"
+    },
+    "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope_disclosure": {
+      "old": "<absent>",
+      "new": "Ahri E declares no reviewed crowd-control scope (H2, deferred with the default shipped), so this mark is delivered to the single defender of the pair fight it was priced in: a claim about one fight, not about the roster."
+    },
+    "/metadata/fingerprint/leaves": {
+      "old": 23308,
+      "new": 23310,
+      "why": "The two added fields, and nothing else. numeric_leaves does not move: both are strings."
+    }
+  },
+  "oracle_pass": {
+    "status": "NOT_OWED_BY_CITATION",
+    "why": "R-15's amendment of 2026-08-14: a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict. Both occurrences are absent_to_value -- as the identity-keyed leaf_report classifies them, which is the amendment's first guard -- on fields that did not exist at capture, and the ruling that puts them there is one a reader can open: the umbrella's [H] table, row H2, 'Recorded ruling, 2026-08-13, at Phase 4 S7: deferred, default shipped ... CcScope.Unreviewed resolves to SingleTarget on the pair defender with a disclosure naming the ability', which is the amendment's second guard. No oracle receipt is owed on either, and one may not be filed as though the question were a value question: no cached wiki text and no formula in docs/math-foundations.md decides whether a disclosure field should exist.",
+    "what_an_oracle_would_still_be_owed": "Any numeric movement. There is none: 0 numeric leaves moved, the pair baseline reads 'snapshot identical', and scripts/golden_coupled_exact.json reproduces every one of its 82 per-attacker totals unchanged.",
+    "the_question_h2_is_still_blocked_on": "How many roster targets one Syndra E cone stun applies to, and on what source. Answering it is authoring MultiTarget(cap=n) on the ability that earned it -- a value in the vocabulary this slice ships, not a new routing concept -- and it re-opens Command's authority move as its own slice with its own Expected qualifying occurrences line."
+  },
+  "qualifying_occurrences": [
+    "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope",
+    "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope_disclosure"
+  ]
+}

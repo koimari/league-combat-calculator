@@ -9,6 +9,7 @@ assumes an active or a trigger that is absent from the authored event stream.
 from __future__ import annotations
 
 from collections.abc import Collection, Iterable, Iterator, Mapping
+from dataclasses import replace
 from functools import lru_cache
 import math
 from types import MappingProxyType
@@ -45,6 +46,14 @@ from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 # declaration carries is a stop instead of a silent registry read.
 from .item_behavior import AllyProducer, PacketKind
 from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
+
+# Phase 4's routing layer.  A crowd-control mark's subject is a decision the
+# ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
+# position a pair scan happened to stamp.  ``program`` imports nothing from
+# here, so the edge is one-way.
+from .program import route as program_route
+from .program.identity import PIdx
+from .program.scope import Unreviewed, reviewed_scope, scope_policy
 
 # The item layer's one edge into the survival kernel: packet authors declare
 # when their packet arms, in the walk's vocabulary, so there is no second
@@ -320,6 +329,68 @@ def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
     return next(
         (actor for actor in all_actors if actor.participant_id == participant_id), None
     )
+
+
+def _cc_ability_label(cc: Trigger, all_actors: Iterable[Any]) -> str:
+    """The ability an unreviewed crowd-control scope belongs to, named.
+
+    "Syndra E", not "E": the disclosure exists so a reader can go and take
+    the wiki reading H2 is waiting on, and a bare slot letter names no cast.
+    The caster is the control row's own ``attacker_id`` — never the packet
+    holder, who may be a different participant entirely.
+    """
+    caster = _target_by_id(all_actors, cc.attacker_id)
+    champion = str(
+        (getattr(caster, "champion_data", None) or {}).get("name", "")
+    ).strip()
+    slot = (
+        cc.source_key or cc.cc_kind or cc.ability_instance or "an unnamed cast"
+    ).strip()
+    return f"{champion} {slot}".strip() if champion else slot
+
+
+def _cc_mark_subjects(
+    attacker: Any, cc: Trigger, all_actors: list[Any], scope: Any
+) -> tuple[Any, ...]:
+    """Who a crowd-control mark reaches — routed, never scanned.
+
+    Two resolutions, in the order the decision is actually made.  The
+    ability's reviewed :mod:`program.scope` says how wide the control is and
+    therefore *who the trigger reached*; the mark then rides that trigger
+    through :class:`program.route.TriggerTarget`, which is what makes a mark
+    that hit one enemy route to one and a mark that hit two route to two,
+    instead of both routing to roster slot zero.
+
+    An empty tuple is the one data condition: the control row named a
+    participant this roster does not hold, so there is nobody to mark.
+    Everything else is a programming error and :func:`resolve_route` raises.
+    """
+    slots = {
+        actor.participant_id: PIdx(index) for index, actor in enumerate(all_actors)
+    }
+    defender = slots.get(cc.target_id)
+    author = slots.get(attacker.participant_id)
+    if defender is None or author is None:
+        return ()
+    context = program_route.RouteContext(
+        author=author,
+        holder=author,
+        pair_defender=defender,
+        opponents=tuple(
+            slots[actor.participant_id]
+            for actor in all_actors
+            if actor.team != attacker.team
+        ),
+    )
+    reached = program_route.resolve_route(
+        scope_policy(scope), context, roster_size=len(all_actors)
+    )
+    marked = program_route.resolve_route(
+        program_route.TriggerTarget(),
+        replace(context, trigger_subjects=reached),
+        roster_size=len(all_actors),
+    )
+    return tuple(all_actors[int(subject)] for subject in marked)
 
 
 def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any | None:
@@ -1093,9 +1164,18 @@ def derive_item_support_effects(
                     )
                 )
         if command is not None and cc.cc is CcClass.IMMOBILIZE:
-            target = _target_by_id(all_actors, cc.target_id)
-            if target is not None:
-                amp = command.value("command_damage_amp")
+            # H2's recorded ruling, *deferred, default shipped*: no ability
+            # declares a reviewed crowd-control scope yet, so every mark takes
+            # the shipped default -- ``SingleTarget`` on the pair defender --
+            # and publishes the disclosure that names the ability it was
+            # assumed for.  Which enemy is marked stops being a roster
+            # position and becomes a routed answer; what that answer *is*
+            # does not move, which is the whole content of "default shipped".
+            scope, disclosures = reviewed_scope(
+                Unreviewed(ability=_cc_ability_label(cc, all_actors))
+            )
+            amp = command.value("command_damage_amp")
+            for target in _cc_mark_subjects(attacker, cc, all_actors, scope):
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -1114,11 +1194,18 @@ def derive_item_support_effects(
                         # The holder's pair engine prices its own amp
                         # (damage._apply_command_amp); the walk applies
                         # this packet to every other participant only.
-                        # Command's move to coupled-authoritative-with-preview
-                        # waits on H2's CcScope reading and is Phase 4's; the
-                        # umbrella's recorded default until then is SPLIT.
+                        # Command's authority move to
+                        # coupled-authoritative-with-preview is what H2 still
+                        # blocks; the umbrella's recorded default is SPLIT and
+                        # this phase does not move it.
                         authority=Authority.SPLIT,
                         owner=attacker.participant_id,
+                        cc_scope=type(scope).__name__,
+                        **(
+                            {"cc_scope_disclosure": disclosures[0].reason}
+                            if disclosures
+                            else {}
+                        ),
                     )
                 )
 
