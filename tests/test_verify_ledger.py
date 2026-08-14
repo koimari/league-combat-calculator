@@ -22,6 +22,7 @@ campaign exists to remove.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -143,3 +144,81 @@ def test_the_campaign_close_pass_answers_every_criterion_it_was_handed(
         item for item in ledger()["passes"] if item["slice_group"] == "campaign-close"
     )
     assert criterion in {row["id"] for row in block["criteria"]}
+
+
+def _slice_group_tags() -> tuple[list[str], int]:
+    """The campaign's own slice labels, read from commit subjects.
+
+    The first element of each subject's trailing parenthetical.  This is a
+    derivation, not a second authored list: the population criterion 11's
+    first clause quantifies over has to come from the tree or it is whatever
+    the ledger says it is.
+    """
+    out = subprocess.run(
+        ["git", "log", "--format=%h\x1f%s\x1e", "584071e..HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    pattern = re.compile(r"\(([^()]*)\)\s*$")
+    tags: list[str] = []
+    untagged = 0
+    for chunk in out.split("\x1e"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        _sha, subject = chunk.split("\x1f", 1)
+        match = pattern.search(subject)
+        if match is None:
+            untagged += 1
+            continue
+        tag = match.group(1).split(",")[0].strip()
+        if tag not in tags:
+            tags.append(tag)
+    return tags, untagged
+
+
+class TestTheCoverageBlockIsTheClauseSDenominator:
+    """Criterion 11's first clause, given something to quantify over.
+
+    "Every slice has a recorded verdict" bounded nothing a machine could
+    read, so a ledger with one pass and a ledger with forty looked the same
+    to every gate.  The coverage block is the denominator, derived from the
+    campaign's own slice labels; these tests are what stop it from being a
+    third authored list.
+    """
+
+    @property
+    def coverage(self) -> dict:
+        return ledger()["coverage"]
+
+    def test_the_two_lists_partition_the_derived_population(self) -> None:
+        tags, _untagged = _slice_group_tags()
+        recorded = self.coverage["slice_groups_with_a_verdict_in_this_ledger"]
+        missing = self.coverage["slice_groups_without_one"]
+        assert set(recorded) | set(missing) == set(tags)
+        assert not set(recorded) & set(missing)
+
+    def test_a_group_listed_as_covered_really_has_a_pass(self) -> None:
+        passes = {block["slice_group"] for block in ledger()["passes"]}
+        assert (
+            set(self.coverage["slice_groups_with_a_verdict_in_this_ledger"]) == passes
+        )
+
+    def test_the_residue_and_the_untagged_count_are_the_measured_ones(self) -> None:
+        """The gap is a number, so it cannot grow in silence."""
+        tags, untagged = _slice_group_tags()
+        assert self.coverage["residue"] == len(
+            self.coverage["slice_groups_without_one"]
+        )
+        assert self.coverage["untagged_commits"] == untagged
+        assert self.coverage["residue"] < len(tags)
+
+    def test_the_block_says_what_it_refuses_to_do(self) -> None:
+        """It does not reconstruct a verdict, and says so where a reader is."""
+        assert (
+            "does not reconstruct a verdict"
+            in self.coverage["what_this_block_does_not_do"]
+        )
+        assert self.coverage["why_the_residue_cannot_be_closed_retroactively"].strip()
