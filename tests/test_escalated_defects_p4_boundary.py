@@ -20,6 +20,12 @@ ledger's own prose; and every one of the 60 recorded ``old_value`` readings
 still reproduces against the committed coupled baseline, which is the machine
 statement that no re-capture has happened.
 
+A fourth reproducer joins them once the amendment's clause 1 is exercised: the
+re-adjudication pass that supersedes those verdicts is checked against its own
+receipts — one cluster per dissent class, the thirteen covered exactly once,
+each re-run naming the defect in the brief it replaces (clause 3), and the
+entry still open because two of the thirteen are sustained.
+
 One thing this file reads differently from the scan that produced the retired
 entry's published figures: a receipt's leaf path may sit at the top level or
 nested under a ``leaf`` object, and six committed receipts use the second
@@ -57,6 +63,16 @@ RULING_FIELD = "the_third_owner_decision_is_now_ruled"
 RETIRED_ID = "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts"
 DISSENT_ID = "thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value"
 PASS_PREFIX = "oracle-P4B-"
+# The re-adjudication pass the amendment's clause 1 licensed.  It POSTdates the
+# boundary pass, so it is neither one of its receipts nor one of the priors the
+# entry classified; the tests below say what it is instead, so that excluding it
+# from "prior" is a stated fact about a named pass and not a silent exemption.
+SUPERSEDING_PREFIX = "oracle-P4C-"
+SUPERSESSION_FIELDS = (
+    "prior_brief_defect_superseded",
+    "supersedes_prior_briefs",
+    "supersedes_prior_brief_defect",
+)
 
 REQUIRED = ("id", "dated", "raised_by", "what", "reproducer", "for_the_owner")
 REQUIRED_TO_RETIRE = ("retired_on", "resolved_by", "resolution")
@@ -119,16 +135,20 @@ def _reportable(value):
 
 
 def _receipt_leaf(receipt):
-    """One receipt's ``(leaf_path, new_value)``, under either shape it uses.
+    """One receipt's ``(leaf_path, new_value)``, under any shape it uses.
 
-    Most receipts carry both at the top level; three of this pass's nest them
-    under a ``leaf`` object.  Reading only the flat shape would report three
-    adjudicated leaves as uncovered, which is the failure this whole file
-    exists to make impossible.
+    Three spellings are committed: ``leaf_path`` beside ``new_value`` at the
+    top level; a ``leaf`` object carrying both; and — the re-adjudication
+    pass's — a ``leaf`` string beside a top-level ``new_value``.  Reading only
+    one shape would report an adjudicated leaf as uncovered, which is the
+    failure this whole file exists to make impossible.
     """
     if "leaf_path" in receipt:
         return receipt["leaf_path"], receipt.get("new_value")
-    nested = receipt.get("leaf") or {}
+    nested = receipt.get("leaf")
+    if isinstance(nested, str):
+        return nested, receipt.get("new_value")
+    nested = nested or {}
     return nested.get("path"), nested.get("new_value")
 
 
@@ -164,6 +184,21 @@ def _amendment_block():
 def _this_pass():
     """Every receipt this investigator pass filed, by name."""
     return sorted(path.name for path in RECEIPTS.glob(f"{PASS_PREFIX}*.json"))
+
+
+def _readjudication():
+    """The dissent entry's record of the pass that supersedes its verdicts."""
+    return _dissent()["re_adjudicated_under_the_amendment"]
+
+
+def _superseding(cluster_id=None):
+    """``[(name, receipt)]`` from the superseding pass, one cluster or all."""
+    members = []
+    for path in sorted(RECEIPTS.glob(f"{SUPERSEDING_PREFIX}*.json")):
+        body = json.loads(path.read_text(encoding="utf-8"))
+        if cluster_id in (None, body["cluster_id"]):
+            members.append((path.name, body))
+    return members
 
 
 def _verdicts():
@@ -328,12 +363,17 @@ class TestTheOwedPopulationIsAnswered:
         opinion.  A prior receipt that does certify the current value is the
         other case — corroboration, recorded as such rather than counted as a
         miss.
+
+        The re-adjudication pass is excluded because it *post*dates the
+        boundary pass rather than predating it; what it is instead is asserted
+        by ``TestTheDissentsAreReAdjudicatedUnderTheAmendment`` below, so the
+        exclusion is a classification and not a hole.
         """
         for leaf in _population():
             prior = [
                 (name, value)
                 for name, value in _certified_values(leaf["leaf_path"])
-                if not name.startswith(PASS_PREFIX)
+                if not name.startswith((PASS_PREFIX, SUPERSEDING_PREFIX))
             ]
             stale = [
                 name
@@ -416,6 +456,76 @@ class TestTheThirteenDissentsBlockTheRecapture:
     def test_the_two_contradiction_kinds_are_documented_by_the_entry(self):
         stated = _dissent()["how_a_dissent_is_contradicted"]
         assert set(stated) >= {"contradicted_by", "mutually_exclusive_with"}
+
+
+class TestTheDissentsAreReAdjudicatedUnderTheAmendment:
+    """The superseding pass, read from its receipts and not from its prose.
+
+    Clause 1 licenses one whole-series re-adjudication per dissent cluster and
+    clause 3 makes a re-run that names no defect in the brief it replaces
+    unwritable.  Both are properties of committed files, so both are asserted
+    here rather than described: every cluster row's ``supersedes`` list is
+    checked against the leaf its own receipts adjudicate, and the thirteen are
+    covered exactly once between the rows.  This is what pays for the
+    ``SUPERSEDING_PREFIX`` exclusion in the prior-receipt classification above
+    — the pass is excluded from *prior* because it is asserted to be *this*.
+    """
+
+    def test_the_block_covers_every_dissent_exactly_once(self):
+        recorded = [
+            name for row in _readjudication()["clusters"] for name in row["supersedes"]
+        ]
+        assert sorted(recorded) == sorted(
+            row["receipt"] for row in _dissent()["dissenting_population"]
+        )
+        assert len(recorded) == len(set(recorded))
+
+    def test_each_cluster_row_reports_the_verdicts_its_receipts_carry(self):
+        """The row's count and verdict are the receipts', or the row is wrong."""
+        for row in _readjudication()["clusters"]:
+            members = _superseding(row["cluster_id"])
+            assert members, row["cluster_id"]
+            assert len(members) == row["leaves"]
+            assert {body["verdict"] for _, body in members} == {row["verdict"]}
+
+    def test_each_row_supersedes_the_receipt_on_its_own_leaf(self):
+        """The mapping is by leaf path, so a mis-stated supersession fails."""
+        rows = {row["receipt"]: row for row in _dissent()["dissenting_population"]}
+        for row in _readjudication()["clusters"]:
+            adjudicated = {body["leaf"] for _, body in _superseding(row["cluster_id"])}
+            superseded = {rows[name]["leaf_path"] for name in row["supersedes"]}
+            assert adjudicated == superseded, row["cluster_id"]
+
+    def test_every_superseding_receipt_names_the_defect_in_the_brief(self):
+        """Clause 3: a re-run citing no brief defect is oracle shopping."""
+        for name, body in _superseding():
+            fields = [field for field in SUPERSESSION_FIELDS if field in body]
+            assert fields, f"{name} supersedes a receipt and says why nowhere"
+            for field in fields:
+                assert body[field]["defect"], f"{name}'s {field} names no defect"
+
+    def test_a_sustained_dissent_is_recorded_as_owing_a_ruled_slice(self):
+        """R-19's stop, kept a stop: sustained means re-opened, never absorbed."""
+        block = _readjudication()
+        sustained = [
+            row for row in block["clusters"] if row["verdict"] != "new_value_correct"
+        ]
+        assert sustained, "a block with no dissent left would have retired the entry"
+        assert block["net_effect_on_the_thirteen"]["sustained"] == sum(
+            row["leaves"] for row in sustained
+        )
+        assert block["net_effect_on_the_thirteen"]["resolved"] == sum(
+            row["leaves"]
+            for row in block["clusters"]
+            if row["verdict"] == "new_value_correct"
+        )
+        assert (
+            block["net_effect_on_the_thirteen"]["prior_receipts_edited_or_deleted"] == 0
+        )
+        obliges = block["what_the_sustained_dissent_now_obliges"]
+        assert "Expected qualifying occurrences" in obliges
+        assert "never absorbed into a baseline" in obliges
+        assert DISSENT_ID in {entry["id"] for entry in _ledger()["defects"]}
 
 
 class TestTheOtherJurisdictionIsClean:

@@ -214,6 +214,41 @@ class TestOrdinalAddressingSubstitutesEvents:
         assert diffs["/combat/events[0]/damage_type"] == ("physical", "true")
         assert diffs["/combat/events[1]/damage_type"] == ("magic", "physical")
 
+    def test_the_re_adjudication_confirms_the_substitution(self):
+        """An oracle now demonstrates the hazard this entry only suspected.
+
+        The two events[82] leaves were re-briefed by event identity under the
+        R-15/R-18 amendment.  Both verdicts say the offered new value belongs
+        to a different record, which is this entry's claim proven from outside
+        the lanes that produced it — a confirmation, never a closure, so the
+        entry stays open and both prior receipts stand unedited.
+        """
+        entry = next(
+            e
+            for e in _entries()
+            if e["id"]
+            == "ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events"
+        )
+        block = entry["re_adjudicated_under_the_amendment"]
+        for name in block["pass"]:
+            body = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            assert body["verdict"] == "old_value_correct", name
+            assert body["leaf"].endswith(
+                ("events[82]/damage_type", "events[82]/sequence")
+            )
+            assert body["supersedes_prior_brief_defect"]["defect"], name
+        prior = {
+            name: json.loads((RECEIPTS / name).read_text(encoding="utf-8"))["verdict"]
+            for name in block["supersedes"]
+        }
+        assert prior == {
+            "oracle-S6S7-leaf10.json": "old_value_correct",
+            "oracle-S6S7-leaf30.json": "both_wrong",
+        }
+        assert (
+            "ordinal_addressed_leaf_paths_hand_an_oracle_two_different_events" in _ids()
+        )
+
 
 class TestTheVerdictSetCannotSayNoEvidence:
     """Third entry's reproducer: a 'cannot certify' has to be spelled as a dissent."""

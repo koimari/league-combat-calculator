@@ -1,0 +1,186 @@
+{
+  "cluster_id": "P4C-C2",
+  "runbook": "R-18/R-19 under the recorded repeated-source amendment (second form: the fields of ONE record whose siblings did not move)",
+  "investigator": "fresh independent oracle; evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md` only",
+  "evidence_tree": [
+    "data/champions.json (cached wiki: Aatrox P Deathbringer Stance, E Umbral Dash, R World Ender; Jax/Lulu/Aatrox base stats)",
+    "data/items.json (Black Cleaver, Bloodsong stat blocks)",
+    "docs/math-foundations.md (stat-growth identity, 100/(100+R) mitigation identity, clipping identity, stat-rounding convention)"
+  ],
+  "scenario": {
+    "id": "cleaver_bloodsong_roster",
+    "champion": "Jax",
+    "level": 18,
+    "items": [
+      "Black Cleaver",
+      "Bloodsong"
+    ],
+    "fight_mode": "time_based",
+    "fight_duration": 8,
+    "enemies": [
+      {
+        "champion": "Aatrox",
+        "level": 18,
+        "items": []
+      }
+    ],
+    "allies": [
+      {
+        "champion": "Lulu",
+        "level": 18,
+        "items": [],
+        "ally_effects_enabled": true
+      }
+    ],
+    "role": "support",
+    "role_quest_complete": true,
+    "include_auto_attacks": true,
+    "auto_attack_uptime": 1.0
+  },
+  "healed_unit": {
+    "participant": "participants[2] enemy:Aatrox",
+    "champion": "Aatrox",
+    "level": 18,
+    "items": [],
+    "max_health": 2588,
+    "ending_health": 2588,
+    "ending_health_ratio": 1.0,
+    "death_time": null,
+    "damage_taken": 4074.9,
+    "healing_received": 4074.9,
+    "healing_reduced": 0.0,
+    "healing_reduction_sources": [],
+    "note": "Healer and healed unit are the same participant. No Grievous Wounds anywhere in the scenario; healing_reduction_factor is 1.0 on all six heals, so no reduction term enters the walk."
+  },
+  "sources_quoted": {
+    "aatrox_P_deathbringer_stance": "Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters. Deathbringer Stance's damage applies life steal. Aatrox heals for the post-mitigation bonus damage dealt, reduced to 25% against minions. [data/champions.json Aatrox.abilities.P; 'Max Health Damage' leveling array index 17 (level 18) = 10%]",
+    "aatrox_E_umbral_dash": "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions. [data/champions.json Aatrox.abilities.E] -- Aatrox holds no items in this scenario, so bonus health = 0 and the vamp rate is exactly 16%.",
+    "aatrox_R_world_ender": "During World Ender, Aatrox gains bonus attack damage, has 5% increased size, is ghosted, and receives increased self-healing from all sources. Increased Healing [50, 75, 100]%. [data/champions.json Aatrox.abilities.R] -- level 18 => rank 3 => +100% increased self-healing => x2.0 on every self-heal.",
+    "stat_growth": "base + growth*(L-1)*(0.7025 + 0.0175*(L-1))  [docs/math-foundations.md sec.5, 'Stat growth (growth_stat)', verdict EXACT]",
+    "mitigation": "m(R) = 100/(100+R)  [docs/math-foundations.md sec.2.1 and sec.5 'Resistance mitigation (apply_resistance)', verdict EXACT]",
+    "stat_rounding": "display-level integer rounding of health/AD/AP/armor/MR before damage  [docs/math-foundations.md sec.5 'Stat rounding (calculate_total_stats)', corpus-wide convention pinned by golden]",
+    "clipping_identity": "clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage-absorbed)`; `absorbed+overkill = damage` -- verdict EXACT; cf. 'Revive (survival walk) ... restore = min(max_health, amount)'  [docs/math-foundations.md sec.5]. The healing instance of the same identity, applied by the sequential survival walk: applied_amount = min(amount, max_health - current_health); overheal = amount - applied_amount; applied_amount + overheal = amount."
+  },
+  "step1_target_max_health": {
+    "formula": "650 + 114*(18-1)*(0.7025 + 0.0175*(18-1))",
+    "arithmetic": "= 650 + 114*17*(0.7025+0.2975) = 650 + 1938*1.0 = 2588",
+    "result": 2588,
+    "agrees_with_baseline_max_health": true
+  },
+  "step2_reproducing_the_heal_amounts_from_wiki_text": {
+    "method": "Deathbringer Stance heal = 1.0 x post-mitigation bonus magic damage x 2.0 (World Ender rank 3). Umbral Dash heal = 0.16 x the same post-mitigation damage x 2.0.",
+    "jax_max_health": "2401 (base L18) + 400 (Black Cleaver) + 200 (Bloodsong) = 3001",
+    "lulu_max_health": "2129 (base L18, no items)",
+    "magic_resist_L18": {
+      "Jax": "66.85 -> 67 (display rounding)",
+      "Lulu": "52.10 -> 52 (display rounding)"
+    },
+    "deathbringer_on_Jax": "raw = 0.10*3001 = 300.10 ; post = 300.10*100/167 = 179.7006 ; heal = 179.7006*2 = 359.4012 -> 359.4 == healing_events[39].amount (UNMOVED)",
+    "deathbringer_on_Lulu": "raw = 0.10*2129 = 212.90 ; post = 212.90*100/152 = 140.0658 ; heal = 140.0658*2 = 280.1316 -> 280.1 == healing_events[38].amount",
+    "umbral_dash_on_Jax": "0.16*179.7006*2 = 57.5042 -> 57.5 == healing_events[41].amount",
+    "umbral_dash_on_Lulu": "0.16*140.0658*2 = 44.8211 -> 44.8 == healing_events[40].amount",
+    "records_36_37": "Umbral Dash vamp on the preceding damage event of the same swing (trigger ids ...:10, vs ...:11 for records [38]-[41]); amounts 31.8 / 31.4 taken as committed and unmoved.",
+    "conclusion": "Four of the six same-timestamp amounts -- including the record under adjudication -- reproduce to the displayed decimal from cached wiki text alone. `amount` = 359.4 is INDEPENDENTLY CONFIRMED CORRECT and is not what moved. Any candidate split must therefore sum to 359.4."
+  },
+  "step3_pinning_the_missing_health_before_the_series": {
+    "constraint_A": "Records [40] and [41] both have applied_amount 0.0 and are UNMOVED. Under the clipping identity that means the target's remaining room is exactly 0 once [39] has landed, i.e. record [39] consumed ALL remaining room: applied[39] = room_before_39, and the target sits at exactly max_health 2588 at t=4.31+ under BOTH candidate values.",
+    "constraint_B": "Because the target is at exactly 2588 immediately after [39] under both candidates, the entire post-t=4.31 segment of the health walk is identical under both. The two candidates therefore differ ONLY in the target's health at t=4.31-: old => 2588-614.7 = 1973.3 ; new => 2588-554.3 = 2033.7, a 60.4 difference.",
+    "constraint_C": "Whole-fight closure for a unit that starts full and ends full, with every heal clipped: ending_health = max_health - damage_taken + SUM(applied_healing). Baseline: 2588 = 2588 - 4074.9 + SUM(applied) => SUM(applied) = 4074.9, exactly the recorded healing_received 4074.9. The OLD split satisfies this closure exactly.",
+    "counterfactual_test_of_the_new_split": "Set applied[39] = 211.0 with all 63 other heal records unmoved (the diff population touches only applied_amount and overheal of record [39]; the five same-timestamp siblings are unmoved). Then SUM(applied) = 4074.9 - 60.4 = 4014.5, and the closure gives ending_health = 2588 - 4074.9 + 4014.5 = 2527.6 (ratio 0.977). That contradicts three separately-recorded unmoved facts at once: ending_health 2588, ending_health_ratio 1.0, and healing_received 4074.9. Read the other way: for the target to be only 554.3 short at t=4.31- while taking the same unmoved damage, participants[2]/survival/damage_taken would have to be 4014.5, not the UNMOVED 4074.9.",
+    "result": "missing health at t=4.31- is uniquely m0 = 31.8 + 31.4 + 280.1 + 271.4 = 614.7, i.e. the target stood at 2588 - 614.7 = 1973.3 health when the series began."
+  },
+  "step4_the_full_six_heal_clipping_walk": {
+    "identity": "applied = min(amount, 2588 - current_health) ; overheal = amount - applied",
+    "walk": [
+      {
+        "index": 36,
+        "source": "Umbral Dash",
+        "trigger_target": "ally:Lulu",
+        "amount": 31.8,
+        "room_before": 614.7,
+        "applied": 31.8,
+        "overheal": 0.0,
+        "health_after": 2005.1
+      },
+      {
+        "index": 37,
+        "source": "Umbral Dash",
+        "trigger_target": "main",
+        "amount": 31.4,
+        "room_before": 582.9,
+        "applied": 31.4,
+        "overheal": 0.0,
+        "health_after": 2036.5
+      },
+      {
+        "index": 38,
+        "source": "Deathbringer Stance",
+        "trigger_target": "ally:Lulu",
+        "amount": 280.1,
+        "room_before": 551.5,
+        "applied": 280.1,
+        "overheal": 0.0,
+        "health_after": 2316.6
+      },
+      {
+        "index": 39,
+        "source": "Deathbringer Stance",
+        "trigger_target": "main",
+        "amount": 359.4,
+        "room_before": 271.4,
+        "applied": 271.4,
+        "overheal": 88.0,
+        "health_after": 2588.0,
+        "under_adjudication": true
+      },
+      {
+        "index": 40,
+        "source": "Umbral Dash",
+        "trigger_target": "ally:Lulu",
+        "amount": 44.8,
+        "room_before": 0.0,
+        "applied": 0.0,
+        "overheal": 44.8,
+        "health_after": 2588.0
+      },
+      {
+        "index": 41,
+        "source": "Umbral Dash",
+        "trigger_target": "main",
+        "amount": 57.5,
+        "room_before": 0.0,
+        "applied": 0.0,
+        "overheal": 57.5,
+        "health_after": 2588.0
+      }
+    ],
+    "record_39_result": {
+      "applied_amount": 271.4,
+      "overheal": 88.0,
+      "sum": 359.4,
+      "equals_unmoved_amount": true
+    },
+    "cross_checks": [
+      "The walk reproduces applied 0.0 / overheal 44.8 for [40] and applied 0.0 / overheal 57.5 for [41] -- both UNMOVED records -- with no free parameter left.",
+      "The walk reproduces applied = amount, overheal = 0.0 for the three UNMOVED heals [36], [37], [38].",
+      "SUM(applied) over the whole fight closes at 4074.9 = damage_taken = healing_received, with the target ending at exactly 2588 / ratio 1.0.",
+      "Record [39] is correctly the last heal at the instant to land any health at all: it fills the bar exactly, which is what makes the two records after it fully clipped."
+    ]
+  },
+  "supersedes_prior_briefs": {
+    "defect": "Each of the two leaves was briefed alone as 'one number, old -> new', with no sight of its own record, so neither investigator could see it was adjudicating a SPLIT of one unmoved `amount` rather than a change in the size of a heal.",
+    "oracle-P4B-leaf18": "concluded the heal GREW by a factor of 1.686 (overheal 88.0 -> 148.4). False premise: `amount`/`raw_amount`/`reduced_amount` are 359.4 on both sides and are not in the qualifying diff population. This receipt additionally re-derives 359.4 from cached wiki text (0.10 x 3001 x 100/167 x 2 = 359.4012), so the heal demonstrably did not grow.",
+    "oracle-P4B-leaf29": "concluded the SAME heal FELL by 22.3% (applied 271.4 -> 211.0). Same false premise, and mutually exclusive with leaf18: 271.4 + 88.0 = 211.0 + 148.4 = 359.4. The two prior conclusions refute each other before any baseline does.",
+    "missing_facts_now_supplied": "the record's unmoved `amount` 359.4; the five same-timestamp sibling heals [36]-[38] and [40]-[41] that fix how much room remains when [39] lands; and the healed unit's max_health 2588 -- precisely the facts that make the overheal split computable.",
+    "amendment_case": "the amendment's named case, 'the fields of a record whose siblings did not move'; escalation owner decision (2) -- re-run with the record's unmoved `amount` in the brief -- is discharged by this receipt."
+  },
+  "verdict_rationale": "The candidate pair (211.0, 148.4) is arithmetically a VALID split of 359.4, so it is not refutable on the sum identity alone -- which is exactly why the record's siblings are the decisive evidence. It fails on the room. The sequential clipping walk fixes the room available to record [39] at 271.4, because (a) the three preceding UNMOVED heals consume 343.3 of the target's 614.7 missing health, and (b) the two following UNMOVED heals apply 0.0, forcing [39] to have consumed the remainder exactly. Moving 60.4 health from applied to overheal would require the target to have taken 60.4 less damage before t=4.31, contradicting the UNMOVED damage_taken 4074.9, healing_received 4074.9, ending_health 2588 and ending_health_ratio 1.0. The pre-change values are correct; the proposed new values are not.",
+  "verdict": "old_value_correct",
+  "committed": false,
+  "leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
+  "old_value": "88.0",
+  "new_value": "148.4",
+  "leaf_specific_reading_of_the_identity": "overheal is the clipped-away half of the identity: overheal = amount - applied = 359.4 - 271.4 = 88.0. The proposed 148.4 would require the room at [39] to have been 211.0. The walk shows it was 271.4.",
+  "paired_leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount",
+  "paired_leaf_note": "The two leaves are the two halves of ONE clipping identity against ONE unmoved `amount` (359.4); a single recomputation of the t=4.31 heal ordering determines both, and both resolve to old_value_correct."
+}

@@ -256,13 +256,68 @@
         "dated": "2026-08-14",
         "answers": "for_the_owner item (3). R-18's investigator EXPORT does not move: it stays exactly data/ and docs/math-foundations.md, built by R-18's one git archive command. What moves is the BRIEF. For a leaf that is one member of a repeated-source series -- successive rows of a same-source list, successive arms of one debuff, or the fields of a record whose siblings did not move -- the brief additionally carries the question specification: the committed scenario parameters and the leaf's series position and context (timestamp, ordinal, trigger context, and the unmoved sibling facts), drawn ONLY from the committed PRE-change baseline receipt and the committed scenario definitions. Those are facts of the question and never facts of the fix, which is why the export rule needs no widening: the pre-change side is what the investigator is asked to adjudicate against, and a post-change sibling stays forbidden. Given that brief the investigator computes the ENTIRE series from scratch and issues one verdict per leaf.",
         "and_rules_how_a_dissent_clears": "Recorded beside it in the same amendment: a mechanic-level dissent cluster is re-adjudicated as ONE well-posed whole-series investigation by a fresh investigator that has read neither the prior receipts nor this escalation; a SUSTAINED dissent re-opens the producing correction as a ruled src/ fix with its own R-20 line and is never absorbed into a baseline; and a verdict is NEVER re-run merely because it dissents -- every re-run must cite the specific defect in the prior brief, written into the receipt that supersedes the prior one, which is never edited and never deleted. That last clause is the anti-oracle-shopping rule, and it is also this entry's licence: the defect its re-run would cite is the underdetermined question the amendment names, not the fact that thirteen verdicts disagreed.",
-        "why_this_entry_stays_open": "The amendment rules the protocol, not the arithmetic. Owner decisions (1) and (2) are unanswered, no whole-series re-adjudication has been run, no receipt supersedes any of the 13, and scripts/golden_coupled_baseline.json, scripts/golden_coupled_exact.json and the golden blocks of docs/receipts/campaign-fingerprints.json stand exactly where they were. Per how_an_entry_closes an entry retires only together with its gate test's own inversion; a protocol ruling is not that inversion, and recording it as one would be precisely the absorption this artifact exists to prevent.",
+        "why_this_entry_stays_open": "The amendment rules the protocol, not the arithmetic. The arithmetic came back on 2026-08-14 and is recorded in re_adjudicated_under_the_amendment: eleven of the thirteen dissents are resolved by a whole-series pass and two are sustained, so scripts/golden_coupled_baseline.json, scripts/golden_coupled_exact.json and the golden blocks of docs/receipts/campaign-fingerprints.json stand exactly where they were. Per how_an_entry_closes an entry retires only together with its gate test's own inversion; a protocol ruling is not that inversion, a partly-resolved enumeration is not either, and a sustained dissent is the one thing a re-capture may never absorb.",
         "gate": "tests/test_escalated_defects_p4_boundary.py::TestTheProtocolGapIsRuledAndTheEntryStillStands"
       },
       "how_a_dissent_is_contradicted": {
         "contradicted_by": "Receipts from this same pass that certify the contrary on the leaf the dissent turns on -- the surviving support_resistance_reduction[0] row, an adjacent removal in the same list, or another member of the same damage triple. Every name here carries the verdict new_value_correct.",
         "mutually_exclusive_with": "Two dissents whose premises cannot both hold. oracle-P4B-leaf18 concludes healing_events[39]'s heal grew by a factor of 1.686 and oracle-P4B-leaf29 concludes the same heal fell by 22.3%; the record's `amount` is 359.4 in both trees, so neither premise holds and they refute each other before the baseline refutes them both. The relation is symmetric and the gate asserts it.",
         "why_a_row_may_carry_only_one": "A dissent needs a stated contradiction, not a particular kind of one. Requiring a contrary sibling everywhere would have forced a false one onto the healing pair, which no receipt in the pass actually provides."
+      },
+      "re_adjudicated_under_the_amendment": {
+        "dated": "2026-08-14",
+        "ruling_applied": "docs/plans/silent-failure-runbook.md, **Amendment R-15/R-18**, adjudication clause 1: a mechanic-level dissent cluster is re-adjudicated as ONE well-posed whole-series investigation by a fresh investigator that has read neither the prior receipts nor this escalation. Clause 3 is the licence and each receipt carries it: the defect cited is the underdetermined question, never the disagreement.",
+        "pass": "docs/receipts/oracle-P4C-*.json — 15 receipts over three clusters. Eleven answer this entry's carve/damage-triple dissents and two its healing split; the remaining two (cluster P4C-C3-s6s7-events-82-ordinal-reindexed-record) answer escalated-defects-S6S7-oracle.json's ordinal-addressing entry and are recorded there.",
+        "what_moved": "The brief, never the export. Each cluster was posed as one whole-series question carrying the leaf's series position, its unmoved siblings and the committed scenario parameters, every one of them read from the committed PRE-change baseline; the investigator tree stayed exactly data/ and docs/math-foundations.md.",
+        "clusters": [
+          {
+            "cluster_id": "P4C-C1-carve-rearm-series-cleaver-bloodsong",
+            "classes": [
+              "carve_rearm_dedupe",
+              "events_46_damage_triple"
+            ],
+            "leaves": 11,
+            "verdict": "new_value_correct",
+            "supersedes": [
+              "oracle-P4B-leaf0.json",
+              "oracle-P4B-leaf1.json",
+              "oracle-P4B-leaf10.json",
+              "oracle-P4B-leaf12.json",
+              "oracle-P4B-leaf13.json",
+              "oracle-P4B-leaf21.json",
+              "oracle-P4B-leaf3.json",
+              "oracle-P4B-leaf4.json",
+              "oracle-P4B-leaf5.json",
+              "oracle-P4B-leaf6.json",
+              "oracle-P4B-leaf7.json"
+            ],
+            "prior_brief_defect": "The prior brief handed each investigator one row path plus two values out of a single-source list of 3 / 6 / 8 rows. It could not see that every row names 'Black Cleaver — Carve', that the fractions are successive CUMULATIVE totals of one unique per-target debuff rather than independent increments, the arming timeline that fixes which arming a row prices, or sibling row [0]. Ten of the thirteen wrote that missing fact down as their own stated falsifier and had no way to check it. The same defect on events[46]/raw_damage: one field of a three-field damage record, briefed without its siblings.",
+            "what_the_whole_series_found": "The falsifier fires. Row [0] is itself a Carve row, every row in every list is, and the removals are a de-duplication of one 5-stack-capped debuff whose row COUNT (8 at t=3.47) already breaches its own cap. The pre-change damage triple 128.9 is the multiplicative product of the duplicate rows, so raw_damage has no pre-mitigation reading to appeal to — raw_damage == damage == pair_damage on both sides."
+          },
+          {
+            "cluster_id": "P4C-C2",
+            "classes": [
+              "healing_events_39_split"
+            ],
+            "leaves": 2,
+            "verdict": "old_value_correct",
+            "supersedes": [
+              "oracle-P4B-leaf18.json",
+              "oracle-P4B-leaf29.json"
+            ],
+            "prior_brief_defect": "Each leaf was briefed alone as one number, old → new, with no sight of its own record, so neither investigator could see it was adjudicating a SPLIT of one unmoved `amount` (359.4) rather than a change in the size of a heal — which is why the two prior conclusions (the heal grew 1.686×; the same heal fell 22.3%) refute each other before any baseline refutes them.",
+            "what_the_whole_series_found": "SUSTAINED. The heal is 359.4 on both sides and is re-derived from cached wiki text; the sequential clipping walk over the five same-timestamp sibling heals and the healed unit's 2588 max health fixes the room at [39] at 271.4, so the pre-change split 271.4 / 88.0 stands and the proposed 211.0 / 148.4 would require the target to have taken 60.4 less damage than the unmoved damage_taken records."
+          }
+        ],
+        "net_effect_on_the_thirteen": {
+          "resolved": 11,
+          "sustained": 2,
+          "prior_receipts_edited_or_deleted": 0
+        },
+        "what_this_does_not_do": "It moves no baseline and retires no entry (R-17, R-32, D-97). No oracle-P4B receipt is edited or deleted — clause 3 keeps both standing — so dissenting_population above still enumerates thirteen rows and still reads exactly as its investigators wrote it.",
+        "owner_decisions_now_answered": "for_the_owner (1): discharged for all eleven leaves it named. Its first option — re-run under a brief carrying the sibling values the verdict turns on — was taken and certifies the new value, so its second option does not arise and the S7 rearm correction is not re-opened by them. for_the_owner (2): discharged as a re-run; its verdict is sustained, which is clause 2's input rather than its close. (3) was ruled on 2026-08-14 in the_third_owner_decision_is_now_ruled.",
+        "what_the_sustained_dissent_now_obliges": "Clause 2: a sustained dissent re-opens the producing correction as its own ruled src/ slice carrying its own `Expected qualifying occurrences` line (R-20), and is never absorbed into a baseline. Both leaves are claimed by two committed allowlists — expected-golden-diff-P4-S7-bloodsong.json and expected-golden-diff-P4-S7-rearm.json — so WHICH correction moved the split is the first thing that slice measures; naming it here would be an implementation lane ruling a question it may not.",
+        "gate": "tests/test_escalated_defects_p4_boundary.py::TestTheDissentsAreReAdjudicatedUnderTheAmendment"
       }
     }
   ],

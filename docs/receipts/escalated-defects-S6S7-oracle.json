@@ -25,7 +25,23 @@
       "why_it_matters": "R-18 hands the investigator a leaf path and two values and forbids it the tree that would let it notice the substitution. Both oracles noticed anyway and wrote the caveat, which is why this is an escalation and not a wrong verdict; a less careful pass would have returned a confident finding about a comparison that has no referent.",
       "why_this_lane_may_not_fix_it": "The fix is either an identity-keyed diff for list sections (pair events by event_id, report inserted and removed members as their own transitions) or a rule that a slice changing a list's length owes its investigators the identity rather than the ordinal. Both are changes to scripts/golden_snapshot.py's leaf_report and to R-15/R-18, which are the runbook's and L0's, not this lane's.",
       "reproducer": "tests/test_escalated_defects_s6s7_oracle.py::TestOrdinalAddressingSubstitutesEvents — inserting one member at the head of a list makes leaf_report report every later member as a value change rather than as an insertion.",
-      "for_the_owner": "Decide whether leaf_report keys list members by identity, or whether R-20's population enumeration must name a length change so the investigator brief can carry the identity."
+      "for_the_owner": "Decide whether leaf_report keys list members by identity, or whether R-20's population enumeration must name a length change so the investigator brief can carry the identity.",
+      "re_adjudicated_under_the_amendment": {
+        "dated": "2026-08-14",
+        "pass": [
+          "oracle-P4C-C3-s6s7-events-82-ordinal-reindexed-record-leaf1.json",
+          "oracle-P4C-C3-s6s7-events-82-ordinal-reindexed-record-leaf2.json"
+        ],
+        "supersedes": [
+          "oracle-S6S7-leaf10.json",
+          "oracle-S6S7-leaf30.json"
+        ],
+        "prior_brief_defect": "R-18 addressed both leaves purely by ordinal (/combat/events[82]/damage_type and /combat/events[82]/sequence) with two bare values and no event identity — no event_id, no timestamp, no source, no list length — while withholding the tree that would expose the substitution. Both prior investigators detected the hazard and wrote the caveat into their own receipts, which is why this is a defect in the brief and not a wrong verdict.",
+        "remedy": "The re-adjudication addresses the record by event_id main:enemy:Aatrox:33 and carries the amendment's timestamp / ordinal / trigger-context clause — t=7.5, sequence 34, source expose_weakness_Bloodsong, neighbours [81] spellblade seq 33 physical and [83] expose_weakness seq 35 magic — every fact read from the committed pre-change baseline.",
+        "verdicts": "old_value_correct on both leaves. 'magic' is the damage_type of the Jax E cast that occupies ordinal 82 once two earlier members are removed, and 7 is that cast's sequence; neither offered new value is a value of this event. The sequence receipt additionally states that `sequence` is engine bookkeeping and is not decidable as a game quantity from the permitted evidence — the third entry of this same ledger.",
+        "why_this_entry_stays_open": "This confirms the defect rather than closing it. An independent, well-posed re-adjudication now demonstrates — rather than suspects — that the two ordinals addressed two different events, which is exactly what this entry says ordinal addressing does. What retires it is a leaf addressing that carries identity, not two verdicts about one record.",
+        "gate": "tests/test_escalated_defects_s6s7_oracle.py::TestOrdinalAddressingSubstitutesEvents::test_the_re_adjudication_confirms_the_substitution"
+      }
     },
     {
       "id": "the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide",
