@@ -1,0 +1,104 @@
+{
+  "receipt_id": "oracle-P4C-RESOLVED-NO-ACTION--P4B-13-dissents-and-S6S7-4-dissents-all-superseded-leaf5",
+  "cluster_id": "P4C-RESOLVED-NO-ACTION--P4B-13-dissents-and-S6S7-4-dissents-all-superseded",
+  "runbook": "R-18/R-19 under the recorded repeated-source amendment (R-15/R-18 clause 3)",
+  "date": "2026-08-14",
+  "disposition": "RESOLVED - NO ACTION. Re-adjudication is neither owed nor permissible on this leaf.",
+  "disposition_rationale": "Amendment R-15/R-18 clause 3 forbids re-running a leaf whose prior brief has already been repaired and answered. Every leaf in this cluster carries a LATER committed receipt whose verdict is new_value_correct, or a committed classification receipt adjudicating it by citation. No qualifying leaf in the measurement of record carries a standing dissent, so no defect in a prior brief exists to justify re-adjudication. This receipt exists so the enumeration is auditable, not so the leaf is dispatched.",
+  "prior_brief_defect_superseded_on": "oracle-P4B-leaf5.json -> superseded by oracle-P4C-C1-...-leaf5.json (new_value_correct)",
+  "prior_brief_defect_superseded": {
+    "supersedes": "nothing of its own - this receipt is an enumeration entry, not a re-run. The supersession it records is the committed one named in `prior_brief_defect_superseded_on`, quoted below.",
+    "chain_recorded_at": "prior_brief_defect_superseded_on",
+    "defect": "Quoted from the committed receipt that superseded this leaf's prior brief, docs/receipts/oracle-P4C-C1-carve-rearm-series-cleaver-bloodsong-leaf5.json: 'The prior brief handed each investigator one row path plus two values out of a single-source list of 3/6/8 rows. That triple does not determine a question: the investigator could not see (a) that all rows in the list name the same source 'Black Cleaver - Carve', (b) that their `fraction` values are successive CUMULATIVE totals (0.06, 0.12, 0.18, 0.24, 0.30, 0.30, ...) of one unique per-target debuff rather than independent increments, (c) the support_events arming timeline that fixes which arming each row prices and shows the row count exceeding the 5-stack cap, or (d) sibling row [0]. Ten of thirteen prior investigators wrote the missing fact down as their own stated falsifier - 'if support_resistance_reduction[0] is ALSO a Black Cleaver - Carve row, then the removal is a de-duplication and the verdict flips' - and had no way to check it.' This receipt names no defect of its own and re-adjudicates nothing: its disposition is RESOLVED - NO ACTION, and it quotes the defect its chain already recorded so clause 3's reproducer can open it here too."
+  },
+  "leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[4]",
+  "old_value": "{factor 1.20, fraction 0.30}",
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "verdict_basis": "independently_derived_from_permitted_sources",
+  "leaf_note": "TERMINAL rung (0.30 = sourced 5-stack cap). events[35] carries 0.30 at BOTH index 4 and index 5 in the old tree -- two simultaneous maximal reductions from a unique item. Not a representable game state. Removal decisively correct.",
+  "carve_stack_index": 5,
+  "series_computation": {
+    "step_1_sourced_rule": "data/items.json id 3071 'Black Cleaver', passives[0] 'Carve', unique=true: \"Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks.\" => fraction ladder f_k = 0.06*k for k in 1..5, TERMINAL at f_5 = 0.30.",
+    "step_2_sourced_mitigation_identity": "docs/math-foundations.md sections 2.1 and 5 (row 1, verdict EXACT): m(R) = 100/(100+R). Amplification of one damage instance by a fractional armor reduction f on armor R is factor(R,f) = m(R*(1-f))/m(R) = (100+R)/(100+R*(1-f)).",
+    "step_3_solve_target_armor": {
+      "method": "Invert factor(R,f) for R at each observed (fraction,factor) pair: R = 100*(fac-1)/(1-fac+fac*f)",
+      "solves": [
+        {
+          "fraction": 0.12,
+          "factor": 1.07,
+          "implied_R": 119.86
+        },
+        {
+          "fraction": 0.18,
+          "factor": 1.11,
+          "implied_R": 122.49
+        },
+        {
+          "fraction": 0.24,
+          "factor": 1.15,
+          "implied_R": 119.05
+        },
+        {
+          "fraction": 0.3,
+          "factor": 1.2,
+          "implied_R": 125.0
+        }
+      ],
+      "conclusion": "All four solves bracket R = 120; the spread is the 2-decimal rounding of the stored 'factor' field."
+    },
+    "step_4_forward_check_R_120": {
+      "ramp": [
+        {
+          "stacks": 1,
+          "fraction": 0.06,
+          "factor_exact": 1.0338,
+          "factor_2dp": 1.03
+        },
+        {
+          "stacks": 2,
+          "fraction": 0.12,
+          "factor_exact": 1.07,
+          "factor_2dp": 1.07
+        },
+        {
+          "stacks": 3,
+          "fraction": 0.18,
+          "factor_exact": 1.1089,
+          "factor_2dp": 1.11
+        },
+        {
+          "stacks": 4,
+          "fraction": 0.24,
+          "factor_exact": 1.1506,
+          "factor_2dp": 1.15
+        },
+        {
+          "stacks": 5,
+          "fraction": 0.3,
+          "factor_exact": 1.1957,
+          "factor_2dp": 1.2
+        }
+      ],
+      "conclusion": "At R=120 the capped Carve ramp reproduces EVERY factor observed in the old tree: 1.03 / 1.07 / 1.11 / 1.15 / 1.20 for 1..5 stacks. The observed fraction ladder (0.12, 0.18, 0.24, 0.30) is exactly stacks 2,3,4,5 and NEVER exceeds the sourced 0.30 cap."
+    },
+    "step_5_uniqueness_of_the_source": "Exhaustive regex over every passives[].branches and active[].branches string of all 324 items in data/items.json returns exactly ONE percent-armor-reduction source: id 3071 Black Cleaver / Carve. Carve additionally carries unique=true. Therefore every armor_reduction_percent record in support_resistance_reduction must be Carve, and the target's Carve state at the instant a damage event resolves is a single integer k in 0..5, i.e. a SINGLE fraction.",
+    "step_6_the_defect": "The old tree emits MULTIPLE Carve records on a single event, including repeats of the TERMINAL 0.30: events[35] holds 0.30 at indices 4 AND 5; events[46] holds 0.30 at indices 4, 6 AND 7. No game state exists in which one damage instance is simultaneously amplified by two, three or four independent 30% Carve reductions from a unique item capped at 5 stacks. The old values are therefore over-emissions (the Carve rearm duplication) and their removal is correct in direction. The ladder VALUES were never wrong; their MULTIPLICITY per event was.",
+    "step_7_healing_conservation": "healing_events[39]: old applied 271.4 + overheal 88.0 = 359.4; new applied 211.0 + overheal 148.4 = 359.4. Gross heal is EXACTLY conserved across the change; 60.4 is reclassified applied -> overheal. Both old and new satisfy the clipping identity pinned in docs/math-foundations.md section 5 ('absorbed + overkill = damage', verdict EXACT), whose heal analogue is applied = min(gross, missing_health), overheal = gross - applied. Conservation alone therefore does NOT separate them; separation requires the healer's missing health at that instant.",
+    "step_8_deathbringer_damage_type": "data/champions.json Aatrox.abilities.P 'Deathbringer Stance': 'Periodically, Aatrox empowers his next basic attack to ... deal bonus MAGIC damage equal to 4%:10% (based on level) of the target's maximum health ... Aatrox heals for the post-mitigation bonus damage dealt.' The roster's heal source is therefore a MAGIC-damage proc, and a 'physical' damage_type label on it contradicts the cache. Bloodsong's Spellblade is by contrast explicitly 'bonus physical damage', so both types legitimately occur in this roster.",
+    "step_9_limit_of_the_permitted_tree": "The evidence tree is exactly 'git archive HEAD data docs/math-foundations.md' (437 files). It contains NO definition of the coupled scenario 'cleaver_bloodsong_roster': grep for 'cleaver_bloodsong' and for 'coupled_scenario' over all exported files returns zero hits, and data/practice-corpus/scenarios.json contains no Cleaver/Bloodsong/Carve/overheal scenario. The champion, level, ability ranks, item set, target stat block and fight window are all absent. Absolute damage magnitudes, event ordinals and field-presence rulings are therefore NOT derivable from the permitted sources, and this receipt does not claim to have derived them."
+  },
+  "sources_quoted": [
+    "data/items.json :: 3071 Black Cleaver :: passives[0] 'Carve' (unique=true) :: branches[0]: \"Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\"",
+    "data/items.json :: 3071 Black Cleaver :: passives[0] 'Carve' :: branches[1]: \"Non-{{tip|basic damage}} dealt on the same target may apply stacks only once per frame.\"",
+    "data/items.json :: 3877 Bloodsong :: passives[0] 'Spellblade' :: branches[0]: \"After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).\"",
+    "data/champions.json :: Aatrox.abilities.P[0] 'Deathbringer Stance' :: effects[0].description: \"Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters. Deathbringer Stance's damage applies life steal. Aatrox heals for the post-mitigation bonus damage dealt, reduced to 25% against minions.\"",
+    "docs/math-foundations.md :: section 2.1: \"m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)\"; \"The reduction *fraction* is 1 - m(R) = R/(100+R)\"",
+    "docs/math-foundations.md :: section 5 formula-audit table, row 'Resistance mitigation (apply_resistance)': verdict EXACT",
+    "docs/math-foundations.md :: section 5 formula-audit table, row 'Shield absorption (survival walk)': \"clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed); absorbed+overkill = damage\" verdict EXACT",
+    "docs/math-foundations.md :: section 2.3 item 2, 'Black Cleaver average stacks (ArmorReductionEffect.average_reduction)': \"the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h)\" -- confirms the engine models Carve as a CAPPED ramp with a single cap constant C."
+  ],
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir> (437 files). src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were NOT read.",
+  "measurement_of_record": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json --report <scratch>/cmp.json on this tip: 124 differing leaves, 106 qualifying (matches commit 4c40c9d's body). Cross-join of the 124 diff paths against all 512 docs/receipts/oracle-*.json: 14 qualifying leaves have a non-new_value_correct receipt somewhere in their chain; on all 14 the LATEST receipt is new_value_correct. Zero qualifying leaves carry a standing dissent. Pair jurisdiction reports zero diffs.",
+  "committed": false
+}

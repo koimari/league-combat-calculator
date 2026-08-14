@@ -1,0 +1,163 @@
+{
+  "cluster_id": "P4C-P4F-C1-deathbringer-stance-heal-clipping-split-applied-half-uncovered-members",
+  "runbook": "R-18/R-19, repeated-source amendment (R-15/R-18 whole-series posing); 2026-08-14 R-18 certified-fact amendment",
+  "adjudicator": "fresh independent oracle investigator, isolated evidence tree",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scope_read": [
+      "data/champions.json (Aatrox, Jax, Lulu)",
+      "data/items.json (Black Cleaver id 3071, Bloodsong id 3877)",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / diff / plan"
+    ]
+  },
+  "leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[31]/applied_amount",
+  "leaf_identity": {
+    "event_id": "enemy:Aatrox:heal:11:main",
+    "trigger_event_id": "enemy:Aatrox:main:9",
+    "t": 3.23,
+    "series_member": "4 of 7",
+    "note": "addressed by event_id; the index 31 is the pre-change locator only"
+  },
+  "old_value": 326.8,
+  "new_value": 312.7,
+  "verdict": "new_value_correct",
+
+  "scenario": {
+    "id": "cleaver_bloodsong_roster",
+    "champion": "Jax",
+    "level": 18,
+    "items": ["Black Cleaver", "Bloodsong"],
+    "fight_mode": "time_based",
+    "fight_duration": 8,
+    "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    "allies": [{"champion": "Lulu", "level": 18, "items": [], "ally_effects_enabled": true}],
+    "role": "support",
+    "role_quest_complete": true,
+    "include_auto_attacks": true,
+    "auto_attack_uptime": 1.0
+  },
+
+  "series_computation": {
+    "framing": "Repeated-source series: one source (Deathbringer Stance), one healer and healed unit (enemy:Aatrox), seven successive rows on trigger_target 'main'. Posed and computed whole, member by member, per the R-15/R-18 amendment, because a single applied_amount handed over alone is the underdetermined triple (amount, applied_amount, overheal) that produced the C2 dissent on sibling record [39].",
+
+    "step_1_healed_unit_stats_from_scratch": {
+      "growth_formula": "base + growth * (L-1) * (0.7025 + 0.0175 * (L-1)); at L=18 the factor is exactly 1.0, so the level-18 value is base + 17*growth",
+      "source": "docs/math-foundations.md Section 5, row 'Stat growth (growth_stat)' - EXACT",
+      "aatrox_base": "data/champions.json Aatrox.stats: health 650 (+114/lvl), armor 38 (+4.8), magicResistance 32 (+2.05), attackDamage 60 (+5), attackSpeed 0.651 / ratio 0.651 (+2.5%/lvl), healthRegen 3 (+0.5)",
+      "derived": {
+        "max_health": "650 + 114*17 = 2588  (matches committed base_health 2588 and health 2588)",
+        "armor": "38 + 4.8*17 = 119.6 -> 120  (matches committed armor 120)",
+        "magic_resistance": "32 + 2.05*17 = 66.85 -> 67  (matches committed 67)",
+        "attack_damage": "60 + 5*17 = 145  (matches committed 145)",
+        "attack_speed": "0.651 + 0.651*(2.5*17/100) = 0.9277 -> 0.93  (matches committed 0.93)",
+        "health_regen": "3 + 0.5*17 = 11.5 per 5s = 2.3/s  (matches committed health_regen_per_second 2.3)"
+      },
+      "conclusion": "Every committed participant stat of the healed unit reproduces from the cached wiki data. H0 = 2588 is the clipping ceiling for the whole series."
+    },
+
+    "step_2_heal_amount_from_scratch": {
+      "mechanic_source": "data/champions.json Aatrox.abilities.P 'Deathbringer Stance': \"Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters. Deathbringer Stance's damage applies life steal.Aatrox heals for the post-mitigation bonus damage dealt, reduced to 25% against minions.\"",
+      "level_scaling": "leveling[0] 'Max Health Damage' values[17] (level 18) = 10, units '%'  -> 10% of target max health",
+      "amplifier_source": "data/champions.json Aatrox.abilities.R 'World Ender': \"During World Ender, Aatrox gains bonus attack damage, has 5% increased size, is ghosted, and receives increased self-healing from all sources.\" leveling 'Increased Healing' = [50, 75, 100] '%'. R is rank 3 from level 16, and math-foundations Section 5 pins 'R casts exactly once per timed fight' with a 10 s duration covering the whole 8 s window -> a constant x2.00 self-healing multiplier on every member of the series (confirmed by all seven members carrying the identical amount 359.4).",
+      "target_main_max_health": "Jax base 650 + 103*17 = 2401; + Black Cleaver (data/items.json id 3071) health 400; + Bloodsong (id 3877) health 200  =>  3001",
+      "target_main_mr": "Jax magicResistance 32 + 2.05*17 = 66.85 -> 67; Aatrox carries no items, no magic penetration",
+      "mitigation": "m(R) = 100/(100+R), docs/math-foundations.md Section 2.1 - EXACT",
+      "arithmetic": "raw = 0.10 * 3001 = 300.1 magic; post = 300.1 * 100/167 = 179.700599; heal = 2.00 * 179.700599 = 359.401198 -> 359.4",
+      "matches": "the committed unmoved amount = reduced_amount = raw_amount = 359.4 for all seven members",
+      "independent_cross_checks": [
+        "Mirror series onto ally:Lulu: Lulu 565 + 92*17 = 2129 max health, MR 30 + 1.3*17 = 52.1 -> 52; 0.10*2129 = 212.9; 212.9*100/152 = 140.065789; x2 = 280.131579 -> 280.1, exactly the committed mirror amount 280.1 (including row [30] at this leaf's own timestamp).",
+        "Umbral Dash (Aatrox E passive): \"Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions.\" Aatrox holds no items so bonus health = 0 -> 16%, doubled by World Ender -> 32%. 0.32 * 179.700599 = 57.504 -> 57.5, exactly the committed unmoved sibling row [33] (main) at this leaf's timestamp. 0.32 * 140.065789 = 44.821 -> 44.8, exactly the committed unmoved sibling row [32] (ally:Lulu).",
+        "Four independent committed sibling values therefore confirm both the mechanic and the x2.00 World Ender amplifier; the amount half of the triple is not merely asserted unmoved, it is derived."
+      ]
+    },
+
+    "step_3_clipping_identity": {
+      "identity": "applied_amount = min(amount, room), overheal = amount - applied_amount, hence applied_amount + overheal = amount, with room = H0 - current_health",
+      "source": "docs/math-foundations.md Section 5, clip row: \"clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed); absorbed+overkill = damage\" - EXACT. Every member carries healing_reduction_factor 1.0 and temporary_health 0.0, and no Grievous Wounds or healing reduction appears anywhere in the snapshot, so raw_amount = reduced_amount = amount = 359.4 and the identity applies unattenuated.",
+      "verified_on_every_pre_change_member": [
+        "t=0.00 enemy:Aatrox:heal:0:main   328.5 + 30.9  = 359.4  OK",
+        "t=1.08 enemy:Aatrox:heal:5:main    57.8 + 301.6 = 359.4  OK",
+        "t=2.16 enemy:Aatrox:heal:8:main   322.0 + 37.4  = 359.4  OK  <- LEAF 1",
+        "t=3.23 enemy:Aatrox:heal:11:main  326.8 + 32.6  = 359.4  OK  <- LEAF 2",
+        "t=4.31 enemy:Aatrox:heal:14:main  271.4 + 88.0  = 359.4  OK",
+        "t=5.39 enemy:Aatrox:heal:17:main  359.4 +  0.0  = 359.4  OK",
+        "t=6.47 enemy:Aatrox:heal:20:main  261.8 + 97.6  = 359.4  OK"
+      ],
+      "conclusion": "The identity holds on all seven pre-change members without exception, so it is the engine's own invariant for this series and not an assumption imported by the adjudicator."
+    },
+
+    "step_4_room_path_of_the_whole_series": {
+      "structure": "Every member except [47] carries a strictly positive overheal, which means every one of them tops the healed unit back to exactly H0 = 2588. The room resets to zero at each member, so members are coupled only through the damage taken in the intervening window - no error propagates from member 3 into member 4. This is what allows the two leaves to move in opposite directions (member 3's room grows, member 4's shrinks) without contradiction, and it is consistent with the committed survival record: ending_health 2588.0, ending_health_ratio 1.0, death_time null.",
+      "room_before_each_member_pre_change": {
+        "member_1_t=0.00": "328.5 (applied), tops to full",
+        "member_2_t=1.08": "57.8, tops to full",
+        "member_3_t=2.16": "322.0, tops to full   <- LEAF 1",
+        "member_4_t=3.23": "326.8, tops to full   <- LEAF 2",
+        "member_5_t=4.31": "271.4, tops to full",
+        "member_6_t=5.39": ">= 359.4 (overheal 0.0)",
+        "member_7_t=6.47": "261.8, tops to full"
+      },
+      "leaf_2_timestamp_batch": {
+        "unmoved_siblings_before_the_leaf_at_t=3.23": "[28] Umbral Dash 31.8/31.8/0.0 (ally:Lulu), [29] Umbral Dash 31.4/31.4/0.0 (main), [30] Deathbringer Stance 280.1/280.1/0.0 (ally:Lulu) - all fully applied, zero overheal, so all three consume real room ahead of the leaf",
+        "unmoved_siblings_after_the_leaf_at_t=3.23": "[32] Umbral Dash 44.8/0.0/44.8 (ally:Lulu), [33] Umbral Dash 57.5/0.0/57.5 (main) - both wholly overhealed, which is the direct fingerprint that the leaf heal topped the unit to exactly H0 and left zero room behind it",
+        "room_at_the_top_of_the_batch_pre_change": "31.8 + 31.4 + 280.1 + 326.8 = 670.1",
+        "room_at_the_top_of_the_batch_new": "31.8 + 31.4 + 280.1 + 312.7 = 656.0",
+        "delta": "-14.1 of room at t=3.23, i.e. 14.1 less net damage standing on the healed unit when the leaf fires. This is exactly what the certified damage-side receipts move: oracle-P4C-C1-carve-rearm-series-cleaver-bloodsong-leaf1..leaf11.json (the Carve de-duplication that changed the healed unit's room, removing a duplicated application in this window) together with oracle-P4B-leaf19/23/34/40/43/45/46.json and oracle-S6S7-leaf52/55/58/61/64/67/71.json (the moved damage on the healed unit).",
+        "consistency": "32.6 + 14.1 = 46.7, precisely the certified new overheal from oracle-P4B-leaf22.json. The applied and overheal halves move by equal and opposite 14.1, conserving amount at 359.4 - the signature of a pure re-clip against a moved room rather than a moved heal.",
+        "sign_flip_vs_leaf_1_is_coherent": "Member 3's room grew by +15.2 and member 4's shrank by -14.1. That is not a contradiction: member 3 heals that extra 15.2 away (applied 337.2 instead of 322.0) and still overheals by 22.2, so the health path re-converges to exactly full at t=2.16 in both worlds. The room at t=3.23 is then determined solely by the net damage taken in the open interval (2.16, 3.23], where the certified de-duplication removes 14.1."
+      },
+      "downstream_coherence": "The new leaf still carries overheal 46.7 > 0, so it still tops the healed unit to exactly 2588 at t=3.23. The unmoved sibling rows [32] and [33] therefore keep their committed 0.0 applied / full overheal splits, member 5 at t=4.31 still measures its room from full, and survival.ending_health stays 2588.0 with death_time null. Bounds: 0 <= 312.7 <= amount 359.4, and total room at the batch top 656.0 <= H0 2588."
+    },
+
+    "step_5_forced_value": {
+      "given": "amount = 359.4 (committed unmoved AND independently derived in step 2); overheal = 46.7 (certified new_value_correct by oracle-P4B-leaf22.json under the 2026-08-14 R-18 certified-fact amendment)",
+      "identity": "applied_amount = amount - overheal",
+      "result": "359.4 - 46.7 = 312.7, which is exactly new_value",
+      "refutation_of_old_value": "326.8 + 46.7 = 373.5 != 359.4, and 373.5 exceeds the amount itself. Holding the old applied half against the certified overheal half would manufacture 14.1 of healing out of nothing and break the min(amount, room) bound. The old value is only self-consistent with the superseded overheal 32.6, which is exactly the half the certified receipt overturns.",
+      "refutation_of_both_wrong": "both_wrong would require either the amount to have moved or the certified overheal to be wrong. The amount is reproduced from scratch at 359.401198 from data/champions.json and data/items.json and is corroborated by four unmoved sibling values (280.1, 57.5, 44.8 twice each); the overheal is a certified fact of the record. Neither escape is available, so the triple is fully determined."
+    }
+  },
+
+  "sources_quoted": [
+    "data/champions.json Aatrox.abilities.P 'Deathbringer Stance' effects[0].description: \"Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters. Deathbringer Stance's damage applies life steal.Aatrox heals for the post-mitigation bonus damage dealt, reduced to 25% against minions.\"",
+    "data/champions.json Aatrox.abilities.P leveling 'Max Health Damage' values[17] = 10 ('%') for level 18",
+    "data/champions.json Aatrox.abilities.R 'World Ender': \"During World Ender, Aatrox gains bonus attack damage, has 5% increased size, is ghosted, and receives increased self-healing from all sources.\" with leveling 'Increased Healing' = [50, 75, 100] '%'",
+    "data/champions.json Aatrox.abilities.E 'Umbral Dash': \"Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions.\"",
+    "data/champions.json Aatrox.stats / Jax.stats / Lulu.stats (base + perLevel for health, armor, magicResistance, attackDamage, attackSpeed, healthRegen)",
+    "data/items.json id 3071 'Black Cleaver' stats.health.flat = 400.0; id 3877 'Bloodsong' stats.health.flat = 200.0",
+    "docs/math-foundations.md Section 2.1: \"m(R) = 100 / (100 + R)\" - EXACT",
+    "docs/math-foundations.md Section 5: \"Stat growth (growth_stat) | base + growth*(L-1)*(0.7025 + 0.0175*(L-1)) | EXACT\"",
+    "docs/math-foundations.md Section 5: \"clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed); absorbed+overkill = damage\" - EXACT",
+    "docs/math-foundations.md Section 5: \"Ability haste (effective_cooldown) ... R casts exactly once per timed fight (model constraint, documented)\"",
+    "docs/math-foundations.md Section 5: \"Stat rounding (calculate_total_stats) | display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX\""
+  ],
+
+  "certified_facts_carried": {
+    "under": "2026-08-14 R-18 certified-fact amendment; cited by receipt path, values attached by the spawning agent, never read from src/",
+    "decisive": ["docs/receipts/oracle-P4B-leaf22.json - overheal 32.6 -> 46.7 certified new_value_correct on this same event"],
+    "room_side_context": [
+      "docs/receipts/oracle-P4C-C1-carve-rearm-series-cleaver-bloodsong-leaf1..leaf11.json (Carve de-duplication that changed the healed unit's room)",
+      "docs/receipts/oracle-P4B-leaf19.json, oracle-P4B-leaf23.json, oracle-P4B-leaf34.json, oracle-P4B-leaf40.json, oracle-P4B-leaf43.json, oracle-P4B-leaf45.json, oracle-P4B-leaf46.json (moved damage on the healed unit)",
+      "docs/receipts/oracle-S6S7-leaf52.json, oracle-S6S7-leaf55.json, oracle-S6S7-leaf58.json, oracle-S6S7-leaf61.json, oracle-S6S7-leaf64.json, oracle-S6S7-leaf67.json, oracle-S6S7-leaf71.json (moved damage on the healed unit)",
+      "docs/receipts/oracle-P4B-leaf26.json, oracle-P4B-leaf28.json, oracle-S6S7-leaf39.json, oracle-P4C-P4E-C2R-...-leaf1.json, oracle-P4C-P4E-C2R-...-leaf2.json (certified split moves on the series' other members)"
+    ]
+  },
+
+  "prior_brief_defect_superseded": {
+    "defect": "No prior brief exists on this leaf, so clause 3 has nothing to cite and this key says so rather than manufacturing one. Quoted from this receipt's own clause_3_defect_citation: 'not applicable - no prior brief exists on this leaf; this is a first adjudication, not a re-run'. What it does supersede is a GAP: this member's overheal half is certified (oracle-P4B-leaf22.json) but its applied half was never briefed - the P4C-P4E-C2R round that repaired the C2 brief adjudicated only healing_events[39]'s two halves, although that round's own `what_the_next_round_owes` named [25]/[31]/[39]/[55] as the series it was supposed to cover. The defect it was posed to avoid is the C2 one, quoted from defect_pattern_avoided: 'The C2 dissent arose from handing over a single applied_amount in isolation - the underdetermined triple (amount, applied_amount, overheal). This brief was posed and answered as a whole-series question under the R-15/R-18 amendment: the amount half is derived from scratch, the identity is verified on all seven members, and the room path is reconstructed across the series, so the applied half is forced rather than asserted.'",
+    "clause_3_defect_citation": "not applicable - no prior brief exists on this leaf; this is a first adjudication, not a re-run",
+    "the_stop_this_receipt_clears": "R-19 plain rule: a qualifying occurrence lacking an oracle receipt is itself a stop on the Phase 4 boundary re-capture. This member's overheal half is certified (oracle-P4B-leaf22.json) but its applied half was never briefed - the P4C-P4E-C2R round that repaired the C2 brief adjudicated only healing_events[39]'s two halves, although that round's own `what_the_next_round_owes` named [25]/[31]/[39]/[55] as the series it was supposed to cover. This leaf blocked the boundary re-capture exactly as a dissent would; this receipt discharges it.",
+    "defect_pattern_avoided": "The C2 dissent arose from handing over a single applied_amount in isolation - the underdetermined triple (amount, applied_amount, overheal). This brief was posed and answered as a whole-series question under the R-15/R-18 amendment: the amount half is derived from scratch, the identity is verified on all seven members, and the room path is reconstructed across the series, so the applied half is forced rather than asserted."
+  },
+
+  "verdict_reasoning": "amount is unmoved at 359.4 and independently derived (300.1 raw magic = 10% of Jax's 3001 max health, mitigated at 100/167 = 179.700599, doubled by World Ender rank 3 = 359.401198). The clipping identity applied_amount + overheal = amount holds on all seven members of the series. The sibling overheal is certified at 46.7. Therefore applied_amount = 359.4 - 46.7 = 312.7 = new_value, and the old value 326.8 is arithmetically impossible against the certified half - it would push the split total above the heal amount itself.",
+  "verdict_final": "new_value_correct"
+}
