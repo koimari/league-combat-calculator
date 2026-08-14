@@ -5,19 +5,27 @@ is deliberately a second file rather than an extension of it: the two lists
 have different owners, and a phase able to edit another phase's frontier
 could retire a name by moving it.
 
-Four of Phase 4's nine rows were closed by a stage that pinned them where it
-worked, and re-asserting them here would give one absence two homes — the
-drift this campaign exists to remove, aimed at itself.  Those four are
-carried by :data:`PINNED_ELSEWHERE`, which is checked rather than recited:
-each row names the file and the test that holds it, and a row whose test has
-been renamed or deleted fails here.  The rest are asserted below, each in
-the section of the stage that closed it.
+Seven of Phase 4's nine rows are closed.  Three of those were closed by a
+stage that pinned them where it worked, and re-asserting them here would give
+one absence two homes — the drift this campaign exists to remove, aimed at
+itself.  Those three are carried by :data:`PINNED_ELSEWHERE`, which is
+checked rather than recited: each names the file and the test that holds it,
+and a row whose test has been renamed or deleted fails here.  The other four
+are asserted below, each under the stage that closed it.
+
+**Two rows are open**, and they are named here rather than left out, because
+a frontier that lists only its successes is a progress report.  Both are
+carried by ``docs/receipts/escalated-defects-P4-S10.json`` with a dated
+reason, a reproducer and a live gate, and this file asserts that the
+artifact still holds exactly those two — so a row cannot be dropped from
+both places at once.
 
 The nine rows, and where each is read:
 
 * ``legacy_phase`` — S2 — ``tests/test_transition_rank.py``
 * ``owner: str`` — S1, replaced by the plain-``int`` ``holder`` slot the
-  owner skip reads — ``tests/test_modifier_classes.py``
+  owner skip reads — here, from the kernel side (``tests/test_modifier_classes``
+  reads the same absence from the packet side)
 * the four ``str | None`` reference fields — S1, replaced by integer slots —
   ``tests/test_event_slots.py``
 * ``survival_action_from_event`` — S4 — ``tests/test_program_structure.py``
@@ -26,6 +34,8 @@ The nine rows, and where each is read:
 * ``_score_with_search_context``'s bespoke result assembly — S9, replaced by
   the score view — here
 * ``_packet_typed_actions`` and ``packet["_typed"]`` — S10 — here
+* ``WalkCompiler``'s duplicated dict/tuple branches — **open** — escalated
+* the hardcoded first-defender scan — **open** — escalated
 
 Rows that are somebody else's are named as *not* Phase 4's, because a
 frontier that quietly absorbs a neighbour's deletion is how one phase's
@@ -46,6 +56,18 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 TESTS = ROOT / "tests"
 
+#: The rows this frontier has not closed, and the escalation entry that
+#: carries each.  Asserted against the artifact rather than described, so a
+#: row cannot quietly leave both the frontier and the escalation.
+OPEN_ROWS: dict[str, str] = {
+    "WalkCompiler's duplicated dict/tuple branches": (
+        "walk_compilers_two_row_readers_are_not_the_duplication_the_frontier_names"
+    ),
+    "the hardcoded first-defender scan": (
+        "the_first_defender_scan_survives_because_ccscope_was_never_authored"
+    ),
+}
+
 #: Frontier row -> (test file, the test function that asserts its absence).
 PINNED_ELSEWHERE: dict[str, tuple[str, str]] = {
     "legacy_phase": (
@@ -61,6 +83,19 @@ PINNED_ELSEWHERE: dict[str, tuple[str, str]] = {
         "test_the_retired_builder_names_have_zero_occurrences",
     ),
 }
+
+
+def test_every_open_row_is_carried_by_the_escalation_artifact() -> None:
+    """An unclosed row lives in two places or it lives in neither."""
+    import json
+
+    receipt = json.loads(
+        (ROOT / "docs" / "receipts" / "escalated-defects-P4-S10.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    carried = {defect["id"] for defect in receipt["defects"]}
+    assert set(OPEN_ROWS.values()) <= carried
 
 
 def _holders(name: str) -> list[str]:
