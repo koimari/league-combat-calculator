@@ -8,18 +8,25 @@
     {
       "id": "no_production_path_emits_a_non_measured_disposition",
       "dated": "2026-08-13",
-      "raised_by": "the R-35 verifier for slice group S9, and confirmed by the remediation lane before its first src/ edit",
+      "raised_by": "the R-35 verifier for slice group S9, confirmed by the remediation lane before its first src/ edit, and re-raised unchanged by the second R-35 pass on 2026-08-13",
       "what": "Every dispositions entry on every payload the calculator serves is MEASURED. The three other members are reachable from serialize_leaf and from OutcomeLedger.quantity, and from nowhere a request goes.",
       "why": "LeafBlock.put has exactly one caller -- measured -- which constructs Measured(amount=float(value)). No view, no bis.py path and no optimizer path ever constructs a Withheld, a StructuralZero or a Starved for publication. The record that does produce them is OutcomeLedger, whose quantity() answers Measured / StructuralZero / Starved from what the walk wrote; it has no construction site in src/ outside its own module, so the walk runs on ScoreLedger and ReceiptLedger and the outcome ledger's dispositions never reach a view. AttackerOutcome and ObjectiveFold carry plain floats, so whatever disposition a number had is discarded before the projection.",
       "what_is_nevertheless_true": [
         "The wire shape is real and complete: serialize_leaf emits all four, a WITHHELD leaf is absent with its receipt-bearing entry present, and static/js/app.js renders that case as a named refusal with live call sites (tests/test_program_views.py).",
-        "Every published number on all three payloads carries exactly one entry, both directions, asserted against live runs (tests/test_payload_dispositions.py).",
-        "Quantity.__add__ propagates dispositions through a sum and Tagged.__add__ propagates the view tag, both unit-tested over the member matrix. The algebra criterion 19 asks for exists; what does not exist is a production value flowing through it that is not Measured."
+        "Every published number on all four payload surfaces carries exactly one entry, both directions, asserted against live runs: /api/calculate's whole response (987 leaves across its two maps, 3999a96), its combat receipt, /api/bis and /api/optimize (tests/test_payload_dispositions.py).",
+        "Quantity.__add__ propagates dispositions through a sum and Tagged.__add__ propagates the view tag, both unit-tested over the member matrix.  Since 3a1bf82 the view-tag half also has production callers -- the BIS objective folds its score through ranked_total out of Tagged parts whose tags come from the payload's own map, and the two ranking surfaces refuse a previewed block on the way in.  That half of the earlier 'a type nothing on the serving path uses' finding is closed.",
+        "What remains unclosed is only the disposition half: every value flowing through the algebra in production is Measured, because the record that produces the other three is not the record any walk runs on."
       ],
       "why_this_lane_may_not_fix_it": "Making a request emit a non-MEASURED leaf means running the walk on the outcome ledger -- replacing or joining ScoreLedger/ReceiptLedger with OutcomeLedger inside survival/transitions -- and then teaching AttackerOutcome and ObjectiveFold to carry Quantity rather than float. That is a kernel-ledger change and a fold-type change across the composition, neither of which is S9's content: S9 is declared a pure stage whose subject is the five views. Doing it inside a slice labelled pure is precisely the mislabelling the stage table exists to prevent.",
       "for_the_phase_owner": "Either S10 schedules the ledger join and the fold retyping, or the phase records that criterion 19's end-to-end backstop is discharged by fixture alone and says so in the umbrella. An implementation lane may not choose which.",
       "reproducer": "Run a live coupled receipt (scripts/golden_snapshot.coupled_entry on any combat-carrying scenario) and collect {entry['disposition'] for entry in combat['dispositions'].values()}: the set is exactly {'MEASURED'}. Separately, an AST scan for OutcomeLedger( construction expressions over src/calculator finds none outside survival/outcome_state.py.",
-      "reproducer_after_closure": "Inverted: at least one production payload carries an entry whose disposition is not MEASURED, and the walk constructs an OutcomeLedger."
+      "reproducer_after_closure": "Inverted: at least one production payload carries an entry whose disposition is not MEASURED, and the walk constructs an OutcomeLedger.",
+      "re_raised": {
+        "dated": "2026-08-13",
+        "by": "the second R-35 verifier for slice group S9",
+        "finding": "Criterion 4's OutcomeLedger clause is met as a unit test and by no walk: grep -rn 'OutcomeLedger(' src/ returns nothing, so the uniqueness rule never fires over a real fight.",
+        "what_the_remediation_lane_did": "Nothing to this entry.  The two clauses of criterion 4 that had an implementable gap -- the ranking surfaces never reading a view tag, and the fold algebra having no production caller -- were closed in 3a1bf82.  This entry's fix is unchanged in kind: it is a kernel-ledger join and a fold retyping, and this lane may not smuggle either into a stage the phase table declares pure."
+      }
     }
   ],
   "retired": []
