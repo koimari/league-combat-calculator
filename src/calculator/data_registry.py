@@ -28,6 +28,8 @@ import json
 import os
 import time
 from collections.abc import MutableMapping
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +64,9 @@ def data_version() -> int:
     serve a value derived from the cache it replaced.
 
     Who reads it is :data:`DATA_VERSION_KEYED_MEMOS`, below, and the three
-    tables beside it say why every other memo in the tree does not.  It is
+    tables beside it say why every other memo in the tree does not — each
+    row carrying its ``invalidated_by`` in :class:`Invalidator`, the one
+    vocabulary ``program/caches`` also declares in.  It is
     declared here, in the module that owns the write it counts, because the
     two lanes that key on it are live at once and a counter either of them
     declared would be a counter the other could not use.
@@ -98,6 +102,83 @@ def store_for_generation(
     memo[key] = value
 
 
+class Invalidator(Enum):
+    """What can make a cached answer wrong — the campaign's one vocabulary.
+
+    Two registries in this tree answer "what stales this cache": the memo
+    tables below, and ``program/caches.CACHES``.  Until S10 they answered it
+    in two languages — a table membership here, an ``invalidated_by`` field
+    there — so "every cache declares ``invalidated_by``" was true of one of
+    them and unaskable of the other.  The enum lives here, in the module
+    that owns ``data_version`` and imports nothing, and ``program/caches``
+    imports it: one vocabulary, two populations, and a gate that can read
+    both.
+
+    ``DATA_VERSION`` is the member most caches carry and the one
+    ``program/caches`` requires of every declaration it holds, because a
+    derived number that survives a patch refresh is the stale literal
+    CLAUDE.md rule 5 bans, one layer up.  The last three members exist so a
+    cache the counter *cannot* govern says so in the same language rather
+    than by being filed somewhere else.
+    """
+
+    DATA_VERSION = "data_version"
+    ROSTER = "roster"
+    ACTOR_STATS = "actor_stats"
+    PARAMS = "params"
+    PROJECTION = "projection"
+    HAND_AUTHORED_ARTIFACT = "hand_authored_artifact"
+    """A ``data/`` file no script writes, so the runtime-cache counter can
+    never move for it."""
+
+    REFRESH_CLEAR = "refresh_clear"
+    """Emptied wholesale by the function that rebuilds what it derives from,
+    so the counter has nothing to add."""
+
+    OBJECT_IDENTITY = "object_identity"
+    """Nothing but the identity guard in front of the key — the honest
+    spelling of a memo that is not invalidated at all.  Every member is a
+    row on the deferred table with an issue reference, so this reads as the
+    gap it is rather than as a design."""
+
+
+@dataclass(frozen=True, slots=True)
+class MemoGovernance:
+    """One memo's ``invalidated_by``, and why that is the right set.
+
+    The reason is not decoration: the four tables below are four different
+    *claims* — "keys on the counter", "another lane keys it", "the counter
+    cannot govern it", "it should be keyed and is not this phase's to edit"
+    — and a set of invalidators alone cannot tell the third from the fourth.
+    """
+
+    invalidated_by: frozenset[Invalidator]
+    why: str
+
+    def __post_init__(self) -> None:
+        """A declaration with no invalidator and no reason is not one."""
+        if not self.invalidated_by:
+            raise ValueError(
+                "a memo governance declaring no invalidator says nothing; use "
+                "Invalidator.OBJECT_IDENTITY if the honest answer is 'nothing "
+                "stales it', which is a gap and reads like one"
+            )
+        if not self.why.strip():
+            raise ValueError("a memo governance with no reason is undeclared")
+
+
+def _governed(*invalidators: Invalidator):
+    """A governance builder, so a table row reads as name -> reason."""
+
+    def declare(why: str) -> MemoGovernance:
+        return MemoGovernance(invalidated_by=frozenset(invalidators), why=why)
+
+    return declare
+
+
+_version_keyed = _governed(Invalidator.DATA_VERSION)
+
+
 # ── who keys on the counter ──────────────────────────────────────────────
 #
 # The population is machine-derived, not judged: *every module-level binding
@@ -113,53 +194,57 @@ def store_for_generation(
 # keyed and is not this phase's to edit" are four different claims, and
 # collapsing the last two would hide a real gap behind a reasoned exemption.
 
-DATA_VERSION_KEYED_MEMOS: dict[str, str] = {
-    "calculator.item_behavior_catalog._BEHAVIOR_RULES_MEMO": (
+DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
+    "calculator.item_behavior_catalog._BEHAVIOR_RULES_MEMO": _version_keyed(
         "one owner's compiled BehaviorRules; every number in them is read out "
         "of a registry the cache generation counts, and the entry objects are "
         "held beside the key so a refresh that rebuilds them without writing "
         "a file misses too"
     ),
-    "calculator.economy._ITEM_BY_ID_MEMO": (
+    "calculator.economy._ITEM_BY_ID_MEMO": _version_keyed(
         "the id-keyed view of the item cache the optimizer prices plans through"
     ),
-    "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO": (
+    "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO": _version_keyed(
         "which item declares the temporary-health Lifeline, derived from the "
         "catalog the cache generation counts; read inside two fight loops, so "
         "the derivation is memoized rather than re-scanned per candidate"
     ),
-    "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": (
+    "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": _version_keyed(
         "derived cast-order params; the order was resolved from cached ability data"
     ),
-    "calculator.stats._ITEM_STATS_MEMO": "one cached item's extracted stat block",
-    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": (
+    "calculator.stats._ITEM_STATS_MEMO": _version_keyed(
+        "one cached item's extracted stat block"
+    ),
+    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": _version_keyed(
         "the schema verdict on one cached item's stat map"
     ),
-    "calculator.support_effects._SUPPORT_ATTRS_MEMO": (
+    "calculator.support_effects._SUPPORT_ATTRS_MEMO": _version_keyed(
         "whether a cached champion carries any support attribute"
     ),
-    "calculator.support_effects._SUPPORT_PROFILE_MEMO": (
+    "calculator.support_effects._SUPPORT_PROFILE_MEMO": _version_keyed(
         "one cached ability's shield/heal attribute names and target scope"
     ),
-    "calculator.survival.receipt_state._STATE_PROTO_MEMO": (
+    "calculator.survival.receipt_state._STATE_PROTO_MEMO": _version_keyed(
         "a participant's survival prototype, derived from cached item stats"
     ),
 }
 
 # Keyed by their own lane rather than here: Phase 5 owns the two rotation
 # memos and keyed them with the cast-dependency work (D-49's split).
-ROTATION_MEMOS: frozenset[str] = frozenset(
-    {
-        "calculator.rotation_resolver._DERIVED_RULE_CACHE",
-        "calculator.rotation_resolver._MATRIX_DPS_CACHE",
-    }
-)
+ROTATION_MEMOS: dict[str, MemoGovernance] = {
+    "calculator.rotation_resolver._DERIVED_RULE_CACHE": _version_keyed(
+        "a champion's derived rotation rule, keyed with the cast-dependency work"
+    ),
+    "calculator.rotation_resolver._MATRIX_DPS_CACHE": _version_keyed(
+        "the per-signature DPS matrix behind that rule, keyed the same way"
+    ),
+}
 
 # Not governable by this counter: the counter counts write_runtime_cache
 # calls, and a memo over something write_runtime_cache never writes would
 # key on a number that can never move for it.
-UNGOVERNED_MEMOS: dict[str, str] = {
-    "calculator.certainty._AUDIT_CACHE": (
+UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
+    "calculator.certainty._AUDIT_CACHE": _governed(Invalidator.HAND_AUTHORED_ARTIFACT)(
         "derived from data/wiki-full-entry-audit.json, a HAND_AUTHORED "
         "artifact rather than a runtime cache"
     ),
@@ -182,19 +267,44 @@ _CHAMPION_MEMO_DEFERRAL = (
 # else's function is exactly the claim this campaign stopped taking on
 # trust.  Their names do not match the ``_MEMO``/``_CACHE`` shape the scan
 # looks for, which is why they are listed rather than partitioned.
-REFRESH_CLEARED_MEMOS: dict[str, str] = {
-    "calculator.item_effects._RESOLVED_DAMAGE_EFFECTS": (
+REFRESH_CLEARED_MEMOS: dict[str, MemoGovernance] = {
+    "calculator.item_effects._RESOLVED_DAMAGE_EFFECTS": _governed(
+        Invalidator.REFRESH_CLEAR
+    )(
         "refresh_item_effects() clears it in the same call that rebuilds "
         "ITEM_EFFECTS"
     ),
 }
 
-DEFERRED_MEMOS: dict[str, str] = {
-    "calculator.champions.engine._CAST_TIME_MEMO": _CHAMPION_MEMO_DEFERRAL,
-    "calculator.champions.engine._RESOURCE_COST_MEMO": _CHAMPION_MEMO_DEFERRAL,
-    "calculator.champions.slotlib._MODIFIER_PAIRS_MEMO": _CHAMPION_MEMO_DEFERRAL,
-    "calculator.champions.slotlib._NAMED_LEVELING_MEMO": _CHAMPION_MEMO_DEFERRAL,
-    "calculator.champions.slotlib._PRIMARY_LEVELING_MEMO": _CHAMPION_MEMO_DEFERRAL,
+_deferred = _governed(Invalidator.OBJECT_IDENTITY)
+
+DEFERRED_MEMOS: dict[str, MemoGovernance] = {
+    "calculator.champions.engine._CAST_TIME_MEMO": _deferred(_CHAMPION_MEMO_DEFERRAL),
+    "calculator.champions.engine._RESOURCE_COST_MEMO": _deferred(
+        _CHAMPION_MEMO_DEFERRAL
+    ),
+    "calculator.champions.slotlib._MODIFIER_PAIRS_MEMO": _deferred(
+        _CHAMPION_MEMO_DEFERRAL
+    ),
+    "calculator.champions.slotlib._NAMED_LEVELING_MEMO": _deferred(
+        _CHAMPION_MEMO_DEFERRAL
+    ),
+    "calculator.champions.slotlib._PRIMARY_LEVELING_MEMO": _deferred(
+        _CHAMPION_MEMO_DEFERRAL
+    ),
+}
+
+
+#: Every memo this module governs, in one mapping — the half of "what stales
+#: a cache" that lives here.  ``program/caches.every_declaration`` unions it
+#: with the program layer's own declarations so the question has one answer
+#: and not two.
+GOVERNED_MEMOS: dict[str, MemoGovernance] = {
+    **DATA_VERSION_KEYED_MEMOS,
+    **ROTATION_MEMOS,
+    **UNGOVERNED_MEMOS,
+    **REFRESH_CLEARED_MEMOS,
+    **DEFERRED_MEMOS,
 }
 
 

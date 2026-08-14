@@ -32,26 +32,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 
-from ..data_registry import data_version
-
-
-class Invalidator(Enum):
-    """What can make a cached answer wrong.
-
-    ``DATA_VERSION`` is on every declaration in this module and is not
-    optional: a cache that does not name it is a cache that survives a patch
-    refresh, which is the one invalidation the calculator's own data layer
-    guarantees will happen.
-    """
-
-    DATA_VERSION = "data_version"
-    ROSTER = "roster"
-    ACTOR_STATS = "actor_stats"
-    PARAMS = "params"
-    PROJECTION = "projection"
+from ..data_registry import GOVERNED_MEMOS, Invalidator, data_version
 
 
 @dataclass(frozen=True, slots=True)
@@ -304,6 +287,7 @@ __all__ = [
     "CACHES",
     "CacheDeclaration",
     "Invalidator",
+    "every_declaration",
     "actor_fingerprint",
     "params_fingerprint",
     "patch_fingerprint",
@@ -311,3 +295,31 @@ __all__ = [
     "program_inputs_fingerprint",
     "roster_fingerprint",
 ]
+
+
+def every_declaration() -> dict[str, frozenset[Invalidator]]:
+    """Every cache in the tree, and what stales it — one answer, one call.
+
+    Phase 4 criterion 14 opens "every cache declares ``invalidated_by``",
+    and until S10 that was a sentence about *this module*: the memos over
+    ``data/``-derived values declared their governance in ``data_registry``,
+    in a different language, so the criterion was true of two caches and
+    unaskable of eighteen.  It is one language now — :class:`Invalidator`
+    is declared beside ``data_version`` and imported here — and this is the
+    reader that makes the criterion a question with one answer instead of
+    a survey of two registries.
+
+    Two registries and not one, deliberately.  ``data_registry`` owns the
+    memos because it owns the counter that stales them and imports nothing;
+    this module owns the program layer's caches because a declaration here
+    also carries its key fields and its producer's inputs, which a memo
+    does not have.  What was wrong was not that there were two populations
+    but that there were two vocabularies.
+    """
+    declared: dict[str, frozenset[Invalidator]] = {
+        f"program.{name}": declaration.invalidated_by
+        for name, declaration in CACHES.items()
+    }
+    for name, governance in GOVERNED_MEMOS.items():
+        declared[name] = governance.invalidated_by
+    return declared

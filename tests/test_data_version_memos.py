@@ -110,7 +110,7 @@ def test_declared_tables_partition_every_memo_in_the_tree() -> None:
     """No memo is outside the four tables, and none is in two of them."""
     tables = {
         "keyed": frozenset(data_registry.DATA_VERSION_KEYED_MEMOS),
-        "rotation": data_registry.ROTATION_MEMOS,
+        "rotation": frozenset(data_registry.ROTATION_MEMOS),
         "ungoverned": frozenset(data_registry.UNGOVERNED_MEMOS),
         "deferred": frozenset(data_registry.DEFERRED_MEMOS),
     }
@@ -152,12 +152,73 @@ def test_every_declared_memo_carries_a_reason() -> None:
     """A table entry with an empty reason is an undeclared memo in disguise."""
     for table in (
         data_registry.DATA_VERSION_KEYED_MEMOS,
+        data_registry.ROTATION_MEMOS,
         data_registry.UNGOVERNED_MEMOS,
         data_registry.DEFERRED_MEMOS,
         data_registry.REFRESH_CLEARED_MEMOS,
     ):
-        for member, reason in table.items():
-            assert reason.strip(), member
+        for member, governance in table.items():
+            assert governance.why.strip(), member
+
+
+def test_every_declared_memo_names_what_stales_it() -> None:
+    """Criterion 14's first clause, over the population it was unaskable of.
+
+    "Every cache declares ``invalidated_by``" was a sentence about
+    ``program/caches``; the eighteen memos here declared their governance by
+    which table they sat in, which is a different language for the same
+    question.  It is one language now -- :class:`Invalidator` is declared
+    beside ``data_version`` and ``program/caches`` imports it -- so the
+    clause is a loop rather than a survey.
+    """
+    for name, governance in data_registry.GOVERNED_MEMOS.items():
+        assert governance.invalidated_by, name
+        for member in governance.invalidated_by:
+            assert isinstance(member, data_registry.Invalidator), name
+
+
+def test_a_governance_with_no_invalidator_is_not_constructible() -> None:
+    """R-05: the declaration refuses the empty set rather than storing it."""
+    with pytest.raises(ValueError, match="says nothing"):
+        data_registry.MemoGovernance(invalidated_by=frozenset(), why="because")
+
+
+def test_a_governance_with_no_reason_is_not_constructible() -> None:
+    with pytest.raises(ValueError, match="undeclared"):
+        data_registry.MemoGovernance(
+            invalidated_by=frozenset({data_registry.Invalidator.DATA_VERSION}),
+            why="   ",
+        )
+
+
+def test_the_two_registries_are_one_question_with_one_reader() -> None:
+    """``every_declaration`` unions both populations without overlapping."""
+    from src.calculator.program.caches import CACHES, every_declaration
+
+    declared = every_declaration()
+    assert set(data_registry.GOVERNED_MEMOS) <= set(declared)
+    assert {f"program.{name}" for name in CACHES} <= set(declared)
+    assert len(declared) == len(data_registry.GOVERNED_MEMOS) + len(CACHES)
+    for name, invalidators in declared.items():
+        assert invalidators, name
+
+
+def test_the_keyed_tables_all_say_data_version_and_the_others_do_not() -> None:
+    """The vocabulary is shared; the claims each table makes are still four."""
+    version = data_registry.Invalidator.DATA_VERSION
+    for table in (
+        data_registry.DATA_VERSION_KEYED_MEMOS,
+        data_registry.ROTATION_MEMOS,
+    ):
+        for name, governance in table.items():
+            assert version in governance.invalidated_by, name
+    for table in (
+        data_registry.UNGOVERNED_MEMOS,
+        data_registry.DEFERRED_MEMOS,
+        data_registry.REFRESH_CLEARED_MEMOS,
+    ):
+        for name, governance in table.items():
+            assert version not in governance.invalidated_by, name
 
 
 def test_rotation_memos_are_keyed_by_their_own_lane() -> None:
