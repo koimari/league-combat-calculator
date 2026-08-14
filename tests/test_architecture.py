@@ -85,13 +85,17 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # It is recorded here as a comment rather than silently deleted because the
     # set is the receipt: a member that leaves without a sentence saying why is
     # indistinguishable from a member somebody deleted to make a gate pass.
-    "survival.score_state": FrontierEntry(
-        owning_phase="Phase 4",
-        reason=(
-            "re-exported by survival/__init__ and reached through it; Phase 4 "
-            "rebuilds it as a program view and owns its front door"
-        ),
-    ),
+    # `survival.score_state` left this frontier at Phase 4 S10, the last of
+    # the six `survival/` members the phase closes (criterion 18).  Its front
+    # door is `tests/test_score_state.py`, and writing one was the work: the
+    # score ledger's contract is almost entirely refusals -- it records one
+    # thing, annotates nothing, and raises rather than scheduling a
+    # walk-authored heal -- and a refusal exercised only through a coupled
+    # request is a refusal nobody has watched fire.  Recorded here as a
+    # comment rather than silently deleted, for the reason the receipt_state
+    # note above gives: the set is the receipt, and a member that leaves
+    # without a sentence saying why is indistinguishable from a member
+    # somebody deleted to make a gate pass.
 }
 
 
