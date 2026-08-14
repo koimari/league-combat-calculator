@@ -469,6 +469,69 @@ def test_the_state_proto_key_covers_every_stat_the_prototype_reads() -> None:
     assert read == set(receipt_state._STATE_KEY_STATS)  # pylint: disable=W0212
 
 
+def test_the_prototype_holds_no_health_derived_value() -> None:
+    """The stat the guard above structurally cannot see, removed instead.
+
+    ``_STATE_KEY_STATS`` covers every ``combatant.stats.get(...)`` in this
+    module, and health was never one of them — it was read one call away,
+    through ``transitions.participant_pools``, inside the construction the
+    memo stores.  Two combatants with matching defences and resistances
+    share a prototype now, and one may have 1000 health and the other 2500;
+    that was safe only because ``build_state`` overwrote both fields, which
+    is a fact about the caller.  So the prototype carries the slots and
+    never the values, and this is what says so.
+    """
+    from src.calculator.survival import receipt_state
+
+    proto = receipt_state._build_state_uncached(  # pylint: disable=W0212
+        _combatant_stub(), 0.0
+    )
+    for field in receipt_state._PER_CALL_FIELDS:  # pylint: disable=W0212
+        assert field in proto
+    assert proto["pools"] is None
+    assert proto["starting_shield"] == 0.0
+
+
+def test_the_prototype_builder_never_reaches_the_health_read() -> None:
+    """Read off the source, because the point is that it is unreachable."""
+    from src.calculator.survival import receipt_state
+
+    source = (SRC_ROOT / "calculator" / "survival" / "receipt_state.py").read_text(
+        encoding="utf-8"
+    )
+    builder = next(
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.FunctionDef) and node.name == "_build_state_uncached"
+    )
+    called = {
+        node.func.id
+        for node in ast.walk(builder)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert "participant_pools" not in called
+    assert "participant_pools" in receipt_state.__dict__
+
+
+def test_two_combatants_sharing_a_prototype_keep_their_own_health() -> None:
+    """The sharing the value key introduced, exercised rather than reasoned.
+
+    Same defence record, same four resistances, different health: one memo
+    entry, two states, two pools.  This is the end-to-end backstop for the
+    two assertions above — they say the prototype cannot carry health, and
+    this says the built state still does.
+    """
+    from src.calculator.survival import receipt_state
+
+    states = []
+    for health in (1000.0, 2500.0):
+        combatant = _combatant_stub()
+        combatant.stats = {**combatant.stats, "health": health}
+        states.append(receipt_state.build_state(combatant, 0.0))
+    assert [state["pools"].health for state in states] == [1000.0, 2500.0]
+    assert states[0]["base_armor"] == states[1]["base_armor"]
+
+
 def test_a_combatant_whose_defences_are_only_an_address_is_not_memoized() -> None:
     """``id()`` may not come back wearing a namespace.
 

@@ -44,6 +44,23 @@ _STATE_KEY_STATS = (
     "bonus_magic_resistance",
 )
 
+#: The two state fields :func:`build_state` writes per call instead of
+#: cloning, because both derive from the combatant's **health** and health is
+#: not in the key.  The prototype carries the slots — so a built state's field
+#: order is the construction's — and never a health-derived value in them.
+#:
+#: Why this is a declaration and not a detail: two combatants whose defence
+#: record and four resistances match now share one prototype, and one of them
+#: may have 1000 health and the other 2500.  Sharing is correct **only**
+#: because these two are overwritten on every call, and until S10 that was a
+#: property of the write order rather than of the prototype — the health read
+#: was inside the memoized construction, reached through
+#: ``transitions.participant_pools`` rather than through ``combatant.stats``,
+#: where the guard that checks the key covers every stat the prototype reads
+#: structurally cannot see it.  Now the prototype does not read health at
+#: all, so the key really is every input it has.
+_PER_CALL_FIELDS = ("pools", "starting_shield")
+
 
 def _state_proto_key(
     combatant: Any, below_half_healing_bonus: float
@@ -109,7 +126,9 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
     else:
         proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
-    # so every caller gets a clone with its own pools and containers.
+    # so every caller gets a clone with its own pools and containers.  The
+    # two :data:`_PER_CALL_FIELDS` are filled here and nowhere else — they
+    # are this combatant's health, which the shared prototype must not hold.
     pools = participant_pools(combatant)
     state = dict(proto)
     state["pools"] = pools
@@ -127,10 +146,16 @@ def _build_state_uncached(
     """The canonical state construction the prototype memo clones.
 
     Every stat it reads is named in :data:`_STATE_KEY_STATS`; a read added
-    here without joining that tuple is an input the key cannot see.
+    here without joining that tuple is an input the key cannot see.  That
+    sentence is why the two :data:`_PER_CALL_FIELDS` below are left empty
+    rather than built: they derive from health, health is not in the key,
+    and a memoized construction that read it would be filed under inputs
+    that do not determine it — legal only because :func:`build_state`
+    happens to overwrite both, which is a fact about the caller and not
+    about the prototype.
 
-    Ported verbatim from the former authoritative walk's state
-    initialisation; the score adapter arms the same shape so both adapters
+    Ported from the former authoritative walk's state initialisation, less
+    those two fields; the score adapter arms the same shape so both adapters
     share one kernel.  Every combat-state field is inert unless an authored
     packet or armed defense field supplies its trigger/timing — the
     simulator never guesses an item's trigger from a name alone.
@@ -143,14 +168,14 @@ def _build_state_uncached(
     base_magic_resistance = max(
         0.0, float(combatant.stats.get("magic_resistance", 0.0) or 0.0)
     )
-    pools = participant_pools(combatant)
     return {
         # Every shield and health transition rides shield_ledger; this is the
         # one place this participant's absorbing state lives (issue #159).
-        "pools": pools,
-        "starting_shield": sum(
-            (pools.magic_shield, pools.physical_shield, pools.general_shield)
-        ),
+        # Both are :data:`_PER_CALL_FIELDS`: the slots are declared here so a
+        # built state's field order is this construction's, and the values
+        # are the caller's because they are derived from health.
+        "pools": None,
+        "starting_shield": 0.0,
         # Combat regeneration is gated against the last sourced damage
         # timestamp.  The fight starts in combat, so a Warmog packet at
         # t=0 cannot immediately claim an unknown pre-fight idle window.
