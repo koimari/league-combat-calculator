@@ -57,6 +57,7 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
     assert [defect["id"] for defect in receipt()["defects"]] == [
         "the_first_defender_scan_survives_because_ccscope_was_never_authored",
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
+        "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
     ]
 
 
@@ -195,3 +196,48 @@ def test_and_nothing_in_src_still_produces_a_withheld_quantity() -> None:
         and node.func.id == "Withheld"
     }
     assert producers <= {"ability_spec.py", "program/views/__init__.py"}
+
+
+# --- the bit-exact clause's scenario set -------------------------------------
+
+
+def test_the_exact_baseline_holds_the_derived_scenario_set() -> None:
+    """R-12's set, read off the committed file rather than described."""
+    import json as _json
+
+    from scripts.golden_snapshot import COUPLED_SCENARIOS
+
+    exact = _json.loads(
+        (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
+    )
+    assert set(exact["coupled_scenarios"]) == {
+        scenario.name for scenario in COUPLED_SCENARIOS
+    }
+
+
+def test_no_bench_scenario_is_in_the_exact_baseline() -> None:
+    """The row's reproducer: the two scenario sets do not intersect.
+
+    Bounded rather than vague -- the entry claims the criterion names a set
+    the instrument does not hold, and this is that claim as a set operation.
+    It inverts the day the integration agent captures the bench rosters.
+    """
+    import json as _json
+
+    from scripts.bench_coupled_optimizer import SCENARIOS
+
+    exact = _json.loads(
+        (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
+    )
+    assert not set(exact["coupled_scenarios"]) & set(SCENARIOS)
+    assert len(SCENARIOS) == 4
+
+
+def test_the_exact_baseline_is_unrounded_where_the_other_one_rounds() -> None:
+    """The half that *is* discharged: repr(float), not two decimals (R-13)."""
+    import json as _json
+
+    exact = _json.loads(
+        (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
+    )
+    assert exact["metadata"]["exact"] is True

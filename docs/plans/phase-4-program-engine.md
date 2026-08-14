@@ -218,7 +218,7 @@ ledger, and score, breakdown, survival, TDD and receipt are five projections of 
 - **Frontier counters 5–7 are this phase's**, committed with their exclusion lists to
   `docs/migration-frontier.json` and diff-gated by set equality (D-40, R-36): **5** `SurvivalAction`
   construction expressions outside `program/compile.py` (baseline 9, target 1 — the issue-#171 fast
-  constructor at `survival/actions.py:203` is the declared survivor); **6** `round(` outside the precision
+  constructor at `survival/actions.py:591` is the declared survivor); **6** `round(` outside the precision
   registry (baseline 118 in `survival/`, 0 in `program/`, non-increasing); **7** `id()`-keyed caches whose key
   is not derived from the served value, over `src/calculator/{survival,program}` and `stats.py`, with the
   baseline **measured by the script on its first run** rather than typed — the naive count depends on whether
@@ -396,7 +396,7 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
    names.*
 2. **One constructor.** `SurvivalAction` construction expressions outside `program/compile.py` = **1**
    (baseline 9; `grep -c "SurvivalAction("` returns 11 because it also matches the class statement and a
-   docstring). The one survivor is `survival/actions.py:203`'s `_ACTION_DEFAULT_ROW`, the issue-#171 fast
+   docstring). The one survivor is `survival/actions.py:591`'s `_ACTION_DEFAULT_ROW`, the issue-#171 fast
    constructor that criterion 17 names as the declared performance fallback — declaring it here is what keeps
    criteria 2 and 17 from being mutually exclusive. All seven `survival_action_from_event` call sites and
    `WalkCompiler`'s duplicated branches are gone.
@@ -467,19 +467,42 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
     script measured on its first run, with `champions/`'s two named on the frontier as out of scope;
     `packet["_typed"]` has zero occurrences; `round(` outside `program/precision.py` = **0 within `program/`**,
     while `survival/`'s count is counter 6, non-increasing from 118; `SumPlan` ids are unique across the three
-    panels; and per-attacker totals are asserted **bit-exact** on the four bench scenarios against
+    panels — each event summed once, the ordering declared, and a cross-panel repeat recorded rather than
+    silently folded twice; and per-attacker totals are asserted **bit-exact** against
     `scripts/golden_coupled_exact.json` (R-13's `capture-coupled --exact`), since golden compares at two
     decimals and no other instrument emits unrounded totals.
+
+    > **The scenario set that sentence names is not the set the instrument holds**, and the divergence is a
+    > dated, gated row on `docs/receipts/escalated-defects-P4-S10.json` rather than a restatement here. The
+    > exact baseline's scenarios are R-12's — derived from the `damage_modifier` producer set, both ledger
+    > shapes and one Catalyst roster — and none of them is one of the four bench scenarios this criterion
+    > names. Adding them is a write to one of R-32's five baselines, which is the integration agent's and not
+    > an implementation lane's; the escalation names exactly that, so the gap is carried by an artifact
+    > instead of by a sentence a lane rewrote to match what it could reach.
 15. **Tuple predicate.** All **ten** adequacy clauses are gone from `pipeline.py` — the nine Phase 4 owns plus
     Phase 2's derived one — replaced by projection satisfaction, with `HEALING_RULE_CHAMPIONS` carried by a
     `ChampionSlotOwner` capability, `target_threshold_health_heal` (and its mirror at `damage.py:9955`)
     expressed as a declared adequacy condition, and stat-derived adequacy expressed as `requires_fields`; the
     derivation landed beside the legacy predicate with an asserted zero delta before the one-symbol flip.
 16. **Fallback fully accounted.** The rung histogram accounts for 100% of evaluations in all four bench
-    scenarios; every `damage_modifier` holder reports `RECEIPT_WALK` with a named receipt; no criterion in this
-    phase asserts a compiled amp under the umbrella's recorded H5 disposition — and if the umbrella records no
-    disposition this criterion is not dischargeable and the phase does not exit; `SearchPoisoned` appears only
-    for genuine invariant errors, never for a declared roster mechanic.
+    scenarios; `SearchPoisoned` appears only for genuine invariant errors, never for a declared roster
+    mechanic — which requires the ladder to have a production path at all, so every member of `program/rung`'s
+    union is constructed in `src/` and every histogram key is `counter_label` of a decision rather than a
+    label chosen beside one.
+
+    The amp clause is **read in two stages, and the umbrella says which**. Its H5 row records the disposition
+    verbatim: *"Phase 4's criterion 16 is read under this scoped ruling — through S7 it reads exactly as
+    written, no criterion of that phase asserting a compiled amp and every `damage_modifier` holder reporting
+    `RECEIPT_WALK` with a named receipt, and it is re-read against the compiled lane only **once the new
+    stage's flip lands**, on the evidence of that stage's equivalence fixture rather than on this ruling
+    alone."* That flip landed at stage `P4-S7H5`, whose own wall row and
+    `docs/receipts/expected-golden-diff-P4-S7H5-kernel.json` record it, so **the second reading is the live
+    one**: a `damage_modifier` the H5-extended kernel represents compiles, on the evidence of that stage's
+    equivalence fixture, and a `damage_modifier` it still cannot represent reports `RECEIPT_WALK` **with a
+    named receipt** — the reason being a receipt rather than a log line is the half that does not move
+    between the two readings. Restating it here is executing the umbrella's own instruction, not writing a
+    descope: this document may not author an H5 disposition and does not, and if the umbrella had recorded
+    none the criterion would still be undischargeable and the phase would not exit.
 17. **Performance neutrality.** Pure stages are identical on all four counter families, the residual, the winner
     and the score; wall best-of-3 isolated stays within +10% of **that stage's own declared baseline** in
     `campaign-fingerprints.json`; S4's `allocation_probe` peak stays within its 15% margin — and if S4 cannot
