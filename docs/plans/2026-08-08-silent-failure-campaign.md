@@ -173,6 +173,30 @@ list.
 | D-25 | `ProjectionStarvation(field, producer, reason)` is raised lazily on first read of an inadequate representation. **Exactly one catch exists**, at the request boundary in `src/app.py`, converting it to a 500 carrying the `STARVED` receipt; a source assertion allowlists that single handler and forbids every other. *Why: it means a projection and a consumer disagree — a programming error, not a data condition — but "never caught" makes a reachable one an unhandled traceback rather than a named refusal.* |
 | D-26 | Fail-closed branches no real item reaches are proven three ways: the rule is checked on an empty registry, a synthetic fixture exercises each branch, and emptiness itself is a pinned number. *Why: zero ordinary-SR items are ineligible today, so silence would otherwise pass for coverage.* |
 
+> **Amendment G — 2026-08-14, D-25's one catch names a class.** The commit that joined the write-once
+> `OutcomeLedger` to the receipt walk gave three `RuntimeError` subclasses a path to every serving
+> request — `OutcomeRewritten` at two sites, `DuplicateApplied`, and `UnwrittenAdjustment` beside them
+> — and D-25's boundary names `ProjectionStarvation` alone. So a condition that used to resolve
+> silently as last-write-wins became a **bare 500 with no receipt, no disposition and no named field**:
+> the campaign's own failure shape, created by the commit that removed the campaign's own failure
+> shape, and filed as such at `docs/receipts/escalated-defects-ledger-join.json`. Two readings of D-25
+> were available and an implementation lane could take neither, because one widens a rule stated in the
+> singular and the other absorbs a raise that exists to refuse the last write.
+> **Ruling: D-25's "exactly one catch" is a rule about *where*, and never a count of the exception
+> types that one handler names.** Its load-bearing half is that a named refusal is converted in one
+> place and absorbed in none, and that half is untouched. The disposition is `STARVED` and **the
+> invariant table owes no fifth spelling**: `STARVED` is *a projection could not answer the question a
+> rule asked — a programming error*, and a ledger holding two answers for one question, or two applied
+> contributions for one `(mechanic, subject, event_id)`, is a record that cannot answer either. The
+> leaf has no value a rule computed, which is the whole of what the word means. Structurally, the
+> class is named rather than enumerated at the catch: `ProjectionStarvation`'s base is the class of
+> programming errors that surface as a `STARVED` leaf on a request, every member carries `field`,
+> `producer` and `reason`, the ledger's raises join it, and the one request-boundary handler converts
+> the base. The source assertion that allowlists exactly one handler and forbids every other is
+> unchanged in force and now ranges over the class. **What stays forbidden**: catching any member
+> anywhere else, and any handler that returns a served payload — the conversion is a 500 carrying the
+> `STARVED` receipt, so a contested number is refused by name and never quietly re-answered.
+
 ### D-30 … D-38 — trigger scope ([Phase 2](phase-2-trigger-bus.md))
 
 | # | Ruling |
@@ -408,6 +432,63 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    table's propagation row; an undeclared zero produced from an empty stream raises rather than serializes,
    proven by a negative test per fail-closed branch and by the frontier's emptiness being a pinned number.
    *No part of this criterion is discharged by an offline audit over a hand-maintained path list.*
+
+   > **Amendment E — 2026-08-14, how a disposition transition is adjudicated.** This criterion's
+   > emission clause stood open for one reason, and it was not effort.
+   > `docs/receipts/escalated-defects-P4-S9.json` measured the change that closes it — the receipt view
+   > publishing a refused transition's outcome fields as `StructuralZero` carrying the walk's own
+   > refusal, in place of a `Measured` zero — and found every occurrence classified `text_change` by
+   > R-15, which R-19 then sends to an investigator R-18's export cannot brief: `data/` and
+   > `docs/math-foundations.md` hold no cached wiki text and no formula that decides whether a zero the
+   > walk refused is `MEASURED` or `STRUCTURAL_ZERO`. That is a question about *this document's own*
+   > vocabulary — the four spellings in the invariant table above — and the export exists to keep
+   > exactly that out of an investigator's hands. The runbook's R-15 amendment of 2026-08-14
+   > adjudicates by citation only a **membership** transition and says in its own words that it does
+   > not reach a disposition string, so the shape has no rule and the slice had no legal landing.
+   > **Ruling: a disposition transition is adjudicated by citation, not by verdict.** A disposition
+   > transition is a diff on an entry of a payload's parallel `dispositions` map — the `disposition` or
+   > `view_tag` string, or the `reason` / `receipts` key that arrives beside it — and its allowlist
+   > entry names the ruling that moved it, which is then the receipt. No oracle receipt is owed on one,
+   > and one may not be filed as though the question were a value question. Three guards bound it, and
+   > the third is this amendment's own contribution rather than a copy of the membership rule's:
+   >
+   > 1. The diff must be on a `dispositions` entry **as the identity-keyed `leaf_report` classifies
+   >    it**, so a payload value that moved cannot be re-spelled as a change of vocabulary.
+   > 2. The cited ruling must be one a reader can open — a decision id, or a committed slice receipt
+   >    naming the declared change — never "ruled elsewhere". D-72 names the single writer and the
+   >    invariant table names the four spellings; a citation naming neither names nothing.
+   > 3. **The leaf the entry describes may not move.** An allowlist claiming a disposition transition
+   >    states, path by path in that same allowlist, that the described leaf's own published value is
+   >    identical on both sides. A number that moved is a value question, owes its investigator under
+   >    R-19, and no citation reaches it. This guard is the whole difference between a rule and a
+   >    loophole: the only thing citation can ever excuse here is a change in what the payload *says
+   >    about* a number that did not change.
+   >
+   > Consequences, stated so that no lane has to infer them. The emission slice lands as one commit
+   > against the committed coupled baseline plus its committed allowlist (R-17), owing no oracle
+   > receipt and moving no baseline. `docs/receipts/rulings-owed.json`'s first row closes naming this
+   > amendment. And criterion 7's Amendment B exit clause stops being *blocked* by this question —
+   > which is not the same as being discharged by it, and Amendment F below is where that debt is
+   > answered.
+   >
+   > **Amendment I — 2026-08-14, this criterion's frontend change budget.** The clause
+   > "`static/js/app.js` takes exactly one budgeted change at S9" is false and was false unremarked:
+   > three commits in the campaign range touch that file — `bf4a6d3`, `44331c7` (the withheld-marker
+   > helper this clause names) and `f25dcfa` (a row-classification refactor) — and nothing counted
+   > them until the closing pass did. Two ways out were available and a lane could take neither:
+   > amending a criterion is not a lane's to do, and reverting shipped, tested rendering behaviour so
+   > that a budget sentence comes true is the sentence-over-code ordering this whole campaign exists
+   > to invert. **Ruling: the clause is amended to what shipped, and gains the property it was
+   > reaching for.** What the budget was protecting is that the frontend does not quietly acquire a
+   > rewrite under cover of a payload change — not the integer one. So the clause now reads: *every
+   > commit in the campaign range touching `static/js/app.js` is named here with its reason, and a
+   > commit that is not named is a budget overrun.* The three are named above, each with its
+   > reason: `bf4a6d3` reads the `dispositions` map the same stage began publishing, `44331c7` is the
+   > withheld-marker rendering helper this clause names, and `f25dcfa` gives "which row is an enemy"
+   > one home in the script in place of three re-derivations. All three are S9's, and all three serve
+   > the one property the clause protects. A fourth arriving unnamed is what this now catches, which
+   > the integer never did.
+
 2. **The incident cannot recur silently.** Renaming the pair-engine effect accessor, deleting the pair-side
    pricer, removing the Command packet's source literal, dropping its `owner=`, or emptying its trigger
    stream each turns the suite red — as permanent mutation tests, not a one-time demonstration. The first
@@ -433,6 +514,27 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    so both a *correct* restated figure (value match) and a *wrong* one (unmarked proximity) fail on
    the commit that adds it, with a committed collision allowlist absorbing legitimate coincidences; and the integration agent's scan of `docs/receipts/` and the commit bodies over the
    range at every barrier, the same over-the-range check the runbook's criterion 10 already runs.
+
+   > **Amendment H — 2026-08-14, a leaf's own adjudicating receipt.** The non-plan half of this
+   > criterion stands measured and unmet, at eleven forced restatements across six sources
+   > (`docs/receipts/golden-figure-sole-home.json`, gated by `scripts/sole_home_scan.py --check`), and
+   > every one of them is forced by another rule of this campaign rather than by anybody's
+   > carelessness: R-19 makes an oracle receipt state the two values of the leaf it adjudicates, R-17
+   > makes an allowlist state the expected old and new value of every path it claims, and R-34 makes a
+   > baseline-move commit give one line of cause per moved value. The `/metadata/fingerprint/*` leaves
+   > are themselves leaves of the snapshot, so a receipt adjudicating one **cannot** be written without
+   > quoting it, and seven of the eleven are in commit bodies, which are history no edit reaches.
+   > **Ruling: this criterion carves out a leaf's own adjudicating receipt**, on three conditions that
+   > together keep the carve-out from becoming a second home. The restatement must sit inside an
+   > artifact adjudicating **that exact leaf** — an oracle receipt, an R-17 allowlist entry, or the
+   > body of the commit that moved it; it must name the leaf **by its path**, so a reader reaches the
+   > receipt rather than a figure; and it must agree with the committed receipt, or declare, in the
+   > same artifact, the entry it supersedes. What is carved out is a *quotation at its address*, which
+   > is the opposite of a second home: a second home is a figure a reader cannot trace, and that is
+   > what the retired one was. Everything else the criterion forbids stays forbidden, and the
+   > distinction is not left to a reader — `sole_home_scan.py --check` holds the residue at zero
+   > unexplained sites, fails on a twelfth, and fails on a row that outlives the site it explains.
+
 5. **Every gate means what it says.** All eleven rows of R-01 in the
    [runbook](silent-failure-runbook.md) are green at every phase boundary; zero pair-engine golden diffs
    outside a slice that declared them in advance with an oracle receipt per qualifying occurrence.
@@ -479,6 +581,29 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > gate. Counter 4's Phase-3 exit target is **0 net of those recorded deferral rows**, and Phase 4's
    > exit re-asserts them retired. Measured on the commit that lands this: **14** deferral rows, all
    > on `RECEIPT_WALK`, all retiring at Phase 4 S3; `PAIR_ENGINE` defers nothing.
+   >
+   > **Amendment F — 2026-08-14, the retiring act Amendment B named does not exist.** Amendment B's
+   > second sentence — *Phase 4's exit re-asserts them retired* — went undischarged at Phase 4's exit,
+   > and the reason is that its first sentence is false against the tree. Amendment B says the rows
+   > are the ones *"only S3's `OutcomeLedger`/end-of-walk projection can retire"*. Measured: a
+   > `(family, RECEIPT_WALK)` row retires when `interpreters.INTERPRETERS` holds that key, and nothing
+   > about projecting a ledger's quantities onto a payload leaf registers one. The retiring act is a
+   > **per-family receipt-walk interpreter** — the walk pricing that family itself instead of
+   > consuming the pair engine's timed rows — which is a behaviour change per family, on the fourteen
+   > families whose numbers `participant_timeline._pair_run_fight` produces today. No phase budgeted
+   > fourteen of those, and a clause resting on a mechanism that cannot perform it is corrected rather
+   > than carried. **Ruling, in H6's shape, and it is a debt restated at its true size and not a
+   > relaxation:** the fourteen rows stand as a dated acknowledged debt. Each names its gap, its
+   > route (`via`, structurally validated — a route to a lane no interpreter serves already fails at
+   > import), its true retiring act, and its blocker; each is `overdue` and says why; the committed
+   > set is diff-gated by set equality; a row that outlives its gap, names a stage the tree does not
+   > declare, or drops its blocker fails the gate. Amendment B's second sentence is superseded by
+   > this one: **Phase 4's exit re-asserts that every row is either retired or carried with a named
+   > retiring act, a named blocker and a machine that refuses a fifteenth** — the three facts a
+   > reader needs to schedule the work, in place of a promise the named stage could not keep. What is
+   > *not* ruled here: that the debt is acceptable. Retiring it is fourteen slices, one per family,
+   > each carrying its own `Expected qualifying occurrences` line, and no phase document may read
+   > this amendment as permission to stop counting them.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty

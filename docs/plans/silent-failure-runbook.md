@@ -169,6 +169,14 @@ R-20's second half — **when `<n>` is not knowable before the edit, declare the
 > an ordinal shift. And the cited ruling must be one a reader can open — a decision id in the
 > umbrella, or a committed slice receipt naming the move — never "ruled elsewhere". A leaf whose
 > citation fails either guard is an ordinary qualifying occurrence and owes its investigator.
+>
+> *A second shape is adjudicated by citation and is ruled elsewhere on purpose: a **disposition
+> transition**, where a `dispositions` entry moves from one campaign spelling to another. It is the
+> [umbrella](2026-08-08-silent-failure-campaign.md)'s Amendment E, recorded there rather than here
+> because the four spellings are the umbrella's own vocabulary and a rule about them belongs with
+> them. It carries a third guard this one does not — the leaf the entry describes may not move —
+> and it does not widen this ruling: a membership transition is still the only value-level shape
+> citation reaches.*
 
 > **Amendment R-18 — 2026-08-14, a brief may carry a certified fact.** The amendment above rules
 > that a series brief carries the sibling facts that did **not** move, read from the committed

@@ -35,6 +35,23 @@ REQUIRED = (
     "consequence_of_leaving_it_open",
 )
 
+#: What a row keeps once it is answered.  A closed row that dropped its
+#: question would leave an amendment standing in the umbrella with nothing
+#: saying what it answered — a conclusion whose question nobody can recover,
+#: which is the shape this campaign exists to remove.
+REQUIRED_ANSWERED = (
+    "id",
+    "dated",
+    "answered_on",
+    "recorded_in",
+    "amendment",
+    "the_ruling",
+    "blocks",
+    "measurement_artifact",
+    "question",
+    "what_the_ruling_unblocked",
+)
+
 
 def _block() -> dict:
     return json.loads(RULINGS.read_text(encoding="utf-8"))
@@ -42,6 +59,22 @@ def _block() -> dict:
 
 def _owed() -> list[dict]:
     return _block()["owed"]
+
+
+def _answered() -> list[dict]:
+    return _block()["answered"]
+
+
+def _every_row() -> list[dict]:
+    """Owed and answered together — the population the joins range over.
+
+    Parametrizing over ``_owed()`` alone made every join here vanish into an
+    empty parameter set the moment the last row closed: a skip, which R-01
+    row 1 counts, and a gate that stops reading the file it exists to read.
+    A closed row is still joined to its measurement and still may not
+    reappear as an open question, so both checks range over both lists.
+    """
+    return _owed() + _answered()
 
 
 def test_the_artifact_declares_what_it_is_and_what_gates_it() -> None:
@@ -53,39 +86,51 @@ def test_the_artifact_declares_what_it_is_and_what_gates_it() -> None:
 
 
 def test_every_row_is_complete_and_ids_are_unique() -> None:
-    ids = [row["id"] for row in _owed()]
+    ids = [row["id"] for row in _every_row()]
     assert len(ids) == len(set(ids))
     for row in _owed():
         for key in REQUIRED:
             assert row[key].strip(), f"{row['id']} is missing {key}"
+    for row in _answered():
+        for key in REQUIRED_ANSWERED:
+            assert row[key].strip(), f"{row['id']} is missing {key}"
 
 
-@pytest.mark.parametrize("row", _owed(), ids=[row["id"] for row in _owed()])
+@pytest.mark.parametrize("row", _every_row(), ids=[row["id"] for row in _every_row()])
 def test_every_row_points_at_a_measurement_that_exists(row) -> None:
     """A ruling request resting on nothing is an opinion with a filename."""
     path, _, _rest = row["measurement_artifact"].partition(",")
     assert (ROOT / path.strip()).exists(), row["id"]
 
 
-@pytest.mark.parametrize("row", _owed(), ids=[row["id"] for row in _owed()])
-def test_every_row_names_what_a_lane_may_not_do_instead(row) -> None:
-    """The half that keeps 'blocked on a ruling' from being a resting place."""
-    forbidden = row["what_a_lane_may_not_do_instead"]
-    assert len(forbidden.split()) >= 8, row["id"]
-    assert forbidden != row["why_no_lane_may_answer_it"]
+def test_every_row_names_what_a_lane_may_not_do_instead() -> None:
+    """The half that keeps 'blocked on a ruling' from being a resting place.
 
-
-def test_an_answered_row_would_have_to_name_its_amendment() -> None:
-    """The closure rule, asserted on whatever answered[] holds.
-
-    Empty today.  Written now rather than when the first row closes, because
-    a closure rule authored by the commit that first needs it is a rule that
-    was fitted to one case.
+    A loop rather than a parametrization, because ``owed`` is empty whenever
+    the campaign owes itself nothing and an empty parameter set is a *skip* —
+    which R-01 row 1 counts, and which would turn a closed ledger into an
+    unread one on the commit that closes it.
     """
-    for row in _block()["answered"]:
-        assert row["id"] in {owed["id"] for owed in _owed()} or row["id"]
-        assert row["recorded_in"] == "docs/plans/2026-08-08-silent-failure-campaign.md"
-        assert row["amendment"] in UMBRELLA.read_text(encoding="utf-8")
+    for row in _owed():
+        forbidden = row["what_a_lane_may_not_do_instead"]
+        assert len(forbidden.split()) >= 8, row["id"]
+        assert forbidden != row["why_no_lane_may_answer_it"]
+
+
+@pytest.mark.parametrize("row", _answered(), ids=[row["id"] for row in _answered()])
+def test_an_answered_row_names_its_amendment_and_what_it_unblocked(row) -> None:
+    """The closure rule: a row closes by a ruling somebody can open.
+
+    Two halves, and the second is the one that keeps a closure honest.  The
+    amendment must be findable in the umbrella verbatim, so "recorded" is a
+    fact rather than a claim; and the row must say what the ruling
+    *unblocked*, so a ruling that changed nothing is visible as one rather
+    than reading like progress.
+    """
+    assert row["recorded_in"] == "docs/plans/2026-08-08-silent-failure-campaign.md"
+    assert row["amendment"] in UMBRELLA.read_text(encoding="utf-8")
+    assert row["id"] not in {open_row["id"] for open_row in _owed()}
+    assert len(row["what_the_ruling_unblocked"].split()) >= 8
 
 
 def test_no_owed_row_claims_to_be_recorded_in_the_umbrella_already() -> None:

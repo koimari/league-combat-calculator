@@ -1,50 +1,59 @@
 {
  "artifact": "rulings_owed",
- "rule": "Four open clauses of the campaign's success criteria are blocked on a ruling no implementation lane may write, and that fact was scattered across a report section, three escalation ledgers and a verify-ledger note. Scattered, it reads as four lanes each explaining why it stopped. Collected, it is one list with a length: these are the decisions the campaign owes itself, and nothing below closes by anybody trying harder. Every row names the criterion it blocks, the artifact carrying the measurement, the question in one sentence, and what a lane may NOT do instead -- because the second half is what keeps 'blocked on a ruling' from becoming the place work goes to stop.",
+ "rule": "Four open clauses of the campaign's success criteria were blocked on a ruling no implementation lane may write, and that fact was scattered across a report section, three escalation ledgers and a verify-ledger note. Scattered, it reads as four lanes each explaining why it stopped. Collected, it is one list with a length: these are the decisions the campaign owed itself, and nothing below closed by anybody trying harder. Every row names the criterion it blocked, the artifact carrying the measurement, the question in one sentence, and what a lane may NOT do instead -- because the second half is what keeps 'blocked on a ruling' from becoming the place work goes to stop. All four were answered on 2026-08-14 by dated amendments in the umbrella; the rows moved to answered[] rather than being deleted, so the question, its measurement and its answer stay joined.",
  "gate": "tests/test_rulings_owed.py",
  "how_a_row_closes": "The ruling is recorded in docs/plans/2026-08-08-silent-failure-campaign.md -- in the [H] table, in a decision row, or as a dated amendment, which is where Amendments A through D already live -- and the row moves to answered[] naming the amendment. A row does NOT close by a lane deciding the question is smaller than it looked, and it does not close by the criterion being re-read more weakly: umbrella criterion 11's own words are that a phase document may not write its own descope.",
  "why_a_lane_may_not_write_these": "Umbrella criterion 11: every [H] is either answered and recorded in the umbrella or its dependent slice is explicitly descoped there with its criterion restated -- a phase document may not write its own descope. The same reasoning reaches a success criterion an implementation would have to reinterpret to satisfy. Amendments A, B, C and D are the precedent: each was measured by a lane, refused by that lane, and recorded in the umbrella by its owner.",
- "owed": [
+ "owed": [],
+ "answered": [
   {
    "id": "how_a_disposition_text_change_is_adjudicated",
    "dated": "2026-08-14",
+   "answered_on": "2026-08-14",
+   "recorded_in": "docs/plans/2026-08-08-silent-failure-campaign.md",
+   "amendment": "Amendment E — 2026-08-14, how a disposition transition is adjudicated",
+   "the_ruling": "A disposition transition is adjudicated BY CITATION, not by verdict, under three guards: the diff must be on a dispositions entry as the identity-keyed leaf_report classifies it; the cited ruling must be one a reader can open; and the leaf the entry describes may not move. The third guard is this amendment's own contribution -- citation can only ever excuse a change in what a payload SAYS ABOUT a number that did not change.",
    "blocks": "umbrella criterion 1's emission clause, and umbrella criterion 7's Amendment B exit clause behind it",
    "measurement_artifact": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition",
    "question": "When publishing a refused row's outcome as STRUCTURAL_ZERO turns a disposition string from one campaign spelling into another, R-15 classifies the diff as a text_change and R-19 sends every qualifying one to an oracle -- but R-18's export is exactly data/ and docs/math-foundations.md, so no investigator can be briefed on a question about this campaign's own disposition vocabulary. Is such a leaf adjudicated by citation, the way the 2026-08-14 R-15 amendment adjudicates a membership transition that is the ruled consequence of a declared change, or does the emission need a different landing shape entirely?",
-   "why_no_lane_may_answer_it": "Both ways out edit a rule the lane is bound by. Landing the emission anyway means either re-capturing a baseline over unanswered qualifying occurrences, which R-19's last sentence forbids, or filing receipts on a question no investigator was given the evidence to answer, which the R-15/R-18 amendment's clause 3 made unwritable.",
-   "what_a_lane_may_not_do_instead": "Widen R-18's export to include src/ or the committed baselines. That is the one widening every dissent cluster has suggested and the amendment refused twice: an oracle that has read the fix is not an oracle.",
-   "consequence_of_leaving_it_open": "Every disposition every production path emits stays MEASURED, and counter 4's fourteen RECEIPT_WALK deferral rows stay overdue -- they retire through the projection this ruling unblocks, and scripts/behavior_frontier.py now declares them overdue with this blocker rather than on schedule."
-  },
-  {
-   "id": "whether_a_leafs_own_adjudicating_receipt_may_state_that_leafs_value",
-   "dated": "2026-08-14",
-   "blocks": "umbrella criterion 4's non-plan half, and runbook criterion 2's sole-home conjunct",
-   "measurement_artifact": "docs/receipts/golden-figure-sole-home.json, gated by scripts/sole_home_scan.py --check",
-   "question": "Criterion 4 says no receipt or commit body states a golden shape count of a committed baseline. The fingerprint counters are themselves leaves of the snapshot, so R-19 forces an oracle receipt adjudicating one to state it, R-17 forces an allowlist claiming one to state both sides, and R-34 forces a baseline-move commit to give a line of cause per moved value. Does criterion 4 carve out a leaf's own adjudicating receipt, or does the snapshot shape change so the counters are not compared leaves at all?",
-   "why_no_lane_may_answer_it": "Seven of the eleven forced restatements are in commit bodies, which are history: no edit reaches them, and rewriting the campaign's commits to satisfy a criterion would destroy the evidence chain the criterion is part of. The other four are in a committed allowlist and two oracle receipts, and the R-15/R-18 amendment forbids editing a filed receipt.",
-   "what_a_lane_may_not_do_instead": "Read the criterion as satisfied by the plans check alone. Its own words bind receipts and commit bodies, and the runbook's criterion 2 repeats the sole-home conjunct outside the plans.",
-   "consequence_of_leaving_it_open": "The residue stands at eleven rows across six sources. It is pinned rather than growing: sole_home_scan.py --check fails on a twelfth site and on a row that outlives its site."
+   "what_the_ruling_unblocked": "The emission slice: the receipt view publishes a refused transition's outcome fields as StructuralZero carrying the walk's own refusal, landing against the committed coupled baseline plus one committed allowlist under R-17, owing no oracle receipt. Umbrella criterion 1's emission clause."
   },
   {
    "id": "whether_d25s_single_catch_names_one_exception_or_a_class",
    "dated": "2026-08-14",
+   "answered_on": "2026-08-14",
+   "recorded_in": "docs/plans/2026-08-08-silent-failure-campaign.md",
+   "amendment": "Amendment G — 2026-08-14, D-25's one catch names a class",
+   "the_ruling": "D-25's “exactly one catch” is a rule about WHERE, never a count of the exception types that one handler names. The write-once ledger's raises are STARVED -- a record holding two answers for one question cannot answer either -- so the invariant table owes no fifth spelling. ProjectionStarvation's base is that class, the ledger's raises join it, the one boundary converts the base, and the source assertion allowlisting exactly one handler is unchanged in force.",
    "blocks": "nothing yet -- it is a live operational risk rather than an unmet criterion",
    "measurement_artifact": "docs/receipts/escalated-defects-ledger-join.json, gated by tests/test_escalated_defects_ledger_join.py",
    "question": "Since the ledger join, OutcomeRewritten and DuplicateApplied are reachable on /api/calculate, /api/bis and /api/optimize, and the request boundary names only ProjectionStarvation. Does D-25's 'exactly one catch' name that exception specifically, or the class of programming errors a projection or a ledger raises on a request? If the class, does STARVED cover a rewritten outcome or does the invariant table owe a fifth spelling?",
-   "why_no_lane_may_answer_it": "Widening the boundary adds a second member to a rule D-25 states in the singular and a source assertion enforces. Absorbing the raise restores the last-write-wins the join was landed to replace.",
-   "what_a_lane_may_not_do_instead": "Catch the raise anywhere else. D-25's source assertion allowlists exactly one handler and forbids every other, and an absorbed OutcomeRewritten is the silent last write with an extra step.",
-   "consequence_of_leaving_it_open": "A request that trips the rule returns a bare 500 with no disposition and no receipt. The reachable set is bounded today by the committed corpus, the acceptance matrix and the 173-champion matrix; nothing bounds rosters outside them."
+   "what_the_ruling_unblocked": "The boundary slice: the class of programming errors that surface as a STARVED leaf gets a name, the ledger's write-once raises join it, and the one request-boundary handler converts the base -- so a contested number is a named 500 carrying a receipt instead of a bare one."
+  },
+  {
+   "id": "whether_a_leafs_own_adjudicating_receipt_may_state_that_leafs_value",
+   "dated": "2026-08-14",
+   "answered_on": "2026-08-14",
+   "recorded_in": "docs/plans/2026-08-08-silent-failure-campaign.md",
+   "amendment": "Amendment H — 2026-08-14, a leaf's own adjudicating receipt",
+   "the_ruling": "Criterion 4 carves out a leaf's own adjudicating receipt on three conditions: the restatement sits inside an artifact adjudicating that exact leaf, it names the leaf by its path, and it agrees with the committed receipt or declares in the same artifact what it supersedes. A quotation at its address is the opposite of a second home; a second home is a figure a reader cannot trace.",
+   "blocks": "umbrella criterion 4's non-plan half, and runbook criterion 2's sole-home conjunct",
+   "measurement_artifact": "docs/receipts/golden-figure-sole-home.json, gated by scripts/sole_home_scan.py --check",
+   "question": "Criterion 4 says no receipt or commit body states a golden shape count of a committed baseline. The fingerprint counters are themselves leaves of the snapshot, so R-19 forces an oracle receipt adjudicating one to state it, R-17 forces an allowlist claiming one to state both sides, and R-34 forces a baseline-move commit to give a line of cause per moved value. Does criterion 4 carve out a leaf's own adjudicating receipt, or does the snapshot shape change so the counters are not compared leaves at all?",
+   "what_the_ruling_unblocked": "Nothing to implement -- the residue was already measured and gated. What closes is the criterion: the eleven sites are the carve-out rather than eleven violations, and sole_home_scan.py --check keeps a twelfth from arriving."
   },
   {
    "id": "the_frontend_change_budget_criterion_1_states",
    "dated": "2026-08-14",
+   "answered_on": "2026-08-14",
+   "recorded_in": "docs/plans/2026-08-08-silent-failure-campaign.md",
+   "amendment": "Amendment I — 2026-08-14, this criterion's frontend change budget",
+   "the_ruling": "The clause is amended to what shipped and gains the property the integer was reaching for: every commit in the campaign range touching static/js/app.js is named in the umbrella with its reason, and a commit that is not named is a budget overrun. bf4a6d3, 44331c7 and f25dcfa are named.",
    "blocks": "umbrella criterion 1's second clause",
    "measurement_artifact": "docs/receipts/campaign-close-report.md, gap G10",
    "question": "Criterion 1 says static/js/app.js takes exactly one budgeted change at S9. Three commits in the campaign range touch it -- bf4a6d3 (+26), 44331c7 (+52/-10, the withheld marker the clause names) and f25dcfa (+13/-5, a row-classification refactor). Is the budget clause amended to what shipped, or are the two unbudgeted commits reverted?",
-   "why_no_lane_may_answer_it": "A lane may not amend a criterion, and reverting a shipped refactor to satisfy a budget clause would remove working behaviour to make a sentence true -- which is the sentence-over-code ordering this campaign exists to invert.",
-   "what_a_lane_may_not_do_instead": "Read 'exactly one budgeted change' as 'one change that mattered'. The clause is a budget and three is not one.",
-   "consequence_of_leaving_it_open": "Criterion 1 stays partially discharged on a second clause, independently of the emission half."
+   "what_the_ruling_unblocked": "Nothing to implement, and deliberately so: reverting shipped rendering behaviour to satisfy a budget sentence is the ordering this campaign exists to invert. What closes is the clause, which now names commits instead of counting them."
   }
  ],
- "answered": []
+ "why_the_answered_rows_stay": "A closed row keeps its question, its measurement artifact and what the ruling unblocked. Deleting it would leave the amendment standing in the umbrella with no record of what it was answering, which is the shape -- a conclusion whose question nobody can recover -- this campaign spent four hundred commits removing."
 }
