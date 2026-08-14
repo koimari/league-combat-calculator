@@ -56,6 +56,15 @@ def _state_proto_key(
     unit fixture built, a stub — hashes by identity, and keying on that would
     be ``id()`` wearing a better name, so such a combatant is not memoized at
     all rather than filed under an address.
+
+    **What that costs, stated rather than discovered.**  ``id(combatant)``
+    was one machine word; this key hashes a frozen ``StartingDefenses`` —
+    fifty-five fields — plus four stats, once per participant per
+    evaluation.  It buys a hit rate the address key could not have (two
+    combatants with identical defences now share an entry, and a mutated
+    record moves its key instead of keeping it), and it is paid for on the
+    bench, but "it hits more" is only half the trade and the other half
+    belongs in the docstring rather than in a profile.
     """
     defenses = combatant.defenses
     params = getattr(type(defenses), "__dataclass_params__", None)

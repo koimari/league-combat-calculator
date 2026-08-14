@@ -181,6 +181,22 @@ def _record_key(item_data: Mapping[str, Any]) -> tuple[int, int] | None:
     ``None`` is a refusal to cache rather than a shared bucket: a synthetic
     fixture declares no id, and filing every such fixture under one key would
     serve one test's stats to another.
+
+    Two costs the value key trades for correctness, named here because they
+    are the kind a benchmark notices and a reader does not.
+
+    * **A refusal is total.**  ``None`` skips *both* memos this key gates —
+      the extracted stats and the schema verdict — so a record declaring no
+      id re-walks its whole stat map on every call rather than hitting
+      ``_ITEM_STATS_VALIDATION_MEMO``.  Under the retired ``id()`` key it hit
+      both.  Every such record is a fixture: ``data/items.json``'s 324 rows
+      all carry an int id.
+    * **Two records sharing one id thrash.**  Identity-keying gave each its
+      own entry; a value key gives them one, and the ``memo[0] is item_data``
+      guard makes every call a miss whose write overwrites the other's entry
+      — so the pair loses caching entirely rather than merely serving each
+      other stale stats.  Correct, and worse than the address key was, for a
+      shape ``data/`` cannot produce and a fixture can.
     """
     item_id = item_data.get("id")
     if not isinstance(item_id, int) or isinstance(item_id, bool):

@@ -187,9 +187,30 @@ def published_quantity(
         raise UnrankableNumber(surface, "a number no entry names", [path]) from None
     disposition = entry.get("disposition")
     if disposition == Disposition.WITHHELD.value:
-        return Withheld(receipts=tuple(entry.get("receipts") or ()))
+        receipts = tuple(entry.get("receipts") or ())
+        if not receipts:
+            # ``Withheld`` refuses a receiptless refusal at construction, and
+            # that raise is a bare ``ValueError`` from the vocabulary leaf.
+            # A surface that promises to refuse a malformed payload has to
+            # refuse it in its *own* words, or one class of malformed entry
+            # leaves by a door no caller of this function is watching.
+            # Unreachable from a ``serialize_leaf`` payload -- it always
+            # writes the receipts -- which is exactly why it is caught here
+            # rather than trusted.
+            raise UnrankableNumber(
+                surface, "a withheld entry carrying no receipt", [path]
+            )
+        return Withheld(receipts=receipts)
     if disposition == Disposition.STRUCTURAL_ZERO.value:
-        return StructuralZero(reason=str(entry.get("reason") or ""))
+        reason = str(entry.get("reason") or "")
+        if not reason.strip():
+            # The same door, one disposition over: a declared zero with no
+            # declaration is an ordinary zero, and ``StructuralZero`` says so
+            # with a ``ValueError`` this surface would otherwise pass on.
+            raise UnrankableNumber(
+                surface, "a structural zero carrying no reason", [path]
+            )
+        return StructuralZero(reason=reason)
     if disposition != Disposition.MEASURED.value:
         raise UnrankableNumber(
             surface, f"a {disposition!r} disposition no payload may carry", [path]

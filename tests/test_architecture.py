@@ -42,11 +42,17 @@ class FrontierEntry:
 # frontier the measuring tool owns can be driven to zero by editing the tool.
 #
 # It is pinned by **set equality**, so it shrinks by edit and never silently
-# grows.  It has shrunk once already: the same derivation reports ten members
-# against the pre-campaign tree and six against this one, because Phase 0's
-# and Phase 2's new suites import `survival/{accumulate, actions, compile,
-# transitions}` directly.  That is the frontier working, and it is why the
-# ten is not written down anywhere as a target.
+# grows.  It has shrunk twice.  The same derivation reports ten members
+# against the pre-campaign tree and six after Phase 0's and Phase 2's new
+# suites imported `survival/{accumulate, actions, compile, transitions}`
+# directly; S10's score-ledger front door took the sixth, leaving the **four**
+# below.  That is the frontier working, and it is why neither the ten nor the
+# six is written down anywhere as a target.
+#
+# The count above is a fact about the dict beneath it, so it is asserted
+# rather than described -- `test_the_frontier_comment_counts_its_own_members`
+# below.  A comment that outran its own table is the shape this campaign is
+# about, and a frontier's own file is the worst place to leave one.
 FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     "application_errors": FrontierEntry(
         owning_phase="none — pre-campaign debt",
@@ -141,6 +147,34 @@ def test_every_frontier_entry_carries_a_reason_and_an_owner() -> None:
     for module, entry in FRONT_DOOR_FRONTIER.items():
         assert entry.reason.strip(), module
         assert entry.owning_phase.strip(), module
+
+
+def test_the_frontier_comment_counts_its_own_members() -> None:
+    """The prose above the table is a claim about the table, so it is read.
+
+    S10 closed the score ledger's front door, wrote a careful departure
+    comment for the member it removed, and left the sentence above the dict
+    saying six -- prose outrunning its own table, in the file whose subject
+    is prose outrunning code.  The number is now resolved out of the source
+    text and compared against ``len``, so the sentence cannot drift again
+    without this failing.
+    """
+    words = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+    }
+    source = Path(__file__).read_text(encoding="utf-8")
+    claim = re.search(r"leaving the \*\*(\w+)\*\*", source)
+    assert claim is not None, "the comment no longer states a count"
+    assert words[claim.group(1)] == len(FRONT_DOOR_FRONTIER)
 
 
 def scanned_sources() -> dict[str, str]:

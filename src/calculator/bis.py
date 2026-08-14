@@ -423,6 +423,12 @@ def bis_objective_score(
         ``.get(..., 0.0)`` above it reads a zero no rule computed; taking the
         quantity from the entry is what makes the fold propagate the refusal
         instead of ranking the candidate on it.
+
+        Two raise sites now, and Python evaluates arguments left to right, so
+        a path with no ``dispositions`` entry fails inside the *quantity*
+        read rather than the tag read.  Same ``UnrankableNumber`` and the
+        same message; different origin, which is worth a sentence for
+        anything reading the traceback.
         """
         return Tagged(
             published_quantity(dispositions, path, value, surface=BIS_SURFACE),
