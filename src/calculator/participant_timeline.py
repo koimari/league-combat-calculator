@@ -605,57 +605,6 @@ def _without_pair_previews(
     }
 
 
-def _packet_typed_actions(
-    packet: dict[str, Any], index_of: Mapping[str, int]
-) -> dict[int, SurvivalAction]:
-    """The packet's events and heals as typed actions, compiled once.
-
-    Issue #169: a cached pair packet serves every evaluation of a search,
-    so its typed-action conversion happens here once and rides the packet
-    (like the precomputed ``_sk`` sort keys) instead of being re-derived
-    from the event dicts on every walk.  The map is keyed by template
-    identity; consumers pair each cached action with that template's
-    per-evaluation copy via ``_replace(event=...)``, which reproduces the
-    per-event conversion exactly while the copy's contents are unchanged —
-    and every composition step that changes an action-relevant field
-    replaces the dict, which makes the lookup miss and the conversion run
-    fresh.  The participant-index token is re-verified on every use (the
-    ``resolve_damage_effects`` pattern), so a different roster order can
-    never serve stale indices.
-    """
-    token = tuple(index_of.items())
-    cached = packet.get("_typed")
-    if cached is not None and cached[0] == token:
-        return cached[1]
-    by_template: dict[int, SurvivalAction] = {}
-    for template in packet["events"]:
-        subject_id = str(template.get("target", ""))
-        subject = index_of.get(subject_id)
-        if subject is None:
-            continue
-        by_template[id(template)] = action_from_event(
-            template,
-            TransitionRank.DAMAGE,
-            subject,
-            index_of,
-            subject_id=subject_id,
-        )._replace(event=None)
-    for template in packet["heals"]:
-        subject_id = str(template.get("attacker", ""))
-        subject = index_of.get(subject_id)
-        if subject is None:
-            continue
-        by_template[id(template)] = action_from_event(
-            template,
-            TransitionRank.RECOVERY,
-            subject,
-            index_of,
-            subject_id=subject_id,
-        )._replace(event=None)
-    packet["_typed"] = (token, by_template)
-    return by_template
-
-
 def _regeneration_windows(
     combatants: Sequence[Combatant],
 ) -> tuple[RegenerationWindow | None, ...]:
@@ -1839,7 +1788,6 @@ def _simulate_survival(
     duration: float,
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
-    typed_actions: Mapping[int, SurvivalAction] | None = None,
 ) -> "WalkResult":
     """Resolve damage, shields, healing, and death for every participant.
 
@@ -1857,10 +1805,6 @@ def _simulate_survival(
     ``receipt_events`` is an optional outgoing ledger used only by receipt
     callers; when supplied, stateful redirect/deferred clones are mirrored
     beside their source packet without changing score-only inputs.
-    ``typed_actions`` maps an event dict's identity to its packet-compiled
-    :class:`SurvivalAction` (issue #169); a hit pairs the cached action
-    with the live dict instead of re-deriving every typed field, and any
-    event the expansion replaced or authored converts fresh.
     """
     combatant_list = list(combatants)
     combatant_by_id = {
@@ -1898,16 +1842,10 @@ def _simulate_survival(
     expanded_incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     expanded_healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     redirect_children: dict[str, dict[str, Any]] = {}
-    typed_lookup = dict(typed_actions) if typed_actions else None
     for participant_id, events in healing.items():
         bucket = expanded_healing[participant_id]
         for event in events:
-            clone = dict(event)
-            if typed_lookup is not None:
-                cached_action = typed_lookup.get(id(event))
-                if cached_action is not None:
-                    typed_lookup[id(clone)] = cached_action
-            bucket.append(clone)
+            bucket.append(dict(event))
 
     def _insert_receipt_clone(
         source_event: dict[str, Any], clone: dict[str, Any]
@@ -2392,18 +2330,13 @@ def _simulate_survival(
     # Damage resolves before self-healing and sourced recovery at the same
     # timestamp, while shields remain before damage above. Reactive
     # strike-back damage (Thorns) resolves after the strikes that
-    # triggered it but still before same-timestamp healing.  Pair packets
-    # carry their precomputed key (``_sk``) and their typed actions
-    # (issue #169) — a cached conversion pairs with the live dict here;
-    # events authored outside a packet (thorns strike-backs, redirect and
-    # deferred clones, revive candidates) convert fresh.
+    # triggered it but still before same-timestamp healing.  Every event
+    # converts here, once: the packet-side typed-action map that used to
+    # pre-convert a cached packet's rows was keyed on ``id(template)`` and
+    # is gone with the rest of Phase 4's deletion frontier.
     for participant_id, events in incoming.items():
         subject = index_of[participant_id]
         for event in events:
-            cached = typed_lookup.get(id(event)) if typed_lookup is not None else None
-            if cached is not None:
-                actions.append(cached._replace(event=event))
-                continue
             phase = (
                 TransitionRank.REACTIVE
                 if event.get("_reactive")
@@ -2421,10 +2354,6 @@ def _simulate_survival(
     for participant_id, events in healing.items():
         subject = index_of[participant_id]
         for event in events:
-            cached = typed_lookup.get(id(event)) if typed_lookup is not None else None
-            if cached is not None:
-                actions.append(cached._replace(event=event))
-                continue
             actions.append(
                 action_from_event(
                     event,
@@ -3607,11 +3536,6 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         for loadout in allies
     ]
     all_actors = [main, *ally_actors, *enemy_actors]
-    # Cached packets carry their typed actions (issue #169); the copies
-    # composed below map back to them by identity so the survival walk
-    # reuses each conversion instead of re-deriving it per evaluation.
-    index_of = {actor.participant_id: i for i, actor in enumerate(all_actors)}
-    typed_actions: dict[int, SurvivalAction] = {}
     outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -3719,17 +3643,10 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 # so this one only takes copies (the walk mutates its rows).
                 # A single-use packet's rows are appended directly.
                 copy_templates = cacheable and pair_result_cache is not None
-                packet_typed = (
-                    _packet_typed_actions(packet, index_of) if copy_templates else None
-                )
                 attacker_outgoing = outgoing[attacker.participant_id]
                 defender_incoming = incoming[defender.participant_id]
                 for template in packet["events"]:
                     enriched = dict(template) if copy_templates else template
-                    if packet_typed is not None:
-                        cached_action = packet_typed.get(id(template))
-                        if cached_action is not None:
-                            typed_actions[id(enriched)] = cached_action
                     attacker_outgoing.append(enriched)
                     defender_incoming.append(enriched)
                     shield_payload = enriched.get("self_shield")
@@ -3786,12 +3703,9 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         )
                         if duplicate:
                             continue
-                    heal_copy = dict(template) if copy_templates else template
-                    if packet_typed is not None:
-                        cached_action = packet_typed.get(id(template))
-                        if cached_action is not None:
-                            typed_actions[id(heal_copy)] = cached_action
-                    attacker_healing.append(heal_copy)
+                    attacker_healing.append(
+                        dict(template) if copy_templates else template
+                    )
                 if attacker.participant_id not in support_attached:
                     support_templates = packet.get("support")
                     if support_templates is None:
@@ -4017,7 +3931,6 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         params.fight_duration_seconds,
         annotate=include_receipt,
         receipt_events=outgoing if include_receipt else None,
-        typed_actions=typed_actions,
     ).projected(
         grey_health=grey_summary or None,
         timeline_coverage=combine_timeline_coverages(
