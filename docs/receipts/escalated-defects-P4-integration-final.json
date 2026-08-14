@@ -12,7 +12,7 @@
       "what": "R-19 says a baseline does not move while a qualifying occurrence lacks a receipt, and the R-15/R-18 amendment says a dissent clears by supersession and never by revision. Neither is enforced repo-wide. The only machine checks that read adverse verdicts are the two scans in tests/test_escalated_defects_p4_boundary.py, and both are scoped: one keys on that entry's own dissenting_population leaf paths and the other on the oracle-P4B- filename prefix. Every adverse verdict outside those two sets -- Phase 0B's, Phase 3's, Phase 5's, and the one filed at the Phase 4 boundary itself -- is invisible to R-01.",
       "why": "Three receipt schemas address the leaf: a string under leaf_path, a string under leaf, and an object under either carrying path. A scan written against any one of them silently misses the other two, which is why the first enumeration this escalation ran read 64 standing dissents and the corrected one reads 51: every oracle-P4B and oracle-S6S7 dissent IS superseded, by receipts that spell the address under leaf rather than leaf_path. c2b3d88's claim about those two families holds; it held unverifiably, because no gate could read it.",
       "measured": {
-        "oracle_receipts": 550,
+        "oracle_receipts": 552,
         "adverse_verdicts": 81,
         "standing": 51,
         "by_family": {
@@ -23,7 +23,7 @@
           "oracle-P5-resolver": 5,
           "oracle-P5-retire": 17
         },
-        "rule": "An adverse verdict (old_value_correct or both_wrong) is CLEARED when a receipt on the same leaf address carries new_value_correct and is not dated earlier than it. A supersession that predates the dissent it answers does not supersede -- that clause is what puts oracle-P4-integration-final-leaf1 in this list. An undated dissent with any same-leaf new_value_correct receipt is treated as cleared, because nothing orders it; 226 of the 550 receipts carry no date field, and that is the population this rule is weakest over."
+        "rule": "An adverse verdict (old_value_correct or both_wrong) is CLEARED when a receipt on the same leaf address carries new_value_correct and is not dated earlier than it. A supersession that predates the dissent it answers does not supersede -- that clause is what puts oracle-P4-integration-final-leaf1 in this list. An undated dissent with any same-leaf new_value_correct receipt is treated as cleared, because nothing orders it; 227 of the 552 receipts carry no date field, and that is the population this rule is weakest over."
       },
       "standing_receipts": [
         "oracle-C2-leaf3.json",

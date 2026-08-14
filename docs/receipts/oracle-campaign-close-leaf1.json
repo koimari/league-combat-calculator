@@ -1,0 +1,99 @@
+{
+  "receipt": "oracle-campaign-close-leaf1",
+  "runbook": "R-18 / R-19 (independent oracle, blind to change under test)",
+  "date": "2026-08-14",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope_disclosure",
+  "old_value": "<absent>",
+  "new_value": "Ahri E declares no reviewed crowd-control scope (H2, deferred with the default shipped), so this mark is delivered to the single defender of the pair fight it was priced in: a claim about one fight, not about the roster.",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-tree",
+    "read_only_scope": "data/**, docs/math-foundations.md",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] \"Command\" -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> in-game mainText (same file)",
+      "quote": "<passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword>"
+    },
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] \"Unmake\" -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/champions.json -> Ahri -> abilities.E[0] \"Charm\" -> effects[0].description",
+      "quote": "Active: Ahri blows forth a kiss in the target direction that deals magic damage to the first enemy hit, knocking them down and charming and slowing them by 65% for a duration."
+    },
+    {
+      "source": "data/champions.json -> Ahri -> abilities.E[0] fields",
+      "quote": "targeting: \"Direction\", affects: \"Enemies\", projectile: \"TRUE\", width: \"120\", speed: \"1550\"; leveling attribute \"Disable Duration\" = 1.2 / 1.35 / 1.5 / 1.65 / 1.8 seconds"
+    },
+    {
+      "source": "data/champions.json -> Ahri -> abilities.E[0].blurb",
+      "quote": "Active: Ahri blows forth a kiss that charms the first enemy hit, dealing magic damage and knocking them down."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 4 (bulleted list, \"Model error\")",
+      "quote": "unmodeled mechanics (champions without named modules, coarse event ordering, vision boundaries such as Pyke's out-of-vision grey-health consume) fail closed or are disclosed; the number is only as good as the reviewed module set."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 3 (local search)",
+      "quote": "the engine never claims a guarantee - the public receipt labels full-build results `local_search` and explicitly *not* \"certified best in slot\"."
+    }
+  ],
+  "independent_computation": {
+    "question": "Is the Imperial Mandate Vulnerable mark triggered by Ahri E roster-scoped (all enemy champions, like the Abyssal Mask curse in the same scenario) or scoped to a single defender?",
+    "steps": [
+      {
+        "step": 1,
+        "claim": "Imperial Mandate's Vulnerable mark is a per-target mark, not an aura.",
+        "derivation": "The cached wiki branch for the \"Command\" passive reads 'Immobilizing an enemy champion marks THEM as Vulnerable for 4 seconds ... Subsequent immobilizes against A TARGET extend the duration.' Both the wiki branch and the in-game mainText use the singular referent bound to the immobilized champion. There is no radius, no `range` value (range: null), and no spread/detonation clause. The mark's cardinality therefore equals the number of enemy champions the triggering immobilize applies to."
+      },
+      {
+        "step": 2,
+        "claim": "Ahri E (Charm) immobilizes exactly one enemy champion per cast.",
+        "derivation": "Ahri E is targeting=\"Direction\", projectile=\"TRUE\", width 120, speed 1550, and its description is explicit: it 'deals magic damage to THE FIRST ENEMY HIT, knocking them down and charming and slowing them by 65% for a duration.' The blurb repeats 'charms the first enemy hit'. A first-enemy-hit collision skillshot stops on the first collision, so max targets = 1. The immobilizing components are the charm and the knockdown (the 65% slow is not an immobilize); the leveling row 'Disable Duration' (1.2 / 1.35 / 1.5 / 1.65 / 1.8 s) confirms a disable, i.e. an immobilizing effect that satisfies Imperial Mandate's trigger."
+      },
+      {
+        "step": 3,
+        "claim": "No other Ahri ability supplies a wider immobilize in this scenario.",
+        "derivation": "Scanning Ahri's full ability set in data/champions.json: P (Essence Theft) is self-heal only; Q (Orb of Deception) deals magic then true damage with no disable; W (Fox-Fire) is damage plus self movement speed with no disable; R (Spirit Rush) is a dash plus up to 3 essence bolts of pure magic damage with no disable. Only E carries a 'Disable Duration'. So Ahri cannot broaden the Mandate mark beyond one champion."
+      },
+      {
+        "step": 4,
+        "claim": "Cardinality result: 1 x Vulnerable mark (7% amp from all sources, 4 s) on the single champion hit by E.",
+        "derivation": "Combining steps 1-3: marks = min(Mandate mark cardinality per trigger = 1 per immobilized champion, Ahri E immobilized champions = 1) = 1. In a pair fight there is exactly one defender, so the mark lands on that defender."
+      },
+      {
+        "step": 5,
+        "claim": "The contrast the disclosure draws against the scenario's roster framing is real and material.",
+        "derivation": "The other coupled item in this scenario, Abyssal Mask, IS roster-scoped by its own text: 'Enemy champions within 700 units of you become cursed ... 12% increased magic damage.' That is an N-target aura. Placing a 1-target 7% Vulnerable mark next to an N-target 12% magic curse inside a scenario literally named `..._curse_roster` invites a reader to generalize the mark to the roster. A scope disclosure attached to the support event is therefore load-bearing, and its absence (the old value) leaves the stronger, unsupported roster reading available."
+      },
+      {
+        "step": 6,
+        "claim": "The 'no reviewed crowd-control scope / deferred with the default shipped' framing is consistent with the documented convention.",
+        "derivation": "docs/math-foundations.md Section 4 states that unmodeled mechanics 'fail closed or are disclosed; the number is only as good as the reviewed module set', and Section 3 shows the same house style of narrowing a published claim to what was actually evaluated rather than asserting a general guarantee. Declaring that the module ships a default rather than a reviewed CC scope, and narrowing the mark's claim to the one fight it was priced in, is exactly the 'disclosed' branch of that rule. The H2 / deferral provenance is process metadata that data/ and docs/math-foundations.md neither confirm nor contradict; nothing in the cached wiki text conflicts with it."
+      }
+    ],
+    "computed_correct_value": "The Vulnerable mark from Imperial Mandate, triggered by Ahri E, applies to exactly one enemy champion - the single first-enemy-hit target, i.e. the lone defender of the pair fight - not to the roster. A disclosure to that effect belongs on this support event, given that the co-priced Abyssal Mask curse in the same scenario IS roster-wide. The shipped disclosure string states precisely this.",
+    "cardinality_check": {
+      "mandate_vulnerable_marks": 1,
+      "mandate_amp": "7% increased damage taken from all sources, 4 s, extended by subsequent immobilizes",
+      "abyssal_curse_targets": "all enemy champions within 700 units (center to edge)",
+      "abyssal_amp": "12% increased magic damage from all sources",
+      "ahri_e_max_targets": 1,
+      "ahri_e_disable_duration_s": [1.2, 1.35, 1.5, 1.65, 1.8]
+    }
+  },
+  "assessment": {
+    "old_value_absent": "Under-disclosed. With a roster-wide Abyssal curse in the same event stream and a roster-named scenario, omitting the scope note leaves the 7% Mandate mark readable as roster-scoped, which the cached item text does not support.",
+    "new_value": "Factually correct on every checkable claim: the mark is single-target (Mandate text), Ahri E hits only the first enemy (Ahri E text and projectile fields), and narrowing the claim to the priced fight matches the documented disclose-or-fail-closed convention. The unverifiable portion (H2 / deferred-default provenance) is process metadata, not a wiki-derived number, and nothing in data/ contradicts it.",
+    "residual_uncertainty": "I could not verify the 'H2' review-item label or the 'deferred with the default shipped' status from data/ or docs/math-foundations.md, since neither carries review provenance. This does not affect the mechanical correctness of the scope claim."
+  },
+  "verdict": "new_value_correct"
+}
