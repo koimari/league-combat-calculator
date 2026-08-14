@@ -32,7 +32,7 @@ that reach *further*, and a module that imports nothing cannot.
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping, MutableMapping
+from collections.abc import Container, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
@@ -43,7 +43,11 @@ __all__ = [
     "LeafBlock",
     "LeafOut",
     "LeafWriter",
+    "RankingWriter",
+    "UnrankableNumber",
     "name_every_number",
+    "published_tag",
+    "refuse_previewed",
     "serialize_leaf",
     "ViewTag",
 ]
@@ -71,6 +75,84 @@ class ViewTag(Enum):
 
     THEORETICAL = "theoretical"
     APPLIED = "applied"
+
+
+class UnrankableNumber(TypeError):
+    """A number the surfaces that pick a winner may not fold into a score.
+
+    D-62's second half — ``THEORETICAL`` is never an optimizer objective and
+    never feeds BIS — as a refusal rather than as a review note.  A preview
+    is what one attacker-versus-one-defender fight *would* have produced;
+    ranking builds by it means ranking by a number no roster delivered, and
+    the failure has no symptom because a preview is a perfectly ordinary
+    ``MEASURED`` float.
+
+    A ``TypeError`` for two reasons.  :class:`~..build.MixedViewFold`'s: the
+    operand is not the right *kind* of number, so its sum is not a wrong
+    total but not a total.  And an operational one — ``bis`` wraps each
+    candidate in ``except (KeyError, ValueError)`` and turns what it catches
+    into a withheld row.  A previewed number is not a bad candidate to drop
+    with a receipt; it is the payload meaning something other than what the
+    ranking assumed, and being swallowed into ``candidate_loadout_
+    unavailable`` would be this rule failing in exactly the shape it exists
+    to stop.
+    """
+
+    def __init__(self, surface: str, reason: str, paths: Sequence[str]) -> None:
+        """Name the surface, what it refused, and the leaves that caused it.
+
+        The message is *assigned* rather than handed to ``TypeError.
+        __init__``, and it is built with an f-string rather than a
+        concatenation.  Both are forced by where this constructor sits: it is
+        reachable from a view, criterion 3 walks that call graph for
+        arithmetic, and the walk over-approximates an attribute call to every
+        class defining the name -- so a ``super().__init__`` here resolves to
+        every constructor in the package and a ``+`` here is a view doing
+        arithmetic.  ``args`` is what ``str(error)`` reads, so the two
+        spellings raise the same exception.
+        """
+        self.surface = surface
+        self.reason = reason
+        self.paths = tuple(paths)
+        self.args = (f"{surface} may not rank {reason}: {sorted(paths)}",)
+
+
+def refuse_previewed(
+    dispositions: Mapping[str, Mapping[str, object]], *, surface: str
+) -> None:
+    """Refuse a payload any of whose numbers is a preview, naming them.
+
+    The read half of the rule, and the total one: it asks the payload's own
+    map rather than a list of the leaves a scorer happens to read, so
+    retagging *any* field ``THEORETICAL`` makes the surface fail instead of
+    quietly scoring a number the coupled walk never delivered.  A derived
+    figure — a time-to-defeat, a tie-break margin — is covered too, because
+    the leaves it is derived from are in the map.
+    """
+    previewed = [
+        path
+        for path, entry in dispositions.items()
+        if entry["view_tag"] != ViewTag.APPLIED.value
+    ]
+    if previewed:
+        raise UnrankableNumber(surface, "a previewed number", previewed)
+
+
+def published_tag(
+    dispositions: Mapping[str, Mapping[str, object]], path: str, *, surface: str
+) -> "ViewTag":
+    """What the payload says the number at *path* means, or a refusal.
+
+    A leaf with no entry is refused rather than assumed applied: a number
+    with no published meaning is precisely what a fold may not carry, and
+    defaulting here would put the assumption back one layer down from where
+    it was removed.
+    """
+    try:
+        entry = dispositions[path]
+    except (KeyError, TypeError):
+        raise UnrankableNumber(surface, "a number no entry names", [path]) from None
+    return ViewTag(entry["view_tag"])
 
 
 @dataclass(frozen=True, slots=True)
@@ -384,7 +466,48 @@ class LeafWriter:
         )
 
 
-class _DiscardingWriter(LeafWriter):
+class RankingWriter(LeafWriter):
+    """The writer for a payload whose numbers choose a build.
+
+    The write half of D-62's second rule.  ``/api/bis`` and ``/api/optimize``
+    do not merely publish their numbers, they *rank* by them, so a preview
+    reaching one of those payloads is a build chosen by a fight that never
+    happened.  Refusing it here means a view that retagged a block
+    ``THEORETICAL`` fails the moment a ranking surface asks it for a payload,
+    with no map to consult and no per-leaf check to remember.
+
+    :meth:`~LeafWriter.block` is the one place a tag enters — ``nested``,
+    ``structure`` and the nested walk all carry the block's own tag down —
+    so refusing a non-``APPLIED`` block is total over every leaf the payload
+    can hold.  That induction is asserted by source scan rather than
+    believed: ``LeafBlock`` is constructed nowhere outside this module.
+
+    The read half is :func:`refuse_previewed`, and both halves exist because
+    the two surfaces are not symmetrical: BIS scores a *published* payload
+    and can be asked what its numbers mean, while the optimizer scores
+    thousands of candidate payloads written through :data:`DISCARD`, which
+    by ruling carries no map at all.
+    """
+
+    __slots__ = ()
+
+    def block(
+        self,
+        target: MutableMapping[str, object],
+        prefix: str,
+        tag: ViewTag = ViewTag.APPLIED,
+    ) -> LeafBlock:
+        """Open a block, or refuse the meaning it declares."""
+        if tag is not ViewTag.APPLIED:
+            raise UnrankableNumber(
+                "a payload that picks a winner",
+                f"a {tag.value} block",
+                [prefix or "<payload root>"],
+            )
+        return super().block(target, prefix, tag)
+
+
+class _DiscardingWriter(RankingWriter):
     """The writer for rows nobody serializes.
 
     The optimizer evaluates thousands of candidates per search and never shows
@@ -398,6 +521,11 @@ class _DiscardingWriter(LeafWriter):
     point of it being a named object: a leaf written through this writer is
     still born in :func:`serialize_leaf`, so the rows are identical to the
     published ones, and the only thing that does not happen is the recording.
+
+    It is a :class:`RankingWriter` because of who discards: the optimizer's
+    candidate payloads are the ones it scores, and a payload with no map is
+    a payload nothing can be asked about afterwards.  Refusing a previewed
+    block on the way in is the only moment left to refuse it.
     """
 
     __slots__ = ()

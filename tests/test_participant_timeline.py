@@ -7,6 +7,7 @@ import pytest
 
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.program.views import LeafWriter, name_every_number
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.defensive_effects import resolve_starting_defenses
@@ -2004,6 +2005,29 @@ def test_bis_rejects_an_unknown_objective():
     assert "objective must be one of" in response.get_json()["error"]
 
 
+def _named_like_the_real_timeline(payload):
+    """A fake timeline payload, carrying the map the real one publishes.
+
+    ``build_participant_timeline`` names every number it publishes, and the
+    BIS objective refuses to rank a number no entry names (D-62): a payload
+    with bare numbers is a payload nobody can ask what its numbers mean.  So
+    a fake that returned one would be a fake of a shape the tree no longer
+    has.  The map is built through the same writer the views use rather than
+    hand-listed, which is what keeps the fake honest as the writer changes.
+    """
+    payload["dispositions"] = name_every_number(payload, LeafWriter())
+    return payload
+
+
+def _naming(fake):
+    """One fake timeline, wrapped so its payload names its own numbers."""
+
+    def wrapped(*args, **kwargs):
+        return _named_like_the_real_timeline(fake(*args, **kwargs))
+
+    return wrapped
+
+
 def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch):
     """A failed candidate remains visible in the per-candidate audit receipt."""
 
@@ -2038,7 +2062,9 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -2092,7 +2118,9 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -2166,7 +2194,9 @@ def test_enemy_bis_prioritizes_event_survival_before_outgoing_threat(monkeypatch
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2223,7 +2253,9 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2244,7 +2276,9 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             result["objective"]["focus_damage_before_death"] = 5_000.0
         return result
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", glass_cannon_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(glass_cannon_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     assert response.get_json()["candidates"][0]["name"] == "Warmog's Armor"

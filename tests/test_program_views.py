@@ -818,6 +818,110 @@ def test_a_fold_over_nothing_is_not_a_measured_zero() -> None:
         fold_tagged([])
 
 
+# ---------------------------------------------------------------------------
+# Criterion 4's last clause — a retagged field fails the ranking surfaces
+# ---------------------------------------------------------------------------
+
+
+def test_a_ranking_payload_refuses_a_previewed_block() -> None:
+    """The write half: a view that retags a block fails the surface at once."""
+    from src.calculator.program.views import RankingWriter, UnrankableNumber
+
+    with pytest.raises(UnrankableNumber) as raised:
+        RankingWriter().block({}, "candidates[0]", ViewTag.THEORETICAL)
+    assert raised.value.paths == ("candidates[0]",)
+    # ...and the same writer takes the applied block, so the red above is the
+    # tag and not the writer refusing everything.
+    assert RankingWriter().block({}, "candidates[0]") is not None
+
+
+def test_the_optimizers_discarded_rows_are_a_ranking_payload_too() -> None:
+    """``DISCARD`` writes what the optimizer scores, so it refuses one too.
+
+    A candidate payload carries no map by ruling -- a few hundred entries per
+    evaluation is what the allocation gate refuses -- so the block is the
+    only moment a preview can be caught on that path.
+    """
+    from src.calculator.program.views import UnrankableNumber
+
+    with pytest.raises(UnrankableNumber):
+        DISCARD.block({}, "", ViewTag.THEORETICAL)
+
+
+def test_a_previewed_entry_makes_a_ranking_surface_refuse_the_payload() -> None:
+    """The read half, over the map a published payload carries."""
+    from src.calculator.program.views import UnrankableNumber, refuse_previewed
+
+    applied = {"objective.focus_damage_before_death": {"view_tag": "applied"}}
+    refuse_previewed(applied, surface="the BIS objective")
+    with pytest.raises(UnrankableNumber) as raised:
+        refuse_previewed(
+            {
+                **applied,
+                "participants[0].survival.effective_health": {
+                    "view_tag": "theoretical"
+                },
+            },
+            surface="the BIS objective",
+        )
+    assert raised.value.paths == ("participants[0].survival.effective_health",)
+
+
+def test_a_number_no_entry_names_may_not_be_ranked() -> None:
+    """Defaulting to applied here would put the assumption back one layer."""
+    from src.calculator.program.views import UnrankableNumber, published_tag
+
+    entries = {"duration": {"view_tag": "applied"}}
+    assert published_tag(entries, "duration", surface="s") is ViewTag.APPLIED
+    with pytest.raises(UnrankableNumber, match="a number no entry names"):
+        published_tag(entries, "total_damage", surface="s")
+
+
+def test_a_total_folded_from_previews_is_not_a_score() -> None:
+    """``ranked_total`` is ``fold_tagged`` plus the half a ranking needs."""
+    from src.calculator.program.build import ranked_total
+    from src.calculator.program.build import Tagged
+    from src.calculator.program.views import UnrankableNumber
+
+    assert (
+        ranked_total(
+            [
+                Tagged(Measured(amount=1.5), ViewTag.APPLIED),
+                Tagged(Measured(amount=2.5), ViewTag.APPLIED),
+            ],
+            surface="the BIS objective",
+        )
+        == 4.0
+    )
+    with pytest.raises(UnrankableNumber, match="a theoretical total"):
+        ranked_total(
+            [Tagged(Measured(amount=1.5), ViewTag.THEORETICAL)],
+            surface="the BIS objective",
+        )
+
+
+def test_the_fold_algebra_has_production_callers() -> None:
+    """``Tagged`` was a type nothing on the serving path used.
+
+    Its every call site was inside its own ``__add__``: the criterion's
+    "folding differently-tagged sources is a construction error" was a
+    property of a class, not of any sum the calculator performs.  The BIS
+    objective folds through it now, so the scan below is what keeps that
+    true.
+    """
+    import ast
+
+    from src.calculator import bis
+
+    called: set[str] = set()
+    for path in (Path(bis.__file__),):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                called.add(node.func.id)
+    assert {"Tagged", "ranked_total"} <= called
+
+
 def test_the_registry_answers_what_a_mechanics_number_means() -> None:
     """``tag_for`` is one total function with live readers.
 

@@ -133,6 +133,11 @@ UNRESOLVED_ALLOWED = frozenset(
         "round",
         "sorted",
         "str",
+        # The builtin proxy, not a method this package defines.  Only the
+        # ``super()`` call itself stops here: the delegation around it --
+        # ``super().block(...)`` -- is an attribute call, so rule 3 follows it
+        # into every class defining that name, ``LeafWriter.block`` included.
+        "super",
         "tuple",
     }
 )

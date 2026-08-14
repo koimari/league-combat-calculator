@@ -42,7 +42,7 @@ from ..trigger_stream import (
     packet_source_literal,
 )
 from ..ability_spec import Quantity
-from .views import ViewTag
+from .views import UnrankableNumber, ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
 from .route import PairDefender, RouteContext, RoutePolicy, resolve_route
@@ -130,6 +130,24 @@ def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
             "not a measured zero"
         )
     return total
+
+
+def ranked_total(parts: Iterable[Tagged], *, surface: str) -> float:
+    """Fold parts into the number a ranking reads, or refuse to produce one.
+
+    :func:`fold_tagged` already makes a mixed fold unrepresentable; this adds
+    the half a ranking needs, which is that the *one* meaning the fold
+    carried has to be ``APPLIED``.  A total folded entirely from previews is
+    perfectly well-typed and still not a score.
+
+    The read is at the end rather than per part on purpose: a withheld member
+    makes the total withheld (D-72's propagation), and reading the total is
+    what turns that into the named refusal a consumer gets.
+    """
+    total = fold_tagged(parts)
+    if total.tag is not ViewTag.APPLIED:
+        raise UnrankableNumber(surface, f"a {total.tag.value} total", ["<fold>"])
+    return total.quantity.read()
 
 
 def tag_for(view_tags: Mapping[EngineLane, ViewTag], lane: EngineLane) -> ViewTag:
@@ -662,6 +680,7 @@ __all__ = [
     "Tagged",
     "declared_view_tags",
     "fold_tagged",
+    "ranked_total",
     "tag_for",
     "DerivationCycle",
     "MechanicView",

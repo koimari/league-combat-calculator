@@ -26,8 +26,16 @@ from .optimizer import (
     get_eligible_legendaries,
     optimizer_supported_items,
 )
+from .ability_spec import Measured
 from .pipeline import DEFAULT_FIGHT_DURATION
-from .program.views import LeafWriter, name_every_number
+from .program.build import Tagged, ranked_total
+from .program.views import (
+    RankingWriter,
+    UnrankableNumber,
+    name_every_number,
+    published_tag,
+    refuse_previewed,
+)
 from .participant_timeline import build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
@@ -353,6 +361,30 @@ def bis_time_to_target_defeat(
     return min(times, default=duration)
 
 
+#: The consumer every BIS refusal names.  A message that said which function
+#: raised would answer the wrong question: what a reader needs to know is
+#: that the surface which picks a build refused to pick one.
+BIS_SURFACE = "the BIS objective"
+
+
+def _focus_survival_path(
+    combat: Mapping[str, object], focus: Mapping[str, object]
+) -> str:
+    """Where the focus participant's survival row lives in the payload.
+
+    Matched by identity rather than by participant id, because the entry
+    describing a number has to be the entry for *that* row: two participants
+    of the same champion at the same level publish equal dicts, and a path
+    that named the wrong one would carry the wrong meaning with no symptom.
+    """
+    for index, row in enumerate(combat.get("participants", ())):
+        if row is focus:
+            return f"participants[{index}].survival"
+    raise UnrankableNumber(
+        BIS_SURFACE, "a row the payload does not publish", ["participants"]
+    )
+
+
 def bis_objective_score(
     objective_key: str,
     *,
@@ -362,7 +394,33 @@ def bis_objective_score(
     objective: Mapping[str, object],
     focus: Mapping[str, object],
 ) -> tuple[float, str, dict[str, float], tuple[float, ...] | None]:
-    """Derive one candidate's selected objective from the shared timeline."""
+    """Derive one candidate's selected objective from the shared timeline.
+
+    Every score below is folded through :func:`~.program.build.ranked_total`
+    out of parts carrying the meaning the payload published for them, and the
+    candidate's whole map is refused first if any of its numbers is a
+    preview.  D-62: ``THEORETICAL`` is never an optimizer objective and never
+    feeds BIS.  Before this, a retagged field would have been ranked exactly
+    like a delivered one -- both are ordinary ``MEASURED`` floats, and
+    nothing on this path ever asked what they meant.
+
+    The refusal is an ``UnrankableNumber``, which is a ``TypeError`` and so
+    passes through the candidate loop's ``except (KeyError, ValueError)``
+    rather than being turned into a withheld row: a previewed number is not a
+    candidate that could not be evaluated, it is a payload meaning something
+    other than what the ranking assumed.
+    """
+    dispositions = combat.get("dispositions", {})
+    refuse_previewed(dispositions, surface=BIS_SURFACE)
+    survival_path = _focus_survival_path(combat, focus)
+
+    def part(path: str, value: float) -> Tagged:
+        """One published number, carrying what its own entry says it means."""
+        return Tagged(
+            Measured(amount=value),
+            published_tag(dispositions, path, surface=BIS_SURFACE),
+        )
+
     focus_survival = focus.get("survival", {})
     if not isinstance(focus_survival, Mapping):
         focus_survival = {}
@@ -374,9 +432,11 @@ def bis_objective_score(
     healing = float(focus_survival.get("healing_received", 0.0) or 0.0)
     support_shield = float(focus_survival.get("support_shield_received", 0.0) or 0.0)
     support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
+    damage_part = part("objective.focus_damage_before_death", focus_damage)
+    health_part = part(f"{survival_path}.effective_health", effective_health)
     if objective_key == "overall":
         if subject_team == "main":
-            score = focus_damage
+            score = ranked_total([damage_part], surface=BIS_SURFACE)
             metric = "main TTD (survival-coupled)"
             components = {
                 "damage_before_death": focus_damage,
@@ -389,7 +449,14 @@ def bis_objective_score(
             team_damage = float(
                 objective.get("main_team_damage_before_death", 0.0) or 0.0
             )
-            score = team_damage + support_value + effective_health
+            score = ranked_total(
+                [
+                    part("objective.main_team_damage_before_death", team_damage),
+                    part("objective.focus_support_value", support_value),
+                    health_part,
+                ],
+                surface=BIS_SURFACE,
+            )
             metric = "team damage + ally utility + effective health"
             components = {
                 "main_team_damage_before_death": team_damage,
@@ -405,7 +472,7 @@ def bis_objective_score(
             duration=duration,
         )
         rank_key = enemy_bis_rank_key(objective, focus_survival, duration=duration)
-        score = focus_damage
+        score = ranked_total([damage_part], surface=BIS_SURFACE)
         metric = "enemy survival gate · threat before defeat"
         components = {
             "survival_time": survival_time,
@@ -430,7 +497,7 @@ def bis_objective_score(
         }
         return score, metric, components, None
     if objective_key == "survival":
-        score = effective_health
+        score = ranked_total([health_part], surface=BIS_SURFACE)
         metric = BIS_OBJECTIVES[objective_key]["metric"]
         components = {
             "effective_health": effective_health,
@@ -440,9 +507,19 @@ def bis_objective_score(
         return score, metric, components, None
     if objective_key == "damage":
         if subject_team == "ally":
-            score = float(objective.get("main_team_damage_before_death", 0.0) or 0.0)
+            score = ranked_total(
+                [
+                    part(
+                        "objective.main_team_damage_before_death",
+                        float(
+                            objective.get("main_team_damage_before_death", 0.0) or 0.0
+                        ),
+                    )
+                ],
+                surface=BIS_SURFACE,
+            )
         else:
-            score = focus_damage
+            score = ranked_total([damage_part], surface=BIS_SURFACE)
         metric = BIS_OBJECTIVES[objective_key]["metric"]
         components = {
             "damage_before_death": score,
@@ -451,8 +528,16 @@ def bis_objective_score(
         return score, metric, components, None
     # Utility is intentionally an additive receipt of values that the event
     # walk actually applied.  It does not infer movement, range, or a value
-    # for an unmodelled item tooltip.
-    score = support_value + healing + support_shield
+    # for an unmodelled item tooltip -- and "actually applied" is now the
+    # fold's own refusal rather than a comment: three parts, one meaning.
+    score = ranked_total(
+        [
+            part("objective.focus_support_value", support_value),
+            part(f"{survival_path}.healing_received", healing),
+            part(f"{survival_path}.support_shield_received", support_shield),
+        ],
+        surface=BIS_SURFACE,
+    )
     metric = BIS_OBJECTIVES[objective_key]["metric"]
     components = {
         "support_value": support_value,
@@ -577,8 +662,15 @@ def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
     the leaf and its entry in the same ``serialize_leaf`` call is what the
     single writer means; re-serialising a value at the path it now lives at
     is that writer, not a second one.
+
+    The writer is a :class:`~.program.views.RankingWriter`: this payload is a
+    ranking, so a block a view opened ``THEORETICAL`` may not reach it.  That
+    is the write half of D-62's rule; the read half is
+    :func:`~.program.views.refuse_previewed`, which
+    :func:`bis_objective_score` runs over each candidate's own combat map
+    before folding a score out of it.
     """
-    return name_every_number(payload, LeafWriter())
+    return name_every_number(payload, RankingWriter())
 
 
 def bis_payload(data: Mapping[str, object]) -> dict:

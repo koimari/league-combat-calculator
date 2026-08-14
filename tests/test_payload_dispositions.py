@@ -391,6 +391,69 @@ class TestTheCalculatePayload:
             assert dispositions[f"participants[{index}].survival.{leaf}"] == entry
 
 
+class TestARetaggedFieldFailsTheRankingSurfaces:
+    """Criterion 4's last clause, over a live receipt.
+
+    "Retagging a field ``THEORETICAL`` makes the optimizer and BIS paths fail
+    rather than silently score it" had no mechanism: neither ranking path
+    read a view tag at any point, and a preview and a delivery are both
+    ordinary ``MEASURED`` floats, so scoring one instead of the other had no
+    symptom at all.
+    """
+
+    def _scored(self, combat: Mapping):
+        """One live combat receipt, scored the way ``bis_payload`` scores it."""
+        from src.calculator.bis import bis_objective_score
+
+        objective = combat["objective"]
+        focus_id = objective["focus_participant_id"]
+        focus = next(
+            row for row in combat["participants"] if row["participant_id"] == focus_id
+        )
+        return bis_objective_score(
+            "overall",
+            subject_team="main",
+            focus_id=focus_id,
+            combat=combat,
+            objective=objective,
+            focus=focus,
+        )
+
+    def test_an_applied_receipt_still_scores(self) -> None:
+        """The positive control: the refusal is the tag, not the mechanism."""
+        score, metric, components, _ = self._scored(_combat())
+        assert isinstance(score, float)
+        assert metric and components
+
+    def test_one_retagged_leaf_refuses_the_whole_ranking(self) -> None:
+        """A preview in the map, and BIS declines to name a winner."""
+        from src.calculator.program.views import UnrankableNumber
+
+        combat = dict(_combat())
+        leaf = "objective.focus_damage_before_death"
+        combat["dispositions"] = {
+            **combat["dispositions"],
+            leaf: {**combat["dispositions"][leaf], "view_tag": "theoretical"},
+        }
+        with pytest.raises(UnrankableNumber) as raised:
+            self._scored(combat)
+        assert raised.value.paths == (leaf,)
+
+    def test_the_refusal_is_not_swallowed_into_a_withheld_candidate(self) -> None:
+        """``bis_payload`` catches ``(KeyError, ValueError)`` per candidate.
+
+        An ``UnrankableNumber`` is a ``TypeError`` precisely so it passes
+        through that handler: a previewed number is not a candidate that
+        could not be evaluated, and a refusal filed as
+        ``candidate_loadout_unavailable`` would be this rule failing in the
+        shape it exists to stop.
+        """
+        from src.calculator.program.views import UnrankableNumber
+
+        assert issubclass(UnrankableNumber, TypeError)
+        assert not issubclass(UnrankableNumber, (KeyError, ValueError))
+
+
 BIS_REQUEST = {
     "champion": "Syndra",
     "level": 13,

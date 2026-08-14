@@ -39,7 +39,7 @@ from .loadout_rules import (
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
-from .program.views import LeafWriter, name_every_number
+from .program.views import RankingWriter, name_every_number
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
@@ -1779,8 +1779,17 @@ def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, objec
     stays an int and carries no entry: a build's price is a count of gold,
     not a quantity a rule measured, and the payload-schema check reads ints
     the same way.
+
+    The writer is a :class:`~.program.views.RankingWriter`, because this
+    payload *is* the ranking: a block some view opened ``THEORETICAL`` holds
+    what one attacker-versus-one-defender fight would have produced, and
+    publishing it in the row that names a winner is ranking by a fight that
+    never happened.  The candidate payloads one layer down are refused the
+    same way -- they go through ``DISCARD``, which is a ranking writer for
+    the same reason and is the only check available there, since a candidate
+    payload carries no map to consult afterwards.
     """
-    return name_every_number(payload, LeafWriter())
+    return name_every_number(payload, RankingWriter())
 
 
 def optimize_build(
