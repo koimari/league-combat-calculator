@@ -1,0 +1,242 @@
+{
+  "cluster_id": "P4C-P4E-C2R-deathbringer-heal-split-series-cleaver-bloodsong",
+  "runbook": "R-18 / R-19, under the recorded repeated-source amendment of 2026-08-14 (certified-fact chain)",
+  "scenario": "cleaver_bloodsong_roster",
+  "healed_unit": "enemy:Aatrox (participants[2]), level 18, no items, max_health 2588.0",
+  "mechanic": "Aatrox Deathbringer Stance self-heal taken off damage he deals to `main`, split by the survival walk's clipping identity into applied_amount and overheal. Repeated-source series: same source, same holder, same subject, seven successive rows of one list -- adjudicated whole, never member by member.",
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>. Nothing outside that export and the question specification was read.",
+  "sources_quoted": {
+    "data/champions.json :: Aatrox.abilities.P[0] (Deathbringer Stance)": "Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters. Deathbringer Stance's damage applies life steal. Aatrox heals for the post-mitigation bonus damage dealt, reduced to 25% against minions. [leveling 'Max Health Damage' values[17] = 10 (%) at level 18]",
+    "data/champions.json :: Aatrox.abilities.E[0] (Umbral Dash)": "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions.",
+    "data/champions.json :: Aatrox.abilities.R[2] (World Ender)": "During World Ender, Aatrox gains bonus attack damage, has 5% increased size, is ghosted, and receives increased self-healing from all sources. [leveling 'Increased Healing' values = 50/75/100 (%)]",
+    "data/items.json :: 3071 Black Cleaver, passive 'Carve'": "Dealing physical damage to an enemy champion applies a stack of Carve for 6 seconds, stacking up to 5 times. Each stack inflicts 6% armor reduction, up to 30% at 5 stacks. || Non-basic damage dealt on the same target may apply stacks only once per frame.",
+    "data/items.json :: 3877 Bloodsong, passive 'Spellblade'": "After using an ability, your next basic attack within 10 seconds deals 100% base AD bonus physical damage on-hit. If the target is a champion, inflict them with Expose Weakness for 4 seconds, causing them to take 8% increased damage from all sources (1.5 second cooldown, starts after using the empowered attack).",
+    "docs/math-foundations.md :: survival-walk clipping identity": "Shield absorption (survival walk): clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed), absorbed+overkill = damage -- EXACT. The heal split is the same clipping identity against the health pool: applied = min(amount, max_health - current_health), overheal = amount - applied, applied + overheal = amount.",
+    "docs/math-foundations.md + CLAUDE.md :: resistance, growth, display rounding": "actual_damage = raw * 100/(100+resistance); stat growth = base + growth*(level-1)*(0.7025 + 0.0175*(level-1)); display-level integer rounding of health/AD/AP/armor/MR before damage (calculate_total_stats), documented as the corpus-wide convention pinned by golden."
+  },
+  "amount_derivation_from_scratch": {
+    "method": "Every heal amount in the room is re-derived from cached wiki text; none is taken from the baseline.",
+    "healed_unit_max_health": {
+      "Aatrox L18": "base + growth*(17)*(0.7025+0.0175*17) -> 2588.0",
+      "items": "none",
+      "max_health": 2588.0,
+      "cross_check": "armor 119.6 -> displayed 120 (brief: 120); MR 66.85 -> 67 (brief: 67); health regen 11.5 per 5s -> 2.3/s (brief: health_regen_per_second 2.3). The export reproduces the healed unit's whole stat block, which validates the growth formula and the display-rounding convention used below."
+    },
+    "deathbringer_on_main": {
+      "target": "main = Jax L18, Black Cleaver + Bloodsong",
+      "max_health": "2401 (L18 base) + 400 (Black Cleaver) + 200 (Bloodsong) = 3001",
+      "raw_bonus_magic_damage": "10% of 3001 = 300.10  (Deathbringer leveling index 17 = 10%)",
+      "post_mitigation": "300.10 * 100/(100+67) = 179.701   [Jax MR 66.85 -> displayed 67; Aatrox has no magic pen]",
+      "self_heal_amplifier": "World Ender rank 3: +100% increased self-healing -> x2.0",
+      "amount": "179.701 * 2 = 359.40  ==  recorded 359.4  EXACT"
+    },
+    "deathbringer_on_ally_Lulu": {
+      "max_health": "2129 (L18 base, no items)",
+      "post_mitigation": "212.90 * 100/(100+52) = 140.066   [Lulu MR 52.1 -> displayed 52]",
+      "amount": "140.066 * 2 = 280.13 -> 280.1  ==  recorded 280.1  EXACT"
+    },
+    "umbral_dash_off_those_two_hits": {
+      "ratio": "16% (Aatrox has 0 bonus health, so the +1.1% per 100 bonus health term is 0), x2 World Ender = 32%",
+      "off_deathbringer_on_main": "0.32 * 179.701 = 57.50  ==  recorded Umbral -> main 57.5  EXACT",
+      "off_deathbringer_on_Lulu": "0.32 * 140.066 = 44.82 -> 44.8  ==  recorded Umbral -> Lulu 44.8  EXACT"
+    },
+    "the_pre_member_triple_at_t_4_31": {
+      "records": "[36] Umbral (plain auto -> ally:Lulu) 31.8 + [37] Umbral (plain auto -> main) 31.4 + [38] Deathbringer -> ally:Lulu 280.1",
+      "sum": 343.3,
+      "all_applied_in_full": "given in the brief: overheal 0.0 on each, unmoved on both sides",
+      "independent_confirmation": "The same 343.3 triple is recovered as the pre-member heal block at t=0.00 (671.9 window damage - 328.5 recorded applied = 343.4) and at t=3.23 (670.1 - 326.8 = 343.3). Three independent windows land on the same mechanically-derived constant, and its two Umbral members are reproduced to the 0.1 from wiki text above."
+    }
+  },
+  "series_computation": [
+    {
+      "member": 1,
+      "index": "[3]",
+      "t": 0.0,
+      "window": "t=0.00 opening burst",
+      "damage_rows_pre": "[0]138.6 + [1]119.8 + [2]94.1 + [3]41.4 + [6]94.1 + [7]70.1 + [10]113.8",
+      "window_damage_pre": 671.9,
+      "window_damage_post": 671.9,
+      "window_delta": 0.0,
+      "heals_ahead_of_member": 343.4,
+      "applied_pre": 328.5,
+      "applied_post": 328.5,
+      "overheal_pre": 30.9,
+      "overheal_post": 30.9,
+      "recorded_pre": "328.5 / 30.9 -- REPRODUCED",
+      "status": "unmoved (no certified damage move at t=0.00)",
+      "tops_off": true
+    },
+    {
+      "member": 2,
+      "index": "[15]",
+      "t": 1.08,
+      "window": "(0.00, 1.08]",
+      "damage_rows_pre": "[13]149.7 + [14]137.7 + [15]94.1 + [16]113.8",
+      "window_damage_pre": 495.3,
+      "window_damage_post": 495.3,
+      "window_delta": 0.0,
+      "heals_ahead_of_member": 437.5,
+      "applied_pre": 57.8,
+      "applied_post": 57.8,
+      "overheal_pre": 301.6,
+      "overheal_post": 301.6,
+      "recorded_pre": "57.8 / 301.6 -- REPRODUCED",
+      "status": "unmoved: all four rows unmoved. The Bloodsong spellblade has not procced yet (first proc t=1.50) and the Carve ladder has not yet diverged, so nothing in this window can move.",
+      "tops_off": true
+    },
+    {
+      "member": 3,
+      "index": "[25]",
+      "t": 2.16,
+      "window": "(1.08, 2.16]",
+      "damage_rows_pre": "[23]50.7 + [24]70.1 + [25]94.1 + [26]113.8 + [27]73.2 + [28]94.1 + [29]113.8 + [30]157.8",
+      "damage_rows_post": "[23]45.9 (Carve, -4.8) + [24]70.1 + [25]94.1 + [26]113.8 + [27]73.2 + [28]101.7 (Expose Weakness, +7.6) + [29]113.8 + [30]170.4 (Expose Weakness, +12.6)",
+      "window_damage_pre": 767.6,
+      "window_damage_post": 783.0,
+      "window_delta": 15.4,
+      "heals_ahead_of_member": 445.6,
+      "applied_pre": 322.0,
+      "applied_post": 337.4,
+      "overheal_pre": 37.4,
+      "overheal_post": 22.0,
+      "recorded_pre": "322.0 / 37.4 -- REPRODUCED",
+      "certified_post": "overheal 22.2 -- docs/receipts/oracle-P4B-leaf26.json, new_value_correct. Computed 22.0. Agrees to 0.2.",
+      "status": "moved",
+      "tops_off": true
+    },
+    {
+      "member": 4,
+      "index": "[31]",
+      "t": 3.23,
+      "window": "(2.16, 3.23]",
+      "damage_rows_pre": "[35]90.1 + [36]70.1 + [37]94.1 + [38]113.8 + [39]94.1 + [40]94.1 + [41]113.8",
+      "damage_rows_post": "[35]53.4 (Carve, -36.7) + [36]70.1 + [37]101.7 (EW, +7.6) + [38]113.8 + [39]101.7 (EW, +7.6) + [40]101.7 (EW, +7.6) + [41]113.8",
+      "window_damage_pre": 670.1,
+      "window_damage_post": 656.2,
+      "window_delta": -13.9,
+      "heals_ahead_of_member": 343.3,
+      "applied_pre": 326.8,
+      "applied_post": 312.9,
+      "overheal_pre": 32.6,
+      "overheal_post": 46.5,
+      "recorded_pre": "326.8 / 32.6 -- REPRODUCED",
+      "certified_post": "overheal 46.7 -- docs/receipts/oracle-P4B-leaf22.json, new_value_correct. Computed 46.5. Agrees to 0.2.",
+      "status": "moved, and moved DOWNWARD in applied while the window's own damage moved by only -13.9 -- the sign flip versus member 3 is the Carve drop at [35] outweighing three Expose Weakness rises. This member is the immediate anchor for the member under adjudication.",
+      "tops_off": true
+    },
+    {
+      "member": 5,
+      "index": "[39]",
+      "t": 4.31,
+      "window": "(3.23, 4.31]   <-- MEMBER UNDER ADJUDICATION",
+      "damage_rows_pre": "[46]128.9 + [47]70.1 + [48]94.1 + [49]113.8 + [50]94.1 + [51]113.8",
+      "damage_rows_post": "[46]53.4 (Carve, -75.5) + [47]70.1 + [48]101.7 (EW, +7.6) + [49]113.8 + [50]101.7 (EW, +7.6) + [51]113.8",
+      "window_damage_pre": 614.8,
+      "window_damage_post": 554.5,
+      "window_delta": -60.3,
+      "heals_ahead_of_member": 343.3,
+      "applied_pre": 271.5,
+      "applied_post": 211.2,
+      "overheal_pre": 87.9,
+      "overheal_post": 148.2,
+      "recorded_pre": "271.4 / 88.0 -- REPRODUCED to 0.1",
+      "status": "moved",
+      "tops_off": true
+    },
+    {
+      "member": 6,
+      "index": "[47]",
+      "t": 5.39,
+      "window": "(4.31, 5.39]",
+      "damage_rows_pre": "[56]73.2 + [59]94.1 + [60]113.8 + [61]138.6 + [62]94.1",
+      "damage_rows_post": "[56]73.2 + [59]101.7 (EW, +7.6) + [60]113.8 + [61]149.7 (EW, +11.1) + [62]101.7 (EW, +7.6)",
+      "window_damage_pre": 513.8,
+      "window_damage_post": 540.1,
+      "window_delta": 26.3,
+      "applied_pre": 359.4,
+      "applied_post": 359.4,
+      "overheal_pre": 0.0,
+      "overheal_post": 0.0,
+      "recorded_pre": "359.4 / 0.0 -- REPRODUCED",
+      "status": "unmoved in the split: the room exceeds the whole 359.4 in BOTH trees, so the heal applies in full and clips nothing. This is the one member that does NOT top the pool off, so its +26.3 window delta does not terminate here -- it is carried across t=5.39 into member 7.",
+      "tops_off": false
+    },
+    {
+      "member": 7,
+      "index": "[55]",
+      "t": 6.47,
+      "window": "(5.39, 6.47] plus the residual carried past member 6",
+      "damage_rows_pre": "[67]113.8 + [70]113.8   (both unmoved)",
+      "window_damage_pre": 227.6,
+      "window_damage_post": 227.6,
+      "window_delta": 0.0,
+      "carried_residual_delta": 26.3,
+      "applied_pre": 261.8,
+      "applied_post": 288.1,
+      "overheal_pre": 97.6,
+      "overheal_post": 71.3,
+      "recorded_pre": "261.8 / 97.6 -- REPRODUCED",
+      "certified_post": "overheal 71.5 -- docs/receipts/oracle-P4B-leaf28.json, new_value_correct. Computed 71.3. Agrees to 0.2.",
+      "status": "moved -- and moved with NO damage move inside its own window. Its entire move is the residual the non-topping-off member 6 carried across t=5.39. A member-by-member adjudication that treated [55] as locally determined would find no cause for its move at all.",
+      "tops_off": true
+    }
+  ],
+  "conservation_checks": {
+    "amount_total": "7 x 359.4 = 2515.8, unmoved (agreed, and re-derived from wiki text above)",
+    "applied_total_pre": "328.5 + 57.8 + 322.0 + 326.8 + 271.4 + 359.4 + 261.8 = 1927.7",
+    "applied_total_post": "328.5 + 57.8 + 337.2 + 312.7 + 211.0 + 359.4 + 287.9 = 1894.5",
+    "overheal_total_pre": "30.9 + 301.6 + 37.4 + 32.6 + 88.0 + 0.0 + 97.6 = 588.1",
+    "overheal_total_post": "30.9 + 301.6 + 22.2 + 46.7 + 148.4 + 0.0 + 71.5 = 621.3",
+    "identity_pre": "1927.7 + 588.1 = 2515.8  EXACT",
+    "identity_post": "1894.5 + 621.3 = 2515.8  EXACT",
+    "cross_check_against_certified_damage": "The 13 certified damage moves on the healed unit sum to (-4.8) + (+7.6) + (+12.6) + (-36.7) + (+7.6) + (+7.6) + (+7.6) + (-75.5) + (+7.6) + (+7.6) + (+7.6) + (+11.1) + (+7.6) = -32.5. Because the unit starts and ends the window at full health, sum(applied over ALL heals on him) equals the damage he took; every non-Deathbringer-on-main heal in the room applies identically in both trees (each is either un-clipped in both or fully overhealing in both), so the whole of that damage move must land in this series. The series applied total moves by 1894.5 - 1927.7 = -33.2 against a certified damage move of -32.5 -- 0.7 across 13 independently rounded 0.1 figures. Consistent. With the OLD 271.4 retained the series applied total would move by +27.2, i.e. the unit would have had to take MORE damage under a change whose certified damage moves net negative. Contradiction. NOTE: this check is stated as a relation between the certified per-row damage moves and the series; it does not quote, and does not need, any post-change survival total."
+  },
+  "rounding_analysis": {
+    "budget": "Each window sums 2 to 8 damage figures that are each already rounded to 0.1, plus a 343.3 heal triple itself rounded from three 0.1 figures. The accumulation budget is about +/-0.3.",
+    "measured_residual": "The reconstruction runs a uniform +0.2 high on applied for every MOVED member: m3 337.4 vs recorded 337.2; m4 312.9 vs 312.7; m7 288.1 vs 287.9; m5 211.2 vs claimed 211.0.",
+    "why_this_matters": "Three of those four -- members 3, 4 and 7 -- are INDEPENDENTLY certified new_value_correct by receipts that were not inputs to this computation (oracle-P4B-leaf26 / -leaf22 / -leaf28). The method therefore reproduces three known-good post-change splits at exactly +0.2, and produces 211.2 for the member under adjudication at the same +0.2. Applying the calibrated residual gives exactly 211.0 / 148.4.",
+    "exact_delta_form": "The tightest form needs no absolute reconstruction at all. Health is full immediately after member 4 ([31]) in BOTH trees -- its overheal is 32.6 pre and 46.7 post, both strictly positive, read off the record itself. Every heal between t=3.23 and the member is unmoved in amount and un-clipped in both trees, so it contributes identically on both sides and cancels. Therefore delta(applied[39]) = delta(window damage) = (-75.5) + 7.6 + 7.6 = -60.3 exactly. 271.4 - 60.3 = 211.1 and 88.0 + 60.3 = 148.3, from only THREE rounded deltas, budget +/-0.15. The claimed 211.0 / 148.4 sits inside that budget; the old 271.4 / 88.0 misses by 60.",
+    "note_on_health_regeneration": "The 1.3-per-tick health-regeneration records do not reduce the deficit anywhere in this walk: the pre-member heal block comes out at 343.3 / 343.4 in three separate windows that between them straddle four regeneration ticks, and that constant is independently derived from wiki text as 31.8 + 31.4 + 280.1. Whatever the engine's convention for those records, it is IDENTICAL on both sides (every regeneration record is unmoved), so it cancels out of the delta form above and cannot affect the verdict either way."
+  },
+  "mechanism": {
+    "why_the_window_damage_fell": "Two independent, opposite-signed item fixes land inside the (3.23, 4.31] window. (1) Black Cleaver Carve de-duplication. The passive reads 'Each stack inflicts 6% armor reduction, up to 30% at 5 stacks' with 'Non-basic damage dealt on the same target may apply stacks only once per frame'. Pre-change the ally's autos on the healed unit escalate 41.4 / 50.7 / 90.1 / 128.9 as stacks over-accumulated; post-change they settle 41.4 / 45.9 / 53.4 / 53.4 -- a saturating ladder against a 120-armor target, the shape the passive's 5-stack cap bounds. Row [46] is the big one: 128.9 -> 53.4, -75.5. (2) Bloodsong single-application Expose Weakness. The passive reads 'inflict them with Expose Weakness for 4 seconds, causing them to take 8% increased damage from all sources'. The spellblade procs at t=1.50 and t=4.50 (rows [27] and [56]); every one of the ten rises is ratio 1.080 (94.1 -> 101.7 = 1.0808; 138.6 -> 149.7 = 1.0801; 157.8 -> 170.4 = 1.0798), and rows [48] and [50] carry +7.6 each. Net over the window: -75.5 + 7.6 + 7.6 = -60.3.",
+    "why_that_is_the_whole_question": "The heal size is not in dispute -- 359.4 is re-derived exactly from wiki text above and is unmoved. The split is a pure clipping identity, applied = min(amount, room) with room = max_health - current health. The healed unit is topped off at t=3.23 in both trees, so the room at t=4.31 is exactly the window damage minus the 343.3 that the three earlier heals at the same timestamp had already restored. Less damage landed on him in that window post-change, so less room existed, so more of the same 359.4 spilled. 614.8 - 343.3 = 271.5 (pre, matching the recorded 271.4); 554.5 - 343.3 = 211.2 (post).",
+    "why_the_series_had_to_be_adjudicated_whole": "Member 6 ([47], t=5.39) is the load-bearing one. It applies its full 359.4 with overheal 0.0 -- it does NOT top the pool off -- so its window's +26.3 delta does not terminate there. It is carried across t=5.39 and is the entire reason member 7 moves (261.8 -> 287.9) despite both damage rows inside member 7's own window being unmoved. Members 1 and 2 are unmoved not by accident but because the Bloodsong spellblade has not yet procced and the Carve ladder has not yet diverged. Members 3, 4 and 5 move in three different directions and magnitudes (+15.4, -13.9, -60.3) purely from which of the two item fixes dominates their window. The series is one health path; only the whole path is well-posed, which is exactly what the R-15/R-18 repeated-source amendment requires."
+  },
+  "prior_brief_defect_superseded": {
+    "supersedes": [
+      "docs/receipts/oracle-P4C-C2-healing-events-39-applied-overheal-split-leaf1.json",
+      "docs/receipts/oracle-P4C-C2-healing-events-39-applied-overheal-split-leaf2.json"
+    ],
+    "supersedes_this_leafs_prior_receipt": "docs/receipts/oracle-P4C-C2-healing-events-39-applied-overheal-split-leaf1.json -- the prior receipt on THIS leaf (/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal, 88.0 -> 148.4, verdict old_value_correct). The cluster's other prior receipt, ...-leaf2.json, is superseded on the sibling leaf by this receipt's sibling, ...-C2R-...-leaf1.json. Neither prior receipt is edited or deleted; both stand.",
+    "defect": "Both C2 briefs posed the question on a premise the tree contradicts, and posed it one leaf at a time. Quoted from the receipts superseded: 'Set applied[39] = 211.0 with all 63 other heal records unmoved (the diff population touches only applied_amount and overheal of record [39]; the five same-timestamp siblings are unmoved)'; 'participants[2]/survival/damage_taken would have to be 4014.5, not the UNMOVED 4074.9'; and the closure 'Baseline: 2588 = 2588 - 4074.9 + SUM(applied) => SUM(applied) = 4074.9, exactly the recorded healing_received 4074.9'. Only the half about the five same-timestamp records at t=4.31 holds. Three OTHER members of this same repeated-source series re-split with `amount` unmoved at 359.4 -- [25] 322.0/37.4 -> 337.2/22.2, [31] 326.8/32.6 -> 312.7/46.7, [55] 261.8/97.6 -> 287.9/71.5 -- and the whole-fight totals the closure rested on moved, so the C2 brief pinned SUM(applied) to the PRE-change damage_taken and then solved for [39] inside a series it had wrongly frozen. Both the constraint and the freeze were wrong. Compounding it, each leaf was briefed alone as one number old -> new with no sight of its own series -- the underdetermination R-15/R-18's repeated-source amendment names -- and the certified-fact amendment that lets a brief carry the moved siblings postdates the C2 brief, so the well-posed form of this question did not exist when it was posed.",
+    "false_premise_quoted": [
+      "'Set applied[39] = 211.0 with all 63 other heal records unmoved (the diff population touches only applied_amount and overheal of record [39]; the five same-timestamp siblings are unmoved)'",
+      "'participants[2]/survival/damage_taken would have to be 4014.5, not the UNMOVED 4074.9'",
+      "constraint_C: 'Baseline: 2588 = 2588 - 4074.9 + SUM(applied) => SUM(applied) = 4074.9, exactly the recorded healing_received 4074.9'"
+    ],
+    "what_was_false": "Only the half about the five same-timestamp records at t=4.31 holds. Three OTHER same-source members of this very series re-split with amount unmoved at 359.4 -- [25] 322.0/37.4 -> 337.2/22.2, [31] 326.8/32.6 -> 312.7/46.7, [55] 261.8/97.6 -> 287.9/71.5 -- and the whole-fight totals the closure rested on moved. The C2 closure pinned SUM(applied) to the PRE-change damage_taken and then solved for [39] inside a series it had wrongly frozen. Both the constraint and the freeze were wrong.",
+    "why_the_prior_investigator_could_not_see_it": "R-18's export withholds scripts/, so the compare that exhibits the movement is precisely what an investigator may not read. The brief owed those facts and asserted their opposite. Additionally both leaves were briefed alone as one number old -> new with no sight of their own record -- the underdetermination R-15/R-18's repeated-source amendment names, a series member priced without its series. The R-18 certified-fact amendment that lets a brief carry the moved siblings postdates the C2 brief, so the well-posed form of this question did not exist when it was posed.",
+    "how_this_receipt_avoids_it": "Nothing here closes on a whole-fight total. The computation is anchored ONLY on local, per-record facts: (i) member 4 tops the pool off in BOTH trees, read off its own overheal being strictly positive on both sides; (ii) the window damage between the two members, taken from the committed pre-change list plus the independently certified per-row moves; (iii) the 343.3 pre-member heal triple, given unmoved and re-derived from wiki text. The whole-fight totals appear only as an after-the-fact relation against the certified per-row damage moves, never as a constraint, and their post-change values are neither needed nor quoted. The verdict is additionally reached in a delta form that is invariant to every quantity the prior brief got wrong.",
+    "bounds_honoured": {
+      "(a)": "No assertion that the healed unit's whole-fight totals are unmoved, and no post-change value of participants[2]/survival/damage_taken, /healing_received, /health_damage, /overhealing or /effective_health is quoted or relied on. They moved; their post-change values are not available to this question and this computation does not need them.",
+      "(b)": "docs/receipts/oracle-S6S7-leaf40.json (88.0 -> 72.9) was NOT used and was not supplied. That transition is not the live one and certifies nothing here.",
+      "(c)": "The post-change applied_amount of [25]/[31]/[55] is a neighbour of a certified leaf, not a certified leaf. It is used only as the arithmetic complement of the certified overheal against the unmoved amount 359.4 -- an identity, not a quoted baseline value -- and only as a corroborating cross-check, never as an input to the [39] result.",
+      "(d)": "Evidence tree is exactly `git archive --format=tar HEAD data docs/math-foundations.md`. No src/, no scripts/, no tests/, no docs/plans/, no docs/receipts/ file, no baseline, no plan, no git history, no diff, no escalation."
+    }
+  },
+  "leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
+  "old_value": "88.0",
+  "new_value": "148.4",
+  "verdict": "new_value_correct",
+  "adjudication": {
+    "leaf": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
+    "old_value": "88.0",
+    "new_value": "148.4",
+    "verdict": "new_value_correct",
+    "computed": "148.2 by absolute window reconstruction; 148.3 by the exact three-delta form; 148.4 after the same calibrated residual. Complement of applied against the unmoved amount 359.4.",
+    "why_old_is_wrong": "88.0 = 359.4 - 271.4 is the complement of the pre-change split and inherits the same contradiction with the three certified damage moves inside the window.",
+    "why_not_both_wrong": "211.0 + 148.4 = 359.4 exactly; the split is exact against the unmoved amount and both halves land inside the rounding budget."
+  },
+  "sibling_leaf_in_this_cluster": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount"
+}
