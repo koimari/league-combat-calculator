@@ -68,9 +68,18 @@ class ScoreLedger:
         reason: str,
         *,
         damage_phase: bool = False,
+        preserve_reason: bool = False,
     ) -> None:
         # Skipped actions leave their applied slot at zero, exactly like the
         # legacy compiled walk's ``continue`` before any state mutation.
+        #
+        # ``preserve_reason`` is accepted because the kernel passes it, and
+        # this adapter keeps no reason to preserve.  It was absent while the
+        # only caller passing it was the redirect-cancelled arm, which is
+        # how a keyword the shared kernel sends came to be a ``TypeError``
+        # the score walk had simply never reached: an adapter that answers a
+        # narrower protocol than the one kernel sends is a crash waiting for
+        # its first roster.
         return None
 
     # -- trigger linkage -----------------------------------------------------

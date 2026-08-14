@@ -1881,10 +1881,19 @@ def run_survival_walk(
             # shared one ordering slot and is still true now that Phase 4 S6
             # has split them, which is why the split moved no comparison
             # here (see ``actions.ordering_slot``).
+            # ``preserve_reason`` for the same reason the redirect-cancelled
+            # arm below carries it, and it was missing here only because this
+            # arm runs first.  A redirect child Knight's Vow already cancelled
+            # arrives with ``holder_health_gate`` stamped on it, and its
+            # trigger is skipped precisely *because* of that cancellation --
+            # so overwriting the stamp published the consequence in place of
+            # the cause, and the specific reason the walk refused this action
+            # was lost to the generic one that followed from it.
             ledger.skip(
                 action,
                 "trigger_event_skipped",
                 damage_phase=phase < TransitionRank.DEBUFF_ARM,
+                preserve_reason=True,
             )
             continue
         if action.redirect_cancelled or (
