@@ -755,15 +755,28 @@ class WalkCompiler:
         # lines each, which is how a fix applied to one of them could miss
         # the other for a whole migration.
         light = bool(result.get("damage_events_tuple"))
-        # A light ledger declares no self-heals, so the heal loop below is
-        # provably a no-op for it rather than skipped by an early return:
-        # ``pipeline.py`` sets ``self_healing_events = []`` on the same three
-        # lines that set ``damage_events_tuple``, and the comment there says
-        # the empty list is the exact value ``derive_self_healing`` would
-        # have returned.  Reading it here rather than branching around it is
-        # what lets the linkage index, the heals and the coverage append be
-        # written once.
+        # A light ledger declares no self-heals, so the heal loop below is a
+        # no-op for it rather than skipped by an early return -- and that is
+        # an invariant of a *different* module: ``pipeline.py`` sets
+        # ``self_healing_events = []`` on the same three lines that set
+        # ``damage_events_tuple``, and the comment there says the empty list
+        # is the exact value ``derive_self_healing`` would have returned.
+        # Reading it here rather than branching around it is what lets the
+        # linkage index, the heals and the coverage append be written once;
+        # the early return used to enforce the invariant structurally, so
+        # dropping it without a check would trade a structure for a promise
+        # kept in another file's comment.  Hence the refusal: the tuple rows
+        # below carry no ``time``/``source_key`` dict keys, so a light result
+        # that did declare heals would link every one of them to nothing and
+        # compile a fight whose heals silently vanished.
         heals = result.get("self_healing_events", [])
+        if light and heals:
+            raise ValueError(
+                f"{attacker_id} published a tuple damage ledger and "
+                f"{len(heals)} self-heal(s); the light row shape carries no "
+                "field the heal linkage reads, so those heals would compile "
+                "to nothing"
+            )
         # The trigger-linkage index costs a key tuple per damage event, so
         # a fight with no self-heals (most candidates, and every light
         # ledger) never builds it.

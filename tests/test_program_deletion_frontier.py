@@ -166,6 +166,42 @@ def test_the_compiler_reads_its_two_row_shapes_in_one_loop() -> None:
     assert calls.count("live_amp_for") == 1
 
 
+def test_a_light_ledger_declaring_a_self_heal_is_refused() -> None:
+    """What the deleted early return used to enforce, enforced on purpose.
+
+    Unifying the two row readers let a light ledger *enter* the heal loop
+    instead of being skipped before it, and the loop is a no-op there only
+    because ``pipeline.py`` sets ``self_healing_events = []`` on the same
+    three lines that set ``damage_events_tuple``.  That is a cross-module
+    invariant, and it was carried by a comment in the other module: nothing
+    failed if it stopped being true, and what it protects is invisible —
+    a light row is a positional tuple with no ``time`` or ``source_key``
+    key, so the linkage the heal loop performs would find nothing and the
+    heals would compile to zero actions.  A number that vanishes without a
+    symptom is this campaign's subject, so the compiler refuses instead.
+    """
+    from src.calculator.program.compile import WalkCompiler
+
+    compiler = WalkCompiler(0)
+    with pytest.raises(ValueError, match="compile to nothing"):
+        compiler.add_engine_result(
+            {
+                "damage_events": [],
+                "damage_events_tuple": True,
+                "self_healing_events": [{"time": 1.0, "amount": 10.0}],
+            },
+            "main",
+            0,
+            "enemy:X",
+            1,
+            {},
+            10.0,
+            {},
+            [],
+            0,
+        )
+
+
 # --- the rows another stage pinned where it worked ---------------------------
 
 
