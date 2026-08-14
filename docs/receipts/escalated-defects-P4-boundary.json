@@ -1,0 +1,817 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "P4-boundary",
+  "dated": "2026-08-14",
+  "why_this_file_exists": "The Phase 4 boundary is where R-17's committed baselines are re-captured. The pair baseline is clean and could move today; the coupled baseline may not, because R-19 forbids a re-capture while any qualifying occurrence lacks an oracle receipt and 60 of them do. That is not a defect in the tree: every one of the 145 differing coupled leaves is claimed by a committed allowlist, and the two S7 allowlists that own 59 of the 60 say so themselves (expected-golden-diff-P4-S7-bloodsong.json's oracle_receipts.status is 'OWED, NOT FILED'; expected-golden-diff-P4-S7-rearm.json's oracle_pass.status is 'OWED'). What has no artifact until this file is the boundary's own population: the S6/S7 oracle pass filed 82 receipts against the values the tree held on 2026-08-13, and the S7 rearm correction, the H5 stage and S9 moved 23 of those leaves again afterwards, so a receipt existing on a leaf path is no longer evidence that the value a re-capture would pin was ever adjudicated. Written down as a dated, gated artifact rather than as commit-body prose, because prose is exactly what the next baseline re-capture absorbs (R-16).",
+  "how_an_entry_closes": "An entry moves from defects[] to retired[] only together with its gate test's own inversion: the reproducer stops reproducing and the test asserts the resolved property instead. For the entry below that means every leaf in owed_population carries a receipt whose certified new_value is the value the re-captured baseline holds, at which point the gate's no-covering-receipt assertion goes red and the entry retires carrying the population it named. Deleting an entry is not closing it.",
+  "gate": "tests/test_escalated_defects_p4_boundary.py",
+  "defects": [
+    {
+      "id": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+      "dated": "2026-08-14",
+      "raised_by": "The boundary lane's coverage check: `python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json --report <scratch>/coupled-report.json`, with every docs/receipts/oracle-*.json cross-read against the report by leaf path AND by certified new_value. Matching on the path alone reports 87 of the 127 qualifying leaves covered; matching on the value a re-capture would actually pin reports 64.",
+      "what": "R-19: 'No baseline is re-captured while any qualifying occurrence lacks one.' On this tip the coupled comparison holds 145 differing leaves, 127 of which satisfy golden_snapshot.qualifies_for_investigation. 64 carry an oracle receipt certifying the current value, 3 are declared NOT_OWED_NO_OLD_VALUE by a committed allowlist, and 60 do not. 23 of the 60 have a receipt on the same leaf path certifying a different value, because the S6/S7 pass adjudicated the tree as it stood before the rearm correction, the H5 stage and S9 moved those leaves again.",
+      "why_it_matters": "The re-capture is the moment a number stops being a diff and becomes the campaign's authority. R-18/R-19 exist so that authority is an independently computed verdict rather than the implementing lane's own arithmetic; a re-capture taken now would pin 60 numbers nobody outside the lanes that produced them has checked, and 23 of them would inherit the confidence of a receipt that adjudicated a different value.",
+      "why_this_lane_may_not_fix_it": "R-18 requires one fresh Opus 5 investigator per occurrence, holding a tree export of exactly data/ and docs/math-foundations.md and having read neither the plan nor the fix. This lane has read the umbrella, the runbook, the phase document, the allowlists and the tree, so it is disqualified by construction from writing any of the 60 receipts, and both the export and the investigator spawn belong to the spawning agent per R-18 and the runbook's instrument table. The S7 rearm allowlist anticipated exactly this: its population is 'declared here so the orchestrator's investigator pass has its population'.",
+      "what_is_nevertheless_true": [
+        "The pair baseline is clean: `compare scripts/golden_baseline.json` reports zero diffs and zero qualifying leaves, so no receipt is owed in that jurisdiction (D-93 is why the two jurisdictions are stated separately).",
+        "Every one of the 145 differing coupled leaves is claimed by a committed expected-golden-diff allowlist; the unclaimed count is 0. R-01 row 3's 'every diff explained' half is met and only the re-capture is blocked.",
+        "The owed population is bounded and enumerated below, so an occurrence outside it is an unexpected one exactly as R-20 requires of a declared population.",
+        "59 of the 60 sit in one scenario, cleaver_bloodsong_roster; the 60th is the coupled snapshot's own /metadata/fingerprint/leaves shape counter, which is a function of the payload the other leaves live in rather than an independent measurement."
+      ],
+      "measured": {
+        "commands": [
+          "python scripts/golden_snapshot.py compare scripts/golden_baseline.json --report <scratch>/pair-report.json",
+          "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json --report <scratch>/coupled-report.json"
+        ],
+        "pair_golden": {
+          "differing_leaves": 0,
+          "qualifying_leaves": 0,
+          "owed": 0
+        },
+        "coupled_golden": {
+          "differing_leaves": 145,
+          "qualifying_leaves": 127,
+          "covered_by_a_receipt_certifying_the_current_value": 64,
+          "declared_not_owed_by_a_committed_allowlist": 3,
+          "owed": 60,
+          "of_the_owed_carrying_a_stale_receipt_on_the_same_path": 23,
+          "unclaimed_by_any_committed_allowlist": 0
+        }
+      },
+      "why_one_leaf_states_a_shape_number": "One member of the population is /metadata/fingerprint/leaves, and R-18 hands an investigator the leaf path and its two values, so this file records them. That is umbrella criterion 4's exemption and not a breach of it: these are a diff report's readings of one qualifying leaf — a measurement — and not a restatement of a committed baseline's shape. The sole home of the committed counts is docs/receipts/campaign-fingerprints.json, which every consumer reads by field; the precedent is docs/receipts/oracle-S9-leaf10.json, which had to state the same two values to adjudicate the same leaf.",
+      "declared_not_owed": {
+        "why": "expected-golden-diff-P4-S9-score-map.json records oracle_pass.status NOT_OWED_NO_OLD_VALUE: R-19 asks an investigator to adjudicate between an old value and a new one, and these three are absent_to_value on a block that did not exist at capture. Recorded here rather than silently netted out of the count.",
+        "leaves": [
+          {
+            "leaf_path": "/coupled_scenarios/score_event_scan_holder/combat/dispositions",
+            "scenario": "score_event_scan_holder",
+            "old_value": null,
+            "new_value": "{\"breakdown[0].effective_health\": {\"disposition\": \"MEASURED\", \"view_tag\": \"applied\"}, \"breakdown[0].healing_output\": ...",
+            "transition": "absent_to_value",
+            "allowlists_that_claim_it": [
+              "expected-golden-diff-P4-S9-score-map.json"
+            ],
+            "stale_receipt_on_the_same_path": []
+          },
+          {
+            "leaf_path": "/coupled_scenarios/score_event_view_holder/combat/dispositions",
+            "scenario": "score_event_view_holder",
+            "old_value": null,
+            "new_value": "{\"breakdown[0].effective_health\": {\"disposition\": \"MEASURED\", \"view_tag\": \"applied\"}, \"breakdown[0].healing_output\": ...",
+            "transition": "absent_to_value",
+            "allowlists_that_claim_it": [
+              "expected-golden-diff-P4-S9-score-map.json"
+            ],
+            "stale_receipt_on_the_same_path": []
+          },
+          {
+            "leaf_path": "/coupled_scenarios/score_plain_tuple/combat/dispositions",
+            "scenario": "score_plain_tuple",
+            "old_value": null,
+            "new_value": "{\"breakdown[0].effective_health\": {\"disposition\": \"MEASURED\", \"view_tag\": \"applied\"}, \"breakdown[0].healing_output\": ...",
+            "transition": "absent_to_value",
+            "allowlists_that_claim_it": [
+              "expected-golden-diff-P4-S9-score-map.json"
+            ],
+            "stale_receipt_on_the_same_path": []
+          }
+        ]
+      },
+      "owed_population": [
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[1]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.07, \"fraction\": 0.12, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[2]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.11, \"fraction\": 0.18, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[1]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.07, \"fraction\": 0.12, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[2]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.11, \"fraction\": 0.18, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[3]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.15, \"fraction\": 0.24, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[4]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[5]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[1]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.07, \"fraction\": 0.12, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[2]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.11, \"fraction\": 0.18, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[3]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.15, \"fraction\": 0.24, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[4]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[5]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[6]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[7]",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "{\"factor\": 1.2, \"fraction\": 0.3, \"source\": \"Black Cleaver \\u2014 Carve\", \"type\": \"armor_reduction_percent\"}",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": "main",
+          "new_value": null,
+          "transition": "value_to_absent",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[0]/fraction",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 0.06,
+          "new_value": 0.3,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/fraction",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 0.06,
+          "new_value": 0.3,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[0]/fraction",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 0.06,
+          "new_value": 0.18,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/overheal",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 88.0,
+          "new_value": 148.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf40.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 128.9,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 128.9,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 128.9,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[31]/overheal",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 32.6,
+          "new_value": 46.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 90.1,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 90.1,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 90.1,
+          "new_value": 53.4,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[25]/overheal",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 37.4,
+          "new_value": 22.2,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf36.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/sources[1]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 311.1,
+          "new_value": 194.1,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[55]/overheal",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 97.6,
+          "new_value": 71.5,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf35.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[39]/applied_amount",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 271.4,
+          "new_value": 211.0,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[35]/support_resistance_reduction[0]/factor",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 1.03,
+          "new_value": 1.2,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[46]/support_resistance_reduction[0]/factor",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 1.03,
+          "new_value": 1.2,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/outgoing_damage_before_death",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 848.8,
+          "new_value": 731.8,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 848.8,
+          "new_value": 731.8,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 50.7,
+          "new_value": 45.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 50.7,
+          "new_value": 45.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 50.7,
+          "new_value": 45.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[39]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[40]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[50]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json"
+          ],
+          "stale_receipt_on_the_same_path": []
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf41.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf42.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[59]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf43.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf44.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf45.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[62]/raw_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 94.1,
+          "new_value": 101.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf46.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 138.6,
+          "new_value": 149.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf47.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[61]/pair_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 138.6,
+          "new_value": 149.7,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf48.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[1]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 282.4,
+          "new_value": 297.5,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf51.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[2]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 847.3,
+          "new_value": 892.5,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf73.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/sources[0]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 277.2,
+          "new_value": 288.3,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf50.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/outgoing_damage_before_death",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 3226.1,
+          "new_value": 3310.1,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf74.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[0]/total_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 3226.1,
+          "new_value": 3310.1,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf75.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/objective/focus_damage_before_death",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 3226.1,
+          "new_value": 3310.1,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf76.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/health_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 4074.9,
+          "new_value": 4041.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf77.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/incoming_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 4074.9,
+          "new_value": 4041.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf78.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/objective/main_team_damage_before_death",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 4074.9,
+          "new_value": 4041.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf81.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/damage_taken",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 4074.9,
+          "new_value": 4041.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf79.json"
+          ]
+        },
+        {
+          "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/health_damage",
+          "scenario": "cleaver_bloodsong_roster",
+          "old_value": 4074.9,
+          "new_value": 4041.9,
+          "transition": "value",
+          "allowlists_that_claim_it": [
+            "expected-golden-diff-P4-S7-bloodsong.json",
+            "expected-golden-diff-P4-S7-rearm.json"
+          ],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S6S7-leaf80.json"
+          ]
+        },
+        {
+          "leaf_path": "/metadata/fingerprint/leaves",
+          "scenario": "metadata",
+          "old_value": 14256,
+          "new_value": 23308,
+          "transition": "value",
+          "allowlists_that_claim_it": [],
+          "stale_receipt_on_the_same_path": [
+            "oracle-S9-leaf10.json"
+          ]
+        }
+      ],
+      "reproducer": "tests/test_escalated_defects_p4_boundary.py::TestTheOwedPopulationIsStillOwed — every leaf in owed_population still has no docs/receipts/oracle-*.json certifying its new_value, and every one of their old_value readings still reproduces against the committed scripts/golden_coupled_baseline.json, which is the assertion that the baseline did not move while the receipts were owed.",
+      "reproducer_after_closure": "Inverted: the receipts exist, the gate's no-covering-receipt assertion fails, and the entry retires carrying the population it named while the integration agent re-captures both baselines and refreshes the golden blocks of campaign-fingerprints.json.",
+      "for_the_owner": "Spawn the R-18 investigator pass over owed_population — one fresh Opus 5 per leaf, tree export built by R-18's one git archive command — file each verdict at docs/receipts/oracle-P4-boundary-<leaf-slug>.json, then re-capture scripts/golden_baseline.json, scripts/golden_coupled_baseline.json and scripts/golden_coupled_exact.json in baseline-only commits (R-17/R-32) and move this entry to retired[]. Two of the three dissents already on escalated-defects-S6S7-oracle.json bear on how that pass is briefed: these leaf paths address list members by ordinal, and 15 of the 60 are value_to_absent."
+    }
+  ],
+  "retired": []
+}
