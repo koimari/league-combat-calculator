@@ -544,6 +544,20 @@
       "captured_at_commit": "a97383d",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "Phase 4 S9's own R-28 baseline, captured on the S8 tip before S9's first src/ edit. The counters, residual, winner and score are S8's landed values (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131) and S9 predicts every one of them unchanged: it is a pure stage, so its Expected qualifying occurrences is 0 on both baselines by definition (phase criterion 8) and any move is an unexpected occurrence that stops the slice. Wall is 1.5% above S8's 3516.7 ms, which is repeat noise on one box. R-28 gates allocation at S4 alone, so S9 declares wall and nothing else."
+    },
+    "P4-S10": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3778.7,
+      "repeats_ms": [
+        3824.2,
+        3778.7,
+        3841.4
+      ],
+      "ratchet_ceiling_ms": 4156.6,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "f9099a1",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "Phase 4 S10's own R-28 baseline, captured on the S9 tip before S10's first src/ edit. The counters, residual, winner and score are S9's landed values, unmoved since S8 (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131), and S10 predicts every one of them unchanged: it is the cleanup stage, so its Expected qualifying occurrences is 0 on both baselines by definition (phase criterion 8) and any move is an unexpected occurrence that stops the slice. Wall is 5.9% above S9's 3568.8 ms measured on the same tree S9 finished on, so the move is box drift between two captures rather than anything S9 landed; the ratchet reads against this stage's own capture, which is what R-28's per-stage baseline is for. S10 retires the pair packet's id()-keyed typed-action map, so the prediction the ratchet is checking is that removing it costs less than 10% of this number. R-28 gates allocation at S4 alone, so S10 declares wall and nothing else."
     }
   },
   "tests": {
