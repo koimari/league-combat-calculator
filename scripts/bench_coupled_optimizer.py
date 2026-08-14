@@ -237,6 +237,12 @@ class WorkCounters:
     measured_proposals: int = 0
     score_memo_misses: int = 0
     pair_run_fight_calls: int = 0
+    #: Entries into the survival kernel.  Not a reported counter family and
+    #: not in ``as_dict``: it exists so Phase 4's one-walk property can be
+    #: read at runtime by a test (criterion 1), and a fifth family in the
+    #: published report would contradict the three counts the runbook's own
+    #: criterion 3 pins the report's shape at.
+    walk_invocations: int = 0
     rungs: Counter[str] = field(default_factory=Counter)
 
     def as_dict(self) -> dict[str, Any]:

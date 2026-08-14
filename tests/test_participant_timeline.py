@@ -5310,6 +5310,7 @@ class TestCatalystIsTwoPassesAndNotARecursion:
             measured_proposals: int = 0
             score_memo_misses: int = 0
             pair_run_fight_calls: int = 0
+            walk_invocations: int = 0
             rungs: Counter = field(default_factory=Counter)
 
         two_pass = Sink()

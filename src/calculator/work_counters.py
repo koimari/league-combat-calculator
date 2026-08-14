@@ -54,7 +54,7 @@ class Rung(StrEnum):
 
 
 class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
-    """What the optimizer needs of a work-counter sink: four mutable fields.
+    """What the optimizer needs of a work-counter sink: five mutable fields.
 
     A structural type with no methods is the whole point — the sink is data,
     and demanding two public methods of it would only invite behaviour into
@@ -63,11 +63,21 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
     ``public_evaluations`` is deliberately absent: that figure is published
     in the optimizer's own response and the harness reads it there, so no
     counting site in ``src/`` can disagree with it.
+
+    ``walk_invocations`` is the structural half of Phase 4's one-walk
+    property.  Source counting says there is one ``run_survival_walk`` call
+    expression in the tree; only a runtime counter says a composition
+    entered it once **per pass** rather than twice per pass under two names,
+    which is the failure "one call site" cannot see.  It is not one of the
+    report's four counter families and is deliberately absent from the
+    harness's published counters: it answers a structural question a test
+    asks, not a work question a benchmark compares across runs.
     """
 
     measured_proposals: int
     score_memo_misses: int
     pair_run_fight_calls: int
+    walk_invocations: int
     rungs: Counter[str]
 
 
@@ -75,3 +85,9 @@ def record_rung(sink: WorkCounterSink | None, rung: Rung) -> None:
     """Attribute one coupled evaluation to the engine that priced it."""
     if sink is not None:
         sink.rungs[str(rung)] += 1
+
+
+def record_walk(sink: WorkCounterSink | None) -> None:
+    """Count one entry into the kernel — the one-walk property, at runtime."""
+    if sink is not None:
+        sink.walk_invocations += 1

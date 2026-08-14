@@ -1788,6 +1788,7 @@ def _simulate_survival(
     duration: float,
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
+    work_counters: WorkCounterSink | None = None,
 ) -> "WalkResult":
     """Resolve damage, shields, healing, and death for every participant.
 
@@ -1805,6 +1806,8 @@ def _simulate_survival(
     ``receipt_events`` is an optional outgoing ledger used only by receipt
     callers; when supplied, stateful redirect/deferred clones are mirrored
     beside their source packet without changing score-only inputs.
+    ``work_counters`` is the search's sink, threaded so this pass's one entry
+    into the kernel is counted (criterion 1); ``None`` outside a search.
     """
     combatant_list = list(combatants)
     combatant_by_id = {
@@ -2406,7 +2409,7 @@ def _simulate_survival(
     # Both now enter through ``program.walk.walk`` -- one call site in
     # ``src/``, so "one walk per pass" is a number a counter reads rather
     # than two composition bodies agreeing by hand (criterion 1).
-    return _walk(actions, ctx)
+    return _walk(actions, ctx, counters=work_counters)
 
 
 class CoupledSearchContext:
@@ -3209,7 +3212,7 @@ def _score_with_search_context(
     base = context.base_compiler
     coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
     program = roster_program(all_actors)
-    walk_result = _walk(actions, ctx).projected(
+    walk_result = _walk(actions, ctx, counters=context.work_counters).projected(
         grey_health=grey_summary or None,
         timeline_coverage=combine_timeline_coverages(
             coverage_reports,
@@ -3931,6 +3934,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         params.fight_duration_seconds,
         annotate=include_receipt,
         receipt_events=outgoing if include_receipt else None,
+        work_counters=work_counters,
     ).projected(
         grey_health=grey_summary or None,
         timeline_coverage=combine_timeline_coverages(

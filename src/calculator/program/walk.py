@@ -44,6 +44,7 @@ from typing import Any
 
 from ..survival.actions import SurvivalAction
 from ..survival.transitions import TransitionContext, finalize_states, run_survival_walk
+from ..work_counters import WorkCounterSink, record_walk
 from .rung import CompiledFast, Rung
 
 
@@ -243,8 +244,16 @@ def walk(
     *,
     coverage: Sequence[Any] = (),
     rung: Rung = CompiledFast(),
+    counters: WorkCounterSink | None = None,
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.
+
+    ``counters`` is the runtime half of the one-walk property (criterion 1).
+    One call expression in ``src/`` says a second engine has not been
+    *written*; only a count of entries says a composition did not enter the
+    one that exists twice per pass.  The sink is threaded from the caller
+    like every other work counter and is ``None`` outside an instrumented
+    search (R-24), so the cost with no sink installed is one ``is None``.
 
     The body is one call, one settlement, one fold and one record: this
     function adds no reordering and no filtering, because anything it added
@@ -262,6 +271,7 @@ def walk(
     caller that forgot it would read a state the kernel had not closed out,
     and nothing would say so.
     """
+    record_walk(counters)
     run_survival_walk(actions, ctx)
     finalize_states(ctx.states, ctx.duration)
     return WalkResult(

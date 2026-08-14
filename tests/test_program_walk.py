@@ -181,3 +181,253 @@ class TestTheWalkFoldsWhatItsStateImplies:
         result = walk_module.walk([damage_action(5.0)], ctx)
         with pytest.raises(TypeError, match="declares no fold named survival"):
             result.projected(survival=())
+
+
+class TestOneWalkPerPassAtRuntime:
+    """Criterion 1's two runtime clauses, which source counting cannot see.
+
+    One ``run_survival_walk(`` call expression in ``src/`` says a second
+    engine has not been *written*.  It says nothing about a composition that
+    enters the one engine twice per pass under two names, which is the shape
+    the incident actually had -- so the property is read at runtime, off the
+    same threaded sink every other work counter uses (R-24), and never off a
+    monkey-patched module attribute.
+
+    The pass count is the roster's own: ``pass_count`` over the declared
+    cross-pass dependencies, one for almost every roster and two for a build
+    whose restore ledger is a function of the fight it is in.
+    """
+
+    @staticmethod
+    def _sink():
+        """A counter sink shaped exactly like the harness's own."""
+        from scripts.bench_coupled_optimizer import WorkCounters
+
+        return WorkCounters()
+
+    def test_one_candidate_evaluation_enters_the_kernel_once_per_pass(self) -> None:
+        from src.calculator import participant_timeline as timeline_module
+        from src.calculator.participant_timeline import CoupledSearchContext
+        from src.calculator.program.dependency import pass_count
+
+        from tests.test_participant_timeline import _coupled_fixture
+        from src.calculator.data_fetcher import get_item_by_name
+
+        sink = self._sink()
+        timeline = _coupled_fixture()
+        items = [get_item_by_name("Rabadon's Deathcap")]
+        timeline(
+            items,
+            include_receipt=False,
+            search_context=CoupledSearchContext(work_counters=sink),
+        )
+        passes = pass_count(
+            timeline_module._cross_pass_dependencies(  # pylint: disable=W0212
+                items, (), ()
+            )
+        )
+        assert passes == 1
+        assert sink.walk_invocations == passes
+
+    def test_a_two_pass_roster_prices_its_fight_once_inside_its_two_passes(
+        self,
+    ) -> None:
+        """The declared pass budget is a ceiling the composition does not spend.
+
+        Criterion 1 asks for ``len(passes)`` invocations, and a Catalyst
+        roster runs two passes and enters the kernel **once** -- which is
+        stronger than the criterion, not weaker, and is worth a test rather
+        than a discovery.  S8's first pass exists to derive the restore
+        ledger the second is priced with: it composes the roster, reads the
+        incoming champion damage, and returns a ``PassRequest`` *before* the
+        walk, so the fight is walked once, by the pass that knows the
+        restores.  The recursion this replaced walked the same fight from
+        inside a call to itself, where the count could not be taken at all.
+
+        The bound is what is asserted, so a pass that started walking
+        speculatively would fail here even though it would still be one walk
+        per pass.
+        """
+        from src.calculator import participant_timeline as timeline_module
+        from src.calculator.participant_timeline import (
+            CoupledSearchContext,
+            build_participant_timeline,
+        )
+        from src.calculator.pipeline import FightParams
+        from src.calculator.program.dependency import pass_count
+        from src.calculator.scenario import ChampionLoadout
+
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Catalyst of Aeons",)
+        ).resolve()
+        enemies = [
+            ChampionLoadout(champion=name, level=13, role="top").resolve()
+            for name in ("Aatrox", "Malphite")
+        ]
+        composed: list[int] = []
+        original = timeline_module._compose_pass  # pylint: disable=W0212
+
+        def spy(*args, **kwargs):
+            composed.append(kwargs["pass_index"])
+            return original(*args, **kwargs)
+
+        sink = self._sink()
+        timeline_module._compose_pass = spy  # pylint: disable=W0212
+        try:
+            build_participant_timeline(
+                main.champion_data,
+                main.request.level,
+                list(main.item_data),
+                FightParams.from_request(
+                    {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+                ),
+                main_stats=main.stats,
+                main_defenses=main.defenses,
+                enemies=enemies,
+                allies=[],
+                search_context=CoupledSearchContext(work_counters=sink),
+            )
+        finally:
+            timeline_module._compose_pass = original  # pylint: disable=W0212
+
+        budget = pass_count(
+            timeline_module._cross_pass_dependencies(  # pylint: disable=W0212
+                list(main.item_data), enemies, []
+            )
+        )
+        assert composed == [1, 2]
+        assert budget == 2
+        assert sink.walk_invocations == 1
+        assert sink.walk_invocations <= budget
+
+    def test_with_no_sink_installed_the_counter_costs_one_is_none_test(self) -> None:
+        """R-24's other half: the seam is inert when nobody is measuring."""
+        ctx, _ = one_participant_context()
+        walk_module.walk([damage_action(1.0)], ctx)  # no sink; must not raise
+
+    def test_the_sink_the_harness_ships_carries_the_field(self) -> None:
+        """A counter the protocol declares and the concrete sink lacks is not one."""
+        sink = self._sink()
+        assert sink.walk_invocations == 0
+        from src.calculator.work_counters import record_walk
+
+        record_walk(sink)
+        assert sink.walk_invocations == 1
+
+    def test_the_walk_count_is_not_one_of_the_reported_counter_families(self) -> None:
+        """The runbook pins the report's shape at four families; this is a fifth."""
+        assert "walk_invocations" not in self._sink().as_dict()
+
+
+class TestEveryViewOfOneRequestProjectsOneWalk:
+    """Criterion 1's third clause: one walk, not two under new names.
+
+    "One call site, one walk per pass" is satisfied by a composition that
+    builds one program for the score projection and a second for the receipt
+    projection -- two walks wearing one name.  What forbids that is
+    identity: the record every view of one request reads has to be *the*
+    walk the kernel produced, and not an equal one.
+
+    **The criterion says "the same object (``is``)" and the composition
+    hands its views a chain of frozen descendants, so that is what is
+    asserted here and the difference is written down rather than absorbed.**
+    ``WalkResult`` is frozen precisely so a view cannot be a sixth producer
+    of numbers, which means a fold added after the walk -- the attacker
+    outcomes derived from the breakdown, the public event lists derived from
+    the receipt composition -- can only arrive as ``replace``.  Three folds
+    land between the first view and the last, so no two views can literally
+    receive one object without the folds being computed before the views
+    that produce them, which is circular.
+
+    What identity is available is exactly what "one walk" means: every view
+    input carries the kernel's own ``actions``, ``states`` and ``survival``
+    **by identity**, and there is exactly one record they all descend from,
+    which is the one ``walk()`` returned.  A second walk fails that as
+    surely as it fails ``is``; a re-projection does not, and a re-projection
+    is not a second engine.
+    """
+
+    @staticmethod
+    def _one_request(monkeypatch) -> tuple[list, dict[str, list]]:
+        """The walks one calculate request ran, and what each view was given."""
+        from src.calculator import participant_timeline as timeline_module
+        from src.calculator.pipeline import FightParams
+        from src.calculator.scenario import ChampionLoadout
+
+        walked: list = []
+        seen: dict[str, list] = {"breakdown": [], "receipt": [], "survival": []}
+
+        original_walk = timeline_module._walk  # pylint: disable=W0212
+
+        def walk_spy(*args, **kwargs):
+            result = original_walk(*args, **kwargs)
+            walked.append(result)
+            return result
+
+        monkeypatch.setattr(timeline_module, "_walk", walk_spy)
+
+        for name, module, attribute in (
+            ("breakdown", timeline_module._breakdown_view, "breakdown"),
+            ("receipt", timeline_module._receipt_view, "receipt"),
+            ("survival", timeline_module._survival_view, "survival_leaves"),
+        ):
+            original = getattr(module, attribute)
+
+            def spy(*args, _name=name, _original=original, **kwargs):
+                seen[_name].append(args[1])
+                return _original(*args, **kwargs)
+
+            monkeypatch.setattr(module, attribute, spy)
+
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        enemies = [ChampionLoadout(champion="Aatrox", level=13, role="top").resolve()]
+        timeline_module.build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            FightParams.from_request(
+                {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+            ),
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=[],
+        )
+        return walked, seen
+
+    def test_the_request_ran_exactly_one_walk(self, monkeypatch) -> None:
+        walked, seen = self._one_request(monkeypatch)
+        assert len(walked) == 1
+        assert [len(records) for records in seen.values()] == [1, 1, 1]
+
+    def test_every_view_reads_that_walks_own_actions_states_and_folds(
+        self, monkeypatch
+    ) -> None:
+        walked, seen = self._one_request(monkeypatch)
+        kernel = walked[0]
+        for name, records in seen.items():
+            given = records[0]
+            assert given.actions is kernel.actions, name
+            assert given.states is kernel.states, name
+            assert given.survival is kernel.survival, name
+
+    def test_a_second_walk_would_not_pass_that(self, monkeypatch) -> None:
+        """R-05: the check ships with a red it can produce on demand.
+
+        Two walks of the same fight are equal and are not identical, which
+        is the whole reason the assertion is written on identity.
+        """
+        walked, _ = self._one_request(monkeypatch)
+        kernel = walked[0]
+        second = walk_module.WalkResult(
+            actions=tuple(list(kernel.actions)),
+            states=tuple(list(kernel.states)),
+            coverage=kernel.coverage,
+            rung=kernel.rung,
+            duration=kernel.duration,
+            survival=kernel.survival,
+        )
+        assert second == kernel
+        assert second.actions is not kernel.actions
