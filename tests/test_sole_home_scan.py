@@ -67,13 +67,20 @@ def test_the_forced_restatements_are_criterion_4s_counted_residue(scan) -> None:
 
     These rows are the sites that really do state a committed baseline's shape
     count, each because another rule left no way not to.  The count is asserted
-    so that adding a seventeenth is a failing test rather than a habit.
+    so that adding one more is a failing test rather than a habit.
+
+    It fell from sixteen across nine sources to eleven across six at the
+    campaign-close coupled re-capture, and the cause is worth stating because
+    it looks like a discharge and is not: the scan reads the *live* counts, so
+    a receipt restating a figure a re-capture superseded stops being a site.
+    The criterion binds a count of a **committed** baseline, and a superseded
+    figure is no longer one.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 16
+    assert block["forced_restatements"] == 11
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 9
+    assert len({row.source for row in forced}) == 6
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

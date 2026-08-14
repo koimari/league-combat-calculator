@@ -4,14 +4,11 @@
  "how_a_row_retires": "A forced row retires when the umbrella rules how a leaf's own adjudicating receipt states that leaf's value -- an amendment carving out the fingerprint counters from criterion 4, or a snapshot shape that keeps them out of the compared leaves. Editing the nine sources is not available: a superseded oracle receipt is never edited (R-15/R-18 amendment) and a commit body is history.",
  "sources": {
   "forced_restatement_sources": [
-   "067c94c4",
    "1483b46e",
    "83574329",
    "c2b3d887",
-   "escalated-defects-P4-boundary.json",
    "expected-golden-diff-P4-H2-ccscope.json",
    "oracle-0A.2-golden-leaf0.json",
-   "oracle-P4B-leaf59.json",
    "oracle-S9-leaf11.json"
   ],
   "coincidence_sources": [
@@ -33,28 +30,10 @@
    "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
   },
   {
-   "source": "oracle-P4B-leaf59.json",
-   "value": 23308,
-   "kind": "forced_restatement",
-   "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
-  },
-  {
    "source": "oracle-S9-leaf11.json",
    "value": 8312,
    "kind": "forced_restatement",
    "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
-  },
-  {
-   "source": "escalated-defects-P4-boundary.json",
-   "value": 23308,
-   "kind": "forced_restatement",
-   "reason": "R-19: the escalation enumerates the owed population leaf by leaf with the two values of each, and one of those leaves is a fingerprint shape counter"
-  },
-  {
-   "source": "expected-golden-diff-P4-H2-ccscope.json",
-   "value": 23308,
-   "kind": "forced_restatement",
-   "reason": "R-17: an R-17 allowlist states the expected old and new value of every path it claims, and one of the paths it claims is a fingerprint shape counter"
   },
   {
    "source": "1483b46e",
@@ -63,12 +42,6 @@
    "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
   },
   {
-   "source": "067c94c4",
-   "value": 23308,
-   "kind": "forced_restatement",
-   "reason": "R-17: an R-17 allowlist states the expected old and new value of every path it claims, and one of the paths it claims is a fingerprint shape counter; the commit body restates its own allowlist's row"
-  },
-  {
    "source": "83574329",
    "value": 13,
    "kind": "forced_restatement",
@@ -87,12 +60,6 @@
    "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
   },
   {
-   "source": "83574329",
-   "value": 23308,
-   "kind": "forced_restatement",
-   "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
-  },
-  {
    "source": "c2b3d887",
    "value": 13,
    "kind": "forced_restatement",
@@ -107,12 +74,6 @@
   {
    "source": "c2b3d887",
    "value": 8312,
-   "kind": "forced_restatement",
-   "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
-  },
-  {
-   "source": "c2b3d887",
-   "value": 23308,
    "kind": "forced_restatement",
    "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
   },
@@ -133,6 +94,13 @@
    "value": 82,
    "kind": "coincidence",
    "reason": "an oracle verdict tally and a receipt count; the report's own note names 82 as a collision"
+  },
+  {
+   "source": "expected-golden-diff-P4-H2-ccscope.json",
+   "value": 23310,
+   "kind": "forced_restatement",
+   "reason": "R-17: an R-17 allowlist states the expected old and new value of every path it claims, and one of the paths it claims is a fingerprint shape counter; 23310 is the value the campaign-close re-capture pinned"
   }
- ]
+ ],
+ "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails."
 }

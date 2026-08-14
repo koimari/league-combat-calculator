@@ -92,6 +92,24 @@ _SEGMENT = re.compile(r"([^\[\]]+)((?:\[\d+\])*)")
 _MISSING = object()
 
 
+def _superseding_value(path: str, recorded):
+    """What a later committed allowlist says this leaf moved on to, if any.
+
+    R-17's allowlists are the campaign's forward record of an expected move,
+    so a leaf a boundary pinned and a later slice moved again has its
+    successor written down before the move rather than after it.  Returns
+    *recorded* unchanged when no allowlist claims the path, so the caller's
+    assertion is the boundary's own by default.
+    """
+    for receipt in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
+        block = json.loads(receipt.read_text(encoding="utf-8"))
+        values = block.get("expected_diff_values") or {}
+        row = values.get(path)
+        if isinstance(row, dict) and "new" in row:
+            return row["new"]
+    return recorded
+
+
 def _ledger():
     return json.loads(RECEIPT.read_text(encoding="utf-8"))
 
@@ -433,15 +451,35 @@ class TestTheOwedPopulationIsAnswered:
         recorded values: the committed baseline now holds, leaf for leaf,
         exactly the ``new_value`` each row's receipt certified — including the
         removals, which are absent from it.
+
+        Unless a **later** committed allowlist claims the same path and
+        declares what it moves it to, which is how a leaf legitimately moves
+        again after a boundary: the closing re-capture moved
+        ``/metadata/fingerprint/leaves`` a second time, because H2's two
+        published fields are two more leaves.  Reading the successor from the
+        allowlist rather than editing this row is the whole discipline —
+        a row is superseded by a claim somebody committed in advance, never
+        by a number somebody updated afterwards.
         """
         baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
         leaf = _population()[index]
         found = _reportable(_resolve(baseline, leaf["leaf_path"]))
-        if leaf["transition"] == "value_to_absent":
+        expected = _superseding_value(leaf["leaf_path"], leaf["new_value"])
+        if leaf["transition"] == "value_to_absent" and expected is leaf["new_value"]:
             assert found is _MISSING, leaf["leaf_path"]
         else:
             assert found is not _MISSING, leaf["leaf_path"]
-            assert _same_value(found, leaf["new_value"]), leaf["leaf_path"]
+            assert _same_value(found, expected), leaf["leaf_path"]
+
+    def test_the_supersession_join_is_not_vacuous(self):
+        """One path really is claimed onward, so the clause above is live."""
+        claimed = {
+            path
+            for leaf in _population()
+            if (path := leaf["leaf_path"])
+            and _superseding_value(path, leaf["new_value"]) is not leaf["new_value"]
+        }
+        assert claimed == {"/metadata/fingerprint/leaves"}
 
     def test_the_population_is_the_size_the_entry_declares(self):
         assert len(_population()) == 60

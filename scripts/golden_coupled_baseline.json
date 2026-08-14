@@ -22099,6 +22099,8 @@
             "amount": 0.07,
             "applied_amount": 0.07,
             "attacker": "main",
+            "cc_scope": "SingleTarget",
+            "cc_scope_disclosure": "Ahri E declares no reviewed crowd-control scope (H2, deferred with the default shipped), so this mark is delivered to the single defender of the pair fight it was priced in: a claim about one fight, not about the roster.",
             "duration": 4.0,
             "event_id": "enemy:Aatrox:support:10",
             "expires_at": 4.0,
@@ -37328,15 +37330,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 13,
-      "leaves": 23308,
+      "leaves": 23310,
       "numeric_leaves": 8312,
       "sections": "coupled_scenarios"
     },
-    "git_head": "92f309f524694ba046c192838f7ec2be170ec5cf",
+    "git_head": "7d2975d598256467e4888a55c06404afc6e2dcca",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "cb724d9a1e6247ce362c3796d628e1e638a2637c"
+    "src_tree_sha": "34ac33f8753f04863815d70eb6328689283a9df9"
   }
 }
