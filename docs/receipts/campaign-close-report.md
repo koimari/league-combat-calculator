@@ -331,3 +331,73 @@ number on all three score-serving endpoints carries exactly one entry naming whi
 and deleting either half of Command fails on a number rather than on a sentence. What remains
 undone is written above with its artifact and its reproducer, and none of it is a claim standing
 where an implementation is missing — which was the campaign's whole subject.
+
+---
+
+## 9. Corrections, and the closing remediation pass
+
+*Appended 2026-08-14 on `1db568c`, after an independent R-35 pass over this report and the two
+commits that carried it returned **nine criteria NOT DISCHARGED** and six findings of behaviour the
+commit bodies did not mention. Everything above this line is left exactly as it was written on
+`067c94c`: a report that edits itself to match what turned out to be true is a report whose earlier
+readers were told something nobody can now recover. Corrections first, then the re-grade.*
+
+### 9.1 Claims above that this repository now contradicts
+
+| Where | What it says | What is true now |
+|---|---|---|
+| Section 1 row 3, section 6 criterion 5, **G1** | row 3 is "RED as a raw command; explained", and no closing re-capture followed `067c94c` | The closing coupled re-capture landed at `1db568c`. `compare scripts/golden_coupled_baseline.json` reads **`snapshot identical`**, and all eleven R-01 rows are green together for the first time since Phase 4 S7. |
+| Section 6 criteria 1 and 8, **G2**, **G3** | `OutcomeLedger` has zero construction sites in `src/`, so D-62's uniqueness never fires over a real fight | It is the receipt walk's companion since `69e7323`. Over the five committed coupled scenarios the ledger records 314 slots, claims 290 applied contributions with 0 unidentified, and observes 24 refusals. **G3 is closed.** G2's emission half is not, and its block is now named exactly rather than costed vaguely -- see 9.3. |
+| **G5** | resolving it "needs an umbrella amendment ... not an edit to the nine sites" | Still true of the criterion's wording, and half wrong about the remedy: the *scan* was the missing piece. `scripts/sole_home_scan.py` (`1e209e2`) mechanises criterion 4's second half, so a tenth site fails a gate. The residue is pinned as a number, and it fell to eleven rows across six sources when the closing re-capture superseded a figure -- a fall, not a discharge. |
+| **G6** | "51 adverse oracle verdicts stand repo-wide (of 81 across 550 receipts)" | The population was 552 when this sentence was written and is 552 now; 81 and 51 are unchanged and were re-derived. The 550 was superseded one commit later by `ce34610`, inside the same slice group, and nothing gated a figure inside this report. That is a small instance of exactly what section 6 criterion 4 is about, in a document arguing about it. |
+| **G8** | H1, H3 and H4 carry a deferral consequence rather than a restated criterion | Fixed at `1de067b`: each row now names its dependent criterion and states how it is read under the deferral, in H5's shape. **G8 is closed.** |
+
+### 9.2 What the remediation pass changed
+
+| Commit | Subject |
+|---|---|
+| `47c5218` | `live_damage` is a diagnostic and stops aliasing the applied outcome field |
+| `ff5e31d` | the rule that refused an action owns its receipt, not the rule that followed |
+| `69e7323` | the receipt walk runs the write-once outcome ledger |
+| `1e209e2` | criterion 4's second half stops being an agent reading |
+| `4267fd3` | a receipt's date is read however the receipt spells it |
+| `98351d1` | two cached-data defects an oracle receipt asserted as an aside |
+| `1de067b` | H1, H3 and H4 get the criterion restatement criterion 11 asks for |
+| `7d2975d` | a deferral whose stage has shipped is a debt and now says so |
+| `1db568c` | the closing coupled re-capture |
+
+Two defects the ledger join surfaced are worth naming here, because neither was visible until a walk
+drove that record. `OutcomeLedger._WRITE_ALIASES` mapped the diagnostic `live_damage` onto the
+`applied` outcome field beside `damage` -- two numbers that agree exactly when nothing overkilled.
+And the kernel's trigger arm skipped without `preserve_reason`, so a redirect child Knight's Vow had
+already cancelled published `trigger_event_skipped`, the consequence, in place of
+`holder_health_gate`, the cause, which was the only one of the two that named a rule.
+
+### 9.3 The gaps, re-graded
+
+| # | State | Note |
+|---|---|---|
+| **G1** | **CLOSED** | `1db568c`. Row 3 green; the exact baseline moved no value, which is the bit-exact evidence that nothing computed moved across the pass's three `src/` commits either. |
+| **G2** | **OPEN, and the block is now named** | Not budget: **adjudication**. Publishing a refused row's outcome as `StructuralZero` moves 38 leaves in the coupled baseline, each a `text_change` on a disposition string. R-15's 2026-08-14 amendment adjudicates by citation only a *membership* transition, and no oracle built by R-18's export can decide whether a zero the walk refused is `MEASURED` or `STRUCTURAL_ZERO` -- that is a question about this campaign's own vocabulary, which the export exists to keep out of an investigator's hands. The slice needs a ruling, not a lane. |
+| **G3** | **CLOSED** | `69e7323`. |
+| **G4** | **OPEN, and now gated** | The rows cannot retire while G2 is open: the retiring stage's mechanism is the projection G2 lacks, and re-dating them is Amendment B's to do rather than a lane's. What changed at `7d2975d` is that a deferral whose stage has shipped is declared **overdue** with a blocker naming an artifact, and the gate refuses an undeclared one -- so the next stage that passes without retiring its rows fails on the commit that passes it. |
+| **G5** | **OPEN, and now counted** | `1e209e2`. See 9.1. |
+| **G6** | **OPEN, one hole closed** | The supersession rule reads a receipt's date under any of eleven live spellings since `4267fd3`, not two. Twenty-three dated receipts were being counted as undated, and an undated dissent is treated as cleared by any same-leaf answer. The standing set does not move -- 51 either way -- so this closed a hole rather than correcting a verdict. |
+| **G7** | **OPEN, unchanged** | Not in this pass's scope. |
+| **G8** | **CLOSED** | `1de067b`. |
+| **G9** | **OPEN by design, unchanged** | H6's recorded ruling. |
+| **G10** | **NEW, OPEN** | Criterion 1's clause "`static/js/app.js` takes exactly one budgeted change at S9" is false, and neither this report nor the commit bodies said so. Three commits touched the file in the campaign range: `bf4a6d3` (+26), `44331c7` (+52/-10, the withheld marker the clause names) and `f25dcfa` (+13/-5, a row-classification refactor). The budget overran by two and nothing counted it. Reverting a shipped refactor to satisfy a budget clause would be worse than recording the overrun, so it is recorded. |
+| **G11** | **NEW, OPEN, filed and gated** | Two cached-data defects an oracle receipt asserted as an aside and no commit body mentioned: Imperial Mandate's `simpleDescription` describes a different item, and one ability-haste phrase is atomized three ways. Neither reaches a damage number, and the gate asserts that rather than saying it. `docs/receipts/escalated-defects-cached-data.json` (`98351d1`). |
+
+### 9.4 The re-grade
+
+Criteria **3, 6, 9, 10** are unchanged and discharged. **8** and **11** move to **DISCHARGED**.
+**5** moves to **DISCHARGED**: all eleven rows are green at the closing boundary, and there are zero
+pair-engine diffs anywhere. **1**, **4** and **7** remain **PARTIALLY DISCHARGED**, each on one named
+clause with a named blocker -- G2 for criterion 1, plus G10 on its frontend clause; G5 for criterion
+4; G4 for criterion 7 -- and each of the three now fails a machine rather than a reader if it grows.
+
+Two of the three open clauses need an umbrella ruling and cannot be closed by an implementation lane
+at all: how a disposition transition is adjudicated (G2, and G4 behind it), and whether a leaf's own
+adjudicating receipt may state that leaf's value (G5). That is the honest end state -- not "done",
+and not a claim standing where an implementation is missing.

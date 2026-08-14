@@ -1,0 +1,196 @@
+{
+ "artifact": "verify_ledger",
+ "rule": "Runbook criterion 11: every slice has a recorded verify-<slice> verdict; no barrier is crossed with an open NOT DISCHARGED; and every 'behaviour the commit bodies do not mention' finding is either documented or reverted. R-35's mechanism was real and used throughout the campaign -- commit bodies across the range cite verify-P2b and verify-P5-retire findings and answer six NOT DISCHARGED verdicts by name -- but the verdicts themselves were only ever written into commit bodies, so 'every slice has a recorded verdict' could not be checked from the repository. That is the first half of the criterion and it is the half this file exists to start.",
+ "what_this_ledger_does_not_hold": "The verdicts of the campaign's earlier slices. They are recoverable only by reading the commit bodies that answer them, one range at a time, and reconstructing them here from those bodies would be this campaign's own failure shape -- a record derived from the thing it is supposed to check independently. So the ledger starts where a lane could record a verdict honestly, which is the pass that produced it, and the gap for everything before it is stated rather than papered over. A campaign that ran this file from slice one would have the criterion; this one has the mechanism and one pass.",
+ "gate": "tests/test_verify_ledger.py",
+ "verdict_vocabulary": [
+  "DISCHARGED",
+  "NOT_DISCHARGED"
+ ],
+ "disposition_vocabulary": [
+  "fixed",
+  "fixed_and_gated",
+  "documented_open",
+  "reverted"
+ ],
+ "passes": [
+  {
+   "slice_group": "campaign-close",
+   "verified_commits": [
+    "8d4695e",
+    "ce34610"
+   ],
+   "dated": "2026-08-14",
+   "answered_by": [
+    "47c5218",
+    "ff5e31d",
+    "69e7323",
+    "1e209e2",
+    "4267fd3",
+    "98351d1",
+    "1de067b",
+    "7d2975d",
+    "1db568c"
+   ],
+   "criteria": [
+    {
+     "id": "umbrella-1",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Production emission: every disposition on every payload is MEASURED and OutcomeLedger had no construction site in src/. Second clause: 'static/js/app.js takes exactly one budgeted change at S9' is false -- three commits touched it.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "69e7323",
+      "1db568c"
+     ],
+     "artifact": "docs/receipts/escalated-defects-P4-S9.json",
+     "note": "The construction-site half is closed and the ledger is filled by every real fight. The emission half is blocked on an adjudication ruling, now named and its footprint measured. The app.js clause is recorded as gap G10 of the campaign-close report; reverting a shipped refactor to satisfy a budget clause would be worse than recording the overrun."
+    },
+    {
+     "id": "umbrella-4",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Nine sources outside the sole home state a committed baseline's golden shape count; the criterion's second half was an agent scan with no gate behind it.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "1e209e2",
+      "1db568c"
+     ],
+     "artifact": "docs/receipts/golden-figure-sole-home.json",
+     "note": "The scan is mechanised and the residue is pinned as a number, so a further site fails a gate. The criterion's wording stays unmet and the report says so."
+    },
+    {
+     "id": "umbrella-5",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "R-01 row 3 exits 1 with three standing diffs; the campaign closes without the re-capture.",
+     "disposition": "fixed",
+     "answered_at": [
+      "1db568c"
+     ],
+     "artifact": "scripts/golden_coupled_baseline.json",
+     "note": "All eleven rows green at the closing boundary."
+    },
+    {
+     "id": "umbrella-7",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Amendment B's exit clause: fourteen deferral rows still retire at a stage that shipped without retiring them.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "7d2975d"
+     ],
+     "artifact": "docs/behavior-frontier.json",
+     "note": "The rows cannot retire while umbrella-1's emission half is open, and re-dating them is Amendment B's ruling rather than a lane's. A deferral whose stage has shipped is now declared overdue with a blocker, and the gate refuses an undeclared one."
+    },
+    {
+     "id": "umbrella-8",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "D-62's one-APPLIED-per-key uniqueness is enforced only on OutcomeLedger, which has no construction site in src/, so it never runs over a real fight.",
+     "disposition": "fixed",
+     "answered_at": [
+      "69e7323"
+     ],
+     "artifact": "src/calculator/survival/receipt_state.py",
+     "note": "290 applied contributions claimed over the committed coupled corpus, 0 unidentified."
+    },
+    {
+     "id": "umbrella-11",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The [H] clause on a strict read: H1, H3 and H4 are unanswered and carry a deferral consequence rather than a restated criterion.",
+     "disposition": "fixed",
+     "answered_at": [
+      "1de067b"
+     ],
+     "artifact": "docs/plans/2026-08-08-silent-failure-campaign.md",
+     "note": "Each row now names its dependent criterion and states how it is read under the deferral, in H5's shape. Nothing is answered; an implementation lane may not answer an [H]."
+    },
+    {
+     "id": "runbook-2",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The sole-home clause, same finding as umbrella-4 from the runbook's side.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "1e209e2"
+     ],
+     "artifact": "scripts/sole_home_scan.py",
+     "note": "The plans half was already green and machine-gated; the receipts and commit-body half now is too."
+    },
+    {
+     "id": "runbook-6",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The compare half fails with three standing diffs; the producer-coverage half was already discharged.",
+     "disposition": "fixed",
+     "answered_at": [
+      "1db568c"
+     ],
+     "artifact": "scripts/golden_coupled_baseline.json",
+     "note": "Same root as umbrella-5."
+    },
+    {
+     "id": "runbook-11",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "No committed ledger of per-slice verdicts, so 'every slice has a recorded verdict' cannot be checked from the repository; and the closing barrier was being crossed with open NOT DISCHARGED verdicts.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "1db568c"
+     ],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "This file is the mechanism the criterion's first half needs, carrying one pass. Its second half -- no barrier crossed with an open NOT DISCHARGED -- is not met and cannot be by a lane: three clauses stay open and two of the three need an umbrella ruling. The third half is met: every unmentioned-behaviour finding below is documented, none reverted."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "Date-key asymmetry inside ce34610: one receipt dates itself generated_at and its sibling date, and the supersession scan read only date and dated, so one of the two was UNDATED to the rule.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "4267fd3"
+     ],
+     "note": "Eleven ISO-dated spellings are live across the oracle receipts; receipt_date is now a value rule rather than a key rule. The standing set does not move.",
+     "artifact": "tests/test_standing_oracle_dissents.py"
+    },
+    {
+     "finding": "ce34610 leaves the slice's own headline artifact stale: the campaign-close report states a receipt population one commit later superseded.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "1db568c"
+     ],
+     "note": "Corrected in the report's own corrections section rather than by editing the sentence, which is the fingerprints receipt's rule for a note that turned out wrong. Nothing gates a figure inside that report and that is stated.",
+     "artifact": "docs/receipts/campaign-close-report.md"
+    },
+    {
+     "finding": "ce34610 files defect claims about cached data without mentioning it: Imperial Mandate's simpleDescription, and one ability-haste phrase atomized three ways.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "98351d1"
+     ],
+     "note": "Both re-verified against data/ directly and filed as dated, gated entries with reproducers. Neither reaches a damage number and the gate asserts it.",
+     "artifact": "docs/receipts/escalated-defects-cached-data.json"
+    },
+    {
+     "finding": "The confidence qualifier inside oracle-campaign-close-leaf0.json does not survive into the commit body that landed it.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "98351d1"
+     ],
+     "note": "Recorded in that commit's body: a commit body cannot be amended, and the receipt's own scope-and-limits block is the authority on the verdict's strength.",
+     "artifact": "docs/receipts/escalated-defects-cached-data.json"
+    },
+    {
+     "finding": "The oracle-campaign-close- family prefix is enumerated by no family scan.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "4267fd3"
+     ],
+     "note": "The family scan is derived from filenames and does fail on a new family with a standing dissent -- but only if the dissent is ordered, and an unreadable date was what made one unorderable. The same hole as the first finding.",
+     "artifact": "tests/test_standing_oracle_dissents.py"
+    },
+    {
+     "finding": "Umbrella criterion 1's clause that static/js/app.js takes exactly one budgeted change at S9 is false; the closing report never touches it.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "1db568c"
+     ],
+     "note": "Gap G10 of the campaign-close report, with the three commits and their line counts.",
+     "artifact": "docs/receipts/campaign-close-report.md"
+    }
+   ]
+  }
+ ]
+}
