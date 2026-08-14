@@ -45,6 +45,14 @@ import golden_snapshot as gs  # noqa: E402  (path is set above)
 RECEIPTS = ROOT / "docs" / "receipts"
 RECEIPT = RECEIPTS / "escalated-defects-P4-boundary.json"
 COUPLED_BASELINE = ROOT / "scripts" / "golden_coupled_baseline.json"
+RUNBOOK = ROOT / "docs" / "plans" / "silent-failure-runbook.md"
+
+# The runbook ruling this entry's third owner decision cites, verbatim.
+AMENDMENT_SECTION = "### Independent investigation"
+AMENDMENT_HEADING = (
+    "**Amendment R-15/R-18 — 2026-08-14, briefing a leaf that cannot be judged alone.**"
+)
+RULING_FIELD = "the_third_owner_decision_is_now_ruled"
 
 RETIRED_ID = "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts"
 DISSENT_ID = "thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value"
@@ -134,6 +142,23 @@ def _certified_values(leaf_path):
         if certified_path == leaf_path:
             values.append((path.name, certified))
     return values
+
+
+def _amendment_block():
+    """The runbook amendment this entry cites, from its heading to the next section.
+
+    Read out of the runbook rather than restated here: a citation whose target
+    the gate does not open is the prose-outruns-code shape the campaign exists
+    to kill.
+    """
+    text = RUNBOOK.read_text(encoding="utf-8")
+    section = text.find(AMENDMENT_SECTION)
+    assert section != -1, f"the runbook no longer has a {AMENDMENT_SECTION!r} section"
+    start = text.find(AMENDMENT_HEADING, section)
+    assert start != -1, "the cited amendment is not in the runbook under that heading"
+    opening = text.rfind("\n", 0, start) + 1
+    end = text.find("\n### ", start)
+    return text[opening : end if end != -1 else len(text)], section, start
 
 
 def _this_pass():
@@ -416,3 +441,66 @@ class TestTheOtherJurisdictionIsClean:
         assert sorted(leaf["leaf_path"] for leaf in declared["leaves"]) == sorted(
             allowlist["expected_diff_paths"]["coupled_golden"]
         )
+
+
+class TestTheProtocolGapIsRuledAndTheEntryStillStands:
+    """The third owner decision is answered in the runbook — and only that one.
+
+    The dissent cluster named a protocol gap: a brief carrying only a leaf path
+    and two values is underdetermined for one member of a repeated-source
+    series.  That gap is now ruled as a dated amendment on R-15/R-18, and this
+    entry cites it.  A citation nothing opens is prose, so the gate opens it;
+    and a protocol ruling is not the arithmetic, so the same gate asserts the
+    entry did not retire on the strength of it.
+    """
+
+    def test_the_entry_cites_the_amendment_by_document_and_name(self):
+        """The citation names a document and a heading, not "the runbook"."""
+        ruling = _dissent()[RULING_FIELD]
+        assert "docs/plans/silent-failure-runbook.md" in ruling["amendment"]
+        assert "Amendment R-15/R-18" in ruling["amendment"]
+        assert ruling["dated"] in AMENDMENT_HEADING
+
+    def test_the_cited_amendment_is_in_the_runbook_under_the_rule_it_amends(self):
+        """R-15/R-18 live in *Independent investigation*; so must their amendment."""
+        block, section, start = _amendment_block()
+        assert start > section, "the amendment sits outside the section it amends"
+        assert block.strip().startswith(">"), "an amendment is a block quote, not prose"
+
+    def test_the_amendment_leaves_the_investigator_export_exactly_two_paths(self):
+        """The half that did NOT move: an oracle that reads the fix is not one."""
+        block, _, _ = _amendment_block()
+        assert "stays exactly `data/` and `docs/math-foundations.md`" in block
+        assert "The export does not move." in block
+
+    def test_the_amendment_rules_what_a_series_brief_carries_and_from_where(self):
+        """The half that did move: the question specification, pre-change only."""
+        block, _, _ = _amendment_block()
+        for claim in (
+            "repeated-source series",
+            "question specification",
+            "committed **pre-change**",
+            "committed scenario definitions",
+            "**entire** series from scratch",
+            "one verdict per leaf",
+        ):
+            assert claim in block, claim
+
+    def test_the_amendment_carries_the_anti_oracle_shopping_clause(self):
+        """A re-run with no named brief defect must be unwritable, not discouraged."""
+        block, _, _ = _amendment_block()
+        assert "never re-run merely because it dissents" in block
+        assert "specific defect in the prior brief" in block
+        assert "receipt that supersedes the prior one" in block
+        assert "never absorbed into a baseline" in block or (
+            "It is **never** absorbed into a baseline" in block
+        )
+
+    def test_the_ruling_did_not_retire_the_entry_that_cites_it(self):
+        """A protocol answer is not the inversion this entry closes on."""
+        ledger = _ledger()
+        assert DISSENT_ID in {entry["id"] for entry in ledger["defects"]}
+        assert DISSENT_ID not in {entry["id"] for entry in ledger["retired"]}
+        ruling = _dissent()[RULING_FIELD]
+        assert "stand exactly where they were" in ruling["why_this_entry_stays_open"]
+        assert ruling["gate"].endswith(type(self).__name__)
