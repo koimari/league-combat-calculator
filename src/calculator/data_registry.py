@@ -135,6 +135,12 @@ class Invalidator(Enum):
     """Emptied wholesale by the function that rebuilds what it derives from,
     so the counter has nothing to add."""
 
+    IMPORTED_MODULE = "imported_module"
+    """A Python module object, which cannot change inside a process — so no
+    `data/` refresh can stale it and the counter would be noise in its key.
+    Distinct from :attr:`HAND_AUTHORED_ARTIFACT`, which is a `data/` file
+    nothing writes: this is not a `data/` file at all."""
+
     OBJECT_IDENTITY = "object_identity"
     """Nothing but the identity guard in front of the key — the honest
     spelling of a memo that is not invalidated at all.  Every member is a
@@ -181,18 +187,27 @@ _version_keyed = _governed(Invalidator.DATA_VERSION)
 
 # ── who keys on the counter ──────────────────────────────────────────────
 #
-# The population is machine-derived, not judged: *every module-level binding
-# under src/calculator/ whose name ends in ``_MEMO`` or ``_CACHE`` and whose
-# value is a mapping*.  tests/test_data_version_memos.py scans the tree for
-# that shape — fifteen of them today — and asserts the four tables below
-# partition it exactly, so a sixteenth cannot join the codebase without
-# landing in one of them, which is the whole point of a counter over a
-# convention (D-49).
+# The population is machine-derived, not judged, and it is derived two ways
+# because either one alone has a blind spot.  A memo is *either* a
+# module-level mapping under src/calculator/ whose name ends in ``_MEMO`` or
+# ``_CACHE``, *or* a module-level empty dict that some function in its module
+# fills, clears or pops — which is what a lazily filled cache looks like
+# whatever it is called.  tests/test_data_version_memos.py scans for both and
+# asserts the five tables below partition the union exactly, so a new one
+# cannot join the codebase without landing in one of them, which is the whole
+# point of a counter over a convention (D-49).
 #
-# Splitting the population four ways rather than two is deliberate: "keys on
-# it", "another lane keys it", "cannot be governed by it" and "should be
-# keyed and is not this phase's to edit" are four different claims, and
-# collapsing the last two would hide a real gap behind a reasoned exemption.
+# The second detector is S10's repair: until it existed the population was
+# the name rule alone, and ``item_effects._RESOLVED_DAMAGE_EFFECTS`` — a memo
+# this file already governed, in REFRESH_CLEARED_MEMOS — sat outside it
+# because of how it is spelled.  "The population is closed" that is closed
+# over a naming convention is a claim about the convention.
+#
+# Splitting the population five ways rather than two is deliberate: "keys on
+# it", "another lane keys it", "cannot be governed by it", "the refresh
+# empties it" and "should be keyed and is not this phase's to edit" are five
+# different claims, and collapsing the last two would hide a real gap behind
+# a reasoned exemption.
 
 DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
     "calculator.item_behavior_catalog._BEHAVIOR_RULES_MEMO": _version_keyed(
@@ -248,6 +263,13 @@ UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
         "derived from data/wiki-full-entry-audit.json, a HAND_AUTHORED "
         "artifact rather than a runtime cache"
     ),
+    "calculator.champions.__init__._MODULE_CONTRACTS": _governed(
+        Invalidator.IMPORTED_MODULE
+    )(
+        "the validated contract of an imported champion module, re-verified "
+        "against the registered module name on every hit; a module object "
+        "cannot change inside a process, so no data/ refresh reaches it"
+    ),
 }
 
 # The same shape as the seven above, over champions.json instead of
@@ -265,8 +287,9 @@ _CHAMPION_MEMO_DEFERRAL = (
 # counter has nothing to add.  Named here anyway, with the test that asserts
 # the clear still happens: a memo whose safety is one line in somebody
 # else's function is exactly the claim this campaign stopped taking on
-# trust.  Their names do not match the ``_MEMO``/``_CACHE`` shape the scan
-# looks for, which is why they are listed rather than partitioned.
+# trust.  Their names do not match the ``_MEMO``/``_CACHE`` shape, which is
+# why the scan grew its second detector rather than this table staying
+# outside the partition.
 REFRESH_CLEARED_MEMOS: dict[str, MemoGovernance] = {
     "calculator.item_effects._RESOLVED_DAMAGE_EFFECTS": _governed(
         Invalidator.REFRESH_CLEAR

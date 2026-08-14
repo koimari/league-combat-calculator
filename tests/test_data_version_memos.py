@@ -1,18 +1,22 @@
 """Test front door for ``data_registry``'s memo tables (D-49).
 
-Fifteen memos in this tree hold values derived from cached ``data/`` files,
-and a sixteenth is cleared wholesale by the refresh it follows.  The seven
-this phase owns were keyed on object identity alone, which answers
-"is this the same dict?" and never "was this dict built from the cache we
-are reading now?".  Those are different questions, and a patch-day refresh
-is exactly where they diverge.
+Most memos in this tree hold values derived from cached ``data/`` files; one
+is cleared wholesale by the refresh it follows and one caches imported Python
+modules.  The seven this phase owns were keyed on object identity alone,
+which answers "is this the same dict?" and never "was this dict built from
+the cache we are reading now?".  Those are different questions, and a
+patch-day refresh is exactly where they diverge.
 
 Two properties are checked here and neither is a convention:
 
 * **The population is closed.**  A scan over ``src/calculator`` finds every
-  module-level mapping whose name ends in ``_MEMO`` or ``_CACHE`` and
-  asserts the four declared tables partition it.  A sixteenth memo therefore
-  fails collection until somebody puts it in one of them.
+  module-level mapping named like a memo **and** every module-level empty
+  dict some function fills lazily, and asserts the five declared tables
+  partition the union.  A new memo therefore fails collection until somebody
+  puts it in one of them — including one spelled off the naming convention,
+  which is the hole S10 closed after finding an already-governed member
+  sitting in it.  No count is stated here: the population is meant to grow,
+  and a number in this docstring would be the drift the campaign is about.
 * **The key really carries the version.**  Each of the seven is exercised
   through its own front door: memoize a value, mutate the source in place so
   identity cannot see the change, bump the counter, and assert the answer
@@ -23,6 +27,7 @@ Two properties are checked here and neither is a convention:
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,38 +61,97 @@ def _combatant_stub() -> SimpleNamespace:
 
 
 MEMO_SUFFIXES = ("_MEMO", "_CACHE")
+MEMO_MUTATIONS = ("clear", "pop", "setdefault", "update")
 
 
 def _module_name(path: Path) -> str:
     return ".".join(path.relative_to(SRC_ROOT).with_suffix("").parts)
 
 
-def scan_memos() -> frozenset[str]:
-    """Every module-level mapping under ``src/`` named like a memo.
+def _module_level_dicts(tree: ast.Module) -> dict[str, ast.Dict]:
+    """Every ``NAME = {...}`` bound at a module's top level."""
+    bound: dict[str, ast.Dict] = {}
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        elif isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        else:
+            continue
+        if isinstance(target, ast.Name) and isinstance(value, ast.Dict):
+            bound[target.id] = value
+    return bound
 
-    The shape rule is the whole definition: ``<module>.<NAME>`` where NAME
-    ends in ``_MEMO`` or ``_CACHE`` and the bound value is a dict display.
-    Names like ``_STATE_PROTO_MEMO_LIMIT`` and ``_SUSTAIN_STAT_CACHE_KEYS``
-    fall out because they do not end in a memo suffix, and a non-mapping
-    constant falls out because it cannot hold entries.
+
+def _filled_lazily(tree: ast.Module, names: Iterable[str]) -> set[str]:
+    """Of *names*, those a function body writes into or empties.
+
+    A memo is filled *lazily*: the module binds an empty dict and some
+    function later stores into it.  A registry built at import time is the
+    same expression mutated at module scope, which is why the scope of the
+    mutation is the discriminator and the name is not.
+    """
+    wanted = set(names)
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for inner in ast.walk(node):
+            if isinstance(inner, ast.Assign):
+                for target in inner.targets:
+                    if (
+                        isinstance(target, ast.Subscript)
+                        and isinstance(target.value, ast.Name)
+                        and target.value.id in wanted
+                    ):
+                        found.add(target.value.id)
+            elif (
+                isinstance(inner, ast.Call)
+                and isinstance(inner.func, ast.Attribute)
+                and isinstance(inner.func.value, ast.Name)
+                and inner.func.value.id in wanted
+                and inner.func.attr in MEMO_MUTATIONS
+            ):
+                found.add(inner.func.value.id)
+    return found
+
+
+def scan_memos() -> frozenset[str]:
+    """Every module-level mapping under ``src/`` that is a memo.
+
+    **Two detectors, unioned, because either one alone has a blind spot.**
+
+    *By name*: ``<module>.<NAME>`` where NAME ends in ``_MEMO`` or
+    ``_CACHE`` and the bound value is a dict display.  Names like
+    ``_STATE_PROTO_MEMO_LIMIT`` and ``_SUSTAIN_STAT_CACHE_KEYS`` fall out
+    because they do not end in a memo suffix, and a non-mapping constant
+    falls out because it cannot hold entries.
+
+    *By shape*: a module-level **empty** dict display that some function in
+    the same module stores into, clears, pops, updates or ``setdefault``s.
+    That is what a lazily filled cache looks like whatever it is called,
+    and it is here because the name rule was the whole population until
+    S10 — which made "the population is closed" a claim closed over a
+    naming convention, with one already-governed member outside it:
+    ``item_effects._RESOLVED_DAMAGE_EFFECTS``, declared in
+    ``REFRESH_CLEARED_MEMOS`` and invisible to the scan that was supposed
+    to prove nothing was missing.  The shape rule finds it, and finds the
+    next one nobody thought to name well.
+
+    Import-time registries are not caught: those are mutated at module
+    scope, and the scope of the mutation rather than the name is what
+    separates "filled on demand" from "built once at import".
     """
     found: set[str] = set()
     for path in sorted(SRC_ROOT.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in tree.body:
-            if isinstance(node, ast.AnnAssign):
-                target, value = node.target, node.value
-            elif isinstance(node, ast.Assign) and len(node.targets) == 1:
-                target, value = node.targets[0], node.value
-            else:
-                continue
-            if not isinstance(target, ast.Name):
-                continue
-            if not target.id.endswith(MEMO_SUFFIXES):
-                continue
-            if not isinstance(value, ast.Dict):
-                continue
-            found.add(f"{_module_name(path)}.{target.id}")
+        module = _module_name(path)
+        bound = _module_level_dicts(tree)
+        by_name = {name for name in bound if name.endswith(MEMO_SUFFIXES)}
+        by_shape = _filled_lazily(
+            tree, (name for name, value in bound.items() if not value.keys)
+        )
+        found.update(f"{module}.{name}" for name in by_name | by_shape)
     return frozenset(found)
 
 
@@ -107,11 +171,19 @@ def _bumped_version(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_declared_tables_partition_every_memo_in_the_tree() -> None:
-    """No memo is outside the four tables, and none is in two of them."""
+    """No memo is outside the five tables, and none is in two of them.
+
+    Five, not four: ``REFRESH_CLEARED_MEMOS`` used to be left out of this
+    partition, and it worked only because its one member's name does not
+    match the convention the scan keyed on.  A table excluded from the
+    partition that proves the population is closed is a table the partition
+    cannot see grow.
+    """
     tables = {
         "keyed": frozenset(data_registry.DATA_VERSION_KEYED_MEMOS),
         "rotation": frozenset(data_registry.ROTATION_MEMOS),
         "ungoverned": frozenset(data_registry.UNGOVERNED_MEMOS),
+        "refresh_cleared": frozenset(data_registry.REFRESH_CLEARED_MEMOS),
         "deferred": frozenset(data_registry.DEFERRED_MEMOS),
     }
     declared: set[str] = set()
@@ -165,7 +237,7 @@ def test_every_declared_memo_names_what_stales_it() -> None:
     """Criterion 14's first clause, over the population it was unaskable of.
 
     "Every cache declares ``invalidated_by``" was a sentence about
-    ``program/caches``; the eighteen memos here declared their governance by
+    ``program/caches``; the memos here declared their governance by
     which table they sat in, which is a different language for the same
     question.  It is one language now -- :class:`Invalidator` is declared
     beside ``data_version`` and ``program/caches`` imports it -- so the
