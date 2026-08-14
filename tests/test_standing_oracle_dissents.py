@@ -25,6 +25,7 @@ first enumeration read 64 standing dissents where the truth is 51.
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -48,13 +49,35 @@ def leaf_address(body: dict) -> str | None:
     return None
 
 
+_ISO_DATE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
+
 def receipt_date(body: dict) -> str | None:
-    """ISO date under either spelling, or ``None`` when the receipt is undated."""
-    for key in ("date", "dated"):
-        value = body.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return None
+    """The earliest ISO date this receipt carries, whatever it calls the key.
+
+    Derived rather than listed, for the same reason :func:`leaf_address` reads
+    three schemas: a scan written against one spelling silently misses the
+    others, and *silently* is the whole problem — an undated dissent is
+    treated as cleared by any same-leaf answer, so a receipt whose date this
+    function cannot see falls into the population the ledger itself calls the
+    rule's weakest.  Reading ``date`` alone put **eleven** spellings in that
+    population: ``date``, ``dated``, ``generated``, ``generated_at``,
+    ``generated_utc``, ``generated_at_utc``, ``investigated_at``,
+    ``investigated_utc_date``, ``adjudicated_at``, ``checked_at``,
+    ``produced_at`` and ``created`` are all live in ``docs/receipts/``.
+
+    So the rule is a *value* rule and not a key rule: any top-level string
+    beginning with an ISO date is one, and the earliest is the receipt's.  A
+    twelfth spelling is read the day somebody writes it.  ``generated_by`` and
+    the other author fields are excluded by the same rule rather than by a
+    block list — a name is not a date.
+    """
+    found = sorted(
+        match.group(1)
+        for value in body.values()
+        if isinstance(value, str) and (match := _ISO_DATE.match(value))
+    )
+    return found[0] if found else None
 
 
 def oracle_receipts() -> dict[str, dict]:
@@ -212,3 +235,56 @@ class TestThePhase4MemberIsDescribedAsItIs:
 def test_every_pinned_standing_receipt_exists(name):
     """A pinned list that names a file that is gone is a stale waiver."""
     assert (RECEIPTS / name).exists()
+
+
+class TestTheDateIsReadHoweverItIsSpelled:
+    """The supersession rule orders receipts, so it has to be able to read them.
+
+    An undated dissent is cleared by any same-leaf answer, which makes "this
+    receipt looks undated" the quietest way to clear one.  Before the value
+    rule, eleven live spellings looked undated.
+    """
+
+    def test_the_spellings_in_the_tree_are_all_read(self):
+        """Every key an oracle receipt dates itself under, enumerated live."""
+        spellings = {
+            key
+            for body in oracle_receipts().values()
+            for key, value in body.items()
+            if isinstance(value, str) and _ISO_DATE.match(value)
+        }
+        assert len(spellings) >= 11, spellings
+        assert {"date", "generated_at", "generated_utc"} <= spellings
+        for body in oracle_receipts().values():
+            for key, value in body.items():
+                if isinstance(value, str) and _ISO_DATE.match(value):
+                    assert receipt_date(body) is not None, key
+
+    def test_a_novel_spelling_still_orders_a_dissent(self):
+        """The seam: a receipt dated under a key nobody has used yet."""
+        receipts = {
+            "oracle-X-leaf0.json": {
+                "leaf": "/a/b",
+                "verdict": "new_value_correct",
+                "date": "2026-01-01",
+            },
+            "oracle-X-leaf1.json": {
+                "leaf": "/a/b",
+                "verdict": "old_value_correct",
+                "signed_off_on": "2026-02-01T09:00:00Z",
+            },
+        }
+        assert standing_dissents(receipts) == ["oracle-X-leaf1.json"]
+
+    def test_an_author_field_is_not_a_date(self):
+        """``generated_by`` and its kin are excluded by the rule, not by a list."""
+        assert receipt_date({"generated_by": "Opus 5", "verdict": "x"}) is None
+
+    def test_the_undated_population_is_the_one_the_ledger_records(self):
+        """The rule's weakest ground, counted rather than described."""
+        receipts = oracle_receipts()
+        undated = [
+            name for name, body in receipts.items() if receipt_date(body) is None
+        ]
+        assert str(len(undated)) in entry()["measured"]["rule"]
+        assert str(len(receipts)) in entry()["measured"]["rule"]
