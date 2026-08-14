@@ -115,6 +115,13 @@ from .program.dependency import (
     run_passes,
 )
 from .program.identity import MechanicId
+from .program.rung import (
+    CompiledFast,
+    FallbackScope,
+    ReceiptWalk,
+    SearchPoisoned,
+    counter_label,
+)
 from .program.compile import (
     WalkCompiler,
     action_from_event,
@@ -130,7 +137,7 @@ from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
 from .program.walk import AttackerOutcome, ObjectiveFold, walk as _walk
-from .work_counters import Rung, WorkCounterSink, record_rung
+from .work_counters import WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
 # underscored name below is kept as an alias so the public surface of this
@@ -142,6 +149,14 @@ _WalkCompiler = WalkCompiler
 # it back rather than reporting every subsequent candidate as its own
 # candidate-local fallback.
 _CONTEXT_POISONED_RECEIPT = "context_marked_uncompilable"
+# The reason a request whose *shape* excludes the compiled panel walk
+# records.  A named constant rather than a literal at the call site because
+# ``ReceiptWalk`` requires a reason and a reason spelled where it is used is
+# a reason that can be spelled twice.
+_GATE_REFUSAL_RECEIPT = (
+    "the request shape excludes the compiled panel walk: no roster, receipt "
+    "mode, Enemy Hits disabled, or a cross-pass patch"
+)
 
 
 def _pair_run_fight(
@@ -3502,16 +3517,23 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             # failures fall back per evaluation.
             if exc.invariant:
                 search_context.uncompilable = True
-            record_rung(
-                work_counters,
-                (
-                    Rung.SEARCH_POISONED
-                    if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
-                    else Rung.RECEIPT_WALK_CANDIDATE
-                ),
+            # The rung is a *decision* with a reason, and the histogram key
+            # is its projection (``counter_label``).  Recording the label
+            # directly is what left ``program/rung``'s four-member union with
+            # zero construction sites in ``src/`` -- a ladder D-69 ruled, that
+            # no production path could reach, so "``SearchPoisoned`` appears
+            # only for genuine invariant errors" was a clause nothing could
+            # fail.  The receipt the exception carries is the reason, so the
+            # decision names *which* declaration refused rather than only
+            # that one did.
+            decision = (
+                SearchPoisoned(exc.receipt)
+                if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
+                else ReceiptWalk(exc.receipt, FallbackScope.CANDIDATE)
             )
+            record_rung(work_counters, counter_label(decision))
         else:
-            record_rung(work_counters, Rung.COMPILED)
+            record_rung(work_counters, counter_label(CompiledFast()))
             return scored
     elif patch is None:
         # One rung per evaluation, recorded by that evaluation's first pass.
@@ -3519,7 +3541,12 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # one, so recording its gate refusal would enter one evaluation in
         # the four-state histogram twice and break the property that the
         # histogram accounts for 100% of evaluations.
-        record_rung(work_counters, Rung.RECEIPT_WALK_GATE)
+        record_rung(
+            work_counters,
+            counter_label(
+                ReceiptWalk(_GATE_REFUSAL_RECEIPT, FallbackScope.REQUEST_GATE)
+            ),
+        )
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
