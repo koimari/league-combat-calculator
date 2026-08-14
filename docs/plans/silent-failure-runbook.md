@@ -238,7 +238,17 @@ gate row, runs three checks over `docs/plans/*.md`:
    fragment adjoins the citation, the fragment must appear within ±5 lines of the cited line. The
    fragment is the authoritative referent and the line number only a locator: a drifted number is
    refreshed in a doc-only commit; a citation whose fragment no longer exists anywhere in the file is
-   escalated as a plan/tree divergence, never silently re-pointed.
+   escalated as a plan/tree divergence, never silently re-pointed. **A slice that itself shifts a
+   cited line refreshes that locator in the same commit**, and the doc-only form applies only to
+   drift the slice did not cause. Why, and it is measured rather than argued:
+   `docs/receipts/escalated-defects-P2a.json`'s
+   `r01_row1_was_red_at_p2a_and_the_body_called_it_pre_existing` shows the two rulings are jointly
+   unsatisfiable otherwise — R-01 row 1 is per commit, so between a `src/` commit that shifts a cited
+   line and the doc-only commit that refreshes the locator there is exactly one red commit, and
+   reversing the order only moves the red onto the doc commit. That entry's own `resolution` names
+   this clause as the missing one and says it is the runbook's to write, which is what this sentence
+   is. A locator refresh is not a semantic change and R-30 does not bind it, so the same-commit form
+   costs the campaign nothing it was buying.
 2. **Golden shape figures**, two prongs so both failure modes are caught: the retired figure's literal
    spellings are pinned inside the instrument and the live golden/coupled-golden count values are read
    from `campaign-fingerprints.json` at run time, each matched as a standalone word-boundary integer
