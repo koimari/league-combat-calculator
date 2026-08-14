@@ -117,6 +117,11 @@ UNRESOLVED_ALLOWED = frozenset(
         "<expression>",
         "ValueError",
         "_set",  # a bound ``dict.__setitem__``, not a method this package has
+        # ``Withheld.__post_init__``'s receipt check, reached since S10 made
+        # ``published_quantity`` rebuild a payload's quantity from its own
+        # dispositions entry.  Both are builtins over strings, not arithmetic.
+        "all",
+        "strip",
         "append",
         "bool",
         "dict",

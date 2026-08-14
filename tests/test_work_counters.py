@@ -41,11 +41,18 @@ LOCKED_BOOTS = "Sorcerer's Shoes"
 
 @dataclass(slots=True)
 class _Sink:
-    """The four mutable fields ``WorkCounterSink`` asks for."""
+    """The five mutable fields ``WorkCounterSink`` asks for.
+
+    ``walk_invocations`` is the odd one out and is here for the same reason
+    the others are: Phase 4 S10 made "one walk per pass" a number a test can
+    read rather than a call-site count, so the protocol asks for a field the
+    kernel seam increments.  It is not a reported counter family.
+    """
 
     measured_proposals: int = 0
     score_memo_misses: int = 0
     pair_run_fight_calls: int = 0
+    walk_invocations: int = 0
     rungs: Counter = field(default_factory=Counter)
 
 
