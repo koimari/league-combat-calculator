@@ -1,0 +1,137 @@
+{
+  "receipt": "oracle-P4-arbitrate-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]",
+  "transition_kind": "value_to_absent (membership)",
+  "old_value": {
+    "amount": 0.3,
+    "applied_amount": 0.3,
+    "armor_reduction_percent": 0.3,
+    "attacker": "main",
+    "duration": 6.0,
+    "event_id": "enemy:Aatrox:support:17",
+    "expires_at": 13.5,
+    "kind": "damage_modifier",
+    "owner": "main",
+    "source": "Black Cleaver \u2014 Carve",
+    "stack_count": 5.0,
+    "_note": "as quoted in the task statement; trailing keys elided with \u2026"
+  },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high on the membership call, high on the underlying numbers",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle18",
+    "read": [
+      "data/items.json (3071 Black Cleaver, 3877 Bloodsong)",
+      "data/item-atoms/3071.json",
+      "data/wiki-atoms/damage.json",
+      "data/champions.json (Aatrox armor)",
+      "data/practice-corpus/scenarios.json",
+      "data/staleness.json (patch stamp)",
+      "data/worklists/e9-bis-b-task.md, data/worklists/p7-validation-task.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> 3071 Black Cleaver -> passives[0] (\"Carve\") -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> 3071 Black Cleaver -> riotDescription (CommunityDragon, cross-check)",
+      "quote": "Carve: Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. (stacks 5 times)."
+    },
+    {
+      "id": "S3",
+      "where": "data/wiki-atoms/damage.json -> atom damage.modifier",
+      "quote": "Damage modifier (amplification/reduction) \u2014 Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "id": "S4",
+      "where": "data/wiki-atoms/damage.json -> atom damage.penetration",
+      "quote": "Penetration and resistance reduction \u2014 Effects that reduce the target's effective resistances before mitigation: percent penetration applies before flat penetration, results cannot go below 0, and only resistance reduction effects can drive armor/MR negative."
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md \u00a72.2 (Penetration and reduction order: exact composition)",
+      "quote": "reduce_resistance(R, r_flat, r_pct): R \u2190 R \u2212 r_flat; R \u2190 R\u00b7(1 \u2212 r_pct/100) ... R_final = max(0, (R \u2212 r_flat)\u00b7(1 \u2212 r_pct/100)\u00b7(1 \u2212 p) \u2212 f)"
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md \u00a72.3 item 2 (Black Cleaver average stacks)",
+      "quote": "Black Cleaver average stacks (ArmorReductionEffect.average_reduction): the established model uses a fixed 0.8\u00b7max_stacks constant (with a hits/2 short-fight branch). ... the exact Ces\u00e0ro mean of the capped ramp min(k, C) over h hits is C \u2212 C(C\u22121)/(2h) for h \u2265 C"
+    },
+    {
+      "id": "S7",
+      "where": "docs/math-foundations.md \u00a71.1 (and audit table row for auto count)",
+      "quote": "N(T) = \u230aAS \u00b7 u \u00b7 T\u230b ... a swing whose impact would land *exactly* at the window boundary is excluded, a measure-zero boundary choice."
+    },
+    {
+      "id": "S8",
+      "where": "data/items.json -> 3877 Bloodsong -> passives[0] (\"Spellblade\") -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources (1.5 second cooldown ...)."
+    },
+    {
+      "id": "S9",
+      "where": "data/champions.json -> Aatrox -> stats.armor; growth formula from CLAUDE.md domain block",
+      "quote": "armor: {flat: 38, perLevel: 4.8}; base + growth \u00d7 (level\u22121) \u00d7 (0.7025 + 0.0175 \u00d7 (level\u22121))"
+    },
+    {
+      "id": "S10",
+      "where": "data/staleness.json",
+      "quote": "\"patch\": \"16.15\""
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_magnitudes_are_faithful": {
+      "claim": "Every raw number in the removed object matches the cached wiki text for Carve.",
+      "work": "5 stacks \u00d7 6% per stack = 30% = 0.30 armor reduction (S1, S2). Stack duration 6.0 s (S1, S2). expires_at 13.5 \u2212 duration 6.0 => applied at t = 7.5 s. Target Aatrox is a champion, so Carve is applicable.",
+      "conclusion": "The value is not a fabricated or stale number. 'both_wrong' is ruled out on magnitude grounds."
+    },
+    "step_2_category_check": {
+      "claim": "Carve is a resistance-reduction (armor shred) effect, NOT a damage modifier; an entry of kind 'damage_modifier' carrying amount/applied_amount = 0.3 is a category error under the cached wiki taxonomy.",
+      "work": "S3 defines damage.modifier as 'Independent damage value modifiers **distinct from resistances**' \u2014 the family Bloodsong's Expose Weakness belongs to (S8: '+8%/5% increased damage from all sources'). S4 places armor shred in damage.penetration / resistance reduction. S5 shows the engine's own composition already carries percentage armor reduction inside the resistance chain R \u2190 R\u00b7(1\u2212r_pct/100) before penetration and before mitigation m(R)=100/(100+R). A support-ledger 'damage_modifier' whose amount and applied_amount are the armor fraction (0.3) is therefore either (a) a double count of a reduction already applied in the resistance path, or (b) at best a mislabeled informational row that any consumer summing applied_amount over damage_modifier events reads as a 30% damage amplifier.",
+      "numeric_demonstration": {
+        "target": "Aatrox level 18",
+        "armor": "38 + 4.8 \u00d7 17 \u00d7 (0.7025 + 0.0175\u00d717) = 119.60 (S9)",
+        "with_30pct_shred": "119.60 \u00d7 0.70 = 83.72",
+        "damage_multiplier_before": "100/(100+119.60) = 0.45537",
+        "damage_multiplier_after": "100/(100+83.72) = 0.54430",
+        "true_damage_gain_from_carve": "0.54430 / 0.45537 = 1.1953 => +19.5% damage",
+        "point": "30% armor reduction is worth +19.5% damage here, not +30%. Booking 0.30 as a damage_modifier amount overstates Carve by ~10 percentage points of damage on top of a shred the resistance path has already applied."
+      }
+    },
+    "step_3_stack_state_check": {
+      "claim": "A hard 5.0 stacks / 0.30 entry is also inconsistent with the engine's documented Black Cleaver model.",
+      "work": "S6 pins the modeled reduction to average stacks: constant model 0.8 \u00d7 5 = 4.0 stacks => 24% (0.24); exact Ces\u00e0ro mean of the capped ramp over h hits = 5 \u2212 10/h stacks => h=10: 4.00 (24.0%), h=17: 4.41 (26.5%), h=18: 4.44 (26.7%). No documented model yields a flat 5.0 stacks / 0.30 for the fight.",
+      "conclusion": "Supporting, not decisive: a per-application ledger could legitimately show the ramp topping out at 5 stacks. But it means the removed row is not the number the damage path uses, so its removal cannot be a damage regression."
+    },
+    "step_4_window_boundary_check": {
+      "claim": "The removed row's active window [7.5, 13.5] starts at the last authored timestamp in the ledger and runs almost entirely past the fight.",
+      "work": "The row is the LAST element (index 17) of support_events and the only reported member change, so nothing after it was displaced. If the ledger's Carve applications are one-per-physical-hit on the periodic swing schedule t_i = i\u00b7\u0394 (S7), then index 17 at t = 7.5 s forces \u0394 = 7.5/17 = 0.4412 s, i.e. AS\u00b7u = 2.2667/s and AS\u00b7u\u00b7T = 17.0 exactly at T = 7.5 s. S7's convention then gives N(T) = \u230a17.0\u230b = 17 legal hits (indices 0\u201316) and excludes the hit landing exactly at T \u2014 which is precisely index 17. The fencepost is self-consistent: the removed row is the classic at-boundary off-by-one.",
+      "conclusion": "Inferred, not proven (the fight duration is not in data/), but it is the only reading under which every quoted number lines up, and it independently predicts exactly this one row being dropped."
+    },
+    "step_5_what_absence_costs": {
+      "work": "Carve refreshes to 5 stacks on every physical hit and each stack lasts 6 s (S1). With hits at ~0.44 s intervals, the 30% shred is already carried by the earlier ledger rows across the whole fight; the dropped row adds a window that begins at the boundary and expires at 13.5 s, after the fight. Removing it therefore removes no in-window shred.",
+      "conclusion": "Absence contradicts no wiki number. Presence, as a damage_modifier row worth 0.30, does contradict the taxonomy (S3/S4) and the resistance composition (S5)."
+    }
+  },
+
+  "verdict_reasoning": "The old row's magnitudes are exactly right for Carve as an armor reduction (5 \u00d7 6% = 30%, 6 s \u2014 S1/S2), so the number is not wrong; that rules out 'both_wrong'. But nothing in the cached wiki text or in docs/math-foundations.md supports Carve existing as a 'damage_modifier' support event with amount/applied_amount 0.30: the wiki taxonomy explicitly separates damage modifiers from resistance effects (S3/S4), and math-foundations already applies percentage armor reduction inside the resistance composition (S5), where 30% shred on a level-18 Aatrox is worth +19.5% damage, not +30%. On top of that, the row's hard 5.0 stacks contradicts the documented average-stack model (S6), and its window [7.5, 13.5] is the at-boundary application S7's counting convention excludes. Its disappearance loses no in-window shred. Therefore the new state (absent) is the defensible one.",
+
+  "caveats_and_alternate_hypothesis": [
+    "This oracle deliberately never read src/, tests/, scripts/, the diff, or the plan, so the membership rule for support_events is inferred from data/ + docs/math-foundations.md only.",
+    "Alternate hypothesis considered and rejected: support_events is a purely informational cross-participant ledger in which Carve's team-wide shred (armor reduction is a debuff on the target, so allies benefit) is legitimately listed. Rejected because the row's generic amount/applied_amount fields carry the armor fraction verbatim \u2014 the exact shape that lets a consumer read 30% shred as a 30% damage amp \u2014 and because the same debuff is already represented by earlier rows and by the resistance path.",
+    "If, contrary to step 4, the fight window extends well past 7.5 s and support_events is the enemy's active-debuff view rather than a damage-modifier feed, the correct fix would have been to relabel the row (kind/field naming), not to keep it as-is \u2014 so 'old_value_correct' still would not follow."
+  ]
+}
