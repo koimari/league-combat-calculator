@@ -1,4 +1,4 @@
-"""S10's escalation, gated: the two deletion-frontier rows cleanup cannot close.
+"""S10's escalation, gated: what this slice found and may not fix.
 
 An escalation living only in a commit body is absorbed by the next baseline
 re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
@@ -14,6 +14,13 @@ readers after an R-35 verifier reported criterion 2 undischarged on them,
 and the entry moved to ``retired`` carrying what the lane measured; the test
 that reproduced it is inverted below rather than removed, so the artifact
 and the tree still say the same thing about a row whose answer changed.
+
+Two of the four open entries began as deletion-frontier rows cleanup cannot
+close; the other two are gaps a later reader found in what S10 shipped -- an
+instrument that holds one scenario set while a criterion names another, and a
+fallback reason that is required at construction and published nowhere.  What
+the four have in common is not their subject: it is that closing them is a
+write outside this lane's ownership.
 """
 
 from __future__ import annotations
@@ -58,6 +65,7 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
         "the_first_defender_scan_survives_because_ccscope_was_never_authored",
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
         "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
+        "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
     ]
 
 
@@ -241,3 +249,44 @@ def test_the_exact_baseline_is_unrounded_where_the_other_one_rounds() -> None:
         (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
     )
     assert exact["metadata"]["exact"] is True
+
+
+# --- the fallback reason nothing publishes -----------------------------------
+
+
+def test_no_src_call_site_reads_a_rung_reason() -> None:
+    """The entry's reproducer, as a shape rather than as a grep in prose.
+
+    ``program/rung.reason_of`` exists so a fallback can name which
+    declaration refused.  Nothing in ``src/`` calls it, and nothing reads
+    ``.reason`` off a decision either -- the recording site keeps
+    ``counter_label(decision)`` and drops the object.  The day a sink field
+    carries it, this goes red, which is the inversion the entry declares.
+    """
+    readers = set()
+    for path in sorted(SRC.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        if path.name == "rung.py":
+            continue
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "reason_of"
+            ):
+                readers.add(path.relative_to(SRC).as_posix())
+    assert not readers, readers
+
+
+def test_the_counter_sink_declares_no_field_a_reason_could_go_in() -> None:
+    """Why it is nobody's oversight: there is no field, and the file is L0's."""
+    from src.calculator.work_counters import WorkCounterSink
+
+    declared = set(WorkCounterSink.__annotations__)
+    assert declared == {
+        "measured_proposals",
+        "score_memo_misses",
+        "pair_run_fight_calls",
+        "walk_invocations",
+        "rungs",
+    }

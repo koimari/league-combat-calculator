@@ -472,6 +472,14 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
     `scripts/golden_coupled_exact.json` (R-13's `capture-coupled --exact`), since golden compares at two
     decimals and no other instrument emits unrounded totals.
 
+    > **Clause history (S10, 2026-08-13).** The bit-exactness clause read "asserted **bit-exact** on the four
+    > bench scenarios against `scripts/golden_coupled_exact.json`". The words *on the four bench scenarios*
+    > were removed and replaced by the note below, in commit `7430805`. Recorded here, in the criterion, and
+    > not only in that commit's body: a criterion that moved inside the slice being graded on it is invisible
+    > to anybody who reads the criterion afterwards, and this campaign's subject is the claim whose past
+    > cannot be checked. The clause is **not** discharged over the set it now leaves unnamed — the gap is the
+    > escalation row below, and it inverts on the day the capture happens.
+    >
     > **The scenario set that sentence names is not the set the instrument holds**, and the divergence is a
     > dated, gated row on `docs/receipts/escalated-defects-P4-S10.json` rather than a restatement here. The
     > exact baseline's scenarios are R-12's — derived from the `damage_modifier` producer set, both ledger
@@ -490,6 +498,18 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
     union is constructed in `src/` and every histogram key is `counter_label` of a decision rather than a
     label chosen beside one.
 
+    > **Clause history (S10, 2026-08-13 and 2026-08-14).** This criterion read: "every `damage_modifier`
+    > holder reports `RECEIPT_WALK` with a named receipt; no criterion in this phase asserts a compiled amp
+    > under the umbrella's recorded H5 disposition — and if the umbrella records no disposition this criterion
+    > is not dischargeable and the phase does not exit; `SearchPoisoned` appears only for genuine invariant
+    > errors, never for a declared roster mechanic." Commit `7430805` replaced the amp half with the two-stage
+    > reading below and added the production-path clause above; commit `7868927` made that added clause true,
+    > which it was not when it was written — `CompiledFull` had zero construction sites in `src/` on the
+    > commit that introduced the sentence requiring them. Both moves are recorded here rather than only in
+    > those commit bodies, for the reason criterion 14's note gives: an acceptance target that moved inside
+    > the slice being accepted is invisible to the next reader of the target. The half that has never moved
+    > is "**with a named receipt**".
+
     The amp clause is **read in two stages, and the umbrella says which**. Its H5 row records the disposition
     verbatim: *"Phase 4's criterion 16 is read under this scoped ruling — through S7 it reads exactly as
     written, no criterion of that phase asserting a compiled amp and every `damage_modifier` holder reporting
@@ -503,6 +523,14 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
     between the two readings. Restating it here is executing the umbrella's own instruction, not writing a
     descope: this document may not author an H5 disposition and does not, and if the umbrella had recorded
     none the criterion would still be undischargeable and the phase would not exit.
+
+    > **"With a named receipt" is discharged at the decision, not at the histogram**, and that is a scope this
+    > criterion states rather than leaves to be discovered. Both failure rungs *require* a reason — one
+    > without it is unconstructible — and `tests/test_amp_kernel.py` reads each declining producer's receipt
+    > off its declared `HolderStacking`. What no reader receives is the reason: the counter sink is five
+    > fields and none of them is a string, so the published histogram names the rung and its scope and never
+    > which declaration refused. Publishing it is a sixth field on L0's harness contract, which is why it is a
+    > dated row on `docs/receipts/escalated-defects-P4-S10.json` and not a sentence here.
 17. **Performance neutrality.** Pure stages are identical on all four counter families, the residual, the winner
     and the score; wall best-of-3 isolated stays within +10% of **that stage's own declared baseline** in
     `campaign-fingerprints.json`; S4's `allocation_probe` peak stays within its 15% margin — and if S4 cannot
