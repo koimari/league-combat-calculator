@@ -401,3 +401,48 @@ Two of the three open clauses need an umbrella ruling and cannot be closed by an
 at all: how a disposition transition is adjudicated (G2, and G4 behind it), and whether a leaf's own
 adjudicating receipt may state that leaf's value (G5). That is the honest end state -- not "done",
 and not a claim standing where an implementation is missing.
+
+---
+
+## 10. The second remediation pass
+
+*Appended 2026-08-14. A second independent R-35 pass over slice group
+`campaign-close` — this time over `8d4695e..94faa95`, which includes the first
+remediation — returned **six criteria NOT DISCHARGED** and **six findings of
+behaviour the commit bodies do not mention**. Everything above this line stays
+as written, for the reason section 9 gives.*
+
+### 10.1 What the six findings were, and what happened to each
+
+| Finding | Disposition | Where |
+|---|---|---|
+| `_superseding_value` resolves by **filename order**, not by "later" — the mechanism `1db568c`'s body sells is not the mechanism that shipped | **fixed and gated** (`a6725ad`) | supersession is now a `supersedes` block an allowlist declares; two claimants raise, an undeclared claim is inert |
+| `COMPLETED_STAGES` is a literal inside the measuring tool and the sole trigger of the overdue rule | **fixed and gated** (`6988301`) | `docs/receipts/campaign-stages.json`; shippedness derived from commit subjects |
+| The write-once ledger is a live 500 risk on all three serving endpoints | **documented, open** (`2c79bd0`) | `docs/receipts/escalated-defects-ledger-join.json`, and an owed ruling |
+| `4267fd3` reindented a 194-line escalation ledger while describing one changed field | **reverted** (`2e302ad`) | `git diff 4267fd3^` over that file is now one line |
+| Three bench allocation peaks above their pins with no body naming a memory effect | **fixed and gated** (`25a2edb`) | measured beside each pin; the named candidate ruled out by measurement |
+| `1de067b`'s 3-line diff carries ~9.8 KB of ruling text | **documented** (this section) | a property of markdown tables holding whole rulings on one line; the content is what criterion 11 asked for |
+
+### 10.2 The gaps, re-graded again
+
+| # | State | Note |
+|---|---|---|
+| **G2** | **OPEN — now an owed ruling with a name** | `rulings-owed.json`, `how_a_disposition_text_change_is_adjudicated`. Unchanged in substance. |
+| **G4** | **OPEN — and the overdue rule now comes due on its own** | The literal that triggered it moved out of the tool; a deferral may no longer name a stage nothing declares, and shippedness is read from the tree. The rows still cannot retire while G2 is open. |
+| **G5** | **OPEN — now an owed ruling with a name** | `rulings-owed.json`, `whether_a_leafs_own_adjudicating_receipt_may_state_that_leafs_value`. Residue unchanged at eleven. |
+| **G10** | **OPEN — now an owed ruling with a name** | The frontend budget clause. A lane may not amend a criterion and should not revert a shipped refactor to satisfy one. |
+| **G12** | **NEW, OPEN, filed and gated** | The ledger join's raise set reaches three serving endpoints uncaught. |
+| **G13** | **NEW, CLOSED** | Runbook criterion 12 was unverifiable, not failed: the ownership map lived only in a plan section. `docs/receipts/lane-ownership.json` is the map outside the plans, and its gate found three writers the map does not list — none a violation, all recorded. |
+| **G14** | **NEW, OPEN and measured** | Runbook criterion 11's first clause now has a denominator: 63 slice-group tags derived from commit subjects, one covered, **62** open. Forwards the clause holds by machine; backwards it is measured. |
+
+### 10.3 What is left, and who it belongs to
+
+Four questions, collected in `docs/receipts/rulings-owed.json` with the
+criterion each blocks, its measurement artifact, and — the half that matters —
+what a lane may **not** do instead. None of the four closes by an
+implementation lane trying harder, and all four now have a length rather than
+four separate explanations of why work stopped.
+
+The honest end state is unchanged in shape and better in evidence: what remains
+undone is written down with its artifact, its reproducer and its owner, and
+none of it is a claim standing where an implementation is missing.

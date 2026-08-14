@@ -190,6 +190,154 @@
      "note": "Gap G10 of the campaign-close report, with the three commits and their line counts.",
      "artifact": "docs/receipts/campaign-close-report.md"
     }
+   ],
+   "round": 1
+  },
+  {
+   "slice_group": "campaign-close",
+   "round": 2,
+   "verified_commits": [
+    "8d4695e",
+    "94faa95"
+   ],
+   "dated": "2026-08-14",
+   "answered_by": [
+    "a6725ad",
+    "6988301",
+    "2c79bd0",
+    "2e302ad",
+    "25a2edb",
+    "6549e32",
+    "c029024",
+    "34fbe33"
+   ],
+   "what_this_round_is": "The second independent R-35 pass over slice group campaign-close, run after round 1's remediation landed. It returned six criteria NOT DISCHARGED and six findings of behaviour the commit bodies do not mention. Three of the six criteria were already open with named blockers; three were new, and one of those -- runbook-12 -- was returned not as failed but as UNVERIFIABLE, which is the sharper result of the two.",
+   "criteria": [
+    {
+     "id": "umbrella-1",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Two clauses. (a) No production path emits a non-MEASURED disposition: OutcomeLedger now has a src/ construction site and is filled by every walk, but no view projects its quantities onto a leaf. (b) 'static/js/app.js takes exactly one budgeted change at S9' is false -- bf4a6d3, 44331c7 and f25dcfa touched it, so the budget overran by two.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "34fbe33"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Both clauses are now rows on the rulings-owed list, each with the criterion it blocks, its measurement artifact, and what a lane may not do instead. (a) stays blocked on how a disposition text_change is oracled; (b) is a budget clause a lane may not amend and a shipped refactor a lane should not revert to satisfy one. Neither is closed and neither is a lane's to close."
+    },
+    {
+     "id": "umbrella-4",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Eleven forced restatements across six sources still state a committed baseline's shape count outside campaign-fingerprints.json. Pinning the residue is not discharging it.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "34fbe33"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Seven of the eleven are in commit bodies, which no edit reaches, and the other four are in a committed allowlist and two filed oracle receipts the R-15/R-18 amendment forbids editing. The residue is irreducible by a lane and is now an owed-ruling row rather than a note inside a scan's allowlist. The verifier's own reading is recorded with it: this is a rule collision, not a drifted figure."
+    },
+    {
+     "id": "umbrella-7",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Amendment B's exit clause: fourteen deferral rows still retire at a stage that shipped. Also in tension with the criterion's own closing sentence -- COMPLETED_STAGES and OVERDUE_BLOCKERS were hand-written literals inside scripts/behavior_frontier.py, and the load-bearing 'this stage shipped' fact was not diff-gated.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "6988301",
+      "34fbe33"
+     ],
+     "artifact": "docs/receipts/campaign-stages.json",
+     "note": "The D-40 half is fixed: the stage records are committed beside the counter and shippedness is derived from commit subjects rather than declared anywhere, so a deferral may no longer name a stage nothing declares and a stage that ships makes its own rows overdue with nobody editing the tool. The exit clause itself stays open as an owed ruling behind umbrella-1(a) -- the retiring mechanism is the projection that clause lacks."
+    },
+    {
+     "id": "runbook-2",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The sole-home conjunct, same residue as umbrella-4 from the runbook's side. The fingerprint and plan-audit conjuncts hold.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "34fbe33"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Same owed ruling. The verifier flagged that under a narrower reading -- the criterion's own named instrument being the whole of it -- this would be DISCHARGED, and declined to take that reading. So does this row."
+    },
+    {
+     "id": "runbook-11",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Clause 1: the ledger holds exactly one pass, so 'every slice has a recorded verdict' is false for every earlier slice. Clause 2: the closing barrier is crossed with three open NOT DISCHARGED verdicts. Clause 3 holds.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "c029024",
+      "34fbe33"
+     ],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Clause 1 gets the denominator it never had: the population is derived from the campaign's own slice-label tags, the residue is 62 of 63 and pinned, and the gate now fails if a NEW slice group ships without either a verdict row or an explicit line saying it has none. Backwards it stays open and measured; forwards it holds by machine. Clause 2's open verdicts are the rulings-owed list, which is what makes them countable rather than several separate explanations."
+    },
+    {
+     "id": "runbook-12",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Returned as UNVERIFIABLE rather than failed: the criterion is checkable 'from the map plus the active worktree list', the map lived only in a runbook section the verifier's brief forbids reading, and no committed artifact recorded lane liveness or (file, symbol) ownership.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "6549e32"
+     ],
+     "artifact": "docs/receipts/lane-ownership.json",
+     "note": "The map is committed outside the plans and gated: lane ids and agents parsed out of the runbook table and asserted equal, ranges resolved against git and asserted contiguous and disjoint, and every actual writer of the three symbol-shared files derived from the tree and asserted declared. The check found three writers the map does not list -- L5 on pipeline.py, L4 on ability_spec.py and champions/syndra.py -- none a criterion 12 violation, because each lane's range is disjoint from every other's, and all three recorded rather than smoothed over."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "THE LOAD-BEARING ONE -- _superseding_value resolves by filename order, not by 'later'. The mechanism its docstring and 1db568c's body sell is forward-dated supersession; what shipped returns the first alphabetical match, with the non-vacuity guard the only thing between the tree and an alphabetically-earlier allowlist overriding a certified boundary value.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "a6725ad"
+     ],
+     "note": "'Later' was never the fact worth reading. An allowlist row now supersedes a boundary pin exactly when it declares a supersedes block naming the receipt and the entry -- so a row that merely spells the same path is inert, two declared claimants raise rather than being ordered, and a claim naming another entry does not reach this one.",
+     "artifact": "tests/test_escalated_defects_p4_boundary.py"
+    },
+    {
+     "finding": "COMPLETED_STAGES is a hand-maintained literal inside the measuring tool and the sole trigger of the overdue rule, so a future stage that ships without retiring its rows produces exactly the silence the rule was written to end -- the campaign's own failure shape one level up.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "6988301"
+     ],
+     "note": "The stage records move to docs/receipts/campaign-stages.json and shippedness is derived from commit subjects: a stage has shipped when the range carries its slice tag and its declared successor's. A deferral naming an undeclared stage now fails the gate, which is what makes the rule come due on its own.",
+     "artifact": "docs/receipts/campaign-stages.json"
+    },
+    {
+     "finding": "The write-once ledger became a live 500 risk on all three serving endpoints and no commit body says so: OutcomeRewritten and DuplicateApplied are reachable on every request since 69e7323, and the request boundary names only ProjectionStarvation.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "2c79bd0",
+      "34fbe33"
+     ],
+     "note": "Filed as a dated escalation whose gate asserts the consequence rather than describing it -- the walk really builds the ledger, each raise really fires, the boundary really does not convert them -- and raised as an owed ruling, because widening the catch edits D-25 and absorbing the raise restores the last-write-wins the join replaced.",
+     "artifact": "docs/receipts/escalated-defects-ledger-join.json"
+    },
+    {
+     "finding": "4267fd3 rewrote docs/receipts/escalated-defects-P4-integration-final.json wholesale from 2-space to 1-space indentation -- 190 of 194 lines -- while its body describes one changed prose field.",
+     "disposition": "reverted",
+     "answered_at": [
+      "2e302ad"
+     ],
+     "note": "Reverted rather than documented: the reindent bought nothing and the revert is exact. git diff 4267fd3^ over this file is now one changed line, which is what that commit's body says it is.",
+     "artifact": "docs/receipts/escalated-defects-P4-integration-final.json"
+    },
+    {
+     "finding": "Three of the four bench allocation peaks sit above their pinned baselines and no body mentions a memory effect; the verifier named the ledger join as the obvious candidate and, being read-only, could not bisect.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "25a2edb"
+     ],
+     "note": "Measured and recorded beside each pin without moving it. The named candidate is ruled out BY MEASUREMENT: with OutcomeLedger replaced by a null object of the same protocol, three isolated subprocess repeats per scenario move the peak by -63..+63 bytes, at or below the pinned observed spread. The residual drift stays unattributed and says so -- this lane may not create a worktree and did not bisect.",
+     "artifact": "docs/receipts/campaign-fingerprints.json"
+    },
+    {
+     "finding": "1de067b's --stat reads '3 insertions(+), 3 deletions(-)' on a governance document while roughly ten kilobytes of ruling text moved, and a reader scanning the diffstat would have no way to know.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "34fbe33"
+     ],
+     "note": "Recorded rather than reverted: the three lines are the H1, H3 and H4 restatements criterion 11 asks for, so the content is owed and the diffstat is a property of markdown tables holding whole rulings on one line. Naming it is the remedy -- a reader of that commit's --stat now has this row.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
    ]
   }
  ],

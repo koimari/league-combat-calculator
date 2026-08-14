@@ -222,3 +222,48 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
             in self.coverage["what_this_block_does_not_do"]
         )
         assert self.coverage["why_the_residue_cannot_be_closed_retroactively"].strip()
+
+
+def _pass(round_number: int) -> dict:
+    return next(
+        block for block in ledger()["passes"] if block.get("round") == round_number
+    )
+
+
+@pytest.mark.parametrize(
+    "criterion",
+    [
+        "umbrella-1",
+        "umbrella-4",
+        "umbrella-7",
+        "runbook-2",
+        "runbook-11",
+        "runbook-12",
+    ],
+)
+def test_the_second_round_answers_every_criterion_it_was_handed(
+    criterion: str,
+) -> None:
+    """The same clause as round 1's, over the pass that followed it.
+
+    Written per round rather than once over all passes: a pass answers the
+    criteria *its* verifier returned, and a rule quantified over the union
+    would demand round 2 re-answer verdicts round 1 already closed.
+    """
+    assert criterion in {row["id"] for row in _pass(2)["criteria"]}
+
+
+def test_every_pass_is_numbered_and_the_numbering_has_no_holes() -> None:
+    """Rounds are how two passes over one slice group stay distinguishable."""
+    rounds = [block["round"] for block in ledger()["passes"]]
+    assert rounds == list(range(1, len(rounds) + 1))
+
+
+def test_round_two_carries_the_six_findings_its_verifier_returned() -> None:
+    """The third clause, per round: documented or reverted, none dropped."""
+    findings = _pass(2)["unmentioned_behaviour"]
+    assert len(findings) == 6
+    assert {row["disposition"] for row in findings} <= set(
+        ledger()["disposition_vocabulary"]
+    )
+    assert any(row["disposition"] == "reverted" for row in findings)
