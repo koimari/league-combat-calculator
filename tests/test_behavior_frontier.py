@@ -12,7 +12,9 @@ dischargeable by creating a fourteenth.
 
 import ast
 import json
+import subprocess
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -964,6 +966,55 @@ def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None
         if stage in shipped:
             assert row["slice_tag"] in tags and row["followed_by"] in tags
             assert tags[row["slice_tag"]] in shipped[stage]
+
+
+def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> None:
+    """R-05's red for the two I/O leaves the overdue clause stands on.
+
+    Both run per deferral row: fourteen rows asked ``declared_stages`` the
+    same question, and ``completed_stages`` spawned a ``git log`` over the
+    whole campaign range for each of them.  Importing this module alone parsed
+    the ruled artifact fourteen times.  The cost is not the point — the point
+    is that a reader cannot tell fourteen identical reads from one, and a
+    derivation that re-reads its own inputs mid-run can answer two ways in one
+    check.  Asserted by counting the reads rather than by trusting a decorator
+    to still be there.
+    """
+    stage_reads = 0
+    git_calls = 0
+    real_read_text = Path.read_text
+    real_run = subprocess.run
+
+    def counted_read(self: Path, *args: object, **kwargs: object) -> str:
+        nonlocal stage_reads
+        if self.name == "campaign-stages.json":
+            stage_reads += 1
+        return real_read_text(self, *args, **kwargs)  # type: ignore[arg-type]
+
+    def counted_run(command: object, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+        nonlocal git_calls
+        if isinstance(command, (list, tuple)) and command and command[0] == "git":
+            git_calls += 1
+        return real_run(command, *args, **kwargs)  # type: ignore[arg-type]
+
+    for cached in (
+        behavior_frontier.declared_stages,
+        behavior_frontier._tag_first_seen,  # noqa: SLF001
+    ):
+        # Tolerated rather than required, so that dropping a decorator fails
+        # this test on the count it is about instead of on an AttributeError.
+        clear = getattr(cached, "cache_clear", None)
+        if clear is not None:
+            clear()
+    with mock.patch.object(Path, "read_text", counted_read), mock.patch.object(
+        subprocess, "run", counted_run
+    ):
+        for _ in range(len(behavior_frontier.COUNTER_4_DEFERRALS)):
+            behavior_frontier.completed_stages()
+            behavior_frontier.deferral_creditor_stage()
+
+    assert stage_reads == 1, f"the ruled artifact was read {stage_reads} times"
+    assert git_calls == 1, f"the campaign range was walked {git_calls} times"
 
 
 def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:

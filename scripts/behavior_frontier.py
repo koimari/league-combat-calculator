@@ -99,6 +99,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import functools
 import json
 import re
 import subprocess
@@ -690,8 +691,18 @@ CAMPAIGN_BASE = "584071e"
 _SUBJECT_TAGS = re.compile(r"\(([^()]*)\)\s*$")
 
 
+@functools.lru_cache(maxsize=None)
 def declared_stages() -> Mapping[str, Mapping[str, str]]:
-    """The committed stage records, keyed by the name a deferral spells."""
+    """The committed stage records, keyed by the name a deferral spells.
+
+    Read once per process.  Four call sites resolve against these records and
+    two of them run per deferral row, so an uncached read parsed the ruled
+    artifact fourteen times before ``import`` returned and thirty more times
+    per ``--check`` — the same file, the same answer, and a reader of the
+    module could not tell that from a single read.  The cache is on the I/O
+    leaf and not on the derivations above it, so ``declared_stages`` stays the
+    one seam a test may replace.
+    """
     block = json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
     return {row["stage"]: row for row in block["stages"]}
 
@@ -742,13 +753,19 @@ def deferral_creditor_stage() -> str:
 
 #: One deferral row per family, dated to the ruled creditor rather than to a
 #: stage name written here.  Built once at import, like every other declared
-#: set in this module, and fails closed if the records do not name a creditor.
+#: set in this module, and fails closed if the records do not name a creditor:
+#: resolving the claim is what makes ``import scripts.behavior_frontier`` raise
+#: on a tree whose records name no creditor or two.  The claim is resolved
+#: **once** and shared by the fourteen rows — it is one claim, and asking the
+#: same question once per row said fourteen times what it says once.
+_DEFERRAL_CREDITOR = deferral_creditor_stage()
 COUNTER_4_DEFERRALS: Mapping[str, str] = {
-    f"{family}/receipt_walk": deferral_creditor_stage()
+    f"{family}/receipt_walk": _DEFERRAL_CREDITOR
     for family in COUNTER_4_DEFERRAL_FAMILIES
 }
 
 
+@functools.lru_cache(maxsize=None)
 def _tag_first_seen(base: str = CAMPAIGN_BASE) -> Mapping[str, str]:
     """Every slice tag in the campaign range → the earliest sha carrying it.
 
@@ -757,6 +774,11 @@ def _tag_first_seen(base: str = CAMPAIGN_BASE) -> Mapping[str, str]:
     latest because the earliest sha is stable — later commits do not move it,
     so a derived fact built on it does not churn the frontier receipt on every
     commit.
+
+    Read once per process, for the same reason ``declared_stages`` is: the
+    overdue clause runs per deferral row and each run spawned its own ``git
+    log`` over the whole campaign range, fifteen subprocesses per ``--check``
+    for one unchanging answer.
 
     Raises:
         RuntimeError: git is unavailable or the range does not resolve.  Fail

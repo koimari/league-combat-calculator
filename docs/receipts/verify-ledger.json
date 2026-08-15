@@ -613,10 +613,11 @@
    "campaign-close",
    "campaign-close-boundary",
    "campaign-close-dissent-docket",
+   "campaign-close-receipt-walk-r35",
    "campaign-close-report",
    "campaign-close-verify-coverage"
   ],
-  "residue_with_no_verdict_anywhere": 78,
+  "residue_with_no_verdict_anywhere": 77,
   "prepared_work": {
    "artifact": "docs/receipts/verify-backlog.json",
    "gate": "tests/test_verify_backlog.py",
