@@ -428,6 +428,77 @@
      "note": "No action owed. Recorded so that a later reader can tell 'checked and accurate' apart from 'not checked'."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-receipt-walk-ruling",
+   "round": 4,
+   "verified_commits": [
+    "0248a42",
+    "4876eb2",
+    "6db708a",
+    "b19a577"
+   ],
+   "dated": "2026-08-15",
+   "answered_by": [
+    "ed82c4a",
+    "15a473b",
+    "c6c82fa"
+   ],
+   "what_this_round_is": "The first independent R-35 pass over a slice group other than campaign-close, and the first recorded here that was run because the coverage block's forward clause asked for one rather than because a closing review was due. It returned one criterion NOT_DISCHARGED and five findings of behaviour the commit bodies do not mention. Three of the five are fixed and gated in the tree; two are corrections to what a commit body declared, and a commit body cannot be amended, so they are carried here.",
+   "criteria": [
+    {
+     "id": "zero_src_change",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "git diff --name-only 4f41e6e..b19a577 -- src/ returns src/calculator/interpreters/__init__.py, +11/-10 lines. 4876eb2 edits it to re-date the fourteen deferral rows' UnservedLane.retires_at declarations onto the closeout stage and compresses two literals to keep the module under pylint's 1000-line bound. The group changed src/ and the criterion says it did not.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Recorded as failed rather than re-worded, and the re-wording was the available move: the umbrella spells the neighbouring idea 'zero src behaviour change' one line away, and every mitigating fact is true -- retires_at is read only by scripts/behavior_frontier.py, no payload, snapshot leaf or API response reads it, both golden compares came back identical, and 4876eb2's own body declares the src/ edit rather than hiding it. None of that is what the criterion says. The structural cause is that retires_at, which is campaign bookkeeping with no runtime consumer, is declared inside a runtime module, so a ruled re-dating cannot be a docs-only commit. Paying that is a src/ refactor of a field whose shape Amendments B, F and K all rule on -- its own slice, with its own R-20 population -- and it cannot discharge this criterion in any case, because the range it quantifies over is four landed commits. What a lane may not do is edit the criterion so the failure reads as a pass."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "4876eb2 changed tests/test_behavior_frontier.py's deferral clause from a 'Phase 4 S3' literal to 'the recorded stage is one declared_stages() returns', in the same commit as the re-dating the literal would have gone red on, and its body does not mention the test edit. declared_stages() returns two members, one of them the stale stage the group existed to move the rows off, so after the group nothing bound the fourteen rows to the ruled stage.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "c6c82fa"
+     ],
+     "note": "The stage record now declares itself the creditor of the debt (creditor_of: counter_4/receipt_walk) and behavior_frontier.deferral_creditor_stage() resolves exactly one, raising on zero and on two. The rows are dated from that claim and the test asserts the tree's own retires_at against it, so re-dating takes two edits that agree and either alone is red. The test's D-92 argument against a literal stands; what it replaced the literal with did not hold.",
+     "artifact": "tests/test_behavior_frontier.py"
+    },
+    {
+     "finding": "0248a42 rewrote docs/receipts/rulings-owed.json with ensure_ascii off -- 7 escapes and 0 non-ASCII bytes before, 0 and 8 after -- which re-spelled strings in five previously answered rows (Amendments E, G, H, I, J) that commit did not adjudicate and did not name in its enumerated population.",
+     "disposition": "fixed",
+     "answered_at": [
+      "15a473b"
+     ],
+     "note": "Semantically null and still five rows of churn outside a declared population, in the file whose purpose is that a question, its measurement and its answer stay re-readable together. Re-encoded as committed: 8 escapes, 0 non-ASCII, and git diff 0248a42^ over that file now shows exactly the population 0248a42 declared.",
+     "artifact": "docs/receipts/rulings-owed.json"
+    },
+    {
+     "finding": "receipt_walk_schedule._retiring_act returned 'settled': True on both branches, so the committed receipt published a flag over 14 families with one value and no reachable other; at the same time check()'s gated keys dropped the settled-derived member for one derived from route_today. 0248a42's body mentions the key replacement but not that the receipt now publishes a field that cannot discriminate.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "ed82c4a"
+     ],
+     "note": "Replaced by already_performed, read from INTERPRETERS: true for the three the defence resolver feeds, false for the eleven. The derived list joins check()'s gated keys and the R-05 red set gains claim_an_unperformed_act, so the field is both discriminating and gated.",
+     "artifact": "docs/receipts/receipt-walk-retirement-schedule.json"
+    },
+    {
+     "finding": "0248a42 renamed the module-public constant receipt_walk_schedule.OWED_RULING to RULING and added PAIR_ENGINE. The body mentions the receipt-key rename and the R-05 red retarget but not the constant rename.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "scripts/receipt_walk_schedule.py",
+     "note": "Disclosed here rather than reverted, and the reversion was considered: the constant holds the id of a ruling that is now answered, so OWED_RULING would name the tree's state wrongly and re-renaming is churn on a name two commits old. The only reader in the tree is tests/test_receipt_walk_schedule.py; an out-of-tree reader of the old name breaks, which is what a body should have said and what this row says instead. A commit body cannot be amended, so the record is here."
+    },
+    {
+     "finding": "4876eb2's enumerated population says the frontier edit moves 'counter 4's two owed_to strings'. Measured over docs/behavior-frontier.json there are 5 owed_to fields, 2 of them under counter_4, and exactly 1 moved -- counter_4/receipt_walk. counter_4/pair_engine's is the empty string and was untouched.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/behavior-frontier.json",
+     "note": "The body over-declared rather than under-declared, which is the harmless direction for an R-20 population line and is still a population line that does not match its diff. A commit body cannot be amended; the corrected figures are recorded here, measured by walking the committed artifact rather than read off the body. Nothing about the frontier moves."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -435,7 +506,8 @@
   "how_the_population_is_derived": "The first element of the trailing parenthetical of every commit subject in 584071e..HEAD. A commit whose subject carries no such tag is counted in untagged_commits and reported rather than dropped -- a slice that never labelled itself is a hole in the convention, not an absence of slices.",
   "what_this_block_does_not_do": "It does not reconstruct a verdict. The earlier passes' verdicts live only in the commit bodies that answer them, and rebuilding them here from those bodies would be a record derived from the thing it is supposed to check independently -- the reason the ledger began mid-campaign. What is recorded is whether a slice group has a verdict IN THIS LEDGER, which is a fact about this file and is checkable without reading a single body. What it now DOES do is grade the residue instead of collapsing it: a slice group whose own commits record an R-35 verdict, naming the mechanism and carrying a verdict word, is listed by name under slice_groups_citing_a_verdict_in_a_commit_body (by name and not by sha: the ledger is committed inside the commit a sha would point at, so a sha here goes stale the moment that commit is amended). That is deliberately weaker than a recorded verdict -- a commit body is the LANE's transcription of the verifier's answer, not the verifier's artifact -- and it is a strict subset of the groups with none here, never a substitute. Collapsing 'a citation a reader can open' with 'nothing at all' is what made a ledger holding one pass and a ledger holding forty look alike to every gate.",
   "slice_groups_with_a_verdict_in_this_ledger": [
-   "campaign-close"
+   "campaign-close",
+   "campaign-close-receipt-walk-ruling"
   ],
   "slice_groups_without_one": [
    "3.2",
@@ -518,7 +590,6 @@
    "campaign-close-lane-ownership",
    "campaign-close-ledger-boundary",
    "campaign-close-ratchet",
-   "campaign-close-receipt-walk-ruling",
    "campaign-close-receipt-walk-schedule",
    "campaign-close-report",
    "campaign-close-rung-receipts",
@@ -528,7 +599,7 @@
    "umbrella [H] table"
   ],
   "untagged_commits": 159,
-  "residue": 88,
+  "residue": 87,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -544,7 +615,7 @@
    "campaign-close-report",
    "campaign-close-verify-coverage"
   ],
-  "residue_with_no_verdict_anywhere": 78,
+  "residue_with_no_verdict_anywhere": 77,
   "prepared_work": {
    "artifact": "docs/receipts/verify-backlog.json",
    "gate": "tests/test_verify_backlog.py",
