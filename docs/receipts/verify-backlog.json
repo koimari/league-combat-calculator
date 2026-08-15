@@ -885,11 +885,12 @@
   },
   "campaign-close-coverage-prose-ruling": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [],
    "subjects": [
     "docs(plans): a campaign-authored justification string is adjudicated by source assertion (campaign-close-coverage-prose-ruling)",
-    "test(gates): the all-defence coverage sentence is bound to the branch that emits it (campaign-close-coverage-prose-ruling)"
+    "test(gates): the all-defence coverage sentence is bound to the branch that emits it (campaign-close-coverage-prose-ruling)",
+    "docs(receipts): the coverage-prose debt closes on the ruling that answers it (campaign-close-coverage-prose-ruling)"
    ]
   },
   "campaign-close-dispositions": {

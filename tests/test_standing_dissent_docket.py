@@ -35,17 +35,31 @@ on it — and deleting it would cut the debt from the answer that discharged it.
 It moves to ``cleared`` instead, and
 :func:`test_a_cleared_cluster_was_answered_rather_than_moved` is what stops
 that list from becoming the resting place a routed debt was already refused:
-every receipt in it is joined, through the adjudication ledger, to a filed
-receipt that exists, adjudicates the *same leaf*, and carries
-``new_value_correct``.
+every receipt in it is joined, through the adjudication ledger, to what
+answered it.
 
-The coverage-prose row carries one measurement and it is recomputed here.
-That row's whole content is that its brief has no defect to name, so what a
-lane may still measure is the *shape of the population* its single receipt
+There are two such joins, because the campaign has two instruments for
+answering a question.  A superseded receipt joins to a filed receipt that
+exists, adjudicates the *same leaf*, and carries ``new_value_correct``.  A
+receipt answered by a **ruling** joins to the ruling instead — the row it
+closed in ``rulings-owed.json`` and the amendment recorded verbatim in the
+umbrella — and it has to, because the whole content of a routed row is that
+no investigation can clear it: demanding a superseding receipt there would
+demand exactly the oracle shopping clause 3 makes unwritable.
+:func:`closure_mechanism` is where the two-way split lives, so it cannot drift
+into prose and so R-05's negative can refuse the third state — a row that left
+``clusters`` because somebody moved it.
+
+The coverage-prose row is the one that closed that second way, and it is why
+:func:`_row` reads both lists: a measurement recomputed by id must follow the
+row that carries it, or the check stops running on the commit that answers the
+question it was measured for.  Its measurement is recomputed here.
+That row's whole content was that its brief has no defect to name, so what a
+lane could still measure was the *shape of the population* its single receipt
 belongs to: one predicate produces the string, the payload publishes it at
 four addresses in each of six scenarios, and twenty-four receipts adjudicate
-the identical pair of strings.  Which way they went is the fact the owed
-ruling reads, and a number nobody recomputes is the prose this docket exists
+the identical pair of strings.  Which way they went is the fact the ruling
+read, and a number nobody recomputes is the prose this docket exists
 to stop being — so :func:`test_the_sibling_census_reproduces` counts them
 from the receipts, and its sibling refuses a census that has silently become
 an average over two different questions.
@@ -169,6 +183,20 @@ def _docket() -> dict:
 
 def _clusters() -> list[dict]:
     return _docket()["clusters"]
+
+
+def _row(cluster_id: str) -> dict:
+    """One docket row wherever it lives — open in ``clusters`` or ``cleared``.
+
+    A row that closes moves lists and keeps everything it carried, so a
+    measurement recomputed by id must follow it.  Reading ``clusters`` alone
+    would turn the census below into a ``StopIteration`` on the commit that
+    answers the question it was measured for — a check that stops running at
+    the moment it stops being convenient.
+    """
+    body = _docket()
+    rows = list(body["clusters"]) + list(body.get("cleared", ()))
+    return next(row for row in rows if row["id"] == cluster_id)
 
 
 def open_debts() -> set[str]:
@@ -323,24 +351,59 @@ def test_a_row_may_not_owe_two_remedies() -> None:
         disposition({"id": "fabricated"})
 
 
+def closure_mechanism(name: str, ledger: dict) -> str:
+    """Which instrument answered one cleared receipt, read off the ledger.
+
+    Two and there is no third, because a docket row is answered by a receipt
+    or by a ruling and *moved* by nothing.  ``supersession`` is a row in the
+    ledger's ``cleared`` naming the receipt that discharged it;
+    ``ruling`` is a live ``citation`` row naming the ruling that decides the
+    leaf — the shape a routed cluster closes in, where no receipt supersedes
+    the dissent and none may.  A pure function over the ledger, so R-05's
+    negative needs no file on disk.
+    """
+    if any(row["receipt"] == name for row in ledger["cleared"]):
+        return "supersession"
+    live = {row["receipt"]: row for row in ledger["adjudications"]}
+    if name in live and live[name]["kind"] == "citation":
+        return "ruling"
+    raise AssertionError(f"{name} is cleared and no ledger row says by what")
+
+
 def test_a_cleared_cluster_was_answered_rather_than_moved(scan) -> None:
-    """Closure is a join to a filed receipt, never a row changing lists.
+    """Closure is a join to an answer, never a row changing lists.
 
     ``cleared`` is the one list a debt can reach without an answer, so every
-    receipt in it is followed through the adjudication ledger to the receipt
-    that discharged it: the same leaf address, ``new_value_correct``, and a
-    file a reader can open.  Without this the docket would close a debt by
-    moving it, which is the deletion the ledger's own rule refuses wearing a
-    different name.
+    receipt in it is followed through the adjudication ledger to what answered
+    it.  A superseded receipt is followed to the receipt that discharged it:
+    the same leaf address, ``new_value_correct``, and a file a reader can
+    open.  A receipt answered by a *ruling* is followed to the ruling instead
+    — the row it closed in ``rulings-owed``, and the amendment recorded
+    verbatim in the umbrella — because a routed cluster's whole content is
+    that no investigation can clear it, so demanding a superseding receipt
+    here would demand the oracle shopping clause 3 forbids.  Without this the
+    docket would close a debt by moving it, which is the deletion the ledger's
+    own rule refuses wearing a different name.
     """
     ledger = json.loads(ADJUDICATIONS.read_text(encoding="utf-8"))
     answers = {row["receipt"]: row for row in ledger["cleared"]}
+    rulings = json.loads(RULINGS.read_text(encoding="utf-8"))
+    answered_rulings = {row["id"]: row for row in rulings["answered"]}
+    umbrella = UMBRELLA.read_text(encoding="utf-8")
     debts = open_debts()
     for cluster in _docket().get("cleared", ()):
-        assert cluster["cleared"]["how_it_closed"].strip(), cluster["id"]
+        closure = cluster["cleared"]
+        assert closure["how_it_closed"].strip(), cluster["id"]
         for name in cluster["receipts"]:
             assert name not in debts, f"{name} is cleared and still an open debt"
-            assert name in answers, f"{name} is cleared and no row says by what"
+            if closure_mechanism(name, ledger) == "ruling":
+                assert cluster["owed_ruling_id"] in answered_rulings, cluster["id"]
+                row = answered_rulings[cluster["owed_ruling_id"]]
+                assert closure["amendment"] == row["amendment"], cluster["id"]
+                assert row["amendment"] in umbrella, cluster["id"]
+                gate, _, _rest = closure["the_source_assertion"].partition(" ")
+                assert (ROOT / gate).exists(), gate
+                continue
             row = answers[name]
             answer = RECEIPTS / row["cleared_by"]
             assert answer.exists(), row["cleared_by"]
@@ -348,6 +411,29 @@ def test_a_cleared_cluster_was_answered_rather_than_moved(scan) -> None:
             dissent = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
             assert body["verdict"] == "new_value_correct", row["cleared_by"]
             assert scan.leaf_address(body) == scan.leaf_address(dissent), name
+
+
+def test_a_cleared_receipt_with_no_answer_anywhere_is_reported() -> None:
+    """R-05 for the closure join, at the pure function.
+
+    The shape it refuses is the one the docket's own rule refuses: a row that
+    left ``clusters`` because somebody moved it.  Neither a superseding
+    receipt nor a live citation is an answer that can be written by editing
+    one list.
+    """
+    ledger = {
+        "cleared": [{"receipt": "oracle-superseded.json"}],
+        "adjudications": [
+            {"receipt": "oracle-ruled.json", "kind": "citation"},
+            {"receipt": "oracle-owing.json", "kind": "open_debt"},
+        ],
+    }
+    assert closure_mechanism("oracle-superseded.json", ledger) == "supersession"
+    assert closure_mechanism("oracle-ruled.json", ledger) == "ruling"
+    with pytest.raises(AssertionError):
+        closure_mechanism("oracle-owing.json", ledger)
+    with pytest.raises(AssertionError):
+        closure_mechanism("oracle-moved.json", ledger)
 
 
 def test_the_recorded_counts_reproduce(scan) -> None:
@@ -385,11 +471,7 @@ def test_the_sibling_census_reproduces() -> None:
     fire on this row at all, so it is the last thing that should be taken on
     the file's word.
     """
-    census = next(
-        cluster
-        for cluster in _clusters()
-        if cluster["id"] == "item_coverage_reason_prose"
-    )["the_sibling_census"]
+    census = _row("item_coverage_reason_prose")["the_sibling_census"]
     bodies = _reason_prose_receipts()
     counted = Counter(body["verdict"] for body in bodies)
     recorded = census["the_count"]

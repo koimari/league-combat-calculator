@@ -1,16 +1,16 @@
 {
  "artifact": "standing_dissent_docket",
- "rule": "The twenty-two standing dissents adjudicated `open_debt` in docs/receipts/standing-dissent-adjudications.json name what is owed but nothing that could be handed to anybody. This is that hand-off. The R-15/R-18 amendment of 2026-08-14 clears a dissent one of exactly two ways -- clause 1, a fresh whole-series re-adjudication, or clause 2, a ruled src/ correction when that re-adjudication sustains the dissent -- and clause 3 forbids a re-run whose superseding receipt names no specific defect in the brief it replaces. Naming that defect concretely, and measuring it from committed artifacts, is the one part of clearing a dissent an implementation lane may do: it is a statement about the QUESTION, never about the answer. Every cluster below carries the defect its members' briefs shared and the measurement that establishes it, and every cluster a fresh investigation can clear additionally carries the well-posed brief clause 1 needs -- so a re-adjudication is a task somebody can start rather than a sentence somebody agrees with. One cluster carries no brief on purpose, because its prior brief has no defect to name and an investigation is the wrong instrument for it; that one is routed to a ruling and says so. Re-adjudicated 2026-08-15, which is what a hand-off is for: nineteen of the twenty-two are discharged, the two clusters every one of whose receipts cleared are closed into cleared[], and five debts stand across the two rows that remain -- one owing the ruling it was always routed to, one owing clause 2's ruled src/ slice because its investigation ran and certified neither side. A worked docket needs a closure half and this is it: a row leaves clusters[] by being answered, never by being deleted, and never by being moved.",
+ "rule": "The twenty-two standing dissents adjudicated `open_debt` in docs/receipts/standing-dissent-adjudications.json name what is owed but nothing that could be handed to anybody. This is that hand-off. The R-15/R-18 amendment of 2026-08-14 clears a dissent one of exactly two ways -- clause 1, a fresh whole-series re-adjudication, or clause 2, a ruled src/ correction when that re-adjudication sustains the dissent -- and clause 3 forbids a re-run whose superseding receipt names no specific defect in the brief it replaces. Naming that defect concretely, and measuring it from committed artifacts, is the one part of clearing a dissent an implementation lane may do: it is a statement about the QUESTION, never about the answer. Every cluster below carries the defect its members' briefs shared and the measurement that establishes it, and every cluster a fresh investigation can clear additionally carries the well-posed brief clause 1 needs -- so a re-adjudication is a task somebody can start rather than a sentence somebody agrees with. One cluster carries no brief on purpose, because its prior brief has no defect to name and an investigation is the wrong instrument for it; that one is routed to a ruling and says so. Re-adjudicated 2026-08-15, which is what a hand-off is for: nineteen of the twenty-two are discharged, the two clusters every one of whose receipts cleared are closed into cleared[], and five debts stand across the two rows that remain -- one owing the ruling it was always routed to, one owing clause 2's ruled src/ slice because its investigation ran and certified neither side. Ruled 2026-08-15, the same day: the row that was always routed to a ruling got it -- Amendment J adjudicates a campaign-authored justification string by source assertion -- so it closes into cleared[] as well, and four debts stand across the one row that remains, owing clause 2's ruled src/ slice because its investigation ran and certified neither side. A worked docket needs a closure half and this is it: a row leaves clusters[] by being answered -- by a receipt that supersedes it or by a ruling that decides it -- never by being deleted, and never by being moved.",
  "gate": "tests/test_standing_dissent_docket.py",
  "what_this_file_does_not_do": "It decides no dissent, and no cluster below states or implies a verdict. Naming a defect in a brief is not answering the question the brief posed: the remedy of every cluster an investigation can clear is still a fresh investigator that has read neither the prior receipts nor this docket, and clause 2 still re-opens the producing correction as a ruled src/ slice if that investigator again certifies the old value. What the docket removes is the state the sign-off review found -- twenty-two debts naming a remedy nobody could begin.",
  "why_a_lane_may_write_this_and_not_the_verdict": "R-18's export keeps src/, the plan, the diff and the post-change baseline out of an investigator's hands so that its arithmetic is independent. Every fact in this file is read from the COMMITTED PRE-CHANGE baseline, from the committed scenario definitions, or from the prior receipt itself -- the three sources the 2026-08-14 R-18 amendment names as facts of the question. It contains no post-change value, so no brief built from it can carry the answer.",
  "measured_on_the_commit_that_lands_this": {
   "standing_dissent_scan": "34 standing of 83 adverse across 573 receipts; 11 blocking, {'citation': 6, 'open_debt': 5}",
-  "docketed": 5,
-  "clusters": 2,
+  "docketed": 4,
+  "clusters": 1,
   "remedy_kinds": {
    "whole_series_re_adjudication": 0,
-   "owed_ruling": 1,
+   "owed_ruling": 0,
    "owed_src_correction": 1
   },
   "re_measured_on": "2026-08-15"
@@ -57,38 +57,6 @@
     "what_did_not": "oracle-C6-leaf77.json and oracle-C6-leaf8.json stand -- a `both_wrong` verdict answers the question and clears nothing, because the value the baseline holds is refuted by it. The two filed receipts join them as dissents in their own right, on the same two addresses, which is why this row now dockets four receipts where it docketed three."
    },
    "what_the_slice_inherits": "The filed receipts state the series they computed, ordinal by ordinal, and the cost they price each cast at. Reading them is the slice's first act and measuring them against src/ is its own; this docket neither ratifies the number nor rules on the stamp, and naming which of the two it must move would be an implementation lane deciding a question it may not."
-  },
-  {
-   "id": "item_coverage_reason_prose",
-   "receipts": [
-    "oracle-P3-3.8-leaf24.json"
-   ],
-   "series": "not a series -- one leaf whose value is a campaign-authored justification string.",
-   "producing_correction": "Phase 3's coverage-evidence rewording of an item's coverage reason.",
-   "defect_in_the_prior_brief": "There is none, and that is this cluster's whole content. The brief was well posed and the investigator answered it as well as the question admits: it checked both strings against the cached corpus, found the operative claim supported on both sides, and certified the old value because R-19's closed verdict set has no member for 'the evidence tree cannot decide between two true sentences'. A re-run under a better brief would reproduce that, and clause 3 makes a re-run whose receipt names no defect in the prior brief unwritable -- correctly, because there is nothing to name.",
-   "how_the_defect_was_measured": {
-    "instrument": "the receipt itself, docs/receipts/oracle-P3-3.8-leaf24.json",
-    "what_it_shows": "The receipt's own step 2 records the shared operative claim as SUPPORTED by the cached sources, and the two deltas it isolates are a universal quantifier and a word choice. Neither is a claim about a number and neither is decidable from data/ or docs/math-foundations.md.",
-    "why_that_bars_clause_1": "Clause 1 clears a dissent by re-posing an underdetermined question. This question is not underdetermined; it is out of the export's jurisdiction, which is the same shape the umbrella's Amendment E found for a disposition string and answered by ruling rather than by investigation."
-   },
-   "remedy": "an owed ruling, not an investigation. Routed to docs/receipts/rulings-owed.json as `how_a_campaign_authored_justification_string_is_adjudicated`. Sending it to a fresh investigator would be oracle shopping with extra steps: a re-run must cite a defect in the prior brief, and this brief has none.",
-   "owed_ruling_id": "how_a_campaign_authored_justification_string_is_adjudicated",
-   "if_sustained": "not applicable -- clause 2 fires on a sustained whole-series verdict, and no whole-series verdict is owed here. The debt closes when the ruling lands, and the adjudication row stays `open_debt` until it does.",
-   "the_sibling_census": {
-    "dated": "2026-08-15",
-    "measured_by": "the implementation lane that was handed clause 2 for this cluster, from the committed receipts alone",
-    "what_was_counted": "Every committed oracle-P3-3.8-leaf*.json whose leaf_path ends in item_coverage[0]/reason. All 24 carry the SAME (old_value, new_value) pair -- one distinct pair across the whole set -- because one predicate in item_coverage.py produces the string and the coverage payload publishes it at four addresses in each of the six Syndra scenarios.",
-    "the_count": {
-     "receipts_on_the_identical_question": 24,
-     "new_value_correct": 23,
-     "old_value_correct": 1,
-     "the_one": "oracle-P3-3.8-leaf24.json, this cluster's whole membership",
-     "same_scenario_siblings": "Three of the 23 -- leaf26, leaf28 and leaf30 -- are the other three addresses of syndra_derived_order_39, the same scenario leaf24 adjudicates, and all four carry the same date, so no supersession orders them."
-    },
-    "why_this_is_a_fact_about_the_question": "It states no answer and grades no receipt. What it establishes is that clause 2's precondition is not met here in the way it was met for the cast-timeline cluster: there, two independent readings stood against the committed value and none for it; here, twenty-three stand for it and one against, and every one of the 24 was asked the same question with the same two strings. A src/ correction moving the string to satisfy the one would pin the baseline over the twenty-three, which is R-19's own failure shape pointing the other way. That is a reason a lane may not fire clause 2 on this row, not a reason the dissent is wrong.",
-    "and_what_it_does_not_decide": "Nothing. The remedy is unchanged and is still the owed ruling this row already names; the census is one more fact the ruling may read. No receipt is edited, no verdict is graded, and leaf24 stands exactly as filed.",
-    "a_second_fact_the_ruling_may_want": "leaf24's own limitations block records that a code-level family vocabulary, if one exists, was out of bounds for R-18's export and was not consulted. One does: item_behavior.RuleFamily groups its members into strike, pricing, defence and neither, and item_coverage.declares_only_defence is the predicate 'every declared family is in the defence group'. Whether a campaign-authored string may assert something true of a src/ vocabulary that the permitted evidence tree cannot see is the ruling's question and not a lane's; it is recorded here because the receipt raised it about itself."
-   }
   }
  ],
  "escalated_by_this_docket": {
@@ -108,7 +76,7 @@
    "measured_on_the_commit_that_lands_it": "R-01 rows 2 and 3 both report the snapshot identical to their committed baselines, before and after -- the widening re-addresses nothing at the tip, because the tip has no diff to re-address. Expected qualifying occurrences: 0, from that enumerated population."
   }
  },
- "how_a_cluster_leaves_clusters": "A cluster leaves clusters[] when the docket has nothing left to hand anybody: every receipt it docketed has cleared, so the join this file's gate holds in both directions -- every open debt docketed, no docket row outliving its dissent -- would fail if the row stayed. It lands in cleared[] and is never deleted, because a closed row is worth what an open one was: it says which question was re-posed, which defect in the prior brief licensed the re-run under clause 3, and which receipts answered it. A cluster whose re-adjudication has run and did NOT clear every member does not leave. It stays, with the receipts that still block, and states what it now owes -- which is clause 2's ruled src/ slice, never a second investigation, because clause 3 makes a re-run whose receipt names no defect in the brief it replaces unwritable and this docket's own brief has none to name.",
+ "how_a_cluster_leaves_clusters": "A cluster leaves clusters[] when the docket has nothing left to hand anybody: every receipt it docketed has cleared, so the join this file's gate holds in both directions -- every open debt docketed, no docket row outliving its dissent -- would fail if the row stayed. It lands in cleared[] and is never deleted, because a closed row is worth what an open one was: it says which question was re-posed, which defect in the prior brief licensed the re-run under clause 3, and which receipts answered it. A cluster whose re-adjudication has run and did NOT clear every member does not leave. It stays, with the receipts that still block, and states what it now owes -- which is clause 2's ruled src/ slice, never a second investigation, because clause 3 makes a re-run whose receipt names no defect in the brief it replaces unwritable and this docket's own brief has none to name. There are two ways a row can be answered and only the first is a receipt. A cluster clause 1 or clause 2 can clear leaves when every receipt it dockets has cleared, joined to the filed receipt that discharged it. A cluster routed to a ruling leaves when that ruling lands: no receipt supersedes its dissent and none may, so its closure is joined instead to the amendment in the umbrella, to the answered row in rulings-owed.json, and to the citation the adjudication ledger now carries in place of the debt. Both land in cleared[] and neither deletes anything, because the two are the same act -- a question answered -- through the two instruments the campaign has for answering one.",
  "cleared": [
   {
    "id": "syndra_rotation_receipt_rederivation",
@@ -224,6 +192,47 @@
     },
     "what_moved": "Nothing executable and no baseline. The committed baseline holds no field at that address, which is what the verdict certifies.",
     "flags_the_receipt_raised_outside_its_leaf": "Three, recorded in the receipt and none of them this row's to decide: Unmake amplifies magic damage only, and the PRE-change series applied 1.12 to a true-damage and a physical event; no event at t=0.0 carries either amplifier while every later one does; and the post-change `damage` sibling's value decides whether the curse was repriced or dropped from the holder's own magic damage. The first is the live S6S7 entry `support_damage_multiplier_publishes_one_of_several_applied_factors` seen from the committed series rather than from a unit test -- the receipt shows an ally event priced with 1.07 x 1.12 and publishing only the 1.07."
+   }
+  },
+  {
+   "id": "item_coverage_reason_prose",
+   "receipts": [
+    "oracle-P3-3.8-leaf24.json"
+   ],
+   "series": "not a series -- one leaf whose value is a campaign-authored justification string.",
+   "producing_correction": "Phase 3's coverage-evidence rewording of an item's coverage reason.",
+   "defect_in_the_prior_brief": "There is none, and that is this cluster's whole content. The brief was well posed and the investigator answered it as well as the question admits: it checked both strings against the cached corpus, found the operative claim supported on both sides, and certified the old value because R-19's closed verdict set has no member for 'the evidence tree cannot decide between two true sentences'. A re-run under a better brief would reproduce that, and clause 3 makes a re-run whose receipt names no defect in the prior brief unwritable -- correctly, because there is nothing to name.",
+   "how_the_defect_was_measured": {
+    "instrument": "the receipt itself, docs/receipts/oracle-P3-3.8-leaf24.json",
+    "what_it_shows": "The receipt's own step 2 records the shared operative claim as SUPPORTED by the cached sources, and the two deltas it isolates are a universal quantifier and a word choice. Neither is a claim about a number and neither is decidable from data/ or docs/math-foundations.md.",
+    "why_that_bars_clause_1": "Clause 1 clears a dissent by re-posing an underdetermined question. This question is not underdetermined; it is out of the export's jurisdiction, which is the same shape the umbrella's Amendment E found for a disposition string and answered by ruling rather than by investigation."
+   },
+   "remedy": "an owed ruling, not an investigation. Routed to docs/receipts/rulings-owed.json as `how_a_campaign_authored_justification_string_is_adjudicated`. Sending it to a fresh investigator would be oracle shopping with extra steps: a re-run must cite a defect in the prior brief, and this brief has none.",
+   "owed_ruling_id": "how_a_campaign_authored_justification_string_is_adjudicated",
+   "if_sustained": "not applicable -- clause 2 fires on a sustained whole-series verdict, and no whole-series verdict is owed here. The debt closes when the ruling lands, and the adjudication row stays `open_debt` until it does.",
+   "the_sibling_census": {
+    "dated": "2026-08-15",
+    "measured_by": "the implementation lane that was handed clause 2 for this cluster, from the committed receipts alone",
+    "what_was_counted": "Every committed oracle-P3-3.8-leaf*.json whose leaf_path ends in item_coverage[0]/reason. All 24 carry the SAME (old_value, new_value) pair -- one distinct pair across the whole set -- because one predicate in item_coverage.py produces the string and the coverage payload publishes it at four addresses in each of the six Syndra scenarios.",
+    "the_count": {
+     "receipts_on_the_identical_question": 24,
+     "new_value_correct": 23,
+     "old_value_correct": 1,
+     "the_one": "oracle-P3-3.8-leaf24.json, this cluster's whole membership",
+     "same_scenario_siblings": "Three of the 23 -- leaf26, leaf28 and leaf30 -- are the other three addresses of syndra_derived_order_39, the same scenario leaf24 adjudicates, and all four carry the same date, so no supersession orders them."
+    },
+    "why_this_is_a_fact_about_the_question": "It states no answer and grades no receipt. What it establishes is that clause 2's precondition is not met here in the way it was met for the cast-timeline cluster: there, two independent readings stood against the committed value and none for it; here, twenty-three stand for it and one against, and every one of the 24 was asked the same question with the same two strings. A src/ correction moving the string to satisfy the one would pin the baseline over the twenty-three, which is R-19's own failure shape pointing the other way. That is a reason a lane may not fire clause 2 on this row, not a reason the dissent is wrong.",
+    "and_what_it_does_not_decide": "Nothing. The remedy is unchanged and is still the owed ruling this row already names; the census is one more fact the ruling may read. No receipt is edited, no verdict is graded, and leaf24 stands exactly as filed.",
+    "a_second_fact_the_ruling_may_want": "leaf24's own limitations block records that a code-level family vocabulary, if one exists, was out of bounds for R-18's export and was not consulted. One does: item_behavior.RuleFamily groups its members into strike, pricing, defence and neither, and item_coverage.declares_only_defence is the predicate 'every declared family is in the defence group'. Whether a campaign-authored string may assert something true of a src/ vocabulary that the permitted evidence tree cannot see is the ruling's question and not a lane's; it is recorded here because the receipt raised it about itself."
+   },
+   "cleared": {
+    "cleared_on": "2026-08-15",
+    "how_it_closed": "The owed ruling, landed. This row never owed an investigation -- its brief has no defect to name and clause 3 makes a re-run unwritable without one -- so it closes the only way it could: Amendment J \u2014 2026-08-15, how a campaign-authored justification string is adjudicated rules that a campaign-authored justification string asserting a fact about src-level vocabulary is adjudicated BY SOURCE ASSERTION, a machine check binding the string to the predicate that produces it, and never by an R-18 investigation whose export excludes src/ by design. leaf24's verdict turns on exactly the vocabulary its own limitations block declares out of bounds, so it is valid for the operative clause it certified on both sides and does not sustain a dissent on the added universal. The receipt stands exactly as filed, answered rather than superseded, and its adjudication row is now a citation naming this amendment.",
+    "amendment": "Amendment J \u2014 2026-08-15, how a campaign-authored justification string is adjudicated",
+    "ruling_id": "how_a_campaign_authored_justification_string_is_adjudicated",
+    "the_source_assertion": "tests/test_coverage_reason_source_assertion.py -- the ruling's premise enforced rather than assumed: the sentence is emitted at exactly one site in src/, in item_coverage._declared_status under `if declares_only_defence(name)`; that predicate is `families <= _DEFENCE_FAMILIES`; the group is the one RuleFamily declares under its own defence heading; and the binding is asserted over every cached item in both directions, with a permanent negative per check.",
+    "what_moved": "No src/, no scenario, no baseline, and no receipt verdict. The 23-receipt majority is not re-rolled and the sibling census stands as measured -- it is one of the facts the ruling read. What moved is one adjudication row's kind and this row's list.",
+    "why_it_is_not_a_supersession": "Nothing supersedes leaf24 and nothing may: a same-leaf `new_value_correct` receipt would be a second investigation of a question clause 3 permits nobody to re-ask, and none of the 23 addresses this leaf. A ruling answers a receipt without grading it, which is why the closure join for this row runs through rulings-owed.json and the umbrella rather than through a filed receipt."
    }
   }
  ],

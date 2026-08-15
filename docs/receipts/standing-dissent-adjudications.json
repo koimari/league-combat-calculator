@@ -9,11 +9,11 @@
   "standing": 34,
   "blocking": 11,
   "by_kind": {
-   "citation": 6,
-   "open_debt": 5
+   "citation": 7,
+   "open_debt": 4
   },
   "re_measured_on": "2026-08-15",
-  "what_moved_it": "The docketed re-adjudication filed 21 receipts. 19 dissents cleared by supersession and their rows moved to cleared[]; 2 of the filed receipts returned `both_wrong` and are standing dissents in their own right, so they gained rows. The blocking population fell 28 -> 11 and the open debts 22 -> 5, without a baseline moving in either direction."
+  "what_moved_it": "The docketed re-adjudication filed 21 receipts. 19 dissents cleared by supersession and their rows moved to cleared[]; 2 of the filed receipts returned `both_wrong` and are standing dissents in their own right, so they gained rows. The blocking population fell 28 -> 11 and the open debts 22 -> 5, without a baseline moving in either direction. Then Amendment J landed and the coverage-prose row stopped being a debt: it is a citation to the ruling that decides the leaf, so the citations read 7 and the open debts 4. The standing and blocking counts do not move with it -- the dissent still stands and the baseline still holds the other string, which is exactly what a citation row is for: it says no oracle was ever owed on this clause, not that the oracle was wrong."
  },
  "adjudications": [
   {
@@ -50,11 +50,13 @@
   },
   {
    "receipt": "oracle-P3-3.8-leaf24.json",
-   "kind": "open_debt",
+   "kind": "citation",
    "address": "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
-   "what_is_owed": "A ruling on how a leaf whose value is a campaign-authored reason string is adjudicated at all. The R-19 verdict set has no member for 'the evidence tree cannot decide this', so an investigator handed a coverage reason must certify the old value.",
-   "why_it_is_a_debt_and_not_a_citation": "The shape is neither a membership transition nor a disposition transition, so neither the R-15 amendment nor the umbrella's Amendment E reaches it, and a lane may not widen either.",
-   "carried_by": "docs/receipts/escalated-defects-S6S7-oracle.json, entry the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide"
+   "cited_ruling": "Amendment J \u2014 2026-08-15, how a campaign-authored justification string is adjudicated (umbrella, criterion 5): a campaign-authored justification string that asserts a fact about src-level vocabulary is adjudicated BY SOURCE ASSERTION -- a machine check binding the string to the predicate that produces it -- and never by an R-18 investigation, whose export excludes src/ by design. The check is tests/test_coverage_reason_source_assertion.py: the sentence is emitted at exactly one site in src/, under `if declares_only_defence(name)`, and that predicate is `families <= _DEFENCE_FAMILIES` over the group RuleFamily itself declares, asserted over every cached item in both directions.",
+   "the_declared_change": "Phase 3's 3.8 coverage flip. The attacker ladder's rung 2 stopped being a name branch and became a declaration read -- `attacker.declared_defence_only`, keyed on item_coverage.declares_only_defence -- and the published receipt was reworded to say what the rung now reads: every declared family on this item is a defence. The leaf is that receipt string; no number moved with it, which is the same guard Amendment E's third clause states.",
+   "why_no_oracle_could_answer_it": "R-18's export is data/ plus docs/math-foundations.md and excludes src/ by design, and the disputed clause is a statement about src-level vocabulary: RuleFamily's defence group, which no cached artifact spells. The filed receipt says so about itself -- its limitations block records that a code-level family vocabulary, if one existed, was out of bounds for this runbook and was not consulted -- so its verdict is valid for the operative clause it certified on BOTH sides and does not reach the added universal. Under the ruling that portion is adjudicated by the source assertion instead, and the receipt stands exactly as filed rather than being re-run or re-graded.",
+   "what_it_owed_until_the_ruling": "A ruling on how a leaf whose value is a campaign-authored reason string is adjudicated at all. The R-19 verdict set has no member for 'the evidence tree cannot decide this', so an investigator handed a coverage reason must certify the old value.",
+   "closed_on": "2026-08-15"
   },
   {
    "receipt": "oracle-P4-integration-final-leaf1.json",

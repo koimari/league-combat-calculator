@@ -334,6 +334,52 @@ class TestTheVerdictSetCannotSayNoEvidence:
             in _ids()
         )
 
+    def test_the_second_ruled_subclass_is_reclassified_and_the_rest_is_not(self):
+        """Amendment J answers a second subclass, and the same both-halves rule.
+
+        A campaign-authored justification string asserting a fact about
+        ``src``-level vocabulary is adjudicated by *source assertion* — the
+        machine check that binds it to the predicate producing it — so an
+        investigator's verdict on that portion never decided it and the
+        receipt is answered where it stands.  Asserted here the way the first
+        narrowing is: the ruling is a document a reader can open, the check it
+        rests on is a file that exists, the answered receipt is unedited with
+        its own verdict, and the undecidable leaf still holds the entry open.
+        """
+        entry = _entry_by_id(
+            "the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide"
+        )
+        block = entry["narrowed_again_by_a_ruling"]
+        umbrella = (
+            ROOT / "docs" / "plans" / "2026-08-08-silent-failure-campaign.md"
+        ).read_text(encoding="utf-8")
+        assert (
+            "Amendment J — 2026-08-15, how a campaign-authored justification "
+            "string is adjudicated" in block["answers"]
+        )
+        assert (
+            "Amendment J — 2026-08-15, how a campaign-authored justification "
+            "string is adjudicated" in umbrella
+        )
+        gate, _, _rest = block["reclassifies"]["the_source_assertion"].partition(" ")
+        assert (ROOT / gate).exists(), gate
+        answered = json.loads(
+            (RECEIPTS / "oracle-P3-3.8-leaf24.json").read_text(encoding="utf-8")
+        )
+        assert answered["verdict"] == "old_value_correct"
+        row = next(
+            candidate
+            for candidate in json.loads(
+                (RECEIPTS / "standing-dissent-adjudications.json").read_text(
+                    encoding="utf-8"
+                )
+            )["adjudications"]
+            if candidate["receipt"] == "oracle-P3-3.8-leaf24.json"
+        )
+        assert row["kind"] == "citation"
+        # ...and the leaf no ruling reaches still keeps the entry open.
+        assert "oracle-S6S7-leaf30" in block["why_this_entry_stays_open"]
+
 
 # ---------------------------------------------------------------------------
 # The two reclassifications: a ruled membership transition is adjudicated by
