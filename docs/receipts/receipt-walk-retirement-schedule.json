@@ -1,5 +1,5 @@
 {
- "a_second_and_smaller_mismatch": "delta_amp/receipt_walk declares via = ['pair_engine'], so it is counted above as taking Amendment F's act as written, while its own reason names two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and says neither of them is the rule. The structured route and the prose beside it therefore describe different things, and only the structured one is gated. It is recorded here rather than corrected because via is the frontier's field and its value is a declaration, not a measurement a schedule may overwrite; the same owed ruling is where its disposition belongs.",
+ "a_second_and_smaller_mismatch": "delta_amp/receipt_walk declares via = ['pair_engine'], so it is counted above as taking Amendment F's act as written, while its own reason names two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and says neither of them is the rule. The structured route and the prose beside it therefore describe different things, and only the structured one is gated. Amendment K answers it in the same sentence as the three: the declaration is the route (D-40), so this row's act is the receipt-walk one, and correcting via would be a behaviour claim owing its own slice rather than a schedule's edit. It stays recorded here because a prose sentence that disagrees with a gated declaration is a thing a reader should be able to find.",
  "artifact": "receipt_walk_retirement_schedule",
  "families": {
   "active_cast": {
@@ -28,6 +28,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -84,6 +88,10 @@
    "population_total": 3537,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -130,6 +138,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -177,9 +189,12 @@
    },
    "population_total": 2648,
    "retiring_act": {
-    "act": "Not settled. The row's own reason says the walks stage what the defence resolver already built and that a walk-lane interpreter here would be a second producer of one number -- which is what D-60 and umbrella criterion 8 forbid. So Amendment F's named act is, for this row, the act the campaign's own criterion rules out.",
-    "routed_to": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
-    "settled": false
+    "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
+    "retiring_lane": [
+     "defense_resolver"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
+    "settled": true
    },
    "route_today": [
     "defense_resolver"
@@ -205,6 +220,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -231,6 +250,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -299,6 +322,10 @@
    "population_total": 5653,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -335,6 +362,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -366,9 +397,12 @@
    "population_by_scenario": {},
    "population_total": 0,
    "retiring_act": {
-    "act": "Not settled. The row's own reason says the walks stage what the defence resolver already built and that a walk-lane interpreter here would be a second producer of one number -- which is what D-60 and umbrella criterion 8 forbid. So Amendment F's named act is, for this row, the act the campaign's own criterion rules out.",
-    "routed_to": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
-    "settled": false
+    "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
+    "retiring_lane": [
+     "defense_resolver"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
+    "settled": true
    },
    "route_today": [
     "defense_resolver"
@@ -402,6 +436,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -434,6 +472,10 @@
    "population_total": 3005,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -456,6 +498,10 @@
    "population_total": 0,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -494,6 +540,10 @@
    "population_total": 1828,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
+    "retiring_lane": [
+     "receipt_walk"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
     "settled": true
    },
    "route_today": [
@@ -527,9 +577,12 @@
    "population_by_scenario": {},
    "population_total": 0,
    "retiring_act": {
-    "act": "Not settled. The row's own reason says the walks stage what the defence resolver already built and that a walk-lane interpreter here would be a second producer of one number -- which is what D-60 and umbrella criterion 8 forbid. So Amendment F's named act is, for this row, the act the campaign's own criterion rules out.",
-    "routed_to": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
-    "settled": false
+    "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
+    "retiring_lane": [
+     "defense_resolver"
+    ],
+    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine",
+    "settled": true
    },
    "route_today": [
     "defense_resolver"
@@ -550,13 +603,13 @@
  "gate": "tests/test_receipt_walk_schedule.py",
  "rule": "Umbrella criterion 7's fourteen receipt-walk deferrals, sized as the fourteen slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
  "scheduled_slices": 14,
- "slices_routed_to_an_owed_ruling": [
+ "slices_whose_retiring_act_is_amendment_f_as_written": 11,
+ "slices_whose_retiring_lane_amendment_k_corrects": [
   "combat_state",
   "opening_defense",
   "threshold_defense"
  ],
- "slices_whose_retiring_act_is_amendment_f_as_written": 11,
  "what_this_is_not": "It is not a retirement and no row here retires anything: the deferrals stand, overdue and gated, exactly as Amendment F leaves them. It does not re-date a row, re-scope the debt or read it as smaller -- fourteen rows in, fourteen slices out -- and it registers no interpreter, because an interpreter registered to move a counter without changing what the walk prices is a counter driven to zero by editing what it counts.",
- "where_the_measurement_disagrees_with_the_prose": "Amendment F describes all fourteen rows as the families whose numbers participant_timeline._pair_run_fight produces today. Eleven declare that route in their own via field. Three -- combat_state, opening_defense, threshold_defense -- declare the defence resolver instead, and their rows say in their own words that a walk-lane interpreter there would be a second producer of one number, which is what D-60 and umbrella criterion 8 forbid. For those three Amendment F's named retiring act is the act the campaign's own criterion rules out, so they are routed to what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine in docs/receipts/rulings-owed.json. A lane may measure this and may not settle it: re-dating a row, editing the lane table so the family stops owing the walk an answer, and registering an interpreter that changes nothing the walk prices are each a way of making a counter agree with a sentence.",
+ "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it": "Amendment F describes all fourteen rows as the families whose numbers participant_timeline._pair_run_fight produces today. Eleven declare that route in their own via field. Three -- combat_state, opening_defense, threshold_defense -- declare the defence resolver instead, and their rows say in their own words that a walk-lane interpreter there would be a second producer of one number, which is what D-60 and umbrella criterion 8 forbid. So Amendment F's act, spelled with the receipt walk, named for those three the act the campaign's own criterion rules out. That was measured here and routed to an owed ruling, which answered it on 2026-08-15: umbrella Amendment K rules the retiring act per LANE rather than per walk -- a per-family interpreter in the family's own declared serving lane, whichever lane the row's via names -- discharging criterion 8's own property that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. Every row therefore has a settled act, derived from its own route rather than assumed uniform, and the three moves a lane may still not make are unchanged in force: registering an interpreter that changes nothing the walk prices, editing the lane table so a family stops owing the walk an answer, and reading fourteen as eleven.",
  "why_a_lane_may_write_this": "R-20's second half makes enumerating a qualifying population a pre-edit act, performed from committed artifacts. Every field here is read from the committed frontier, the behaviour catalog, the committed coupled scenario set or the committed coupled baseline. Nothing here decides what a slice should do; it says how big each one is, which is what 'unbudgeted' was the absence of."
 }

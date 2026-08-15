@@ -666,6 +666,56 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > *not* ruled here: that the debt is acceptable. Retiring it is fourteen slices, one per family,
    > each carrying its own `Expected qualifying occurrences` line, and no phase document may read
    > this amendment as permission to stop counting them.
+   >
+   > **Amendment K — 2026-08-15, the retiring act is named per lane, not per walk.**
+   > *Answers `what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine` in
+   > `docs/receipts/rulings-owed.json`, the seventh row that ledger opened and the one Amendment F
+   > left behind it.* Amendment F names one retiring act for all fourteen rows and describes them all
+   > as *"the families whose numbers `participant_timeline._pair_run_fight` produces today"*. Measured
+   > against the frontier's own `via` declarations by
+   > `docs/receipts/receipt-walk-retirement-schedule.json`, that description is true of eleven.
+   > Three — `combat_state`, `opening_defense`, `threshold_defense` — declare `DEFENSE_RESOLVER`
+   > instead, and their rows say in their own words that a walk-lane interpreter there *"would be a
+   > second producer of one number"*, which is exactly what D-60 and criterion 8 forbid. Read as *a
+   > **receipt-walk** interpreter*, Amendment F's act therefore names, for those three, the act the
+   > campaign rules out.
+   >
+   > **Ruling: the retiring act for every one of the fourteen rows is a per-family interpreter in the
+   > family's own declared serving lane** — `RECEIPT_WALK` for the eleven the pair engine feeds,
+   > `DEFENSE_RESOLVER` for the three the resolver feeds, and in general whichever lane that row's
+   > `via` names. Amendment F's act is neither narrowed nor widened; what is corrected is the lane it
+   > was spelled with, which was read off eleven rows and written over fourteen. The property being
+   > discharged is one property and it is criterion 8's own: **the family's numbers reach the walk
+   > through exactly one interpreter, in the lane the family declares, instead of arriving already
+   > priced by the pair engine.** Spelled that way the act *serves* D-60 rather than colliding with
+   > it — a resolver interpreter is not a second producer of one number, it is the one producer, and
+   > the walk consuming what it built is the one-engine property holding rather than breaking.
+   > `delta_amp` is answered by the same sentence and needs no separate one: its structured `via` is
+   > `pair_engine`, so its ruled act is a receipt-walk interpreter; the second route its prose names
+   > is the `damage_modifier` packet, and prose naming two routes does not move a gated declaration —
+   > the declaration is the route (D-40), and correcting `via` would be a behaviour claim owing its
+   > own slice rather than a schedule's edit.
+   >
+   > **What this ruling does not do**, each of which was available and is refused. It registers no
+   > interpreter that emits fields nothing consumes: a counter driven to zero by editing what it
+   > counts is worse than the gap. It does not touch `_FAMILY_LANES`: the three families still
+   > declare a receipt-walk lane, so counter 4 still counts them, and an exclusion driven from
+   > inside the thing it excuses is D-40's exact prohibition. And it does not read Amendment F's
+   > fourteen as eleven. Measured on the commit that lands this, `INTERPRETERS` already holds
+   > `(COMBAT_STATE, DEFENSE_RESOLVER)`, `(OPENING_DEFENSE, DEFENSE_RESOLVER)` and
+   > `(THRESHOLD_DEFENSE, DEFENSE_RESOLVER)`, so for those three the ruled act is already performed
+   > and the one-engine property is discharged today — which is a fact about the tree and **not**
+   > permission to stop counting: all fourteen rows stand, `overdue` and gated, the machine still
+   > refuses a fifteenth, and the eleven are still eleven slices no phase has budgeted.
+   >
+   > **The rows' recorded retiring stage is refreshed** from *Phase 4 S3 — one kernel, five views*,
+   > which Amendment F measured cannot perform the act, to this closeout, dated `2026-08-15` and
+   > citing Amendment F as the measurement behind it. The stage record the deferrals name said in
+   > its own words that *"re-dating them is a ruling and not a lane's edit"*; this is that ruling.
+   > Re-dating changes what the rows are overdue **against** and nothing about whether they are
+   > overdue: the closeout has shipped, it did not retire them either, and every row stays `overdue`
+   > with a blocker a reader can open. A stage that made the rows read as on schedule would be the
+   > debt getting smaller by being re-dated, which is the one thing a re-dating may not buy.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty

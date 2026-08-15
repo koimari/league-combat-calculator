@@ -120,33 +120,41 @@ def test_every_declared_owner_and_rule_comes_from_the_catalog() -> None:
         )
 
 
-def test_a_row_whose_route_is_not_the_pair_engine_is_routed_to_a_ruling() -> None:
-    """Amendment F's named act does not describe every row, and this says so.
+def test_every_rows_retiring_act_names_the_lane_that_row_declares() -> None:
+    """Amendment K's ruling, as the derivation rather than as a sentence.
 
-    A defence-resolver row says in its own words that a walk-lane interpreter
-    would be a second producer of one number, which D-60 forbids.  A lane may
-    measure that and may not settle it, so the row carries the owed ruling's
-    id and that ruling is asserted to be really open.
+    Amendment F named one act and spelled it with one lane, which is true of
+    the rows the pair engine feeds and named, for the rest, the second
+    producer of one number D-60 forbids.  Amendment K rules the act per lane:
+    a per-family interpreter in the lane the row itself declares.  So the act
+    is checked against ``via`` row by row rather than against a family list --
+    a row that re-declares its route must re-derive its act on the same
+    commit, which is the property a typed list would lose.
 
-    As above, the routed list is not asserted non-empty: the day the ruling
-    lands and the rows gain a settled act is the day this gap closes, and it
-    should close by the derivation changing rather than by a red test.
+    The corrected list is deliberately not asserted non-empty.  The day a
+    family's declared route changes is the day this list moves, and a test
+    that pins the current split would go red when its subject changes rather
+    than when the rule breaks (D-92).
     """
     block = schedule()
-    routed = block["slices_routed_to_an_owed_ruling"]
-    owed = {
-        row["id"] for row in json.loads(RULINGS.read_text(encoding="utf-8"))["owed"]
+    corrected = block["slices_whose_retiring_lane_amendment_k_corrects"]
+    answered = {
+        row["id"] for row in json.loads(RULINGS.read_text(encoding="utf-8"))["answered"]
     }
-    for family in routed:
-        act = block["families"][family]["retiring_act"]
-        assert act["settled"] is False
-        assert act["routed_to"] == receipt_walk_schedule.OWED_RULING
-        assert act["routed_to"] in owed
+    assert receipt_walk_schedule.RULING in answered
     for family, entry in block["families"].items():
-        if family in routed:
-            continue
-        assert entry["retiring_act"]["settled"] is True
-        assert entry["route_today"] == ["pair_engine"]
+        act = entry["retiring_act"]
+        assert act["settled"] is True, family
+        assert act["ruled_by"] == receipt_walk_schedule.RULING, family
+        if entry["route_today"] == [receipt_walk_schedule.PAIR_ENGINE]:
+            assert family not in corrected
+            assert act["retiring_lane"] == [receipt_walk_schedule.LANE], family
+        else:
+            assert family in corrected
+            assert act["retiring_lane"] == entry["route_today"], family
+    assert block["slices_whose_retiring_act_is_amendment_f_as_written"] == len(
+        block["families"]
+    ) - len(corrected)
 
 
 def test_the_schedule_retires_nothing() -> None:
@@ -163,7 +171,7 @@ def test_the_schedule_retires_nothing() -> None:
     [
         ("drop_a_family", "different set of families"),
         ("shrink_a_population", "committed row differs from derived"),
-        ("resettle_a_routed_row", "committed value differs from derived"),
+        ("respell_a_corrected_lane", "committed value differs from derived"),
     ],
 )
 def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
@@ -179,6 +187,6 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
         )
         mutated["families"][family]["population_total"] = 0
     else:
-        mutated["slices_routed_to_an_owed_ruling"] = []
+        mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
     failures = receipt_walk_schedule.check(mutated)
     assert any(expected in failure for failure in failures), failures

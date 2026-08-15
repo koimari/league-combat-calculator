@@ -25,18 +25,24 @@ So this file is fourteen declared populations, every field derived:
 * and the retiring act, derived from the row's **own declared route** rather
   than assumed uniform.
 
-That last one is where the measurement disagrees with the prose, and the
-disagreement is recorded rather than resolved.  Amendment F describes all
-fourteen as *"the families whose numbers ``participant_timeline._pair_run_fight``
-produces today"*.  Eleven of them declare that route.  Three route through the defence resolver
-and their rows say in their own words that a walk-lane interpreter there
-*"would be a second producer of one number"* -- which is what D-60 forbids, so
-for those three Amendment F's named act is one the campaign's own criterion 8
-rules out.  A fourth, ``delta_amp``, declares the pair engine in its structured route
-while its prose names a second one and says neither is the rule; that smaller
-mismatch is recorded beside the three rather than folded into them.  A lane
-may measure all of this and may not settle it, so it is routed to an owed
-ruling, which is this campaign's mechanism for exactly this.
+That last one is where the measurement disagreed with the prose, and the
+disagreement is now ruled rather than merely recorded.  Amendment F describes
+all fourteen as *"the families whose numbers ``participant_timeline._pair_run_fight``
+produces today"*.  Eleven of them declare that route.  Three route through the
+defence resolver and their rows say in their own words that a walk-lane
+interpreter there *"would be a second producer of one number"* -- which is what
+D-60 forbids, so Amendment F's act, spelled with the receipt walk, named for
+those three the act criterion 8 rules out.  **Amendment K (2026-08-15)
+corrects the spelling rather than the act:** the retiring act is a per-family
+interpreter in the family's *own declared serving lane*, whichever lane the
+row's ``via`` names, discharging criterion 8's own property -- the family's
+numbers reach the walk through exactly one interpreter instead of arriving
+already priced by the pair engine.  So this file derives each row's act from
+its route, and every row has a settled one.  ``delta_amp``, which declares the
+pair engine in its structured route while its prose names a second one, is
+answered by the same sentence: the declaration is the route (D-40), so its act
+is the receipt-walk one, and the prose mismatch is recorded beside it as a
+behaviour claim owing its own slice rather than a schedule's edit.
 
 **What this file is not.**  It is not a retirement, and no row here retires
 anything -- the deferrals stand, ``overdue`` and gated, exactly as
@@ -70,9 +76,15 @@ INTERPRETERS_DIR = REPO_ROOT / "src" / "calculator" / "interpreters"
 #: a different lane with a different blocker (H5) and are deliberately not here.
 LANE = "receipt_walk"
 
-#: The owed ruling a row is routed to when its declared route is not the pair
-#: engine, and Amendment F's named retiring act therefore does not describe it.
-OWED_RULING = "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
+#: The ruling that spells the retiring act per lane rather than per walk, and
+#: so gives a row whose declared route is not the pair engine a settled act.
+#: It was owed and is answered; the id stays here because every row's act
+#: cites it, and a citation nobody can resolve is the thing this file avoids.
+RULING = "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
+
+#: The lane whose interpreter Amendment F named, and the only lane the eleven
+#: pair-engine-fed rows are retired by.
+PAIR_ENGINE = "pair_engine"
 
 
 class ScheduleError(RuntimeError):
@@ -146,11 +158,14 @@ def population_size(node: Any) -> int:
 def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
     """What retires this row, read off its own declared route.
 
-    Amendment F names one act for all fourteen.  For a row routed anywhere but
-    the pair engine that description is not true of the tree, and the row is
-    routed to a ruling rather than given an act a lane invented for it.
+    Amendment F names one act for all fourteen and spells it with one lane,
+    which is true of the eleven the pair engine feeds and names, for the rest,
+    the second producer D-60 forbids.  Amendment K rules the act per lane
+    instead: a per-family interpreter in the lane the row itself declares.
+    The act is derived from ``via`` rather than assumed, so a row that
+    re-declares its route re-derives its act on the same commit.
     """
-    if tuple(route) == ("pair_engine",):
+    if tuple(route) == (PAIR_ENGINE,):
         return {
             "act": (
                 "A receipt-walk interpreter for this family: the walk prices it "
@@ -158,18 +173,26 @@ def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
                 "participant_timeline._pair_run_fight produces. This is "
                 "Amendment F's named act and it describes this row as written."
             ),
+            "retiring_lane": [LANE],
             "settled": True,
+            "ruled_by": RULING,
         }
     return {
         "act": (
-            "Not settled. The row's own reason says the walks stage what the "
-            "defence resolver already built and that a walk-lane interpreter "
-            "here would be a second producer of one number -- which is what "
-            "D-60 and umbrella criterion 8 forbid. So Amendment F's named act "
-            "is, for this row, the act the campaign's own criterion rules out."
+            "A per-family interpreter in this family's own declared serving "
+            "lane -- " + ", ".join(route) + " -- so that the family's numbers "
+            "reach the walk through exactly one interpreter instead of "
+            "arriving already priced by the pair engine. That is umbrella "
+            "criterion 8's property, which is why the act serves D-60 rather "
+            "than colliding with it: the lane's interpreter is not a second "
+            "producer of one number, it is the one producer, and the walk "
+            "consumes what it built. Amendment K rules this act for every row, "
+            "correcting the lane Amendment F spelled it with and neither "
+            "narrowing nor widening the debt."
         ),
-        "settled": False,
-        "routed_to": OWED_RULING,
+        "retiring_lane": list(route),
+        "settled": True,
+        "ruled_by": RULING,
     }
 
 
@@ -226,10 +249,10 @@ def schedule() -> dict[str, Any]:
                 )
             ),
         }
-    unsettled = sorted(
+    lane_corrected = sorted(
         family
         for family, entry in slices.items()
-        if not entry["retiring_act"]["settled"]
+        if tuple(entry["route_today"]) != (PAIR_ENGINE,)
     )
     blind = [
         family
@@ -265,22 +288,28 @@ def schedule() -> dict[str, Any]:
             "Nothing here decides what a slice should do; it says how big each "
             "one is, which is what 'unbudgeted' was the absence of."
         ),
-        "where_the_measurement_disagrees_with_the_prose": (
+        "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it": (
             "Amendment F describes all fourteen rows as the families whose "
             "numbers participant_timeline._pair_run_fight produces today. "
             "Eleven declare that route in their own via field. Three -- "
-            + ", ".join(sorted(unsettled))
+            + ", ".join(lane_corrected)
             + " -- declare the defence resolver instead, and their rows say in "
             "their own words that a walk-lane interpreter there would be a "
             "second producer of one number, which is what D-60 and umbrella "
-            "criterion 8 forbid. For those three Amendment F's named retiring "
-            "act is the act the campaign's own criterion rules out, so they are "
-            "routed to " + OWED_RULING + " in docs/receipts/rulings-owed.json. "
-            "A lane may measure this and may not settle it: re-dating a row, "
-            "editing the lane table so the family stops owing the walk an "
-            "answer, and registering an interpreter that changes nothing the "
-            "walk prices are each a way of making a counter agree with a "
-            "sentence."
+            "criterion 8 forbid. So Amendment F's act, spelled with the receipt "
+            "walk, named for those three the act the campaign's own criterion "
+            "rules out. That was measured here and routed to an owed ruling, "
+            "which answered it on 2026-08-15: umbrella Amendment K rules the "
+            "retiring act per LANE rather than per walk -- a per-family "
+            "interpreter in the family's own declared serving lane, whichever "
+            "lane the row's via names -- discharging criterion 8's own property "
+            "that the family's numbers reach the walk through exactly one "
+            "interpreter instead of arriving already priced by the pair engine. "
+            "Every row therefore has a settled act, derived from its own route "
+            "rather than assumed uniform, and the three moves a lane may still "
+            "not make are unchanged in force: registering an interpreter that "
+            "changes nothing the walk prices, editing the lane table so a family "
+            "stops owing the walk an answer, and reading fourteen as eleven."
         ),
         "a_second_and_smaller_mismatch": (
             "delta_amp/receipt_walk declares via = ['pair_engine'], so it is "
@@ -292,15 +321,17 @@ def schedule() -> dict[str, Any]:
             "an ActionKind.DAMAGE_MODIFIER' -- and says neither of them is the "
             "rule. The structured route and the prose beside it therefore "
             "describe different things, and only the structured one is gated. "
-            "It is recorded here rather than corrected because via is the "
-            "frontier's field and its value is a declaration, not a "
-            "measurement a schedule may overwrite; the same owed ruling is "
-            "where its disposition belongs."
+            "Amendment K answers it in the same sentence as the three: the "
+            "declaration is the route (D-40), so this row's act is the "
+            "receipt-walk one, and correcting via would be a behaviour claim "
+            "owing its own slice rather than a schedule's edit. It stays "
+            "recorded here because a prose sentence that disagrees with a gated "
+            "declaration is a thing a reader should be able to find."
         ),
         "scheduled_slices": len(slices),
         "slices_whose_retiring_act_is_amendment_f_as_written": len(slices)
-        - len(unsettled),
-        "slices_routed_to_an_owed_ruling": list(unsettled),
+        - len(lane_corrected),
+        "slices_whose_retiring_lane_amendment_k_corrects": list(lane_corrected),
         "families_with_no_covering_coupled_scenario": sorted(blind),
         "families": slices,
     }
@@ -328,7 +359,10 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
     for family, entry in fresh["families"].items():
         if committed.get("families", {}).get(family) != entry:
             failures.append(f"family {family!r}: committed row differs from derived")
-    for key in ("scheduled_slices", "slices_routed_to_an_owed_ruling"):
+    for key in (
+        "scheduled_slices",
+        "slices_whose_retiring_lane_amendment_k_corrects",
+    ):
         if committed.get(key) != fresh[key]:
             failures.append(f"{key}: committed value differs from derived")
     return failures
