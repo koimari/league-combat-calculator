@@ -1,0 +1,68 @@
+{
+  "receipt": "oracle-DKT-ruling-leaf7",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "investigator": "fresh independent oracle; evidence tree built only from `git archive --format=tar HEAD data docs/math-foundations.md`",
+  "scenario": "champion_baselines (pair snapshot, no fight behind it)",
+  "leaf_path": "/champion_baselines/Syndra/abilities_level_11/Q2/resource_cost",
+  "old_value": null,
+  "old_value_note": "<absent> — the leaf did not exist in the prior baseline",
+  "new_value": 60.0,
+  "independent_value": 60.0,
+  "verdict": "new_value_correct",
+  "computation": {
+    "step_1_what_Q2_is": "Syndra has no second Q spell in the wiki cache; `data/champions.json` -> Syndra.abilities.Q holds a single spell 'Dark Sphere' whose second effect entry reads 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' The audit cache confirms the calculator models that stocked charge as a synthetic slot: data/champion-audit/batch-6.json -> Syndra.module_slots.modeled = [P, Q, Q2, W, E, R], note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)', and notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'. So Q2 is a second CAST of Dark Sphere, not a distinct ability.",
+    "step_2_cost_per_cast": "The wiki cache gives Dark Sphere exactly one cost track, per cast: cost.modifiers[0].values = [40, 45, 50, 55, 60], resource = MANA. It is a charge/recharge ability (rechargeRate = [7,7,7,7,7], cooldown.affectedByCdr = false), and nothing in the Q effects, blurb, or notes waives or discounts mana for a charge-stocked cast — the notes only say the stocked charges are shown as sphere icons under her health bar. Therefore every Dark Sphere cast, including one that consumes a stocked charge, costs the rank's mana.",
+    "step_3_rank_at_level_11": "Rank-unlock rules: a basic ability reaches rank 5 at champion level 9 (ranks 2/3/4/5 unlock at levels 3/5/7/9); the ultimate takes its 2nd point at level 11. At level 11 Syndra has 11 points, 2 in R, 9 in basics, so a Q-max-first baseline has Q at rank 5 — the maximum rank legal at that level.",
+    "step_4_value": "Q rank 5 mana cost = cost.values[4] = 60 -> Q2.resource_cost = 60.0.",
+    "consistency_check": "Because Q2 is the same spell cast a second time, its resource_cost must equal the sibling leaf /champion_baselines/Syndra/abilities_level_11/Q/resource_cost. 60.0 is the only value in the cost track consistent with a rank-5 (level-11-maxed) Q; a rank-4 reading would give 55.0, but rank 4 is not what a level-11 baseline with a maxed primary carries.",
+    "why_old_absent_is_wrong": "An absent resource_cost asserts the stocked second Dark Sphere is free to cast. The cached wiki text supports no such waiver: the Transcendent Bonus grants a charge only, and the single per-cast cost track applies to every cast. Modeling Q2 without a mana cost would understate Syndra's mana expenditure in any rotation that spends both charges."
+  },
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [40, 45, 50, 55, 60], \"units\": [\"\", \"\", \"\", \"\", \"\"]}]}"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].resource / rechargeRate / cooldown",
+      "quote": "resource = \"MANA\"; rechargeRate = [7, 7, 7, 7, 7]; cooldown = {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the  Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... note: \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge).\""
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "[.].description (ammo resource, internal index 12)",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "whole document",
+      "quote": "no formula bearing on ability resource cost or ability rank-by-level; searched for 'resource_cost', 'mana cost', 'rank', 'charge' — no relevant hits. Value derived entirely from the cached wiki text above."
+    }
+  ],
+  "data_provenance": {
+    "champions.json patchLastChanged (Syndra)": "26.12",
+    "champions.json fetched_at": 1786113324.862417
+  },
+  "caveat": "The one assumption outside the cached text is the baseline's skill order at level 11 (Q maxed, rank 5). If the level-11 baseline instead carries Q at rank 4, both this leaf and its sibling /Q/resource_cost would read 55.0; the invariant that survives either way is Q2.resource_cost == Q.resource_cost, which <absent> violates.",
+  "committed": false
+}

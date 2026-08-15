@@ -1,0 +1,126 @@
+{
+  "receipt": "oracle-DKT-ruling-leaf4",
+  "date": "2026-08-15",
+  "investigator": "fresh independent oracle (runbook R-18/R-19 with recorded amendments)",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle4",
+    "isolation": "no src/, tests/, scripts/, docs/plans/, docs/receipts/, or git history was read; the scenario definition and the golden baseline were NOT consulted"
+  },
+  "leaf": {
+    "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_spent",
+    "old_value": 530.0,
+    "new_value": 590.0,
+    "delta": 60.0
+  },
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "step_1_scenario_state": {
+      "claim": "the '_120' suffix is Syndra's Splinters of Wrath stack count at its maximum (120), i.e. full Transcendence",
+      "why": "data/champions.json Syndra P: 'Syndra collects Splinters of Wrath ... stacking up to 120 times'; 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%'. data/champion-audit/batch-e9-1.json independently describes the Syndra module option as 'splinters: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'.",
+      "level_implication": "P grants 5 Splinters per ability rank-up 'up to 85' = 17 rank-ups = every skill point beyond the first, which is only reachable at level 18. At that state every ability is at max rank."
+    },
+    "step_2_cached_costs": {
+      "source": "data/champions.json -> Syndra.abilities[*].cost.modifiers[0].values",
+      "Q_Dark_Sphere": [40, 45, 50, 55, 60],
+      "W_Force_of_Will": [60, 70, 80, 90, 100],
+      "E_Scatter_the_Weak": [50, 50, 50, 50, 50],
+      "R_Unleashed_Power": [100, 100, 100],
+      "at_max_rank": {"Q": 60, "W": 100, "E": 50, "R": 100}
+    },
+    "step_3_mana_pool_feasibility": {
+      "formula": "docs/math-foundations.md Sect. 5 'Stat growth (growth_stat): base + growth*(L-1)*(0.7025 + 0.0175*(L-1))' [EXACT]",
+      "inputs": "data/champions.json Syndra.stats.mana = {flat: 480, perLevel: 40}",
+      "arithmetic": "480 + 40*17*(0.7025 + 0.0175*17) = 480 + 40*17*1.0 = 1160",
+      "conclusion": "max mana 1160 at L18; both 530 and 590 are affordable, so neither value is set by a pool clamp"
+    },
+    "step_4_decomposition": {
+      "constraint_used": "docs/math-foundations.md Sect. 5, Ability haste row: 'R casts exactly once per timed fight (model constraint, documented)'",
+      "enumeration_over_nonneg_cast_counts_at_max_rank": {
+        "530": ["R + 3Q + 0W + 5E", "R + 3Q + 1W + 3E", "R + 3Q + 2W + 1E"],
+        "590": ["R + 4Q + 0W + 5E", "R + 4Q + 1W + 3E", "R + 4Q + 2W + 1E"]
+      },
+      "result": "the two totals are the SAME cast ledger except for the Dark Sphere count: 3 vs 4. The 60-mana delta is exactly one rank-5 Dark Sphere cast (60 mana). No other cast in the kit at this state costs 60 (W is 100 at rank 5; E is 50; R is 100)."
+    },
+    "step_5_rule_that_decides_it": {
+      "mechanic": "At 120 splinters Syndra is above the 40-splinter threshold, so Dark Sphere is a stocked-charge ability: data/champions.json Syndra Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' data/wiki-atoms/stack-transform-summon-resource.json classifies this as the ammo atom: 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'. data/champion-audit/batch-6.json records that the module models this as a synthetic second slot: modeled = [P, Q, Q2, W, E, R], 'incl. synthetic Q2 (2nd charge)'.",
+      "rule": "A stocked charge gates AVAILABILITY, not COST. Nothing in the cached Q text grants a cost reduction, a refund, or a free cast for the charge-consumed cast; the cost row [40,45,50,55,60] is the cost of casting Dark Sphere, once per cast. Therefore every Dark Sphere cast in the fight - including the one that consumes the stocked second charge (the synthetic Q2 slot) - must appear in resource_spent at full rank-5 cost, 60 mana.",
+      "refund_hypotheses_ruled_out": [
+        "P mana restore per collected Splinter is 20/25/30/35/40/48/56/64/72/80/95/110/125/140/155/175/195/215/235/255 by level (data/champions.json). 60 does not appear at ANY level, so the 60 delta cannot be a passive mana restore appearing/disappearing.",
+        "W's only mana refund in the cached notes is the Blue Sentinel throw: 'will refund 10 mana to Syndra upon cast' - 10, not 60.",
+        "A rank-1 W also costs 60, but rank-1 W is impossible in a 120-splinter state (which requires the full 85-splinter rank-up cap, i.e. all skill points spent), so the 60 delta cannot be a W."
+      ]
+    },
+    "conclusion": "530.0 prices only 3 of the fight's 4 Dark Sphere casts - one Dark Sphere lands (and, at 120 splinters, is enabled precisely by the stocked-charge bonus) without being charged its 60 mana. 590.0 = R(100) + 4 x Q(60) + the same W/E remainder(250) prices every cast in the ledger. 590.0 is the value consistent with the cached cost rows and the charge rule."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cost / E[0].cost / R[0].cost",
+      "quote": "W [60, 70, 80, 90, 100]; E [50, 50, 50, 50, 50]; R [100, 100, 100]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[1]",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. -- per-level values [20,25,30,35,40,48,56,64,72,80,95,110,125,140,155,175,195,215,235,255]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].notes",
+      "quote": "Force of Will has additional effects when targeting the Blue Sentinel and Red Brambleback. Throwing the former will refund 10 mana to Syndra upon cast..."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.stats.mana",
+      "quote": "{flat: 480, perLevel: 40}"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "atom stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)..."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.' ; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Sect. 5 formula-audit table, Stat growth row",
+      "quote": "base + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121)) - EXACT"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Sect. 5 formula-audit table, Ability haste row",
+      "quote": "R casts exactly once per timed fight (model constraint, documented)"
+    }
+  ],
+
+  "residual_uncertainty": [
+    "The scenario definition itself (cast order, fight length, item/haste setup) lives outside the permitted evidence tree, so the absolute cast count could not be read - only the DIFFERENCE was reconstructed. That difference is pinned exactly: 60 mana = one rank-5 Dark Sphere cast, with every other cast identical between the two decompositions.",
+    "This ruling therefore holds on the rule, not on the schedule: it is correct so long as the fight's cast ledger is unchanged and one Dark Sphere cast was previously unpriced. If instead the fight's Dark Sphere COUNT itself changed (a scheduling change adding a 4th cast), the +60 would still be the right resource consequence of that cast, but the cast count itself would need a separate schedule audit - which no permitted source can settle.",
+    "data/champions.json marks Syndra Q cooldown 'affectedByCdr: false' while R's passive explicitly grants Dark Sphere ability haste ('Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste', 10/20/30). Flagged as a possible cached-parse inconsistency; it does not affect this leaf's cost arithmetic."
+  ]
+}

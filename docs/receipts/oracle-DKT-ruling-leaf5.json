@@ -1,0 +1,125 @@
+{
+  "receipt": "oracle-DKT-ruling-leaf5",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "date": "2026-08-15",
+  "investigator": "fresh independent oracle subagent",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle5",
+    "isolation_note": "Only data/ and docs/math-foundations.md from the export were read. src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were never opened. The scenario spec itself is not in the export, so the scenario parameters were reconstructed by search over the sourced cooldown/cost data rather than read."
+  },
+
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_spent",
+  "old_value": 530.0,
+  "new_value": 590.0,
+  "delta": 60.0,
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0]",
+      "quote": "\"cost\": {\"modifiers\": [{\"values\": [40, 45, 50, 55, 60], \"units\": [\"\",\"\",\"\",\"\",\"\"]}]}, \"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"resource\": \"MANA\", \"rechargeRate\": [7,7,7,7,7]",
+      "use": "Dark Sphere costs 40/45/50/55/60 MANA per activation; rank 5 = 60. Recharge/cooldown 7 s."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At >= 40 Splinters Dark Sphere becomes a 2-charge (stocked) ability. Nothing in the effect text, the notes, or the cost field waives the mana cost of a stocked cast: the cost is per activation."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.",
+      "use": "Confirms the charge system is an availability gate (ammo pips), not a cost waiver."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.{W,E,R}[0].cost",
+      "quote": "W: [60,70,80,90,100]; E: [50,50,50,50,50]; R: [100,100,100]",
+      "use": "The full Syndra mana-cost alphabet used to decompose 530 and 590."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].notes",
+      "quote": "The initial cast does not count as an ability activation for the purposes of on-cast effects such as Spellblade ... Detonating the ability manually does.",
+      "use": "Force of Will is cast + recast on ONE mana payment; a W double-charge would be +100, not +60. Excludes W as the source of the delta at level-18 ranks."
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. leveling: Ability Haste [10, 20, 30]",
+      "use": "The competing hypothesis for an extra Q cast (R passive haste shortening the Q cooldown). Tested and excluded below."
+    },
+    {
+      "id": "S7",
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "atom stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ...",
+      "use": "Syndra's Dark Sphere is classified as a stocked-charge (ammo) ability. Ammo is a second, independent gate layered on top of the ability's listed resource cost - it does not replace it."
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "lines": "59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline ... each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`",
+      "use": "The cast-count schedule used to reconstruct the fight."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "line": "462",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` ... R casts exactly once per timed fight (model constraint, documented)",
+      "use": "Effective-cooldown formula, and the nR = 1 constraint that closes the decomposition."
+    },
+    {
+      "id": "S10",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.",
+      "use": "Independent (data-side) confirmation that the second Dark Sphere charge is modeled as a synthetic Q2 slot gated at >= 40 Splinters, and that the scenario suffix 60 lands above that gate (and on the 60-Splinter W true-damage gate)."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_delta_is_one_dark_sphere": {
+      "statement": "The change is exactly +60.0 mana. Over Syndra's sourced cost alphabet (S1, S4) at level-18 ranks (18 skill points = Q5/W5/E5/R3, so the 'derived order' cannot change ranks), the only single activation worth 60 mana is one rank-5 Dark Sphere. W5 = 100, E = 50, R = 100. W = 60 only at rank 1, unreachable at level 18, and W pays once for cast+recast anyway (S5).",
+      "conclusion": "The golden moved by exactly one Dark Sphere activation."
+    },
+    "step_2_decompose_both_values": {
+      "model": "resource_spent = 60*k + 100*nW + 50*nE + 100*nR, with k = Dark Sphere activations, nR = 1 (S9).",
+      "old": "530 = 60*3 + 100*2 + 50*1 + 100*1   (k=3, nW=2, nE=1, nR=1)",
+      "new": "590 = 60*4 + 100*2 + 50*1 + 100*1   (k=4, nW=2, nE=1, nR=1)",
+      "note": "An exhaustive sweep over ability haste AH in 0..200 (step 5) and fight length T in 0.5..120 s (step 0.5) using the shared-timeline schedule of S8/S9 found exactly one realizable (AH,T) family reaching each value, and both carry the same nW=2, nE=1, nR=1. Example realization: level 18, AH = 0, T = 15 s -> W at t=0,8 (cd 8 s); E at t=0 only (cd 15 s); R once. Another: AH = 60, T in (7.37, 9.375] with the R3 passive on Q. In every realization nW, nE and nR are unchanged and only k moves 3 -> 4."
+    },
+    "step_3_exclude_the_cooldown_hypothesis": {
+      "test": "Could the 4th sphere come from the R passive's +10/20/30 ability haste on Dark Sphere (S6) rather than from a charge? That needs 3*cd_Q < T <= 4*cd_Q while simultaneously cd_W < T <= 2*cd_W (nW stays 2). With cd_Q = 7*100/(100+AH+h) and cd_W = 8*100/(100+AH): 21/(1+(AH+h)/100) < 16/(1+AH/100)  =>  h > 31.25 + 0.3125*AH.",
+      "result": "h > 31.25 is impossible; R's passive caps at 30 ability haste. A full numeric sweep confirms 590 is NOT reachable by any pure-cooldown Q schedule for any AH in 0..200, any T, any R rank, with nR = 1.",
+      "conclusion": "The 4th Dark Sphere is not a cooldown artifact. It can only be the stocked second charge (S2)."
+    },
+    "step_4_charge_count_identity": {
+      "single_charge": "activations in [0,T) = 1 + floor((T-eps)/c)   (epochs 0, c, 2c, ... per S8)",
+      "two_stocked_charges": "activations in [0,T) = 2 + floor((T-eps)/c)   (both charges available at t=0, then one per recharge period)",
+      "identity": "stocked - single = +1 activation for EVERY T > 0 and EVERY recharge time c. Verified numerically for c = 7.0, 5.3846 (AH+h=30), 4.375 (AH=60), 3.6842 (AH+h=90) at T = 5, 8.5, 9, 11, 15, 20, 30 s.",
+      "mana_consequence": "+1 * 60 mana = +60.0 mana, exactly the observed delta, independent of the fight length I could not read."
+    },
+    "step_5_is_the_stocked_cast_billed": {
+      "argument": "Dark Sphere's cost field is a per-activation MANA cost of 40/45/50/55/60 (S1). The Transcendent bonus (S2) stocks a charge; neither the effect text nor the notes (S3) waive that cost, and the wiki's own taxonomy classes Dark Sphere as an ammo/stocked-charge ability (S7) - ammo gates availability on top of the resource cost, it is not a substitute for it. A model that fires the second sphere for its damage (the Q2 slot, S10) while spending 0 mana on it is internally inconsistent: it prices the reward and not the cost.",
+      "conclusion": "Four sphere activations must bill 4 * 60 = 240 mana."
+    },
+    "result": "resource_spent = 4*60 (Dark Sphere x4, incl. the 40-Splinter stocked charge) + 2*100 (Force of Will x2) + 1*50 (Scatter the Weak x1) + 1*100 (Unleashed Power x1) = 240 + 200 + 50 + 100 = 590.0"
+  },
+
+  "verdict": "new_value_correct",
+
+  "confidence": "high",
+  "residual_uncertainty": "The scenario spec is not inside the permitted evidence tree, so fight length, ability haste and the splinters option were reconstructed by search rather than read. The ruling does not depend on those parameters: step 4 shows the stocked-charge delta is exactly +60 mana for every fight length and every haste value, and step 3 shows no cooldown-only schedule can produce 590. The one premise carried is that this scenario's Syndra sits at >= 40 Splinters of Wrath - which is forced anyway, since a second sphere exists to be charged for at all only above that gate, and which the scenario id suffix 60 (>= the 40-charge gate, and exactly the 60-Splinter W true-damage gate, S10) independently supports.",
+  "committed": false
+}

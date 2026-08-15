@@ -1,0 +1,120 @@
+{
+  "receipt": "oracle-DKT-ruling-leaf3",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "investigator": "fresh independent oracle; evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were not read",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_spent",
+  "old_value": 530.0,
+  "new_value": 590.0,
+  "verdict": "new_value_correct",
+
+  "sources": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]",
+      "use": "Dark Sphere mana cost by rank; rank 5 = 60"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].cost.modifiers[0].values",
+      "quote": "[60, 70, 80, 90, 100]",
+      "use": "Force of Will mana cost by rank; rank 5 = 100. The recast (throw) carries no separate cost entry, so a W grab+throw is one 100-mana spend."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].cost.modifiers[0].values",
+      "quote": "[50, 50, 50, 50, 50]",
+      "use": "Scatter the Weak mana cost, rank-flat 50"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].cost.modifiers[0].values",
+      "quote": "[100, 100, 100]",
+      "use": "Unleashed Power mana cost, rank-flat 100"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At >= 40 Splinters, Dark Sphere becomes a charge (ammo) ability with a 2-charge stock. The scenario tag `_60` is at/over that threshold."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].rechargeRate",
+      "quote": "[7, 7, 7, 7, 7]",
+      "use": "Charge recharge period, 7 s at every rank. Presence of a rechargeRate field (absent on non-ammo abilities) independently confirms Q is charge-based."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown",
+      "quote": "values [7,7,7,7,7], affectedByCdr: false",
+      "use": "Wiki ammo convention: the static inter-cast cooldown slot mirrors the recharge value and is flagged not-CDR-affected, because on a charge ability the haste-affected quantity is the recharge, not the cooldown."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.",
+      "use": "Second, independent statement in the cache that post-threshold Dark Sphere is a stocked-charge ability."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> [34] stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)",
+      "use": "Classifies Syndra's Dark Sphere as banked/stocked casts, i.e. charges are spendable ahead of the recharge cadence rather than gated at recharge intervals."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0] (Passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. — Ability Haste [10, 20, 30]",
+      "use": "Dark Sphere's recharge is ability-haste-affected (10/20/30 by R rank); used in the window reconstruction sweep."
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats.mana",
+      "quote": "flat 480, perLevel 40",
+      "use": "Mana pool ceiling check"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, …`",
+      "use": "Engine's own cast-counting convention: N_casts(T) = floor(T / c) + 1 for a plain-cooldown ability starting at t = 0."
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (stat growth) and docs/math-foundations.md input contract",
+      "quote": "base + growth x (level - 1) x (0.7025 + 0.0175 x (level - 1))",
+      "use": "Level-18 mana pool"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_costs_at_corpus_ranks": {
+      "note": "Corpus convention across every cached scenario in data/practice-corpus/scenarios.json is ranks Q5 W5 E5 R3 at level 18.",
+      "Q_rank5": 60,
+      "W_rank5": 100,
+      "E_rank5": 50,
+      "R_rank3": 100
+    },
+    "step_2_decompose_both_values": {
+      "method": "Solve 60a + 100b + 50c + 100d = V over non-negative integers for V = 530 and V = 590.",
+      "solutions_530": "(a,b,c,d) families: (3, b+d=3, c=1), (3, b+d=2, c=3), (3, b+d=1, c=5), (3, b+d=0, c=7), (8, 0, 1, 0)",
+      "solutions_590": "(4, b+d=3, c=1), (4, b+d=2, c=3), (4, b+d=1, c=5), (4, b+d=0, c=7), (9, 0, 1, 0)",
+      "conclusion": "Every solution family is identical between the two values except that the Dark Sphere count `a` increases by exactly 1. The 60-mana delta is one additional Dark Sphere cast at rank 5 - it cannot be a double-charged W (that would be +100 at rank 5), a double-charged E (+50) or a double-charged R (+100)."
+    },
+    "step_3_window_reconstruction": {
+      "model_old": "plain-cooldown Dark Sphere, N_Q = floor(T / c_Q) + 1 per docs/math-foundations.md Sec. 1.1, with c_Q = 7 x 100/(100 + R-passive haste)",
+      "sweep": "T scanned 2.0-120.0 s in 0.1 s steps x R-passive haste in {0, 10, 20, 30}; solved for total = 530",
+      "result": "107 hits, all with the identical cast vector (N_Q, N_W, N_E, N_R) = (3, 2, 1, 1); window T is 14.0-14.9 s at 0 haste, 12.8-14.9 s at 10, 11.7-14.9 s at 20, 10.8-14.9 s at 30",
+      "arithmetic_old": "3 x 60 + 2 x 100 + 1 x 50 + 1 x 100 = 180 + 200 + 50 + 100 = 530",
+      "arithmetic_new": "4 x 60 + 2 x 100 + 1 x 50 + 1 x 100 = 240 + 200 + 50 + 100 = 590",
+      "reading": "The old value is the plain-cooldown Dark Sphere schedule (one sphere at t=0, then one per recharge). The new value is the same fight with one extra Dark Sphere."
+    },
+    "step_4_is_the_extra_sphere_correct": {
+      "argument": "Yes. The scenario is tagged 60, at or above the 40-Splinter Transcendent threshold at which the cached wiki text makes Dark Sphere a charge ability stocking up to 2 charges (rechargeRate 7 s, charge pips under the health bar, and the ammo atom classifying it as 'stocked ability casts'). A charge ability entering a window with 2 stocked charges produces casts = floor(T / recharge) + 2, versus floor(T / cooldown) + 1 for the same ability on a plain cooldown: exactly one more cast in any bounded window. A stock of 2 whose second charge could not be spent ahead of the 7 s recharge would be a mechanically inert mechanic, contradicting the cached description and the ammo classification.",
+      "cost_of_the_extra_cast": "Charges do not waive the cost: Dark Sphere's cost entry is per cast, 60 mana at rank 5.",
+      "so": "530 + 60 = 590"
+    },
+    "step_5_sanity_checks": {
+      "mana_pool": "Level-18 mana = 480 + 40 x 17 x (0.7025 + 0.0175 x 17) = 480 + 680 x 1.0 = 1160. 590 < 1160, so resource_spent is not clamped by the pool at either value, and 530 was not a clamp artifact.",
+      "gross_not_net": "Transcendent restores 20:255 mana per Splinter collected (255 at level 18). Both 530 and 590 are exact sums of listed cast costs, so this leaf is gross mana spent; the passive's restore does not enter it, and no restore-accounting change can explain a clean +60.",
+      "w_recast_ruled_out": "Force of Will's recast (the throw) has no separate cost entry in the cache; a bug charging W twice would move the total by 100 at rank 5, not 60."
+    },
+    "computed_value": 590.0
+  },
+
+  "limitations": [
+    "The scenario definition (fight duration, ranks, items, champion options, cast order) lives outside the permitted evidence tree, so the fight window was reconstructed rather than read. The reconstruction is insensitive to which window it is: every window consistent with the old value carries the same cast vector (3, 2, 1, 1), and the ruling rests on the rank-5 cast-cost decomposition plus the cached Transcendent charge text, neither of which depends on the window.",
+    "Per runbook, no external wiki or web source was fetched; all quotes are from the HEAD export of data/ and docs/math-foundations.md."
+  ],
+
+  "committed": false
+}
