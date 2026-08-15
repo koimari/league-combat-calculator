@@ -607,9 +607,16 @@
   }
  },
  "tests": {
-  "collected": 7838,
+  "collected": 8128,
   "skipped": 0,
-  "xfailed": 0
+  "xfailed": 0,
+  "re_pinned": {
+   "dated": "2026-08-14",
+   "from": 7838,
+   "to": 8128,
+   "cause": "R-01 row 1's second half -- 'collected = the pinned count + declared new' -- needs a pin somebody moved. Measured on 1a73f6f: 8081 at 31bce59, the tip this pass opened on, and 8128 at its close, so the pass's nine slices declare +47 node ids between them; the 243 between the old pin and 31bce59 are the slices that declared their own counts in their bodies and never re-pinned. Moved in a receipt-only commit touching no src/ and neither compared baseline, which is R-32's shape for a baseline move.",
+   "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move."
+  }
  },
  "corpus": {
   "non_legacy_count": 18

@@ -446,3 +446,89 @@ four separate explanations of why work stopped.
 The honest end state is unchanged in shape and better in evidence: what remains
 undone is written down with its artifact, its reproducer and its owner, and
 none of it is a claim standing where an implementation is missing.
+
+---
+
+## 11. The third remediation pass — the sign-off blockers
+
+*Appended 2026-08-14 on `31bce59..1a73f6f`, nine commits, after a Fable sign-off
+review withheld sign-off with six **major** findings and three minor ones.
+Everything above this line stays as written, for the reason section 9 gives.*
+
+### 11.1 What the pass did, finding by finding
+
+| Finding | State | Where |
+|---|---|---|
+| **G2** — no production path emits a non-`MEASURED` disposition | **CLOSED** | `4b8779e`, unblocked by umbrella **Amendment E** |
+| **G12** — the ledger's raises reach three serving endpoints uncaught | **CLOSED** | `19b03d7`, unblocked by umbrella **Amendment G** |
+| **G7**, entry 3 — `ReceiptWalk.reason` published nowhere | **CLOSED** | `5c19b1f` |
+| **G7**, entry 2 — the bit-exact clause names a scenario set the instrument does not hold | **CLOSED** | `0f3adca` |
+| **G6** — standing dissents invisible to every R-01 row | **half closed, half open and measured** | `9c6adee` |
+| **G4** — Amendment B's exit clause undischarged | **RULED**, debt restated at its true size | umbrella **Amendment F** |
+| **G5** — eleven forced restatements of a shape count | **CLOSED as a ruled carve-out** | umbrella **Amendment H** |
+| **G10** — the frontend change budget clause is false | **CLOSED by amendment** | umbrella **Amendment I** |
+| **G14** — the slice groups with no recorded verify verdict | **graded, and its ruling is owed** | `b12a2fe` |
+| R-20's missing lines on 8 historical commits | **not actionable** | history; every commit in this pass carries the line |
+
+### 11.2 The two that changed what the calculator does
+
+**A refused transition now publishes the declared zero it is.**  Every
+disposition every production path emitted was `MEASURED`, including on the
+rows whose `skipped_reason` says the walk refused to price them — the zero was
+put there by the refusal, and the map said a rule had produced it.  That is
+the campaign's own invariant broken inside the campaign's own receipt.
+`survival.outcome_state.outcome_quantity` is now the one verdict, and the
+receipt view's three panels publish their outcome fields through it.  **No
+published number moves**: `StructuralZero.read()` is `0.0` and the branch is
+reached only on a zero, so a live coupled receipt's spelling set is
+`{MEASURED, STRUCTURAL_ZERO}` and its 38 declared zeros each carry the walk's
+own refusal as their reason.
+
+**A contested outcome reaches the boundary as a named refusal.**  The
+write-once ledger's three raises were caught nowhere, so a condition that used
+to resolve silently as last-write-wins had become a bare 500 with no receipt
+and no named field.  `trigger_stream.StarvedSignal` is the class D-25's one
+boundary converts; nothing is absorbed, the ledger still refuses the second
+write where it is written, and the D-25 source assertion now ranges over the
+class — so catching a *member* somewhere else is as red as catching the base.
+
+### 11.3 What the pass did not close, in its own words
+
+* **G6.**  R-19's blocking half is mechanised repo-wide and a capture that
+  pins over a standing verdict now fails a gate.  Of 51 standing dissents, 28
+  are blocking; 6 are adjudicated by citation under the R-15 amendment and 22
+  stand as open debts, each naming what is owed and the artifact carrying it.
+  Re-adjudicating one needs a fresh investigator that has read neither the
+  prior receipts nor the escalation, which no implementation lane can be.
+* **G4.**  Amendment B named a retiring act that does not exist — a
+  `(family, RECEIPT_WALK)` row retires when `interpreters.INTERPRETERS` holds
+  that key, and no ledger projection registers one.  The clause is corrected
+  rather than carried, the debt is restated in H6's shape with its true
+  retiring act named, and the amendment says in terms that it does **not**
+  rule the debt acceptable: retiring it is fourteen slices, one per family.
+* **G14.**  The residue is graded rather than binary — measured on this tip,
+  8 slice groups cite a verdict in their own commit bodies and 63 cite nothing
+  anywhere, out of 70 tags with no verdict recorded in the ledger — and the
+  question of whether the clause binds the campaign's past is a fifth row on
+  `rulings-owed.json`, because a lane may neither re-read "every slice" nor
+  commit an owner to sixty-one verification passes.
+
+### 11.4 The R-01 matrix on `1a73f6f`
+
+| # | Verdict | What it read |
+|---|---|---|
+| 1 | **GREEN** | 8128 passed, 0 skipped, 0 xfailed |
+| 2 | **GREEN** | `snapshot identical` |
+| 3 | **explained** | 77 differing leaves, 76 qualifying, every one claimed by `expected-golden-diff-campaign-close-dispositions.json`; `tests/test_coupled_golden_allowlist.py` — row 3's real pass condition — green, now including Amendment E's third guard as a machine check |
+| 4 | **GREEN** | exit 0 |
+| 5 | **GREEN** | exit 0 |
+| 6 | **GREEN** | 646 files unchanged |
+| 7 | **GREEN** | rated 9.61/10; ratchet reports 197 files at or above their recorded score |
+| 8 | **GREEN** | all four scenarios; every pinned counter, residual and score reproduces exactly; no run voided or truncated |
+| 9 | **GREEN** | 18 non-legacy scenarios at the merge-base anchor |
+| 10 | **GREEN** | 34 passed |
+| 11 | **GREEN** | identical winner and identical score both ways on all four |
+
+`plan_audit.py` (R-37): **exit 0 — 8 plan documents clean.**
+`sole_home_scan.py --check`, `standing_dissent_scan.py --check`,
+`behavior_frontier.py --check` and `migration_frontier.py --check`: all exit 0.

@@ -424,7 +424,15 @@ def test_the_pinned_collected_count_moved_off_the_number_the_entry_named() -> No
     )
     tests_block = fingerprints["tests"]
     assert tests_block["collected"] != entry["pinned_value"]
-    assert tests_block["collected"] == entry["re_pinned_value"]
+    # The pin moves again whenever a pass declares new node ids, and each move
+    # carries its own cause on the receipt.  What this asserts is the property
+    # the entry was about -- the pin is not the stale number -- plus the rule
+    # that every later move says why, so "the pin is the integration agent's"
+    # cannot decay back into "the pin is nobody's".
+    assert tests_block["collected"] >= entry["re_pinned_value"]
+    if tests_block["collected"] != entry["re_pinned_value"]:
+        assert tests_block["re_pinned"]["cause"].strip()
+        assert tests_block["re_pinned"]["to"] == tests_block["collected"]
     # The half of the row that was live all along: a test quietly becoming a
     # skip still fails, because both of these are pinned at zero and still are.
     assert tests_block["skipped"] == 0
