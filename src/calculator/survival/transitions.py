@@ -65,6 +65,7 @@ from .actions import (
     damage_class_of,
     declared_modifier_classes,
 )
+from . import pricing
 from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
 from ..resistance import apply_resistance
@@ -457,6 +458,62 @@ def update_combat_state(
         target_state[
             "dynamic_bonus_magic_resistance"
         ] += profile.force_bonus_magic_resistance
+
+
+def apply_declared_price(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> float | None:
+    """Price one packet from its family's declaration, at the live resistance.
+
+    The from-declaration counterpart of :func:`reprice_dynamic_resistance`
+    below, and the reason the two sit together.  That one starts from a
+    number the pair engine already mitigated and divides the mitigation back
+    out to re-apply it, which it can only do where the fight published the
+    baseline the number was priced at.  This one never divides — the
+    declaration *is* the pre-mitigation side — so an armed resistance delta
+    is simply part of the resistance the raw value meets.
+
+    Returns the priced amount, or ``None`` when the packet went unpriced,
+    having receipted why.  Never a silent zero: an unpriced declaration is a
+    family's number missing from a roster total, which is the failure this
+    stage exists to make visible rather than to cause.
+
+    Inert today.  No packet the tree produces carries a declaration, so this
+    is reached only by a family whose retirement slice opted it in.
+    """
+    packet = action.declared
+    price = pricing.price_declared_packet(
+        packet,
+        baseline_effective_armor=action.baseline_effective_armor,
+        baseline_effective_mr=action.baseline_effective_mr,
+        dynamic_bonus_armor=state.get("dynamic_bonus_armor", 0.0),
+        dynamic_bonus_magic_resistance=state.get("dynamic_bonus_magic_resistance", 0.0),
+    )
+    if price.amount is None:
+        ctx.ledger.write(
+            action,
+            declared_price_unavailable={
+                "rule": packet.rule_id,
+                "reason": price.unavailable,
+                "damage_type": packet.damage_type,
+            },
+        )
+        return None
+    ctx.ledger.write(
+        action,
+        declared_price={
+            "rule": packet.rule_id,
+            "raw": round(float(packet.raw_amount), 6),
+            # ``None`` for true damage, which met no resistance — a receipt
+            # that spelled that as 0.0 would read as "mitigated at zero
+            # armour", a different and checkable claim.
+            "resistance": (
+                None if price.resistance is None else round(price.resistance, 6)
+            ),
+            "amount": round(price.amount, 6),
+        },
+    )
+    return price.amount
 
 
 def reprice_dynamic_resistance(
@@ -1252,7 +1309,20 @@ def _apply_live_packet_chain(
     amount = max(0.0, float(raw_amount or 0.0))
     if action.kind in _DAMAGE_KINDS and ctx.stack_flags[action.subject]:
         update_combat_state(ctx, action, state)
-    if state.get("dynamic_bonus_armor") or state.get("dynamic_bonus_magic_resistance"):
+    if action.declared is not None:
+        # The packet's family declared its own price, so the walk mitigates
+        # the raw value here instead of re-ratioing a number the pair engine
+        # mitigated.  It reads the armed delta the line above may just have
+        # written, and it replaces the reprice rather than preceding it: a
+        # declaration priced at the live resistance has nothing left to
+        # re-price.  No live family declares one, so this branch is inert
+        # until a retirement slice opts one in.
+        priced = apply_declared_price(ctx, action, state)
+        if priced is not None:
+            amount = priced
+    elif state.get("dynamic_bonus_armor") or state.get(
+        "dynamic_bonus_magic_resistance"
+    ):
         # Only a combat-state stack holder ever arms a dynamic delta; the
         # reprice call is skipped while both deltas are absent or zero.
         repriced = reprice_dynamic_resistance(ctx, action, state)
@@ -2067,6 +2137,7 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
 
 __all__ = [
     "TransitionContext",
+    "apply_declared_price",
     "evaluate_live_raw_formula",
     "expire_temporary_health",
     "finalize_states",

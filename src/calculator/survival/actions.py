@@ -22,6 +22,7 @@ from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
 from ..trigger_stream import is_immobilizing_event
+from .pricing import DeclaredPacket
 
 # ---------------------------------------------------------------------------
 # Transition rank — the one ordered "when does this resolve" vocabulary
@@ -394,6 +395,15 @@ class SurvivalAction(NamedTuple):
     # Damage fields
     amount: float = 0.0
     damage_type: str = ""
+    # The price this packet's family declared, for the walk to mitigate
+    # itself (``transitions.apply_declared_price``).  ``None`` means "no
+    # family declared one for this packet", which is every packet the tree
+    # produces today: the from-declaration path is inert until a family's
+    # retirement slice hands it one.  It is a value and not a float
+    # defaulting to zero for the same reason ``live_amp`` is not a 1.0 — a
+    # declaration nobody made and a declaration of nothing are different
+    # answers, and only one of them may be paid.
+    declared: DeclaredPacket | None = None
     raw_formula: Any = None
     raw_damage: float = 0.0
     grievous: Any = None

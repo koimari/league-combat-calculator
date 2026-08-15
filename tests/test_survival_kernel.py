@@ -28,8 +28,11 @@ when that producer is a second packet on an item some fixture already equips
 (slice 0A.9).
 """
 
+import re
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Mapping
 
 import pytest
@@ -37,7 +40,19 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters.reactive import thorns_effects
+from src.calculator.participant_timeline import Combatant
+from src.calculator.program.compile import action_from_event
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
+from src.calculator.survival import (
+    EVENT_SLOTS,
+    ActionKind,
+    ReceiptLedger,
+    SurvivalAction,
+    TransitionContext,
+    TransitionRank,
+    build_states,
+    run_survival_walk,
+)
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
     MITIGATED_DAMAGE_TYPES,
@@ -1575,3 +1590,206 @@ def test_the_strike_back_prices_through_the_shared_arithmetic():
     assert thorns_return_damage(profile, wearer, striker) == mitigate_declared(
         expected_raw, "magic", expected_resistance
     )
+
+
+# ---------------------------------------------------------------------------
+# From-declaration pricing — the walk-side branch
+# ---------------------------------------------------------------------------
+#
+# `_apply_live_packet_chain` opens on the pair engine's post-mitigation number
+# and re-ratios it when the subject's resistance moved.  A packet carrying a
+# declaration takes the other arm: the walk mitigates the raw value itself, at
+# the resistance resolved for that instant, and the ratio never runs.  These
+# cases drive the real kernel, because a branch asserted only through its own
+# helper is a branch nothing proves the walk reaches.
+
+#: The subject every declared-packet case is priced against.  One number, so a
+#: case that changes it says so rather than quietly comparing two fights.
+DECLARED_SUBJECT_MR = 67.0
+
+#: How a `DeclaredPacket` construction is counted in `src/` (R-29's rule
+#: stated so the count is reproducible): this pattern over every `.py` file
+#: under `src/calculator/`, with `survival/pricing.py` excluded because the
+#: line that declares the class matches it and a definition is not a
+#: construction.
+DECLARED_PACKET_CONSTRUCTION = re.compile(r"\bDeclaredPacket\s*\(")
+
+PRICING_MODULE = "src/calculator/survival/pricing.py"
+
+
+def _src_sources() -> Mapping[str, str]:
+    """Every `src/calculator/` module's text, keyed by repo-relative path."""
+    root = Path(__file__).parents[1]
+    return {
+        path.relative_to(root).as_posix(): path.read_text(encoding="utf-8")
+        for path in sorted((root / "src" / "calculator").rglob("*.py"))
+    }
+
+
+def declared_packet_construction_sites(
+    sources: Mapping[str, str] | None = None,
+) -> tuple[str, ...]:
+    """Every `src/` file that builds a declared packet, its own home aside.
+
+    `sources` is the seam the negative below drives (R-05): a scan that
+    cannot be made to report something is indistinguishable from a scan that
+    found nothing.
+    """
+    return tuple(
+        path
+        for path, text in sorted((sources or _src_sources()).items())
+        if path != PRICING_MODULE and DECLARED_PACKET_CONSTRUCTION.search(text)
+    )
+
+
+def _pricing_target():
+    """One defender with health, the fixture magic resistance, nothing else."""
+    return Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 100000.0, "magic_resistance": DECLARED_SUBJECT_MR},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+
+
+def _walk_one_declared_packet(packet, *, baseline_mr=DECLARED_SUBJECT_MR):
+    """Run the real kernel over one declared packet; return its receipt row.
+
+    The event carries ``damage: 0.0`` on purpose.  That zero is what the pair
+    engine's arm would pay, so a row that ends up non-zero can only have been
+    priced from the declaration.
+    """
+    event = {"_event_id": "declared", "time": 0.0, "damage": 0.0}
+    action = SurvivalAction(
+        sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "declared", "item"),
+        time=0.0,
+        phase=TransitionRank.DAMAGE,
+        kind=ActionKind.DAMAGE,
+        subject=0,
+        attacker=0,
+        aidx=0,
+        amount=0.0,
+        damage_type=packet.damage_type,
+        declared=packet,
+        baseline_effective_mr=baseline_mr,
+        source_key="item",
+        source="item",
+        event_slot=EVENT_SLOTS.slot("declared"),
+        sequence=0,
+        event=event,
+    )
+    target = _pricing_target()
+    states = build_states([target], (0.0,))
+    ledger = ReceiptLedger(
+        actions=[action],
+        index_of={"target": 0},
+        compile_event=action_from_event,
+        annotating=True,
+    )
+    run_survival_walk(
+        [action],
+        TransitionContext(
+            duration=10.0,
+            states=states,
+            combatants=[target],
+            index_of={"target": 0},
+            ledger=ledger,
+            regeneration_windows=(None,),
+        ),
+    )
+    return event
+
+
+class TestTheWalkPricesADeclaredPacketItself:
+    """The branch, driven through `run_survival_walk` rather than around it."""
+
+    def test_the_declaration_is_paid_and_the_packets_own_amount_is_not(self):
+        """The number comes from the raw value, mitigated here.
+
+        252.0 magic at 67 magic resistance is the Sunfire immolate total the
+        equivalence fixture pins against the pair engine; what this case
+        proves is only that the walk's arm reaches it from a packet whose own
+        damage field says zero.
+        """
+        row = _walk_one_declared_packet(
+            DeclaredPacket(252.0, "magic", "fixture.periodic")
+        )
+        assert row["damage"] == round(apply_resistance(252.0, DECLARED_SUBJECT_MR), 6)
+
+    def test_the_receipt_names_the_rule_and_the_resistance_it_met(self):
+        """A priced declaration publishes its arithmetic, not just a total."""
+        row = _walk_one_declared_packet(
+            DeclaredPacket(252.0, "magic", "fixture.periodic")
+        )
+        assert row["declared_price"] == {
+            "rule": "fixture.periodic",
+            "raw": 252.0,
+            "resistance": DECLARED_SUBJECT_MR,
+            "amount": round(apply_resistance(252.0, DECLARED_SUBJECT_MR), 6),
+        }
+
+    def test_true_damage_is_paid_whole_and_records_no_resistance(self):
+        """`None` rather than 0.0: it met no resistance, it did not meet zero."""
+        row = _walk_one_declared_packet(
+            DeclaredPacket(300.0, "true", "fixture.execute"), baseline_mr=None
+        )
+        assert row["damage"] == 300.0
+        assert row["declared_price"]["resistance"] is None
+
+    def test_an_unpriceable_declaration_pays_nothing_and_says_why(self):
+        """R-05's red for the walk-side arm, through the real kernel.
+
+        A fight that published no effective magic resistance leaves the raw
+        value nothing to be mitigated against.  The packet then pays its own
+        amount — zero here — and the row carries a named reason, which is the
+        difference between a family that went unpaid and a family that dealt
+        no damage.
+        """
+        row = _walk_one_declared_packet(
+            DeclaredPacket(252.0, "magic", "fixture.blind"), baseline_mr=None
+        )
+        assert row["damage"] == 0.0
+        assert row["declared_price_unavailable"] == {
+            "rule": "fixture.blind",
+            "reason": NO_RESISTANCE_PUBLISHED,
+            "damage_type": "magic",
+        }
+        assert "declared_price" not in row
+
+
+class TestThePathIsInertUntilAFamilyOptsIn:
+    """Amendment L, Ruling 3's inertness clause, asserted not assumed."""
+
+    def test_no_packet_the_tree_produces_carries_a_declaration(self):
+        """Zero construction sites in `src/`, its own home aside.
+
+        This is what makes the stage a re-spelling rather than a re-pricing:
+        every family still reaches the walk as the pair engine's timed rows,
+        so both compared baselines and every bench counter are unmovable by
+        this path until a retirement slice writes the first construction.
+        """
+        assert declared_packet_construction_sites() == ()
+
+    def test_the_default_action_declares_nothing(self):
+        """The field's default is the inertness, so it is asserted too."""
+        assert SurvivalAction().declared is None
+
+    def test_the_inertness_scan_has_a_permanent_injection_seam(self):
+        """R-05: the first family to opt in is a finding, on demand."""
+        injected = {
+            PRICING_MODULE: "class DeclaredPacket(NamedTuple):\n",
+            "src/calculator/interpreters/periodic.py": (
+                "DeclaredPacket(31.5, 'magic', 'sunfire_aegis.continuous_aura')\n"
+            ),
+        }
+        assert declared_packet_construction_sites(injected) == (
+            "src/calculator/interpreters/periodic.py",
+        )

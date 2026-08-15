@@ -218,7 +218,7 @@ ledger, and score, breakdown, survival, TDD and receipt are five projections of 
 - **Frontier counters 5–7 are this phase's**, committed with their exclusion lists to
   `docs/migration-frontier.json` and diff-gated by set equality (D-40, R-36): **5** `SurvivalAction`
   construction expressions outside `program/compile.py` (baseline 9, target 1 — the issue-#171 fast
-  constructor at `survival/actions.py:591` is the declared survivor); **6** `round(` outside the precision
+  constructor at `survival/actions.py:601` is the declared survivor); **6** `round(` outside the precision
   registry (baseline 118 in `survival/`, 0 in `program/`, non-increasing); **7** `id()`-keyed caches whose key
   is not derived from the served value, over `src/calculator/{survival,program}` and `stats.py`, with the
   baseline **measured by the script on its first run** rather than typed — the naive count depends on whether
@@ -396,7 +396,7 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
    names.*
 2. **One constructor.** `SurvivalAction` construction expressions outside `program/compile.py` = **1**
    (baseline 9; `grep -c "SurvivalAction("` returns 11 because it also matches the class statement and a
-   docstring). The one survivor is `survival/actions.py:591`'s `_ACTION_DEFAULT_ROW`, the issue-#171 fast
+   docstring). The one survivor is `survival/actions.py:601`'s `_ACTION_DEFAULT_ROW`, the issue-#171 fast
    constructor that criterion 17 names as the declared performance fallback — declaring it here is what keeps
    criteria 2 and 17 from being mutually exclusive. All seven `survival_action_from_event` call sites and
    `WalkCompiler`'s duplicated branches are gone.
