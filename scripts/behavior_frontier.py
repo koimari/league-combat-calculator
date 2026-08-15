@@ -634,25 +634,27 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # the closeout shipped and retired none of them, so all fourteen stay overdue
 # with a blocker.  A re-dating that made them read as on schedule would be the
 # debt getting smaller by being re-dated, which is the one thing it may not buy.
-COUNTER_4_DEFERRALS: Mapping[str, str] = {
-    f"{family}/receipt_walk": "Closeout 2026-08-15 — the declared lane's interpreter"
-    for family in (
-        "active_cast",
-        "cast_proc",
-        "charged_strike",
-        "combat_state",
-        "crit_profile",
-        "damage_routing",
-        "delta_amp",
-        "on_hit_strike",
-        "opening_defense",
-        "periodic",
-        "resistance_shred",
-        "secondary_target",
-        "spellblade",
-        "threshold_defense",
-    )
-}
+#
+# Which stage they name is not spelled here either.  It is read from the stage
+# record that declares itself their creditor, so re-dating them takes an edit
+# to the ruled artifact rather than an edit to this dict — see
+# ``deferral_creditor_stage`` below.
+COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
+    "active_cast",
+    "cast_proc",
+    "charged_strike",
+    "combat_state",
+    "crit_profile",
+    "damage_routing",
+    "delta_amp",
+    "on_hit_strike",
+    "opening_defense",
+    "periodic",
+    "resistance_shred",
+    "secondary_target",
+    "spellblade",
+    "threshold_defense",
+)
 
 # ── the stages the campaign has shipped, and what a passed stage owes ──────
 #
@@ -692,6 +694,59 @@ def declared_stages() -> Mapping[str, Mapping[str, str]]:
     """The committed stage records, keyed by the name a deferral spells."""
     block = json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
     return {row["stage"]: row for row in block["stages"]}
+
+
+#: The debt whose creditor a stage record may declare itself.  Spelled the way
+#: ``TARGET_CRITERIA`` spells the same counter and lane, because it is the same
+#: counter and lane: counter 4's receipt-walk half, netted out by these rows.
+CREDITOR_OF_COUNTER_4_DEFERRALS = "counter_4/receipt_walk"
+
+
+def deferral_creditor_stage() -> str:
+    """The one stage the committed records declare the deferrals' creditor.
+
+    Which stage retires counter 4's fourteen rows is a ruling — Amendment K
+    re-dated them off *Phase 4 S3 — one kernel, five views*, which Amendment F
+    measured cannot perform the act — and a ruling's home is the committed
+    stage record, not a literal in the tool that measures the counter (D-40).
+    Reading it here is what lets the deferral rows carry no stage name of
+    their own: re-dating them means moving ``creditor_of`` from one record to
+    another, which is an edit to the artifact a ruling lands in.
+
+    The alternative that was live before this and is refused: dating the rows
+    to *any* stage the records declare.  That resolves against a set of two,
+    one of which is the stale stage the re-dating existed to leave, so the
+    clause was satisfied by exactly the state it was meant to refuse.
+
+    Raises:
+        ValueError: no record declares it, or more than one does.  Fail
+            closed both ways: no creditor leaves the rows dated to nothing,
+            and two creditors let a re-dating leave the old claim standing
+            beside the new one, which is the silence this derivation ends.
+    """
+    claimed = sorted(
+        stage
+        for stage, row in declared_stages().items()
+        if row.get("creditor_of") == CREDITOR_OF_COUNTER_4_DEFERRALS
+    )
+    if len(claimed) != 1:
+        raise ValueError(
+            f"{CAMPAIGN_STAGES.name} has {len(claimed)} stage record(s) "
+            f"declaring themselves the creditor of "
+            f"{CREDITOR_OF_COUNTER_4_DEFERRALS} ({claimed}); exactly one may, "
+            "because the stage that retires a deferral is what the row is "
+            "overdue against"
+        )
+    return claimed[0]
+
+
+#: One deferral row per family, dated to the ruled creditor rather than to a
+#: stage name written here.  Built once at import, like every other declared
+#: set in this module, and fails closed if the records do not name a creditor.
+COUNTER_4_DEFERRALS: Mapping[str, str] = {
+    f"{family}/receipt_walk": deferral_creditor_stage()
+    for family in COUNTER_4_DEFERRAL_FAMILIES
+}
 
 
 def _tag_first_seen(base: str = CAMPAIGN_BASE) -> Mapping[str, str]:

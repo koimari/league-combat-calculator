@@ -14,6 +14,8 @@ import ast
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts import behavior_frontier
 from src.calculator import interpreters
 from src.calculator import item_behavior_catalog as catalog
@@ -657,12 +659,18 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     each row carries the tree's own reason and the stage that owes it — never
     a stage this module invented.
 
-    The stage is asserted to be one the committed stage records declare rather
-    than a literal spelled here.  It was ``"Phase 4 S3"`` until Amendment K
-    re-dated the rows to the closeout, and a test naming the stage of the day
-    goes red on a ruled re-dating instead of on the rule breaking — while
-    resolving it against ``declared_stages`` still catches the thing the
-    literal was there for, a row dated to a stage nothing records.
+    The stage is asserted to be the one the committed records declare the
+    creditor of this debt, rather than a literal spelled here or *any* stage
+    the records happen to declare.  It was the literal ``"Phase 4 S3"`` until
+    Amendment K re-dated the rows to the closeout, and a test naming the stage
+    of the day goes red on a ruled re-dating instead of on the rule breaking.
+    But resolving it against the whole of ``declared_stages`` is weaker than
+    it reads: that set has two members, one of them the stale stage the
+    re-dating existed to leave, so the clause was satisfied by exactly the
+    state it was meant to refuse.  ``creditor_of`` is the ruled claim, exactly
+    one record may carry it, and the tree's own ``retires_at`` is asserted
+    against it — so re-dating takes an edit to the ruled artifact and an edit
+    to the declaration together, and either alone is red.
     """
     block = _receipt()["counters"]["counter_4"]["deferrals"]
     assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
@@ -670,12 +678,13 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
         f"{family.value}/{lane.value}"
         for family, lane in interpreters.uninterpreted_pairs()
     }
-    declared = behavior_frontier.declared_stages()
+    creditor = behavior_frontier.deferral_creditor_stage()
+    assert creditor in behavior_frontier.declared_stages()
     for key, row in block["rows"].items():
         assert key in open_gaps, key
         assert row["reason"].strip(), key
         assert row["recorded_stage"] == row["retires_at"], key
-        assert row["recorded_stage"] in declared, key
+        assert row["retires_at"] == creditor, key
     # Every deferral is on the receipt walk; the pair engine defers nothing,
     # which is why criterion 4's pair-engine half is discharged outright.
     assert set(block["by_lane"]) == {"receipt_walk"}
@@ -900,6 +909,41 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
     assert any("campaign-stages.json declares" in f for f in failures)
+
+
+@pytest.mark.parametrize("claimants", [0, 2])
+def test_the_deferrals_refuse_to_resolve_a_creditor_that_is_not_exactly_one(
+    claimants: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """R-05's red for the claim the fourteen rows are dated from.
+
+    Fails closed in both directions, and the two directions are different
+    failures.  No record claiming the debt leaves the rows dated to nothing.
+    Two records claiming it is the one a half-finished re-dating produces —
+    the new stage claims the debt and the stage the rows were moved OFF never
+    let go — and resolving that silently would let a row stay overdue against
+    a stage nobody ruled it against any more.
+    """
+    declared = dict(behavior_frontier.declared_stages())
+    stages = sorted(declared)
+    rewritten = {
+        stage: {
+            **row,
+            "creditor_of": (
+                behavior_frontier.CREDITOR_OF_COUNTER_4_DEFERRALS
+                if claimants == 2
+                else "a debt nothing defers"
+            ),
+        }
+        for stage, row in declared.items()
+    }
+    assert len(stages) == 2, stages
+    monkeypatch.setattr(behavior_frontier, "declared_stages", lambda: rewritten)
+
+    with pytest.raises(ValueError) as raised:
+        behavior_frontier.deferral_creditor_stage()
+
+    assert f"has {claimants} stage record(s)" in str(raised.value)
 
 
 def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None:
