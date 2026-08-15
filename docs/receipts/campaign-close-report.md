@@ -532,3 +532,140 @@ class — so catching a *member* somewhere else is as red as catching the base.
 `plan_audit.py` (R-37): **exit 0 — 8 plan documents clean.**
 `sole_home_scan.py --check`, `standing_dissent_scan.py --check`,
 `behavior_frontier.py --check` and `migration_frontier.py --check`: all exit 0.
+
+---
+
+## 12. The fourth remediation pass — the close, actually closed
+
+*Appended 2026-08-14 on `86aa1d2..HEAD`, three commits, after a second Fable
+sign-off review withheld sign-off with three **major** findings and three minor
+ones. Everything above this line stays as written, for the reason section 9
+gives.*
+
+### 12.1 What the pass did, finding by finding
+
+| Finding | State | Where |
+|---|---|---|
+| **Major 1** — the campaign ends without a closing coupled re-capture; row 3 red at the tip, and §9.4's re-grade of criterion 5 names a boundary three later `src/` commits outdated | **CLOSED** | `09956f8` |
+| **Major 2** — runbook criterion 11's first clause is measurably unmet and its disposition is an open owed ruling | **OPEN, and it is the one thing left that blocks certification** | `rulings-owed.json`, row 5 — unchanged, and unchangeable by a lane |
+| **Major 3** — 22 standing oracle dissents are open debts naming a remedy nobody could begin | **SCHEDULED, with the defect in each prior brief named and measured** | `1414576` |
+| Minor — 8 historical commits carry no R-20 line | **not actionable** | history; all three commits of this pass carry the line |
+| Minor — the tip re-pinned `tests.collected` outside R-32's carve-out and weakened the S10 inverted test | **disclosed, left standing** | `86aa1d2`'s body; the re-pin reproduces and the load-bearing half is respected |
+| Minor — asides, verified accurate | **no action** | every number the reviewer re-ran reproduced |
+
+### 12.2 Major 1, and what a second closing capture cost
+
+The first closing capture (`1db568c`) was followed by three `src/` commits, so
+the campaign closed a second time on a semantic slice and row 3 read 77
+differing leaves. `09956f8` is the capture that ends it, on `1db568c`'s own
+terms: its own commit, no `src/`, the standing allowlisted diffs and nothing
+else. The population was enumerated **before** the capture — 77 moved leaves,
+0 unclaimed by any committed allowlist, 76 qualifying, transitions
+`{text_change: 38, absent_to_value: 38, value: 1}` — and all 76 are disposition
+transitions the umbrella's Amendment E adjudicates by citation, so R-19's
+precondition is satisfied without an oracle receipt and none may be filed as
+though the question were a value question. `golden_coupled_exact.json`
+re-captured to a byte-identical digest, which is the bit-exact statement (R-13)
+that nothing computed moved across the three `src/` commits the capture absorbs.
+
+One mechanism had to grow for the capture to be landable, and it grew rather
+than bent. The coupled leaf counter is one of the sixty leaves the Phase 4
+boundary ledger pins; H2's allowlist had already declared itself the successor
+to that pin, and this capture moves the leaf a second time. Supersession is
+therefore a **chain**: the first claim names the ledger's receipt and entry, a
+later claim names the allowlist whose claim it replaces, and resolution walks
+the declared links. Every guard the single-hop version had survives — a row that
+merely spells the path is inert, two claimants on one predecessor raise rather
+than being ordered, a claim naming another entry does not reach it — and two new
+negatives pose the chain and the orphan claim. What was **not** available was
+editing a boundary row afterwards, which is the one thing that mechanism exists
+to make unnecessary.
+
+### 12.3 Major 3, and the shape twenty of the twenty-two share
+
+The debts named a remedy — "a fresh whole-series re-adjudication" — and the
+R-15/R-18 amendment's clause 3 makes that remedy unwritable until the
+superseding receipt cites *the specific defect in the brief it replaces*.
+Nothing had named one, so nothing could start.
+`docs/receipts/standing-dissent-docket.json` names them, measured from the
+committed pre-change baselines and from nowhere else:
+
+* **`syndra_cast_timeline_ordinal` (3).** C6 *inserted* a cast into the
+  timeline, so index *i* names a different cast on the two sides for every
+  *i* at or above 1. The brief that produced `oracle-C6-leaf77` said
+  `cast_timeline[1]/resource_cost: 100.0 → 0.0`; 100.0 is Force of Will's
+  rank-5 mana cost and 0.0 is the second Dark Sphere charge's. The investigator
+  computed W's cost, was right about it, and certified an old value nobody had
+  disputed.
+* **`syndra_rotation_receipt_rederivation` (17).** The seed retirement
+  re-derived the whole rotation record; positional pairing then reads a
+  surviving member at a new ordinal as a value change, a removal as a shift of
+  every later ordinal, and growth as absent-to-value at the tail.
+* **`abyssal_unmake_support_multiplier_field` (1).** The brief posed a value
+  question about what identity-keyed pairing calls a field removal, and called
+  the record's siblings unmoved when three of thirteen had moved.
+* **`item_coverage_reason_prose` (1).** No defect to name, and saying so is the
+  row's content: the question was well posed and the export cannot rank two
+  true sentences. Routed to a ruling, `rulings-owed.json`'s sixth row.
+
+The counts do not move — 51 standing, 28 blocking, 22 open debts — and no verdict
+is stated anywhere in the docket. What moved is that a re-adjudication is now a
+task with a brief rather than a sentence to agree with, and
+`tests/test_standing_dissent_docket.py` holds the join both ways, so the docket
+can neither fall behind the population nor outlive it.
+
+Filed as an aside by the same measurement, and the structural cause of twenty
+of the twenty-two: **identity pairing does not reach a bare-scalar list.**
+`leaf_report` pairs by `event_id` and falls back to positional pairing,
+fail-closed and documented — but `cast_timeline` rows are identified by `slot`
+plus `ordinal` and the rotation lists by their own values, so an insertion
+re-addresses every later member and each re-addressed member becomes a value
+diff R-15 sends to an investigator. Escalated rather than fixed: widening
+identity pairing re-addresses every committed allowlist and oracle receipt in
+the campaign.
+
+### 12.4 The gaps, re-graded a fourth time
+
+| # | State | Note |
+|---|---|---|
+| **G1** | **CLOSED, and this time at a boundary that is the tip** | `09956f8`. Row 3 reads `snapshot identical`. |
+| **G6** | **OPEN, and now scheduled rather than only named** | 22 open debts, four clusters, three startable and one routed to a ruling. Clearing one is still a fresh investigator's or a ruled `src/` slice's, which no implementation lane can be. |
+| **G14** | **OPEN — the campaign's one certification blocker** | Runbook criterion 11's first clause. Reading it forwards re-reads "every slice"; reading it backwards schedules sixty-odd fresh R-35 passes. Matthew's, not a lane's. |
+| **G2, G3, G5, G10, G12, G13** | **unchanged** | closed in earlier passes. |
+| **G4, G7, G8, G9, G11** | **unchanged** | each open with its named blocker and its gate. |
+
+### 12.5 The re-grade
+
+Umbrella criterion **5** moves to **DISCHARGED and stays there**: all eleven
+R-01 rows are green on the tip this pass ends on, not on a boundary a later
+commit outdated, and the boundary *is* the tip. Runbook criterion **6**'s first
+clause is true for the first time in the campaign — `compare` against
+`golden_coupled_baseline.json` exits zero. Criteria **1**, **4** and **7** are
+unchanged at **PARTIALLY DISCHARGED**, each on one clause with a named blocker.
+
+Runbook criterion **11** stands **NOT DISCHARGED as written**, and this report
+says so at the end rather than in a footnote: the campaign is **not certified
+against its own runbook** while that clause is unread. Every other criterion in
+both documents is discharged, or partially discharged with its residue measured,
+gated and owned. What is left is one decision with a cost and an owner, and a
+docket of twenty-two investigations somebody can now start.
+
+### 12.6 The R-01 matrix on this pass's tip
+
+| # | Verdict | What it read |
+|---|---|---|
+| 1 | **GREEN** | 8148 passed, 0 skipped, 0 xfailed — the pinned count plus the 20 node ids this pass declares |
+| 2 | **GREEN** | `snapshot identical` |
+| 3 | **GREEN** | `snapshot identical` — the first clean coupled compare at a campaign tip |
+| 4 | **GREEN** | exit 0, `passed: true`, 10 scenarios |
+| 5 | **GREEN** | exit 0, 173 registered / 173 exercised / 0 withheld |
+| 6 | **GREEN** | 647 files unchanged |
+| 7 | **GREEN** | rated 9.61/10; ratchet reports 197 files at or above their recorded score |
+| 8 | **GREEN** | all four scenarios; every pinned counter reproduces exactly; no run voided or truncated |
+| 9 | **GREEN** | 18 non-legacy scenarios at the merge-base anchor |
+| 10 | **GREEN** | 34 passed |
+| 11 | **GREEN** | `routing_divergences` empty, and identical winner and score both ways on all four |
+
+`plan_audit.py` (R-37): **exit 0 — 8 plan documents clean.**
+`sole_home_scan.py --check`, `standing_dissent_scan.py --check`,
+`behavior_frontier.py --check` and `migration_frontier.py --check`: all exit 0.

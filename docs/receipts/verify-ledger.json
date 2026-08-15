@@ -339,6 +339,95 @@
      "artifact": "docs/receipts/verify-ledger.json"
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close",
+   "round": 3,
+   "verified_commits": [
+    "1a73f6f",
+    "86aa1d2"
+   ],
+   "dated": "2026-08-14",
+   "answered_by": [
+    "1414576",
+    "09956f8"
+   ],
+   "what_this_round_is": "The second independent Fable sign-off review of the campaign tip, run after round 2's remediation and the third pass landed. It withheld sign-off with three major findings and three minor ones. Recorded here rather than only in the report because a sign-off review IS the R-35 shape -- a fresh read-only reader, verifying criteria against source by running the gates -- and the campaign's own measurement of criterion 11 is that verdicts written only into commit bodies are unrecoverable as records.",
+   "criteria": [
+    {
+     "id": "runbook-6",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The campaign ends without a closing coupled re-capture. On the tip 86aa1d2, compare against golden_coupled_baseline.json reports 77 differences -- all claimed by expected-golden-diff-campaign-close-dispositions.json with Amendment E's third guard machine-checked -- so the criterion's first clause, 'compare against golden_coupled_baseline.json is clean', is false at the tip.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "scripts/golden_coupled_baseline.json",
+     "note": "The capture the campaign's own precedent prescribes, on 1db568c's terms: its own commit, no src/, the population enumerated before the capture, and R-19's precondition satisfied by citation under Amendment E. Row 3 now reads 'snapshot identical'."
+    },
+    {
+     "id": "umbrella-5",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The report's own 9.4 re-grade moves criterion 5 to DISCHARGED on the ground that 'all eleven rows are green at the closing boundary', and names a boundary -- 1db568c -- that three later src/ commits outdated. Section 11 never re-grades it or acknowledges that the close is again after its closing boundary.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "Section 12.5 re-grades it against a boundary that IS the tip, with the eleven rows re-run there rather than at an outdated one."
+    },
+    {
+     "id": "runbook-11",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "'Every slice has a recorded verify-<slice> verdict' is measurably unmet and unamended: most slice-group tags cite no verification verdict anywhere. R-35 verdicts demonstrably drove the process, but they were written into commit bodies rather than recorded per slice, so barriers were crossed with no recoverable verdict record for most of the campaign. The gap is honestly measured and gated forwards, but its disposition is an OPEN owed ruling.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Unchanged and unchangeable by a lane. What this pass added is one more recorded verdict rather than none -- this very block -- and an explicit statement in the report that the campaign is NOT certified against its runbook while the clause is unread. The row stays open; the residue is measured and cannot grow in silence."
+    },
+    {
+     "id": "runbook-9",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "22 standing oracle dissents remain open debts: leaves where an independent investigator's committed verdict certifies the old value and the committed coupled baseline pins the disputed number anyway. Each names what is owed, but under the R-18 amendment's adjudication rule a sustained dissent re-opens the producing correction as a ruled src/ fix, and none of the 22 re-opened slices exist.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "1414576"
+     ],
+     "artifact": "docs/receipts/standing-dissent-docket.json",
+     "note": "Scheduled rather than closed, which is the most a lane may do: clause 1 reserves clearing to a fresh investigator and clause 2 fires only on a sustained verdict, which none of the 22 has yet received. The docket names the defect in each prior brief -- measured from the committed pre-change baselines -- and carries the well-posed brief clause 1 needs, so three of the four clusters are startable and the fourth is routed to an owed ruling. The counts do not move."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "Eight src/-touching commits in the range carry no R-20 'Expected qualifying occurrences' line -- exactly the eight the report's 11.1 discloses as historical.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "History, not actionable: a commit body cannot be edited without rewriting the commit. Every commit of this pass carries the line, and the count was verified honest by the reviewer's own scan of all 432 bodies."
+    },
+    {
+     "finding": "The tip re-pinned tests.collected in a receipt-only commit, but tests.collected is not in R-32's lane-writable carve-out; the same commit weakened the S10 inverted test from '==' to '>= plus a stated cause'.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "docs/receipts/campaign-fingerprints.json",
+     "note": "Left standing rather than reverted. Both are disclosed in 86aa1d2's own body with a rationale, the re-pinned count reproduces exactly, and the load-bearing half of the row -- no src/, no compared baseline, skipped and xfailed still zero -- is respected. Reverting a correct pin to satisfy an ownership sentence is the ordering this campaign exists to invert."
+    },
+    {
+     "finding": "Asides, verified accurate rather than wrong: the RECEIPT_WALK deferrals stand as Amendment F's ruled overdue debt; G12/G2/G3 closures are real in source; every checkable number in the report reproduced on the tip.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "09956f8"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "No action owed. Recorded so that a later reader can tell 'checked and accurate' apart from 'not checked'."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -425,7 +514,7 @@
   "untagged_commits": 159,
   "residue": 72,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair.",
-  "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 9 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report.",
+  "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
    "P2b",
    "P4-H2-ccscope",
@@ -436,8 +525,9 @@
    "campaign-close",
    "campaign-close-boundary",
    "campaign-close-dissent-docket",
+   "campaign-close-report",
    "campaign-close-verify-coverage"
   ],
-  "residue_with_no_verdict_anywhere": 63
+  "residue_with_no_verdict_anywhere": 62
  }
 }
