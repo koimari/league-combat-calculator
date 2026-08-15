@@ -155,12 +155,23 @@ def _live_coupled_diffs():
     return tuple(diff.path for diff in leaf_report(baseline, current))
 
 
+#: The two keys a coupled declaration is written under: the leaves a slice
+#: moved, and the derived shape counters that move *because* leaves were
+#: added or removed.  Both are read wherever declarations are read — the
+#: single-key reading here was invisible only while every declared shape
+#: counter happened to be one of the two ``DISOWNED_COUNTERS`` above, and a
+#: declaration naming any other one would have been reported as unclaimed.
+COUPLED_DECLARATION_KEYS = ("coupled_golden", "coupled_golden_shape_counters")
+
+
 def _allowlisted_paths():
     """Every coupled-golden path any committed slice allowlist declares."""
     paths: set[str] = set()
     for path in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
-        paths.update(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+        declared = data.get("expected_diff_paths", {})
+        for key in COUPLED_DECLARATION_KEYS:
+            paths.update(declared.get(key, ()))
     return paths
 
 
@@ -206,7 +217,9 @@ def _leaves_other_slices_claim():
         if receipt.name.startswith("expected-golden-diff-P5-"):
             continue
         data = json.loads(receipt.read_text(encoding="utf-8"))
-        claimed.update(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+        declared = data.get("expected_diff_paths", {})
+        for key in COUPLED_DECLARATION_KEYS:
+            claimed.update(declared.get(key, ()))
     return frozenset(claimed)
 
 

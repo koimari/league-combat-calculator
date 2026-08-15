@@ -1,0 +1,60 @@
+{
+ "slice": "campaign-close-deferral-coverage",
+ "decisions": [
+  "R-12",
+  "umbrella Amendment L, Ruling 2"
+ ],
+ "what_landed": "Two coupled scenarios, and the derived guard that makes them mandatory. Nine of the fourteen (family, receipt_walk) deferral families had no committed coupled scenario putting one of their declaring items on a participant, and docs/receipts/receipt-walk-retirement-schedule.json published each of those rows with a population of zero and the reason it is a declared emptiness rather than a clean bill. Against that emptiness no leaf can qualify, so a retirement slice's Expected qualifying occurrences line would read zero, no investigator would ever be owed, and the re-pricing would ship unseen. crit_onhit_carry_roster covers crit_profile, secondary_target, on_hit_strike, charged_strike and threshold_defense; immolate_active_bruiser_roster covers periodic, active_cast, damage_routing and opening_defense. golden_snapshot.capture_coupled now refuses to capture while any deferral family is uncovered, reading the family-to-item mapping from the committed schedule receipt rather than from a list typed here (R-12), so a fifteenth family fails the capture instead of passing silently.",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17/R-32/D-97 -- no baseline moves inside this commit; the capture is the integration agent's own next commit, which is the order Ruling 2 sets: scenario, then re-capture, then the family's retirement slice"
+ },
+ "no_src_change": "This slice edits scripts/ and tests/ only. It adds a measurement surface and changes nothing the calculator computes, which is why every leaf below is a new row rather than a moved one.",
+ "expected_qualifying_occurrences": 6,
+ "qualifying_population": {
+  "enumerated_before_first_edit": true,
+  "rule": "R-20's second half. The count is not readable off the pre-change tree by inspection, because a scenario the baseline does not hold has no leaves to inspect. The population is therefore enumerated from the committed artifacts -- scripts/golden_coupled_baseline.json's own scenario keys and its metadata block -- before the first edit, and any occurrence outside it stops the slice.",
+  "method": "A scenario key the committed baseline does not hold is reported by leaf_report ONCE, at the node, as a single absent_to_value membership transition: _leaf_diffs recurses into a mapping only when BOTH sides are mappings, so an absent subtree is never fanned out into leaves that have no counterpart. Two new scenarios are therefore two occurrences and not two subtrees' worth. Beside them, the snapshot's own derived shape counters move because the scenario set gained members: the metadata block publishes four of them, enumerated by name below.",
+  "bounded_by": [
+   "/coupled_scenarios/crit_onhit_carry_roster",
+   "/coupled_scenarios/immolate_active_bruiser_roster",
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves",
+   "/metadata/fingerprint/entries",
+   "/metadata/scenario_count"
+  ],
+  "predicted": "6 occurrences: 2 membership transitions, 4 shape counters",
+  "occurrences_outside_the_population": 0,
+  "no_committed_leaf_moves": "Every leaf the committed baseline already holds is untouched: the difference set is exactly the six paths above, so the thirteen scenarios captured before this slice are byte-identical, and scripts/golden_coupled_exact.json reproduces every per-attacker total it already holds."
+ },
+ "expected_diff_paths": {
+  "golden": [],
+  "coupled_golden": [
+   "/coupled_scenarios/crit_onhit_carry_roster",
+   "/coupled_scenarios/immolate_active_bruiser_roster"
+  ],
+  "coupled_golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves",
+   "/metadata/fingerprint/entries",
+   "/metadata/scenario_count"
+  ],
+  "coupled_exact_new_scenarios": [
+   "crit_onhit_carry_roster",
+   "immolate_active_bruiser_roster"
+  ]
+ },
+ "oracle_pass": {
+  "status": "NOT_OWED_BY_CITATION",
+  "why": "R-15's amendment of 2026-08-14: a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict. Both scenario occurrences are absent_to_value as the identity-keyed leaf_report classifies them, which is the amendment's first guard; they are rows a captured snapshot did not hold because the scenario did not exist, not values that moved. The ruling that puts them there is one a reader can open, which is the amendment's second guard: the umbrella's Amendment L, Ruling 2 -- 'the covering scenarios land first, and they are an R-12 integration act ... So the covering scenario lands first, as its own act ... Scenario, then re-capture, then that family's retirement slice.' No oracle receipt is owed on either, and one may not be filed as though the question were a value question: no cached wiki text and no formula in docs/math-foundations.md decides whether a roster should be measured.",
+  "the_four_shape_counters": "They are not behaviour leaves and they are not adjudicable by an oracle: they count the snapshot's own shape, and no cached wiki text decides how many leaves a snapshot has. Umbrella criterion 4 disowns them to docs/receipts/campaign-fingerprints.json, which is their sole home, and the capture commit that moves them carries their one line of cause (R-34). They are listed under coupled_golden_shape_counters rather than beside the behaviour leaves for exactly that reason -- the allowlist mechanism keeps the two apart, and this receipt states no value of any of them.",
+  "what_an_oracle_would_still_be_owed": "Any movement of a leaf the committed baseline already holds. There is none: the pair baseline reads 'snapshot identical', and the coupled difference set is the six paths enumerated above and nothing else."
+ },
+ "measured": {
+  "golden": "compare clean -- this slice enters through neither pipeline.run_fight nor any src/ path (R-11).",
+  "coupled_golden": "6 differing leaves, 6 qualifying under R-15, all six inside the enumerated population, zero outside it. R-15's ratio clause is not triggered: the differing-leaf count is 0.07% of the numeric leaves, read from the report's own denominator.",
+  "one_physical_cause": "The coupled scenario set gained two members. Nothing the calculator computes changed, and no leaf that existed before this slice differs."
+ }
+}

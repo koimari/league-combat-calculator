@@ -76,6 +76,9 @@ from src.calculator.scenario import parse_scenario_request, resolve_scenario
 from src.calculator.stats import calculate_total_stats
 
 FINGERPRINTS_PATH = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
+SCHEDULE_RECEIPT_PATH = (
+    REPO_ROOT / "docs" / "receipts" / "receipt-walk-retirement-schedule.json"
+)
 
 # Metadata keys ``compare`` ignores.  ``git_head`` moves every commit, the
 # ``src`` tree sha moves on a comment-only edit, and the two fetch stamps move
@@ -989,6 +992,55 @@ COUPLED_SCENARIOS = (
         ),
         score_mode=True,
     ),
+    # The nine deferral families the baseline was blind to (umbrella
+    # Amendment L, Ruling 2).  Both rosters are ordinary builds rather than
+    # item lists assembled to satisfy a check: every declaring item below is
+    # one a real build of that champion holds, and each one produces a number
+    # in the captured snapshot — which is the whole point, since a family's
+    # retirement slice has to be *seen* moving its price out of the pair
+    # engine's rows and into the walk's own.
+    #
+    # A crit carry, covering five: crit_profile (Infinity Edge),
+    # secondary_target (Runaan's Hurricane), on_hit_strike (Blade of the
+    # Ruined King), charged_strike (Kraken Slayer) and threshold_defense
+    # (Immortal Shieldbow).  Two enemies, because Runaan's bolts have nowhere
+    # to go against one; autos at full uptime, because four of the five ride
+    # a basic attack.
+    CoupledScenario(
+        "crit_onhit_carry_roster",
+        _roster_request(
+            "Caitlyn",
+            (
+                "Infinity Edge",
+                "Runaan's Hurricane",
+                "Blade of the Ruined King",
+                "Kraken Slayer",
+                "Immortal Shieldbow",
+            ),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    # A melee bruiser, covering the remaining four: periodic (Sunfire Aegis's
+    # immolate), active_cast (Stridebreaker's active), damage_routing (Death's
+    # Dance's deferral) and opening_defense (Randuin's Omen, and Plated
+    # Steelcaps beside it — the one owner of that family whose reduction
+    # prices every incoming basic attack rather than only a critical one).
+    # It attacks and is attacked, because half of these price incoming damage.
+    CoupledScenario(
+        "immolate_active_bruiser_roster",
+        _roster_request(
+            "Darius",
+            ("Sunfire Aegis", "Stridebreaker", "Randuin's Omen", "Death's Dance"),
+            enemies=("Aatrox",),
+            allies=("Lulu",),
+            boots="Plated Steelcaps",
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
     *_syndra_pin_scenarios(),
 )
 
@@ -1037,6 +1089,63 @@ def _uncovered_producers(scenarios, producers):
     """Producers no scenario equips the item for — R-12's derived coverage."""
     equipped = frozenset().union(*(s.equipped() for s in scenarios))
     return tuple(sorted(p for p in producers if producer_item(p) not in equipped))
+
+
+def receipt_walk_families():
+    """Every receipt-walk deferral family, mapped to the items that declare it.
+
+    R-12's coverage is derived and never typed, and this is its second
+    reading.  :func:`cross_participant_producers` answers *can the baseline
+    see every cross-participant packet source*; this answers *can it see
+    every family whose numbers the walk still defers to the pair engine*.
+    The umbrella's Amendment L, Ruling 2 makes that a covering scenario's
+    job: against a family the baseline holds no roster for, a retirement
+    slice's ``Expected qualifying occurrences`` line reads zero, no
+    investigator is ever owed, and the re-pricing ships unseen.
+
+    The mapping is **read** from
+    ``docs/receipts/receipt-walk-retirement-schedule.json``, which is the
+    committed home of the family-to-owner join and is itself derived — from
+    the behaviour frontier's ``(family, receipt_walk)`` deferral rows and
+    ``item_behavior_catalog``'s declarations — and gated against the tree by
+    ``receipt_walk_schedule.py --check``.  So a fifteenth family, or an item
+    that changes hands between families, reaches this guard on the commit
+    that declares it: the schedule goes red until it is regenerated, and the
+    regenerated schedule fails the capture until a scenario covers the
+    family.  A hand list here would be the third copy of a mapping the tree
+    already derives twice.
+    """
+    schedule = json.loads(SCHEDULE_RECEIPT_PATH.read_text(encoding="utf-8"))
+    return {
+        family: frozenset(entry["owners"])
+        for family, entry in schedule["families"].items()
+    }
+
+
+def covering_scenarios(scenarios, families):
+    """Which scenarios put one of a family's declaring items on a participant.
+
+    One home for the predicate, because two readers ask it: this module's
+    capture guard, and the schedule receipt's own per-family population.  A
+    covering scenario and a scheduled population that disagreed about what
+    "covering" means is the silent divergence the campaign exists to remove.
+    """
+    return {
+        family: tuple(
+            sorted(
+                scenario.name
+                for scenario in scenarios
+                if scenario.equipped() & frozenset(items)
+            )
+        )
+        for family, items in families.items()
+    }
+
+
+def _uncovered_families(scenarios, families):
+    """Deferral families no scenario equips a declaring item of (R-12)."""
+    covering = covering_scenarios(scenarios, families)
+    return tuple(sorted(family for family, names in covering.items() if not names))
 
 
 def _coupled_receipt(parsed, resolved, *, score_mode):
@@ -1151,7 +1260,7 @@ def cross_participant_producers():
     )
 
 
-def capture_coupled(scenarios, *, producers, exact=False):
+def capture_coupled(scenarios, *, producers, families=None, exact=False):
     """Roster snapshots through the coupled path, covering every producer.
 
     ``producers`` is read, never typed: it was the ``ast`` table
@@ -1159,8 +1268,11 @@ def capture_coupled(scenarios, *, producers, exact=False):
     0A/0B, and is :func:`cross_participant_producers` — the
     ``trigger_stream.CAPABILITIES`` reading — from P2a (R-12), so a seventh
     ``damage_modifier`` producer with no covering scenario fails here rather
-    than passing silently.  ``exact`` writes ``repr(float)`` per-attacker
-    totals instead of the 2-decimal snapshot.
+    than passing silently.  ``families`` is R-12's second reading and is read
+    the same way, defaulting to :func:`receipt_walk_families`; passing it is
+    the seam a negative test drives the guard through (R-05).  ``exact``
+    writes ``repr(float)`` per-attacker totals instead of the 2-decimal
+    snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
@@ -1170,6 +1282,20 @@ def capture_coupled(scenarios, *, producers, exact=False):
             + " — add a scenario equipping "
             + ", ".join(sorted({producer_item(p) for p in uncovered}))
             + " before capturing the baseline"
+        )
+    families = receipt_walk_families() if families is None else families
+    blind = _uncovered_families(scenarios, families)
+    if blind:
+        raise ValueError(
+            "the coupled scenario set puts no declaring item of "
+            + ", ".join(blind)
+            + " on any participant — a deferral family the baseline is blind "
+            "to cannot be seen to re-price, so its retirement slice would "
+            "declare zero qualifying occurrences and ship unseen (umbrella "
+            "Amendment L, Ruling 2); add a covering scenario equipping one of "
+            "the items each family's row in "
+            + SCHEDULE_RECEIPT_PATH.name
+            + " names, before capturing the baseline"
         )
     entries = {}
     for scenario in scenarios:

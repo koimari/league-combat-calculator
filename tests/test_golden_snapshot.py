@@ -18,6 +18,10 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
+from src.calculator.item_behavior_catalog import (  # noqa: E402
+    behavior_rules,
+    rule_owners,
+)
 from src.calculator.item_support_effects import producer_item  # noqa: E402
 
 COUPLED_BASELINE = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
@@ -27,6 +31,13 @@ PAIR_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 
 def _load(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _holder(entry):
+    """The captured roster row of the scenario's own champion."""
+    return next(
+        row for row in entry["combat"]["breakdown"] if row["participant_id"] == "main"
+    )
 
 
 @pytest.fixture(scope="module")
@@ -606,6 +617,96 @@ class TestCoupledCoverage:
         assert "Catalyst of Aeons" in equipped
 
 
+class TestDeferralFamilyCoverage:
+    """R-12's second reading: no receipt-walk deferral family is unseen.
+
+    The umbrella's Amendment L, Ruling 2 makes a covering scenario the first
+    act of a family's retirement, because against a family the baseline holds
+    no roster for, the retirement slice's ``Expected qualifying occurrences``
+    line reads zero, no investigator is ever owed, and the re-pricing ships
+    unseen — the campaign's founding failure shape wearing the campaign's own
+    gate as a disguise.
+    """
+
+    def test_the_scenario_set_covers_every_deferral_family(self):
+        assert (
+            gs._uncovered_families(gs.COUPLED_SCENARIOS, gs.receipt_walk_families())
+            == ()
+        )
+
+    def test_the_family_mapping_is_read_rather_than_typed(self):
+        """The schedule receipt is the join, and the catalog is its source.
+
+        A hand list in the harness, or a schedule receipt that stopped
+        matching the declarations, both fail here — which is what makes a
+        fifteenth family arrive on the commit that declares it.
+        """
+        declared = {}
+        for owner in rule_owners():
+            for rule in behavior_rules(owner):
+                declared.setdefault(rule.family.value, set()).add(owner)
+        families = gs.receipt_walk_families()
+        assert families
+        for family, items in families.items():
+            assert set(items) == declared[family]
+
+    def test_a_family_no_scenario_equips_fails_the_capture(self):
+        """The permanent negative (R-05), driven through the ``families`` seam."""
+        families = dict(gs.receipt_walk_families())
+        families["fifteenth_family"] = frozenset({"Unequipped Relic — Seventh Wonder"})
+        with pytest.raises(ValueError, match="fifteenth_family"):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                families=families,
+            )
+
+    def test_the_carry_roster_prices_the_families_it_covers(self, coupled):
+        """Covering means the snapshot can *see* the family, not merely hold it."""
+        entry = coupled["coupled_scenarios"]["crit_onhit_carry_roster"]
+        fight = entry["fights"]["1:Malphite"]
+        rows = fight["breakdown"]
+        # charged_strike, on_hit_strike and secondary_target each price a
+        # named row of their own.
+        for row in (
+            "on_hit_Kraken Slayer",
+            "on_hit_Blade of the Ruined King",
+            "secondary_Runaan's Hurricane",
+        ):
+            assert rows[row]["total_damage"] > 0
+        # crit_profile is priced into the attack rows rather than into one of
+        # its own, so the facts that say it landed are the holder's crit
+        # damage bonus and the crits it is applied to.
+        stats = fight["champion_stats"]
+        assert stats["critical_strike_damage_percent"] > 0
+        assert stats["critical_strike_chance"] > 0
+        # threshold_defense: the Lifeline shield the holder absorbed itself,
+        # told apart from the ally's shield by its own published field.
+        holder = _holder(entry)
+        assert holder["shield_absorbed"] > holder["support_shield_received"]
+
+    def test_the_bruiser_roster_prices_the_families_it_covers(self, coupled):
+        entry = coupled["coupled_scenarios"]["immolate_active_bruiser_roster"]
+        rows = entry["fights"]["0:Aatrox"]["breakdown"]
+        for row in ("immolate_Sunfire Aegis", "active_Stridebreaker"):
+            assert rows[row]["total_damage"] > 0
+        # damage_routing routes damage the holder took into later ticks, and
+        # every one of them carries the event it was deferred from.
+        deferred = [
+            event
+            for event in entry["combat"]["events"]
+            if event.get("target") == "main" and event.get("deferred_from")
+        ]
+        assert deferred
+        # opening_defense writes durability rather than damage, so what the
+        # snapshot publishes for it is the holder's coverage row.
+        coverage = {
+            row["name"]: row
+            for row in _holder(entry)["utility_outcomes"]["item_coverage"]
+        }
+        assert "critical_mitigation" in coverage["Randuin's Omen"]["dimensions"]
+
+
 def _q2_row_was_absent_before_c6(scenario):
     """Did an oracle receipt read this scenario's ``Q2`` row as absent (R-19)?
 
@@ -763,6 +864,34 @@ def declared_exact_moves():
     return declared
 
 
+def declared_exact_new_scenarios():
+    """Scenarios a landed slice declared this baseline does not hold yet.
+
+    The same mechanism as :func:`declared_exact_moves` and for the same
+    reason, over the one shape a per-key allowlist cannot express: a scenario
+    the committed capture predates entirely has no old total to name, so it
+    is declared by name.  Adding a covering scenario is its own act and the
+    capture is the integration agent's next commit (R-17, R-32, and the
+    umbrella's Amendment L, Ruling 2), so between the two this baseline
+    legitimately holds fewer scenarios than the harness runs.
+
+    The declaration is bounded on both sides: a name here must be one the
+    scenario set actually holds, so a typo is a red rather than a waiver, and
+    it never excuses a scenario going *missing* — only the equality below is
+    relaxed, and only in the direction the ruling permits.
+    """
+    declared: set[str] = set()
+    for receipt in sorted(
+        (REPO_ROOT / "docs" / "receipts").glob("expected-*-diff-*.json")
+    ):
+        body = json.loads(receipt.read_text(encoding="utf-8"))
+        names = body.get("expected_diff_paths", {}).get(
+            "coupled_exact_new_scenarios", ()
+        )
+        declared.update(names)
+    return declared
+
+
 class TestExactBaseline:
     """R-13: golden equality is two decimals, so bit-exactness needs its own file."""
 
@@ -774,7 +903,8 @@ class TestExactBaseline:
         )["coupled_scenarios"]
         committed = _load(COUPLED_EXACT)["coupled_scenarios"]
         declared = declared_exact_moves()
-        assert set(captured) == set(committed)
+        assert set(committed) <= set(captured)
+        assert set(captured) - set(committed) <= declared_exact_new_scenarios()
         for scenario, totals in committed.items():
             allowed = declared.get(scenario, {})
             assert set(captured[scenario]) == set(totals)
@@ -792,6 +922,11 @@ class TestExactBaseline:
         for scenario, keys in declared_exact_moves().items():
             assert scenario in committed
             assert set(keys) <= set(committed[scenario])
+
+    def test_a_declared_new_scenario_names_one_the_harness_runs(self):
+        """The other half of the same guard, for the other declaration shape."""
+        names = {scenario.name for scenario in gs.coupled_scenarios_for(exact=True)}
+        assert declared_exact_new_scenarios() <= names
 
     def test_exact_values_are_repr_floats_not_rounded(self):
         captured = gs.capture_coupled(

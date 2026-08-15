@@ -235,18 +235,23 @@ def schedule() -> dict[str, Any]:
     baseline = json.loads(COUPLED_BASELINE_PATH.read_text(encoding="utf-8"))[
         "coupled_scenarios"
     ]
-    equipped = {
-        scenario.name: scenario.equipped()
-        for scenario in golden_snapshot.COUPLED_SCENARIOS
-    }
+    # One home for "which scenarios cover this family" (R-12): the capture
+    # guard that refuses a blind baseline and this file's population read the
+    # same predicate, so a covering scenario and a scheduled population can
+    # never disagree about what covering means.  The committed baseline is
+    # the extra filter here and only here -- a population is enumerated from
+    # a snapshot that exists, and a scenario the baseline has not captured
+    # yet has no rows to bound anything with.
+    covering_by_family = golden_snapshot.covering_scenarios(
+        golden_snapshot.COUPLED_SCENARIOS,
+        {family: set(owners) for family, owners in declarations.items()},
+    )
     slices: dict[str, Any] = {}
     for family, row in sorted(rows.items()):
         owned = declarations.get(family, {})
-        covering = sorted(
-            name
-            for name, items in equipped.items()
-            if items & set(owned) and name in baseline
-        )
+        covering = [
+            name for name in covering_by_family.get(family, ()) if name in baseline
+        ]
         sizes = {name: population_size(baseline[name]) for name in covering}
         total = sum(sizes.values())
         route = list(row["via"])

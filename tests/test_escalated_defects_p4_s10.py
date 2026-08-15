@@ -255,16 +255,23 @@ def test_the_exact_baseline_holds_the_derived_scenario_set() -> None:
     guarantee is that every ``damage_modifier`` producer has a covering
     scenario, which a superset keeps, and the bench rosters are the four
     Phase 4's criterion 14 names.
+
+    Less a scenario a committed allowlist declares this baseline does not
+    hold yet: a covering scenario lands as its own act and the capture is
+    the integration agent's next commit (R-17, R-32, umbrella Amendment L
+    Ruling 2), so between the two the file legitimately holds one fewer.
     """
     import json as _json
 
     from scripts.golden_snapshot import COUPLED_SCENARIOS
 
+    from tests.test_golden_snapshot import declared_exact_new_scenarios
+
     exact = _json.loads(
         (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
     )
-    assert {scenario.name for scenario in COUPLED_SCENARIOS} <= set(
-        exact["coupled_scenarios"]
+    assert {scenario.name for scenario in COUPLED_SCENARIOS} <= (
+        set(exact["coupled_scenarios"]) | declared_exact_new_scenarios()
     )
 
 
@@ -273,23 +280,32 @@ def test_every_bench_scenario_is_in_the_exact_baseline() -> None:
 
     The entry read "the criterion names a set the instrument does not hold",
     as a set operation over an empty intersection.  The instrument holds it:
-    the exact capture is R-12's thirteen plus the four bench rosters, and
+    the exact capture is R-12's coupled set plus the four bench rosters, and
     nothing else -- so the criterion's sentence is dischargeable against the
     file it cites, and the exact baseline has not become a place scenarios
     accumulate.
+
+    Stated as two containments rather than one equality, because a covering
+    scenario declared but not yet captured is the one legal gap between them
+    (see the test above).  The half that carries the row's own claim -- the
+    file holds nothing the harness does not derive -- is unweakened.
     """
     import json as _json
 
     from scripts.bench_coupled_optimizer import SCENARIOS
     from scripts.golden_snapshot import COUPLED_SCENARIOS
 
+    from tests.test_golden_snapshot import declared_exact_new_scenarios
+
     exact = _json.loads(
         (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
     )
     held = set(exact["coupled_scenarios"])
+    derived = {scenario.name for scenario in COUPLED_SCENARIOS} | set(SCENARIOS)
     assert set(SCENARIOS) <= held
     assert len(SCENARIOS) == 4
-    assert held == {scenario.name for scenario in COUPLED_SCENARIOS} | set(SCENARIOS)
+    assert held <= derived
+    assert derived - held <= declared_exact_new_scenarios()
 
 
 def test_the_rounded_baseline_did_not_gain_them() -> None:
