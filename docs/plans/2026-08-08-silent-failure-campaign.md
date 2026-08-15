@@ -806,6 +806,104 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > number that binds a slice is the population that slice enumerates before its first `src/` edit
    > (R-20), published with its predicate, because a prerequisite sized by a figure nobody can
    > regenerate is the shape this campaign spent four hundred commits removing.
+   >
+   > **Amendment M — 2026-08-15, the static holder-amp term, the ordering that delivers it, and the
+   > producer semantic for a packet-delivered walk half.** Amendment L, Ruling 3 budgets the
+   > from-declaration pricing path and requires it to be *"provably a re-spelling before it is ever a
+   > re-pricing"*. A retirement lane that went to start `delta_amp` measured that the path as built
+   > does not carry one term the pair engine does. `damage._add_item_active_damage` mitigates an item
+   > active's raw value against the holder's magic amplifier —
+   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:7979`) — and
+   > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:7509`);
+   > `survival.pricing.price_declared_packet` (`pricing.py:105`) has neither. So
+   > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
+   > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
+   > holds it. The same lane measured a second thing: a retired family's `PAIRED` walk half, declared
+   > the way Amendment L requires, would join `golden_snapshot.cross_participant_producers` and move
+   > D-07's ruled six. Both are ruled here and neither is re-litigable by a lane.
+   >
+   > **Ruling 1 — ordering, and the amp term.** `delta_amp`/`receipt_walk` **retires first**, and its
+   > retirement act **is** the walk-side delivery of the static holder amps. Amendment L's Ruling 3
+   > engine stage is amended, dated, to include the **declared amp term**: a `DeclaredPacket` composed
+   > with the holder's static amps, resolved at build time from the declarations that produce them and
+   > applied in the pair engine's documented order — **pre-mitigation**, so the composed value is
+   > mitigated once rather than a mitigated number being re-multiplied. Its equivalence fixtures
+   > **must** cover `amp != 1.0`; a fixture set in which every amp is `1.0` proves the stage
+   > re-spells the case that cannot fail. The two cases the lane named — an Abyssal Mask holder's item
+   > active, and an Abyssal Mask holder's ability-triggered item proc — are the **seed fixtures**, by
+   > their predicate; what binds numerically is what the fixture's own instrument produces, per the
+   > sentence Amendment L closes with. Two shapes are **forbidden**. Folding the amp into each
+   > family's own declarations is an undeclared second producer of one number (D-60). Refusing a
+   > packet whose holder has an amp armed deletes the number in the other direction, which is worse
+   > than the ratio path it replaces, since that path at least refuses **by name**.
+   >
+   > **Ruling 2 — amp-armed coverage.** The covering scenario set gains, **by integration act**
+   > (R-12, R-32 — a baseline moves in the integration agent's own commit and never inside a semantic
+   > slice), at least one scenario arming `magic_amp` and one arming `ability_amp`, so the amp term is
+   > observed by the baselines and by the oracles rather than shipping behind a green
+   > zero-occurrence line. The coverage derivation **reads the amp-kind mapping** — which declaration
+   > produces which of the holder's static amps — the way `golden_snapshot.receipt_walk_families`
+   > already reads the family-to-owner join, so a future amp kind that no scenario arms fails the
+   > check on the commit that declares it rather than being discovered by whoever next re-prices.
+   >
+   > **Ruling 3 — the producer semantic.** The cross-participant producer set derives from **the
+   > packet semantic — does this packet modify ANOTHER participant's damage** — for
+   > **packet-delivered** walk halves exactly as Amendment C already rules it for **rider-delivered**
+   > ones. A retired self-scoped family's walk half prices *its own holder's* damage, so it is **not**
+   > a producer. The ruled six stand **unedited**;
+   > `tests/test_trigger_stream.py::test_the_cross_participant_producers_are_the_ruled_six` stays
+   > green **without the six being touched**, which is the whole test of whether this ruling was
+   > honest. `golden_snapshot.capture_coupled`'s producer gate binds **producers only**
+   > (`golden_snapshot.py:1277`); a retired family is covered by the deferral coverage rule beside it
+   > (`golden_snapshot.py:1287`), which is the rule that already exists for exactly this population.
+   > A family joining the producer set because its retirement slice had to declare a pair preview
+   > would be a ruled count moved to satisfy a validator — the move Amendment C refused, on the same
+   > reasoning, from the other delivery shape.
+   >
+   > **What this amendment does not do.** It retires no row: all fourteen stand, `overdue` and gated,
+   > and the machine still refuses a fifteenth. It budgets none of the fourteen slices — it amends the
+   > one engine stage Amendment L already budgeted and names one integration act. It touches no
+   > `src/`, moves no baseline, re-dates nothing, edits no lane table, and does not narrow Ruling 2:
+   > what is measured below is **which half of that act is already met**, never a smaller act.
+   >
+   > **Measured on the commit that lands this**, because three claims in the prose that opened this
+   > amendment do not reproduce, and each would mislead the lane that acts on it.
+   >
+   > *The amp term's declaring families are two, not one.* `state.ability_amp` resolves through
+   > `delta_amp.resolve_part_amp` for the attack class being priced (`damage.py:2284`) from exactly one
+   > declaring owner, `actualizer.ability_part_amp`, family `DELTA_AMP` — and it is armed only while
+   > that item's own window is up. `state.magic_amp` is the sum of the `magic_damage_amp` effect over
+   > the holder's items (`item_effects.py:4035`), declared today by exactly one owner, as
+   > `abyssal_mask.unmake`, family **`ALLY_PACKET`** — *not* `delta_amp`, and itself one of D-07's
+   > ruled six. So "resolved from the `delta_amp` declarations" is true of the ability half and false
+   > of the magic half. Recorded rather than smoothed over: a lane that goes looking for the magic amp
+   > among the `delta_amp` declarations finds nothing and drops the term, which is the exact deletion
+   > Ruling 1 exists to forbid. The third static holder amp, `basic_amp`, comes from the only other
+   > part-amp declaration in the tree over every owner in `rule_owners()`, and Ruling 2 names neither
+   > it nor its coverage.
+   >
+   > *The two seed figures do not reproduce, and their factor does.* The lane published four numbers
+   > and no roster, level or target to reproduce them at; no configuration reachable from the
+   > committed scenario set returns them. What an instrument reproduces exactly is the **term**: in
+   > both named cases the pair engine's row is the from-declaration price times the holder's own
+   > `magic_amp`, which is also the ratio the lane's own two pairs stand in. The seed cases therefore
+   > stand by their predicate and their numbers come from the fixture, per Amendment L's closing
+   > sentence — a number that binds comes from an instrument.
+   >
+   > *Ruling 2's premise is half false, and the half that is false is load-bearing.* Measured over
+   > every committed coupled scenario by reading each fight's resolved combat state:
+   > `mandate_abyssal_curse_roster` already arms `magic_amp` on one of its participants — an Abyssal
+   > Mask holder, exactly the shape Ruling 2 names — while every other scenario sits at `1.0`; and
+   > `ability_amp` is `1.0` with an empty owner in **all** of them, no committed scenario holding the
+   > one item that declares it. So Ruling 2's magic half is discharged by a scenario that already
+   > exists and its ability half is genuinely owed. Two consequences the acting lane needs. The
+   > integration act is **one** scenario, arming `ability_amp`, and the requirement is not thereby
+   > narrowed — a derivation that reads the amp-kind mapping is what keeps "already met" from
+   > decaying into "never checked". And the loss is **not** invisible today: stamping this family's
+   > pair rows `THEORETICAL` without the amp term would move leaves in that roster, so the coupled
+   > baseline can already see the magic half of the deletion, and this slice's R-20 population is
+   > non-empty there before its first `src/` edit.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
