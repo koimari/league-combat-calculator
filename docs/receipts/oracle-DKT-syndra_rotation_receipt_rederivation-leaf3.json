@@ -1,0 +1,67 @@
+{
+ "date": "2026-08-15",
+ "cluster": "syndra_rotation_receipt_rederivation",
+ "runbook": "R-18/R-19 under the R-15/R-18 amendment (clauses 1 and 3); fresh independent investigator",
+ "leaf": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
+ "scenario": "syndra_derived_order_60",
+ "old_value": "Q",
+ "new_value": "E",
+ "verdict": "new_value_correct",
+ "leaf_reasoning": "setup is the declaration-level classification (byte-identical across all three scenarios pre-change), and the correct membership is {E, Q2, Q}: E applies the crowd control that orders the rotation (E row: a knocked-back Dark Sphere stuns for 1.25s), and Q/Q2 are the enablers that must exist before E has a sphere to scatter. The pre-change list is the single element ['Q'] - it omits E, the only crowd-control slot in the kit - so it is wrong on membership and cannot be the correct record at index 0 however the remaining members are ordered. The derived list leads with the crowd-control setup relation: the relation that derives the order, and the only one the record's own vocabulary calls 'setup' (see the sources lines 'E applies cc_kind crowd control - setup before W/R'); the enabler chain Q2/Q follows. Index 0 is E.",
+ "computation": "EVIDENCE TREE: `git archive --format=tar HEAD data docs/math-foundations.md` only. Rows read: data/champions.json['Syndra'].abilities (P/Q/W/E/R); data/champion-audit/batch-6.json['Syndra'] (module slot inventory: modeled = P,Q,Q2,W,E,R, note 'SLOTS keys incl. synthetic Q2 (2nd charge)'); data/champion-audit/batch-e9-1.json['Syndra'] (splinters option: 40+ Q charges via Q2 slot, 60+ W true damage, 120 -> 1.15x AP); data/staleness.json['Syndra'] (stale=false, 15 ability rows checked, 0 stale -> the cached rows agree with the game binaries). docs/math-foundations.md carries no rotation-record semantics beyond the ability-rotation cast row (shared-timeline renewal schedule, R single-cast).\n\nKIT FACTS OFF THE ROWS: P Transcendent - targeting 'Passive', affects 'Self', effectRadius/width/angle all null; splinter collection + mana; '+15% ability power' only at 120 splinters. Q Dark Sphere - places a sphere (0.6s delay, 6s life), effectRadius 210, spellEffects 'Aoe', attribute 'Magic Damage'; Transcendent Bonus row: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' W Force of Will - grabs the nearest Dark Sphere/minion/monster, recast throws it, effectRadius 225, 'Aoe', 25% slow 1.5s; Transcendent Bonus at 60 splinters (bonus true damage). E Scatter the Weak - cone, width '120 - 200', angle '56deg - 84deg', no effectRadius; 'Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds' => E's stun exists ONLY through a Dark Sphere, so Q/Q2 is E's cc enabler and E is the consumer; Transcendent Bonus at 80 (wider cone + 70% slow). R Unleashed Power - unit-targeted, targetRange 675, conjures 3 spheres and grabs up to 4 nearby live ones, attribute 'Magic Damage per Sphere'; Transcendent Bonus at 100 (execute).\n\nSPLINTER GATES vs THE THREE SCENARIOS (identical but for the splinter count): 39 -> no gate cleared, so no second Dark Sphere charge, i.e. no Q2 cast; 60 -> 40 and 60 cleared (Q2 castable, W bonus true damage); 120 -> every gate (Q2, W true damage, E 84deg cone, R execute, P +15% AP).\n\nRECORD DERIVED FROM THOSE ROWS:\n1. cast_order is the scenario-dependent list - only the slots the splinter count can buy. Dependency edges: Q -> E (E needs a sphere on the ground to knock back, otherwise there is no stun), E -> W and E -> R (the crowd-control slot precedes the later damage slots), Q -> Q2 (Q2 is Q's recast/second charge). 39 splinters: [Q, E, W, R]; 60 and 120: [Q, Q2, E, W, R]. The passive is not a cast and takes no cast_order slot.\n2. setup / consume / sources are DECLARATION-level and scenario-independent: the pre-change capture at 51db3f6 shows them byte-identical across all three scenarios, and the 39-splinter consume names Q2 - a slot 39 splinters cannot cast - which is only coherent if these lists classify the module's declared relations rather than the scenario's casts. The declared relations readable off the rows: (R1) E requires a Dark Sphere for its crowd control -> the enabler Q/Q2 is setup, E consumes; (R2) Q2 is Q's recast (the 40-splinter stocked charge) -> Q is setup, Q2 consumes; (R3) E applies crowd control -> E is setup before W; (R4) the same edge for R. So setup = {E, Q2, Q} and consume = {E, Q2}, led by the crowd-control setup relation - the relation that actually DERIVES the order and gives this scenario family its name: setup = [E, Q2, Q], consume = [E, Q2]. sources carries one line per relation, citing the declaration (cc_enabler / recast_of / cc_kind), not a damage attribute.\n3. aoe maps a slot to the breadth it covers, read off the geometry fields: E carries width/angle and spellEffects 'Aoe' (the scenario's 5); P carries targeting 'Passive', affects 'Self' and null effectRadius/width/angle - a single unit, no splash - so breadth 1.\n\nWHY THE PRE-CHANGE RECORD FAILS ON MEMBERSHIP, NOT MERELY ON ORDINALS: setup ['Q'] is a one-element list that omits E, the only crowd-control slot in the kit and the one whose stun orders the rotation; consume ['E'] omits Q2; the 39-splinter cast_order casts a Q2 that 39 splinters cannot buy; sources are hand-written damage-attribute prose ('Q Magic Damage', 'R Magic Damage per sphere') that justifies no ordering decision; aoe omits the passive. A one-element list cannot be the correct record at index 0 of a three-member set, which settles the setup[0] leaves independently of any presentation convention for the internal order.",
+ "sources": [
+  "data/champions.json['Syndra'].abilities.Q[0].effects[1].description - 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+  "data/champions.json['Syndra'].abilities.E[0].effects[1].description - 'Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds' (E's stun requires a Dark Sphere)",
+  "data/champions.json['Syndra'].abilities.W[0].effects[2..3] - recast throws the grabbed target for magic damage + 25% slow; Transcendent Bonus at 60 splinters",
+  "data/champions.json['Syndra'].abilities.R[0] - targeting 'Unit', targetRange 675, 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones', attribute 'Magic Damage per Sphere'",
+  "data/champions.json['Syndra'].abilities.P[0] - targeting 'Passive', affects 'Self', effectRadius/width/angle null; '+15% ability power' at 120 splinters",
+  "data/champion-audit/batch-6.json['Syndra'].module_slots - modeled [P,Q,Q2,W,E,R], note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'",
+  "data/champion-audit/batch-e9-1.json['Syndra'].gap_summary - 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'",
+  "data/staleness.json['Syndra'] - stale=false, 15 ability rows checked, 0 stale",
+  "docs/math-foundations.md - ability rotation cast row (no competing rotation-record semantics)"
+ ],
+ "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md (data/ plus docs/math-foundations.md only; no src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, diff or plan was read)",
+ "pre_change_capture": "51db3f6",
+ "supersedes": "oracle-P5-retire-leaf10.json",
+ "superseded_receipt_brief_defect": "Shape A of the recorded defect (R-15/R-18 amendment, clauses 1 and 3): the correction did not edit this entry in place - it replaced a hand-written list with a derived one of different length, order and membership. This member SURVIVED with a new ordinal, so the prior brief showed it as a value change ('Q' -> 'E') on a list whose post-change membership still holds Q, asking the investigator to choose between two sentences about two different abilities as though one replaced the other. The unit is the record, not the ordinal.",
+ "unit": "the whole rotation record per scenario, computed from the cached ability rows and docs/math-foundations.md, one verdict per leaf",
+ "derived_record": {
+  "cast_order": {
+   "syndra_derived_order_39": [
+    "Q",
+    "E",
+    "W",
+    "R"
+   ],
+   "syndra_derived_order_60": [
+    "Q",
+    "Q2",
+    "E",
+    "W",
+    "R"
+   ],
+   "syndra_derived_order_120": [
+    "Q",
+    "Q2",
+    "E",
+    "W",
+    "R"
+   ]
+  },
+  "setup": [
+   "E",
+   "Q2",
+   "Q"
+  ],
+  "consume": [
+   "E",
+   "Q2"
+  ],
+  "aoe": {
+   "E": 5,
+   "passive": 1
+  },
+  "note": "setup/consume/sources are declaration-level and identical across the three scenarios; cast_order is where the splinter gate bites (Q2 needs 40)."
+ },
+ "residual_uncertainty": "The internal ordering convention of setup/consume lives in code this investigator may not read; it was reconstructed from the record's own vocabulary (only the E lines are worded 'setup') and from the requirement that a single build order produce both setup[0] and consume[1]. The verdicts do not rest on it: the pre-change setup ['Q'] and consume ['E'] are one-element lists that omit E and Q2 respectively, so they are wrong on membership at any index. The wiki revision id in the sources[1] citation is uncheckable from this tree (article-index.json holds pageids, not revisions)."
+}

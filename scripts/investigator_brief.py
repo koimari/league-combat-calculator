@@ -27,7 +27,11 @@ because that command's sole home is the ruling.
 implies an answer.  It refuses a cluster routed to a ruling rather than
 quietly briefing it, because clause 3 makes a re-run whose receipt names no
 defect in the prior brief unwritable and that cluster has no defect to name --
-briefing it anyway would be oracle shopping with a script in front of it.
+briefing it anyway would be oracle shopping with a script in front of it.  It
+refuses a cluster whose re-adjudication has already run for the same reason
+from the other end: the brief it was posed under was this docket's own and was
+well posed, so a second one would cite no defect either, and what that row
+owes is clause 2's ruled ``src/`` slice.
 """
 
 from __future__ import annotations
@@ -182,19 +186,46 @@ def _at(tree: Mapping[str, Any], scenario: str, container: str) -> Any:
     return node
 
 
+def refusal(cluster_id: str, entry: Mapping[str, Any]) -> str | None:
+    """Why this cluster may not be briefed, or ``None`` if it may.
+
+    Both refusals are clause 3 read in the two directions a docket row can
+    lack a brief.  A cluster *routed to a ruling* never had a defect to name.
+    A cluster whose re-adjudication has *already run* has no defect to name
+    either -- the brief it was posed under is this docket's own, and it was
+    well posed -- so what it owes is clause 2's ruled ``src/`` slice and not a
+    second investigator.  Naming which one it is matters more than refusing:
+    "not startable" would read as a gap, and neither of these is one.
+    """
+    if "brief_for_the_re_adjudication" in entry:
+        return None
+    if "re_adjudication_filed" in entry:
+        return (
+            f"{cluster_id} has been re-adjudicated and carries no brief on "
+            "purpose: clause 1 is spent, and clause 3 requires a re-run to cite "
+            "a specific defect in the brief it replaces -- the brief this docket "
+            "wrote, which has none. What it owes is clause 2, the producing "
+            "correction re-opened as its own ruled src/ slice. Briefing it again "
+            "is oracle shopping. See its re_adjudication_filed block and the "
+            "receipts it names"
+        )
+    return (
+        f"{cluster_id} is routed to a ruling and carries no brief on "
+        "purpose: its prior brief has no defect to name, and clause 3 "
+        "makes a re-run whose receipt names none unwritable. Briefing it "
+        f"anyway is oracle shopping. See {entry.get('owed_ruling_id')!r} in "
+        "docs/receipts/rulings-owed.json"
+    )
+
+
 def build(cluster_id: str) -> dict[str, Any]:
     """The whole brief for one cluster, ready to hand to an investigator."""
     entry = clusters().get(cluster_id)
     if entry is None:
         raise BriefError(f"no docketed cluster is called {cluster_id!r}")
-    if "brief_for_the_re_adjudication" not in entry:
-        raise BriefError(
-            f"{cluster_id} is routed to a ruling and carries no brief on "
-            "purpose: its prior brief has no defect to name, and clause 3 "
-            "makes a re-run whose receipt names none unwritable. Briefing it "
-            f"anyway is oracle shopping. See {entry.get('owed_ruling_id')!r} in "
-            "docs/receipts/rulings-owed.json"
-        )
+    refused = refusal(cluster_id, entry)
+    if refused is not None:
+        raise BriefError(refused)
     sha = entry["pre_change_capture"]
     tree = pre_change_baseline(sha)
     containers = series_containers(entry)
@@ -245,11 +276,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.list or not args.cluster:
         for cluster_id, entry in sorted(clusters().items()):
-            state = (
-                "startable"
-                if "brief_for_the_re_adjudication" in entry
-                else f"routed to ruling {entry.get('owed_ruling_id')}"
-            )
+            if "brief_for_the_re_adjudication" in entry:
+                state = "startable"
+            elif "re_adjudication_filed" in entry:
+                state = "re-adjudicated; owes a ruled src/ slice (clause 2)"
+            else:
+                state = f"routed to ruling {entry.get('owed_ruling_id')}"
             print(f"{cluster_id}: {state}")
         return 0
     print(json.dumps(build(args.cluster), indent=1))

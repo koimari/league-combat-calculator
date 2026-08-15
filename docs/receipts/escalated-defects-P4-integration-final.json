@@ -12,24 +12,23 @@
    "what": "R-19 says a baseline does not move while a qualifying occurrence lacks a receipt, and the R-15/R-18 amendment says a dissent clears by supersession and never by revision. Neither is enforced repo-wide. The only machine checks that read adverse verdicts are the two scans in tests/test_escalated_defects_p4_boundary.py, and both are scoped: one keys on that entry's own dissenting_population leaf paths and the other on the oracle-P4B- filename prefix. Every adverse verdict outside those two sets -- Phase 0B's, Phase 3's, Phase 5's, and the one filed at the Phase 4 boundary itself -- is invisible to R-01.",
    "why": "Three receipt schemas address the leaf: a string under leaf_path, a string under leaf, and an object under either carrying path. A scan written against any one of them silently misses the other two, which is why the first enumeration this escalation ran read 64 standing dissents and the corrected one reads 51: every oracle-P4B and oracle-S6S7 dissent IS superseded, by receipts that spell the address under leaf rather than leaf_path. c2b3d88's claim about those two families holds; it held unverifiably, because no gate could read it.",
    "measured": {
-    "oracle_receipts": 552,
-    "adverse_verdicts": 81,
-    "standing": 51,
+    "oracle_receipts": 573,
+    "adverse_verdicts": 83,
+    "standing": 34,
     "by_family": {
-     "oracle-C2": 1,
-     "oracle-C6": 3,
+     "oracle-C6": 2,
+     "oracle-DKT-syndra_cast_timeline_ordinal": 2,
      "oracle-P3-3.8": 24,
      "oracle-P4-integration-final": 1,
-     "oracle-P5-resolver": 5,
-     "oracle-P5-retire": 17
+     "oracle-P5-resolver": 5
     },
-    "rule": "An adverse verdict (old_value_correct or both_wrong) is CLEARED when a receipt on the same leaf address carries new_value_correct and is not dated earlier than it. A supersession that predates the dissent it answers does not supersede -- that clause is what puts oracle-P4-integration-final-leaf1 in this list. An undated dissent with any same-leaf new_value_correct receipt is treated as cleared, because nothing orders it, and that is the population this rule is weakest over -- so how a date is READ decides how large it is. The gate used to look under 'date' and 'dated' only, and eleven ISO-dated spellings are live in docs/receipts/ (date, generated, generated_at, generated_utc, generated_at_utc, investigated_at, investigated_utc_date, adjudicated_at, checked_at, produced_at, created), so 23 receipts that ARE dated were counted as undated -- one of them filed in the same commit as a sibling that spells it 'date'. receipt_date is now a value rule rather than a key rule: any top-level string beginning with an ISO date is the receipt's date, earliest wins, and a twelfth spelling is read the day somebody writes it. Re-measured under that rule: 173 of the 552 receipts carry no date at all. The standing set does not move -- 51 either way -- so this closes a hole rather than correcting a verdict."
+    "rule": "An adverse verdict (old_value_correct or both_wrong) is CLEARED when a receipt on the same leaf address carries new_value_correct and is not dated earlier than it. A supersession that predates the dissent it answers does not supersede -- that clause is what puts oracle-P4-integration-final-leaf1 in this list. An undated dissent with any same-leaf new_value_correct receipt is treated as cleared, because nothing orders it, and that is the population this rule is weakest over -- so how a date is READ decides how large it is. The gate used to look under 'date' and 'dated' only, and eleven ISO-dated spellings are live in docs/receipts/ (date, generated, generated_at, generated_utc, generated_at_utc, investigated_at, investigated_utc_date, adjudicated_at, checked_at, produced_at, created), so 23 receipts that ARE dated were counted as undated -- one of them filed in the same commit as a sibling that spells it 'date'. receipt_date is now a value rule rather than a key rule: any top-level string beginning with an ISO date is the receipt's date, earliest wins, and a twelfth spelling is read the day somebody writes it. Re-measured under that rule: 173 of the 573 receipts carry no date at all. The standing set does not move -- 51 either way -- so this closes a hole rather than correcting a verdict. Re-measured again on 2026-08-15, when the docketed re-adjudication filed 21 receipts: the undated population does not grow, because every filed receipt carries the day it was filed under the `date` key -- which is what lets a whole-series answer supersede the dissent it answers instead of falling into exactly the population this paragraph calls the rule's weakest."
    },
    "standing_receipts": [
-    "oracle-C2-leaf3.json",
     "oracle-C6-leaf77.json",
     "oracle-C6-leaf8.json",
-    "oracle-C6-leaf95.json",
+    "oracle-DKT-syndra_cast_timeline_ordinal-leaf1.json",
+    "oracle-DKT-syndra_cast_timeline_ordinal-leaf2.json",
     "oracle-P3-3.8-leaf1.json",
     "oracle-P3-3.8-leaf11.json",
     "oracle-P3-3.8-leaf13.json",
@@ -59,24 +58,7 @@
     "oracle-P5-resolver-leaf12.json",
     "oracle-P5-resolver-leaf13.json",
     "oracle-P5-resolver-leaf3.json",
-    "oracle-P5-resolver-leaf4.json",
-    "oracle-P5-retire-leaf1.json",
-    "oracle-P5-retire-leaf10.json",
-    "oracle-P5-retire-leaf13.json",
-    "oracle-P5-retire-leaf16.json",
-    "oracle-P5-retire-leaf26.json",
-    "oracle-P5-retire-leaf27.json",
-    "oracle-P5-retire-leaf28.json",
-    "oracle-P5-retire-leaf29.json",
-    "oracle-P5-retire-leaf35.json",
-    "oracle-P5-retire-leaf36.json",
-    "oracle-P5-retire-leaf37.json",
-    "oracle-P5-retire-leaf42.json",
-    "oracle-P5-retire-leaf43.json",
-    "oracle-P5-retire-leaf44.json",
-    "oracle-P5-retire-leaf53.json",
-    "oracle-P5-retire-leaf58.json",
-    "oracle-P5-retire-leaf7.json"
+    "oracle-P5-resolver-leaf4.json"
    ],
    "the_phase_4_member": {
     "receipt": "oracle-P4-integration-final-leaf1.json",
@@ -95,15 +77,38 @@
     "dated": "2026-08-14",
     "what_changed": "The entry recorded that 51 adverse verdicts stand and that nothing in R-01 would go red if a future capture pinned over one. The second half is no longer true. scripts/standing_dissent_scan.py joins every standing verdict to every committed baseline and reports the ones a baseline holds a different value than -- the population R-19's last sentence and the R-15/R-18 amendment's clause 2 are about -- and tests/test_standing_dissent_scan.py rides R-01 row 1.",
     "measured": {
-     "standing": 51,
-     "blocking": 28,
+     "standing": 34,
+     "blocking": 11,
      "citation": 6,
-     "open_debt": 22
+     "open_debt": 5
     },
-    "how_the_two_numbers_differ": "51 is every standing dissent; 28 is the subset a committed baseline actually pinned over. The other 23 stand as disagreements the baselines did not absorb -- the leaf still holds what the oracle certified -- which is a real distinction the earlier count could not draw and is why the blocking number is the one a gate can act on.",
+    "how_the_two_numbers_differ": "51 was every standing dissent and 28 the subset a committed baseline actually pinned over; on 2026-08-15 the re-adjudication moved those to 34 and 11. The other 23 stood as disagreements the baselines did not absorb -- the leaf still holds what the oracle certified -- which is a real distinction the earlier count could not draw and is why the blocking number is the one a gate can act on.",
     "the_six_citations": "Adjudicated by citation under the R-15 amendment of 2026-08-14: one dispositions-map block (D-72 / Phase 4 S9) and five rotation dependency ledgers (D-80/D-82 / Phase 5). Each is a membership transition that is the ruled consequence of a declared change, each receipt's own reasoning is the amendment's predicted failure reproduced, and no receipt is edited or deleted.",
-    "the_twenty_two_debts": "Twenty rotation-order dissents (seventeen P5-retire, three C6), one support-damage-multiplier leaf and one coverage reason string. Each names what is owed under the amendment's two clauses -- a fresh whole-series re-adjudication, and failing that a ruled src/ correction re-opening the producing slice -- and the artifact carrying it. They are a debt with a length rather than a sentence, and this lane does not decide them: a lane deciding a dissent is the oracle shopping clause 3 made unwritable.",
+    "the_twenty_two_debts": "Twenty rotation-order dissents (seventeen P5-retire, three C6), one support-damage-multiplier leaf and one coverage reason string. Each names what is owed under the amendment's two clauses -- a fresh whole-series re-adjudication, and failing that a ruled src/ correction re-opening the producing slice -- and the artifact carrying it. They are a debt with a length rather than a sentence, and this lane does not decide them: a lane deciding a dissent is the oracle shopping clause 3 made unwritable. Re-adjudicated 2026-08-15: nineteen of the twenty-two are discharged by supersession -- the seventeen rotation rows, one cast-timeline slot and the support-damage-multiplier field -- and three stand, joined by the two `both_wrong` receipts the re-adjudication itself produced. See the_re_adjudication above and the docket's own cleared[] rows.",
     "what_is_still_not_discharged": "Runbook criterion 9's repo-wide reading. Twenty-two dissents stand un-re-adjudicated, and re-adjudicating one needs a fresh investigator that has read neither the prior receipts nor this entry. What is discharged is the half the entry itself named as missing: the blocking semantics are mechanised outside the two Phase-4 boundary scans, so a twenty-ninth cannot arrive in silence and a capture that pins over a standing verdict fails a gate."
+   },
+   "the_re_adjudication": {
+    "dated": "2026-08-15",
+    "what_changed": "The docket this entry's population was handed to (docs/receipts/standing-dissent-docket.json) was worked: 21 whole-series receipts filed against the three clusters clause 1 could clear, from fresh investigators that read neither the prior receipts nor the docket. 19 verdicts are `new_value_correct` and clear their dissent by supersession; 2 are `both_wrong` and are standing dissents themselves, on the two addresses they answer. Nothing was absorbed: a cleared dissent certifies the value the committed baseline already holds, and the two that stand are the one thing clause 2 says a re-capture may never take.",
+    "measured": {
+     "standing": {
+      "before": 51,
+      "after": 34
+     },
+     "blocking": {
+      "before": 28,
+      "after": 11
+     },
+     "open_debt": {
+      "before": 22,
+      "after": 5
+     },
+     "citation": {
+      "before": 6,
+      "after": 6
+     }
+    },
+    "what_is_still_not_discharged": "Runbook criterion 9's repo-wide reading, over a smaller residue. Five debts stand: two C6 cast-timeline dissents plus the two `both_wrong` receipts that answered them, whose remedy is now clause 2's ruled src/ slice rather than another investigation, and one coverage-reason string routed to an owed ruling. The 24 oracle-P3-3.8 dissents remain standing but not blocking, exactly as before -- the baselines never pinned over them."
    }
   }
  ],

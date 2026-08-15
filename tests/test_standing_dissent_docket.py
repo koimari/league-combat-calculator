@@ -16,6 +16,28 @@ and the brief — with the last assertion the load-bearing one: a cluster whose
 remedy is a ruling rather than an investigation must name the owed-ruling row
 that carries it, so "this one needs a decision" cannot become the place a debt
 goes to rest.
+
+A worked docket needs a third remedy, and the 2026-08-15 re-adjudication is
+what needed it.  Clause 1 ran on the cast-timeline cluster, was well posed,
+and cleared one of its three leaves: the whole-series computation certified
+neither side on the other two.  That row owes clause 2 — the producing
+correction re-opened as a ruled ``src/`` slice — and it owes it *instead of*
+another investigation, because clause 3 requires a re-run to cite a defect in
+the brief it replaces and this docket's brief has none.  Written as an
+investigation it would say a re-run is owed, which is the oracle shopping
+clause 3 exists to make unwritable; written as a ruling it would name a
+decision nobody owes.  So :func:`disposition` reads the remedy off the keys a
+row carries, and a row claiming two remedies is the failure it refuses.
+
+The other half of a worked docket is closure.  A cluster every one of whose
+receipts has cleared cannot stay in ``clusters`` — the join above would fail
+on it — and deleting it would cut the debt from the answer that discharged it.
+It moves to ``cleared`` instead, and
+:func:`test_a_cleared_cluster_was_answered_rather_than_moved` is what stops
+that list from becoming the resting place a routed debt was already refused:
+every receipt in it is joined, through the adjudication ledger, to a filed
+receipt that exists, adjudicates the *same leaf*, and carries
+``new_value_correct``.
 """
 
 from __future__ import annotations
@@ -23,6 +45,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -67,6 +90,53 @@ REQUIRED_BRIEF = (
     "sibling_facts_that_did_not_move",
     "what_the_brief_may_not_carry",
 )
+
+#: What a cluster whose clause-1 investigation has already RUN carries: the
+#: filing, and what the ``src/`` slice clause 2 owes inherits from it.  It
+#: carries no brief and no ``supersedes_on_filing``, and that absence is the
+#: rule rather than an omission — a row that has been investigated and still
+#: dockets debts owes a correction, and offering a second brief for the same
+#: question is clause 3's oracle shopping with a docket row behind it.
+REQUIRED_RE_ADJUDICATED = (
+    "re_adjudication_filed",
+    "what_the_slice_inherits",
+)
+
+#: What the filing itself must say.  ``what_did_not`` is the load-bearing one:
+#: a filing that records only what it cleared is a pass reporting its own
+#: successes, and the receipts that still block are the reason the row stays.
+REQUIRED_FILING = (
+    "dated",
+    "receipts",
+    "unit",
+    "what_it_returned",
+    "what_cleared",
+    "what_did_not",
+)
+
+#: The three remedies, keyed by the field that carries each.  A row owes
+#: exactly one; :func:`disposition` is where that is enforced.
+REMEDY_KEYS = {
+    "whole_series_re_adjudication": "supersedes_on_filing",
+    "owed_ruling": "owed_ruling_id",
+    "owed_src_correction": "re_adjudication_filed",
+}
+
+
+def disposition(cluster: dict) -> str:
+    """Which remedy a row owes, read off the keys it carries.
+
+    A pure function over one row — the seam R-05 asks for, and the reason the
+    three-way split cannot drift into prose.  Claiming two remedies is the
+    failure it exists to catch: a row that has been investigated *and* offers a
+    brief is a second run of a question clause 3 permits nobody to re-ask.
+    """
+    live = sorted(name for name, key in REMEDY_KEYS.items() if cluster.get(key))
+    if len(live) != 1:
+        raise AssertionError(
+            f"{cluster.get('id')} owes {live or 'no'} remedy; exactly one is a row"
+        )
+    return live[0]
 
 
 @pytest.fixture(name="scan", scope="module")
@@ -140,14 +210,51 @@ def test_every_cluster_is_startable(cluster) -> None:
         assert cluster[key], f"{cluster['id']} is missing {key}"
     assert len(cluster["defect_in_the_prior_brief"].split()) >= 30, cluster["id"]
     assert cluster["how_the_defect_was_measured"]["instrument"].strip()
-    if "owed_ruling_id" in cluster:
-        for key in REQUIRED_INVESTIGATED:
+    route = disposition(cluster)
+    if route == "owed_ruling":
+        for key in REQUIRED_INVESTIGATED + REQUIRED_RE_ADJUDICATED:
             assert not cluster.get(key), f"{cluster['id']} is routed to a ruling"
+        return
+    if route == "owed_src_correction":
+        for key in REQUIRED_INVESTIGATED:
+            assert not cluster.get(key), f"{cluster['id']} has been investigated"
+        for key in REQUIRED_RE_ADJUDICATED:
+            assert cluster[key], f"{cluster['id']} is missing {key}"
+        for key in REQUIRED_FILING:
+            assert cluster["re_adjudication_filed"][key], cluster["id"]
         return
     for key in REQUIRED_INVESTIGATED:
         assert cluster[key], f"{cluster['id']} is missing {key}"
     for key in REQUIRED_BRIEF:
         assert cluster["brief_for_the_re_adjudication"][key].strip(), cluster["id"]
+
+
+def test_an_investigated_cluster_files_receipts_that_exist_and_agree() -> None:
+    """Clause 1 discharged is a claim about files, so it is read off them.
+
+    The filing names its receipts with the verdict each returned.  Every one
+    must exist and carry that verdict — otherwise "the investigation ran" is
+    the same unverifiable sentence about the past that the docket replaced,
+    one layer further in.  And at least one must be adverse: a filing where
+    every verdict is ``new_value_correct`` cleared its cluster, and a cleared
+    cluster does not stay in ``clusters``.
+
+    A loop rather than a parametrisation, here and below, because an empty
+    parameter set is a *skip* and R-01 row 1 counts those — a docket with no
+    row of this shape must read as a check with nothing to say, not as a
+    check that stopped running.
+    """
+    for cluster in _clusters():
+        if disposition(cluster) != "owed_src_correction":
+            continue
+        filed = cluster["re_adjudication_filed"]["receipts"]
+        for name, verdict in filed.items():
+            body = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            assert body["verdict"] == verdict, name
+            assert body.get("superseded_brief_defect") or body.get("supersedes"), name
+        adverse = {n for n, verdict in filed.items() if verdict != "new_value_correct"}
+        assert adverse, cluster["id"]
+        assert adverse <= set(cluster["receipts"]), cluster["id"]
 
 
 @pytest.mark.parametrize("cluster", _clusters(), ids=[c["id"] for c in _clusters()])
@@ -168,11 +275,54 @@ def test_a_cluster_answered_by_a_ruling_names_the_owed_row(cluster) -> None:
     reference at all — which is the resting place the adjudication ledger's
     own rule refuses.
     """
-    if cluster.get("supersedes_on_filing"):
+    if disposition(cluster) != "owed_ruling":
         assert "owed_ruling_id" not in cluster, cluster["id"]
         return
     owed = json.loads(RULINGS.read_text(encoding="utf-8"))["owed"]
     assert cluster["owed_ruling_id"] in {row["id"] for row in owed}, cluster["id"]
+
+
+def test_a_row_may_not_owe_two_remedies() -> None:
+    """R-05's negative for the three-way split, at the pure function.
+
+    The shape it refuses is the one clause 3 refuses: a cluster whose
+    investigation has run, still offering a brief for the same question.  A
+    row with no remedy at all fails the same way, because "docketed" would
+    then mean nothing more than "listed".
+    """
+    investigated = {"id": "fabricated", "supersedes_on_filing": ["x.json"]}
+    assert disposition(investigated) == "whole_series_re_adjudication"
+    with pytest.raises(AssertionError):
+        disposition(dict(investigated, re_adjudication_filed={"dated": "2026-01-01"}))
+    with pytest.raises(AssertionError):
+        disposition({"id": "fabricated"})
+
+
+def test_a_cleared_cluster_was_answered_rather_than_moved(scan) -> None:
+    """Closure is a join to a filed receipt, never a row changing lists.
+
+    ``cleared`` is the one list a debt can reach without an answer, so every
+    receipt in it is followed through the adjudication ledger to the receipt
+    that discharged it: the same leaf address, ``new_value_correct``, and a
+    file a reader can open.  Without this the docket would close a debt by
+    moving it, which is the deletion the ledger's own rule refuses wearing a
+    different name.
+    """
+    ledger = json.loads(ADJUDICATIONS.read_text(encoding="utf-8"))
+    answers = {row["receipt"]: row for row in ledger["cleared"]}
+    debts = open_debts()
+    for cluster in _docket().get("cleared", ()):
+        assert cluster["cleared"]["how_it_closed"].strip(), cluster["id"]
+        for name in cluster["receipts"]:
+            assert name not in debts, f"{name} is cleared and still an open debt"
+            assert name in answers, f"{name} is cleared and no row says by what"
+            row = answers[name]
+            answer = RECEIPTS / row["cleared_by"]
+            assert answer.exists(), row["cleared_by"]
+            body = json.loads(answer.read_text(encoding="utf-8"))
+            dissent = json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
+            assert body["verdict"] == "new_value_correct", row["cleared_by"]
+            assert scan.leaf_address(body) == scan.leaf_address(dissent), name
 
 
 def test_the_recorded_counts_reproduce(scan) -> None:
@@ -180,8 +330,9 @@ def test_the_recorded_counts_reproduce(scan) -> None:
     recorded = _docket()["measured_on_the_commit_that_lands_this"]
     assert recorded["docketed"] == len(docketed()) == len(open_debts())
     assert recorded["clusters"] == len(_clusters())
-    kinds = recorded["remedy_kinds"]
-    ruled = sum(1 for c in _clusters() if not c.get("supersedes_on_filing"))
-    assert kinds["owed_ruling"] == ruled
-    assert kinds["whole_series_re_adjudication"] == len(_clusters()) - ruled
+    counted = Counter(disposition(cluster) for cluster in _clusters())
+    assert recorded["remedy_kinds"] == {
+        name: counted[name] for name in sorted(REMEDY_KEYS)
+    }
+    assert sum(counted.values()) == len(_clusters())
     assert scan.report()["by_kind"]["open_debt"] == len(open_debts())

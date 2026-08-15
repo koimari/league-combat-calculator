@@ -1,0 +1,101 @@
+{
+  "date": "2026-08-15",
+  "cluster": "syndra_cast_timeline_ordinal",
+  "runbook": "R-18/R-19 under the R-15/R-18 amendment (unit = the whole series, one verdict per leaf)",
+  "leaf": "fights/manual_target/cast_timeline[6]/slot",
+  "scenario": "syndra_custom_order_60",
+  "old_value": "Q",
+  "new_value": "W",
+  "oracle_correct_value": "W",
+  "cast_at_this_address": "Force of Will (slot W), ordinal 2, t=7.27 -- W rank 5 cd 8s at 10 ability haste = 8*100/110 = 7.2727",
+  "verdict": "new_value_correct",
+  "note": "Exactly one row enters the series, at index 1 (Dark Sphere ordinal 2 off the second stocked charge at t=0), so every later member shifts by one: pre-change index 5, Force of Will ordinal 2 at t=7.27, becomes index 6. Slot 'W' is correct. 'Q' is the un-shifted pre-change address -- Dark Sphere ordinal 3 at t=10 -- which the corrected series carries at index 7. The Q epochs are independently pinned: rechargeRate 7 under R rank 3's +30 Dark Sphere ability haste plus 10 item haste gives 7*100/140 = 5.000 s, hence Dark Sphere at t = 0, 0, 5, 10 and Force of Will at t = 0, 7.27.",
+  "corrected_series": [
+    {
+      "index": 0,
+      "slot": "Q",
+      "name": "Dark Sphere",
+      "ordinal": 1,
+      "time": 0.0,
+      "resource_cost": 60.0
+    },
+    {
+      "index": 1,
+      "slot": "Q",
+      "name": "Dark Sphere",
+      "ordinal": 2,
+      "time": 0.0,
+      "resource_cost": 60.0
+    },
+    {
+      "index": 2,
+      "slot": "W",
+      "name": "Force of Will",
+      "ordinal": 1,
+      "time": 0.0,
+      "resource_cost": 100.0
+    },
+    {
+      "index": 3,
+      "slot": "E",
+      "name": "Scatter the Weak",
+      "ordinal": 1,
+      "time": 0.0,
+      "resource_cost": 50.0
+    },
+    {
+      "index": 4,
+      "slot": "R",
+      "name": "Unleashed Power",
+      "ordinal": 1,
+      "time": 0.25,
+      "resource_cost": 100.0
+    },
+    {
+      "index": 5,
+      "slot": "Q",
+      "name": "Dark Sphere",
+      "ordinal": 3,
+      "time": 5.0,
+      "resource_cost": 60.0
+    },
+    {
+      "index": 6,
+      "slot": "W",
+      "name": "Force of Will",
+      "ordinal": 2,
+      "time": 7.27,
+      "resource_cost": 100.0
+    },
+    {
+      "index": 7,
+      "slot": "Q",
+      "name": "Dark Sphere",
+      "ordinal": 4,
+      "time": 10.0,
+      "resource_cost": 60.0
+    }
+  ],
+  "computation": "SCENARIO RECONSTRUCTION (from the pre-change series' own arithmetic, checked against the export).\n1. Ranks. Q cost 60 -> rank 5 of [40,45,50,55,60]. W cost 100 -> rank 5 of [60,70,80,90,100]. E 50 and R 100 are rank-flat. Q5+W5+E5+R3 = 18 points -> level 18.\n2. Level-18 stats. Mana = 480 + 40*17*(0.7025+0.0175*17) = 480 + 680*1.0 = 1160.0. The series opens at 1760.0 -> 600 flat mana from the item set. Mana regen = 8 + 0.8*17*1.0 = 21.6 per 5s = 4.32/s with no item regen: the pre-change series' inter-cast drifts are 1.08/0.25s, 20.52/4.75s, 9.82/2.27s, 11.78/2.73s = 4.32/s throughout. Model confirmed.\n3. Ability haste. W: 8 * 100/(100+AH) = 7.2727 -> AH = 10 from items. Q: rechargeRate 7 is affectedByCdr=false, but R's passive grants Dark Sphere ability haste [10,20,30]; at R rank 3 that is +30, so 7 * 100/(100+30+10) = 7*100/140 = 5.000 s exactly -- matching the pre-change Q epochs 0, 5, 10 to the digit. The scenario is fully pinned.\n4. The scenario suffixes are Splinter-of-Wrath counts, not durations. The Transcendent thresholds in the cache are 40 (Q stocks a charge, max 2), 60 (W true damage), 80 (E), 100 (R execute), 120 (+15% AP). 60 and 120 both clear 40, so BOTH scenarios run Dark Sphere as a 2-charge ability; the two suffixes differ only in damage riders, never in cast identity or mana cost. That is why the two pre-change timelines are byte-identical, and why leaf 1 and leaf 2 resolve identically.\n5. Dark Sphere schedule under the charge model. Charges are full at t=0 and the recharge period is the effective 5.000 s from step 3, so Dark Sphere is castable at t = 0, 0, 5, 10 -- four casts. The pre-change series carries only three (0, 5, 10): the second stocked charge was never spent. Restoring it inserts one row at index 1 and shifts every later row by one. The whole series, member by member:\n   [0] Q Dark Sphere      ord 1  t=0.00   spends 60 mana\n   [1] Q Dark Sphere      ord 2  t=0.00   spends 60 mana  <- second stocked charge, the disputed address\n   [2] W Force of Will    ord 1  t=0.00   spends 100 mana\n   [3] E Scatter the Weak ord 1  t=0.00   spends 50 mana\n   [4] R Unleashed Power  ord 1  t=0.25   spends 100 mana\n   [5] Q Dark Sphere      ord 3  t=5.00   spends 60 mana\n   [6] W Force of Will    ord 2  t=7.27   spends 100 mana\n   [7] Q Dark Sphere      ord 4  t=10.00  spends 60 mana\n6. What a charged Dark Sphere spends. The charge is an AVAILABILITY gate, not a price. Syndra Q is tagged resource=MANA with cost [40,45,50,55,60] as a single unconditional modifier list; neither the Transcendent bonus text ('periodically stock a Dark Sphere charge, up to a maximum of 2') nor the ability notes (which only describe the sphere-icon HUD readout) exempt a charged cast from mana. The cache settles it across champions: all 13 MANA-resource charge abilities pay full mana per charge spent, and the wiki marks the three abilities whose per-cast resource IS the charge with resource=CHARGE, cost 1 (Ashe E, Gangplank E, Kled Q). Syndra Q is MANA, so every Dark Sphere cast in this series spends 60.0 mana at rank 5, the second charge included.\nCONCLUSION. cast_timeline[1] is Dark Sphere ordinal 2 spending 60.0 mana. 100.0 prices Force of Will, which the corrected series holds at index 2, not index 1 -- right number, wrong cast. 0.0 names the right cast but prices it as free, which no charge ability in the cache is. Both sides are wrong at that address. cast_timeline[6] is Force of Will ordinal 2 at t=7.27: with exactly one row inserted at index 1, pre-change index 5 (slot W) lands on index 6, so slot 'W' is correct and 'Q' is the un-shifted old address.",
+  "sources": [
+    "data/champions.json :: Syndra.stats.mana = {flat 480, perLevel 40}; manaRegen = {flat 8, perLevel 0.8}",
+    "data/champions.json :: Syndra.abilities.Q 'Dark Sphere': resource=MANA, cost.modifiers=[40,45,50,55,60], cooldown=[7x5] affectedByCdr=false, rechargeRate=[7,7,7,7,7], castTime='none'",
+    "data/champions.json :: Syndra.abilities.Q effect[1]: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+    "data/champions.json :: Syndra.abilities.W 'Force of Will': resource=MANA, cost=[60,70,80,90,100], cooldown=[12,11,10,9,8] affectedByCdr=true; effect[3] 'Collecting 60 Splinters of Wrath ...'",
+    "data/champions.json :: Syndra.abilities.E 'Scatter the Weak': cost=[50x5], castTime=0.25; effect[2] 'Collecting 80 Splinters of Wrath ...'",
+    "data/champions.json :: Syndra.abilities.R 'Unleashed Power': cost=[100,100,100], castTime=0.25; effect[0] passive leveling 'Ability Haste' = [10,20,30]; effect[3] 'Collecting 100 Splinters of Wrath ...'",
+    "data/champions.json :: Syndra.abilities.P 'Transcendent': stacks to 120; 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+    "data/champions.json :: cross-champion charge-ability survey (21 abilities with non-null rechargeRate): every MANA-resource charge ability carries its full per-cast mana cost (Vi E 26-50, Nilah E 30, Jhin E 30, Caitlyn W 20, Teemo R 75/55/35, Taric Q 60, Bard W 70, Azir W 40-20, Amumu Q 50, Milio E 50-90, Vel'Koz W 50-70, Ivern W 30, Heimerdinger Q 20). Only abilities whose per-cast resource IS the charge are tagged resource=CHARGE with cost 1 (Ashe E, Gangplank E, Kled Q). Syndra Q is tagged MANA, not CHARGE.",
+    "docs/math-foundations.md sec. 1.1: ability recasts run on one shared timeline; an ability recasts when its effective cooldown has elapsed and no other cast is in progress; a cast counts when it starts; superposition resolved greedily by cast order",
+    "docs/math-foundations.md summary table: 'Ability haste (effective_cooldown): cd' = cd*100/(100+AH)' -- EXACT",
+    "CLAUDE.md domain knowledge: stat growth = base + growth*(L-1)*(0.7025+0.0175*(L-1)); ability haste -> effective_cd = base_cd*100/(100+AH)"
+  ],
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md, extracted to a fresh scratch dir; no src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, diff, or plan was read",
+  "supersedes": [
+    "oracle-C6-leaf77.json",
+    "oracle-C6-leaf8.json",
+    "oracle-C6-leaf95.json"
+  ],
+  "superseded_brief_defect": "Recorded defect in the superseded brief (R-15/R-18 amendment, clauses 1 and 3): the correction INSERTED a row into the cast timeline, so index i does not name the same cast on the two sides for any i >= 1, yet the brief stated only a leaf path and two scalars. Handed 'cast_timeline[1]/resource_cost: 100.0 -> 0.0', the prior investigator could not know that 100.0 is Force of Will's rank-5 mana cost while 0.0 is the second Dark Sphere charge's -- two different casts sharing one address. It computed Force of Will's cost from the cached ability rows, was right about it, and certified an old value nobody had disputed: it priced the series' first member and was right about a question nobody asked. This receipt answers the series member by member instead of the ordinal, per the amendment.",
+  "supersession_mapping_note": "The docket named the superseded set for the cluster as a whole and did not pin a per-leaf mapping; all three superseded receipts are listed on each leaf receipt rather than guessed apart."
+}
