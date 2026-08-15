@@ -1,0 +1,150 @@
+{
+ "artifact": "campaign_gap_ledger",
+ "rule": "The close report grew four appended remediation sections, and each re-graded the gaps in its own table against the state it found. That is the right way to append -- section 9 says earlier text stays as written -- but it left the final per-gap state recoverable only by reading four tables in order and letting the later ones win. The sign-off review measured the consequence: the fourth table calls G7 and G8 open with a named blocker while the first and third had already closed all three of their entries. This file is the one place the final state of each gap lives, one row apiece, and the gate below asserts the report's last table says exactly what it says. A reader who opens only this file has the answer; a reader who opens only the last table gets the same answer, because the two cannot disagree.",
+ "gate": "tests/test_campaign_gap_ledger.py",
+ "why_the_report_is_not_the_ledger": "A report is a record of passes, in the order they ran. A ledger is a record of state, as it now is. Collapsing the two is what produced the drift: an appended table that re-grades only the gaps its own pass touched is correct about them and silently stale about the rest. So the ledger holds every gap on every pass, the report's final table is derived-checked against it, and a pass that closes a gap without moving its row here fails a gate rather than a reader.",
+ "state_vocabulary": [
+  "CLOSED",
+  "OPEN",
+  "OPEN BY DESIGN"
+ ],
+ "how_a_row_closes": "A CLOSED row names either a commit that exists in the campaign range or an umbrella amendment the umbrella actually holds -- both checked, so 'closed by amendment' cannot name an amendment nobody wrote. An OPEN row names the criterion it blocks and the blocker standing in its way, because an open gap with no blocker is a gap nobody can schedule.",
+ "why_snapshot_figures_are_not_restated_here": "Every count this campaign grades itself by moves. The report's earlier sections quote the verify-ledger residue at 70/63, then 68/61, then 73/62, and each was true on its date -- so the figures are not repeated in this file at all. `live_figures` names the artifact that owns each one and the gate reads it at run time, which is the same discipline criterion 4 imposes on golden shape counts: one home, and every consumer reads the home.",
+ "gaps": {
+  "G1": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 5",
+   "closed_by": [
+    "09956f8"
+   ],
+   "note": "The campaign's second and last closing re-capture. R-01 row 3 reads `snapshot identical` on the tip, and the boundary is the tip rather than a commit three later `src/` commits outdated."
+  },
+  "G2": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 1's emission clause",
+   "closed_by": [
+    "4b8779e"
+   ],
+   "unblocked_by": "Amendment E",
+   "note": "A refused transition's outcome fields are published as the declared zero they are, so a production path emits a non-MEASURED disposition. The landing shape needed a ruling first, and the ruling is the umbrella's."
+  },
+  "G3": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 8",
+   "closed_by": [
+    "69e7323"
+   ],
+   "note": "D-62's one-APPLIED-per-(mechanic, subject, event_id) uniqueness runs over real fights: 290 applied contributions claimed over the committed coupled corpus, 0 unidentified."
+  },
+  "G4": {
+   "state": "OPEN",
+   "blocks": "umbrella criterion 7, and Amendment B's exit clause behind it",
+   "blocker": "Fourteen per-family receipt-walk interpreters -- one behaviour-changing slice per family, on the families whose numbers participant_timeline._pair_run_fight produces today. Amendment F establishes that this, and not S3's ledger projection, is the act that retires a (family, RECEIPT_WALK) row; no phase budgeted fourteen of them, and the amendment says in terms that it does not rule the debt acceptable.",
+   "artifact": "docs/behavior-frontier.json, counters.counter_4.deferrals",
+   "gate": "tests/test_behavior_frontier.py",
+   "note": "Each row carries its retiring act, its blocker and an overdue flag; the committed set is diff-gated by set equality and a fifteenth row fails the gate. The debt is restated at its true size, which is not the same as being smaller."
+  },
+  "G5": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 4's non-plan half",
+   "unblocked_by": "Amendment H",
+   "closed_by": [
+    "1e209e2"
+   ],
+   "note": "Closed as a ruled carve-out rather than by editing the sites: a leaf's own adjudicating receipt may quote that leaf at its address, on three conditions. `scripts/sole_home_scan.py --check` holds the residue at zero unexplained sites and fails on a twelfth."
+  },
+  "G6": {
+   "state": "OPEN",
+   "blocks": "runbook criterion 9's repo-wide reading",
+   "blocker": "Twenty-two standing oracle dissents stand as open debts. Clearing one needs either a fresh investigator that has read neither the prior receipts nor the docket, or -- if that investigation sustains the dissent -- a ruled src/ correction; an implementation lane can be neither. One of the twenty-two is routed to an owed ruling instead, because its prior brief has no defect to name.",
+   "artifact": "docs/receipts/standing-dissent-docket.json",
+   "gate": "tests/test_standing_dissent_docket.py",
+   "note": "Scheduled rather than only named: four clusters, three startable with a well-posed brief each and one routed to a ruling. The instrument defect behind twenty of the twenty-two -- identity pairing reaching neither a cast row nor a bare-string list -- is resolved in the slice tagged `campaign-close-identity-pairing`, ahead of the re-adjudications as the escalation asked, so the next investigator is not handed the same mis-posed question. No dissent is thereby decided."
+  },
+  "G7": {
+   "state": "CLOSED",
+   "blocks": "Phase 4's criterion 14, and criterion 16's fallback-cause clause",
+   "closed_by": [
+    "5c19b1f",
+    "0f3adca"
+   ],
+   "note": "Both entries. `ReceiptWalk.reason` now reaches a published receipt at 5c19b1f, and the exact capture gained the four bench rosters its criterion names at 0f3adca."
+  },
+  "G8": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 11's [H] clause, read strictly",
+   "closed_by": [
+    "1de067b"
+   ],
+   "note": "H1, H3 and H4 each now name their dependent criterion and state how it is read under the deferral, in H5's shape. Nothing is answered -- an implementation lane may not answer an [H] -- and the clause asks for the criterion restated, which is what closed."
+  },
+  "G9": {
+   "state": "OPEN BY DESIGN",
+   "blocks": "nothing",
+   "artifact": "docs/cast-dependency-audit.json, acknowledged_gaps",
+   "note": "`enhanced_consume` has no producing champion. H6's recorded ruling is that Phase 5 ships exactly this, so the row is the discharge and not a residue."
+  },
+  "G10": {
+   "state": "CLOSED",
+   "blocks": "umbrella criterion 1's frontend change budget clause",
+   "unblocked_by": "Amendment I",
+   "note": "Closed by amendment rather than by reverting shipped rendering behaviour. The clause now names every commit in the range touching static/js/app.js with its reason -- bf4a6d3, 44331c7, f25dcfa -- and an unnamed fourth is the overrun, which the integer never caught."
+  },
+  "G11": {
+   "state": "OPEN",
+   "blocks": "nothing this campaign's criteria assert",
+   "blocker": "Two defects in cached wiki text, not in src/: Imperial Mandate's `simpleDescription` describes a different item, and one ability-haste phrase is atomized three ways. Fixing either is a vendor-parser or data-refresh slice outside this campaign's scope.",
+   "artifact": "docs/receipts/escalated-defects-cached-data.json",
+   "closed_by": [],
+   "note": "Filed at 98351d1 with a gate that asserts neither defect reaches a damage number rather than saying so."
+  },
+  "G12": {
+   "state": "CLOSED",
+   "blocks": "nothing -- it was a live operational risk rather than an unmet criterion",
+   "closed_by": [
+    "19b03d7"
+   ],
+   "unblocked_by": "Amendment G",
+   "note": "The write-once ledger's raises reached three serving endpoints uncaught. They now join the class the one request boundary converts, so a contested outcome is a named 500 carrying a STARVED receipt instead of a bare one."
+  },
+  "G13": {
+   "state": "CLOSED",
+   "blocks": "runbook criterion 12",
+   "closed_by": [
+    "6549e32"
+   ],
+   "note": "The criterion was unverifiable rather than failed: the ownership map lived only in a plan section. `docs/receipts/lane-ownership.json` is the map outside the plans, and its gate found three writers the map does not list -- none a violation, all recorded."
+  },
+  "G14": {
+   "state": "OPEN",
+   "blocks": "runbook criterion 11's first clause -- every slice has a recorded verify-<slice> verdict",
+   "blocker": "An owed ruling, and the campaign's one certification blocker. `docs/receipts/rulings-owed.json`, row `whether_criterion_11s_first_clause_binds_the_campaign_backwards`. Binding the clause backwards schedules some sixty fresh read-only passes, which is a cost with an owner; reading it forwards re-reads 'every slice', which umbrella criterion 11's own words forbid a phase document from doing. A lane may take neither, and the three shortcuts -- manufacturing a record, reconstructing one from the commit bodies being checked, or shrinking the denominator -- are each named and refused in that row.",
+   "artifact": "docs/receipts/verify-ledger.json, coverage block",
+   "gate": "tests/test_verify_ledger.py",
+   "note": "Mechanically the residue is in good order: the denominator is machine-derived from commit subjects, the forward gate refuses a new slice group that ships with neither a record nor an explicit line, and the number cannot grow in silence. What it does not do is fall."
+  }
+ },
+ "live_figures": {
+  "rule": "Each figure the report grades a gap by lives in exactly one artifact and is read from it at run time. Nothing here is a value; a value here would be the second home criterion 4 exists to forbid.",
+  "verify_ledger_residue": {
+   "artifact": "docs/receipts/verify-ledger.json",
+   "path": "coverage.residue",
+   "grades": "G14"
+  },
+  "verify_ledger_residue_with_no_verdict_anywhere": {
+   "artifact": "docs/receipts/verify-ledger.json",
+   "path": "coverage.residue_with_no_verdict_anywhere",
+   "grades": "G14"
+  },
+  "standing_dissent_open_debts": {
+   "artifact": "docs/receipts/standing-dissent-docket.json",
+   "path": "measured_on_the_commit_that_lands_this.docketed",
+   "grades": "G6"
+  },
+  "receipt_walk_deferrals": {
+   "artifact": "docs/behavior-frontier.json",
+   "path": "counters.counter_4.deferrals.by_lane.receipt_walk",
+   "grades": "G4"
+  }
+ }
+}

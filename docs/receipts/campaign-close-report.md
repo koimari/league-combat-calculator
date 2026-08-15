@@ -640,15 +640,52 @@ the tip to re-address. It decides no dissent — every cluster's remedy is still
 fresh investigator — and removes the instrument defect that would otherwise have
 handed the next one the same mis-posed question.
 
-### 12.4 The gaps, re-graded a fourth time
+### 12.4 The gaps, as they finally stand
 
-| # | State | Note |
-|---|---|---|
-| **G1** | **CLOSED, and this time at a boundary that is the tip** | `09956f8`. Row 3 reads `snapshot identical`. |
-| **G6** | **OPEN, and now scheduled rather than only named** | 22 open debts, four clusters, three startable and one routed to a ruling. Clearing one is still a fresh investigator's or a ruled `src/` slice's, which no implementation lane can be. |
-| **G14** | **OPEN — the campaign's one certification blocker** | Runbook criterion 11's first clause. Reading it forwards re-reads "every slice"; reading it backwards schedules sixty-odd fresh R-35 passes. Matthew's, not a lane's. |
-| **G2, G3, G5, G10, G12, G13** | **unchanged** | closed in earlier passes. |
-| **G4, G7, G8, G9, G11** | **unchanged** | each open with its named blocker and its gate. |
+*Every gap, on every pass, in one table — not only the ones this pass touched.
+The four appended re-grades above each stated the gaps their own pass moved and
+said nothing about the rest, which is correct as a record of a pass and
+misleading as a statement of state: the fourth of them called G7 and G8 open
+with a named blocker when §11.1 and §9.3 had already closed all three of their
+entries. The state column below is a bare word from a closed vocabulary and the
+whole table is derived-checked against
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) by
+`tests/test_campaign_gap_ledger.py`, so a future pass that closes a gap without
+moving its row fails a gate rather than a reader.*
+
+| # | State | Blocks | Where it stands |
+|---|---|---|---|
+| **G1** | **CLOSED** | umbrella criterion 5 | `09956f8`, the campaign's second and last closing re-capture. Row 3 reads `snapshot identical`, and the boundary is the tip. |
+| **G2** | **CLOSED** | umbrella criterion 1's emission clause | `4b8779e`, unblocked by **Amendment E**. |
+| **G3** | **CLOSED** | umbrella criterion 8 | `69e7323`. 290 applied contributions claimed over the committed coupled corpus, 0 unidentified. |
+| **G4** | **OPEN** | umbrella criterion 7, and Amendment B's exit clause behind it | Fourteen `RECEIPT_WALK` deferral rows. **Amendment F** establishes that the act retiring one is a per-family receipt-walk interpreter — a behaviour change per family, fourteen of them, budgeted by no phase — and says in terms that it does not rule the debt acceptable. Each row carries its retiring act, its blocker and an overdue flag; a fifteenth fails the gate. |
+| **G5** | **CLOSED** | umbrella criterion 4's non-plan half | **Amendment H**, mechanised at `1e209e2`. Closed as a ruled carve-out — a leaf's own adjudicating receipt may quote that leaf at its address — not by editing the sites. `sole_home_scan.py --check` fails on a twelfth. |
+| **G6** | **OPEN** | runbook criterion 9's repo-wide reading | 22 open debts, four clusters, three startable with a brief each and one routed to a ruling (`1414576`). Clearing one still needs a fresh investigator or a ruled `src/` slice, which no implementation lane can be. The instrument defect behind twenty of the twenty-two is resolved in `campaign-close-identity-pairing`, ahead of the re-adjudications as the escalation asked; that decides no dissent. |
+| **G7** | **CLOSED** | Phase 4's criterion 14, and criterion 16's fallback-cause clause | Both entries: `5c19b1f` publishes `ReceiptWalk.reason`, `0f3adca` gives the exact capture the four bench rosters its criterion names. |
+| **G8** | **CLOSED** | umbrella criterion 11's `[H]` clause, read strictly | `1de067b`. H1, H3 and H4 each name their dependent criterion and state how it is read under the deferral. Nothing is answered, and nothing may be by a lane. |
+| **G9** | **OPEN BY DESIGN** | nothing | `enhanced_consume` has no producing champion. H6's recorded ruling is that Phase 5 ships exactly this, so the row is the discharge. |
+| **G10** | **CLOSED** | umbrella criterion 1's frontend change budget clause | **Amendment I**. The clause names every commit in the range touching `static/js/app.js` with its reason; an unnamed fourth is the overrun, which the integer never caught. |
+| **G11** | **OPEN** | nothing this campaign's criteria assert | Two defects in cached wiki text, not in `src/` (`98351d1`). The gate asserts neither reaches a damage number rather than saying so. Fixing either is a vendor-parser or data-refresh slice outside this scope. |
+| **G12** | **CLOSED** | nothing — a live operational risk, not an unmet criterion | `19b03d7`, unblocked by **Amendment G**. |
+| **G13** | **CLOSED** | runbook criterion 12 | `6549e32`. The criterion was unverifiable rather than failed; the ownership map is an artifact outside the plans now. |
+| **G14** | **OPEN** | runbook criterion 11's first clause | The campaign's one certification blocker, and an owed ruling: `rulings-owed.json`, `whether_criterion_11s_first_clause_binds_the_campaign_backwards`. Reading it forwards re-reads "every slice"; reading it backwards schedules some sixty fresh read-only passes. Matthew's, not a lane's. |
+
+Four gaps stand open and one stands open by design. Two of the four — G6 and
+G14 — are the sign-off blockers, and neither closes by an implementation lane:
+one needs fresh investigators, the other needs a decision. G4 is fourteen
+budgeted slices nobody has budgeted. G11 is outside this campaign's scope and
+gated where it sits.
+
+**Which snapshot is current.** Every count this report grades a gap by moves,
+and the earlier sections quote three different residues for G14 — each true on
+its date. None of them is restated in the ledger: it names the artifact that
+owns each figure, and its gate reads the figure at run time. The live
+artifacts are the authority, always:
+[`verify-ledger.json`](verify-ledger.json)'s `coverage` block for G14,
+[`standing-dissent-docket.json`](standing-dissent-docket.json) for G6, and
+[`behavior-frontier.json`](../behavior-frontier.json)'s `counter_4.deferrals`
+for G4. A figure quoted in a dated section above is a record of that date and
+is not re-graded here, for the same reason section 9 does not rewrite section 6.
 
 ### 12.5 The re-grade
 
@@ -656,8 +693,33 @@ Umbrella criterion **5** moves to **DISCHARGED and stays there**: all eleven
 R-01 rows are green on the tip this pass ends on, not on a boundary a later
 commit outdated, and the boundary *is* the tip. Runbook criterion **6**'s first
 clause is true for the first time in the campaign — `compare` against
-`golden_coupled_baseline.json` exits zero. Criteria **1**, **4** and **7** are
-unchanged at **PARTIALLY DISCHARGED**, each on one clause with a named blocker.
+`golden_coupled_baseline.json` exits zero.
+
+Criteria **1** and **4** stood at **PARTIALLY DISCHARGED** here through three
+passes, and that grade outlived its cause. It is corrected rather than carried,
+because a criterion graded short of what its own blockers say is the same defect
+as one graded past them — a grade a reader cannot reconstruct from the gap table:
+
+* **Criterion 1 — DISCHARGED, under Amendment I.** Its two named blockers are
+  closed. G2 was the emission clause and `4b8779e` closed it under Amendment E;
+  G10 was the frontend budget clause and Amendment I closed it by amending the
+  clause to what shipped and giving it the property the integer was reaching for.
+  Nothing here re-reads the criterion: both closures are recorded in the umbrella
+  by its owner, and this line states their consequence.
+* **Criterion 4 — DISCHARGED, under Amendment H.** Its named blocker was G5, and
+  Amendment H rules the eleven forced restatements a carve-out — a leaf's own
+  adjudicating receipt quoting that leaf at its address — on three conditions
+  that `sole_home_scan.py --check` holds at zero unexplained sites.
+* **Criterion 7 — PARTIALLY DISCHARGED, unchanged.** Its blocker G4 is open, and
+  Amendment F is explicit that restating the debt at its true size is not ruling
+  it acceptable. Fourteen families' numbers are still priced by the pair engine
+  rather than by the one walk, which is a substantive residue of this campaign's
+  own thesis and is graded as one.
+
+A criterion discharged *under an amendment* is discharged, and the amendment is
+named every time so the reading is one click from the grade. Neither line here
+amends anything: both amendments were written by the umbrella's owner before
+this pass, and what changed is only that the grade now says what they did.
 
 Runbook criterion **11** stands **NOT DISCHARGED as written**, and this report
 says so at the end rather than in a footnote: the campaign is **not certified
