@@ -607,6 +607,20 @@
    "captured_at_commit": "f9099a1",
    "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
    "why": "Phase 4 S10's own R-28 baseline, captured on the S9 tip before S10's first src/ edit. The counters, residual, winner and score are S9's landed values, unmoved since S8 (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131), and S10 predicts every one of them unchanged: it is the cleanup stage, so its Expected qualifying occurrences is 0 on both baselines by definition (phase criterion 8) and any move is an unexpected occurrence that stops the slice. Wall is 5.9% above S9's 3568.8 ms measured on the same tree S9 finished on, so the move is box drift between two captures rather than anything S9 landed; the ratchet reads against this stage's own capture, which is what R-28's per-stage baseline is for. S10 retires the pair packet's id()-keyed typed-action map, so the prediction the ratchet is checking is that removing it costs less than 10% of this number. R-28 gates allocation at S4 alone, so S10 declares wall and nothing else."
+  },
+  "campaign-close-declared-pricing": {
+   "scenario": "cassiopeia_5champ",
+   "best_of_3_ms": 4471.0,
+   "repeats_ms": [
+    4514.6,
+    4471.0,
+    4632.1
+   ],
+   "ratchet_ceiling_ms": 4918.1,
+   "provenance": "VERIFIED",
+   "captured_at_commit": "f4614a7",
+   "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+   "why": "The from-declaration pricing stage's own R-28 baseline (umbrella Amendment L, Ruling 3), captured on the closeout tip before the stage's first src/ edit and written in a receipt-only commit touching no src/ and neither compared baseline, which is R-32's carve-out for a wall{stage} key. The stage is declared stage-shaped in cost rather than assumed free: it adds one field to the kernel's action tuple and one branch to the per-packet live chain, both of which the optimizer pays per compiled damage packet, so the ratchet has something to check. The counters, residual, winner and score are the values Phase 4 S10 landed and nothing has moved since (1033/1015/967/3118, residual 19, score 5010.8, rungs compiled 836 / receipt_walk_candidate 131), and this stage predicts every one of them unchanged: it is inert until a family's retirement slice opts in, so its Expected qualifying occurrences is 0 on both baselines and any move is an unexpected occurrence that stops the slice. Wall is 18.3% above S10's 3778.7 ms measured five slices and one box-idle period apart; the ratchet reads against this stage's own capture, which is exactly what R-28's per-stage baseline is for. R-28 gates allocation at Phase 4 S4 alone, so this stage declares wall and nothing else."
   }
  },
  "tests": {
