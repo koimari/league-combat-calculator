@@ -13,6 +13,9 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 * :mod:`score_state` — the parallel-array ledger adapter (optimizer);
 * :mod:`compile` — the packet compiler with fail-closed capability
   receipts (:class:`UncompilableActionError`);
+* :mod:`pricing` — raw declared damage becoming a mitigated number: the
+  one arithmetic home a family's declaration reaches the walk through,
+  inert until a retirement slice hands it a packet;
 * :mod:`accumulate` — per-attacker float-sum order, rounded death-time
   cutoff, breakdown rows.
 

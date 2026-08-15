@@ -36,6 +36,17 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters.reactive import thorns_effects
+from src.calculator.resistance import apply_magic_penetration, apply_resistance
+from src.calculator.survival.compile import thorns_return_damage
+from src.calculator.survival.pricing import (
+    MITIGATED_DAMAGE_TYPES,
+    NO_RESISTANCE_PUBLISHED,
+    UNPRICEABLE_DAMAGE_TYPE,
+    DeclaredPacket,
+    mitigate_declared,
+    price_declared_packet,
+)
 from src.calculator.item_support_effects import (
     _declared_authorities,
     producer_item,
@@ -1408,3 +1419,159 @@ def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatc
     assert missing_fixtures(
         required_coverage_keys(), candidate_reached, ally_reached
     ) == ((extra, "ally"), (extra, "candidate"))
+
+
+# ---------------------------------------------------------------------------
+# From-declaration pricing — the arithmetic (umbrella Amendment L, Ruling 3)
+# ---------------------------------------------------------------------------
+#
+# The walk consumes the pair engine's post-mitigation rows and, where the
+# subject's resistance moves, recovers the pre-mitigation side by ratio.  A
+# family that declares its own damage brings a raw value and no mitigation to
+# divide out, so it has nowhere to hand a price.  `survival/pricing.py` is
+# that home; this section pins its arithmetic, its refusals, and the fact that
+# the tree's one older from-raw producer now reads it rather than spelling the
+# same step again.
+
+
+@dataclass(frozen=True)
+class _PricingHolder:
+    """A participant as the strike-back pricer reads one: a stat block.
+
+    `thorns_return_damage` takes the wearer and the striker and reads exactly
+    `.stats` off each, so this is the whole of the interface — a full
+    `Combatant` would hide which fields the price actually depends on.
+    """
+
+    stats: Mapping[str, float]
+
+
+class TestRawDeclaredDamageBecomesAMitigatedNumber:
+    """`mitigate_declared` — one raw magnitude at one resistance."""
+
+    def test_a_positive_resistance_reduces_the_declaration(self):
+        """The one resistance formula, not a second copy of it."""
+        assert mitigate_declared(252.0, "magic", 67.0) == apply_resistance(252.0, 67.0)
+        assert mitigate_declared(100.0, "physical", 100.0) == 50.0
+
+    def test_a_negative_resistance_amplifies_it(self):
+        """Negative resistance is a real state, and it is the formula's."""
+        assert mitigate_declared(100.0, "magic", -100.0) == apply_resistance(
+            100.0, -100.0
+        )
+
+    def test_true_damage_meets_no_resistance(self):
+        """Priced, never refused: the resistance handed in is ignored."""
+        assert mitigate_declared(300.0, "true", 9999.0) == 300.0
+
+    def test_a_negative_declaration_cannot_become_a_heal(self):
+        """A declaration is a magnitude, so the floor is at zero.
+
+        Without it a malformed declaration would mitigate into a negative
+        number the walk would subtract from a total — a family paying its
+        subject rather than damaging it, which no receipt would name.
+        """
+        assert mitigate_declared(-40.0, "magic", 50.0) == 0.0
+        assert mitigate_declared(-40.0, "true", 50.0) == 0.0
+
+
+class TestTheWalkPricesADeclarationAgainstWhatItMeets:
+    """`price_declared_packet` — the resistance resolved at resolve time."""
+
+    def test_a_magic_packet_reads_the_published_magic_resistance(self):
+        packet = DeclaredPacket(252.0, "magic", "sunfire_aegis.continuous_aura")
+        price = price_declared_packet(
+            packet, baseline_effective_armor=120.0, baseline_effective_mr=67.0
+        )
+        assert price.unavailable == ""
+        assert price.resistance == 67.0
+        assert price.amount == apply_resistance(252.0, 67.0)
+
+    def test_a_physical_packet_reads_the_published_armour(self):
+        packet = DeclaredPacket(100.0, "physical", "fixture.physical")
+        price = price_declared_packet(
+            packet, baseline_effective_armor=100.0, baseline_effective_mr=67.0
+        )
+        assert price.resistance == 100.0
+        assert price.amount == 50.0
+
+    def test_an_armed_delta_is_part_of_the_mitigation_not_a_second_factor(self):
+        """The whole difference between this path and the ratio it replaces.
+
+        The ratio re-prices an already-mitigated number by
+        `f(baseline + delta) / f(baseline)`; here the delta is simply part of
+        the resistance the raw value meets, mitigated once.  The two agree on
+        this input, which is what makes the replacement a re-spelling — and
+        they are written out separately so the day they stop agreeing is a
+        failure rather than a shared expression.
+        """
+        packet = DeclaredPacket(252.0, "magic", "fixture.armed")
+        price = price_declared_packet(
+            packet,
+            baseline_effective_armor=None,
+            baseline_effective_mr=67.0,
+            dynamic_bonus_magic_resistance=30.0,
+        )
+        assert price.resistance == 97.0
+        ratioed = apply_resistance(252.0, 67.0) * (
+            apply_resistance(1.0, 97.0) / apply_resistance(1.0, 67.0)
+        )
+        assert price.amount == pytest.approx(ratioed, rel=1e-12)
+
+    def test_true_damage_is_priced_without_any_baseline(self):
+        """No baseline is consulted, so none can be missing."""
+        price = price_declared_packet(
+            DeclaredPacket(300.0, "true", "fixture.true"),
+            baseline_effective_armor=None,
+            baseline_effective_mr=None,
+        )
+        assert price == (300.0, None, "")
+
+    def test_a_missing_baseline_is_refused_by_name(self):
+        """R-05: the refusal the walk receipts, reproduced on demand.
+
+        A fight that published no effective resistance leaves the walk
+        nothing to mitigate against.  The refusal is a named reason and a
+        `None` amount, never a zero a caller could add to a total.
+        """
+        price = price_declared_packet(
+            DeclaredPacket(252.0, "magic", "fixture.blind"),
+            baseline_effective_armor=120.0,
+            baseline_effective_mr=None,
+        )
+        assert price.amount is None
+        assert price.unavailable == NO_RESISTANCE_PUBLISHED
+
+    def test_a_damage_class_no_resistance_answers_for_is_refused(self):
+        """R-05's second red: an unrecognized class is not paid in full.
+
+        Paying it raw would be a mitigation decision taken by silence, which
+        is the shape this campaign exists to remove.
+        """
+        price = price_declared_packet(
+            DeclaredPacket(252.0, "adaptive", "fixture.unknown"),
+            baseline_effective_armor=120.0,
+            baseline_effective_mr=67.0,
+        )
+        assert price.amount is None
+        assert price.unavailable == UNPRICEABLE_DAMAGE_TYPE
+        assert "adaptive" not in MITIGATED_DAMAGE_TYPES
+
+
+def test_the_strike_back_prices_through_the_shared_arithmetic():
+    """The tree's one older from-raw producer reads the same home.
+
+    Thorns predates this module: it is the only place the walk's own side
+    already turned a declared magnitude into a mitigated number.  Asserting
+    the two agree on a real Thornmail profile is what makes `pricing` the one
+    home rather than a successor sitting beside a precedent.
+    """
+    wearer = _PricingHolder({"bonus_armor": 80.0})
+    striker = _PricingHolder({"magic_resistance": 67.0})
+    profile = thorns_effects([_item("Thornmail")])[0]
+
+    expected_resistance = apply_magic_penetration(67.0, 0.0, 0.0)
+    expected_raw = profile.damage + profile.bonus_armor_ratio * 80.0
+    assert thorns_return_damage(profile, wearer, striker) == mitigate_declared(
+        expected_raw, "magic", expected_resistance
+    )

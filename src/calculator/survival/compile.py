@@ -32,8 +32,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from ..resistance import apply_magic_penetration, apply_resistance
+from ..resistance import apply_magic_penetration
 from .actions import ActionKind, SurvivalAction
+from .pricing import mitigate_declared
 
 
 class UncompilableActionError(ValueError):
@@ -211,6 +212,14 @@ def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
     by the striker like any other damage of its type.  Lives here (not in
     the kernel) because both the receipt scheduler and the compiler price
     strike-backs before the walk runs.
+
+    This is the tree's oldest from-raw price — a declared magnitude the
+    walk's own side mitigates, rather than a number the pair engine already
+    mitigated — so the last step is :func:`~.pricing.mitigate_declared`
+    rather than a second spelling of it.  What stays here is the half that
+    is genuinely a strike-back's: which resistance the return damage meets,
+    and the refusal for a declaration whose damage type this mechanic has
+    never carried.
     """
     if profile.damage_type != "magic":
         raise ValueError(
@@ -231,7 +240,7 @@ def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
         float(wearer.stats.get("magic_penetration_flat", 0.0)),
         float(wearer.stats.get("magic_penetration_percent", 0.0)) / 100.0,
     )
-    return apply_resistance(raw_damage, resistance)
+    return mitigate_declared(raw_damage, profile.damage_type, resistance)
 
 
 def coalesce_darius_q_heals(
