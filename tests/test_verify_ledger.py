@@ -146,6 +146,14 @@ def test_the_campaign_close_pass_answers_every_criterion_it_was_handed(
     assert criterion in {row["id"] for row in block["criteria"]}
 
 
+#: The trailing parenthetical every lane stamps on a commit subject.
+TRAILING_TAG = r"\(([^()]*)\)\s*$"
+
+#: What an R-35 citation in a commit body has to name to count.
+MECHANISM_NAMES = r"R-35|verify-[A-Za-z0-9.\-/]+|verifier|sign-?off"
+VERDICT_WORDS = r"\bNOT DISCHARGED\b|\bDISCHARGED\b|\bverdict\b"
+
+
 def _slice_group_tags() -> tuple[list[str], int]:
     """The campaign's own slice labels, read from commit subjects.
 
@@ -161,7 +169,7 @@ def _slice_group_tags() -> tuple[list[str], int]:
         cwd=ROOT,
         check=True,
     ).stdout
-    pattern = re.compile(r"\(([^()]*)\)\s*$")
+    pattern = re.compile(TRAILING_TAG)
     tags: list[str] = []
     untagged = 0
     for chunk in out.split("\x1e"):
@@ -177,6 +185,53 @@ def _slice_group_tags() -> tuple[list[str], int]:
         if tag not in tags:
             tags.append(tag)
     return tags, untagged
+
+
+def _groups_citing_a_verdict_in_a_commit_body() -> list[str]:
+    """Slice groups whose own commits record an R-35 verdict.
+
+    Names rather than shas, and the reason is the one this ledger keeps
+    running into: it is committed *inside* the commit it would be recording,
+    so a sha here is stale the moment that commit is amended or rebased.
+
+    A third coverage state, derived rather than authored, and deliberately
+    weaker than a recorded verdict: a commit body is the *lane's*
+    transcription of the verifier's answer, not the verifier's artifact.  It
+    is surfaced anyway because "a citation somebody can go and read" and
+    "nothing at all" are different states of one clause, and collapsing them is what made
+    a ledger holding one pass and a ledger holding forty look alike to every
+    gate.
+
+    The rule is a conjunction so a passing mention cannot qualify: the body
+    must name the mechanism -- R-35, a ``verify-`` agent, a verifier or a
+    sign-off -- **and** carry a verdict word from R-35's own brief.
+    """
+    unit, record = chr(31), chr(30)
+    out = subprocess.run(
+        ["git", "log", f"--format=%h{unit}%s{unit}%b{record}", "584071e..HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    tag_pattern = re.compile(TRAILING_TAG)
+    mechanism = re.compile(MECHANISM_NAMES, re.I)
+    verdict = re.compile(VERDICT_WORDS, re.I)
+    cited: list[str] = []
+    for chunk in out.split(record):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        _sha, subject, commit_body = chunk.split(unit, 2)
+        match = tag_pattern.search(subject)
+        if match is None:
+            continue
+        tag = match.group(1).split(",")[0].strip()
+        if tag in cited:
+            continue
+        if mechanism.search(commit_body) and verdict.search(commit_body):
+            cited.append(tag)
+    return sorted(cited)
 
 
 class TestTheCoverageBlockIsTheClauseSDenominator:
@@ -214,6 +269,31 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
         )
         assert self.coverage["untagged_commits"] == untagged
         assert self.coverage["residue"] < len(tags)
+
+    def test_the_citation_state_is_derived_and_not_authored(self) -> None:
+        """The third state: a verdict a reader can open, in a commit body.
+
+        Recorded with its sha so the citation is a link rather than a claim,
+        and re-derived here so the ledger cannot list a group whose commits
+        say nothing.  It is a strict subset of the groups with no verdict in
+        this ledger: a citation is the lane's transcription of a verifier's
+        answer and is not the artifact the clause asks for.
+        """
+        cited = self.coverage["slice_groups_citing_a_verdict_in_a_commit_body"]
+        assert cited == _groups_citing_a_verdict_in_a_commit_body()
+        # Names and not shas: a sha is a locator, and the ledger sits inside
+        # the commit whose sha it would have to record, so any rewrite of that
+        # commit would leave the file describing a commit that no longer
+        # exists.  ``git log --grep`` finds a named group's commits.
+        # A group can be both: the pass recorded here also cited itself in the
+        # commit that landed it.  What the residue subtracts is the overlap,
+        # so a citation never counts as a verdict and never double-counts one.
+        assert set(cited) <= set(self.coverage["slice_groups_without_one"]) | set(
+            self.coverage["slice_groups_with_a_verdict_in_this_ledger"]
+        )
+        assert self.coverage["residue_with_no_verdict_anywhere"] == len(
+            set(self.coverage["slice_groups_without_one"]) - set(cited)
+        )
 
     def test_the_block_says_what_it_refuses_to_do(self) -> None:
         """It does not reconstruct a verdict, and says so where a reader is."""
