@@ -620,9 +620,25 @@ of the twenty-two: **identity pairing does not reach a bare-scalar list.**
 fail-closed and documented — but `cast_timeline` rows are identified by `slot`
 plus `ordinal` and the rotation lists by their own values, so an insertion
 re-addresses every later member and each re-addressed member becomes a value
-diff R-15 sends to an investigator. Escalated rather than fixed: widening
-identity pairing re-addresses every committed allowlist and oracle receipt in
-the campaign.
+diff R-15 sends to an investigator. Escalated rather than fixed at that pass,
+because widening identity pairing would re-address every committed allowlist and
+oracle receipt in the campaign; the escalation said the widening belongs ahead of
+the re-adjudications rather than never.
+
+**Since resolved**, in the slice tagged `campaign-close-identity-pairing`: a
+record whose identity is spelled apart — an origin field beside that origin's own
+ordinal, which is what a cast row carries — is paired by it exactly as an
+`event_id`-bearing record is, and a bare-string list is paired by its own strings
+**only when the two lists differ in length**. That guard is what makes it a
+correction and not a relaxation: an equal-length list gained and lost nothing, so
+a substitution there stays the one `text_change` it is, and only a membership
+transition can be adjudicated by citation. Numbers are never value-identified, so
+no numeric move loses its `percent`. The re-addressing worry did not materialise
+and was measured rather than argued: R-01 rows 2 and 3 report the snapshot
+identical to both committed baselines before and after, so there was no diff at
+the tip to re-address. It decides no dissent — every cluster's remedy is still a
+fresh investigator — and removes the instrument defect that would otherwise have
+handed the next one the same mis-posed question.
 
 ### 12.4 The gaps, re-graded a fourth time
 

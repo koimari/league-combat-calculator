@@ -351,6 +351,176 @@ class TestIdentityKeyedListMatching:
 
 
 # ---------------------------------------------------------------------------
+# The two lists identity pairing did not reach: a cast row, which spells its
+# identity as an origin beside that origin's ordinal, and a bare-string list,
+# whose members have no fields to be identified by at all.
+# ---------------------------------------------------------------------------
+
+
+def _casts(*rows):
+    """A snapshot fragment holding one ``cast_timeline``-shaped list."""
+    return {
+        "s": {
+            "cast_timeline": [
+                {"slot": slot, "ordinal": ordinal, "resource_cost": cost}
+                for slot, ordinal, cost in rows
+            ]
+        }
+    }
+
+
+#: Syndra's pre-C6 cast timeline in miniature: Q, W, E, each the first cast
+#: of its slot, with the mana each spends.
+_CASTS_BEFORE = _casts(("Q", 1, 40.0), ("W", 1, 100.0), ("E", 1, 90.0))
+
+#: The same timeline after a second Dark Sphere charge is inserted at
+#: position 1.  Every later row keeps its own identity and changes nothing.
+_CASTS_AFTER = _casts(("Q", 1, 40.0), ("Q", 2, 0.0), ("W", 1, 100.0), ("E", 1, 90.0))
+
+
+class TestOriginOrdinalIdentity:
+    """A cast row's identity is its slot and that slot's ordinal.
+
+    C6 inserted one row into Syndra's ``cast_timeline`` and positional
+    pairing re-addressed every later row, which is how three oracle briefs
+    came to ask about ``cast_timeline[1]/resource_cost: 100.0 -> 0.0`` —
+    Force of Will's rank-5 mana cost against the second Dark Sphere charge's,
+    two different casts at one address.  That is the defect
+    ``identity_pairing_does_not_reach_a_bare_scalar_list`` names, reproduced
+    here as a fixture so the remedy has a red it can produce on demand.
+    """
+
+    def test_the_inserted_cast_is_one_membership_transition(self):
+        (diff,) = gs.leaf_report(_CASTS_BEFORE, _CASTS_AFTER)
+        assert diff.transition == "absent_to_value"
+        assert diff.identity == "Q#2"
+
+    def test_no_later_cast_is_reported_as_a_value_change(self):
+        """The whole point: W's mana cost is never compared against Q2's."""
+        paths = [diff.path for diff in gs.leaf_report(_CASTS_BEFORE, _CASTS_AFTER)]
+        assert "/s/cast_timeline[1]/resource_cost" not in paths
+
+    def test_stripping_the_ordinal_reproduces_the_substitution(self):
+        """R-05's permanent negative, on the identity this commit adds.
+
+        Identical fixture with ``ordinal`` dropped, so the only difference is
+        whether the rows can be paired by identity.  Positional pairing then
+        hands exactly the brief the three C6 receipts answered.
+        """
+
+        def stripped(document):
+            return {
+                "s": {
+                    "cast_timeline": [
+                        {k: v for k, v in row.items() if k != gs.ORDINAL_FIELD}
+                        for row in document["s"]["cast_timeline"]
+                    ]
+                }
+            }
+
+        diffs = {
+            diff.path: (diff.old, diff.new)
+            for diff in gs.leaf_report(stripped(_CASTS_BEFORE), stripped(_CASTS_AFTER))
+        }
+        assert diffs["/s/cast_timeline[1]/resource_cost"] == (100.0, 0.0)
+
+    def test_a_repeated_origin_ordinal_falls_back_to_position(self):
+        """Fail closed, exactly as a duplicate ``event_id`` does."""
+        duplicated = _casts(("Q", 1, 40.0), ("Q", 1, 50.0))
+        other = _casts(("Q", 1, 40.0), ("Q", 1, 55.0))
+        (diff,) = gs.leaf_report(duplicated, other)
+        assert diff.path == "/s/cast_timeline[1]/resource_cost"
+        assert diff.identity is None
+
+    def test_a_moved_cast_keeps_the_baselines_address(self):
+        moved = _casts(("Q", 1, 40.0), ("W", 1, 100.0), ("E", 1, 95.0))
+        (diff,) = gs.leaf_report(_CASTS_BEFORE, moved)
+        assert diff.path == "/s/cast_timeline[2]/resource_cost"
+        assert diff.identity == "E#1"
+
+
+class TestBareStringListIdentity:
+    """A bare string is its own address, and only where a member left or came.
+
+    Phase 5's seed retirement replaced the rotation record's hand-written
+    ``setup`` / ``consume`` / ``sources`` lists with derived ones of a
+    different length, and positional pairing turned seventeen surviving or
+    added members into value questions.  Pairing such a list by its own
+    strings is guarded on the lengths differing, which is what makes this a
+    correction rather than a relaxation: an equal-length list cannot have
+    gained or lost a member, so a substitution there is still one
+    ``text_change`` owed to an investigator.
+    """
+
+    def test_a_grown_list_reports_only_what_arrived(self):
+        diffs = gs.leaf_report(
+            {"s": {"setup": ["Q"]}}, {"s": {"setup": ["E", "Q", "R"]}}
+        )
+        assert {(d.transition, d.identity) for d in diffs} == {
+            ("absent_to_value", "E"),
+            ("absent_to_value", "R"),
+        }
+
+    def test_a_shrunk_list_reports_only_what_left(self):
+        (diff,) = gs.leaf_report(
+            {"s": {"cast_order": ["Q", "Q2", "W"]}},
+            {"s": {"cast_order": ["Q", "W"]}},
+        )
+        assert diff.transition == "value_to_absent"
+        assert diff.identity == "Q2"
+
+    def test_an_equal_length_substitution_is_still_one_text_change(self):
+        """The guard, asserted: nothing about a same-length list moves.
+
+        Without it a reworded justification string would split into a removal
+        plus an addition, and a membership transition can be adjudicated by
+        citation where a ``text_change`` never can — a relaxation this commit
+        must not buy.
+        """
+        (diff,) = gs.leaf_report(
+            {"s": {"sources": ["a", "b"]}}, {"s": {"sources": ["a", "c"]}}
+        )
+        assert diff.path == "/s/sources[1]"
+        assert diff.transition == "text_change"
+        assert (diff.old, diff.new) == ("b", "c")
+
+    def test_a_repeated_string_falls_back_to_position(self):
+        """``cast_order`` holds repeats, and a repeat is not an identity."""
+        diffs = gs.leaf_report(
+            {"s": {"cast_order": ["Q", "W", "Q"]}},
+            {"s": {"cast_order": ["Q", "W"]}},
+        )
+        assert [d.path for d in diffs] == ["/s/cast_order[2]"]
+        assert diffs[0].identity is None
+
+    def test_a_numeric_list_keeps_its_value_diffs(self):
+        """Numbers are excluded on purpose: R-15 grades them by magnitude."""
+        (diff,) = gs.leaf_report(
+            {"s": {"ticks": [10.0, 20.0]}}, {"s": {"ticks": [10.0, 20.0, 30.0]}}
+        )
+        assert diff.path == "/s/ticks[2]"
+        assert diff.transition == "absent_to_value"
+
+    def test_a_numeric_move_is_never_re_spelled_as_a_membership_change(self):
+        """A grown numeric list still grades its moved member by magnitude."""
+        diffs = {
+            diff.path: diff.transition
+            for diff in gs.leaf_report(
+                {"s": {"ticks": [10.0, 20.0]}}, {"s": {"ticks": [10.0, 25.0, 30.0]}}
+            )
+        }
+        assert diffs["/s/ticks[1]"] == "value"
+        assert diffs["/s/ticks[2]"] == "absent_to_value"
+
+    def test_a_membership_transition_on_a_string_still_owes_an_investigator(self):
+        """Widening the pairing widens no threshold: R-15 still qualifies it."""
+        diffs = gs.leaf_report(
+            {"s": {"setup": ["Q"]}}, {"s": {"setup": ["E", "Q", "R"]}}
+        )
+        assert all(gs.qualifies_for_investigation(diff) for diff in diffs)
+
+
+# ---------------------------------------------------------------------------
 # The coupled baseline (R-11, R-12)
 # ---------------------------------------------------------------------------
 

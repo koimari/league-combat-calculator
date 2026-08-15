@@ -313,6 +313,8 @@ Transition = Literal["value", "zero_to_value", "value_to_zero", "value_to_error"
 
 IDENTITY_FIELD = "event_id"                   # the field a list member carries when it has a
                                               # stable identity: origin id + that origin's ordinal
+ORIGIN_FIELD, ORDINAL_FIELD = "slot", "ordinal"   # the same identity spelled apart rather than
+                                              # pre-joined, which is how a cast row carries it
 
 @dataclass(frozen=True, slots=True)
 class LeafDiff:
@@ -335,13 +337,19 @@ def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
 def leaf_report(old: Mapping, new: Mapping) -> tuple[LeafDiff, ...]:
     """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
 
-    List members carrying IDENTITY_FIELD are paired by that identity and never by
-    position: a removal or an insertion is one membership transition, and the members
-    that survive it compare against themselves rather than against whichever record
-    the shift slid into their place.  A member both sides hold keeps the *baseline's*
-    ordinal in its path, which is the address every committed allowlist and receipt
-    already spells.  Fail-closed: a list with a duplicate or a missing identity is
-    paired positionally, never half by identity and half by position."""
+    List members carrying a record identity — IDENTITY_FIELD, or ORIGIN_FIELD beside
+    ORDINAL_FIELD — are paired by it and never by position: a removal or an insertion
+    is one membership transition, and the members that survive it compare against
+    themselves rather than against whichever record the shift slid into their place.
+    A member both sides hold keeps the *baseline's* ordinal in its path, which is the
+    address every committed allowlist and receipt already spells.  A list of bare
+    strings has no fields to be identified by, so its members are paired by the
+    strings themselves — but only when the two lists differ in length, since an
+    equal-length list gained and lost nothing and a substitution there is still the
+    one text_change it is.  Numbers are never value-identified: R-15 grades a numeric
+    move by magnitude and a removal-plus-addition throws that away.  Fail-closed: a
+    list with a duplicate or a missing identity is paired positionally, never half by
+    identity and half by position."""
 def qualifies_for_investigation(diff: LeafDiff) -> bool:
     """R-15's threshold — the one predicate that decides an investigator is owed."""
 def capture_coupled(scenarios: Sequence[CoupledScenario], *, producers: frozenset[str],

@@ -488,6 +488,16 @@ ABSENT = _Absent()
 # ``_identity_index``.
 IDENTITY_FIELD = "event_id"
 
+# The same identity spelled apart instead of pre-joined: an origin and that
+# origin's own ordinal.  ``cast_timeline`` is the live case — its rows carry
+# ``slot`` and a per-slot ``ordinal``, so ``Q#2`` names the same cast however
+# many rows precede it — and it is the list whose insertion at Phase 0B's C6
+# re-addressed seven later rows into three oracle briefs about casts nobody
+# had disputed.  One concept, two spellings; nothing here is a second notion
+# of identity.
+ORIGIN_FIELD = "slot"
+ORDINAL_FIELD = "ordinal"
+
 
 @dataclass(frozen=True, slots=True)
 class LeafDiff:
@@ -538,15 +548,45 @@ def _classify(old, new):
 
 
 def _identity(member):
-    """One list member's stable identity, or ``None`` when it has none."""
+    """One record's stable identity, or ``None`` when it has none.
+
+    Two spellings of the one notion — an origin and that origin's ordinal.
+    ``IDENTITY_FIELD`` carries it pre-joined; ``ORIGIN_FIELD`` beside
+    ``ORDINAL_FIELD`` carries it apart, which is how a cast row spells the
+    same fact.  A record's identity is never its *value*, so pairing by it
+    can only ever re-address a member — it can never re-spell a changed
+    field as a removal.
+    """
     if isinstance(member, Mapping):
         value = member.get(IDENTITY_FIELD)
         if isinstance(value, str) and value:
             return value
+        origin = member.get(ORIGIN_FIELD)
+        ordinal = member.get(ORDINAL_FIELD)
+        if (
+            isinstance(origin, str)
+            and origin
+            and isinstance(ordinal, int)
+            and not isinstance(ordinal, bool)
+        ):
+            return f"{origin}#{ordinal}"
     return None
 
 
-def _identity_index(members):
+def _value_identity(member):
+    """A bare string's identity, which is the string — or ``None``.
+
+    A list of bare strings holds members with no fields to be identified by,
+    so the member *is* its address; the rotation record's ``setup``,
+    ``consume`` and ``sources`` lists are the live case.  Numbers are
+    deliberately excluded: a float's identity being its value would re-spell
+    every numeric move as a removal plus an addition and throw away the
+    ``percent`` and ``abs_delta`` that R-15 grades a value change by.
+    """
+    return member if isinstance(member, str) and member else None
+
+
+def _index(members, identity_of):
     """``{identity: position}`` for a list whose every member is identified.
 
     ``None`` when any member carries no identity or two members share one.
@@ -556,11 +596,16 @@ def _identity_index(members):
     """
     index = {}
     for position, member in enumerate(members):
-        identity = _identity(member)
+        identity = identity_of(member)
         if identity is None or identity in index:
             return None
         index[identity] = position
     return index
+
+
+def _identity_index(members):
+    """``{identity: position}`` keyed on the members' own record identities."""
+    return _index(members, _identity)
 
 
 def _identity_keyed_diffs(path, old, new, out):
@@ -575,11 +620,28 @@ def _identity_keyed_diffs(path, old, new, out):
     manufactured value changes against whichever record the shift slid into
     its place.
 
-    Returns False when either side cannot be indexed, leaving the caller to
-    fall back to positional pairing.
+    Two index attempts, in that order, and the second is guarded:
+
+    * by **record identity**, which is never the member's value, so it is
+      always the honest pairing where it succeeds;
+    * failing that, and **only when the two lists differ in length**, by the
+      members' own string values.  The guard is what keeps this from
+      relaxing anything: equal-length string lists cannot have gained or
+      lost a member, so positional pairing is already the right reading and
+      a substitution there stays the single ``text_change`` it is.  Unequal
+      lengths mean a member arrived or left, and positional pairing is then
+      *guaranteed* to compare strings that were never each other.
+
+    Returns False when neither indexing applies, leaving the caller to fall
+    back to positional pairing.
     """
     old_index = _identity_index(old)
     new_index = _identity_index(new)
+    if old_index is None or new_index is None:
+        if len(old) == len(new):
+            return False
+        old_index = _index(old, _value_identity)
+        new_index = _index(new, _value_identity)
     if old_index is None or new_index is None:
         return False
     for identity, position in old_index.items():
@@ -655,10 +717,14 @@ def _reportable(value):
 def leaf_report(old, new):
     """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
 
-    List members that carry an ``event_id`` are paired by that identity and
-    never by position, so a removal or an insertion is one membership
-    transition rather than a run of value changes against the record the
-    shift slid into its place (R-15).
+    List members that carry a record identity — an ``event_id``, or a
+    ``slot`` beside that slot's ``ordinal`` — are paired by it and never by
+    position, so a removal or an insertion is one membership transition
+    rather than a run of value changes against the record the shift slid
+    into its place (R-15).  A list of bare strings whose length changed is
+    paired by the strings themselves, for the same reason and under the
+    length guard in ``_identity_keyed_diffs``: such a member has no fields to
+    be identified by, so its value is the only address it has.
     """
     diffs = []
     _leaf_diffs("", old, new, diffs)
