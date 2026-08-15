@@ -66,6 +66,7 @@ RECEIPTS = ROOT / "docs" / "receipts"
 DOCKET = RECEIPTS / "standing-dissent-docket.json"
 ADJUDICATIONS = RECEIPTS / "standing-dissent-adjudications.json"
 RULINGS = RECEIPTS / "rulings-owed.json"
+UMBRELLA = ROOT / "docs" / "plans" / "2026-08-08-silent-failure-campaign.md"
 
 #: What every cluster carries, whichever way it clears.  ``if_sustained`` is
 #: here because clause 2 is the half a docket most easily loses: a
@@ -285,12 +286,25 @@ def test_a_cluster_answered_by_a_ruling_names_the_owed_row(cluster) -> None:
     debt to a ruling would be the one way to leave it with no forward
     reference at all — which is the resting place the adjudication ledger's
     own rule refuses.
+
+    The join ranges over ``owed`` *and* ``answered``, for the reason
+    ``test_rulings_owed`` gives for the same widening: a row that closes moves
+    lists rather than vanishing, and a join that reads only the open list
+    would break on the commit that answers the question — reading as a
+    dangling forward reference exactly when the reference finally resolves.
+    An answered row is held to more, not less: it must name the amendment
+    that answers it, and that amendment must be findable verbatim in the
+    umbrella, so "answered" is a fact about a document rather than a claim.
     """
     if disposition(cluster) != "owed_ruling":
         assert "owed_ruling_id" not in cluster, cluster["id"]
         return
-    owed = json.loads(RULINGS.read_text(encoding="utf-8"))["owed"]
-    assert cluster["owed_ruling_id"] in {row["id"] for row in owed}, cluster["id"]
+    rulings = json.loads(RULINGS.read_text(encoding="utf-8"))
+    rows = {row["id"]: row for row in rulings["owed"] + rulings["answered"]}
+    assert cluster["owed_ruling_id"] in rows, cluster["id"]
+    row = rows[cluster["owed_ruling_id"]]
+    if row in rulings["answered"]:
+        assert row["amendment"] in UMBRELLA.read_text(encoding="utf-8"), row["id"]
 
 
 def test_a_row_may_not_owe_two_remedies() -> None:

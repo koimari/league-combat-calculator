@@ -538,6 +538,68 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
 5. **Every gate means what it says.** All eleven rows of R-01 in the
    [runbook](silent-failure-runbook.md) are green at every phase boundary; zero pair-engine golden diffs
    outside a slice that declared them in advance with an oracle receipt per qualifying occurrence.
+
+   > **Amendment J — 2026-08-15, how a campaign-authored justification string is adjudicated.**
+   > *Answers `how_a_campaign_authored_justification_string_is_adjudicated` in
+   > `docs/receipts/rulings-owed.json`, the one docketed dissent whose remedy was never an
+   > investigation.* This criterion's oracle-receipt-per-occurrence clause meets a leaf it cannot
+   > mean what it says about. Phase 3's coverage-evidence step reworded an item's coverage reason
+   > from *"the represented mechanic changes defense, not outgoing TDD"* to *"Every declared family
+   > on this item is a defence: the represented mechanic changes durability, not outgoing TDD"*;
+   > R-15 classified the reword a `text_change`, R-19 sent every occurrence to an investigator, and
+   > R-18's export is `data/` plus `docs/math-foundations.md`. Twenty-four receipts adjudicate that
+   > one pair of strings. Twenty-three certified the new one. The twenty-fourth,
+   > `oracle-P3-3.8-leaf24.json`, certified the old one, and its own limitations block says why in
+   > its own words: it read *"Every declared family"* against the family vocabularies that exist in
+   > the cache, found no `defence` family there, and recorded that **a code-level family vocabulary,
+   > if one exists, was out of bounds for this runbook and was not consulted**. One exists.
+   > `item_behavior.RuleFamily` groups its members, `item_coverage` names the defence group, and
+   > `item_coverage.declares_only_defence` is the predicate *the declared family set is non-empty
+   > and contained in that group* — literally the sentence, evaluated.
+   >
+   > **Ruling: a campaign-authored justification string that asserts a fact about `src`-level
+   > vocabulary is adjudicated by SOURCE ASSERTION — a machine check binding the string to the
+   > predicate that produces it — and never by an R-18 investigation, whose export excludes `src/`
+   > by design.** Two halves follow and both are the ruling, not commentary on it. An oracle verdict
+   > on such a string is valid **only for its export-verifiable portion**: a verdict that turns on a
+   > vocabulary the verdict's own limitations block declares out of bounds does not sustain a
+   > dissent, because it is a reading of a question the export was built not to be asked. And the
+   > string **may** assert the `src`-vocabulary fact, because the machine check is what keeps it
+   > true — this campaign's own prose-must-not-outrun-code mechanism, turned on prose. A sentence
+   > bound to the branch that emits it cannot become false without a gate going red, which is
+   > strictly more than an investigator reading the cache could ever certify about it.
+   >
+   > Three guards bound it, in Amendment E's shape, and the third is what keeps it from swallowing
+   > R-18's jurisdiction:
+   >
+   > 1. **One producer, named.** The string must be emitted at exactly one site in `src/`, and the
+   >    check must bind *that* site's own predicate. A check asserting the sentence of a hand-listed
+   >    set of items is not a source assertion; it is the name list this repository already forbids,
+   >    wearing a test's clothes.
+   > 2. **Total over what the sentence quantifies over.** *"Every declared family"* is a universal,
+   >    so its check ranges over every cached item the producer can be asked about, in both
+   >    directions — an item published with that reason declares only defence families, and an item
+   >    declaring only defence families and carrying no more specific receipt is published with that
+   >    reason. A sample of named items measures the examples somebody thought of.
+   > 3. **Only the `src`-vocabulary claim is carved out.** Whatever such a string asserts about the
+   >    cached corpus stays R-18's, and an adverse verdict on that portion is a value question that
+   >    owes its remedy under the R-15/R-18 amendment exactly as before. Here the operative clause —
+   >    a durability mechanic does not change outgoing TDD — is the export-verifiable portion, and
+   >    the receipt certifies it **on both sides**: it is the added universal, and nothing else, that
+   >    this ruling reaches.
+   >
+   > Consequences, stated so no lane has to infer them. `oracle-P3-3.8-leaf24.json` **stands exactly
+   > as filed** — not re-run, not re-graded, not withdrawn; it is answered rather than superseded,
+   > which is why no receipt supersedes it. Its `open_debt` row in
+   > `docs/receipts/standing-dissent-adjudications.json` closes per that ledger's own rule as a
+   > `citation` naming this amendment, and the docket cluster routed here leaves `clusters` by being
+   > answered. The twenty-three-receipt majority stands and is **not** re-rolled: a re-run cites a
+   > defect in the brief it replaces and there is none to cite. No baseline moves, no `src/` moves,
+   > and the string does not move. What lands instead is the ruling's own premise, enforced rather
+   > than assumed: the source assertion guard 1 and guard 2 describe, as a test, so that the day the
+   > defence group or the ladder changes under the sentence, a gate goes red instead of a receipt
+   > going stale.
+
 6. **The hand-maintained adequacy sets are gone.** The five trigger name sets have zero occurrences in
    `src/`; the derived tuple-incapable and enriched-view sets equal the memberships enumerated in their
    docstrings, item for item; all **ten** tuple
