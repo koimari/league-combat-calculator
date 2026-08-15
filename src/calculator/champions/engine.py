@@ -287,6 +287,18 @@ def _stamp_cast_time(
         entry["cast_time"] = cast_time
 
 
+def _is_free_recast(entry: dict[str, Any]) -> bool:
+    """Whether this entry is a recast the parent cast already paid for.
+
+    Camille's and Ambessa's Q2 are: one paid cast buys both halves, so the
+    second spends nothing of its own.  A *charge* is not one — it is a whole
+    cast that happens to have been stocked in advance — and a slot parser
+    that knows the difference says so by stamping its own ``resource_cost``,
+    which the early return below hands back untouched.
+    """
+    return bool(entry.get("recast_of"))
+
+
 def _stamp_resource_cost(
     entry: dict[str, Any],
     ability_json: dict[str, Any] | None,
@@ -295,13 +307,18 @@ def _stamp_resource_cost(
     level: int,
     resource_type: str,
 ) -> None:
-    """Stamp a cast's locally sourced resource cost onto its engine entry."""
+    """Stamp a cast's locally sourced resource cost onto its engine entry.
+
+    A slot parser that stamps its own ``resource_cost`` wins outright — the
+    price of a synthetic slot, which owns no ability JSON of its own, is
+    champion knowledge and only the module has it.
+    """
     if "resource_cost" in entry or ability_json is None:
         return
     if resource_type not in {"MANA", "ENERGY"} or "cooldown" not in entry:
         return
     entry["resource_type"] = resource_type
-    if entry.get("recast_of"):
+    if _is_free_recast(entry):
         entry["resource_cost"] = 0.0
         return
     memo_key = (id(ability_json), rank, level)
@@ -309,15 +326,38 @@ def _stamp_resource_cost(
     if memo is not None and memo[0] is ability_json:
         entry["resource_cost"] = memo[1]
         return
-    modifiers = (ability_json.get("cost") or {}).get("modifiers", [])
-    values = modifiers[0].get("values", []) if modifiers else []
-    if not values:
-        cost = 0.0
-    else:
-        index = level - 1 if len(values) >= 18 else rank - 1
-        cost = 0.0 if index < 0 else float(values[min(index, len(values) - 1)])
+    # Deferred import: slotlib imports the phase constants from this
+    # module, so engine.py must not import slotlib at module level.
+    # pylint: disable-next=import-outside-toplevel,cyclic-import
+    from .slotlib import extract_resource_cost
+
+    cost = extract_resource_cost(ability_json, rank, level)
     _RESOURCE_COST_MEMO[memo_key] = (ability_json, cost)
     entry["resource_cost"] = cost
+
+
+def _stamp_slot_facts(
+    entry: dict[str, Any],
+    ctx: "SlotCtx",
+    *,
+    level: int,
+    resource_type: str,
+) -> None:
+    """Stamp the facts a slot's own cached ability entry carries.
+
+    One call site instead of two, so a slot's cast time and its price are
+    read from the same ability JSON or from neither: a synthetic slot owns
+    no entry at all, and both stamps hand it straight back.
+    """
+    ability_json = ctx.ability()
+    _stamp_cast_time(entry, ability_json)
+    _stamp_resource_cost(
+        entry,
+        ability_json,
+        rank=ctx.rank_for(),
+        level=level,
+        resource_type=resource_type,
+    )
 
 
 # Key shapes that already passed validation.  Entries are rebuilt per
@@ -500,6 +540,7 @@ def build_parser(
             declared_options = declared_option_defaults(champion_name)
         stats = build_stats_context(champion_stats, total_ability_power)
         target = dict(target_stats) if target_stats else {}
+        resource_type = str(champion_data.get("resource", "NONE"))
         results: dict[str, dict[str, Any]] = {}
 
         for slot, parser in ordered:
@@ -517,15 +558,7 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
-                ability_json = ctx.ability()
-                _stamp_cast_time(entry, ability_json)
-                _stamp_resource_cost(
-                    entry,
-                    ability_json,
-                    rank=ctx.rank_for(),
-                    level=level,
-                    resource_type=str(champion_data.get("resource", "NONE")),
-                )
+                _stamp_slot_facts(entry, ctx, level=level, resource_type=resource_type)
                 results[_result_key(slot)] = entry
 
         # Validate AFTER all phases: AMP parsers mutate earlier entries,

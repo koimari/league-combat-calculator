@@ -47,6 +47,7 @@ from .slotlib import (
     extract_cast_time,
     extract_cooldown,
     extract_named,
+    extract_resource_cost,
     extract_value,
     simple_damage,
 )
@@ -167,6 +168,18 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     (D-11): it is what keeps the charge riding Q's slot in a requested
     cast order instead of being dropped, and what the rotation resolver
     reads to place it after Q. Nothing may infer the link from the name.
+
+    Parentage is not price. A stocked charge is a whole cast of Dark
+    Sphere and pays Dark Sphere's mana, so the cost is read off Q's own
+    cached cost row at Q's rank — the engine's free-recast default is for
+    a recast that a single paid cast bought, which this is not:
+
+        Transcendent Bonus: Collecting 40 Splinters of Wrath causes
+        Syndra to periodically stock a Dark Sphere charge, up to a
+        maximum of 2.
+
+    (``data/champions.json`` Syndra Q, effect 2 — the charge gates
+    availability and says nothing about price.)
     """
     if _splinters(ctx) < SPLINTERS_Q_SECOND_CHARGE:
         return None
@@ -181,6 +194,8 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     name = ability.get("name", "Dark Sphere")
     entry = damage_entry(f"{name} (2nd charge)", rank, 0.0, total, "magic")
     entry["recast_of"] = "Q"
+    entry["resource_type"] = str(ability.get("resource", "NONE"))
+    entry["resource_cost"] = extract_resource_cost(ability, rank, ctx.level)
     # The engine can only auto-stamp cast time from the slot's own JSON
     # entry; a synthetic slot copies its parent's.
     cast_time = extract_cast_time(ability)

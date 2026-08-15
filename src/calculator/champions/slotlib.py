@@ -335,6 +335,35 @@ def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
     return float(values[idx])
 
 
+def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
+    """Extract what one cast of this ability spends, from its own cost row.
+
+    The sole home of the cached cost lookup: ``engine._stamp_resource_cost``
+    calls it for every slot that owns an ability JSON, and a synthetic slot —
+    one the wiki has no ability entry for, so the engine cannot reach a cost
+    row on its behalf — calls it with the ability it is a cast of.
+
+    An 18-or-more-value cost row is indexed by level (a per-level cost) and a
+    shorter one by rank, which is the same rule every cached cost row obeys.
+
+    Args:
+        ability: Single ability dict from champion JSON.
+        rank: Ability rank (1-indexed).
+        level: Champion level (1-indexed).
+
+    Returns:
+        Resource units one cast spends, or 0.0 when the row carries no values.
+    """
+    modifiers = (ability.get("cost") or {}).get("modifiers", [])
+    values = modifiers[0].get("values", []) if modifiers else []
+    if not values:
+        return 0.0
+    index = level - 1 if len(values) >= 18 else rank - 1
+    if index < 0:
+        return 0.0
+    return float(values[min(index, len(values) - 1)])
+
+
 _NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _PERCENT = re.compile(r"\d+(?:\.\d+)?\s*%")
 

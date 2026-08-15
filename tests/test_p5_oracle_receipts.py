@@ -24,8 +24,10 @@ and left it being checked by hand, one leaf at a time.
 ``TestTheCoupledCompareIsFullyAllowlisted`` runs R-01 row 3's compare and
 asserts what the phase actually claims: no differing leaf outside a
 committed allowlist, none outside a ``rotation`` receipt object, no
-allowlist entry excusing a diff that no longer moves, and the pair baseline
-identical.  It survives the re-capture — an empty compare satisfies every
+allowlist entry excusing a diff that no longer moves, and no pair-jurisdiction
+leaf outside a committed allowlist either — R-01 row 2's *zero unless the
+slice touches the pair engine*, read the same way as row 3 and through the
+same receipts.  It survives the re-capture — an empty compare satisfies every
 clause.
 """
 
@@ -162,6 +164,22 @@ def _allowlisted_paths():
     return paths
 
 
+def _allowlisted_pair_paths():
+    """Every pair-golden path any committed slice allowlist declares.
+
+    Its coupled sibling above reads one key; this reads the two the pair
+    jurisdiction has used since C6 — the moved leaves and the shape counters
+    that follow them when a leaf is added or removed.
+    """
+    paths: set[str] = set()
+    for path in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        declared = data.get("expected_diff_paths", {})
+        for key in ("golden", "golden_shape_counters"):
+            paths.update(declared.get(key, ()))
+    return paths
+
+
 def unallowlisted(diff_paths, allowlisted):
     """Every differing leaf no committed allowlist declares.
 
@@ -272,7 +290,17 @@ class TestTheCoupledCompareIsFullyAllowlisted:
         assert sorted(declared - differing) == []
 
     def test_the_pair_baseline_is_identical(self) -> None:
-        """R-01 row 2's claim, pinned where the phase's other claims are."""
+        """R-01 row 2's claim, pinned where the phase's other claims are.
+
+        Row 2 reads *zero unless the slice touches the pair engine*, and a
+        slice that does declares its pair-jurisdiction leaves in the same
+        R-17 allowlist that carries its coupled ones — the ``golden`` and
+        ``golden_shape_counters`` keys, which have carried them since C6.
+        Read the way the coupled clause above is read: a pair leaf outside
+        every committed allowlist is the leak this row exists to catch, and
+        Phase 5's own claim (it moved none) survives, because Phase 5's
+        allowlists declare no pair path at all.
+        """
         from scripts.golden_snapshot import (
             COMPARE_EXCLUDED_PROVENANCE,
             leaf_report,
@@ -288,7 +316,13 @@ class TestTheCoupledCompareIsFullyAllowlisted:
         for snapshot in (baseline, current):
             for key in COMPARE_EXCLUDED_PROVENANCE:
                 snapshot.get("metadata", {}).pop(key, None)
-        assert [diff.path for diff in leaf_report(baseline, current)] == []
+        assert (
+            unallowlisted(
+                (diff.path for diff in leaf_report(baseline, current)),
+                _allowlisted_pair_paths(),
+            )
+            == ()
+        )
 
 
 # ---------------------------------------------------------------------------

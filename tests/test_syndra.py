@@ -224,6 +224,56 @@ class TestDarkSphereCharges:
         abilities = _parse(syndra_data, options={"splinters": 39})
         assert "Q2" not in abilities
 
+    def test_the_charge_pays_dark_spheres_own_mana(self, syndra_data) -> None:
+        """A stocked charge is a whole cast and is priced like one.
+
+        The wiki grants the charge and says nothing about price: "Collecting
+        40 Splinters of Wrath causes Syndra to periodically stock a Dark
+        Sphere charge, up to a maximum of 2."  So the charge spends what Q
+        spends at Q's rank, read from Q's own cached cost row rather than
+        typed here.
+        """
+        abilities = _parse(syndra_data, options={"splinters": 40})
+        q_cost = (syndra_data["abilities"]["Q"][0]["cost"]["modifiers"][0]["values"])[4]
+        assert abilities["Q2"]["resource_cost"] == pytest.approx(float(q_cost))
+        assert abilities["Q2"]["resource_cost"] == abilities["Q"]["resource_cost"]
+        assert abilities["Q2"]["resource_type"] == "MANA"
+
+    @pytest.mark.parametrize("rank, expected", [(1, 40.0), (3, 50.0), (5, 60.0)])
+    def test_the_charge_is_priced_at_its_parents_rank(
+        self, syndra_data, rank, expected
+    ) -> None:
+        """Not a fixed number: the charge follows Q's rank down its cost row."""
+        abilities = _parse(
+            syndra_data,
+            options={"splinters": 40},
+            ranks={"Q": rank, "W": 5, "E": 5, "R": 3},
+        )
+        assert abilities["Q2"]["resource_cost"] == pytest.approx(expected)
+
+    def test_the_charge_is_priced_on_the_fights_cast_ledger(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """The stamp is not decoration — the executed timeline carries it.
+
+        Two Q casts and one charge in an 8 s window, and the ledger prices
+        all three at Dark Sphere's cost rather than two of them.
+        """
+        stats = attacker_stats()
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            0.0,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_stats=stats,
+            champion_options={"splinters": 40},
+        )
+        timeline = _fight(stats, abilities)["cast_timeline"]
+        assert [cast["slot"] for cast in timeline] == ["Q", "Q2", "Q"]
+        assert [cast["resource_cost"] for cast in timeline] == [
+            abilities["Q"]["resource_cost"]
+        ] * 3
+
     def test_timed_fight_gets_exactly_one_extra_q(
         self, syndra_data, attacker_stats
     ) -> None:
@@ -428,6 +478,53 @@ def _priced(entry):
 _PIN_SPLINTERS = (39, 60, 120)
 
 
+def _allowlisted_moves():
+    """Every coupled leaf a committed R-17 allowlist claims, with its new value.
+
+    R-17 lands a semantic slice against the *old* baseline plus a committed
+    allowlist and re-captures at the boundary, so between the two a pin that
+    demands byte-equality with the committed entry forbids every correction
+    this campaign exists to make.  What must hold in between is the weaker
+    pair the allowlist itself states: a leaf outside it did not move, and a
+    leaf inside it holds the value its receipt declared.  Once the boundary
+    lands the difference set is empty and both clauses hold trivially.
+    """
+    claimed: set[str] = set()
+    declared: dict[str, object] = {}
+    receipts = (_REPO_ROOT / "docs" / "receipts").glob("expected-golden-diff-*.json")
+    for receipt in sorted(receipts):
+        block = json.loads(receipt.read_text(encoding="utf-8"))
+        paths = block.get("expected_diff_paths", {})
+        for key in ("coupled_golden", "coupled_golden_shape_counters"):
+            claimed.update(paths.get(key, ()))
+        for path, move in (block.get("moved_values") or {}).items():
+            claimed.add(path)
+            declared[path] = move.get("new")
+    return claimed, declared
+
+
+def _pin_diffs(name):
+    """The live run against the committed entry, through R-15's own instrument."""
+    snapshot = _golden_snapshot()
+    live = {"coupled_scenarios": {name: _priced(_capture(name))}}
+    committed = {"coupled_scenarios": {name: _priced(_coupled_baseline()[name])}}
+    return snapshot.leaf_report(committed, live)
+
+
+def _assert_pinned(name):
+    """The scenario reproduces its committed entry, allowlist included."""
+    claimed, declared = _allowlisted_moves()
+    for diff in _pin_diffs(name):
+        assert (
+            diff.path in claimed
+        ), f"{name} moved {diff.path}, which no receipt claims"
+        if diff.path in declared:
+            assert diff.new == declared[diff.path], (
+                f"{name} moved {diff.path} to {diff.new!r}, where the receipt claiming "
+                f"it declares {declared[diff.path]!r}"
+            )
+
+
 class TestTheDerivedOrderPinScenario:
     """Criterion 6 — the 5.0 s Q recast, pinned by the coupled baseline.
 
@@ -440,8 +537,7 @@ class TestTheDerivedOrderPinScenario:
 
     @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
     def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
-        name = f"syndra_derived_order_{splinters}"
-        assert _priced(_capture(name)) == _priced(_coupled_baseline()[name])
+        _assert_pinned(f"syndra_derived_order_{splinters}")
 
     @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
     def test_q_recasts_at_five_seconds(self, splinters) -> None:
@@ -533,8 +629,7 @@ class TestTheCustomOrderPinReadsTheBaseline:
 
     @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
     def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
-        name = f"syndra_custom_order_{splinters}"
-        assert _priced(_capture(name)) == _priced(_coupled_baseline()[name])
+        _assert_pinned(f"syndra_custom_order_{splinters}")
 
     def test_the_requested_order_keeps_the_second_charge(self) -> None:
         entry = _capture("syndra_custom_order_120")
