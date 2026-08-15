@@ -64,6 +64,16 @@ Usage:
 
 from __future__ import annotations
 
+# Two thirds of this file is a committed exception table, not logic: the
+# collision allowlist grows by one block every time a capture makes a shape
+# count a small, common integer, and each row carries the sentence that
+# excuses it.  The size warning would fire on every such capture and says
+# nothing about the checks below, which is why it is silenced here and not
+# ratcheted around.  The alternative -- moving the table to a receipt the way
+# every other campaign allowlist lives -- is a change to where this gate reads
+# its data and belongs to a slice of its own, not to a capture.
+# pylint: disable=too-many-lines
+
 import argparse
 import ast
 import json
@@ -273,6 +283,86 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         value=5,
         context="golden rows | **Recorded ruling: Phase 5",
         reason="H6's ruling names Phase 5; the integer is a phase number",
+    ),
+    *(
+        Allowance(
+            doc=doc,
+            value=value,
+            context=context,
+            reason=(
+                f"{what}, which happens to equal coupled_golden{block}.entries "
+                "since the two covering rosters joined the coupled scenario set "
+                "on 2026-08-15 (umbrella Amendment L, Ruling 2)"
+            ),
+        )
+        # The same shape as the block above, one capture later: a scenario
+        # count is a small integer, and small integers are everywhere in
+        # prose about margins, members and sites.
+        for doc, value, block, context, what in (
+            (
+                "phase-0-gates-and-corrections.md",
+                15,
+                "",
+                "IMMOBILIZING_CC_KINDS",
+                "the member count of an ability-spec constant",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                15,
+                "",
+                "sites are all",
+                "the count of `ast.Call` name sites in `damage.py`",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                15,
+                "",
+                "name sites",
+                "the same site count, in the migration's own inventory",
+            ),
+            (
+                "phase-4-program-engine.md",
+                15,
+                "",
+                "margin",
+                "an allocation-probe margin in percent",
+            ),
+            (
+                "silent-failure-runbook.md",
+                15,
+                "",
+                "peak, one isolated evaluation",
+                "the same margin, where R-28 declares it",
+            ),
+            (
+                "silent-failure-runbook.md",
+                15,
+                "",
+                "allocation_probe` peak stays within its",
+                "the same margin, in the criterion that reads it",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                19,
+                "_exact",
+                "ALLY_ITEM_EFFECTS",
+                "the entry count of a registry and the size of `ActionKind`",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                19,
+                "_exact",
+                "Undeclared `ITEM_EFFECTS`",
+                "the same registry count, in the frontier table",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                19,
+                "_exact",
+                "`ActionKind`s, every support producer",
+                "the size of `ActionKind`, in the closure criterion",
+            ),
+        )
     ),
 )
 

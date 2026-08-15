@@ -92,12 +92,23 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     Neither could be re-keyed the way an allowlist can: a commit body is
     history and a superseded oracle receipt is never edited, so a row whose
     figure a capture supersedes simply stops having a site.
+
+    And it fell to two, across two sources, at the deferral-coverage capture —
+    the widest supersession the campaign has had, because that capture moved
+    every coupled census at once, so every row still keyed to one of them
+    stopped having a site together.  What is left is the pair snapshot's entry
+    count in the oracle receipt that adjudicates it, which no capture since
+    0A.2 has superseded, and that capture's own allowlist, which claims the
+    coupled leaf counter in order to supersede the boundary pin on it and so
+    cannot make the claim without stating the figure.  A residue this small is
+    not the criterion being discharged: the number is what it is because a
+    capture moved, and the next forced restatement will raise it again.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 7
+    assert block["forced_restatements"] == 2
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 5
+    assert len({row.source for row in forced}) == 2
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

@@ -3,8 +3,10 @@
  "artifact": "receipt_walk_retirement_schedule",
  "families": {
   "active_cast": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "immolate_active_bruiser_roster"
+   ],
    "declared_rules": [
     "hextech_gunblade.active",
     "hextech_rocketbelt.active",
@@ -14,7 +16,7 @@
     "tiamat.active"
    ],
    "deferral_row": "active_cast/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/active_cast.py",
    "owners": [
     "Hextech Gunblade",
@@ -24,8 +26,10 @@
     "Stridebreaker",
     "Tiamat"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "immolate_active_bruiser_roster": 1790
+   },
+   "population_total": 1790,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -99,8 +103,10 @@
    ]
   },
   "charged_strike": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster"
+   ],
    "declared_rules": [
     "bastionbreaker.shaped_charge",
     "dead_mans_plate.empowered_hit",
@@ -117,7 +123,7 @@
     "yun_tal_wildarrows.swing_rate"
    ],
    "deferral_row": "charged_strike/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
    "interpreter_module": "src/calculator/interpreters/charged_strike.py",
    "owners": [
     "Bastionbreaker",
@@ -134,8 +140,10 @@
     "Voltaic Cyclosword",
     "Yun Tal Wildarrows"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "crit_onhit_carry_roster": 3498
+   },
+   "population_total": 3498,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -201,23 +209,27 @@
    ]
   },
   "crit_profile": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster"
+   ],
    "declared_rules": [
     "infinity_edge.crit_damage_bonus",
     "navori_flickerblade.cooldown_refund",
     "sundered_sky.forced_crit"
    ],
    "deferral_row": "crit_profile/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
    "interpreter_module": "src/calculator/interpreters/crit_profile.py",
    "owners": [
     "Infinity Edge",
     "Navori Flickerblade",
     "Sundered Sky"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "crit_onhit_carry_roster": 3498
+   },
+   "population_total": 3498,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -231,23 +243,27 @@
    ]
   },
   "damage_routing": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "immolate_active_bruiser_roster"
+   ],
    "declared_rules": [
     "deaths_dance.ignore_pain",
     "serpents_fang.shield_bypass",
     "the_collector.execute"
    ],
    "deferral_row": "damage_routing/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/damage_routing.py",
    "owners": [
     "Death's Dance",
     "Serpent's Fang",
     "The Collector"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "immolate_active_bruiser_roster": 1790
+   },
+   "population_total": 1790,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -333,8 +349,10 @@
    ]
   },
   "on_hit_strike": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster"
+   ],
    "declared_rules": [
     "blade_of_the_ruined_king.on_hit",
     "guinsoos_rageblade.on_hit",
@@ -346,7 +364,7 @@
     "wits_end.on_hit"
    ],
    "deferral_row": "on_hit_strike/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
    "interpreter_module": "src/calculator/interpreters/on_hit_strike.py",
    "owners": [
     "Blade of the Ruined King",
@@ -358,8 +376,10 @@
     "Titanic Hydra",
     "Wit's End"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "crit_onhit_carry_roster": 3498
+   },
+   "population_total": 3498,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -373,8 +393,10 @@
    ]
   },
   "opening_defense": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "immolate_active_bruiser_roster"
+   ],
    "declared_rules": [
     "bloodthirster.ichorshield",
     "celestial_opposition.blessing_of_the_mountain",
@@ -384,7 +406,7 @@
     "wardens_mail.rock_solid"
    ],
    "deferral_row": "opening_defense/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/opening_defense.py",
    "owners": [
     "Bloodthirster",
@@ -394,8 +416,10 @@
     "Randuin's Omen",
     "Warden's Mail"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "immolate_active_bruiser_roster": 1790
+   },
+   "population_total": 1790,
    "retiring_act": {
     "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
     "already_performed": true,
@@ -409,8 +433,10 @@
    ]
   },
   "periodic": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "immolate_active_bruiser_roster"
+   ],
    "declared_rules": [
     "bamis_cinder.continuous_aura",
     "blackfire_torch.refreshed_burn",
@@ -421,7 +447,7 @@
     "unending_despair.fixed_interval"
    ],
    "deferral_row": "periodic/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/periodic.py",
    "owners": [
     "Bami's Cinder",
@@ -432,8 +458,10 @@
     "Sunfire Aegis",
     "Unending Despair"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "immolate_active_bruiser_roster": 1790
+   },
+   "population_total": 1790,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -483,19 +511,23 @@
    ]
   },
   "secondary_target": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster"
+   ],
    "declared_rules": [
     "runaans_hurricane.secondary_target"
    ],
    "deferral_row": "secondary_target/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
    "interpreter_module": "src/calculator/interpreters/secondary_target.py",
    "owners": [
     "Runaan's Hurricane"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "crit_onhit_carry_roster": 3498
+   },
+   "population_total": 3498,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -551,8 +583,10 @@
    ]
   },
   "threshold_defense": {
-   "coupled_baseline_is_blind_to_this_family": true,
-   "covering_coupled_scenarios": [],
+   "coupled_baseline_is_blind_to_this_family": false,
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster"
+   ],
    "declared_rules": [
     "guardian_angel.rebirth",
     "hexdrinker.lifeline_hexdrinker",
@@ -563,7 +597,7 @@
     "steraks_gage.lifeline_sterak"
    ],
    "deferral_row": "threshold_defense/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: 0 on the coupled baseline, which holds no scenario putting one of this family's owners on a participant. That is a declared emptiness and not a clean bill: the retiring slice has no roster-path signal at all, so it owes a covering scenario or a non-golden numeric gate of its own before it may claim anything (D-93, R-11).",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
    "interpreter_module": "src/calculator/interpreters/threshold_defense.py",
    "owners": [
     "Guardian Angel",
@@ -574,8 +608,10 @@
     "Seraph's Embrace",
     "Sterak's Gage"
    ],
-   "population_by_scenario": {},
-   "population_total": 0,
+   "population_by_scenario": {
+    "crit_onhit_carry_roster": 3498
+   },
+   "population_total": 3498,
    "retiring_act": {
     "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
     "already_performed": true,
@@ -589,17 +625,7 @@
    ]
   }
  },
- "families_with_no_covering_coupled_scenario": [
-  "active_cast",
-  "charged_strike",
-  "crit_profile",
-  "damage_routing",
-  "on_hit_strike",
-  "opening_defense",
-  "periodic",
-  "secondary_target",
-  "threshold_defense"
- ],
+ "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
  "rule": "Umbrella criterion 7's fourteen receipt-walk deferrals, sized as the fourteen slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
  "scheduled_slices": 14,

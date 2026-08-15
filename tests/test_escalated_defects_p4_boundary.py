@@ -540,10 +540,18 @@ class TestTheOwedPopulationIsAnswered:
     def test_the_live_chain_declares_every_link(self):
         """Each claim is a declaration in the tree, not an inference here.
 
-        Two links now: H2's allowlist supersedes this ledger's pin, and the
-        campaign-close disposition allowlist supersedes H2's claim.  Each
-        names its own predecessor, so the chain is readable in the receipts
-        rather than reconstructed from which value happens to be live.
+        H2's allowlist supersedes this ledger's pin, and every later capture
+        that moves the leaf again names the claim it replaces.  Each names its
+        own predecessor, so the chain is readable in the receipts rather than
+        reconstructed from which value happens to be live.
+
+        Asserted as the *shape* of the chain rather than as its membership on
+        the day it was written: one unbroken run rooted at this ledger's own
+        entry, reaching every claim there is.  A capture that moves the leaf
+        again lands as one more link and is checked by the same three
+        sentences; a claim that forks the chain, orphans itself on a
+        predecessor nothing reaches, or arrives without a reason still fails
+        here.
         """
         claims = {
             name: row["supersedes"]
@@ -553,15 +561,17 @@ class TestTheOwedPopulationIsAnswered:
             and isinstance(row, dict)
             and isinstance(row.get("supersedes"), dict)
         }
-        assert set(claims) == {
-            "expected-golden-diff-P4-H2-ccscope.json",
-            "expected-golden-diff-campaign-close-dispositions.json",
-        }
-        root = claims["expected-golden-diff-P4-H2-ccscope.json"]
+        successor = {link["receipt"]: name for name, link in claims.items()}
+        assert len(successor) == len(claims), "two claims share one predecessor"
+        walked, predecessor = [], RECEIPT.name
+        while predecessor in successor:
+            predecessor = successor[predecessor]
+            walked.append(predecessor)
+        assert set(walked) == set(claims), "a claim the chain never reaches"
+        assert len(walked) >= 2, "the chain is too short to be the join it stands for"
+        root = claims[walked[0]]
         assert root["receipt"] == RECEIPT.name
         assert root["entry"] == RETIRED_ID
-        second = claims["expected-golden-diff-campaign-close-dispositions.json"]
-        assert second["receipt"] == "expected-golden-diff-P4-H2-ccscope.json"
         assert all(link["why"].strip() for link in claims.values())
 
     def test_an_allowlist_that_only_spells_the_path_does_not_supersede(self):

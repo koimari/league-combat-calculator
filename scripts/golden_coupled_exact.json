@@ -46,6 +46,18 @@
       "combat/2:enemy:Aatrox/outgoing": "5377.4",
       "fights/0:Aatrox": "3933.8"
     },
+    "crit_onhit_carry_roster": {
+      "combat/0:main/incoming": "2569.4",
+      "combat/0:main/outgoing": "6954.4",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "745.1",
+      "combat/2:enemy:Aatrox/incoming": "4780.0",
+      "combat/2:enemy:Aatrox/outgoing": "2986.2",
+      "combat/3:enemy:Malphite/incoming": "2919.6",
+      "combat/3:enemy:Malphite/outgoing": "1712.2",
+      "fights/0:Aatrox": "8220.1",
+      "fights/1:Malphite": "10525.6"
+    },
     "dream_maker_roster": {
       "combat/0:main/incoming": "1774.1",
       "combat/0:main/outgoing": "377.2",
@@ -54,6 +66,15 @@
       "combat/2:enemy:Aatrox/incoming": "1176.0",
       "combat/2:enemy:Aatrox/outgoing": "3376.3",
       "fights/0:Aatrox": "377.2"
+    },
+    "immolate_active_bruiser_roster": {
+      "combat/0:main/incoming": "2562.0",
+      "combat/0:main/outgoing": "5335.3",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "703.2",
+      "combat/2:enemy:Aatrox/incoming": "6038.4",
+      "combat/2:enemy:Aatrox/outgoing": "4691.0",
+      "fights/0:Aatrox": "5654.8"
     },
     "mandate_abyssal_curse_roster": {
       "combat/0:main/incoming": "1884.9",
@@ -158,16 +179,16 @@
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 17,
-      "leaves": 119,
+      "entries": 19,
+      "leaves": 136,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e40ac6800b8a2e8549a298bdc53ce023efb81774",
+    "git_head": "52b56bcc2976322d6e06e19aaa5b6dc4eba50f97",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 17,
+    "scenario_count": 19,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "a8947d1a8a0053a461ebf463e6d3c391c5b2ba8c"
+    "src_tree_sha": "b084d5542bf9125c11440270b5775aa114b77d96"
   }
 }

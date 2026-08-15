@@ -46,6 +46,17 @@
    "immolate_active_bruiser_roster"
   ]
  },
+ "expected_diff_values": {
+  "/metadata/fingerprint/leaves": {
+   "old": 23348,
+   "new": 41093,
+   "why": "The two covering rosters' own leaves, and nothing else: every leaf the baseline already held is byte-identical across the capture. Stated here because R-17 obliges an allowlist to state both sides of every path it claims, which is umbrella criterion 4's Amendment H carve-out and not a second home -- the figure sits inside the artifact adjudicating this exact leaf, names the leaf by its path, and agrees with docs/receipts/campaign-fingerprints.json, which remains the sole home.",
+   "supersedes": {
+    "receipt": "expected-golden-diff-campaign-close-dispositions.json",
+    "why": "This leaf is one of the sixty escalated-defects-P4-boundary.json pins, and the disposition slice's allowlist holds the live claim on it. This capture moves it again, so the claim names the claim it replaces rather than the ledger entry three moves back: supersession is a chain, every link is declared in advance, and a boundary row is never edited afterwards."
+   }
+  }
+ },
  "oracle_pass": {
   "status": "NOT_OWED_BY_CITATION",
   "why": "R-15's amendment of 2026-08-14: a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict. Both scenario occurrences are absent_to_value as the identity-keyed leaf_report classifies them, which is the amendment's first guard; they are rows a captured snapshot did not hold because the scenario did not exist, not values that moved. The ruling that puts them there is one a reader can open, which is the amendment's second guard: the umbrella's Amendment L, Ruling 2 -- 'the covering scenarios land first, and they are an R-12 integration act ... So the covering scenario lands first, as its own act ... Scenario, then re-capture, then that family's retirement slice.' No oracle receipt is owed on either, and one may not be filed as though the question were a value question: no cached wiki text and no formula in docs/math-foundations.md decides whether a roster should be measured.",
