@@ -73,7 +73,22 @@
    },
    "remedy": "an owed ruling, not an investigation. Routed to docs/receipts/rulings-owed.json as `how_a_campaign_authored_justification_string_is_adjudicated`. Sending it to a fresh investigator would be oracle shopping with extra steps: a re-run must cite a defect in the prior brief, and this brief has none.",
    "owed_ruling_id": "how_a_campaign_authored_justification_string_is_adjudicated",
-   "if_sustained": "not applicable -- clause 2 fires on a sustained whole-series verdict, and no whole-series verdict is owed here. The debt closes when the ruling lands, and the adjudication row stays `open_debt` until it does."
+   "if_sustained": "not applicable -- clause 2 fires on a sustained whole-series verdict, and no whole-series verdict is owed here. The debt closes when the ruling lands, and the adjudication row stays `open_debt` until it does.",
+   "the_sibling_census": {
+    "dated": "2026-08-15",
+    "measured_by": "the implementation lane that was handed clause 2 for this cluster, from the committed receipts alone",
+    "what_was_counted": "Every committed oracle-P3-3.8-leaf*.json whose leaf_path ends in item_coverage[0]/reason. All 24 carry the SAME (old_value, new_value) pair -- one distinct pair across the whole set -- because one predicate in item_coverage.py produces the string and the coverage payload publishes it at four addresses in each of the six Syndra scenarios.",
+    "the_count": {
+     "receipts_on_the_identical_question": 24,
+     "new_value_correct": 23,
+     "old_value_correct": 1,
+     "the_one": "oracle-P3-3.8-leaf24.json, this cluster's whole membership",
+     "same_scenario_siblings": "Three of the 23 -- leaf26, leaf28 and leaf30 -- are the other three addresses of syndra_derived_order_39, the same scenario leaf24 adjudicates, and all four carry the same date, so no supersession orders them."
+    },
+    "why_this_is_a_fact_about_the_question": "It states no answer and grades no receipt. What it establishes is that clause 2's precondition is not met here in the way it was met for the cast-timeline cluster: there, two independent readings stood against the committed value and none for it; here, twenty-three stand for it and one against, and every one of the 24 was asked the same question with the same two strings. A src/ correction moving the string to satisfy the one would pin the baseline over the twenty-three, which is R-19's own failure shape pointing the other way. That is a reason a lane may not fire clause 2 on this row, not a reason the dissent is wrong.",
+    "and_what_it_does_not_decide": "Nothing. The remedy is unchanged and is still the owed ruling this row already names; the census is one more fact the ruling may read. No receipt is edited, no verdict is graded, and leaf24 stands exactly as filed.",
+    "a_second_fact_the_ruling_may_want": "leaf24's own limitations block records that a code-level family vocabulary, if one exists, was out of bounds for R-18's export and was not consulted. One does: item_behavior.RuleFamily groups its members into strike, pricing, defence and neither, and item_coverage.declares_only_defence is the predicate 'every declared family is in the defence group'. Whether a campaign-authored string may assert something true of a src/ vocabulary that the permitted evidence tree cannot see is the ruling's question and not a lane's; it is recorded here because the receipt raised it about itself."
+   }
   }
  ],
  "escalated_by_this_docket": {

@@ -38,6 +38,17 @@ that list from becoming the resting place a routed debt was already refused:
 every receipt in it is joined, through the adjudication ledger, to a filed
 receipt that exists, adjudicates the *same leaf*, and carries
 ``new_value_correct``.
+
+The coverage-prose row carries one measurement and it is recomputed here.
+That row's whole content is that its brief has no defect to name, so what a
+lane may still measure is the *shape of the population* its single receipt
+belongs to: one predicate produces the string, the payload publishes it at
+four addresses in each of six scenarios, and twenty-four receipts adjudicate
+the identical pair of strings.  Which way they went is the fact the owed
+ruling reads, and a number nobody recomputes is the prose this docket exists
+to stop being — so :func:`test_the_sibling_census_reproduces` counts them
+from the receipts, and its sibling refuses a census that has silently become
+an average over two different questions.
 """
 
 from __future__ import annotations
@@ -336,3 +347,53 @@ def test_the_recorded_counts_reproduce(scan) -> None:
     }
     assert sum(counted.values()) == len(_clusters())
     assert scan.report()["by_kind"]["open_debt"] == len(open_debts())
+
+
+def _reason_prose_receipts() -> list[dict]:
+    """Every committed receipt adjudicating the all-defence coverage string.
+
+    Found by the leaf they address rather than by a list, so a receipt filed
+    later joins the census by existing.
+    """
+    bodies = []
+    for path in sorted(RECEIPTS.glob("oracle-P3-3.8-leaf*.json")):
+        body = json.loads(path.read_text(encoding="utf-8"))
+        if str(body.get("leaf_path", "")).endswith("item_coverage[0]/reason"):
+            bodies.append(body)
+    return bodies
+
+
+def test_the_sibling_census_reproduces() -> None:
+    """The one measurement the coverage cluster carries, recomputed.
+
+    A census recorded and never recomputed is the prose this docket exists
+    to stop being.  It is also the fact that decides whether clause 2 may
+    fire on this row at all, so it is the last thing that should be taken on
+    the file's word.
+    """
+    census = next(
+        cluster
+        for cluster in _clusters()
+        if cluster["id"] == "item_coverage_reason_prose"
+    )["the_sibling_census"]
+    bodies = _reason_prose_receipts()
+    counted = Counter(body["verdict"] for body in bodies)
+    recorded = census["the_count"]
+    assert recorded["receipts_on_the_identical_question"] == len(bodies)
+    assert recorded["new_value_correct"] == counted["new_value_correct"]
+    assert recorded["old_value_correct"] == counted["old_value_correct"]
+
+
+def test_the_census_counts_one_question_and_not_several() -> None:
+    """The count means nothing unless every receipt was asked the same thing.
+
+    One predicate produces the string and the payload publishes it at four
+    addresses per scenario, so all of them carry one ``(old_value,
+    new_value)`` pair.  If a future edit gave the addresses different
+    strings, the census would silently become an average over two questions
+    and this is what refuses it.
+    """
+    pairs = {
+        (body["old_value"], body["new_value"]) for body in _reason_prose_receipts()
+    }
+    assert len(pairs) == 1, f"the census spans {len(pairs)} distinct questions"
