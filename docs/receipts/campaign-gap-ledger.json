@@ -121,7 +121,8 @@
    "blocker": "An owed ruling, and the campaign's one certification blocker. `docs/receipts/rulings-owed.json`, row `whether_criterion_11s_first_clause_binds_the_campaign_backwards`. Binding the clause backwards schedules some sixty fresh read-only passes, which is a cost with an owner; reading it forwards re-reads 'every slice', which umbrella criterion 11's own words forbid a phase document from doing. A lane may take neither, and the three shortcuts -- manufacturing a record, reconstructing one from the commit bodies being checked, or shrinking the denominator -- are each named and refused in that row.",
    "artifact": "docs/receipts/verify-ledger.json, coverage block",
    "gate": "tests/test_verify_ledger.py",
-   "note": "Mechanically the residue is in good order: the denominator is machine-derived from commit subjects, the forward gate refuses a new slice group that ships with neither a record nor an explicit line, and the number cannot grow in silence. What it does not do is fall."
+   "note": "Mechanically the residue is in good order: the denominator is machine-derived from commit subjects, the forward gate refuses a new slice group that ships with neither a record nor an explicit line, and the number cannot grow in silence. What it does not do is fall. What it now also does is hand the backwards branch over as work: the residue's passes are prepared one row each, so the ruling is a scheduling decision over a known list rather than over an estimate.",
+   "prepared_work": "docs/receipts/verify-backlog.json, gated by tests/test_verify_backlog.py: one startable row per residue slice group. The gap is unchanged -- a prepared pass is not a run pass -- but the branch of the owed ruling that binds the clause backwards is now priced row by row instead of estimated."
   }
  },
  "live_figures": {
