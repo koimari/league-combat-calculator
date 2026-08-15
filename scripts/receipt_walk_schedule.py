@@ -38,7 +38,11 @@ interpreter in the family's *own declared serving lane*, whichever lane the
 row's ``via`` names, discharging criterion 8's own property -- the family's
 numbers reach the walk through exactly one interpreter instead of arriving
 already priced by the pair engine.  So this file derives each row's act from
-its route, and every row has a settled one.  ``delta_amp``, which declares the
+its route, and every row has a settled one.  What each row still publishes for
+itself is whether that act has been **performed**: ``INTERPRETERS`` holds the
+ruled key for the three the resolver feeds and not for the eleven, which is
+the one thing about an act that can be false and so the one worth a field.
+``delta_amp``, which declares the
 pair engine in its structured route while its prose names a second one, is
 answered by the same sentence: the declaration is the route (D-40), so its act
 is the receipt-walk one, and the prose mismatch is recorded beside it as a
@@ -64,6 +68,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 # pylint: disable=wrong-import-position,wrong-import-order
 import golden_snapshot  # noqa: E402
+from calculator import interpreters  # noqa: E402
 from calculator.item_behavior_catalog import behavior_rules, rule_owners  # noqa: E402
 
 RECEIPTS_DIR = REPO_ROOT / "docs" / "receipts"
@@ -155,7 +160,21 @@ def population_size(node: Any) -> int:
     return 1 if isinstance(node, (int, float)) else 0
 
 
-def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
+def registered_lanes(family: str) -> set[str]:
+    """The lanes ``INTERPRETERS`` already holds an interpreter of *family* in.
+
+    Read from the registry rather than from a list here: whether a family's
+    ruled retiring act has been performed is a fact about the tree, and the
+    one place it is written is the registration table itself.
+    """
+    return {
+        lane.value
+        for declared, lane in interpreters.INTERPRETERS
+        if declared.value == family
+    }
+
+
+def _retiring_act(family: str, route: Sequence[str]) -> dict[str, Any]:
     """What retires this row, read off its own declared route.
 
     Amendment F names one act for all fourteen and spells it with one lane,
@@ -164,7 +183,20 @@ def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
     instead: a per-family interpreter in the lane the row itself declares.
     The act is derived from ``via`` rather than assumed, so a row that
     re-declares its route re-derives its act on the same commit.
+
+    ``already_performed`` is the half of the act a reader cannot see from the
+    prose: Amendment K observes that ``INTERPRETERS`` already holds the ruled
+    key for the three rows the defence resolver feeds, so their act is done
+    and what stands is the receipt-walk lane the table still declares.  It is
+    derived from the registry, which is what makes it a fact that can be false
+    -- the field it replaces said ``settled`` on both branches of this
+    function and so could no longer discriminate anything, while the ruling it
+    reported had already made every act settled.  That the acts are settled is
+    said once, in this file's own words; per row, what is worth publishing is
+    which of them still need performing.
     """
+    lanes = [LANE] if tuple(route) == (PAIR_ENGINE,) else list(route)
+    performed = bool(lanes) and set(lanes) <= registered_lanes(family)
     if tuple(route) == (PAIR_ENGINE,):
         return {
             "act": (
@@ -173,8 +205,8 @@ def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
                 "participant_timeline._pair_run_fight produces. This is "
                 "Amendment F's named act and it describes this row as written."
             ),
-            "retiring_lane": [LANE],
-            "settled": True,
+            "retiring_lane": lanes,
+            "already_performed": performed,
             "ruled_by": RULING,
         }
     return {
@@ -190,8 +222,8 @@ def _retiring_act(route: Sequence[str]) -> dict[str, Any]:
             "correcting the lane Amendment F spelled it with and neither "
             "narrowing nor widening the debt."
         ),
-        "retiring_lane": list(route),
-        "settled": True,
+        "retiring_lane": lanes,
+        "already_performed": performed,
         "ruled_by": RULING,
     }
 
@@ -224,7 +256,7 @@ def schedule() -> dict[str, Any]:
             .as_posix(),
             "deferral_row": f"{family}/{LANE}",
             "route_today": route,
-            "retiring_act": _retiring_act(route),
+            "retiring_act": _retiring_act(family, route),
             "declared_rules": sorted(
                 mechanic for ids in owned.values() for mechanic in ids
             ),
@@ -253,6 +285,11 @@ def schedule() -> dict[str, Any]:
         family
         for family, entry in slices.items()
         if tuple(entry["route_today"]) != (PAIR_ENGINE,)
+    )
+    performed = sorted(
+        family
+        for family, entry in slices.items()
+        if entry["retiring_act"]["already_performed"]
     )
     blind = [
         family
@@ -332,6 +369,18 @@ def schedule() -> dict[str, Any]:
         "slices_whose_retiring_act_is_amendment_f_as_written": len(slices)
         - len(lane_corrected),
         "slices_whose_retiring_lane_amendment_k_corrects": list(lane_corrected),
+        "slices_whose_ruled_act_is_already_performed": list(performed),
+        "what_already_performed_does_not_mean": (
+            "Not that the row retires. INTERPRETERS holding the ruled key is "
+            "the act being done; the deferral stands because the family still "
+            "declares a receipt-walk lane the table has no interpreter for, "
+            "and D-40 forbids editing that table from inside the counter it "
+            "moves. So this list is the count of acts performed, never a "
+            "count of debts paid -- fourteen rows in, fourteen slices out. It "
+            "is published per row because it is the one thing about an act "
+            "that can be false, and it replaces a flag that said settled on "
+            "every row and so could not tell a reader anything."
+        ),
         "families_with_no_covering_coupled_scenario": sorted(blind),
         "families": slices,
     }
@@ -362,6 +411,7 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
     for key in (
         "scheduled_slices",
         "slices_whose_retiring_lane_amendment_k_corrects",
+        "slices_whose_ruled_act_is_already_performed",
     ):
         if committed.get(key) != fresh[key]:
             failures.append(f"{key}: committed value differs from derived")

@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import receipt_walk_schedule  # noqa: E402  pylint: disable=wrong-import-position
+from calculator import interpreters  # noqa: E402  pylint: disable=wrong-import-position
 
 SCHEDULE = ROOT / "docs" / "receipts" / "receipt-walk-retirement-schedule.json"
 FRONTIER = ROOT / "docs" / "behavior-frontier.json"
@@ -144,7 +145,6 @@ def test_every_rows_retiring_act_names_the_lane_that_row_declares() -> None:
     assert receipt_walk_schedule.RULING in answered
     for family, entry in block["families"].items():
         act = entry["retiring_act"]
-        assert act["settled"] is True, family
         assert act["ruled_by"] == receipt_walk_schedule.RULING, family
         if entry["route_today"] == [receipt_walk_schedule.PAIR_ENGINE]:
             assert family not in corrected
@@ -155,6 +155,41 @@ def test_every_rows_retiring_act_names_the_lane_that_row_declares() -> None:
     assert block["slices_whose_retiring_act_is_amendment_f_as_written"] == len(
         block["families"]
     ) - len(corrected)
+
+
+def test_whether_a_ruled_act_is_already_performed_is_read_from_the_registry() -> None:
+    """The published per-row fact has to be one that can come back false.
+
+    ``settled`` was published on every row and was ``True`` on both branches
+    of the derivation, so no tree could have made it say anything else -- the
+    ruling it reported had settled every act at once, and a flag that cannot
+    discriminate is a receipt column nobody can read a fact out of.  What
+    replaces it is the half of the act Amendment K actually measured against
+    the tree: whether ``INTERPRETERS`` already holds the row's ruled retiring
+    key.  It is checked here against the registry directly rather than against
+    the derivation that wrote it, so the two would have to agree by accident
+    to pass.
+
+    The split is deliberately not pinned to a number.  Registering one of the
+    eleven is the debt getting smaller, and a test that goes red when its
+    subject improves pins the gap rather than the rule (D-92).
+    """
+    block = schedule()
+    performed = block["slices_whose_ruled_act_is_already_performed"]
+    for family, entry in block["families"].items():
+        act = entry["retiring_act"]
+        registered = {
+            lane.value
+            for declared, lane in interpreters.INTERPRETERS
+            if declared.value == family
+        }
+        expected = set(act["retiring_lane"]) <= registered
+        assert act["already_performed"] is expected, family
+        assert (family in performed) is expected, family
+    assert performed == sorted(performed)
+    assert (
+        "never a count of debts paid" in block["what_already_performed_does_not_mean"]
+    )
 
 
 def test_the_schedule_retires_nothing() -> None:
@@ -172,6 +207,7 @@ def test_the_schedule_retires_nothing() -> None:
         ("drop_a_family", "different set of families"),
         ("shrink_a_population", "committed row differs from derived"),
         ("respell_a_corrected_lane", "committed value differs from derived"),
+        ("claim_an_unperformed_act", "committed value differs from derived"),
     ],
 )
 def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
@@ -186,6 +222,10 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
             if entry["population_total"]
         )
         mutated["families"][family]["population_total"] = 0
+    elif mutation == "claim_an_unperformed_act":
+        mutated["slices_whose_ruled_act_is_already_performed"] = sorted(
+            mutated["families"]
+        )
     else:
         mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
     failures = receipt_walk_schedule.check(mutated)
