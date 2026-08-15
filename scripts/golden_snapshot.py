@@ -953,7 +953,13 @@ def bench_roster_scenarios():
     capture does, so R-01 row 3's jurisdiction is exactly what it was and this
     adds a bit-exactness assertion rather than a new golden surface.
     """
-    from bench_coupled_optimizer import SCENARIOS  # local: scripts-to-scripts
+    # Local and unresolvable to a static checker on purpose: the two scripts
+    # sit in one directory that neither puts on ``sys.path`` at import time,
+    # and hoisting this to the top would make importing the capture harness
+    # import the bench harness -- a scripts-to-scripts dependency at module
+    # scope, for a set only ``--exact`` reads.
+    # pylint: disable-next=import-error,import-outside-toplevel
+    from bench_coupled_optimizer import SCENARIOS
 
     return tuple(
         CoupledScenario(name, dict(request))

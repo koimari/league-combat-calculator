@@ -90,18 +90,15 @@ UNINDEXED_DIRS = frozenset(
     {".git", "__pycache__", "node_modules", ".venv", "vendor", "data"}
 )
 
-# The retired golden figure's literal spellings.
-#
-# Empty, and deliberately so.  The umbrella retired the hand-written
-# scenario-entry figure *and its value together* — criterion 4 forbids restating
-# it even as a warning, "because a doc figure a reader cannot regenerate is
-# exactly how the retired one survived" — so no spelling of it survives anywhere
-# in this tree to pin here.  The constant is the home R-37 gives such a literal:
-# the next figure retired from a plan document lands here, in the instrument,
-# because there is nowhere else it may be written.  The prong is not thereby
-# vacuous — LIVE golden counts are read from the fingerprints receipt at run
-# time and matched the same way, and the mechanism's red is driven on demand by
-# tests/test_plan_audit.py.
+# The retired golden figure's literal spellings.  Empty, deliberately: the
+# umbrella retired the scenario-entry figure *and its value together* —
+# criterion 4 forbids restating it even as a warning, "because a doc figure a
+# reader cannot regenerate is exactly how the retired one survived" — so no
+# spelling of it survives here to pin.  The constant is the home R-37 gives
+# such a literal, and the next retired figure lands here because there is
+# nowhere else it may be written.  The prong is not thereby vacuous: live
+# golden counts are read from the fingerprints receipt at run time and matched
+# the same way, and its red is driven on demand by tests/test_plan_audit.py.
 RETIRED_GOLDEN_FIGURES: tuple[str, ...] = ()
 
 # Blocks of the fingerprints receipt whose integer members are golden shape
@@ -109,14 +106,12 @@ RETIRED_GOLDEN_FIGURES: tuple[str, ...] = ()
 GOLDEN_FINGERPRINT_BLOCKS = ("golden", "coupled_golden", "coupled_golden_exact")
 
 # Prose that makes an adjacent integer a golden shape claim.  ``golden`` matches
-# as a bare word only: ``golden_snapshot.py`` and ``golden-figure`` are
-# identifiers, and a table row number beside a file name is not a shape figure.
+# as a bare word only: ``golden_snapshot.py`` is an identifier, not a figure.
 GOLDEN_SHAPE_KEYWORDS = ("golden", "leaf count", "entry count", "scenario entr")
 
-# The citation marker an integer near those keywords must carry.
+# The citation marker an integer near those keywords must carry, and how many
+# whitespace tokens count as "adjacent" for the proximity prong.
 FINGERPRINT_MARKER = "fingerprint:"
-
-# How many whitespace tokens count as "adjacent" for the proximity prong.
 PROXIMITY_TOKENS = 6
 
 
@@ -139,9 +134,7 @@ class Allowance:
         return self.doc == doc and self.value == value and self.context in line
 
 
-# Committed collision allowlist (R-37).  Every row names the document and the
-# reason, so the docs' many non-golden integers are out of reach by
-# construction rather than by the instrument being lax.
+# Committed collision allowlist (R-37): each row names its document and reason.
 COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
     Allowance(
         doc=doc,
@@ -203,79 +196,77 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         context="rounds to 2 dp",
         reason="golden's rounding precision (R-13), not a count of anything",
     ),
-    Allowance(
-        doc="phase-5-cast-dependency.md",
-        value=119,
-        context="splinters",
-        reason=(
-            "a Syndra splinter count in a cast-order pin, which happens to equal "
-            "coupled_golden_exact.leaves since the bench rosters joined that "
-            "capture — a collision between a game quantity and a shape figure"
-        ),
-    ),
-    Allowance(
-        doc="silent-failure-runbook.md",
-        value=17,
-        context="criterion 17",
-        reason=(
-            "R-32's citation of Phase 4's criterion 17, which happens to equal "
-            "coupled_golden_exact.entries since the bench rosters joined that "
-            "capture — a criterion number, not a scenario count"
-        ),
-    ),
-    Allowance(
-        doc="phase-1-coverage-evidence.md",
-        value=17,
-        context="survival/outcome_state",
-        reason=(
-            "a per-module claim count in the coverage table, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
-    ),
-    Allowance(
-        doc="phase-3-behavior-rules.md",
-        value=17,
-        context="RuleFamily",
-        reason=(
-            "the closed size of the RuleFamily union, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
-    ),
-    Allowance(
-        doc="phase-4-program-engine.md",
-        value=17,
-        context="new modules",
-        reason=(
-            "the count of new program/ modules naming a test front door, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
-    ),
-    Allowance(
-        doc="phase-4-program-engine.md",
-        value=17,
-        context="undeclared modules",
-        reason=(
-            "the same module count, restated as what would break the frontier, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
-    ),
-    Allowance(
-        doc="phase-4-program-engine.md",
-        value=17,
-        context="criterion 17",
-        reason=(
-            "a citation of this phase's own criterion 17, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
-    ),
-    Allowance(
-        doc="phase-4-program-engine.md",
-        value=17,
-        context="criteria 2 and 17",
-        reason=(
-            "the same criterion citation, in the pair it is read with, which happens to equal coupled_golden_exact.entries "
-            "since the bench rosters joined that capture"
-        ),
+    *(
+        Allowance(
+            doc=doc,
+            value=value,
+            context=context,
+            reason=(
+                f"{what}, which happens to equal "
+                f"coupled_golden_exact.{field} since the four bench rosters "
+                "joined that capture on 2026-08-14"
+            ),
+        )
+        # The exact capture's counts became small, common integers the day it
+        # grew: these are collisions, which is what this allowlist is for.
+        for doc, value, field, context, what in (
+            (
+                "phase-5-cast-dependency.md",
+                119,
+                "leaves",
+                "splinters",
+                "a Syndra splinter count in a cast-order pin",
+            ),
+            (
+                "silent-failure-runbook.md",
+                17,
+                "entries",
+                "criterion 17",
+                "R-32's citation of Phase 4's criterion 17",
+            ),
+            (
+                "phase-1-coverage-evidence.md",
+                17,
+                "entries",
+                "survival/outcome_state",
+                "a per-module claim count in the coverage table",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                17,
+                "entries",
+                "RuleFamily",
+                "the closed size of the RuleFamily union",
+            ),
+            (
+                "phase-4-program-engine.md",
+                17,
+                "entries",
+                "new modules",
+                "the count of new program/ modules naming a test front door",
+            ),
+            (
+                "phase-4-program-engine.md",
+                17,
+                "entries",
+                "undeclared modules",
+                "the same module count, as what would break the frontier",
+            ),
+            (
+                "phase-4-program-engine.md",
+                17,
+                "entries",
+                "criterion 17",
+                "a citation of this phase's own criterion 17",
+            ),
+            (
+                "phase-4-program-engine.md",
+                17,
+                "entries",
+                "criteria 2 and 17",
+                "the same criterion citation, in the pair it is read with",
+            ),
+        )
     ),
     Allowance(
         doc=UMBRELLA_NAME,
