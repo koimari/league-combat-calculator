@@ -79,12 +79,17 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     the artifact adjudicating that leaf and agreeing with the committed
     receipt.  It then fell by two when the bench rosters joined the exact
     capture and superseded the old exact leaf count three rows were stating.
+    And it fell by one more at the campaign-close boundary re-capture, in the
+    two directions this file's own rule describes: H2's row retired because
+    the figure it states is now two captures old, and the disposition
+    allowlist's row was re-keyed to the figure that capture made live, because
+    an allowlist states both sides of the move it claims.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 10
+    assert block["forced_restatements"] == 9
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 7
+    assert len({row.source for row in forced}) == 6
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

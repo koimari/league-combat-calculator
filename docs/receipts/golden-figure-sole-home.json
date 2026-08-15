@@ -7,7 +7,6 @@
    "1483b46e",
    "83574329",
    "c2b3d887",
-   "expected-golden-diff-P4-H2-ccscope.json",
    "expected-golden-diff-campaign-close-dispositions.json",
    "oracle-0A.2-golden-leaf0.json",
    "oracle-S9-leaf11.json"
@@ -80,16 +79,10 @@
    "reason": "the scenario count in the phase and re-capture tables, and the report's own note that 13 is a collision rather than a restatement"
   },
   {
-   "source": "expected-golden-diff-P4-H2-ccscope.json",
-   "value": 23310,
-   "kind": "forced_restatement",
-   "reason": "R-17: an R-17 allowlist states the expected old and new value of every path it claims, and one of the paths it claims is a fingerprint shape counter; 23310 is the value the campaign-close re-capture pinned"
-  },
-  {
    "source": "expected-golden-diff-campaign-close-dispositions.json",
-   "value": 23310,
+   "value": 23348,
    "kind": "forced_restatement",
-   "reason": "R-17: an allowlist states the expected old and new value of every path it claims, and this slice claims /metadata/fingerprint/leaves -- the shape counter the thirty-eight added reason keys move. Carved out by the umbrella's Amendment H of 2026-08-14: a quotation at its address, inside the artifact adjudicating that exact leaf, naming the leaf by its path and agreeing with the committed receipt."
+   "reason": "R-17: an allowlist states the expected old and new value of every path it claims, and this one claims /metadata/fingerprint/leaves. Re-keyed from the superseded figure to the live one at the campaign-close boundary re-capture, which is what 'an allowlist states both sides of the move it claims' means once the move lands."
   },
   {
    "source": "expected-golden-diff-P4-S7-bloodsong.json",
@@ -98,5 +91,5 @@
    "reason": "an occurrence count in an R-17 allowlist, which happens to equal coupled_golden_exact.entries since the four bench rosters joined that capture on 2026-08-14. Not a shape figure: the receipt states no snapshot count and its 17 is a number of moved paths."
   }
  ],
- "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails. The 2026-08-14 exact-capture move did it again and in both directions: three rows stating the old exact leaf count retired the moment the capture superseded it, and one allowlist's unrelated occurrence count became a collision the same day. Both are recorded rather than reasoned about, which is what the stale-row check is for."
+ "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails. The 2026-08-14 exact-capture move did it again and in both directions: three rows stating the old exact leaf count retired the moment the capture superseded it, and one allowlist's unrelated occurrence count became a collision the same day. Both are recorded rather than reasoned about, which is what the stale-row check is for. The campaign-close BOUNDARY re-capture did it a third time: the H2 allowlist's row retired outright because its stated figure is now two captures old, and the dispositions allowlist's row was re-keyed to the figure that capture made live -- the same two moves, in the same order, for the same reason."
 }

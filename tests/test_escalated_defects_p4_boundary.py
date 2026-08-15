@@ -103,31 +103,53 @@ def _resolve_supersession(path: str, recorded, blocks):
     allowlist states an old and a new value for every path it claims — is not
     a claim on the boundary and does not override it.
 
-    Two claimants on one path is a contradiction, not a precedence question,
-    so it raises rather than picking one.  *blocks* is the ``(name, parsed
-    allowlist)`` sequence, taken as an argument so the negatives below can
-    pose both failures without writing a file into ``docs/receipts/``.
+    A leaf may move more than once after the boundary, and the campaign-close
+    boundary is where it did: the disposition slice moved the coupled leaf
+    counter that H2's allowlist had already superseded this ledger on.  So the
+    resolution is a **chain** rather than a single hop, and every link is
+    declared the same way — the first claim names this receipt and this entry,
+    a later one names the allowlist whose claim it replaces.  Walking the
+    chain is what keeps a second move a declaration instead of an overwrite;
+    the alternative was editing a boundary row afterwards, which is the one
+    thing this whole mechanism exists to make unnecessary.
+
+    Two claimants on one predecessor is a contradiction, not a precedence
+    question, so it raises rather than picking one — and a claim naming a
+    predecessor no chain reaches is inert, exactly as a claim naming a
+    different entry is.  *blocks* is the ``(name, parsed allowlist)``
+    sequence, taken as an argument so the negatives below can pose every
+    failure without writing a file into ``docs/receipts/``.
     """
-    claims = [
-        (name, row)
-        for name, block in blocks
-        for claimed, row in (block.get("expected_diff_values") or {}).items()
-        if claimed == path
-        and isinstance(row, dict)
-        and isinstance(row.get("supersedes"), dict)
-        and row["supersedes"].get("receipt") == RECEIPT.name
-        and row["supersedes"].get("entry") == RETIRED_ID
-    ]
-    if not claims:
-        return recorded
-    if len(claims) > 1:
-        raise AssertionError(
-            f"{path}: {sorted(name for name, _ in claims)} each claim to "
-            f"supersede {RETIRED_ID}; supersession is not a precedence question"
-        )
-    name, row = claims[0]
-    assert "new" in row, f"{name} claims to supersede {path} without a new value"
-    return row["new"]
+    claims: dict[str, tuple[str, dict]] = {}
+    for name, block in blocks:
+        for claimed, row in (block.get("expected_diff_values") or {}).items():
+            if claimed != path or not isinstance(row, dict):
+                continue
+            supersedes = row.get("supersedes")
+            if not isinstance(supersedes, dict):
+                continue
+            target = supersedes.get("receipt")
+            if target == RECEIPT.name:
+                if supersedes.get("entry") != RETIRED_ID:
+                    continue
+            elif not isinstance(target, str) or not target.startswith(
+                "expected-golden-diff-"
+            ):
+                continue
+            if target in claims:
+                raise AssertionError(
+                    f"{path}: {sorted((claims[target][0], name))} each claim to "
+                    f"supersede {target}; supersession is not a precedence question"
+                )
+            claims[target] = (name, row)
+    value, predecessor, walked = recorded, RECEIPT.name, {RECEIPT.name}
+    while predecessor in claims:
+        name, row = claims[predecessor]
+        assert "new" in row, f"{name} claims to supersede {path} without a new value"
+        assert name not in walked, f"{path}: the supersession chain revisits {name}"
+        value, predecessor = row["new"], name
+        walked.add(name)
+    return value
 
 
 def _committed_allowlists():
@@ -515,27 +537,32 @@ class TestTheOwedPopulationIsAnswered:
         }
         assert claimed == {"/metadata/fingerprint/leaves"}
 
-    def test_the_one_live_claim_declares_what_it_supersedes(self):
-        """The claim is a declaration in the tree, not an inference here."""
-        claimants = [
-            name
+    def test_the_live_chain_declares_every_link(self):
+        """Each claim is a declaration in the tree, not an inference here.
+
+        Two links now: H2's allowlist supersedes this ledger's pin, and the
+        campaign-close disposition allowlist supersedes H2's claim.  Each
+        names its own predecessor, so the chain is readable in the receipts
+        rather than reconstructed from which value happens to be live.
+        """
+        claims = {
+            name: row["supersedes"]
             for name, block in _committed_allowlists()
             for path, row in (block.get("expected_diff_values") or {}).items()
             if path == "/metadata/fingerprint/leaves"
             and isinstance(row, dict)
             and isinstance(row.get("supersedes"), dict)
-        ]
-        assert claimants == ["expected-golden-diff-P4-H2-ccscope.json"]
-        claim = next(
-            row["supersedes"]
-            for name, block in _committed_allowlists()
-            if name == claimants[0]
-            for path, row in block["expected_diff_values"].items()
-            if path == "/metadata/fingerprint/leaves"
-        )
-        assert claim["receipt"] == RECEIPT.name
-        assert claim["entry"] == RETIRED_ID
-        assert claim["why"].strip()
+        }
+        assert set(claims) == {
+            "expected-golden-diff-P4-H2-ccscope.json",
+            "expected-golden-diff-campaign-close-dispositions.json",
+        }
+        root = claims["expected-golden-diff-P4-H2-ccscope.json"]
+        assert root["receipt"] == RECEIPT.name
+        assert root["entry"] == RETIRED_ID
+        second = claims["expected-golden-diff-campaign-close-dispositions.json"]
+        assert second["receipt"] == "expected-golden-diff-P4-H2-ccscope.json"
+        assert all(link["why"].strip() for link in claims.values())
 
     def test_an_allowlist_that_only_spells_the_path_does_not_supersede(self):
         """The filename-order accident this resolution replaced.
@@ -579,6 +606,56 @@ class TestTheOwedPopulationIsAnswered:
                             "supersedes": {
                                 "receipt": RECEIPT.name,
                                 "entry": "some_other_entry",
+                                "why": "test",
+                            },
+                        }
+                    }
+                },
+            )
+        ]
+        assert _resolve_supersession("/x", 7, blocks) == 7
+
+    def test_a_second_move_is_resolved_by_walking_the_declared_chain(self):
+        """The campaign-close shape, posed without reading the receipts.
+
+        A leaf the boundary pinned, moved once and then moved again: the
+        terminal claim wins because each link names its predecessor, not
+        because it sorts last or was committed last.
+        """
+        first = {"receipt": RECEIPT.name, "entry": RETIRED_ID, "why": "test"}
+        blocks = [
+            (
+                "expected-golden-diff-second.json",
+                {
+                    "expected_diff_values": {
+                        "/x": {
+                            "new": 3,
+                            "supersedes": {
+                                "receipt": "expected-golden-diff-first.json",
+                                "why": "test",
+                            },
+                        }
+                    }
+                },
+            ),
+            (
+                "expected-golden-diff-first.json",
+                {"expected_diff_values": {"/x": {"new": 2, "supersedes": first}}},
+            ),
+        ]
+        assert _resolve_supersession("/x", 1, blocks) == 3
+
+    def test_a_claim_naming_a_predecessor_no_chain_reaches_is_inert(self):
+        """The chain does not become a way in for an undeclared claimant."""
+        blocks = [
+            (
+                "expected-golden-diff-orphan.json",
+                {
+                    "expected_diff_values": {
+                        "/x": {
+                            "new": 999,
+                            "supersedes": {
+                                "receipt": "expected-golden-diff-nobody-filed.json",
                                 "why": "test",
                             },
                         }

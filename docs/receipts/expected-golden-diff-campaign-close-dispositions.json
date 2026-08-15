@@ -445,7 +445,12 @@
   },
   "/metadata/fingerprint/leaves": {
    "old": 23310,
-   "new": 23348
+   "new": 23348,
+   "why": "The 38 reason keys the emission adds beside the 38 dispositions it re-spells, and nothing else. numeric_leaves does not move: a disposition and a reason are both strings.",
+   "supersedes": {
+    "receipt": "expected-golden-diff-P4-H2-ccscope.json",
+    "why": "This leaf is one of the sixty escalated-defects-P4-boundary.json pins, and H2's allowlist already declared the successor to that pin. This slice moves it a second time, so the claim names the claim it replaces rather than the ledger entry two moves back -- supersession is a chain and each link is declared, which is what keeps a leaf that moves twice from being resolved by editing a boundary row afterwards. A second claimant on this same predecessor is a contradiction the resolution refuses rather than an ordering it picks."
+   }
   }
  },
  "described_leaves": {

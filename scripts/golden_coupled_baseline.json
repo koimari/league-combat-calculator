@@ -6946,11 +6946,13 @@
             "view_tag": "applied"
           },
           "events[57].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[57].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[57].pair_damage": {
@@ -6966,11 +6968,13 @@
             "view_tag": "applied"
           },
           "events[58].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[58].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[58].pair_damage": {
@@ -7098,11 +7102,13 @@
             "view_tag": "applied"
           },
           "events[63].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[63].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[63].pair_damage": {
@@ -7138,11 +7144,13 @@
             "view_tag": "applied"
           },
           "events[65].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[65].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[65].pair_damage": {
@@ -7198,11 +7206,13 @@
             "view_tag": "applied"
           },
           "events[68].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[68].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[68].pair_damage": {
@@ -7218,11 +7228,13 @@
             "view_tag": "applied"
           },
           "events[69].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[69].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[69].pair_damage": {
@@ -7278,11 +7290,13 @@
             "view_tag": "applied"
           },
           "events[71].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[71].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[71].pair_damage": {
@@ -7318,11 +7332,13 @@
             "view_tag": "applied"
           },
           "events[73].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[73].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[73].pair_damage": {
@@ -7378,11 +7394,13 @@
             "view_tag": "applied"
           },
           "events[76].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[76].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[76].pair_damage": {
@@ -7418,11 +7436,13 @@
             "view_tag": "applied"
           },
           "events[78].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[78].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[78].pair_damage": {
@@ -7438,11 +7458,13 @@
             "view_tag": "applied"
           },
           "events[79].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[79].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[79].pair_damage": {
@@ -7478,11 +7500,13 @@
             "view_tag": "applied"
           },
           "events[80].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[80].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[80].pair_damage": {
@@ -7498,11 +7522,13 @@
             "view_tag": "applied"
           },
           "events[81].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[81].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[81].pair_damage": {
@@ -7518,11 +7544,13 @@
             "view_tag": "applied"
           },
           "events[82].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[82].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[82].pair_damage": {
@@ -8798,7 +8826,8 @@
             "view_tag": "applied"
           },
           "healing_events[44].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[44].healing_reduction_factor": {
@@ -8862,7 +8891,8 @@
             "view_tag": "applied"
           },
           "healing_events[46].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[46].healing_reduction_factor": {
@@ -8926,7 +8956,8 @@
             "view_tag": "applied"
           },
           "healing_events[48].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[48].healing_reduction_factor": {
@@ -9086,7 +9117,8 @@
             "view_tag": "applied"
           },
           "healing_events[52].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[52].healing_reduction_factor": {
@@ -9150,7 +9182,8 @@
             "view_tag": "applied"
           },
           "healing_events[54].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[54].healing_reduction_factor": {
@@ -9214,7 +9247,8 @@
             "view_tag": "applied"
           },
           "healing_events[56].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[56].healing_reduction_factor": {
@@ -9310,7 +9344,8 @@
             "view_tag": "applied"
           },
           "healing_events[59].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[59].healing_reduction_factor": {
@@ -9406,7 +9441,8 @@
             "view_tag": "applied"
           },
           "healing_events[61].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[61].healing_reduction_factor": {
@@ -9438,7 +9474,8 @@
             "view_tag": "applied"
           },
           "healing_events[62].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[62].healing_reduction_factor": {
@@ -9470,7 +9507,8 @@
             "view_tag": "applied"
           },
           "healing_events[63].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[63].healing_reduction_factor": {
@@ -37330,15 +37368,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 13,
-      "leaves": 23310,
+      "leaves": 23348,
       "numeric_leaves": 8312,
       "sections": "coupled_scenarios"
     },
-    "git_head": "7d2975d598256467e4888a55c06404afc6e2dcca",
+    "git_head": "13dd733a23c64c41a7e7e901db089e7ea228a461",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "34ac33f8753f04863815d70eb6328689283a9df9"
+    "src_tree_sha": "890149fb1d4d2955cfe1fd4486d4a472d3d1e9f7"
   }
 }
