@@ -652,10 +652,17 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     """Amendment B: every deferred gap names its reason and its creditor.
 
     The umbrella's dated amendment (criterion 7) rules the receipt-walk gaps
-    that only Phase 4's S3 can retire into committed deferral rows, and makes
-    the Phase-3 exit target 0 net of them.  A deferral is a promise with a
-    creditor, so each row carries the tree's own reason and the stage that
-    owes it — never a stage this module invented.
+    Phase 3 cannot close into committed deferral rows, and makes the Phase-3
+    exit target 0 net of them.  A deferral is a promise with a creditor, so
+    each row carries the tree's own reason and the stage that owes it — never
+    a stage this module invented.
+
+    The stage is asserted to be one the committed stage records declare rather
+    than a literal spelled here.  It was ``"Phase 4 S3"`` until Amendment K
+    re-dated the rows to the closeout, and a test naming the stage of the day
+    goes red on a ruled re-dating instead of on the rule breaking — while
+    resolving it against ``declared_stages`` still catches the thing the
+    literal was there for, a row dated to a stage nothing records.
     """
     block = _receipt()["counters"]["counter_4"]["deferrals"]
     assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
@@ -663,11 +670,12 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
         f"{family.value}/{lane.value}"
         for family, lane in interpreters.uninterpreted_pairs()
     }
+    declared = behavior_frontier.declared_stages()
     for key, row in block["rows"].items():
         assert key in open_gaps, key
         assert row["reason"].strip(), key
         assert row["recorded_stage"] == row["retires_at"], key
-        assert "Phase 4 S3" in row["recorded_stage"], key
+        assert row["recorded_stage"] in declared, key
     # Every deferral is on the receipt walk; the pair engine defers nothing,
     # which is why criterion 4's pair-engine half is discharged outright.
     assert set(block["by_lane"]) == {"receipt_walk"}

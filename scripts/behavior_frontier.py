@@ -624,8 +624,18 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # creditor, which is why the gate refuses a row naming a gap the tree no
 # longer holds, a row the tree's own receipt does not date to the recorded
 # stage, and a gap deferred with no dated row behind it at all.
+#
+# The stage they name is no longer S3.  Amendment F measured that S3 cannot
+# perform the retiring act at all — a row retires when ``INTERPRETERS`` holds
+# its key, and projecting a ledger's quantities onto a payload leaf registers
+# nothing — and umbrella Amendment K (2026-08-15) rules the act per lane and
+# re-dates the rows to the closeout that ruled it.  Re-dating changes what
+# these rows are overdue *against* and nothing about whether they are overdue:
+# the closeout shipped and retired none of them, so all fourteen stay overdue
+# with a blocker.  A re-dating that made them read as on schedule would be the
+# debt getting smaller by being re-dated, which is the one thing it may not buy.
 COUNTER_4_DEFERRALS: Mapping[str, str] = {
-    f"{family}/receipt_walk": "Phase 4 S3 — one kernel, five views"
+    f"{family}/receipt_walk": "Closeout 2026-08-15 — the declared lane's interpreter"
     for family in (
         "active_cast",
         "cast_proc",

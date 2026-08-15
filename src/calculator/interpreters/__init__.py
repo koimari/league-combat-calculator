@@ -26,7 +26,7 @@ derived front-door check (D-95) is what would notice.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, Protocol
 
@@ -400,16 +400,21 @@ _PAIR_PRICED_OR_PACKET_FED = (
 # stronger per-rule form, D-101) and could not have landed sooner, since D-92
 # refuses a row no declaration reaches; H5's stage flipped those rules, so
 # this row is now all that stands between that lane and an unreceipted zero.
+# The receipt walk's rows are counter 4's fourteen deferrals, and Amendment K
+# (2026-08-15) re-dates them to a stage naming the act rather than a slice
+# number; the compiled lane's rows are not deferrals and keep theirs.
 _ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
+_CLOSEOUT = "Closeout 2026-08-15 — the declared lane's interpreter"
 _AMP_LANE = UnservedLane(
     _PAIR_PRICED_OR_PACKET_FED, _ONE_KERNEL, (EngineLane.PAIR_ENGINE,)
 )
+_AMP_WALK_LANE = replace(_AMP_LANE, retires_at=_CLOSEOUT)
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
         (family, lane): UnservedLane(
             reason=_PACKET_FED,
-            retires_at=_ONE_KERNEL,
+            retires_at=_CLOSEOUT if lane is EngineLane.RECEIPT_WALK else _ONE_KERNEL,
             via=(EngineLane.PAIR_ENGINE,),
         )
         for family in (
@@ -426,22 +431,18 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_PACKET_FED,
-        retires_at=_ONE_KERNEL,
-        via=(EngineLane.PAIR_ENGINE,),
+        _PACKET_FED, _CLOSEOUT, (EngineLane.PAIR_ENGINE,)
     ),
     # Sustain's receipt half is no longer a gap — the walk reads its two
     # walk-paid shapes through the registered walk interpreter — so only the
     # compiled lane has a row, packet-fed like the strikes.
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        reason=_PACKET_FED,
-        retires_at=_ONE_KERNEL,
-        via=(EngineLane.PAIR_ENGINE,),
+        _PACKET_FED, _ONE_KERNEL, (EngineLane.PAIR_ENGINE,)
     ),
     **{
         (family, lane): UnservedLane(
             reason=_RESOLVER_FED,
-            retires_at=_ONE_KERNEL,
+            retires_at=_CLOSEOUT if lane is EngineLane.RECEIPT_WALK else _ONE_KERNEL,
             via=(EngineLane.DEFENSE_RESOLVER,),
         )
         for family in (
@@ -466,7 +467,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         retires_at=_ONE_KERNEL,
         via=(EngineLane.RECEIPT_WALK,),
     ),
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_LANE,
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_WALK_LANE,
     (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK): _AMP_LANE,
 }
 
