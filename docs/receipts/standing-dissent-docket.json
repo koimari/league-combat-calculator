@@ -16,7 +16,8 @@
  "pre_change_sources": {
   "coupled_baseline_at_58a43a6": "scripts/golden_coupled_baseline.json as first captured -- the pre-change side for the C6 and P5 clusters, read with `git show 58a43a6:scripts/golden_coupled_baseline.json`",
   "coupled_baseline_at_51db3f6": "the Phase 0 boundary re-capture -- the pre-change side for the P5 seed-retirement cluster, which lands after it",
-  "why_a_sha_and_not_a_quotation": "The amendment says the pre-change side is read from the committed baseline and from nowhere else. A sha is that instruction; a value pasted here is a second home for it."
+  "why_a_sha_and_not_a_quotation": "The amendment says the pre-change side is read from the committed baseline and from nowhere else. A sha is that instruction; a value pasted here is a second home for it.",
+  "why_each_cluster_names_its_own_capture": "Each investigable cluster carries pre_change_capture, the sha its own how_the_defect_was_measured block already names in prose. Structured rather than only stated, for the reason the frontier gives for via: a route named only in a sentence is unverified prose beside a verified count, and a brief assembled from the wrong capture would pose the question against a side nobody disputed. scripts/investigator_brief.py reads this field and reads the baseline out of that git object, never off disk -- the working tree's copy is the post-change side, which is the answer."
  },
  "clusters": [
   {
@@ -51,7 +52,8 @@
     "oracle-C6-leaf8.json",
     "oracle-C6-leaf95.json"
    ],
-   "if_sustained": "clause 2 -- C6's `recast_of=\"Q\"` stamp re-opens as its own ruled src/ slice carrying its own `Expected qualifying occurrences` line. It is never absorbed into a baseline."
+   "if_sustained": "clause 2 -- C6's `recast_of=\"Q\"` stamp re-opens as its own ruled src/ slice carrying its own `Expected qualifying occurrences` line. It is never absorbed into a baseline.",
+   "pre_change_capture": "58a43a6"
   },
   {
    "id": "syndra_rotation_receipt_rederivation",
@@ -116,7 +118,8 @@
     "oracle-P5-retire-leaf53.json",
     "oracle-P5-retire-leaf58.json"
    ],
-   "if_sustained": "clause 2 -- the seed retirement re-opens as its own ruled src/ slice with its own `Expected qualifying occurrences` line, and the rotation the resolver derives is corrected in source rather than pinned."
+   "if_sustained": "clause 2 -- the seed retirement re-opens as its own ruled src/ slice with its own `Expected qualifying occurrences` line, and the rotation the resolver derives is corrected in source rather than pinned.",
+   "pre_change_capture": "51db3f6"
   },
   {
    "id": "abyssal_unmake_support_multiplier_field",
@@ -144,7 +147,8 @@
    "supersedes_on_filing": [
     "oracle-C2-leaf3.json"
    ],
-   "if_sustained": "clause 2 -- C2 re-opens as its own ruled src/ slice. The umbrella's authority table rules `abyssal_mask.unmake` SPLIT with the pair engine keeping `magic_amp`, so a sustained dissent is a dispute with that ruling and is escalated to it rather than absorbed."
+   "if_sustained": "clause 2 -- C2 re-opens as its own ruled src/ slice. The umbrella's authority table rules `abyssal_mask.unmake` SPLIT with the pair engine keeping `magic_amp`, so a sustained dissent is a dispute with that ruling and is escalated to it rather than absorbed.",
+   "pre_change_capture": "58a43a6"
   },
   {
    "id": "item_coverage_reason_prose",
