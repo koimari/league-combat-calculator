@@ -113,13 +113,16 @@ def test_the_export_is_r18s_own_command_and_no_wider() -> None:
 
 
 def test_a_cluster_routed_to_a_ruling_is_refused_by_name() -> None:
-    """Clause 3, enforced rather than described."""
+    """Clause 3, enforced rather than described.
+
+    Not asserted non-empty: a cluster leaves this arm when its ruling lands,
+    and that is the gap closing rather than a gate to protect.
+    """
     routed = [
         entry["id"]
         for entry in json.loads(DOCKET.read_text(encoding="utf-8"))["clusters"]
         if "owed_ruling_id" in entry
     ]
-    assert routed
     for cluster_id in routed:
         with pytest.raises(investigator_brief.BriefError) as raised:
             investigator_brief.build(cluster_id)

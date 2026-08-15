@@ -87,14 +87,17 @@ def test_every_slice_declares_a_population_before_anything_is_edited() -> None:
 def test_a_blind_family_says_it_owes_a_gate_rather_than_reading_as_clean() -> None:
     """An empty population is the sharpest thing here and the easiest to misread.
 
-    Nine of the fourteen families have no committed coupled scenario putting
-    one of their owners on a participant, so a retiring slice for them has no
-    roster-path signal at all.  Read carelessly that is "zero expected
-    occurrences", which is the shape of a clean bill; the row has to say the
-    other thing.
+    A family with no committed coupled scenario putting one of its owners on a
+    participant gives its retiring slice no roster-path signal at all.  Read
+    carelessly that is "zero expected occurrences", which is the shape of a
+    clean bill; the row has to say the other thing.
+
+    The list is deliberately not asserted non-empty.  A scenario that covers
+    one of these families is the gap getting smaller, and a test that goes red
+    when its subject improves is a test that pins the gap rather than the
+    rule -- which is D-92's argument, applied to this file.
     """
     blind = schedule()["families_with_no_covering_coupled_scenario"]
-    assert blind
     for family in blind:
         line = schedule()["families"][family]["expected_qualifying_occurrences"]
         assert "no roster-path signal" in line, family
@@ -120,14 +123,17 @@ def test_every_declared_owner_and_rule_comes_from_the_catalog() -> None:
 def test_a_row_whose_route_is_not_the_pair_engine_is_routed_to_a_ruling() -> None:
     """Amendment F's named act does not describe every row, and this says so.
 
-    The three defence-resolver rows say in their own words that a walk-lane
-    interpreter would be a second producer of one number, which D-60 forbids.
-    A lane may measure that and may not settle it, so the row carries the owed
-    ruling's id and the ruling is really open.
+    A defence-resolver row says in its own words that a walk-lane interpreter
+    would be a second producer of one number, which D-60 forbids.  A lane may
+    measure that and may not settle it, so the row carries the owed ruling's
+    id and that ruling is asserted to be really open.
+
+    As above, the routed list is not asserted non-empty: the day the ruling
+    lands and the rows gain a settled act is the day this gap closes, and it
+    should close by the derivation changing rather than by a red test.
     """
     block = schedule()
     routed = block["slices_routed_to_an_owed_ruling"]
-    assert routed
     owed = {
         row["id"] for row in json.loads(RULINGS.read_text(encoding="utf-8"))["owed"]
     }
