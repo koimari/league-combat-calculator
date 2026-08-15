@@ -28,7 +28,9 @@ when that producer is a second packet on an item some fixture already equips
 (slice 0A.9).
 """
 
+import json
 import re
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -37,9 +39,17 @@ from typing import Any, Mapping
 
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+import golden_snapshot as gs  # noqa: E402  (path is set above)
+
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters import INTERPRETERS, periodic
 from src.calculator.interpreters.reactive import thorns_effects
+from src.calculator.item_behavior import EngineLane, RuleFamily
+from src.calculator.item_effects import DamageInputs
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
@@ -71,8 +81,12 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
 from src.calculator.stats import calculate_total_stats
 
 
@@ -1792,4 +1806,198 @@ class TestThePathIsInertUntilAFamilyOptsIn:
         }
         assert declared_packet_construction_sites(injected) == (
             "src/calculator/interpreters/periodic.py",
+        )
+
+
+# ---------------------------------------------------------------------------
+# From-declaration pricing — the equivalence fixture
+# ---------------------------------------------------------------------------
+#
+# Amendment L, Ruling 3 requires the stage to carry "the from-declaration price
+# against the pair-ratioed one, on a family that has not yet opted in, so the
+# stage is provably a re-spelling before it is ever a re-pricing".  This is
+# that fixture.
+#
+# The family is `periodic`, priced through Sunfire Aegis's immolate: a flat
+# declared rate per second, magic, over the fight's own window.  It is chosen
+# because everything the comparison needs is committed and readable — the
+# family still routes through the pair engine, the covering coupled scenario
+# is the one the retirement schedule records for it, and the pair engine
+# publishes both the number and the effective resistance it priced at.
+#
+# Nothing about the fixture is typed: the scenario, the owner and the rule id
+# are all read, so a schedule that re-covers the family under a different
+# roster fails here instead of quietly comparing the old one.
+
+SCHEDULE_RECEIPT = (
+    Path(__file__).parents[1]
+    / "docs"
+    / "receipts"
+    / "receipt-walk-retirement-schedule.json"
+)
+
+
+@dataclass(frozen=True)
+class DeclaredPricingEquivalence:
+    """One not-yet-opted-in family, and where its two prices can be compared.
+
+    `owner` and `breakdown_key` name the declaring item and the pair engine's
+    row for it; `family` is the deferral row this fixture stands in for, and
+    the scenario is read from that row rather than named here.
+    """
+
+    name: str
+    family: RuleFamily
+    deferral_family_key: str
+    owner: str
+    breakdown_key: str
+
+
+PRICING_EQUIVALENCE = DeclaredPricingEquivalence(
+    name="periodic_immolate",
+    family=RuleFamily.PERIODIC,
+    deferral_family_key="periodic",
+    owner="Sunfire Aegis",
+    breakdown_key="immolate_Sunfire Aegis",
+)
+
+
+def _covering_scenario(fixture):
+    """The committed coupled scenario the retirement schedule covers *fixture* with.
+
+    Read from `receipt-walk-retirement-schedule.json` and resolved against
+    `golden_snapshot.COUPLED_SCENARIOS`, so the two cannot disagree about
+    which roster the family is visible in.
+    """
+    row = json.loads(SCHEDULE_RECEIPT.read_text(encoding="utf-8"))["families"][
+        fixture.deferral_family_key
+    ]
+    assert fixture.owner in row["owners"], "the schedule no longer joins this owner"
+    names = row["covering_coupled_scenarios"]
+    assert names, f"{fixture.deferral_family_key} has no covering scenario"
+    return next(
+        scenario for scenario in gs.COUPLED_SCENARIOS if scenario.name == names[0]
+    )
+
+
+def _pair_priced(fixture):
+    """The pair engine's number for the family, and the fight that priced it."""
+    scenario = _covering_scenario(fixture)
+    parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
+    resolved = resolve_scenario(parsed)
+    params = resolved.target_fight_params[0]
+    result = run_fight(
+        resolved.champion_data, parsed.level, list(resolved.items), params
+    )
+    return parsed, resolved, params, result
+
+
+def _declared_packet(fixture, parsed, resolved, params):
+    """The same family's damage as its own declaration states it: raw.
+
+    Built the way the pair engine builds it — the family's interpreter, at the
+    build context that fight used — so what the comparison isolates is the
+    *mitigation*, which is the half this stage moves.
+    """
+    stats = calculate_total_stats(
+        resolved.champion_data,
+        parsed.level,
+        list(resolved.items),
+        item_options=params.item_options,
+        role=params.role,
+        role_quest_complete=params.role_quest_complete,
+        external_stat_bonuses=params.ally_stat_bonuses,
+    )
+    is_melee = bool(stats.get("is_melee", True))
+    duration = float(params.fight_duration_seconds)
+    owners = [str(item["name"]) for item in resolved.items]
+    slots = periodic.resolve_slots(
+        owners,
+        level=parsed.level,
+        fight_duration_seconds=duration,
+        target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
+        holder_is_melee=is_melee,
+    )
+    row = next(
+        aura for aura in slots.auras if aura.breakdown_key == fixture.breakdown_key
+    )
+    rule = next(
+        declared
+        for declared in periodic.periodic_rules(owners)
+        if declared.owner == fixture.owner
+    )
+    raw = (
+        row.raw_damage(
+            DamageInputs(
+                champion_stats=stats,
+                level=parsed.level,
+                is_melee=is_melee,
+                target_max_health=float(params.target_health),
+                target_current_health=float(params.target_health),
+            )
+        )
+        * duration
+    )
+    return DeclaredPacket(raw, row.damage_type, rule.mechanic_id)
+
+
+class TestTheFromDeclarationPriceReproducesThePairEngines:
+    """The stage is a re-spelling before it is ever a re-pricing."""
+
+    def test_the_fixture_family_has_not_opted_in(self):
+        """The comparison is only worth something on a family still deferred.
+
+        Two halves, because either alone can be true of an opted-in family:
+        no receipt-walk interpreter is registered for it, and no packet in the
+        tree carries a declaration at all.
+        """
+        assert (PRICING_EQUIVALENCE.family, EngineLane.RECEIPT_WALK) not in INTERPRETERS
+        assert declared_packet_construction_sites() == ()
+
+    def test_the_declaration_prices_to_the_pair_engines_own_number(self):
+        """Bit-exact, on identical inputs — the fixture this stage owes.
+
+        The pair engine mitigates the family's raw total once, at the fight's
+        effective magic resistance, and hands the walk the result. The walk's
+        own pricer, given the same raw total and the same resistance the
+        packet would carry as its baseline, returns the same float. That is
+        the whole claim: the from-declaration path re-spells a number, it does
+        not move one.
+        """
+        parsed, resolved, params, result = _pair_priced(PRICING_EQUIVALENCE)
+        pair = result["breakdown"][PRICING_EQUIVALENCE.breakdown_key]["total_damage"]
+        packet = _declared_packet(PRICING_EQUIVALENCE, parsed, resolved, params)
+
+        price = price_declared_packet(
+            packet,
+            baseline_effective_armor=float(result["effective_armor"]),
+            baseline_effective_mr=float(result["effective_mr"]),
+        )
+        assert price.amount == pair
+        assert price.resistance == float(result["effective_mr"])
+
+    def test_the_comparison_is_not_vacuous_and_can_fail(self):
+        """R-05's permanent negative for the fixture, in two directions.
+
+        An equality between two numbers proves nothing until both are known
+        to be non-trivial and the equality is known to be breakable. The raw
+        total is positive and strictly larger than the priced one, so
+        mitigation really happened; and the same declaration priced one point
+        of resistance away from the fight's own no longer matches, so the
+        assertion above is sensitive to the number it is checking.
+        """
+        parsed, resolved, params, result = _pair_priced(PRICING_EQUIVALENCE)
+        pair = result["breakdown"][PRICING_EQUIVALENCE.breakdown_key]["total_damage"]
+        packet = _declared_packet(PRICING_EQUIVALENCE, parsed, resolved, params)
+        resistance = float(result["effective_mr"])
+
+        assert packet.raw_amount > pair > 0.0
+        assert resistance > 0.0
+        assert (
+            price_declared_packet(
+                packet,
+                baseline_effective_armor=float(result["effective_armor"]),
+                baseline_effective_mr=resistance + 1.0,
+            ).amount
+            != pair
         )
