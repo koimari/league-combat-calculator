@@ -59,6 +59,13 @@ from tests.test_coupled_golden_allowlist import (  # noqa: E402
     unexplained,
 )
 
+# When a receipt was written, by the same value rule the standing-dissent gate
+# reads it with: any top-level string beginning with an ISO date, earliest
+# wins.  Imported rather than re-derived — eleven spellings are live in
+# docs/receipts/, and a second copy of the rule is a second thing that can
+# quietly stop reading one of them.
+from tests.test_standing_oracle_dissents import receipt_date  # noqa: E402
+
 RECEIPTS = ROOT / "docs" / "receipts"
 RECEIPT = RECEIPTS / "escalated-defects-P4-boundary.json"
 COUPLED_BASELINE = ROOT / "scripts" / "golden_coupled_baseline.json"
@@ -150,6 +157,19 @@ def _resolve_supersession(path: str, recorded, blocks):
         value, predecessor = row["new"], name
         walked.add(name)
     return value
+
+
+def _written_after(body, day):
+    """The date rule as a predicate: undated never postdates."""
+    written = receipt_date(body)
+    return written is not None and written > day
+
+
+def _postdates(name, day):
+    """Was this receipt written after *day*?  Undated reads as no."""
+    return _written_after(
+        json.loads((RECEIPTS / name).read_text(encoding="utf-8")), day
+    )
 
 
 def _committed_allowlists():
@@ -476,12 +496,33 @@ class TestTheOwedPopulationIsAnswered:
         boundary pass rather than predating it; what it is instead is asserted
         by ``TestTheDissentsAreReAdjudicatedUnderTheAmendment`` below, so the
         exclusion is a classification and not a hole.
+
+        Every other later pass is excluded on the same ground, and by date
+        rather than by a second prefix: a leaf may be adjudicated again after
+        the boundary — the campaign-close captures moved
+        ``/metadata/fingerprint/leaves`` twice more, and a receipt filed on it
+        afterwards certifies the figure the *live* tree holds.  Reading that as
+        stale would report a verdict on today's baseline as contradicting a pin
+        today's baseline already superseded by declaration, and the only repair
+        available would be editing a boundary row to admit a receipt written
+        later, which is the one thing this mechanism exists to make
+        unnecessary.  ``dated`` on the entry is the pass's own day, so the
+        population is *receipts that existed when the pass ran*, which is what
+        the two frozen lists were ever a record of.
+
+        A receipt carrying no date at all stays in the population: nothing
+        orders it, so it is read as prior and lands in one of the two lists or
+        turns this red.  That is the direction to fail in — an undated receipt
+        appearing on an owed path stops a commit and gets a date, rather than
+        excusing itself by being unreadable.
         """
+        filed_by = _entry()["dated"]
         for leaf in _population():
             prior = [
                 (name, value)
                 for name, value in _certified_values(leaf["leaf_path"])
                 if not name.startswith((PASS_PREFIX, SUPERSEDING_PREFIX))
+                and not _postdates(name, filed_by)
             ]
             stale = [
                 name
@@ -495,6 +536,28 @@ class TestTheOwedPopulationIsAnswered:
             assert covering == leaf["covering_receipt_that_predated_the_pass"], leaf[
                 "leaf_path"
             ]
+
+    def test_the_later_pass_exclusion_is_live_and_fails_closed(self):
+        """The clause above, made falsifiable at the predicate (R-05's idiom).
+
+        An exclusion nobody exercises is indistinguishable from one that
+        excuses everything, so the first assertion is that some committed
+        receipt really is excluded by date on an owed path.  The other two are
+        the rule itself, injected rather than filed: a later date is excluded,
+        and a receipt carrying no date is not — the fail-closed direction the
+        classification depends on.
+        """
+        day = _entry()["dated"]
+        excluded = [
+            name
+            for leaf in _population()
+            for name, _ in _certified_values(leaf["leaf_path"])
+            if not name.startswith((PASS_PREFIX, SUPERSEDING_PREFIX))
+            and _postdates(name, day)
+        ]
+        assert excluded, "no receipt postdates the pass; the exclusion is vacuous"
+        assert _written_after({"date": "2999-01-01"}, day)
+        assert not _written_after({"verdict": "new_value_correct"}, day)
 
     @pytest.mark.parametrize("index", range(60))
     def test_the_recaptured_baseline_now_holds_the_new_value(self, index):

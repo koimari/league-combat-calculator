@@ -103,12 +103,21 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     cannot make the claim without stating the figure.  A residue this small is
     not the criterion being discharged: the number is what it is because a
     capture moved, and the next forced restatement will raise it again.
+
+    It did, the same day and by three, when the RW-scenarios pass filed
+    verdicts on three of the counters that capture moved: R-19 says an oracle
+    receipt carries the two values of the leaf it adjudicates, and a leaf that
+    IS a shape counter cannot be adjudicated without the figure being written
+    down.  The rise is the carve-out working exactly as the fall was — the
+    same three conditions hold of each row, so what the number records is
+    that three more artifacts now adjudicate a counter, not that the criterion
+    slipped.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 2
+    assert block["forced_restatements"] == 5
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 2
+    assert len({row.source for row in forced}) == 5
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

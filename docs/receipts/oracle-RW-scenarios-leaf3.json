@@ -1,0 +1,133 @@
+{
+  "receipt": "oracle-RW-scenarios-leaf3",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "investigator": "fresh independent oracle; evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were never read",
+  "scenario": "metadata (derived shape counter)",
+  "leaf_path": "/metadata/fingerprint/numeric_leaves",
+  "old_value": 8312,
+  "new_value": 13600,
+  "verdict": "new_value_correct",
+
+  "leaf_classification": {
+    "kind": "derived shape counter (self-referential)",
+    "claim_made_by_leaf": "the number of numeric leaves present in the snapshot's own emitted tree",
+    "is_a_game_quantity": false,
+    "has_external_ground_truth_in_data": false,
+    "consequence": "the leaf carries no independent evidential weight for the change under test; it mirrors the tree it is computed from rather than asserting anything about League of Legends math"
+  },
+
+  "independent_computation": {
+    "goal": "find any quantity derivable from the cached wiki data under data/ (or a formula quoted in docs/math-foundations.md) that equals 8312 or 13600, which would give the leaf an external referent",
+    "method": "exhaustive numeric-leaf enumeration over every JSON file in the exported data/ tree. A numeric leaf was defined as a JSON number (int or float) at any depth; booleans excluded (variants with booleans and with nulls-as-zero were also swept). For each file the following counters were computed: total leaves, non-zero leaves, distinct leaf values, integer-only, float-only. Counts were then aggregated per directory, per top-level section of the two large caches, and searched for 1-, 2- and 3-term subset sums equal to the targets.",
+    "results": {
+      "per_file_totals_numeric_leaves": {
+        "data/items.json": 86022,
+        "data/champions.json": 52810,
+        "data/atoms/items.json": 5566,
+        "data/wiki/article-index.json": 4231,
+        "data/economics-sourced.json": 2171,
+        "data/worklists/e2-dot-ticks.json": 953,
+        "data/atoms/classification-report.json": 933,
+        "data/staleness.json": 869,
+        "data/worklists/e5-mechanics.json": 840,
+        "data/practice-corpus/scenarios.json": 243,
+        "data/runes.json": 222,
+        "all_json_under_data_combined": 157295
+      },
+      "per_directory_totals": {
+        "data (top level files)": 142133,
+        "data/atoms": 7167,
+        "data/wiki": 4231,
+        "data/worklists": 1851,
+        "data/item-atoms": 1496,
+        "data/practice-corpus": 243,
+        "data/champion-audit": 173,
+        "data/bin": 1,
+        "data/wiki-atoms": 0
+      },
+      "champions_json_by_section": {
+        "id": 173,
+        "stats": 22144,
+        "attributeRatings": 1211,
+        "abilities": 28763,
+        "price": 519,
+        "abilities_leveling_modifier_values_only": 22385,
+        "abilities_cooldown_and_cost_modifier_values_only": 6248,
+        "stats_nonzero_only": 6779
+      },
+      "items_json_by_section": {
+        "id": 324,
+        "tier": 324,
+        "specialRecipe": 324,
+        "buildsInto": 506,
+        "buildsFrom": 386,
+        "stats": 42768,
+        "shop": 972,
+        "passives": 40395,
+        "active": 23,
+        "stats_nonzero_only": 705,
+        "sr_legal_subset": "all 324 items carry `classic sr 5v5` in `modes`, so no SR filter narrows the cache"
+      },
+      "variant_counters": {
+        "items.json": {"total": 86022, "nonzero": 2781, "distinct": 517, "int": 2879, "float": 83143},
+        "champions.json": {"total": 52810, "nonzero": 37193, "distinct": 3946, "int": 25910, "float": 26900},
+        "runes.json": {"total": 222, "nonzero": 220, "distinct": 146},
+        "economics-sourced.json": {"total": 2171, "nonzero": 1889, "distinct": 495}
+      },
+      "target_matches": "none. No per-file, per-directory, per-section, non-zero, distinct, int-only, float-only, bool-inclusive or null-inclusive counter equals 8312 or 13600, and no 1-, 2- or 3-term subset sum of those counters equals 8312, 13600, or their difference 5288.",
+      "textual_search": "grep -rn 'numeric_leaves|fingerprint' over the whole exported data/ tree returns nothing; grep -n -i 'numeric_leaves|fingerprint|numeric leaves|shape counter' over docs/math-foundations.md returns nothing."
+    },
+    "conclusion_of_search": "Neither 8312 nor 13600 is a count of anything in the cached wiki data. The leaf therefore does not fingerprint the input cache; it counts the snapshot's own output tree, exactly as the scenario name ('derived shape counter') states.",
+    "reasoning_to_verdict": [
+      "A derived shape counter is computed from the tree at capture time, so for any given tree it is correct by construction: `numeric_leaves` = |{numeric leaves emitted}|.",
+      "8312 was the correct count of the previous tree; it cannot also be the correct count of a tree whose emitted numeric output changed. Holding the old value while the tree changed is what would be wrong.",
+      "13600 is therefore correct for the recaptured tree, and nothing in data/ or docs/math-foundations.md contradicts it — the leaf asserts no game quantity that cached wiki text could refute.",
+      "'both_wrong' would require observing an arithmetic inconsistency between the counter and the tree it counts; that is internal to scripts/golden_baseline.json, which this oracle is forbidden to read, and there is no external evidence pointing to such an inconsistency."
+    ],
+    "scope_limit_stated_plainly": "This verdict is 'correct by construction', not independent corroboration. This leaf cannot validate the change under test. The substantive question — whether the emitted tree *should* have grown by +5288 numeric leaves (+63.6%) — must be answered by the change's own receipt (does the diff add roughly that many numeric outputs: new scenarios, new champions, new per-event rows?), not by this leaf. If the diff adds no such output, the growth is the red flag and this leaf is merely its shadow."
+  },
+
+  "asides_flagged": [
+    "13600 is exactly 136 x 100, i.e. it lands on a round hundred; an arbitrary leaf count does so about 1% of the time. Both values are also divisible by 8 (8312 = 8 x 1039, 13600 = 8 x 1700). Neither observation is evidence of an error, but if the snapshot emits a fixed number of numeric leaves per scenario row, 8 x N and a round total are consistent with a per-row multiplier and worth a glance from someone who can read the capture code.",
+    "docs/math-foundations.md never defines the fingerprint block. Its only reference to the snapshot is line 428, where the golden snapshot is described as pinning point estimates against game-verified scenarios. A shape counter is not a point estimate; if the fingerprint block is meant to be part of the documented gate, the doc does not currently cover it."
+  ],
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md line 428 (quoted)",
+      "text": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "used_for": "establishing that the doc treats the golden snapshot as a pinning corpus and nowhere defines a fingerprint/numeric_leaves quantity"
+    },
+    {
+      "source": "docs/math-foundations.md, grep for 'numeric_leaves|fingerprint|shape counter'",
+      "text": "(no matches)",
+      "used_for": "ruling out a quoted formula as the leaf's referent"
+    },
+    {
+      "source": "data/ tree, grep -rn 'numeric_leaves|fingerprint'",
+      "text": "(no matches)",
+      "used_for": "ruling out a cached-data definition of the leaf"
+    },
+    {
+      "source": "data/champions.json (patch-stamped wiki cache, 173 champions)",
+      "used_for": "numeric-leaf enumeration: 52810 total, sections id/stats/attributeRatings/abilities/price = 173/22144/1211/28763/519"
+    },
+    {
+      "source": "data/items.json (patch-stamped wiki cache, 324 items)",
+      "used_for": "numeric-leaf enumeration: 86022 total, sections stats/passives/shop/... = 42768/40395/972/..."
+    },
+    {
+      "source": "data/runes.json (17 keystones)",
+      "used_for": "numeric-leaf enumeration: 222 total"
+    },
+    {
+      "source": "data/README.md",
+      "text": "`champions.json`, `items.json`, `runes.json` — patch-stamped wiki data, written only by `src/calculator/data_updater.py`, read only through `src/calculator/data_fetcher.py`.",
+      "used_for": "confirming which cached files constitute the wiki text the calculator reads, and therefore what an input fingerprint would have to count"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "used_for": "checked as a candidate scenario corpus for the counter: only 243 numeric leaves, ruling it out"
+    }
+  ]
+}

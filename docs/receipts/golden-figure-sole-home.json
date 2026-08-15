@@ -1,11 +1,14 @@
 {
  "artifact": "golden_figure_sole_home_allowlist",
  "rule": "Umbrella criterion 4's second half, mechanised by scripts/sole_home_scan.py. Every row excuses one (source, value) pair: a 'coincidence' says the integer is not that shape count at all, a 'forced_restatement' says it is and that R-17, R-19 or R-34 made writing it unavoidable. Since the umbrella's Amendment H of 2026-08-14 the forced rows are criterion 4's ruled CARVE-OUT rather than its open residue: a leaf's own adjudicating receipt may state that leaf's value, on three conditions -- the restatement sits inside an artifact adjudicating that exact leaf, names the leaf by its path, and agrees with the committed receipt or declares what it supersedes. This file is what keeps the carve-out from widening: every row is one site, a row that outlives its site fails, and a site with no row fails.",
- "how_a_row_retires": "A forced row retires when its site stops stating a count of a COMMITTED baseline -- because a re-capture superseded the figure, or because the artifact stops adjudicating that leaf. Editing the sources is not available and never was: a superseded oracle receipt is never edited (R-15/R-18 amendment) and a commit body is history. What changed on 2026-08-14 is the reading, not the mechanism: Amendment H rules these sites carved out rather than owed, and the scan's job became holding the carve-out to its three conditions instead of counting a debt.  The deferral-coverage capture of 2026-08-15 did it a fourth time and at the widest reach yet, because it moved every coupled census at once -- both entry counts, both leaf counts and the coupled numeric-leaf count -- so every row still keyed to one of them stopped having a site in the same commit: two commit bodies' R-34 lines, one oracle receipt's numeric-leaf figure, one allowlist's leaf figure now two captures old, and the three coincidences whose integers stopped colliding with a live count the moment the count moved. None is re-keyed and none is edited -- a commit body is history, a superseded oracle receipt is never edited, and an allowlist two captures behind states a figure no reader should be sent to. The residue that remains is the one row whose figure no capture since has superseded.",
+ "how_a_row_retires": "A forced row retires when its site stops stating a count of a COMMITTED baseline -- because a re-capture superseded the figure, or because the artifact stops adjudicating that leaf. Editing the sources is not available and never was: a superseded oracle receipt is never edited (R-15/R-18 amendment) and a commit body is history. What changed on 2026-08-14 is the reading, not the mechanism: Amendment H rules these sites carved out rather than owed, and the scan's job became holding the carve-out to its three conditions instead of counting a debt.  The deferral-coverage capture of 2026-08-15 did it a fourth time and at the widest reach yet, because it moved every coupled census at once -- both entry counts, both leaf counts and the coupled numeric-leaf count -- so every row still keyed to one of them stopped having a site in the same commit: two commit bodies' R-34 lines, one oracle receipt's numeric-leaf figure, one allowlist's leaf figure now two captures old, and the three coincidences whose integers stopped colliding with a live count the moment the count moved. None is re-keyed and none is edited -- a commit body is history, a superseded oracle receipt is never edited, and an allowlist two captures behind states a figure no reader should be sent to. The residue that remains is the one row whose figure no capture since has superseded. It rose again the same day, by three rows across three sources, when the RW-scenarios oracle pass filed verdicts on three of the counters that capture moved: an oracle receipt states the two values of the leaf it adjudicates (R-19), and when the leaf IS a shape counter there is no way to pose the verdict without writing the figure. That is the carve-out working rather than widening -- each of the three sits inside the artifact adjudicating its own leaf, names it by its path, and agrees with the committed sole home -- and it is exactly the rise the pinned residue exists to make visible.",
  "sources": {
   "forced_restatement_sources": [
    "expected-golden-diff-campaign-close-deferral-coverage.json",
-   "oracle-0A.2-golden-leaf0.json"
+   "oracle-0A.2-golden-leaf0.json",
+   "oracle-RW-scenarios-leaf2.json",
+   "oracle-RW-scenarios-leaf3.json",
+   "oracle-RW-scenarios-leaf4.json"
   ],
   "coincidence_sources": []
  },
@@ -15,6 +18,24 @@
    "value": 41093,
    "kind": "forced_restatement",
    "reason": "R-17: an allowlist states the expected old and new value of every path it claims, and this allowlist claims /metadata/fingerprint/leaves in order to supersede the boundary pin on it, so it cannot make the claim without stating the figure"
+  },
+  {
+   "source": "oracle-RW-scenarios-leaf2.json",
+   "value": 41093,
+   "kind": "forced_restatement",
+   "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and the leaf this one adjudicates IS /metadata/fingerprint/leaves, so the verdict cannot be posed without stating the figure. Amendment H's three conditions hold: the artifact adjudicates that exact leaf, names it by its path, and its new value agrees with the committed campaign-fingerprints.json"
+  },
+  {
+   "source": "oracle-RW-scenarios-leaf3.json",
+   "value": 13600,
+   "kind": "forced_restatement",
+   "reason": "R-19: the same, one leaf over -- this receipt adjudicates /metadata/fingerprint/numeric_leaves, names it by its path, and agrees with the committed campaign-fingerprints.json"
+  },
+  {
+   "source": "oracle-RW-scenarios-leaf4.json",
+   "value": 15,
+   "kind": "forced_restatement",
+   "reason": "R-19: the same, one leaf over -- this receipt adjudicates /metadata/fingerprint/entries, names it by its path, and agrees with the committed campaign-fingerprints.json"
   },
   {
    "source": "oracle-0A.2-golden-leaf0.json",

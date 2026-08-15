@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-RW-scenarios-leaf5",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "generated_utc": "2026-08-15",
+  "scenario": "metadata (derived shape counter)",
+  "leaf_path": "/metadata/scenario_count",
+  "old_value": 13,
+  "new_value": 15,
+  "verdict": "new_value_correct",
+  "verdict_class": "structural / self-consistency — NOT an independently computed domain quantity",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle5",
+    "read": [
+      "docs/math-foundations.md (523 lines, full heading scan + section 4 read)",
+      "data/ (all 8 subdirectories enumerated; practice-corpus/scenarios.json, atoms/manifest.json, atoms/atom-summary.json, bin/behavior-index.json, staleness.json, onhit-matrix.json, economics-sourced.json, README.md, worklists/*.md inspected)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history"]
+  },
+
+  "independent_computation": {
+    "goal": "Derive the correct value of /metadata/scenario_count from cached wiki text under data/ and/or a quoted formula in docs/math-foundations.md.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Searched the full evidence tree for the leaf key itself.",
+        "command": "grep -rl \"scenario_count\" .  (over data/ + docs/math-foundations.md)",
+        "result": "Zero hits. The key is defined nowhere in the sanctioned evidence tree."
+      },
+      {
+        "step": 2,
+        "action": "Searched docs/math-foundations.md for any formula, table row, or invariant that fixes a scenario count.",
+        "command": "grep -n -i \"scenario|metadata|counter|derived shape|golden\" docs/math-foundations.md; full heading scan (sections 0-6); read of section 4 lines 405-450",
+        "result": "Exactly two relevant hits, both non-numeric. Line 428-429 quoted below is the only mention of the golden snapshot at all, and it names the owning module rather than the count. No formula in the document yields a scenario count; the only quantified expression near it is the conformal-coverage bound, whose n is the corpus size of a hypothetical P3 validation corpus, not this counter."
+      },
+      {
+        "step": 3,
+        "action": "Tested whether the golden snapshot's scenario set could be data-driven (i.e. derivable by counting records under data/).",
+        "command": "python: len(json.load(open('data/practice-corpus/scenarios.json'))['scenarios'])",
+        "result": "22 scenarios (ids cp21-*, e0-*, vladimir-*, e9-e1..e9-item-*). 22 matches neither 13 nor 15, and data/worklists/e9-corpus-task.md scopes that file to the Practice-Tool corpus + tests/test_e9_corpus.py, a different artifact from scripts/golden_snapshot.py. Conclusion: the golden snapshot's scenario list is NOT enumerated from data/; it is defined in code under scripts/, which this runbook forbids reading."
+      },
+      {
+        "step": 4,
+        "action": "Swept the remaining data/ manifests for any count that a shape counter could be pinned against.",
+        "command": "inspected data/atoms/manifest.json (items object_count 324, atom_count 1663), data/atoms/atom-summary.json (6 domains), data/bin/behavior-index.json (per-champion keys), data/staleness.json, data/onhit-matrix.json, data/economics-sourced.json, data/champion-audit/ (14 batches), data/item-atoms/ (325 files), data/wiki-atoms/ (10 files)",
+        "result": "No cardinality in the cache equals 13 or 15 in a way that could constrain a golden scenario list. The counter is not a projection of any cached wiki quantity."
+      },
+      {
+        "step": 5,
+        "action": "Classified the leaf and resolved its correctness condition.",
+        "reasoning": "/metadata/scenario_count is a DERIVED SHAPE COUNTER: it is emitted by the snapshot capture as a count over the snapshot's own scenario set, not asserted independently of it. Its correctness condition is therefore internal — count == number of scenario subtrees actually emitted — and is discharged at capture time by construction, not by any external domain fact. Two consequences follow. (a) No wiki datum or quoted formula can falsify it; there is no oracle-computable target value. (b) The observed transition 13 -> 15 is a SHAPE change (+2 scenarios present in the snapshot), not a numeric regression in a modeled quantity: a scenario set that gained two members forces the recomputed counter to read 15, and leaves 13 describing a snapshot that no longer exists. The only way 15 could be wrong is if the counter had been hand-written out of step with the emitted scenarios, which contradicts the leaf's own classification as derived.",
+        "conclusion": "No independent numeric target exists. Correct value = |emitted scenario set|. Nothing in the sanctioned evidence contradicts 15; 13 is inconsistent with a scenario set that changed size."
+      }
+    ],
+    "computed_value": "not independently computable from data/ or docs/math-foundations.md — see step 5; correct value is definitionally |emitted scenario set|, reported as 15",
+    "residual_risk": "This verdict is structural. It does NOT independently confirm that the snapshot emits 15 scenarios, because scripts/golden_snapshot.py and scripts/golden_baseline.json are outside the sanctioned evidence tree. A reviewer with scripts/ access should confirm the +2 by naming the two added scenarios; if the counter were hand-maintained rather than recomputed, this verdict does not hold."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md",
+      "lines": "428-429",
+      "quote": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "bearing": "Only mention of the golden snapshot in the document. Locates ownership of the scenario list in scripts/, and supplies no count."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "lines": "431-436",
+      "quote": "with `n` exchangeable validation points, the rank of a new point's error among the corpus errors gives a distribution-free coverage guarantee `P(|model - game| <= q_{ceil((1-alpha)(n+1))}) >= 1 - alpha` for the empirical quantile `q`",
+      "bearing": "The only quantified formula anywhere near the corpus. Its n is the size of a prospective P3 validation corpus and is explicitly forward-looking (\"the recommended next step (P3) when a full validation corpus exists\"); it neither defines nor bounds /metadata/scenario_count."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "field": "scenarios",
+      "quote": "schema_version 1; 22 scenario objects: cp21-ziggs-outer-blast, cp21-bis-utility-ahri, e0-vladimir-sanguine-pool-heal, vladimir-hemoplague-multitarget, e9-e1-aatrox-umbral-dash-heal, e9-e2-malzahar-malefic-visions, e9-e3-varus-blight-detonation, e9-e3-nasus-siphoning-stacks, e9-e4-zyra-plant-attacks, e9-e4-yorick-mist-walkers, e9-e5-zed-death-mark, e9-e5-veigar-primordial-burst, e9-e5-sion-decimating-smash, e9-e8-rengar-battle-roar-grey, e9-e8-annie-molten-shield, e9-e8-anivia-rebirth, e9-e8-morellonomicon-grievous, e9-e8-serpents-fang-shield-cut, e9-item-serpents-fang-venom, e9-item-fimbulwinter-everlasting, e9-item-steraks-lifeline, e9-item-bloodthirster-lifesteal",
+      "bearing": "Rules out the hypothesis that the golden scenario list is enumerated from cached data: 22 != 13 and 22 != 15."
+    },
+    {
+      "source": "data/worklists/e9-corpus-task.md",
+      "quote": "SCOPE (you OWN these files ...): - data/practice-corpus/scenarios.json (expand; keep schema_version 1, the four existing scenarios, and add new ones)",
+      "bearing": "Confirms data/practice-corpus/scenarios.json is the E-series Practice-Tool corpus, a separate artifact from the golden snapshot."
+    },
+    {
+      "source": "data/README.md",
+      "quote": "The calculator's champion/item data cache -- the single source the app reads.",
+      "bearing": "Establishes data/ as patch-stamped wiki cache only; it carries no snapshot-harness shape metadata."
+    }
+  ],
+
+  "notes": [
+    "No commit was made; this receipt is written to the working tree only.",
+    "Investigator was blind to the change under test throughout; src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were never read."
+  ]
+}

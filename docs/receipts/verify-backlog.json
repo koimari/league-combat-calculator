@@ -919,11 +919,12 @@
   },
   "campaign-close-deferral-coverage": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [],
    "subjects": [
     "test(golden): a covering scenario for every blind deferral family, derived (campaign-close-deferral-coverage)",
-    "chore(baseline): capture the two covering rosters, and the artifacts that move with them (campaign-close-deferral-coverage)"
+    "chore(baseline): capture the two covering rosters, and the artifacts that move with them (campaign-close-deferral-coverage)",
+    "docs(receipts): six verdicts on the coverage capture, filed though none was owed (campaign-close-deferral-coverage)"
    ]
   },
   "campaign-close-dispositions": {

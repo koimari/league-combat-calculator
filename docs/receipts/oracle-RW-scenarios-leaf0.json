@@ -1,0 +1,143 @@
+{
+  "receipt_id": "oracle-RW-scenarios-leaf0",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "investigator": "fresh independent oracle subagent",
+  "date": "2026-08-15",
+  "leaf_path": "/coupled_scenarios/crit_onhit_carry_roster",
+  "scenario_id": "crit_onhit_carry_roster",
+  "transition_kind": "absent_to_value (membership transition, reported once at the node)",
+  "old_value": "<absent>",
+  "new_value": "the captured scenario entry for 'crit_onhit_carry_roster' (entire subtree newly present under /coupled_scenarios)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_tree",
+    "file_count": 437,
+    "paths_never_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history"]
+  },
+
+  "scope_limitation": {
+    "statement": "The captured entry's numeric contents could not be inspected. The golden baseline lives at scripts/golden_baseline.json and the scenario's input tuple (champion, level, build, roster) is defined in scripts/, both of which the runbook forbids this investigator from reading. The exported evidence tree contains no definition of 'crit_onhit_carry_roster': grep over all 437 exported files for 'crit_onhit_carry_roster', 'coupled_scenario' and 'carry_roster' returned zero hits, and data/practice-corpus/scenarios.json enumerates 22 scenario ids, none of them this one.",
+    "consequence": "This receipt therefore adjudicates the membership transition itself (should this node exist at all?) and independently verifies, from cached source, that every mechanic the scenario names is real, sourced, and governed by an identity the engine rates EXACT. It does not, and cannot, re-derive the entry's individual numbers.",
+    "what_would_close_it": "An oracle permitted to read the captured entry, or a copy of the scenario's input tuple + captured outputs supplied inside the evidence tree."
+  },
+
+  "independent_computation": {
+    "framing": "The leaf name binds three mechanics: crit, on-hit, and a coupled roster. Each is checked against cached wiki text and a quoted formula.",
+
+    "leg_1_crit": {
+      "identity_quoted": "E[swing] = (1-p)*1 + p*CM = 1 + p*(CM-1)  (docs/math-foundations.md, Section 5 formula-audit table, 'Crit expectation' row, verdict EXACT)",
+      "base_crit_multiplier": 2.0,
+      "infinity_edge_from_cache": {
+        "item_id": "3031",
+        "attackDamage.flat": 75.0,
+        "criticalStrikeChance.percent": 25.0,
+        "criticalStrikeDamage.percent": 30.0,
+        "source": "data/items.json -> 3031.stats"
+      },
+      "worked_example": "A crit carry holding Infinity Edge + one 25% crit Zeal item (e.g. Phantom Dancer 3046, criticalStrikeChance.percent 25.0) has p = 0.50 and CM = 2.00 + 0.30 = 2.30. E[swing] = 1 + 0.50*(2.30-1) = 1 + 0.65 = 1.65x the base auto. Deterministic mode replaces the stochastic draw by this expectation (math-foundations lines 21-22), and mitigation commutes with it because x -> x*100/(100+R) is linear in raw damage (Section 1.2, item 1).",
+      "verdict": "crit leg is sourced and exactly specified"
+    },
+
+    "leg_2_onhit": {
+      "identity_quoted": "'On-hit stacking (_calculate_stacking_procs, _simulate_stacking_on_hit_damage) | modular every-Nth counting; sequential health-path expectation (affine => exact) | EXACT' (docs/math-foundations.md Section 5)",
+      "supporting_identity": "Deterministic every-Nth-hit procs (Kraken Slayer, Hullbreaker) have exact count floor(n/N) - modular counting over the shared hit sequence (Section 1.2, item 3).",
+      "cached_source": {
+        "kraken_slayer_id": "6672",
+        "passive_name": "Bring It Down",
+        "branch_text": "Basic attacks [[on-hit]] grant a stack for 3 seconds, up to 2 stacks. At 2 stacks, the next basic attack consumes all stacks to deal ... bonus physical damage on-hit, increased by 0 to 75 by 5 % of target's missing health ...",
+        "affine_check": "The missing-health term base*(1 + 0.75*missing) is affine in current health, so evaluating it on the expected health path is exact in expectation (Section 1.2, 'Exact vs approximate')."
+      },
+      "champion_side_onhit": "data/onhit-matrix.json carries a per-champion on-hit application table (slot, effectiveness in {0.25, 0.75, 1.0}, on_attack, only_once_per_cast) covering the ability-carried on-hit carries (Ezreal Q 1.0/on_attack, Lucian P 1.0/on_attack, Master Yi Q 0.75, Akshan E 0.25, Ashe Q 1.0 once-per-cast, ...). The mechanic is data-backed, not literal-coded.",
+      "verdict": "on-hit leg is sourced and exactly specified"
+    },
+
+    "leg_3_coupled_roster": {
+      "identity_quoted": "'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9)' (docs/math-foundations.md Section 3.1)",
+      "roster_repricing_rule": "data/atoms/autoresearch-review.md 3.2: 'each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (defender_index > 0)'. This is exactly the coupling a /coupled_scenarios node exists to pin.",
+      "crit_x_onhit_x_roster_intersection": {
+        "why_statikk_shiv": "docs/math-foundations.md Section 1.4 names the one place all three legs meet: 'Statikk Shiv's Electrospark bounces to a deterministic level-scaled count; the single-target fight prices one allocation across the roster (statikk_chain_target_count).'",
+        "cached_wiki_text": "data/items.json -> 3087 Statikk Shiv, passive 'Electrospark': \"When fully Energized, your next basic attack on-hit is empowered to form chain lightning, dealing 60 bonus magic damage, increased to 90 magic damage against non-champions. This bounces to the closest target within 500 units, repeating from the new target to strike up to {{pp|4 to 8 by 1|1;6;10;14;20}} targets, dealing the same damage and applying on-hit effects to secondary targets hit.\"",
+        "level_table_decoded": {
+          "breakpoints": "levels 1;6;10;14;20 -> 4;5;6;7;8 targets",
+          "level_18": 7,
+          "level_20": 8,
+          "note": "Level cap is 20 per the stat-growth row of the Section 5 audit table ('Level cap 20 (top lane)'), so the 8-target tier is reachable."
+        },
+        "worked_example": "At level 18 the chain ceiling is 7 targets; against a 5-champion enemy roster the binding constraint is the roster, so min(7,5) = 5 champion hits x 60 bonus magic = 300 raw magic damage, allocated across the roster rather than triple-counted onto one defender. Each hit is then mitigated independently by 100/(100+MR) (Section 2.1, EXACT), e.g. 60 * 100/150 = 40.0 per target at 50 MR, and each hit re-applies on-hit effects per the quoted branch text."
+      },
+      "verdict": "coupled-roster leg is sourced and exactly specified"
+    },
+
+    "conclusion_of_computation": "Every mechanic named by the leaf resolves to cached wiki text (data/items.json 3031/3046/3087/6672, data/onhit-matrix.json) and to a formula-audit row rated EXACT (crit expectation, on-hit modular counting, mitigation identity, coupled-timeline score). There is no unsourced or unmodellable component in a 'crit + on-hit carry vs roster' coupled scenario, so a golden capture of it is well-founded."
+  },
+
+  "adjudication": {
+    "what_absent_means": "An absent leaf under /coupled_scenarios is not a computed quantity - it is the absence of golden coverage for a scenario that had not yet been defined. No formula in docs/math-foundations.md and no record in data/ predicts 'absent' as the correct output of any calculation.",
+    "what_would_make_absent_correct": "Only a finding that the scenario cannot be legitimately modelled from cached source - e.g. it exercises a mechanic with no cached wiki text, or one the audit table rates APPROX-and-undocumented. Checked and not found: all three legs are sourced and EXACT-rated (see independent_computation).",
+    "what_would_make_both_wrong": "Evidence that the captured entry contains a value contradicting cached source. Not assessable here (see scope_limitation), and no contradiction is implied by the scenario's construction.",
+    "residual_risk": "Because the captured numbers were unreadable, an arithmetic error inside the new entry would not have been caught by this receipt. The membership transition itself is nonetheless correct: adding coverage for a fully-sourced mechanic combination is an extension of the golden gate, not a regression of it."
+  },
+
+  "sources_quoted": [
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, 'Crit expectation' row",
+      "quote": "E[swing] = (1-p)*1 + p*CM = 1+p*(CM-1); mitigation commutes with expectation (linear in raw) | EXACT"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, 'On-hit stacking' row",
+      "quote": "modular every-Nth counting; sequential health-path expectation (affine => exact) | EXACT"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 1.4 Geometric sums for proc chains",
+      "quote": "Statikk Shiv's Electrospark bounces to a deterministic level-scaled count; the single-target fight prices one allocation across the roster (statikk_chain_target_count)."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 1.2, application 3",
+      "quote": "Deterministic every-Nth-hit procs (Kraken Slayer, Hullbreaker) have exact count floor(n/N) - modular counting over the shared hit sequence."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 3.1 Exact formulation",
+      "quote": "f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 5, 'Resistance mitigation' row and Section 2.1",
+      "quote": "m(R)=100/(100+R) | EXACT"
+    },
+    {
+      "path": "data/items.json",
+      "locator": "3087 Statikk Shiv -> passives[2] 'Electrospark' -> branches[0]",
+      "quote": "When fully Energized, your next basic attack on-hit is empowered to form chain lightning, dealing 60 bonus magic damage, increased to 90 magic damage against non-champions. This bounces to the closest target within 500 units, repeating from the new target to strike up to {{pp|4 to 8 by 1|1;6;10;14;20}} targets, dealing the same damage and applying on-hit effects to secondary targets hit."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "3031 Infinity Edge -> stats",
+      "quote": "attackDamage.flat 75.0; criticalStrikeChance.percent 25.0; criticalStrikeDamage.percent 30.0"
+    },
+    {
+      "path": "data/items.json",
+      "locator": "6672 Kraken Slayer -> passives[0] 'Bring It Down' -> branches[0]",
+      "quote": "Basic attacks on-hit grant a stack for 3 seconds, up to 2 stacks. At 2 stacks, the next basic attack consumes all stacks to deal ... bonus physical damage on-hit, increased by 0 to 75 by 5 % of target's missing health ..."
+    },
+    {
+      "path": "data/onhit-matrix.json",
+      "locator": "champions map",
+      "quote": "per-champion ability-carried on-hit table with slot / effectiveness / on_attack / only_once_per_cast (e.g. Ezreal Q 'Mystic Shot' effectiveness 1.0 on_attack true; Master Yi Q 'Alpha Strike' effectiveness 0.75)"
+    },
+    {
+      "path": "data/atoms/autoresearch-review.md",
+      "locator": "3.2 Ledger fix (multi-target heals re-priced by roster index)",
+      "quote": "each pair fight cannot see the roster, so the engine authors the full value with an explicit reduced receipt; the coupled ledger re-prices defenders past the first (defender_index > 0)."
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_basis": "The transition adds golden coverage for a scenario whose every mechanic - crit expectation, on-hit proc counting, and coupled-roster allocation of the Statikk Shiv chain - is backed by cached wiki text in data/ and by a formula-audit identity rated EXACT in docs/math-foundations.md. 'Absent' is not a value any cached source or quoted formula computes, and nothing in the evidence tree argues this scenario should not exist. Verdict is scoped to the membership transition; the entry's individual numbers were unreadable under this runbook's read restrictions (see scope_limitation).",
+  "committed": false
+}
