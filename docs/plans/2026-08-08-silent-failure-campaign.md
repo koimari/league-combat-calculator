@@ -716,6 +716,96 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > overdue: the closeout has shipped, it did not retire them either, and every row stays `overdue`
    > with a blocker a reader can open. A stage that made the rows read as on schedule would be the
    > debt getting smaller by being re-dated, which is the one thing a re-dating may not buy.
+   >
+   > **Amendment L — 2026-08-15, the full shape of a retirement act, and the three prerequisites
+   > it needs.** Amendment F sizes the debt at fourteen slices; Amendment K settles which lane each
+   > one is spelled in. Neither says what one slice *contains*, and a retirement lane that went to
+   > start the first of them measured why that is not a detail: retiring a `(family, RECEIPT_WALK)`
+   > deferral takes **both halves at once**. The walk has to price the family through the
+   > interpreter in that family's declared lane, **and** the pair engine's rows for that family have
+   > to become previews — the producing site stamping `pair_preview_of`, the mechanic declaring
+   > `ViewTag.THEORETICAL` on its pair lane, which is the two-sided join `program.build`'s
+   > `pair_preview_sources` reads and which D-62's one-`APPLIED`-per-`(mechanic, subject, event_id)`
+   > uniqueness backs. Either half alone is worse than neither: the interpreter without the stamp
+   > prices the family twice into one roster total, and the stamp without the interpreter deletes
+   > the family's number from every total that used to hold it. That is why the act is ruled as one
+   > slice and not as a sequence of tidy ones.
+   >
+   > **Ruling 1 — the retirement act is one behaviour slice per family**, and it carries all of:
+   > the family's `MechanicCapability` declarations authored; its pair rows stamped
+   > `pair_preview_of` and declared `THEORETICAL`; the lane interpreter landed and wired to the
+   > pricing path; and the deferral row retired. In that same slice, and this is the half that makes
+   > it a behaviour change rather than a registration: the family's **numeric consequence** — the
+   > pair row leaving the roster total, the walk's own number entering it — its
+   > `Expected qualifying occurrences` line with the qualifying population enumerated from that
+   > family's covering scenarios **before the slice's first `src/` edit** (R-20's second half), and
+   > the oracle receipt every qualifying occurrence then owes (R-19). One correction per commit
+   > still binds inside the slice (R-30), and no baseline moves inside any of its semantic commits
+   > (R-17, R-32, D-97).
+   >
+   > **This is not a D-40 exclusion**, and the distinction is the whole of why the act is legal to
+   > perform. A capability authored so that counter 4 stops counting a row, while the walk goes on
+   > consuming the pair engine's timed rows for that family, would be a counter driven to zero by
+   > editing what it counts — the move Amendment K refuses in three places and the one D-40 exists
+   > to forbid. What is ruled here is the opposite shape: every declaration arrives carrying the
+   > number it moves and the receipts that adjudicate the move, in the slice that makes it, so the
+   > counter falls because the tree changed and not because the declaration did.
+   >
+   > **The capability declarations are the closeout's to author, as a sequential handoff.** The
+   > runbook's ownership map gives `trigger_stream.py` to L2 and carves the two Phase-4 capability
+   > fields out to L5 — and it says in its own words that a carve-out on a file whose earlier owner
+   > has already merged is a sequential handoff rather than a concurrent share. L2 merged long ago
+   > and L5 with it; the map is a **liveness rule about who may write concurrently**, not a
+   > permanent title, and the closeout inherits `view_tags` and the declarations beside it on
+   > exactly the terms L5 held them. No lane is live to collide with.
+   >
+   > **Ruling 2 — the covering scenarios land first, and they are an R-12 integration act.** Nine of
+   > the fourteen families have no committed coupled scenario putting one of their owners on a
+   > participant; the set is enumerated in `docs/receipts/receipt-walk-retirement-schedule.json`,
+   > gated by `tests/test_receipt_walk_schedule.py`, and each of those rows already publishes a
+   > population of zero with the reason it is a declared emptiness and not a clean bill. Against
+   > that emptiness no leaf can qualify, so the slice's R-20 line reads zero, no investigator is
+   > ever owed, and the re-pricing ships unseen — which is the campaign's own founding failure shape
+   > wearing the campaign's own gate as a disguise. **So the covering scenario lands first, as its
+   > own act**: the coupled producer set is read rather than typed (R-12), adding a scenario moves
+   > the committed coupled baseline, and a baseline moves in the integration agent's own commit and
+   > never inside a semantic slice (R-17, R-32). Scenario, then re-capture, then that family's
+   > retirement slice — which now has something to be seen in.
+   >
+   > **Ruling 3 — the from-declaration pricing path is the engine stage Amendment F said no phase
+   > had budgeted, and it is hereby budgeted.** Measured on the commit that lands this: three
+   > registered interpreters serve the receipt walk, and only one of them — the reactive family's,
+   > the strike-back — hands the walk a damage number priced from a raw declaration. The other two
+   > compile the fields the walk itself pays out and the numbers a packet producer declares. Every
+   > deferral family's damage still arrives as `participant_timeline._pair_run_fight`'s
+   > post-mitigation rows, which the walk re-ratios and, where it cannot recover the pre-mitigation
+   > side, refuses by name rather than inventing a ratio. A per-family interpreter therefore has
+   > nowhere to hand its price. The stage is one engine stage: a family's declaration priced into
+   > the walk's own ledger. It **lands before the first family that needs it**, it carries its own
+   > equivalence fixture — the from-declaration price against the pair-ratioed one, on a family that
+   > has not yet opted in, so the stage is provably a re-spelling before it is ever a re-pricing —
+   > and it is **inert until a family's retirement slice opts in**, which is what keeps it from
+   > being a behaviour change smuggled in under an infrastructure heading.
+   >
+   > **What this amendment does not do**, each available and refused. It retires no row: all
+   > fourteen stand, `overdue` and gated, and the machine still refuses a fifteenth. It does not
+   > budget the fourteen slices — Ruling 3 budgets one engine stage and Ruling 2 names the act the
+   > blind families owe first; the fourteen remain unbudgeted work with a shape, which is more than
+   > they had and less than a schedule. It does not read the debt as smaller, re-date a row, or
+   > touch `_FAMILY_LANES`. And it does not rule the debt acceptable: what it removes is the excuse
+   > that nobody knew what one slice would have to contain.
+   >
+   > **Measured on the commit that lands this**, so the prerequisites are sized rather than
+   > asserted. The fourteen families declare ninety-two mechanics between them — unique
+   > `mechanic_id`s compiled from `item_behavior_catalog.behavior_rules` over every owner in
+   > `rule_owners()` — and eighty-five of the ninety-two are absent from
+   > `trigger_stream.CAPABILITIES`, so a family's declarations are authored by its retirement slice
+   > for nearly every mechanic it holds. Two mechanics are pair-lane previews today, under four
+   > declared spellings, stamped by two producing sites. The retirement lane's own figure for the
+   > undeclared mechanics does not reproduce under the join above and is **not** adopted here: the
+   > number that binds a slice is the population that slice enumerates before its first `src/` edit
+   > (R-20), published with its predicate, because a prerequisite sized by a figure nobody can
+   > regenerate is the shape this campaign spent four hundred commits removing.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
