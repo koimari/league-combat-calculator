@@ -999,7 +999,7 @@
   },
   "campaign-close-receipt-walk-r35": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 7,
+   "commit_count": 8,
    "criteria_documents": [],
    "subjects": [
     "fix(receipts): the schedule publishes a fact that can be false, not a settled flag (campaign-close-receipt-walk-r35)",
@@ -1008,7 +1008,8 @@
     "docs(receipts): the receipt-walk ruling group's R-35 answer, recorded (campaign-close-receipt-walk-r35)",
     "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-receipt-walk-r35)",
     "perf(gates): the ruled artifact is read once per process, not once per deferral row (campaign-close-receipt-walk-r35)",
-    "refactor(interpreters): the retiring stage leaves the engine table and lives where a ruling lands (campaign-close-receipt-walk-r35)"
+    "refactor(interpreters): the retiring stage leaves the engine table and lives where a ruling lands (campaign-close-receipt-walk-r35)",
+    "docs(receipts): R-35's second pass over the receipt-walk ruling group, recorded (campaign-close-receipt-walk-r35)"
    ]
   },
   "campaign-close-receipt-walk-schedule": {

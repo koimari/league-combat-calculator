@@ -499,6 +499,79 @@
      "note": "The body over-declared rather than under-declared, which is the harmless direction for an R-20 population line and is still a population line that does not match its diff. A commit body cannot be amended; the corrected figures are recorded here, measured by walking the committed artifact rather than read off the body. Nothing about the frontier moves."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-receipt-walk-ruling",
+   "round": 5,
+   "verified_commits": [
+    "0248a42",
+    "4876eb2",
+    "6db708a",
+    "b19a577"
+   ],
+   "dated": "2026-08-15",
+   "answered_by": [
+    "61f40a0",
+    "8e36c60"
+   ],
+   "what_this_round_is": "A second independent R-35 pass over the slice group round 4 covered, run because round 4 closed with a criterion still NOT_DISCHARGED and a disposition of documented_open. It returned that criterion unchanged and five further findings of behaviour the commit bodies do not mention -- two of them re-measurements of rows round 4 already carries, confirmed accurate rather than corrected, and one a confirmation that the three fixes round 4 cites are real in the tree and not merely narrated. What is new in this round is the structural half. Round 4's own note named the cause -- campaign bookkeeping declared inside a runtime module -- and left it unpaid on the argument that paying it 'cannot discharge this criterion in any case'. That argument is true about the measurement and is not a reason to leave the cause standing, so the cause is paid here and the measurement is recorded as still failing.",
+   "criteria": [
+    {
+     "id": "zero_src_change",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Re-measured rather than read off round 4: git diff --stat 0248a42^..b19a577 -- src/ returns src/calculator/interpreters/__init__.py, 11 insertions / 10 deletions, and the same diff over 0248a42^..HEAD was identical when this round ran, so no commit had reverted it. 4876eb2 adds `from dataclasses import replace`, the module constant _CLOSEOUT and _AMP_WALK_LANE, and turns UnservedLane.retires_at into a per-lane conditional in two dict comprehensions plus three hand-spelled sites. Every mitigation round 4 lists is still true and none of them is what the criterion says. The verdict stands.",
+     "disposition": "documented_open",
+     "answered_at": [
+      "8e36c60"
+     ],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "The cause is paid and the measurement still fails, and those are two different sentences. Paid: 8e36c60 removes retires_at from interpreters.UnservedLane entirely. src/ now declares the two facts about the tree a reader can check at import -- which interpreter produces the number, and by which lane -- and no stage at all; every unserved lane's retiring stage is resolved from the one stage record that declares itself the creditor_of that lane's debt, so a ruled re-dating is an edit to docs/receipts/campaign-stages.json alone. Measured after: git grep -n retires_at -- src/ returns nothing, against 6 occurrences before, and tests/test_behavior_frontier.py::test_no_campaign_stage_is_declared_anywhere_under_src asserts against source that no stage name any committed record declares appears anywhere under src/ and that UnservedLane's fields are exactly {reason, via}. Still failing: the criterion quantifies over four landed commits, and the only edit that would empty git diff 0248a42^..HEAD -- src/ is restoring the module to its 0248a42^ blob. That was considered and is refused for a reason and not for the cost. The blob dates the fourteen rows to 'Phase 4 S3 -- one kernel, five views', which Amendment K re-dated them OFF and Amendment F measured cannot perform the retiring act, so the runtime module would carry a superseded dating in the present tense; and because the gate binds the tree's declaration to the recorded stage, keeping it green would additionally take editing that clause. A false statement in src/, or a weakened gate, bought so that a measurement reads as a pass, is the ordering this campaign exists to invert -- the ledger's round-3 precedent refuses the same trade in the other direction, 'reverting a correct pin to satisfy an ownership sentence'. So the record is: the four commits changed src/, that is history and cannot be un-landed, and from 8e36c60 no future ruling can repeat it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "4876eb2's body justifies the safety of its src/ edit by naming a single home that does not exist: 'interpreters._retires_at is the lane conditional that keeps the two apart in one place'. No identifier _retires_at is or was in src/calculator/interpreters/__init__.py. The closeout-vs-S3 choice was spelled in five separate places -- replace(_AMP_LANE, retires_at=_CLOSEOUT), two copies of `_CLOSEOUT if lane is EngineLane.RECEIPT_WALK else _ONE_KERNEL`, and two positional literals picking _CLOSEOUT and _ONE_KERNEL by hand.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "8e36c60"
+     ],
+     "artifact": "src/calculator/interpreters/__init__.py",
+     "note": "The body named the property that would have made the edit safe, and the property was absent. It is present now, and not in the place the body claimed: the single home is docs/receipts/campaign-stages.json, one creditor_of claim per lane debt, and the five sites left with the field. Gated by test_no_campaign_stage_is_declared_anywhere_under_src, which is a source assertion over the whole of src/ rather than a check on one module's constants, so a sixth site cannot be opened anywhere in the package."
+    },
+    {
+     "finding": "c6c82fa changed scripts/behavior_frontier.py's import-time behaviour without stating it. COUNTER_4_DEFERRALS became a 14-element dict comprehension calling deferral_creditor_stage() once per family, which calls declared_stages(), which did an uncached json.loads of docs/receipts/campaign-stages.json on every call. So importing the module read and parsed the ruled artifact 14 times where it previously read it zero times at import, and module import could newly raise ValueError. Every importer paid it.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "61f40a0"
+     ],
+     "artifact": "scripts/behavior_frontier.py",
+     "note": "Measured before, by counting Path.read_text and subprocess.run: import = 14 reads; one check() = 30 further reads and 15 git log walks over the campaign range, the second shape older than c6c82fa and reached through _overdue_failures running per row. After: import = 1 read; one check() = 0 reads and 1 walk. Cached on the two I/O leaves only, which leaves declared_stages the seam the creditor tests replace, and the claim is resolved once and shared by the fourteen rows. Import-time fail-closed is kept deliberately and is now said out loud where the constant is built. Gated by test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process, which counts the reads rather than trusting a decorator to still be there."
+    },
+    {
+     "finding": "4876eb2 also edited the measuring tool in the same commit as the tree declaration it is supposed to check: scripts/behavior_frontier.py's COUNTER_4_DEFERRALS literal moved from 'Phase 4 S3 -- one kernel, five views' to the closeout string. The body's population line names docs/behavior-frontier.json rows, the unserved-lane receipts and the owed_to strings, and never the tool. At that commit the clause comparing recorded_stage to retires_at could not have caught a half-finished re-dating, because both sides moved together.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "c6c82fa",
+      "8e36c60"
+     ],
+     "artifact": "scripts/behavior_frontier.py",
+     "note": "The same failure shape as the test-edit finding round 4 records, and undisclosed in the same way. c6c82fa removed the literal from the tool and derived the stage from the ruled creditor claim; 8e36c60 removed the second declaration as well, so the stage is neither in the tool nor in src/ and there is nothing left for one commit to move on both sides at once. What replaced the two-homes clause is not nothing: the committed frontier receipt must record the stage the records claim today, whose red is test_a_re_dating_that_never_reached_the_receipt_fails_the_gate. A commit body cannot be amended, so the disclosure the body owed is here."
+    },
+    {
+     "finding": "0248a42 moved three top-level fields of docs/receipts/receipt-walk-retirement-schedule.json and its enumerated population covers none of them. The population line says the artifacts that move are 'the 14 schedule rows ... and the 1 owed row'; the only key change the body discloses is slices_routed_to_an_owed_ruling -> slices_whose_retiring_lane_amendment_k_corrects. Also renamed: where_the_measurement_disagrees_with_the_prose -> where_the_measurement_disagreed_with_the_prose_and_what_ruled_it. Also rewritten: a_second_and_smaller_mismatch.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/receipt-walk-retirement-schedule.json",
+     "note": "Measured by diffing the committed artifact's top-level keys across 0248a42: 2 removed, 2 added, and of the 2 keys whose value changed one is families, which IS the declared population of 14 rows. Three top-level fields outside it, one of them disclosed. Recorded here rather than reverted, on round 4's own precedent for the OWED_RULING constant rename: both new strings are accurate against the tree after Amendment K where the old ones read as though the question were still open, scripts/receipt_walk_schedule.py and its test read the new names, and re-renaming would be churn on names one ruling old. What was wrong is the population line, and a commit body cannot be amended."
+    },
+    {
+     "finding": "Re-measurements and confirmations, recorded so a later reader can tell 'checked' from 'not checked'. (a) Round 4's two documented_open rows re-measured on the artifacts rather than trusted: receipt_walk_schedule.OWED_RULING -> RULING plus a new PAIR_ENGINE is unmentioned in 0248a42's body, and docs/behavior-frontier.json carries 5 owed_to fields, 2 of them under counter_4, of which exactly 1 moved in 4876eb2 against a body saying 'two'. Both stand as accurate records. (b) The three findings round 4's fix commits claim to close are closed in the tree and not only narrated: settled is absent from all 14 retiring_act blocks with already_performed splitting 3 True / 11 False against interpreters.INTERPRETERS; rulings-owed.json is back to 8 escapes and 0 non-ASCII bytes; and the fourteen rows are bound to the ruled stage through creditor_of rather than through the two-member declared_stages() set.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "No action owed by any of it. Kept as a row because a round that re-measured its predecessor's open items and found them honest is different evidence from a round that did not look, and the two are indistinguishable once the transcript is gone."
+    }
+   ]
   }
  ],
  "coverage": {
