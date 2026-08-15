@@ -414,7 +414,6 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
                 EngineLane.DEFENSE_RESOLVER,
             ): interpreters.UnservedLane(
                 reason="a lane that is in fact served",
-                retires_at="never",
                 via=(EngineLane.PAIR_ENGINE,),
             )
         },
@@ -528,11 +527,16 @@ def test_a_subject_its_authority_cannot_see_is_refused(
         interpreters.validate_registrations()
 
 
-def test_every_dated_gap_row_says_what_retires_it() -> None:
-    """A gap with no date is the silence the table exists to replace."""
+def test_every_gap_row_says_why_the_lane_is_unserved() -> None:
+    """A gap with no reason is the silence the table exists to replace.
+
+    What the row does *not* carry is when it retires: that is campaign
+    bookkeeping with one home in ``docs/receipts/campaign-stages.json``, and
+    ``tests/test_behavior_frontier`` asserts no stage name reaches ``src/``.
+    """
     for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
         assert row.reason.strip(), f"{family.value}/{lane.value} has no reason"
-        assert row.retires_at.strip(), f"{family.value}/{lane.value} has no date"
+        assert row.via, f"{family.value}/{lane.value} names no route"
         assert (family, lane) not in interpreters.INTERPRETERS
 
 
@@ -586,7 +590,6 @@ def test_a_route_the_registry_does_not_serve_is_refused(
         | {
             pair: interpreters.UnservedLane(
                 reason=interpreters.UNSERVED_LANE_RECEIPTS[pair].reason,
-                retires_at=interpreters.UNSERVED_LANE_RECEIPTS[pair].retires_at,
                 via=via,
             )
         },
@@ -595,20 +598,20 @@ def test_a_route_the_registry_does_not_serve_is_refused(
         interpreters.validate_registrations()
 
 
-def test_no_gap_row_is_dated_at_a_counter_this_phase_has_retired() -> None:
-    """Every surviving row waits on the one kernel, not on a name site.
+def test_no_gap_row_stands_on_a_counter_this_phase_has_retired() -> None:
+    """Every surviving row waits on an interpreter, not on a name site.
 
-    Two rows used to be dated "3.9 residue — counter 1's remaining
-    name-dispatch sites", both standing on the walk reading a sustain key by
-    item name in ``survival/receipt_state.py``.  That read is gone: the
-    below-half bonus is a declaration the walk lane's own interpreter
-    compiles.  A row outliving its stated cause is the prose-outruns-code
-    failure inside the table that exists to prevent it, so the date is
-    asserted rather than trusted.
+    Two rows used to stand on the walk reading a sustain key by item name in
+    ``survival/receipt_state.py``, and were dated at counter 1's residue for
+    it.  That read is gone: the below-half bonus is a declaration the walk
+    lane's own interpreter compiles.  A row outliving its stated cause is the
+    prose-outruns-code failure inside the table that exists to prevent it, so
+    the reason is asserted rather than trusted.  The date it carried moved to
+    the stage records with every other date, so what is left to assert here is
+    the half that was ever a fact about this tree.
     """
     for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
         assert "counter 1" not in row.reason, f"{family.value}/{lane.value}"
-        assert "3.9 residue" not in row.retires_at, f"{family.value}/{lane.value}"
 
 
 def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> None:

@@ -476,10 +476,12 @@ def unserved_lane_block() -> dict[str, Any]:
 
     Two populations, because they are excused by two different things and
     collapsing them would hide which.  ``dated`` are the rows
-    ``interpreters.UNSERVED_LANE_RECEIPTS`` carries — a reason, a retiring
-    stage and a ``via`` route each, the last being the lanes whose registered
-    interpreters produce the number instead, checked against the registry at
-    import and diff-gated here.  ``per_rule_receipted`` are the compiled-lane gaps no row
+    ``interpreters.UNSERVED_LANE_RECEIPTS`` carries — a reason and a ``via``
+    route each, the second being the lanes whose registered interpreters
+    produce the number instead, checked against the registry at import and
+    diff-gated here — joined to the retiring stage its lane's debt is owed to,
+    which the engine does not declare and this reads from the one record that
+    claims it.  ``per_rule_receipted`` are the compiled-lane gaps no row
     names because every declaration reaching them carries its own
     ``ReceiptOnly``, which is the stronger form: ``delta_amp`` is that whole
     population today (D-101).
@@ -491,7 +493,7 @@ def unserved_lane_block() -> dict[str, Any]:
     dated = {
         f"{family.value}/{lane.value}": {
             "reason": row.reason,
-            "retires_at": row.retires_at,
+            "retires_at": creditor_stage(f"counter_4/{lane.value}"),
             "via": [route.value for route in row.via],
         }
         for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
@@ -713,16 +715,20 @@ def declared_stages() -> Mapping[str, Mapping[str, str]]:
 CREDITOR_OF_COUNTER_4_DEFERRALS = "counter_4/receipt_walk"
 
 
-def deferral_creditor_stage() -> str:
-    """The one stage the committed records declare the deferrals' creditor.
+def creditor_stage(debt: str) -> str:
+    """The one stage the committed records declare the creditor of *debt*.
 
-    Which stage retires counter 4's fourteen rows is a ruling — Amendment K
-    re-dated them off *Phase 4 S3 — one kernel, five views*, which Amendment F
-    measured cannot perform the act — and a ruling's home is the committed
-    stage record, not a literal in the tool that measures the counter (D-40).
-    Reading it here is what lets the deferral rows carry no stage name of
-    their own: re-dating them means moving ``creditor_of`` from one record to
-    another, which is an edit to the artifact a ruling lands in.
+    Which stage retires an unserved lane is a ruling — Amendment K re-dated
+    counter 4's fourteen receipt-walk rows off *Phase 4 S3 — one kernel, five
+    views*, which Amendment F measured cannot perform the act — and a ruling's
+    home is the committed stage record, not a literal in the tool that
+    measures the counter (D-40) and not a field on the engine's own lane
+    table.  This is the **only** home: ``interpreters.UnservedLane`` carries
+    the two facts a reader can check against the tree, and nothing about when
+    a row retires, so a re-dating is an edit to this artifact alone.
+
+    A debt is spelled ``counter_4/<lane>``, exactly as ``TARGET_CRITERIA``
+    spells the same counter and lane.
 
     The alternative that was live before this and is refused: dating the rows
     to *any* stage the records declare.  That resolves against a set of two,
@@ -738,17 +744,22 @@ def deferral_creditor_stage() -> str:
     claimed = sorted(
         stage
         for stage, row in declared_stages().items()
-        if row.get("creditor_of") == CREDITOR_OF_COUNTER_4_DEFERRALS
+        if row.get("creditor_of") == debt
     )
     if len(claimed) != 1:
         raise ValueError(
             f"{CAMPAIGN_STAGES.name} has {len(claimed)} stage record(s) "
             f"declaring themselves the creditor of "
-            f"{CREDITOR_OF_COUNTER_4_DEFERRALS} ({claimed}); exactly one may, "
+            f"{debt} ({claimed}); exactly one may, "
             "because the stage that retires a deferral is what the row is "
             "overdue against"
         )
     return claimed[0]
+
+
+def deferral_creditor_stage() -> str:
+    """The ruled creditor of counter 4's receipt-walk half, by name."""
+    return creditor_stage(CREDITOR_OF_COUNTER_4_DEFERRALS)
 
 
 #: One deferral row per family, dated to the ruled creditor rather than to a
@@ -859,32 +870,32 @@ def _uninterpreted_by_lane() -> dict[str, int]:
 
 
 def _lane_owed_to(lane: str) -> str:
-    """What the tree's own receipts say retires *lane*'s remaining gaps.
+    """What the ruled records say retires *lane*'s remaining gaps.
 
-    Read from ``UNSERVED_LANE_RECEIPTS`` rather than written here, so a row
-    re-dated in ``interpreters`` re-dates this without a second edit.  Several
-    distinct answers are joined rather than collapsed; no answer at all is the
-    empty string, which is the honest rendering of a gap nothing schedules.
+    Which gaps remain is read from ``UNSERVED_LANE_RECEIPTS``, so a lane the
+    tree has closed stops being owed to anything without a second edit; which
+    stage owes them is read from the record claiming that lane's debt, because
+    the engine does not declare one.  No open gap at all is the empty string,
+    which is the honest rendering of a lane nothing schedules — it is what
+    ``counter_4/pair_engine`` says, and it says it because that lane is served.
     """
-    stages = sorted(
-        {
-            row.retires_at
-            for (_family, pair_lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
-            if pair_lane.value == lane
-            and (_family, pair_lane) not in interpreters.INTERPRETERS
-        }
+    open_gaps = any(
+        pair_lane.value == lane and (family, pair_lane) not in interpreters.INTERPRETERS
+        for family, pair_lane in interpreters.UNSERVED_LANE_RECEIPTS
     )
-    return "; ".join(stages)
+    return creditor_stage(f"counter_4/{lane}") if open_gaps else ""
 
 
 def deferral_block() -> dict[str, Any]:
     """Counter 4's committed deferrals: the gap, its reason and its creditor.
 
-    The reason and the retiring stage are read from
-    ``interpreters.UNSERVED_LANE_RECEIPTS``, so a row re-dated in the tree
-    re-dates here rather than saying two things in two places; what this
-    module owns is the *decision* to defer, which is the part a receipt has to
-    carry because no code implies it.
+    The reason is read from ``interpreters.UNSERVED_LANE_RECEIPTS`` and the
+    recorded stage from the record that claims this lane's debt, so each fact
+    is transcribed from its one home rather than said twice; what this module
+    owns is the *decision* to defer, which is the part a receipt has to carry
+    because no code implies it.  A row carries no second copy of its stage:
+    ``retires_at`` used to ride beside ``recorded_stage`` because the two came
+    from two homes and could disagree, and it left with the second home.
     """
     shipped = completed_stages()
     blockers = {
@@ -906,7 +917,6 @@ def deferral_block() -> dict[str, Any]:
         rows[key] = {
             "recorded_stage": stage,
             "reason": row.reason if row is not None else "",
-            "retires_at": row.retires_at if row is not None else "",
             "overdue": stage in shipped,
             "overdue_because": shipped.get(stage, ""),
             "blocked_on": blockers.get(stage, "") if stage in shipped else "",
@@ -939,12 +949,22 @@ def _deferral_failures(
 ) -> list[str]:
     """Amendment B's rows, gated by set equality and against the tree (D-40).
 
-    Fails closed on a missing section.  Three substantive clauses: the
+    Fails closed on a missing section.  Four substantive clauses: the
     committed rows equal the declared ones, every deferred gap is still an
-    open gap in the tree, and every deferred gap is dated by the tree's own
-    unserved-lane receipt to exactly the stage the deferral records.  Without
-    the last two a deferral would outlive the gap it excused, which is a
-    counter driven to its target by a row nobody re-read.
+    open gap in the tree, every deferred gap has the tree's own unserved-lane
+    receipt behind it, and the **committed** receipt records the stage the
+    ruled records claim today.  Without the first three a deferral would
+    outlive the gap it excused, which is a counter driven to its target by a
+    row nobody re-read.
+
+    The last clause is where the old two-homes clause went.  While the stage
+    was declared both on ``UnservedLane.retires_at`` and in the stage records,
+    this compared the two and caught a re-dating that moved only one — at the
+    price of making every ruled re-dating a ``src/`` commit.  With one home
+    that comparison has nothing left to disagree about, so what is compared
+    instead is the pair that still can: a re-dating lands in
+    ``campaign-stages.json`` and the committed frontier receipt is stale until
+    it is regenerated, and a stale receipt is now red rather than invisible.
     """
     recorded = committed.get("counters", {}).get("counter_4", {}).get("deferrals")
     if not isinstance(recorded, Mapping):
@@ -974,10 +994,16 @@ def _deferral_failures(
                 f"counter 4: {key} is deferred and no unserved-lane receipt "
                 "dates it; a deferral needs the tree's own reason behind it"
             )
-        elif row["retires_at"] != row["recorded_stage"]:
+        committed_row = recorded.get("rows", {}).get(key)
+        if (
+            isinstance(committed_row, Mapping)
+            and committed_row.get("recorded_stage") != row["recorded_stage"]
+        ):
             failures.append(
-                f"counter 4: {key} is deferred to {row['recorded_stage']!r} and "
-                f"the tree's receipt says {row['retires_at']!r}"
+                f"counter 4: {key} is committed as deferred to "
+                f"{committed_row.get('recorded_stage')!r} and the record "
+                f"claiming its debt says {row['recorded_stage']!r}; a "
+                "re-dating that never reached the receipt is half-landed"
             )
         failures.extend(_overdue_failures(key, row, recorded.get("rows", {})))
     return failures

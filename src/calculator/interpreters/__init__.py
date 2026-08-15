@@ -26,7 +26,7 @@ derived front-door check (D-95) is what would notice.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Protocol
 
@@ -330,13 +330,13 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
 
 @dataclass(frozen=True, slots=True)
 class UnservedLane:
-    """Why a declared ``(family, lane)`` has no interpreter, and what closes it.
+    """Why a declared ``(family, lane)`` has no interpreter, and by what route.
 
     Counter 4 is the *size* of the gap between the lane table and the
     registry; this is the gap's content.  Every entry is a lane that some
     declaration reaches and no interpreter serves, with the engine's own
-    reason for it and the slice or stage that retires the row — so the
-    absence is dated evidence rather than a number nobody can read back.
+    reason for it — so the absence is evidence a reader can check against the
+    code rather than a number nobody can read back.
 
     A row is not a permit to price zero.  It is a claim that the lane's
     number arrives by another route, and the row says which route; the
@@ -351,10 +351,19 @@ class UnservedLane:
     against the registry.  Without it the route is unverified prose beside a
     verified count — coverage claimed and nothing checking the claim against
     code, which is failure four of the incident this campaign exists to end.
+
+    **What a row does not carry is when it retires.**  Both fields above are
+    facts about this tree, checkable here at import.  The stage that retires a
+    row is neither: it is campaign bookkeeping, ruled and re-dated by
+    amendment (K, 2026-08-15), read by no runtime caller.  It lives once, in
+    ``docs/receipts/campaign-stages.json``, where exactly one stage record may
+    declare itself the ``creditor_of`` a lane's debt; ``behavior_frontier``
+    resolves each row's stage from that claim.  Declared here as well it was
+    declared twice — a ruling had to edit a runtime module to land, and the
+    copies could disagree with only a gate clause between them.
     """
 
     reason: str
-    retires_at: str
     via: tuple[EngineLane, ...]
 
 
@@ -400,21 +409,14 @@ _PAIR_PRICED_OR_PACKET_FED = (
 # stronger per-rule form, D-101) and could not have landed sooner, since D-92
 # refuses a row no declaration reaches; H5's stage flipped those rules, so
 # this row is now all that stands between that lane and an unreceipted zero.
-# The receipt walk's rows are counter 4's fourteen deferrals, and Amendment K
-# (2026-08-15) re-dates them to a stage naming the act rather than a slice
-# number; the compiled lane's rows are not deferrals and keep theirs.
-_ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
-_CLOSEOUT = "Closeout 2026-08-15 — the declared lane's interpreter"
-_AMP_LANE = UnservedLane(
-    _PAIR_PRICED_OR_PACKET_FED, _ONE_KERNEL, (EngineLane.PAIR_ENGINE,)
-)
-_AMP_WALK_LANE = replace(_AMP_LANE, retires_at=_CLOSEOUT)
+# The receipt walk's rows are counter 4's fourteen deferrals; the compiled
+# lane's rows are not deferrals.  Neither carries a stage — see UnservedLane.
+_AMP_LANE = UnservedLane(_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
         (family, lane): UnservedLane(
             reason=_PACKET_FED,
-            retires_at=_CLOSEOUT if lane is EngineLane.RECEIPT_WALK else _ONE_KERNEL,
             via=(EngineLane.PAIR_ENGINE,),
         )
         for family in (
@@ -431,18 +433,17 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
-        _PACKET_FED, _CLOSEOUT, (EngineLane.PAIR_ENGINE,)
+        _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),
     # Sustain's receipt half is no longer a gap — the walk reads its two
     # walk-paid shapes through the registered walk interpreter — so only the
     # compiled lane has a row, packet-fed like the strikes.
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        _PACKET_FED, _ONE_KERNEL, (EngineLane.PAIR_ENGINE,)
+        _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),
     **{
         (family, lane): UnservedLane(
             reason=_RESOLVER_FED,
-            retires_at=_CLOSEOUT if lane is EngineLane.RECEIPT_WALK else _ONE_KERNEL,
             via=(EngineLane.DEFENSE_RESOLVER,),
         )
         for family in (
@@ -459,15 +460,13 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     # named, because the reason names both.
     (RuleFamily.REACTIVE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         reason=_PROFILE_FED,
-        retires_at=_ONE_KERNEL,
         via=(EngineLane.DEFENSE_RESOLVER, EngineLane.RECEIPT_WALK),
     ),
     (RuleFamily.ALLY_PACKET, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         reason=_TEMPLATE_FED,
-        retires_at=_ONE_KERNEL,
         via=(EngineLane.RECEIPT_WALK,),
     ),
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_WALK_LANE,
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_LANE,
     (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK): _AMP_LANE,
 }
 

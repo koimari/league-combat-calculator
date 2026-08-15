@@ -134,112 +134,98 @@
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "cast_proc/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "charged_strike/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "combat_state/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "crit_profile/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "damage_routing/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "delta_amp/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "on_hit_strike/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "opening_defense/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "periodic/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "resistance_shred/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "secondary_target/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "spellblade/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "threshold_defense/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
+            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           }
         },
         "rule": "umbrella criterion 7, Amendment B (2026-08-12): a declared (family, lane) gap Phase 3 cannot close is deferred in writing to the stage that can.  The Phase-3 exit target is 0 net of these rows; Phase 4's exit re-asserts them retired.  A row naming a gap the tree no longer holds, or a stage the tree's own receipt does not say, fails the gate"

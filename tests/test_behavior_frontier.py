@@ -13,6 +13,7 @@ dischargeable by creating a fourteenth.
 import ast
 import json
 import subprocess
+from dataclasses import fields
 from pathlib import Path
 from unittest import mock
 
@@ -669,10 +670,16 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     But resolving it against the whole of ``declared_stages`` is weaker than
     it reads: that set has two members, one of them the stale stage the
     re-dating existed to leave, so the clause was satisfied by exactly the
-    state it was meant to refuse.  ``creditor_of`` is the ruled claim, exactly
-    one record may carry it, and the tree's own ``retires_at`` is asserted
-    against it — so re-dating takes an edit to the ruled artifact and an edit
-    to the declaration together, and either alone is red.
+    state it was meant to refuse.  ``creditor_of`` is the ruled claim and
+    exactly one record may carry it.
+
+    A row carries the stage **once**.  It used to carry it twice — a
+    ``retires_at`` copied off ``interpreters.UnservedLane`` beside the
+    ``recorded_stage`` resolved from the claim — which put campaign
+    bookkeeping in a runtime module and made a ruled re-dating a ``src/``
+    commit.  What the two copies bought was a clause that caught a re-dating
+    landing on one of them; what one copy buys is a re-dating that cannot land
+    on one of them.
     """
     block = _receipt()["counters"]["counter_4"]["deferrals"]
     assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
@@ -685,8 +692,8 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     for key, row in block["rows"].items():
         assert key in open_gaps, key
         assert row["reason"].strip(), key
-        assert row["recorded_stage"] == row["retires_at"], key
-        assert row["retires_at"] == creditor, key
+        assert row["recorded_stage"] == creditor, key
+        assert "retires_at" not in row, key
     # Every deferral is on the receipt walk; the pair engine defers nothing,
     # which is why criterion 4's pair-engine half is discharged outright.
     assert set(block["by_lane"]) == {"receipt_walk"}
@@ -714,7 +721,6 @@ def test_a_deferral_that_outlives_its_gap_fails_the_gate() -> None:
     fresh["counters"]["counter_4"]["deferrals"]["rows"][stale] = {
         "recorded_stage": "Phase 4 S3 — one kernel, five views",
         "reason": "invented",
-        "retires_at": "Phase 4 S3 — one kernel, five views",
     }
     committed["counters"]["counter_4"]["deferrals"]["rows"][stale] = fresh["counters"][
         "counter_4"
@@ -725,19 +731,25 @@ def test_a_deferral_that_outlives_its_gap_fails_the_gate() -> None:
     assert any("is not an open gap" in failure for failure in failures)
 
 
-def test_a_deferral_dated_against_the_tree_fails_the_gate() -> None:
-    """A stage the tree's own receipt does not say is not a creditor."""
+def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
+    """R-05's red for the clause that replaced the two-homes comparison.
+
+    A re-dating is now one edit — ``creditor_of`` moves in
+    ``campaign-stages.json`` — and the way it can be half-landed is that the
+    committed frontier receipt is never regenerated.  This is that state: the
+    committed rows still name the stage the records claimed yesterday.
+    """
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    row = fresh["counters"]["counter_4"]["deferrals"]["rows"][
+    row = committed["counters"]["counter_4"]["deferrals"]["rows"][
         "on_hit_strike/receipt_walk"
     ]
-    row["recorded_stage"] = "some stage nobody scheduled"
+    row["recorded_stage"] = "Phase 4 S3 — one kernel, five views"
 
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
-    assert any("the tree's receipt says" in failure for failure in failures)
+    assert any("is half-landed" in failure for failure in failures)
 
 
 def test_a_moved_or_missing_deferral_set_fails_the_gate() -> None:
@@ -775,24 +787,26 @@ def test_every_counter_carries_its_target_and_the_gap_left_to_it() -> None:
         assert entry["gap"] == max(entry["measured"] - entry["bound"], 0), key
 
 
-def test_an_outstanding_target_names_what_the_tree_says_retires_it() -> None:
-    """``owed_to`` is read from the tree's own receipts, never written here.
+def test_an_outstanding_target_names_what_the_ruled_records_say_retires_it() -> None:
+    """``owed_to`` joins the tree's open gaps to the ruled claim over them.
 
-    Empty is a legal answer and an honest one — it says no receipt in the tree
-    schedules the remainder, which is a fact worth committing rather than a
-    blank filled in with a guess.
+    Which gaps are open is the tree's answer; which stage owes them is the
+    stage records', because the engine declares no stage.  Empty is a legal
+    answer and an honest one — a lane with no open gap is owed to nothing,
+    which is what the pair engine's entry says and why it says it.
     """
     targets = _receipt()["targets"]["targets"]
-    assert targets["counter_4/receipt_walk"]["owed_to"] == "; ".join(
-        sorted(
-            {
-                row.retires_at
-                for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
-                if lane.value == "receipt_walk"
-                and (family, lane) not in interpreters.INTERPRETERS
-            }
-        )
-    )
+    open_receipt_walk = {
+        (family, lane)
+        for (family, lane) in interpreters.UNSERVED_LANE_RECEIPTS
+        if lane.value == "receipt_walk"
+        and (family, lane) not in interpreters.INTERPRETERS
+    }
+    assert open_receipt_walk
+    assert targets["counter_4/receipt_walk"][
+        "owed_to"
+    ] == behavior_frontier.creditor_stage("counter_4/receipt_walk")
+    assert targets["counter_4/pair_engine"]["owed_to"] == ""
 
 
 def test_a_counter_drifting_away_from_its_target_fails_the_gate() -> None:
@@ -882,7 +896,6 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "a stage that has not shipped"
-        row["retires_at"] = "a stage that has not shipped"
 
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
@@ -906,7 +919,6 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"
-        row["retires_at"] = "Phase 9 S1 — a stage no record declares"
 
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
@@ -966,6 +978,33 @@ def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None
         if stage in shipped:
             assert row["slice_tag"] in tags and row["followed_by"] in tags
             assert tags[row["slice_tag"]] in shipped[stage]
+
+
+def test_no_campaign_stage_is_declared_anywhere_under_src() -> None:
+    """R-05's red for the one-home rule, asserted against source.
+
+    A retiring stage is campaign bookkeeping: ruled by amendment, re-dated by
+    amendment, read by no runtime caller.  While it was also a field on
+    ``interpreters.UnservedLane`` a ruled re-dating had to edit a runtime
+    module to land, which is what R-35 round 5 returned as the structural
+    cause of the receipt-walk group's ``zero_src_change`` failure.  The rule
+    that replaces it is checkable rather than remembered: no stage name any
+    committed record declares may appear under ``src/`` at all, and the lane
+    row carries the two fields that *are* facts about this tree.
+    """
+    assert {field.name for field in fields(interpreters.UnservedLane)} == {
+        "reason",
+        "via",
+    }
+    stages = set(behavior_frontier.declared_stages())
+    assert stages, "no stage records, so this clause is asserting nothing"
+    offenders = [
+        f"{path.relative_to(ROOT)}: {stage}"
+        for path in (ROOT / "src").rglob("*.py")
+        for stage in stages
+        if stage in path.read_text(encoding="utf-8")
+    ]
+    assert not offenders, offenders
 
 
 def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> None:
