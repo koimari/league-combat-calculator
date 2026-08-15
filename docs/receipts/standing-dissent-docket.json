@@ -1,0 +1,175 @@
+{
+ "artifact": "standing_dissent_docket",
+ "rule": "The twenty-two standing dissents adjudicated `open_debt` in docs/receipts/standing-dissent-adjudications.json name what is owed but nothing that could be handed to anybody. This is that hand-off. The R-15/R-18 amendment of 2026-08-14 clears a dissent one of exactly two ways -- clause 1, a fresh whole-series re-adjudication, or clause 2, a ruled src/ correction when that re-adjudication sustains the dissent -- and clause 3 forbids a re-run whose superseding receipt names no specific defect in the brief it replaces. Naming that defect concretely, and measuring it from committed artifacts, is the one part of clearing a dissent an implementation lane may do: it is a statement about the QUESTION, never about the answer. Every cluster below carries the defect its members' briefs shared and the measurement that establishes it, and every cluster a fresh investigation can clear additionally carries the well-posed brief clause 1 needs -- so a re-adjudication is a task somebody can start rather than a sentence somebody agrees with. One cluster carries no brief on purpose, because its prior brief has no defect to name and an investigation is the wrong instrument for it; that one is routed to a ruling and says so.",
+ "gate": "tests/test_standing_dissent_docket.py",
+ "what_this_file_does_not_do": "It decides no dissent, and no cluster below states or implies a verdict. Naming a defect in a brief is not answering the question the brief posed: the remedy of every cluster an investigation can clear is still a fresh investigator that has read neither the prior receipts nor this docket, and clause 2 still re-opens the producing correction as a ruled src/ slice if that investigator again certifies the old value. What the docket removes is the state the sign-off review found -- twenty-two debts naming a remedy nobody could begin.",
+ "why_a_lane_may_write_this_and_not_the_verdict": "R-18's export keeps src/, the plan, the diff and the post-change baseline out of an investigator's hands so that its arithmetic is independent. Every fact in this file is read from the COMMITTED PRE-CHANGE baseline, from the committed scenario definitions, or from the prior receipt itself -- the three sources the 2026-08-14 R-18 amendment names as facts of the question. It contains no post-change value, so no brief built from it can carry the answer.",
+ "measured_on_the_commit_that_lands_this": {
+  "standing_dissent_scan": "51 standing of 81 adverse across 552 receipts; 28 blocking, {citation: 6, open_debt: 22}",
+  "docketed": 22,
+  "clusters": 4,
+  "remedy_kinds": {
+   "whole_series_re_adjudication": 3,
+   "owed_ruling": 1
+  }
+ },
+ "pre_change_sources": {
+  "coupled_baseline_at_58a43a6": "scripts/golden_coupled_baseline.json as first captured -- the pre-change side for the C6 and P5 clusters, read with `git show 58a43a6:scripts/golden_coupled_baseline.json`",
+  "coupled_baseline_at_51db3f6": "the Phase 0 boundary re-capture -- the pre-change side for the P5 seed-retirement cluster, which lands after it",
+  "why_a_sha_and_not_a_quotation": "The amendment says the pre-change side is read from the committed baseline and from nowhere else. A sha is that instruction; a value pasted here is a second home for it."
+ },
+ "clusters": [
+  {
+   "id": "syndra_cast_timeline_ordinal",
+   "receipts": [
+    "oracle-C6-leaf77.json",
+    "oracle-C6-leaf8.json",
+    "oracle-C6-leaf95.json"
+   ],
+   "series": "The fight's `cast_timeline` -- a repeated-source series in the amendment's exact sense: successive rows of one same-source list, produced by one mechanic (the cast scheduler) into one record.",
+   "producing_correction": "Phase 0B's C6, the `recast_of=\"Q\"` stamp on champions/syndra.py, which gave the scheduler a second Dark Sphere charge to place.",
+   "defect_in_the_prior_brief": "The correction INSERTED a row into the series, so index i does not name the same cast on the two sides for any i >= 1, and the brief stated only a leaf path and two values. Handed `cast_timeline[1]/resource_cost: 100.0 -> 0.0`, the investigator could not know that 100.0 is Force of Will's rank-5 mana cost and 0.0 is the second Dark Sphere charge's -- two different casts, one address. It computed W's cost from the cached ability rows, was right about it, and certified an old value nobody had disputed. That is the amendment's own diagnosis reproduced verbatim: it priced the series' first member and was right about a question nobody asked.",
+   "how_the_defect_was_measured": {
+    "instrument": "git show <sha>:scripts/golden_coupled_baseline.json, read at the two committed captures that bracket C6",
+    "pre_change_series_syndra_custom_order_60": "7 rows at 58a43a6; the slots in order are Q, W, E, R, Q, W, Q",
+    "post_change_series_syndra_custom_order_60": "8 rows at 1db568c; the slots in order are Q, Q2, W, E, R, Q, W, Q",
+    "the_shift": "One row inserted at ordinal 1. Every later ordinal addresses its predecessor's cast: index 1 was W and is Q2; index 6 was Q and is W. Both leaf pairs the three receipts adjudicate are that shift and nothing else.",
+    "syndra_custom_order_120": "The same insertion at the same ordinal, measured on the same two captures."
+   },
+   "why_leaf_report_did_not_catch_it": "`leaf_report` pairs list members by IDENTITY_FIELD (`event_id`) and falls back to positional pairing when a list does not carry one. `cast_timeline` rows carry `slot` and `ordinal`, which together identify a cast, but not `event_id`, so the fail-closed branch applies and an insertion re-addresses every later row. This is a property of the instrument, not of the correction, and it is filed as such below.",
+   "brief_for_the_re_adjudication": {
+    "unit": "the whole series, computed member by member from cached wiki text and docs/math-foundations.md, one verdict per leaf (R-15/R-18 amendment)",
+    "scenario_parameters": "The committed definitions of `syndra_custom_order_60` and `syndra_custom_order_120` in the coupled scenario set -- the champion, level, rank allocation, item set and the user-supplied cast order each pins.",
+    "question": "For each row of Syndra's cast timeline under those parameters, which ability is cast and what resource does that cast spend? Answer the series, not an ordinal.",
+    "position_and_context_supplied": "The pre-change series in full, by ordinal, from the capture at 58a43a6, together with the statement that the correction under adjudication adds a cast rather than re-pricing one.",
+    "sibling_facts_that_did_not_move": "Read from the pre-change capture at the same addresses; the brief quotes them from there.",
+    "what_the_brief_may_not_carry": "Any post-change value, any src/ path, the diff, the plan, or this docket."
+   },
+   "remedy": "clause 1 -- one fresh investigator, one whole-series computation, one receipt per leaf, each naming this defect and the receipt it supersedes (clause 3).",
+   "supersedes_on_filing": [
+    "oracle-C6-leaf77.json",
+    "oracle-C6-leaf8.json",
+    "oracle-C6-leaf95.json"
+   ],
+   "if_sustained": "clause 2 -- C6's `recast_of=\"Q\"` stamp re-opens as its own ruled src/ slice carrying its own `Expected qualifying occurrences` line. It is never absorbed into a baseline."
+  },
+  {
+   "id": "syndra_rotation_receipt_rederivation",
+   "receipts": [
+    "oracle-P5-retire-leaf1.json",
+    "oracle-P5-retire-leaf7.json",
+    "oracle-P5-retire-leaf10.json",
+    "oracle-P5-retire-leaf13.json",
+    "oracle-P5-retire-leaf16.json",
+    "oracle-P5-retire-leaf26.json",
+    "oracle-P5-retire-leaf27.json",
+    "oracle-P5-retire-leaf28.json",
+    "oracle-P5-retire-leaf29.json",
+    "oracle-P5-retire-leaf35.json",
+    "oracle-P5-retire-leaf36.json",
+    "oracle-P5-retire-leaf37.json",
+    "oracle-P5-retire-leaf42.json",
+    "oracle-P5-retire-leaf43.json",
+    "oracle-P5-retire-leaf44.json",
+    "oracle-P5-retire-leaf53.json",
+    "oracle-P5-retire-leaf58.json"
+   ],
+   "series": "The fight's `rotation` record -- `cast_order`, `setup`, `consume`, `sources` and `aoe` together. One mechanic (the rotation resolver) produces all five into one record, and the seed retirement re-derived the whole record at once.",
+   "producing_correction": "Phase 5's seed retirement: Syndra's rotation stopped being a hand-authored seed and became a derivation over declared cast dependencies.",
+   "defect_in_the_prior_brief": "The correction did not change entries in place; it replaced four hand-written lists with derived ones of different length, different order and different membership, and rewrote the fifth from module prose into declaration prose. Every one of the seventeen leaves was then briefed as an isolated positional value pair. Three shapes result and none of them is a question about a mechanic. A member that SURVIVED with a new ordinal reads as a value change -- `setup[0]: \"Q\" -> \"E\"` on a list whose post-change membership still holds Q. A member that was REMOVED shifts every later ordinal -- `cast_order[2]: \"E\" -> \"W\"` on the 39-splinter scenario, where the retirement dropped the Q2 row that 39 splinters cannot buy. And a list that grew reads as absent-to-value at its new tail -- `consume[1]`, `sources[4]`, `aoe/passive`. An investigator handed any of these is asked to choose between two sentences about two different abilities as though one replaced the other, which is a question nobody asked, and it must still return a member of R-19's three-way set.",
+   "how_the_defect_was_measured": {
+    "instrument": "git show <sha>:scripts/golden_coupled_baseline.json at 51db3f6 (pre) and 1db568c (post), scenario syndra_derived_order_39 unless noted",
+    "cast_order": "pre holds five slots, post holds four on the 39-splinter scenario; the removed member is the second charge, and index 2 therefore addresses its successor.",
+    "setup": "pre holds one member, post holds three; the pre member is still present at a later ordinal.",
+    "consume": "pre holds one member, post holds four; the disputed ordinal is one of the three the derivation added.",
+    "sources": "pre holds four hand-written justification strings, post holds eight derived ones; no ordinal is shared by a surviving string.",
+    "aoe": "pre is a mapping over one slot, post is a mapping over six; the disputed key is one the derivation added.",
+    "the_60_and_120_scenarios": "The same five shapes, measured on the same two captures."
+   },
+   "why_leaf_report_did_not_catch_it": "These lists hold bare strings and carry no IDENTITY_FIELD, so `leaf_report`'s fail-closed branch pairs them positionally. A bare-string list is its own identity, and the campaign's identity pairing does not reach one.",
+   "brief_for_the_re_adjudication": {
+    "unit": "the whole rotation record per scenario, computed from the cached ability rows and docs/math-foundations.md, one verdict per leaf",
+    "scenario_parameters": "The committed definitions of `syndra_derived_order_39`, `syndra_derived_order_60` and `syndra_derived_order_120` -- identical but for the splinter count, which is the parameter the second Dark Sphere charge turns on.",
+    "question": "Under those parameters, what order does Syndra cast in, which slots are setup and which consume, which slots hit an area and how wide, and what facts about the cached ability rows establish each? Answer the record, not an ordinal.",
+    "position_and_context_supplied": "The pre-change record in full from the capture at 51db3f6, with the statement that the correction re-derives the whole record rather than editing entries, and that list lengths differ across the change.",
+    "sibling_facts_that_did_not_move": "Read from the same pre-change capture.",
+    "what_the_brief_may_not_carry": "Any post-change value, any src/ path, the diff, the plan, or this docket.",
+    "note_on_two_receipts": "oracle-P5-retire-leaf27 and leaf35 adjudicate two spellings of the same fact -- that Q2 is Q's recast -- and leaf26 records that both of its values reached it elliptically, with an unquoted ellipsis inside the new one. A brief that truncates a value it asks about is a fourth defect in the same family and the re-posed brief quotes both sides in full."
+   },
+   "remedy": "clause 1 -- one fresh investigator per scenario record, one computation, one receipt per leaf, each naming this defect and the receipt it supersedes (clause 3).",
+   "supersedes_on_filing": [
+    "oracle-P5-retire-leaf1.json",
+    "oracle-P5-retire-leaf7.json",
+    "oracle-P5-retire-leaf10.json",
+    "oracle-P5-retire-leaf13.json",
+    "oracle-P5-retire-leaf16.json",
+    "oracle-P5-retire-leaf26.json",
+    "oracle-P5-retire-leaf27.json",
+    "oracle-P5-retire-leaf28.json",
+    "oracle-P5-retire-leaf29.json",
+    "oracle-P5-retire-leaf35.json",
+    "oracle-P5-retire-leaf36.json",
+    "oracle-P5-retire-leaf37.json",
+    "oracle-P5-retire-leaf42.json",
+    "oracle-P5-retire-leaf43.json",
+    "oracle-P5-retire-leaf44.json",
+    "oracle-P5-retire-leaf53.json",
+    "oracle-P5-retire-leaf58.json"
+   ],
+   "if_sustained": "clause 2 -- the seed retirement re-opens as its own ruled src/ slice with its own `Expected qualifying occurrences` line, and the rotation the resolver derives is corrected in source rather than pinned."
+  },
+  {
+   "id": "abyssal_unmake_support_multiplier_field",
+   "receipts": [
+    "oracle-C2-leaf3.json"
+   ],
+   "series": "The `support_damage_multiplier` field across `mandate_abyssal_curse_roster`'s event list -- the fields of one record whose siblings the brief did not state.",
+   "producing_correction": "Phase 0B's C2, which removed a spurious x1.12 on holder magic damage.",
+   "defect_in_the_prior_brief": "The brief posed a VALUE question -- is 1.12 the right multiplier for Abyssal Mask's Unmake? -- about what the identity-keyed classification calls a FIELD REMOVAL from a record both sides hold. The investigator derived 1.12 from the cached item text correctly and certified it, and the campaign does not dispute the magnitude: what C2 changed is which engine prices it, not what it is worth. The brief also called the record's siblings unmoved by not mentioning them, and on the same correction three of them moved -- the event's `damage` and `pair_damage` alongside the field itself. That is the false premise the 2026-08-14 R-18 amendment names in terms, and the amendment's remedy is a brief that carries a moved sibling certified by a committed receipt, cited by path.",
+   "how_the_defect_was_measured": {
+    "instrument": "git show <sha>:scripts/golden_coupled_baseline.json at 58a43a6 (pre) and 1db568c (post)",
+    "record_identity": "The event carries `event_id` and holds the same id on both sides, so `leaf_report` pairs it by identity and classifies the leaf `value_to_absent` rather than as an ordinal shift.",
+    "siblings_that_moved": "Of the record's thirteen fields, three differ across the two captures: `damage`, `pair_damage`, and the disputed field itself. The remaining ten are identical.",
+    "why_that_is_the_defect": "A brief stating only the disputed field poses a question whose premise -- that the rest of the record is settled -- the compare contradicts."
+   },
+   "brief_for_the_re_adjudication": {
+    "unit": "the record, and the field across the event list it belongs to",
+    "scenario_parameters": "The committed definition of `mandate_abyssal_curse_roster`.",
+    "question": "For each event of this roster's combat log, does a support-damage multiplier apply to it, and if so what is its magnitude and which participant's engine is entitled to publish it? Answer the field across the series, not one member.",
+    "position_and_context_supplied": "The pre-change record in full from 58a43a6, and the pre-change values of the three fields that moved -- each cited to a committed receipt where one certifies it, per the 2026-08-14 R-18 amendment's certified-fact clause.",
+    "sibling_facts_that_did_not_move": "The ten identical fields, read from the same capture.",
+    "what_the_brief_may_not_carry": "Any post-change value, any src/ path, the diff, the plan, or this docket."
+   },
+   "remedy": "clause 1 -- a fresh investigator, briefed on the record rather than the field, one receipt naming this defect and the receipt it supersedes (clause 3).",
+   "supersedes_on_filing": [
+    "oracle-C2-leaf3.json"
+   ],
+   "if_sustained": "clause 2 -- C2 re-opens as its own ruled src/ slice. The umbrella's authority table rules `abyssal_mask.unmake` SPLIT with the pair engine keeping `magic_amp`, so a sustained dissent is a dispute with that ruling and is escalated to it rather than absorbed."
+  },
+  {
+   "id": "item_coverage_reason_prose",
+   "receipts": [
+    "oracle-P3-3.8-leaf24.json"
+   ],
+   "series": "not a series -- one leaf whose value is a campaign-authored justification string.",
+   "producing_correction": "Phase 3's coverage-evidence rewording of an item's coverage reason.",
+   "defect_in_the_prior_brief": "There is none, and that is this cluster's whole content. The brief was well posed and the investigator answered it as well as the question admits: it checked both strings against the cached corpus, found the operative claim supported on both sides, and certified the old value because R-19's closed verdict set has no member for 'the evidence tree cannot decide between two true sentences'. A re-run under a better brief would reproduce that, and clause 3 makes a re-run whose receipt names no defect in the prior brief unwritable -- correctly, because there is nothing to name.",
+   "how_the_defect_was_measured": {
+    "instrument": "the receipt itself, docs/receipts/oracle-P3-3.8-leaf24.json",
+    "what_it_shows": "The receipt's own step 2 records the shared operative claim as SUPPORTED by the cached sources, and the two deltas it isolates are a universal quantifier and a word choice. Neither is a claim about a number and neither is decidable from data/ or docs/math-foundations.md.",
+    "why_that_bars_clause_1": "Clause 1 clears a dissent by re-posing an underdetermined question. This question is not underdetermined; it is out of the export's jurisdiction, which is the same shape the umbrella's Amendment E found for a disposition string and answered by ruling rather than by investigation."
+   },
+   "remedy": "an owed ruling, not an investigation. Routed to docs/receipts/rulings-owed.json as `how_a_campaign_authored_justification_string_is_adjudicated`. Sending it to a fresh investigator would be oracle shopping with extra steps: a re-run must cite a defect in the prior brief, and this brief has none.",
+   "owed_ruling_id": "how_a_campaign_authored_justification_string_is_adjudicated",
+   "if_sustained": "not applicable -- clause 2 fires on a sustained whole-series verdict, and no whole-series verdict is owed here. The debt closes when the ruling lands, and the adjudication row stays `open_debt` until it does."
+  }
+ ],
+ "escalated_by_this_docket": {
+  "id": "identity_pairing_does_not_reach_a_bare_scalar_list",
+  "dated": "2026-08-14",
+  "what": "Twenty of the twenty-two docketed dissents are ordinal or membership artifacts of positional pairing over lists that carry no IDENTITY_FIELD. `leaf_report` pairs by `event_id` where a member has one and falls back to positional pairing otherwise -- correctly, fail-closed, and documented as such. What nobody wrote down is the consequence: for `cast_timeline` (identified by `slot` + `ordinal`) and for the rotation record's bare-string lists (identified by their own value), an insertion or a removal re-addresses every later member, and every re-addressed member becomes a value diff that R-15 sends to an investigator.",
+  "why_it_is_escalated_and_not_fixed_here": "Widening identity pairing is a change to the instrument every committed allowlist and every oracle receipt in the campaign addresses leaves through -- each spells the baseline's ordinal, which is the address `leaf_report` promises to keep. Changing that at the campaign's close would re-address the very artifacts this docket is built from, and it is a semantic change to a gate, which R-30 and R-32 both bind. It belongs to whoever schedules the re-adjudications, ahead of them.",
+  "reproducer": "git show 58a43a6:scripts/golden_coupled_baseline.json and git show 1db568c:scripts/golden_coupled_baseline.json, scenario syndra_custom_order_60, path fights/manual_target/cast_timeline -- one row inserted at ordinal 1, seven later rows re-addressed, three of them adjudicated as value changes.",
+  "carried_by": "this file, and the cluster rows above that measure it"
+ }
+}
