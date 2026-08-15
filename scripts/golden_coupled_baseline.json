@@ -28093,9 +28093,9 @@
             {
               "name": "Dark Sphere (2nd charge)",
               "ordinal": 1,
-              "resource_after": 1700.0,
+              "resource_after": 1640.0,
               "resource_before": 1700.0,
-              "resource_cost": 0.0,
+              "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q2",
               "time": 0.0
@@ -28103,8 +28103,8 @@
             {
               "name": "Force of Will",
               "ordinal": 1,
-              "resource_after": 1600.0,
-              "resource_before": 1700.0,
+              "resource_after": 1540.0,
+              "resource_before": 1640.0,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -28113,8 +28113,8 @@
             {
               "name": "Scatter the Weak",
               "ordinal": 1,
-              "resource_after": 1550.0,
-              "resource_before": 1600.0,
+              "resource_after": 1490.0,
+              "resource_before": 1540.0,
               "resource_cost": 50.0,
               "resource_restored": 0.0,
               "slot": "E",
@@ -28123,8 +28123,8 @@
             {
               "name": "Unleashed Power",
               "ordinal": 1,
-              "resource_after": 1451.08,
-              "resource_before": 1551.08,
+              "resource_after": 1391.08,
+              "resource_before": 1491.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "R",
@@ -28133,8 +28133,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 2,
-              "resource_after": 1411.6,
-              "resource_before": 1471.6,
+              "resource_after": 1351.6,
+              "resource_before": 1411.6,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -28143,8 +28143,8 @@
             {
               "name": "Force of Will",
               "ordinal": 2,
-              "resource_after": 1321.42,
-              "resource_before": 1421.42,
+              "resource_after": 1261.42,
+              "resource_before": 1361.42,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -28153,8 +28153,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 3,
-              "resource_after": 1273.2,
-              "resource_before": 1333.2,
+              "resource_after": 1213.2,
+              "resource_before": 1273.2,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -28295,8 +28295,8 @@
           "notes": [],
           "overkill": 0.0,
           "physical_shield_absorbed": 0.0,
-          "resource_remaining": 1273.2,
-          "resource_spent": 530.0,
+          "resource_remaining": 1213.2,
+          "resource_spent": 590.0,
           "rotation": {
             "aoe": {},
             "cast_order": [
@@ -31646,9 +31646,9 @@
             {
               "name": "Dark Sphere (2nd charge)",
               "ordinal": 1,
-              "resource_after": 1700.0,
+              "resource_after": 1640.0,
               "resource_before": 1700.0,
-              "resource_cost": 0.0,
+              "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q2",
               "time": 0.0
@@ -31656,8 +31656,8 @@
             {
               "name": "Force of Will",
               "ordinal": 1,
-              "resource_after": 1600.0,
-              "resource_before": 1700.0,
+              "resource_after": 1540.0,
+              "resource_before": 1640.0,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -31666,8 +31666,8 @@
             {
               "name": "Scatter the Weak",
               "ordinal": 1,
-              "resource_after": 1550.0,
-              "resource_before": 1600.0,
+              "resource_after": 1490.0,
+              "resource_before": 1540.0,
               "resource_cost": 50.0,
               "resource_restored": 0.0,
               "slot": "E",
@@ -31676,8 +31676,8 @@
             {
               "name": "Unleashed Power",
               "ordinal": 1,
-              "resource_after": 1451.08,
-              "resource_before": 1551.08,
+              "resource_after": 1391.08,
+              "resource_before": 1491.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "R",
@@ -31686,8 +31686,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 2,
-              "resource_after": 1411.6,
-              "resource_before": 1471.6,
+              "resource_after": 1351.6,
+              "resource_before": 1411.6,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -31696,8 +31696,8 @@
             {
               "name": "Force of Will",
               "ordinal": 2,
-              "resource_after": 1321.42,
-              "resource_before": 1421.42,
+              "resource_after": 1261.42,
+              "resource_before": 1361.42,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -31706,8 +31706,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 3,
-              "resource_after": 1273.2,
-              "resource_before": 1333.2,
+              "resource_after": 1213.2,
+              "resource_before": 1273.2,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -31848,8 +31848,8 @@
           "notes": [],
           "overkill": 0.0,
           "physical_shield_absorbed": 0.0,
-          "resource_remaining": 1273.2,
-          "resource_spent": 530.0,
+          "resource_remaining": 1213.2,
+          "resource_spent": 590.0,
           "rotation": {
             "aoe": {},
             "cast_order": [
@@ -33446,9 +33446,9 @@
             {
               "name": "Dark Sphere (2nd charge)",
               "ordinal": 1,
-              "resource_after": 1700.0,
+              "resource_after": 1640.0,
               "resource_before": 1700.0,
-              "resource_cost": 0.0,
+              "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q2",
               "time": 0.0
@@ -33456,8 +33456,8 @@
             {
               "name": "Scatter the Weak",
               "ordinal": 1,
-              "resource_after": 1650.0,
-              "resource_before": 1700.0,
+              "resource_after": 1590.0,
+              "resource_before": 1640.0,
               "resource_cost": 50.0,
               "resource_restored": 0.0,
               "slot": "E",
@@ -33466,8 +33466,8 @@
             {
               "name": "Force of Will",
               "ordinal": 1,
-              "resource_after": 1551.08,
-              "resource_before": 1651.08,
+              "resource_after": 1491.08,
+              "resource_before": 1591.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -33476,8 +33476,8 @@
             {
               "name": "Unleashed Power",
               "ordinal": 1,
-              "resource_after": 1451.08,
-              "resource_before": 1551.08,
+              "resource_after": 1391.08,
+              "resource_before": 1491.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "R",
@@ -33486,8 +33486,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 2,
-              "resource_after": 1411.6,
-              "resource_before": 1471.6,
+              "resource_after": 1351.6,
+              "resource_before": 1411.6,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -33496,8 +33496,8 @@
             {
               "name": "Force of Will",
               "ordinal": 2,
-              "resource_after": 1322.5,
-              "resource_before": 1422.5,
+              "resource_after": 1262.5,
+              "resource_before": 1362.5,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -33506,8 +33506,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 3,
-              "resource_after": 1273.2,
-              "resource_before": 1333.2,
+              "resource_after": 1213.2,
+              "resource_before": 1273.2,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -33648,8 +33648,8 @@
           "notes": [],
           "overkill": 0.0,
           "physical_shield_absorbed": 0.0,
-          "resource_remaining": 1273.2,
-          "resource_spent": 530.0,
+          "resource_remaining": 1213.2,
+          "resource_spent": 590.0,
           "rotation": {
             "aoe": {
               "E": 5,
@@ -37063,9 +37063,9 @@
             {
               "name": "Dark Sphere (2nd charge)",
               "ordinal": 1,
-              "resource_after": 1700.0,
+              "resource_after": 1640.0,
               "resource_before": 1700.0,
-              "resource_cost": 0.0,
+              "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q2",
               "time": 0.0
@@ -37073,8 +37073,8 @@
             {
               "name": "Scatter the Weak",
               "ordinal": 1,
-              "resource_after": 1650.0,
-              "resource_before": 1700.0,
+              "resource_after": 1590.0,
+              "resource_before": 1640.0,
               "resource_cost": 50.0,
               "resource_restored": 0.0,
               "slot": "E",
@@ -37083,8 +37083,8 @@
             {
               "name": "Force of Will",
               "ordinal": 1,
-              "resource_after": 1551.08,
-              "resource_before": 1651.08,
+              "resource_after": 1491.08,
+              "resource_before": 1591.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -37093,8 +37093,8 @@
             {
               "name": "Unleashed Power",
               "ordinal": 1,
-              "resource_after": 1451.08,
-              "resource_before": 1551.08,
+              "resource_after": 1391.08,
+              "resource_before": 1491.08,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "R",
@@ -37103,8 +37103,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 2,
-              "resource_after": 1411.6,
-              "resource_before": 1471.6,
+              "resource_after": 1351.6,
+              "resource_before": 1411.6,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -37113,8 +37113,8 @@
             {
               "name": "Force of Will",
               "ordinal": 2,
-              "resource_after": 1322.5,
-              "resource_before": 1422.5,
+              "resource_after": 1262.5,
+              "resource_before": 1362.5,
               "resource_cost": 100.0,
               "resource_restored": 0.0,
               "slot": "W",
@@ -37123,8 +37123,8 @@
             {
               "name": "Dark Sphere",
               "ordinal": 3,
-              "resource_after": 1273.2,
-              "resource_before": 1333.2,
+              "resource_after": 1213.2,
+              "resource_before": 1273.2,
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
@@ -37265,8 +37265,8 @@
           "notes": [],
           "overkill": 0.0,
           "physical_shield_absorbed": 0.0,
-          "resource_remaining": 1273.2,
-          "resource_spent": 530.0,
+          "resource_remaining": 1213.2,
+          "resource_spent": 590.0,
           "rotation": {
             "aoe": {
               "E": 5,
@@ -37372,11 +37372,11 @@
       "numeric_leaves": 8312,
       "sections": "coupled_scenarios"
     },
-    "git_head": "13dd733a23c64c41a7e7e901db089e7ea228a461",
+    "git_head": "e40ac6800b8a2e8549a298bdc53ce023efb81774",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "890149fb1d4d2955cfe1fd4486d4a472d3d1e9f7"
+    "src_tree_sha": "a8947d1a8a0053a461ebf463e6d3c391c5b2ba8c"
   }
 }

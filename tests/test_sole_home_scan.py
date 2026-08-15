@@ -84,12 +84,20 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     the figure it states is now two captures old, and the disposition
     allowlist's row was re-keyed to the figure that capture made live, because
     an allowlist states both sides of the move it claims.
+
+    It then fell by two, across one source, at the charge-price pin
+    re-capture — the first capture since the 0B boundary to move the *pair*
+    snapshot's two censuses, which retired the 0B capture commit's own R-34
+    line of cause and the 0A.2 oracle receipt's numeric-leaf figure together.
+    Neither could be re-keyed the way an allowlist can: a commit body is
+    history and a superseded oracle receipt is never edited, so a row whose
+    figure a capture supersedes simply stops having a site.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 9
+    assert block["forced_restatements"] == 7
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 6
+    assert len({row.source for row in forced}) == 5
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

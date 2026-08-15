@@ -487,6 +487,7 @@
     "/champion_baselines/Syndra/abilities_level_11/Q2/resource_type"
    ],
    "status": "OWED -- R-18 investigators, one per leaf, not run by this lane",
+   "status_now": "DISCHARGED at fc80f2b. Eight fresh R-18 investigators returned one verdict per leaf, all new_value_correct, filed as docs/receipts/oracle-DKT-ruling-leaf1.json through -leaf8.json in the leaf order listed above. The line above is left exactly as the landing slice wrote it -- it was true when it was written, and a status that is edited in place cannot be told apart from one that was never owed. This field is what a later reader needs and the pin re-capture needs: R-19 forbids a re-capture while any qualifying occurrence lacks a receipt, and this block is the record that none of these eight does.",
    "why_they_are_recorded_rather_than_absorbed": "R-19 is not satisfied by a sibling's receipt. These eight are the same correction reaching addresses no oracle has been asked about: the two derived-order scenarios, which the docket never docketed because C6's brief was built from the custom-order pair; the four mana totals, which move because the charge is priced and are arithmetic over leaves the receipts do state; and the two pair-snapshot keys, which are a declaration dump with no fight behind them -- the same shape C6 recorded when Q2 gained recast_of there. They are reported to the campaign owner as this slice's qualifying occurrences rather than being quietly carried, and the baseline that absorbs them is a separate commit."
   }
  },

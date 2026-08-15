@@ -25960,6 +25960,8 @@
           ],
           "rank": 5,
           "recast_of": "Q",
+          "resource_cost": 60.0,
+          "resource_type": "MANA",
           "total_raw": 230.0
         },
         "R": {
@@ -41713,18 +41715,18 @@
     "champions_fetched_at": 1786113324.862417,
     "fingerprint": {
       "entries": 670,
-      "leaves": 51438,
-      "numeric_leaves": 43348,
+      "leaves": 51440,
+      "numeric_leaves": 43349,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "a5da84cb2784af4e18591713cacff563fa62a44a",
+    "git_head": "e40ac6800b8a2e8549a298bdc53ce023efb81774",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
     "patch_last_changed_max": "26.15",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "8cac3f5f5927137b5ca07725fa9298e6948650aa"
+    "src_tree_sha": "a8947d1a8a0053a461ebf463e6d3c391c5b2ba8c"
   },
   "registered_champion_fights": {
     "Aatrox": {

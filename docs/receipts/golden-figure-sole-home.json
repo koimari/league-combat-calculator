@@ -4,7 +4,6 @@
  "how_a_row_retires": "A forced row retires when its site stops stating a count of a COMMITTED baseline -- because a re-capture superseded the figure, or because the artifact stops adjudicating that leaf. Editing the sources is not available and never was: a superseded oracle receipt is never edited (R-15/R-18 amendment) and a commit body is history. What changed on 2026-08-14 is the reading, not the mechanism: Amendment H rules these sites carved out rather than owed, and the scan's job became holding the carve-out to its three conditions instead of counting a debt.",
  "sources": {
   "forced_restatement_sources": [
-   "1483b46e",
    "83574329",
    "c2b3d887",
    "expected-golden-diff-campaign-close-dispositions.json",
@@ -25,22 +24,10 @@
    "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
   },
   {
-   "source": "oracle-0A.2-golden-leaf0.json",
-   "value": 43348,
-   "kind": "forced_restatement",
-   "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
-  },
-  {
    "source": "oracle-S9-leaf11.json",
    "value": 8312,
    "kind": "forced_restatement",
    "reason": "R-19: an oracle receipt carries the two values of the leaf it adjudicates, and this leaf IS a fingerprint shape counter, so the receipt cannot state the question without stating the figure"
-  },
-  {
-   "source": "1483b46e",
-   "value": 51438,
-   "kind": "forced_restatement",
-   "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
   },
   {
    "source": "83574329",
@@ -91,5 +78,5 @@
    "reason": "an occurrence count in an R-17 allowlist, which happens to equal coupled_golden_exact.entries since the four bench rosters joined that capture on 2026-08-14. Not a shape figure: the receipt states no snapshot count and its 17 is a number of moved paths."
   }
  ],
- "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails. The 2026-08-14 exact-capture move did it again and in both directions: three rows stating the old exact leaf count retired the moment the capture superseded it, and one allowlist's unrelated occurrence count became a collision the same day. Both are recorded rather than reasoned about, which is what the stale-row check is for. The campaign-close BOUNDARY re-capture did it a third time: the H2 allowlist's row retired outright because its stated figure is now two captures old, and the dispositions allowlist's row was re-keyed to the figure that capture made live -- the same two moves, in the same order, for the same reason."
+ "a_superseded_count_stops_being_a_site": "The charge-price PIN re-capture did it a fourth time, and for the first time in the pair jurisdiction: it is the only capture since the 0B boundary to move golden.leaves and golden.numeric_leaves, so the two rows that stated those two superseded figures -- 1483b46e's, the 0B capture commit's own line of cause under R-34, and oracle-0A.2-golden-leaf0.json's numeric-leaf figure under R-19 -- retired outright, with no re-keying available to either: a commit body is history and a superseded oracle receipt is never edited. The 0A.2 receipt keeps its entry-count row, which that capture did not move. The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails. The 2026-08-14 exact-capture move did it again and in both directions: three rows stating the old exact leaf count retired the moment the capture superseded it, and one allowlist's unrelated occurrence count became a collision the same day. Both are recorded rather than reasoned about, which is what the stale-row check is for. The campaign-close BOUNDARY re-capture did it a third time: the H2 allowlist's row retired outright because its stated figure is now two captures old, and the dispositions allowlist's row was re-keyed to the figure that capture made live -- the same two moves, in the same order, for the same reason."
 }
