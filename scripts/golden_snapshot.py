@@ -927,6 +927,40 @@ COUPLED_SCENARIOS = (
 )
 
 
+def bench_roster_scenarios():
+    """The four bench rosters, as coupled scenarios — read, never typed.
+
+    Phase 4's criterion 14 ends *"per-attacker totals are asserted bit-exact
+    on the four bench scenarios against ``scripts/golden_coupled_exact.json``"*.
+    The assertion existed and was gated, over :data:`COUPLED_SCENARIOS`'
+    thirteen — and the intersection with the four the sentence names was
+    empty, so the clause named one instrument and cited another and was never
+    dischargeable as written.
+
+    The two sets answer two different questions and both are kept.
+    :data:`COUPLED_SCENARIOS` is R-12's, derived from the ``damage_modifier``
+    producer set so a seventh producer with no covering scenario fails; these
+    four are R-07's and R-27's, chosen to move the optimizer's work counters.
+    The bench requests are *rosters* — the searched champion carries no items,
+    the enemies and allies do — so one coupled fight over each is well defined
+    and deterministic, which an optimizer *search* over one would not be.
+
+    Read from ``bench_coupled_optimizer.SCENARIOS`` rather than restated, for
+    the same reason ``producers`` is read: a fifth bench scenario must arrive
+    here on the commit that adds it, not on the commit somebody notices.
+
+    **The rounded coupled baseline does not gain them.**  Only the exact
+    capture does, so R-01 row 3's jurisdiction is exactly what it was and this
+    adds a bit-exactness assertion rather than a new golden surface.
+    """
+    from bench_coupled_optimizer import SCENARIOS  # local: scripts-to-scripts
+
+    return tuple(
+        CoupledScenario(name, dict(request))
+        for name, request in sorted(SCENARIOS.items())
+    )
+
+
 def _uncovered_producers(scenarios, producers):
     """Producers no scenario equips the item for — R-12's derived coverage."""
     equipped = frozenset().union(*(s.equipped() for s in scenarios))
@@ -1133,11 +1167,26 @@ def capture(outfile):
     return 0
 
 
+def coupled_scenarios_for(*, exact):
+    """Which scenario set a capture covers — one answer, two readers.
+
+    The exact capture additionally holds the four bench rosters, because
+    Phase 4's criterion 14 names them by name; the rounded one does not,
+    because adding them would move R-01 row 3's jurisdiction rather than the
+    bit-exactness assertion the criterion is about.
+    """
+    if not exact:
+        return COUPLED_SCENARIOS
+    return (*COUPLED_SCENARIOS, *bench_roster_scenarios())
+
+
 def capture_coupled_file(outfile, *, exact=False):
     """Capture the coupled roster baseline (or its exact per-attacker totals)."""
     started = time.perf_counter()
     snapshot = capture_coupled(
-        COUPLED_SCENARIOS, producers=cross_participant_producers(), exact=exact
+        coupled_scenarios_for(exact=exact),
+        producers=cross_participant_producers(),
+        exact=exact,
     )
     Path(outfile).write_text(
         json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8"

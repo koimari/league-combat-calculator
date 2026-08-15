@@ -598,7 +598,7 @@ class TestExactBaseline:
 
     def test_the_exact_capture_reproduces_the_committed_totals(self):
         captured = gs.capture_coupled(
-            gs.COUPLED_SCENARIOS,
+            gs.coupled_scenarios_for(exact=True),
             producers=gs.cross_participant_producers(),
             exact=True,
         )["coupled_scenarios"]
@@ -625,7 +625,7 @@ class TestExactBaseline:
 
     def test_exact_values_are_repr_floats_not_rounded(self):
         captured = gs.capture_coupled(
-            gs.COUPLED_SCENARIOS,
+            gs.coupled_scenarios_for(exact=True),
             producers=gs.cross_participant_producers(),
             exact=True,
         )

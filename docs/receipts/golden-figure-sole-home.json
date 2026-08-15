@@ -14,7 +14,8 @@
   ],
   "coincidence_sources": [
    "8ec29d7e",
-   "campaign-close-report.md"
+   "campaign-close-report.md",
+   "expected-golden-diff-P4-S7-bloodsong.json"
   ]
  },
  "allowances": [
@@ -50,12 +51,6 @@
   },
   {
    "source": "83574329",
-   "value": 82,
-   "kind": "forced_restatement",
-   "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
-  },
-  {
-   "source": "83574329",
    "value": 8312,
    "kind": "forced_restatement",
    "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
@@ -63,12 +58,6 @@
   {
    "source": "c2b3d887",
    "value": 13,
-   "kind": "forced_restatement",
-   "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
-  },
-  {
-   "source": "c2b3d887",
-   "value": 82,
    "kind": "forced_restatement",
    "reason": "R-34: a baseline-move commit owes one line of cause per moved value, and the fingerprint shape counters are values the move moved"
   },
@@ -91,12 +80,6 @@
    "reason": "the scenario count in the phase and re-capture tables, and the report's own note that 13 is a collision rather than a restatement"
   },
   {
-   "source": "campaign-close-report.md",
-   "value": 82,
-   "kind": "coincidence",
-   "reason": "an oracle verdict tally and a receipt count; the report's own note names 82 as a collision"
-  },
-  {
    "source": "expected-golden-diff-P4-H2-ccscope.json",
    "value": 23310,
    "kind": "forced_restatement",
@@ -107,7 +90,13 @@
    "value": 23310,
    "kind": "forced_restatement",
    "reason": "R-17: an allowlist states the expected old and new value of every path it claims, and this slice claims /metadata/fingerprint/leaves -- the shape counter the thirty-eight added reason keys move. Carved out by the umbrella's Amendment H of 2026-08-14: a quotation at its address, inside the artifact adjudicating that exact leaf, naming the leaf by its path and agreeing with the committed receipt."
+  },
+  {
+   "source": "expected-golden-diff-P4-S7-bloodsong.json",
+   "value": 17,
+   "kind": "coincidence",
+   "reason": "an occurrence count in an R-17 allowlist, which happens to equal coupled_golden_exact.entries since the four bench rosters joined that capture on 2026-08-14. Not a shape figure: the receipt states no snapshot count and its 17 is a number of moved paths."
   }
  ],
- "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails."
+ "a_superseded_count_stops_being_a_site": "The scan reads the LIVE counts from campaign-fingerprints.json, so a receipt restating a count a later re-capture superseded stops being a site the moment the capture lands -- which is what the criterion says, since it binds a count OF A COMMITTED BASELINE and a superseded figure is no longer one. The campaign-close coupled re-capture moved coupled_golden.leaves and retired six rows that way; the seventh, this file's H2 allowlist, is re-keyed to the new value because an allowlist states both sides of the move it claims. The stale-row check is what makes that visible rather than quiet: a row outliving its site fails. The 2026-08-14 exact-capture move did it again and in both directions: three rows stating the old exact leaf count retired the moment the capture superseded it, and one allowlist's unrelated occurrence count became a collision the same day. Both are recorded rather than reasoned about, which is what the stale-row check is for."
 }

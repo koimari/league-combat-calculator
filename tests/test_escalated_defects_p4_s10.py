@@ -68,7 +68,6 @@ def test_the_open_defects_are_the_ones_this_file_reproduces() -> None:
     """A gate that drifted off its entries is a gate for nothing."""
     assert [defect["id"] for defect in receipt()["defects"]] == [
         "no_production_path_emits_a_non_measured_disposition_consumption_half_closed",
-        "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
     ]
 
 
@@ -80,6 +79,7 @@ def test_a_retired_entry_says_how_it_closed_and_what_gates_it_now() -> None:
         "r01_row_1s_pinned_collected_count_is_the_integration_agents_and_is_stale",
         "the_first_defender_scan_survives_because_ccscope_was_never_authored",
         "the_fallback_reason_is_carried_on_the_decision_and_published_nowhere",
+        "the_bit_exact_clause_names_a_scenario_set_the_instrument_does_not_hold",
     ]
     for entry in retired:
         assert entry["retired"] and entry["retired_by"]
@@ -248,7 +248,14 @@ def test_and_nothing_in_src_still_produces_a_withheld_quantity() -> None:
 
 
 def test_the_exact_baseline_holds_the_derived_scenario_set() -> None:
-    """R-12's set, read off the committed file rather than described."""
+    """R-12's set, read off the committed file rather than described.
+
+    A superset now rather than an equality, and the four extra members are
+    named in the assertion below rather than left as slack: R-12's coverage
+    guarantee is that every ``damage_modifier`` producer has a covering
+    scenario, which a superset keeps, and the bench rosters are the four
+    Phase 4's criterion 14 names.
+    """
     import json as _json
 
     from scripts.golden_snapshot import COUPLED_SCENARIOS
@@ -256,27 +263,51 @@ def test_the_exact_baseline_holds_the_derived_scenario_set() -> None:
     exact = _json.loads(
         (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
     )
-    assert set(exact["coupled_scenarios"]) == {
-        scenario.name for scenario in COUPLED_SCENARIOS
-    }
+    assert {scenario.name for scenario in COUPLED_SCENARIOS} <= set(
+        exact["coupled_scenarios"]
+    )
 
 
-def test_no_bench_scenario_is_in_the_exact_baseline() -> None:
-    """The row's reproducer: the two scenario sets do not intersect.
+def test_every_bench_scenario_is_in_the_exact_baseline() -> None:
+    """The row's reproducer, inverted: the two sets now meet, exactly.
 
-    Bounded rather than vague -- the entry claims the criterion names a set
-    the instrument does not hold, and this is that claim as a set operation.
-    It inverts the day the integration agent captures the bench rosters.
+    The entry read "the criterion names a set the instrument does not hold",
+    as a set operation over an empty intersection.  The instrument holds it:
+    the exact capture is R-12's thirteen plus the four bench rosters, and
+    nothing else -- so the criterion's sentence is dischargeable against the
+    file it cites, and the exact baseline has not become a place scenarios
+    accumulate.
+    """
+    import json as _json
+
+    from scripts.bench_coupled_optimizer import SCENARIOS
+    from scripts.golden_snapshot import COUPLED_SCENARIOS
+
+    exact = _json.loads(
+        (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
+    )
+    held = set(exact["coupled_scenarios"])
+    assert set(SCENARIOS) <= held
+    assert len(SCENARIOS) == 4
+    assert held == {scenario.name for scenario in COUPLED_SCENARIOS} | set(SCENARIOS)
+
+
+def test_the_rounded_baseline_did_not_gain_them() -> None:
+    """The half that keeps this from being a jurisdiction change.
+
+    R-01 row 3 compares the *rounded* coupled baseline, and adding four
+    rosters to it would have grown the surface every future slice is graded
+    against.  The bit-exactness assertion is what criterion 14 asks for, so
+    only the exact capture moved.
     """
     import json as _json
 
     from scripts.bench_coupled_optimizer import SCENARIOS
 
-    exact = _json.loads(
-        (ROOT / "scripts" / "golden_coupled_exact.json").read_text(encoding="utf-8")
+    rounded = _json.loads(
+        (ROOT / "scripts" / "golden_coupled_baseline.json").read_text(encoding="utf-8")
     )
-    assert not set(exact["coupled_scenarios"]) & set(SCENARIOS)
-    assert len(SCENARIOS) == 4
+    assert not set(rounded["coupled_scenarios"]) & set(SCENARIOS)
 
 
 def test_the_exact_baseline_is_unrounded_where_the_other_one_rounds() -> None:

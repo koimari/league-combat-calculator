@@ -1,5 +1,30 @@
 {
   "coupled_scenarios": {
+    "cassiopeia_3champ": {
+      "combat/0:main/incoming": "1144.5",
+      "combat/0:main/outgoing": "768.0",
+      "combat/1:enemy:Alistar/incoming": "509.7",
+      "combat/1:enemy:Alistar/outgoing": "530.8",
+      "combat/2:enemy:Dr. Mundo/incoming": "258.2",
+      "combat/2:enemy:Dr. Mundo/outgoing": "613.7",
+      "fights/0:Alistar": "509.7",
+      "fights/1:Dr. Mundo": "258.2"
+    },
+    "cassiopeia_5champ": {
+      "combat/0:main/incoming": "1504.4",
+      "combat/0:main/outgoing": "1313.1",
+      "combat/1:ally:Alistar/incoming": "1303.9",
+      "combat/1:ally:Alistar/outgoing": "1296.4",
+      "combat/2:enemy:Alistar/incoming": "1013.0",
+      "combat/2:enemy:Alistar/outgoing": "976.2",
+      "combat/3:enemy:Dr. Mundo/incoming": "513.2",
+      "combat/3:enemy:Dr. Mundo/outgoing": "1155.1",
+      "combat/4:enemy:Vayne/incoming": "1083.3",
+      "combat/4:enemy:Vayne/outgoing": "676.9",
+      "fights/0:Alistar": "509.7",
+      "fights/1:Dr. Mundo": "258.2",
+      "fights/2:Vayne": "545.1"
+    },
     "catalyst_roster": {
       "combat/0:main/incoming": "2814.8",
       "combat/0:main/outgoing": "2318.4",
@@ -38,6 +63,16 @@
       "combat/2:enemy:Aatrox/incoming": "3072.3",
       "combat/2:enemy:Aatrox/outgoing": "3500.6",
       "fights/0:Aatrox": "2183.7"
+    },
+    "mundo_3champ": {
+      "combat/0:main/incoming": "1584.5",
+      "combat/0:main/outgoing": "996.0",
+      "combat/1:enemy:Cassiopeia/incoming": "499.1",
+      "combat/1:enemy:Cassiopeia/outgoing": "1209.8",
+      "combat/2:enemy:Vayne/incoming": "497.0",
+      "combat/2:enemy:Vayne/outgoing": "374.7",
+      "fights/0:Cassiopeia": "499.1",
+      "fights/1:Vayne": "497.0"
     },
     "score_event_scan_holder": {
       "combat/0:main/incoming": "1894.8",
@@ -107,22 +142,32 @@
       "combat/1:/incoming": "0.0",
       "combat/1:/outgoing": "0.0",
       "fights/manual_target": "5648.4"
+    },
+    "syndra_mandate_3champ": {
+      "combat/0:main/incoming": "1151.1",
+      "combat/0:main/outgoing": "1092.4",
+      "combat/1:enemy:Alistar/incoming": "717.6",
+      "combat/1:enemy:Alistar/outgoing": "538.2",
+      "combat/2:enemy:Dr. Mundo/incoming": "374.8",
+      "combat/2:enemy:Dr. Mundo/outgoing": "612.9",
+      "fights/0:Alistar": "717.6",
+      "fights/1:Dr. Mundo": "374.8"
     }
   },
   "metadata": {
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 13,
-      "leaves": 82,
+      "entries": 17,
+      "leaves": 119,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "7d2975d598256467e4888a55c06404afc6e2dcca",
+    "git_head": "9c6adee0fae2305840fc7f5e981cd5bd0faf69e5",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 13,
+    "scenario_count": 17,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "34ac33f8753f04863815d70eb6328689283a9df9"
+    "src_tree_sha": "890149fb1d4d2955cfe1fd4486d4a472d3d1e9f7"
   }
 }

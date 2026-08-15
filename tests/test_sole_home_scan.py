@@ -77,10 +77,11 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     working rather than widening: R-17 obliges an allowlist to state both sides
     of every path it claims, and Amendment H admits exactly that shape, inside
     the artifact adjudicating that leaf and agreeing with the committed
-    receipt.
+    receipt.  It then fell by two when the bench rosters joined the exact
+    capture and superseded the old exact leaf count three rows were stating.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 12
+    assert block["forced_restatements"] == 10
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
     assert len({row.source for row in forced}) == 7

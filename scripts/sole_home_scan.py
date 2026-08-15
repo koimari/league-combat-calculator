@@ -37,7 +37,7 @@ adjudicates (R-19), an allowlist must state the expected old and new value of
 each path it claims (R-17), and a baseline-move commit owes one line of cause
 per moved value (R-34).  The ``/metadata/fingerprint/*`` leaves are themselves
 leaves of the snapshot, so a receipt that adjudicates or allowlists one has to
-restate it.  Those rows are criterion 4's open residue, not its discharge, and
+restate it.  Those rows are criterion 4's ruled carve-out, not its discharge, and
 the scan pins **how many** there are so the residue cannot grow in silence ---
 which is the whole difference between a gap and a habit.
 """
@@ -319,7 +319,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"sole-home scan over {block['range']}: {block['sites']} site(s), "
             f"{len(block['unexplained'])} unexplained, "
             f"{block['forced_restatements']} forced restatement(s) "
-            f"(criterion 4's open residue), "
+            f"(criterion 4's ruled carve-out), "
             f"{block['coincidences']} coincidence(s)"
         )
         for row in block["unexplained"]:

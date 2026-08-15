@@ -204,6 +204,80 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         reason="golden's rounding precision (R-13), not a count of anything",
     ),
     Allowance(
+        doc="phase-5-cast-dependency.md",
+        value=119,
+        context="splinters",
+        reason=(
+            "a Syndra splinter count in a cast-order pin, which happens to equal "
+            "coupled_golden_exact.leaves since the bench rosters joined that "
+            "capture — a collision between a game quantity and a shape figure"
+        ),
+    ),
+    Allowance(
+        doc="silent-failure-runbook.md",
+        value=17,
+        context="criterion 17",
+        reason=(
+            "R-32's citation of Phase 4's criterion 17, which happens to equal "
+            "coupled_golden_exact.entries since the bench rosters joined that "
+            "capture — a criterion number, not a scenario count"
+        ),
+    ),
+    Allowance(
+        doc="phase-1-coverage-evidence.md",
+        value=17,
+        context="survival/outcome_state",
+        reason=(
+            "a per-module claim count in the coverage table, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
+        doc="phase-3-behavior-rules.md",
+        value=17,
+        context="RuleFamily",
+        reason=(
+            "the closed size of the RuleFamily union, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
+        doc="phase-4-program-engine.md",
+        value=17,
+        context="new modules",
+        reason=(
+            "the count of new program/ modules naming a test front door, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
+        doc="phase-4-program-engine.md",
+        value=17,
+        context="undeclared modules",
+        reason=(
+            "the same module count, restated as what would break the frontier, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
+        doc="phase-4-program-engine.md",
+        value=17,
+        context="criterion 17",
+        reason=(
+            "a citation of this phase's own criterion 17, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
+        doc="phase-4-program-engine.md",
+        value=17,
+        context="criteria 2 and 17",
+        reason=(
+            "the same criterion citation, in the pair it is read with, which happens to equal coupled_golden_exact.entries "
+            "since the bench rosters joined that capture"
+        ),
+    ),
+    Allowance(
         doc=UMBRELLA_NAME,
         value=5,
         context="golden rows | **Recorded ruling: Phase 5",
