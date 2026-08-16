@@ -63,5 +63,14 @@
     "occurrences_outside_the_population": 0
   },
   "why_zero_is_predicted_rather_than_hoped": "The reclassification's whole src/ reach is the declaration table interpreters._FAMILY_LANES and the unserved-lane row beside it. Neither is on a pricing path: EngineLane.RECEIPT_WALK is absent from item_coverage.ATTACKER_LANES, SCORING_LANES and TARGET_LANES, so no coverage rung, no optimizer eligibility answer and no payload reads it; lanes_for's other two readers are counter 4's own declared-pair set and DEFENSE_FAMILIES, which crit_profile is not in. No interpreter is registered, no mechanic is declared, no row is stamped and no packet is priced. A leaf that moved here would therefore be an occurrence outside the predicted zero and would stop the slice, which is what makes stating the zero a gate rather than a hope.",
-  "measured_after": "NOT YET MEASURED. This receipt is filed before the group's first edit, which is the order R-20's second half requires; the measurement lands in its own commit beside the prediction above, so a reader can see which number was predicted and which was observed rather than one number that was written once."
+  "measured_after": {
+    "dated": "2026-08-16",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical.",
+    "bench_row_8_and_row_11": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json and the same run with --no-compiled: identical winner and score on all four scenarios -- cassiopeia_3champ 4003.1, cassiopeia_5champ 5010.8, mundo_3champ 3305.0, syndra_mandate_3champ 4642.3. Recorded because R-01 row 8 is the row that caught the term the active_cast stop was reverted for, and a reclassification that moved the lane table without moving a leaf is exactly the shape that row exists to check independently of golden.",
+    "what_moved_instead_of_leaves": "interpreters.declared_pairs() 53 -> 52, counter 4's receipt-walk deferral set 10 -> 9, and one unserved-lane row replaced by a compiled-lane-only row with a reason of its own. All three are counters and receipts rather than numbers a fight publishes, which is why the enumerated 13199 could not move and did not.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15); zero of the enumerated 13199 leaves moved, and both baselines read 'snapshot identical' on every commit of this group."
+  }
 }
