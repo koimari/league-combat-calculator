@@ -19,6 +19,12 @@
   ],
   "what_was_attempted": "crit_profile/receipt_walk, the fifth of the fourteen and the second family of this slice group, in Amendment L, Ruling 1's whole shape: the family's three mechanics declaring both halves, its pair rows stamped pair_preview_of and declared THEORETICAL, interpreters.crit_profile gaining a WALK_INTERPRETER registered at (CRIT_PROFILE, RECEIPT_WALK), and the deferral row retiring with it.",
   "what_landed": "Nothing in src/. The slice is STOPPED before its first src/ edit, on a measurement, and this receipt is what a stopped retirement leaves behind. The precedent is campaign-close-active-cast-retirement, which measured a missing term and reverted rather than shipping half a retirement; the difference is that that one's missing half was a term a ruling could add to a budgeted stage, and this one's is the retiring act itself.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97. The slice stopped before its first src/ edit, so what this receipt is an allowlist OF is an empty claim set against the committed baselines -- and it names them anyway, because a receipt that did not say which baselines it was measured against would leave a reader unable to check that the zero it reports is a zero on the surfaces the campaign gates."
+  },
   "expected_qualifying_occurrences": 0,
   "qualifying_population": {
     "enumerated_before_first_edit": true,
