@@ -538,6 +538,44 @@ def _amendment_named_delivery(
     return resolved, tuple(unanswered)
 
 
+def _named_delivery_resolution(
+    declarations: Mapping[str, Mapping[str, Sequence[str]]],
+) -> dict[str, Any]:
+    """Amendment P's mapping, resolved whether or not the row is still open.
+
+    The row it was written for retired on 2026-08-16, and the resolution
+    outlives it deliberately.  A named delivery that stopped being checked the
+    moment its row left would be a ruling that held exactly as long as nobody
+    depended on it: what the walk now stages for this family IS those
+    mechanisms, so a fourth mechanic whose payload shape the amendment does
+    not name, or a named mechanism that leaves the kernel, has to go red here
+    as well as in the interpreter's own branch table.  ``covers_every_declaration``
+    is the totality half and ``unanswered`` names which, because the ruling's
+    conditional stop is *STOPS blocked, naming exactly which*.
+    """
+    owners = sorted(declarations.get(NAMED_DELIVERY_FAMILY, {}))
+    resolved, unanswered = _amendment_named_delivery(NAMED_DELIVERY_FAMILY, owners)
+    return {
+        "family": NAMED_DELIVERY_FAMILY,
+        "ruled_by": NAMED_DELIVERY_RULING,
+        "owners": owners,
+        "mechanisms_by_declaration": {
+            declaration: list(mechanisms)
+            for declaration, mechanisms in sorted(resolved.items())
+        },
+        "covers_every_declaration": bool(resolved) and not unanswered,
+        "unanswered": list(unanswered),
+        "why_it_outlives_the_row": (
+            "The row retired on 2026-08-16 and this stayed. The mechanisms the "
+            "amendment names are what the walk stages for this family now, not "
+            "what it would have staged, so a shape the ruling does not name or "
+            "a mechanism that leaves the kernel is a live break rather than a "
+            "stale note -- and a check that switched itself off the moment its "
+            "row left would be a delivery term recorded rather than resolved."
+        ),
+    }
+
+
 def _delivery_term(
     family: str, owners: Sequence[str], act: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -1057,6 +1095,7 @@ def schedule() -> dict[str, Any]:
             "conditional stop is that the kernel is never extended inside a "
             "retirement slice."
         ),
+        "named_delivery_resolution": _named_delivery_resolution(declarations),
         "triage_by_class": by_class,
         "triage_rows_stopping_the_next_retirement_round": stopped,
         "what_the_triage_does_not_do": (
@@ -1117,12 +1156,20 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
         "slices_whose_retiring_lane_amendment_k_corrects",
         "slices_whose_ruled_act_is_already_performed",
         "named_delivery_rule",
+        "named_delivery_resolution",
         "triage_by_class",
         "triage_rows_stopping_the_next_retirement_round",
         "closed_by_authority_reclassification",
     ):
         if committed.get(key) != fresh[key]:
             failures.append(f"{key}: committed value differs from derived")
+    resolution = fresh["named_delivery_resolution"]
+    if not resolution["covers_every_declaration"]:
+        failures.append(
+            "named delivery: umbrella Amendment P's mapping no longer covers "
+            f"every declaration of {resolution['family']} -- "
+            + "; ".join(resolution["unanswered"])
+        )
     failures.extend(_reclassification_failures())
     return failures
 

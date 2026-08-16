@@ -281,17 +281,24 @@ def test_a_named_delivery_is_resolved_against_the_kernel_and_not_asserted() -> N
 
     The ruling names standing mechanisms and invents none, so the receipt may
     not simply *record* that a delivery exists: every mechanism the ruling
-    names is looked up in the kernel's own declarations, and the row is named
+    names is looked up in the kernel's own declarations, and the term is named
     only when all of them resolve.  Both halves are checked here against the
     kernel directly rather than against the derivation that wrote the
     receipt -- the rider families off ``RIDER_KINDS``, the state fields off
     the records that declare them -- so the two would have to agree by
     accident to pass.
+
+    The row this was written for retired on 2026-08-16 and the resolution
+    outlives it: those mechanisms are what the walk stages for the family
+    *now*, so the check reads the standing resolution block rather than a
+    deferral row that is no longer there.
     """
     block = schedule()
-    term = block["families"]["damage_routing"]["triage"]["walk_side_delivery_term"]
-    assert term["named"] is True
+    term = block["named_delivery_resolution"]
+    assert term["covers_every_declaration"] is True
+    assert term["unanswered"] == []
     assert term["ruled_by"] == receipt_walk_schedule.NAMED_DELIVERY_RULING
+    where = json.dumps(term["mechanisms_by_declaration"])
     riders = {kind.__name__ for kind in events.RIDER_KINDS}
     state = {
         "survival.actions.SurvivalAction": set(
@@ -311,7 +318,7 @@ def test_a_named_delivery_is_resolved_against_the_kernel_and_not_asserted() -> N
         holder, _, leaf = path.rpartition(".")
         expected = riders if holder == "program.events" else state[holder]
         assert leaf in expected, path
-        assert path in term["where"], path
+        assert path in where, path
 
 
 def test_the_named_delivery_covers_every_declaration_of_the_ruled_family() -> None:
@@ -323,13 +330,14 @@ def test_the_named_delivery_covers_every_declaration_of_the_ruled_family() -> No
     three items: a fourth mechanic declaring a shape the ruling does not name
     fails here on the commit that declares it.
     """
-    entry = schedule()["families"]["damage_routing"]
+    resolution = schedule()["named_delivery_resolution"]
     payloads = receipt_walk_schedule._declared_payloads(  # noqa: SLF001
-        "damage_routing", entry["owners"]
+        "damage_routing", resolution["owners"]
     )
     assert payloads
     for mechanic, payload in payloads:
         assert payload in receipt_walk_schedule.AMENDMENT_P_DELIVERY, mechanic
+    assert len(resolution["mechanisms_by_declaration"]) == len(payloads)
 
 
 def test_a_class_c_row_with_no_named_delivery_term_is_named_as_a_stop() -> None:
@@ -440,12 +448,14 @@ def test_a_mechanism_leaving_the_kernel_re_stops_the_named_row() -> None:
     finally:
         receipt_walk_schedule._mechanism_stands = bare  # noqa: SLF001
     assert any("damage_routing" in failure for failure in failures), failures
-    assert fresh["triage_rows_stopping_the_next_retirement_round"] == ["damage_routing"]
-    why = fresh["families"]["damage_routing"]["triage"]["walk_side_delivery_term"][
-        "why"
-    ]
-    assert "serpents_fang.shield_bypass" in why
-    assert "no walk-side delivery term" in why
+    resolution = fresh["named_delivery_resolution"]
+    assert resolution["covers_every_declaration"] is False
+    assert any(
+        "serpents_fang.shield_bypass" in entry for entry in resolution["unanswered"]
+    ), resolution["unanswered"]
+    assert any(
+        "no longer stands in the kernel" in entry for entry in resolution["unanswered"]
+    ), resolution["unanswered"]
 
 
 def test_the_triage_says_it_pays_nothing() -> None:

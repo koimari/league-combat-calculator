@@ -612,7 +612,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Ten now, and the rows that left are why the count is written as a derived
+# Nine now, and the rows that left are why the count is written as a derived
 # length rather than restated in prose anywhere below.  ``delta_amp`` retired
 # on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
 # fourteen and rules its retiring act to be the walk-side delivery of the
@@ -627,7 +627,15 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # same day again, over five authoring sites and the eleven of its thirteen
 # mechanics that author a damage row — the other two declare a swing schedule,
 # which authors no packet for a walk to price and says so with an ``APPLIED``
-# pair half of its own.  In each case the receipt
+# pair half of its own.  ``damage_routing`` retired on 2026-08-16 as well, and
+# it is the first of the five whose interpreter hands the walk no *price* at
+# all: umbrella Amendment P names its walk-side delivery as the program rider
+# system and the kernel state paths already in the tree, so
+# ``interpreters.damage_routing.WALK_INTERPRETER`` compiles a ``Defer`` rider,
+# an ``Execute`` rider and the shield ledger's barrier-state adjustment, and
+# the walk stages those instead of the ratio the pair engine used to stamp on
+# its own events and the venom it used to read from the name-keyed effects
+# registry.  In each case the receipt
 # walk reads that family's declaration
 # through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
 # deferring a gap the tree no longer holds would fail the gate below rather
@@ -680,7 +688,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
     "combat_state",
-    "damage_routing",
     "on_hit_strike",
     "opening_defense",
     "periodic",

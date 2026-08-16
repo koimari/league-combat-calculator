@@ -17,11 +17,16 @@ import pytest
 
 from src.calculator.ability_spec import Authority
 from src.calculator import bis
+from src.calculator import data_fetcher
 from src.calculator import interpreters
 from src.calculator import item_coverage
+from src.calculator import item_effects
 from src.calculator import item_behavior_catalog as catalog
+from src.calculator.interpreters import damage_routing
 from src.calculator.item_behavior import (
     Compilable,
+    DefenseField,
+    DefenseSubject,
     EngineLane,
     ReceiptOnly,
     ReceiptScope,
@@ -712,3 +717,125 @@ def test_a_forced_strike_that_heals_somebody_else_is_not_a_holder_ledger_entry()
         rule, payload=dataclasses.replace(rule.payload, subject=Subject.TARGET)
     )
     assert interpreters.survival_ledger_contribution(elsewhere) is None
+
+
+# ── damage_routing's per-owner equivalence fixtures ───────────────────────
+#
+# Umbrella Amendment P requires a fixture PER OWNER for this family, and the
+# plural is the point: three owners deliver through three different kernel
+# mechanisms, and the one committed coupled scenario that covers the family
+# holds only Death's Dance, so a green baseline proves nothing about the two
+# that can still fail.  Each fixture below asserts the retirement was a
+# re-spelling -- the walk interpreter's number against the producer the walk
+# read before it -- rather than a re-pricing.
+
+
+@pytest.mark.parametrize("holder_is_melee", [True, False])
+def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
+    holder_is_melee: bool,
+) -> None:
+    """Serpent's Fang: the barrier-state adjustment, on both range classes.
+
+    ``item_effects.serpents_fang_venom`` is what the walk read before this
+    family retired, and it returns the SURVIVING share.  So does the
+    interpreter, and that is the whole hazard the fixture guards: the
+    declaration carries the cut, the ledger multiplies by its complement, and
+    a subtraction on the wrong side is off by the entire effect.
+    """
+    item = data_fetcher.get_item_by_name("Serpent's Fang")
+    before = item_effects.serpents_fang_venom([item], is_melee=holder_is_melee)
+    after = damage_routing.walk_venom(
+        ["Serpent's Fang"],
+        level=13,
+        fight_duration_seconds=8.0,
+        target_bonus_health=0.0,
+        holder_is_melee=holder_is_melee,
+    )
+    assert before is not None and after is not None
+    assert (after.keep, after.duration) == before
+    assert after.owner == "Serpent's Fang"
+
+
+def test_the_walk_execution_equals_the_pair_engines_stamp() -> None:
+    """The Collector: the Execute rider, against the ratio the pair engine stamps.
+
+    ``damage.py`` stamps ``execute_threshold_ratio`` from
+    ``item_effects``'s own ``ExecuteEffect``; the walk now reads the
+    declaration.  Equal numbers, one producer.
+    """
+    effects = item_effects.resolve_damage_effects(
+        [data_fetcher.get_item_by_name("The Collector")]
+    )
+    rider = damage_routing.walk_execution(
+        ["The Collector"],
+        level=13,
+        fight_duration_seconds=8.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert effects.execute is not None and rider is not None
+    assert rider.threshold == effects.execute.threshold
+    assert rider.owner == effects.execute.item_name
+
+
+@pytest.mark.parametrize("holder_is_melee", [True, False])
+def test_the_walk_deferral_equals_the_resolved_defensive_state(
+    holder_is_melee: bool,
+) -> None:
+    """Death's Dance: the Defer rider, against the resolver's own schedule.
+
+    The resolver still builds this family's schedule and still publishes it
+    as the holder's opening defensive state; what the walk now stages is the
+    rider.  Two consumers of one declaration is only honest while they agree,
+    so the fixture is what makes that a checked fact -- including the
+    melee/ranged share, which is resolved against the holder paying it.
+    """
+    (rule,) = [
+        candidate
+        for candidate in catalog.behavior_rules("Death's Dance")
+        if candidate.family is RuleFamily.DAMAGE_ROUTING
+    ]
+    subject = DefenseSubject(
+        level=13, stats={"is_melee": float(holder_is_melee)}, options={}
+    )
+    outcome = interpreters.resolve_defense(rule, subject)
+    resolved = {grant.name: grant.value for grant in outcome.fields}
+    rider = damage_routing.walk_deferral(
+        ["Death's Dance"],
+        level=13,
+        fight_duration_seconds=8.0,
+        target_bonus_health=0.0,
+        holder_is_melee=holder_is_melee,
+    )
+    assert rider is not None
+    assert rider.fraction == resolved[DefenseField.DAMAGE_DEFERRAL_FRACTION.value]
+    assert rider.duration == resolved[DefenseField.DAMAGE_DEFERRAL_DURATION.value]
+    assert rider.ticks == resolved[DefenseField.DAMAGE_DEFERRAL_TICKS.value]
+
+
+def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
+    """Amendment P's stop clause, as a test rather than as a reading.
+
+    Every declaration of the family compiles on the walk lane.  A fourth
+    mechanic whose payload the interpreter has no branch for raises here
+    instead of reaching a payload as a silently unstaged rider.
+    """
+    rules = damage_routing.walk_rules(sorted(catalog.rule_owners()))
+    assert {rule.mechanic_id for rule in rules} == {
+        "deaths_dance.ignore_pain",
+        "serpents_fang.shield_bypass",
+        "the_collector.execute",
+    }
+    for rule in rules:
+        fields = damage_routing.WALK_INTERPRETER.compile(
+            rule,
+            catalog.build_context(
+                rule.owner,
+                13,
+                fight_duration_seconds=8.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
+        )
+        assert fields
+        assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)

@@ -49,6 +49,11 @@ from .healing_reduction import (
     healing_reduction_profiles,
 )
 from .interpreters import uncompilable_item_receipt as _uncompilable_item_receipt
+from .interpreters.damage_routing import (
+    walk_deferral as _walk_deferral,
+    walk_execution as _walk_execution,
+    walk_venom as _walk_venom,
+)
 from .interpreters.reactive import thorns_effects
 from .interpreters.sustain import SustainSlot, walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
@@ -63,7 +68,6 @@ from .interpreters.delta_amp import (
 from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
-    serpents_fang_venom,
 )
 from .resistance import (
     apply_armor_penetration,
@@ -1916,6 +1920,44 @@ def _grey_health_event_receipt(
     return None
 
 
+def _routing_build(
+    combatant: Combatant, duration: float
+) -> tuple[list[str], dict[str, Any]]:
+    """One participant's item names and the build facts a routing rule reads.
+
+    The three fight facts a :class:`~.item_behavior.BuildContext` requires are
+    keyword-only and defaultless on purpose, so this assembles them once for
+    the three walk-lane resolvers rather than three times.  ``target_bonus_health``
+    is 0.0 because no ``damage_routing`` declaration reads it — a routing rule
+    moves a packet rather than scaling one — and the resolvers are the only
+    callers, so this is a fact about the family rather than a defaulted zero.
+    """
+    return [str(item.get("name", "")) for item in combatant.items], {
+        "level": int(combatant.stats.get("level", 1) or 1),
+        "fight_duration_seconds": duration,
+        "target_bonus_health": 0.0,
+        "holder_is_melee": bool(combatant.stats.get("is_melee", True)),
+    }
+
+
+def _venom_profile(combatant: Combatant, duration: float) -> tuple[float, float] | None:
+    """The ``(keep, duration)`` pair the kernel's shield ledger reads.
+
+    ``keep`` is the surviving share of a granted shield and the interpreter
+    is what turns the declared cut into it, so no caller here does the
+    subtraction and the two spellings cannot swap.
+    """
+    owners, facts = _routing_build(combatant, duration)
+    venom = _walk_venom(owners, **facts)
+    return None if venom is None else (venom.keep, venom.duration)
+
+
+def _execution_rider(combatant: Combatant, duration: float) -> Any:
+    """The Execute rider this participant's own declarations arm, or ``None``."""
+    owners, facts = _routing_build(combatant, duration)
+    return _walk_execution(owners, **facts)
+
+
 def _simulate_survival(
     combatants: Iterable[Combatant],
     incoming: Mapping[str, list[dict[str, Any]]],
@@ -1956,10 +1998,14 @@ def _simulate_survival(
     # Serpent's Fang venom is attacker-owned: a participant whose build
     # holds the item wounds every target it damages for ``venom_duration``
     # seconds, cutting shields that target gains.  ``None`` fails closed.
+    #
+    # Read from the declaration through this family's own walk interpreter
+    # since ``damage_routing`` retired (umbrella Amendment P): it used to
+    # come from the name-keyed effects registry, which is not an interpreter
+    # of this family in any lane, so the walk's barrier-state adjustment had
+    # no declared producer at all.
     venom_profiles = {
-        participant_id: serpents_fang_venom(
-            combatant.items, is_melee=bool(combatant.stats.get("is_melee", True))
-        )
+        participant_id: _venom_profile(combatant, duration)
         for participant_id, combatant in combatant_by_id.items()
     }
     states_list = build_states(
@@ -2019,17 +2065,57 @@ def _simulate_survival(
             index += 1
         bucket.insert(index + 1, clone)
 
-    # Only a Death's Dance holder can stamp deferral metadata; resolving the
-    # holders once keeps the per-event loop below to plain marker checks.
-    deferral_holders = {
-        participant_id: combatant
+    # Only a declared deferral holder can stamp deferral metadata; resolving
+    # the holders once keeps the per-event loop below to plain marker checks.
+    #
+    # The rider is read from the declaration through this family's own walk
+    # interpreter since ``damage_routing`` retired (umbrella Amendment P).
+    # The resolver still builds the same schedule and still publishes it as
+    # the holder's opening defensive state, which is the block a receipt
+    # reader sees; this is the rider on the events the walk stages, a
+    # different consumer of one declaration rather than a second producer of
+    # one number.  A participant whose resolved state arms a deferral no
+    # declaration produces is a stop rather than an unstamped packet.
+    deferral_riders: dict[str, Any] = {}
+    for participant_id, combatant in combatant_by_id.items():
+        if (
+            float(getattr(combatant.defenses, "damage_deferral_fraction", 0.0) or 0.0)
+            <= 0.0
+        ):
+            continue
+        owners, facts = _routing_build(combatant, duration)
+        rider = _walk_deferral(owners, **facts)
+        if rider is None:
+            raise ValueError(
+                f"{participant_id} resolves a damage deferral and declares no "
+                "damage_routing rule that produces one; the walk would defer "
+                "damage no declaration priced"
+            )
+        deferral_riders[participant_id] = rider
+    # The Execute rider, read from the attacker's own declaration through this
+    # family's walk interpreter since ``damage_routing`` retired (umbrella
+    # Amendment P).  It used to arrive stamped on the pair engine's own events
+    # by ``damage.py``, which is the shape Amendment K's property is about: the
+    # walk consumed a number the other engine had already decided.  Resolved
+    # once per attacker, then written onto every packet that attacker authored
+    # -- and *removed* from packets whose attacker declares none, so the stamp
+    # the pair engine leaves behind can no longer decide a roster execution.
+    execution_riders = {
+        participant_id: _execution_rider(combatant, duration)
         for participant_id, combatant in combatant_by_id.items()
-        if float(getattr(combatant.defenses, "damage_deferral_fraction", 0.0) or 0.0)
-        > 0.0
     }
     for participant_id, events in incoming.items():
         for original in events:
             event = original
+            attacker_id = str(event.get("attacker", "") or "")
+            if attacker_id in execution_riders:
+                execution = execution_riders[attacker_id]
+                if execution is None:
+                    original.pop("execute_threshold_ratio", None)
+                    original.pop("execute_source", None)
+                else:
+                    original["execute_threshold_ratio"] = execution.threshold
+                    original["execute_source"] = execution.owner
             target_id = str(event.get("target", participant_id))
             if "redirect_fraction" not in event:
                 redirect_fraction = 0.0
@@ -2257,29 +2343,21 @@ def _simulate_survival(
                     "_redirect_fraction": redirect_fraction,
                 }
 
-            # Death's Dance receives post-mitigation physical and magic
-            # packets.  Apply its typed defense metadata here, before the
-            # shared split logic, so every authored source (abilities, autos,
-            # item procs, and reactive packets) follows the same path.
-            target_defenses = (
-                deferral_holders.get(target_id) if deferral_holders else None
-            )
+            # A declared deferral receives post-mitigation physical and magic
+            # packets.  Apply its rider here, before the shared split logic,
+            # so every authored source (abilities, autos, item procs, and
+            # reactive packets) follows the same path.
+            deferral = deferral_riders.get(target_id) if deferral_riders else None
             if (
-                target_defenses is not None
+                deferral is not None
                 and not event.get("_deferred")
                 and str(event.get("damage_type", "")) in {"physical", "magic"}
                 and float(event.get("damage", 0.0) or 0.0) > 0.0
                 and "deferred_fraction" not in event
             ):
-                event["deferred_fraction"] = float(
-                    target_defenses.defenses.damage_deferral_fraction
-                )
-                event["deferred_duration"] = float(
-                    target_defenses.defenses.damage_deferral_duration
-                )
-                event["deferred_ticks"] = int(
-                    target_defenses.defenses.damage_deferral_ticks
-                )
+                event["deferred_fraction"] = deferral.fraction
+                event["deferred_duration"] = deferral.duration
+                event["deferred_ticks"] = deferral.ticks
 
             # Deferred damage (for example a damage-deferral passive) is
             # represented only when the packet provides all timing fields.
@@ -3374,12 +3452,11 @@ def _score_with_search_context(
     # is the ledger's parallel-array observation below.
     states = build_states(all_actors, _below_half_healing_bonuses(all_actors))
     ledger = ScoreLedger(n_actions)
-    venom_packs = [
-        serpents_fang_venom(
-            list(actor.items), is_melee=bool(actor.stats.get("is_melee", True))
-        )
-        for actor in all_actors
-    ]
+    # One producer for both adapters: the score walk reads the same walk-lane
+    # interpreter the receipt walk does, so a venom that moved would move in
+    # both or in neither.  Two reads of two different producers is how a score
+    # and a receipt come to disagree about one declaration.
+    venom_packs = [_venom_profile(actor, duration) for actor in all_actors]
     ctx = TransitionContext(
         duration=duration,
         states=states,

@@ -102,56 +102,6 @@
     }
    }
   },
-  "damage_routing": {
-   "coupled_baseline_is_blind_to_this_family": false,
-   "covering_coupled_scenarios": [
-    "immolate_active_bruiser_roster"
-   ],
-   "declared_rules": [
-    "deaths_dance.ignore_pain",
-    "serpents_fang.shield_bypass",
-    "the_collector.execute"
-   ],
-   "deferral_row": "damage_routing/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
-   "interpreter_module": "src/calculator/interpreters/damage_routing.py",
-   "owners": [
-    "Death's Dance",
-    "Serpent's Fang",
-    "The Collector"
-   ],
-   "population_by_scenario": {
-    "immolate_active_bruiser_roster": 1790
-   },
-   "population_total": 1790,
-   "retiring_act": {
-    "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
-    "already_performed": false,
-    "retiring_lane": [
-     "receipt_walk"
-    ],
-    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
-   },
-   "route_today": [
-    "pair_engine"
-   ],
-   "triage": {
-    "authored_pair_rows": [],
-    "class": "c",
-    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
-    "declared_subjects": [
-     "target",
-     "target",
-     "undeclared"
-    ],
-    "ruled_by": "umbrella Amendment O, Ruling 2",
-    "walk_side_delivery_term": {
-     "named": true,
-     "ruled_by": "umbrella Amendment P",
-     "where": "umbrella Amendment P (2026-08-16) names this family's walk-side delivery as the program rider system and the kernel state paths ALREADY IN THE TREE, one per declared payload family, and every mechanism it names stands in the kernel today: deaths_dance.ignore_pain (DamageDeferralRule): program.events.Defer, survival.actions.SurvivalAction.deferred, survival.actions.SurvivalAction.deferred_batch_slot; serpents_fang.shield_bypass (ShieldBypassRule): shield_ledger.ShieldPools.venom_factor; the_collector.execute (ExecuteRule): program.events.Execute, survival.actions.SurvivalAction.execute_threshold_ratio, survival.actions.SurvivalAction.execute_source. The retirement act is then the ruled act (Amendments L/M/N) with rider and state compilation as the interpreter's output, and equivalence fixtures per owner."
-    }
-   }
-  },
   "on_hit_strike": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
@@ -574,10 +524,37 @@
  },
  "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
+ "named_delivery_resolution": {
+  "covers_every_declaration": true,
+  "family": "damage_routing",
+  "mechanisms_by_declaration": {
+   "deaths_dance.ignore_pain (DamageDeferralRule)": [
+    "program.events.Defer",
+    "survival.actions.SurvivalAction.deferred",
+    "survival.actions.SurvivalAction.deferred_batch_slot"
+   ],
+   "serpents_fang.shield_bypass (ShieldBypassRule)": [
+    "shield_ledger.ShieldPools.venom_factor"
+   ],
+   "the_collector.execute (ExecuteRule)": [
+    "program.events.Execute",
+    "survival.actions.SurvivalAction.execute_threshold_ratio",
+    "survival.actions.SurvivalAction.execute_source"
+   ]
+  },
+  "owners": [
+   "Death's Dance",
+   "Serpent's Fang",
+   "The Collector"
+  ],
+  "ruled_by": "umbrella Amendment P",
+  "unanswered": [],
+  "why_it_outlives_the_row": "The row retired on 2026-08-16 and this stayed. The mechanisms the amendment names are what the walk stages for this family now, not what it would have staged, so a shape the ruling does not name or a mechanism that leaves the kernel is a live break rather than a stale note -- and a check that switched itself off the moment its row left would be a delivery term recorded rather than resolved."
+ },
  "named_delivery_rule": "Umbrella Amendment P (2026-08-16): the walk-side delivery of damage_routing -- the one row Ruling 2's stop clause fired on -- is the program rider system and the kernel state paths ALREADY IN THE TREE, named per declared payload family. Death's Dance's deferred-damage routing is a Defer rider on the holder's incoming damage events, The Collector's threshold execute an Execute rider on outgoing damage, and Serpent's Fang's shield reduction the kernel's barrier-state adjustment path. Naming a standing mechanism is an amendment's act and never a lane's (Amendment K's precedent), so what this file does with the name is RESOLVE it: each mechanism is looked up in the kernel's own declarations on every run, and a declaration the ruling does not name -- or a named mechanism that leaves the kernel -- turns the term unnamed again, re-stops the row and says which, because the ruling's own conditional stop is that the kernel is never extended inside a retirement slice.",
  "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
- "scheduled_slices": 9,
- "slices_whose_retiring_act_is_amendment_f_as_written": 6,
+ "scheduled_slices": 8,
+ "slices_whose_retiring_act_is_amendment_f_as_written": 5,
  "slices_whose_retiring_lane_amendment_k_corrects": [
   "combat_state",
   "opening_defense",
@@ -597,7 +574,6 @@
   ],
   "c": [
    "combat_state",
-   "damage_routing",
    "opening_defense",
    "resistance_shred",
    "threshold_defense"

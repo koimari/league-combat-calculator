@@ -282,3 +282,37 @@ def test_dropping_a_preview_does_not_renumber_the_events_after_it():
     slots = [action.event_slot for action in _compile_engine_result()]
     texts = [EVENT_SLOTS.text(slot) for slot in slots]
     assert texts == ["main:enemy:Aatrox:0", "main:enemy:Aatrox:2"]
+
+
+def test_the_retired_routing_family_has_no_preview_to_double_count() -> None:
+    """D-62's uniqueness for ``damage_routing``, which is an emptiness.
+
+    Every other retirement so far had two halves to keep apart: a pair row
+    stamped ``THEORETICAL`` and a walk number stamped ``APPLIED``, with D-62's
+    one-``APPLIED``-per-``(mechanic, subject, event_id)`` rule holding the
+    line between them.  The triage measured this family authoring no priced
+    pair row at all, so the half that could be double-counted does not exist,
+    and umbrella Amendment P discharges that half as an enumerated emptiness.
+
+    An emptiness is only worth anything while somebody checks it is still
+    empty, which is what this is.  Three claims: no declaration of the family
+    is a previewed mechanic, none of them is re-priced by the walk's pricer
+    either -- they are riders and state adjustments, not prices -- and every
+    one of their walk halves is ``APPLIED`` and rider-delivered.  A future
+    mechanic of the family that authored a pair row would have to declare a
+    preview to be honest, and it would fail here rather than quietly summing
+    beside the rider the walk already stages.
+    """
+    routing = {
+        "deaths_dance.ignore_pain",
+        "serpents_fang.shield_bypass",
+        "the_collector.execute",
+    }
+    assert not routing & pair_preview_mechanics()
+    assert not routing & walk_repriced_mechanics()
+    for mechanic in sorted(routing):
+        capability = CAPABILITIES[mechanic]
+        assert capability.engine is Engine.WALK, mechanic
+        assert capability.view_tags[Engine.WALK] is ViewTag.APPLIED, mechanic
+        assert type(capability.packet_source).__name__ == "RiderDelivery", mechanic
+        assert f"{mechanic}_preview" not in CAPABILITIES, mechanic

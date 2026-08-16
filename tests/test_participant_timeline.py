@@ -2465,6 +2465,7 @@ def _dummy_combatant(
     team: str,
     health: float = 100.0,
     healing_received_multiplier: float = 1.0,
+    items: tuple[dict, ...] = (),
 ) -> Combatant:
     defenses = SimpleNamespace(
         magic_shield=0.0,
@@ -2477,7 +2478,7 @@ def _dummy_combatant(
         team=team,
         champion_data={"name": participant_id},
         level=1,
-        items=(),
+        items=items,
         stats={"health": health},
         defenses=defenses,
     )
@@ -3560,11 +3561,13 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
     assert event["skipped_reason"] == "outside_window"
 
 
-def test_survival_walk_applies_collector_execute_as_terminal_state():
-    """The Collector threshold kills without adding synthetic damage."""
-    source = _dummy_combatant("source", "main", health=100.0)
-    target = _dummy_combatant("target", "enemy", health=100.0)
-    execute_event = {
+def _collector_execute_event() -> dict:
+    """One packet that leaves the target inside The Collector's threshold.
+
+    It carries the pair engine's own stamp, because that is what the walk
+    used to read and what this pair of tests is about.
+    """
+    return {
         "time": 1.0,
         "damage": 96.0,
         "damage_type": "physical",
@@ -3575,6 +3578,15 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
         "sequence": 0,
         "_event_id": "collector",
     }
+
+
+def test_survival_walk_applies_collector_execute_as_terminal_state():
+    """The Collector threshold kills without adding synthetic damage."""
+    source = _dummy_combatant(
+        "source", "main", health=100.0, items=({"name": "The Collector"},)
+    )
+    target = _dummy_combatant("target", "enemy", health=100.0)
+    execute_event = _collector_execute_event()
     result = _simulated_rows(
         [source, target],
         {"target": [execute_event]},
@@ -3588,6 +3600,36 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
     assert result["target"]["execute_source"] == "The Collector"
     assert result["target"]["health_damage"] == 96.0
     assert execute_event["execute_triggered"] is True
+
+
+def test_the_walk_executes_off_the_declaration_and_not_off_the_pair_stamp():
+    """The equivalence fixture for The Collector, and the mutation behind it.
+
+    ``damage_routing`` retired off the pair engine (umbrella Amendment P), so
+    the walk reads the Execute rider from the attacker's own declaration
+    rather than from the ratio ``damage.py`` stamped on its own events.  The
+    same packet, carrying the same stamp, against an attacker whose build
+    declares no execution: the threshold does not fire, and the target lives
+    on the four health the previous test executes it out of.
+
+    That is the whole property the retirement bought, and it is unprovable
+    from the covering scenario -- no committed coupled roster holds The
+    Collector -- which is why Amendment P asks for a fixture per owner.
+    """
+    source = _dummy_combatant("source", "main", health=100.0)
+    target = _dummy_combatant("target", "enemy", health=100.0)
+    execute_event = _collector_execute_event()
+    result = _simulated_rows(
+        [source, target],
+        {"target": [execute_event]},
+        {},
+        {},
+        10.0,
+    )
+
+    assert result["target"]["ending_health"] == 4.0
+    assert result["target"]["execute_source"] == ""
+    assert "execute_threshold_ratio" not in execute_event
 
 
 def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():

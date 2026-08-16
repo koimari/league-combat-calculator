@@ -1325,6 +1325,59 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
     *_retired_family_halves(_CAST_PROC_RETIREMENT),
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
+    # -- the retired ``damage_routing`` family: three riders, no packet -----
+    #
+    # The fifth family to retire off the pair engine (2026-08-16) and the
+    # first whose walk half is not a price.  Umbrella Amendment P names its
+    # delivery as the program rider system and the kernel state paths already
+    # in the tree — a deferral moves damage in time, an execution ends a
+    # fight, and a venom resizes a barrier — so each of these three is
+    # ``RiderDelivery``-delivered, which Amendment C ruled legal for a walk
+    # half whose number rides an event somebody else authored and which
+    # carries no ``packet_source`` at all.  A rider amplifies the event it
+    # rides, so none of the three is a cross-participant producer and D-07's
+    # ruled six do not move (Amendment M, Ruling 3, from the other delivery
+    # shape).
+    #
+    # ``SOLO`` and ``holder_stacking=None`` are measured rather than assumed:
+    # the triage found this family authoring no priced pair-engine row
+    # anywhere in its covering population, so there is no pair half for these
+    # to be ``PAIRED`` against and nothing for a preview stamp to prevent.
+    # That is the enumerated emptiness Amendment L, Ruling 1's first half is
+    # discharged by here, exactly as ``delta_amp``'s was — never a step
+    # skipped, which is why the rows are written out one by one instead of
+    # being absent.
+    #
+    # ``COUPLED_AUTHORITATIVE`` for all three, by the campaign's own authority
+    # rule: every one of them reads an input the pair engine cannot see.  The
+    # execution reads the target's live health under combined fire, the venom
+    # reads the shields that target gains from any granter on the roster, and
+    # the deferral reads the holder's incoming damage from every roster
+    # attacker at once.
+    _walk_item(
+        "deaths_dance.ignore_pain",
+        "Death's Dance",
+        RiderDelivery("deaths_dance.ignore_pain"),
+        holder_stacking=None,
+        authority=Authority.COUPLED_AUTHORITATIVE,
+        impl="participant_timeline._simulate_survival",
+    ),
+    _walk_item(
+        "the_collector.execute",
+        "The Collector",
+        RiderDelivery("the_collector.execute"),
+        holder_stacking=None,
+        authority=Authority.COUPLED_AUTHORITATIVE,
+        impl="participant_timeline._simulate_survival",
+    ),
+    _walk_item(
+        "serpents_fang.shield_bypass",
+        "Serpent's Fang",
+        RiderDelivery("serpents_fang.shield_bypass"),
+        holder_stacking=None,
+        authority=Authority.COUPLED_AUTHORITATIVE,
+        impl="participant_timeline._simulate_survival",
+    ),
     # -- pair-engine halves -------------------------------------------------
     # The two swing schedules of the retired ``charged_strike`` family.  They
     # sit here rather than among the retirement's paired halves because they
