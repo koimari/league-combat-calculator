@@ -68,8 +68,16 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             "damage": 80.0,
             "damage_type": "physical",
             "event_precision": "exact",
+            # `cast_proc` retired off the pair engine on 2026-08-16, so this
+            # row is a preview and its event carries the declaration the
+            # coupled walk prices instead of a number it would have to trust:
+            # the rule, the pre-mitigation magnitude, the attack class that
+            # decides which of the holder's amps it earns, and no resistance,
+            # because this packet met the fight's published figure.
+            "declared": ("eclipse.proc", 80.0, "other", None),
         }
     ]
+    assert row["pair_preview_of"] == "eclipse.proc"
 
 
 def test_eclipse_prefers_authored_ability_hit_time() -> None:
@@ -90,6 +98,7 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             "damage": 80.0,
             "damage_type": "physical",
             "event_precision": "hit",
+            "declared": ("eclipse.proc", 80.0, "other", None),
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

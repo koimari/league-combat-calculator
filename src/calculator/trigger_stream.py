@@ -938,6 +938,26 @@ _ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# The eight cast-triggered procs, retired off the pair engine 2026-08-16.  One
+# row per declared rule in ``item_behavior_catalog``'s ``cast_proc`` family.
+# Both proc shapes author their rows in one engine function, so both name it:
+# a cooldown proc's row and an ultimate proc's differ in how their events are
+# timed and not in who writes them.
+_CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(mechanic, item, "damage._add_item_proc_damage")
+    for mechanic, item in (
+        ("eclipse.proc", "Eclipse"),
+        ("hextech_alternator.proc", "Hextech Alternator"),
+        ("ludens_echo.proc", "Luden's Echo"),
+        ("malignance.ultimate_proc", "Malignance"),
+        ("scouts_slingshot.proc", "Scout's Slingshot"),
+        ("stormsurge.proc", "Stormsurge"),
+        ("zazzaks_realmspike.proc", "Zaz'Zak's Realmspike"),
+        ("zekes_convergence.ultimate_proc", "Zeke's Convergence"),
+    )
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1237,6 +1257,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     ),
     # -- retired families: both halves of one packet ------------------------
     *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
+    *_retired_family_halves(_CAST_PROC_RETIREMENT),
     # -- pair-engine halves -------------------------------------------------
     _pair_half(
         "abyssal_mask.magic_amp",

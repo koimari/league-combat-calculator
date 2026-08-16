@@ -612,7 +612,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Twelve now, and the rows that left are why the count is written as a derived
+# Eleven now, and the rows that left are why the count is written as a derived
 # length rather than restated in prose anywhere below.  ``delta_amp`` retired
 # on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
 # fourteen and rules its retiring act to be the walk-side delivery of the
@@ -622,7 +622,9 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # mechanics declare both halves, ``damage._add_item_active_damage`` stamps the
 # row it authors as a preview and hands the walk the declaration under it, and
 # ``interpreters.active_cast.WALK_INTERPRETER`` is the one interpreter that
-# prices it.  In each case the receipt walk reads that family's declaration
+# prices it.  ``cast_proc`` retired the same day and in the same shape, over
+# its two authoring sites and its eight mechanics.  In each case the receipt
+# walk reads that family's declaration
 # through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
 # deferring a gap the tree no longer holds would fail the gate below rather
 # than pass it.  The debt is smaller because the tree changed, which is the
@@ -659,7 +661,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "cast_proc",
     "charged_strike",
     "combat_state",
     "crit_profile",

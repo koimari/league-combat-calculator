@@ -76,40 +76,114 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
     return NO_SIBLING if reference is None else resolve(reference, level)
 
 
+def _proc_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """One proc's compiled numbers for *lane*.
+
+    The clock this proc compiles to, plus the proof its bases resolve.  An
+    ultimate proc's clock is the window it spreads over; a cooldown proc's is
+    the wait before it re-arms.  Both are build-time numbers, and both are
+    the field a damage lane can honestly compile.
+
+    The lane is the only thing that varies between the two interpreters
+    below.  Sharing the body rather than spelling it twice is what makes
+    "the walk reads the same declaration the pair engine reads" a property of
+    the tree instead of a claim two functions could drift out of.
+    """
+    payload = rule.payload
+    if isinstance(payload, UltimateProcRule):
+        clock = payload.duration
+    elif isinstance(payload, CooldownProcRule):
+        clock = payload.cooldown
+    else:
+        raise CastProcInterpretationError(
+            f"{rule.mechanic_id} is not a cast-triggered proc rule"
+        )
+    damage_formula.compile_formula(payload.formula, ctx)
+    return (
+        KernelField(
+            name=PROC_COOLDOWN_FIELD,
+            value=resolve(clock, ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        ),
+    )
+
+
 class CastProcPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``cast_proc`` family."""
+    """The pair engine's answer for the ``cast_proc`` family.
+
+    Its number is a **preview** since this family retired: every rule below
+    declares ``ViewTag.THEORETICAL`` on its pair lane and
+    ``damage._add_item_proc_damage`` stamps ``pair_preview_of`` on the rows it
+    authors, so the honest one-attacker figure stays in the pair fight's own
+    receipt and leaves every total the roster composes.
+    """
 
     FAMILY = RuleFamily.CAST_PROC
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The clock this proc compiles to, plus the proof its bases resolve.
+        """This proc's numbers, resolved for the one-attacker engine."""
+        return _proc_fields(rule, ctx, EngineLane.PAIR_ENGINE)
 
-        An ultimate proc's clock is the window it spreads over; a cooldown
-        proc's is the wait before it re-arms.  Both are build-time numbers,
-        and both are the field this lane can honestly compile.
-        """
-        payload = rule.payload
-        if isinstance(payload, UltimateProcRule):
-            clock = payload.duration
-        elif isinstance(payload, CooldownProcRule):
-            clock = payload.cooldown
-        else:
-            raise CastProcInterpretationError(
-                f"{rule.mechanic_id} is not a cast-triggered proc rule"
-            )
-        damage_formula.compile_formula(payload.formula, ctx)
-        return (
-            KernelField(
-                name=PROC_COOLDOWN_FIELD,
-                value=resolve(clock, ctx.level),
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            ),
-        )
+
+class CastProcWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the ``cast_proc`` family.
+
+    The half that retires ``cast_proc/receipt_walk`` (umbrella Amendment F's
+    act, in the lane Amendment K rules and with the whole shape Amendment L,
+    Ruling 1 requires).  Before it, the coupled walk consumed this family as
+    ``participant_timeline._pair_run_fight``'s already-priced rows, which is
+    what the deferral row said in its own words.  Now each proc's pair event
+    is a declaration and no price: the walk mitigates the declared magnitude
+    itself, at the resistance that packet met, through
+    ``survival.pricing.price_declared_packet``.
+
+    What the declaration has to carry is this family's own arithmetic and not
+    the item active's, which is why it is enumerated at the authoring site
+    rather than assumed here: a charged proc's magnitude is its share of one
+    application, an ultimate proc's is scaled by the window it spreads over,
+    and the attack class is decided per *event* against the pair engine's own
+    Actualizer-window gate, because a proc that fired after the window closed
+    earns no part amp.
+    """
+
+    FAMILY = RuleFamily.CAST_PROC
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """This proc's numbers, resolved for the coupled roster walk."""
+        return _proc_fields(rule, ctx, EngineLane.RECEIPT_WALK)
 
 
 PAIR_INTERPRETER = CastProcPairInterpreter()
+WALK_INTERPRETER = CastProcWalkInterpreter()
+
+
+def proc_mechanic_id(owner: str) -> str:
+    """*owner*'s cast-proc mechanic id, or a stop.
+
+    What the pair engine needs to stamp the rows it authors with the mechanic
+    each row previews: ``damage._add_item_proc_damage`` walks
+    :class:`~..item_effects.DamageSource` rows, which carry an item name and
+    no rule id, and reading the id back off the declaration here is what
+    keeps the stamp from being a second spelling of the mechanic slug inside
+    the engine.
+
+    A stop rather than a default: an unstamped proc row would keep the pair
+    engine's number in every roster total *and* leave the walk pricing the
+    declaration, which is the double count this family's retirement exists to
+    make unrepresentable.
+    """
+    rules = cast_proc_rules([owner])
+    if not rules:
+        raise CastProcInterpretationError(
+            f"{owner} authors a cast-triggered proc and declares no cast_proc "
+            "rule, so its pair row has no mechanic to be a preview of"
+        )
+    return rules[0].mechanic_id
 
 
 def repeated_target_multiplier(charges: int, single_target: float) -> float:
@@ -299,6 +373,7 @@ __all__ = [
     "NO_CHARGES",
     "NO_SIBLING",
     "PAIR_INTERPRETER",
+    "WALK_INTERPRETER",
     "PROC_BREAKDOWN_PREFIX",
     "PROC_COOLDOWN_FIELD",
     "PROC_SUFFIX",
@@ -308,7 +383,9 @@ __all__ = [
     "CastProcInterpretationError",
     "CastProcPairInterpreter",
     "CastProcSlots",
+    "CastProcWalkInterpreter",
     "cast_proc_rules",
+    "proc_mechanic_id",
     "cooldown_proc_effect",
     "repeated_target_multiplier",
     "resolve_slots",

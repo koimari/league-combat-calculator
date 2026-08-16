@@ -1300,6 +1300,29 @@ def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
     )
 
 
+def _row_declaration_share(
+    declaration: tuple[Any, ...] | None, amount: float, total: float
+) -> tuple[Any, ...] | None:
+    """One coarse row's declaration, as the share one synthesized event carries.
+
+    A retired family's row usually authors its own events and each of those
+    carries its own declaration.  A row whose ledger held no certifiable
+    boundary authors none, and the reconstruction below synthesizes one event
+    per typed part instead — so the declaration has to be split the way the
+    damage was, or a row that fell into two damage types would hand one
+    magnitude to both packets and the walk would price the family twice.
+
+    The scale is the part's share of the row, which is the same restatement
+    :func:`_restate_declaration` applies when a re-pricing site moves a
+    packet's magnitude, through the same one method on the declaration.
+    ``None`` in, ``None`` out: every row the pair engine still prices carries
+    no declaration and this returns without building one.
+    """
+    if declaration is None or total <= 0.0:
+        return None
+    return tuple(AuthoredDeclaration(*declaration).rescaled_by(amount / total))
+
+
 # Phase precedence inside one timestamp of the reconstructed ledger.
 _EVENT_PHASE_ORDER = {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}
 
@@ -1346,7 +1369,12 @@ def _ordered_damage_events(
     sequence = 0
     typed_totals = {"physical": 0.0, "magic": 0.0, "true": 0.0}
 
-    def add(
+    # The parameter list is the row schema, and the schema is pinned to mirror
+    # ``add_declared_events`` below field for field: a local removed here by
+    # bundling two of them into a mapping would be one more place the two
+    # spellings of one row could drift, which the comment inside says is the
+    # thing that must not happen.
+    def add(  # pylint: disable=too-many-locals
         source_key: str,
         damage_type: str,
         damage: float,
@@ -1360,6 +1388,7 @@ def _ordered_damage_events(
         source_missing_ratio: float | None = None,
         event_precision: str | None = None,
         basic_attack: bool = False,
+        declared: tuple[Any, ...] | None = None,
     ) -> None:
         # Row schema (including ``_lk``) must mirror add_declared_events'
         # inlined fast path below exactly; change them together.
@@ -1377,13 +1406,7 @@ def _ordered_damage_events(
                     source_key,
                     raw_formula,
                     0.0 if raw_damage is None else raw_damage,
-                    # A row reconstructed here has no authored event list, so
-                    # it cannot be a retired family's declared packet: both
-                    # families that hand the walk a declaration author their
-                    # own ``damage_events`` and reach ``add_declared_events``
-                    # below.  The slot is still present, because the two row
-                    # shapes are one shape and a reader indexes it positionally.
-                    None,
+                    declared,
                 )
             )
             sequence += 1
@@ -1437,6 +1460,8 @@ def _ordered_damage_events(
             event["raw_damage"] = raw_damage
         if raw_formula is not None:
             event["raw_formula"] = raw_formula
+        if declared is not None:
+            event["declared"] = declared
         events.append(event)
         sequence += 1
 
@@ -1630,6 +1655,14 @@ def _ordered_damage_events(
             continue
         parts = _row_damage_parts(entry)
         if parts:
+            # A row a retired family authored with no event list of its own —
+            # a proc whose ledger held no certifiable boundary — still has to
+            # hand the walk its declaration, or the walk would find a packet
+            # stamped as re-priced and nothing to re-price it from.  The row
+            # states it once and each synthesized event carries its share
+            # (:func:`_row_declaration_share`), so a row that split across
+            # damage types cannot hand one declaration to two packets.
+            row_total = sum(amount for _, amount in parts)
             for dtype, amount in parts:
                 add(
                     key,
@@ -1638,6 +1671,9 @@ def _ordered_damage_events(
                     time=last_ability_time,
                     ordinal=1,
                     phase="effect",
+                    declared=_row_declaration_share(
+                        entry.get("declared"), amount, row_total
+                    ),
                 )
         else:
             damage = float(entry.get("total_damage", 0.0))
@@ -7423,6 +7459,35 @@ def _stacked_champion_proc_times(
     return proc_events
 
 
+def _proc_declaration(
+    source: item_effects.DamageSource, raw_amount: float, ability_amped: bool
+) -> tuple[Any, ...]:
+    """One cast-proc packet's declaration, as the retired family states it.
+
+    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
+    rule that authored the packet, its pre-mitigation magnitude, and the
+    attack class that decides which of the holder's own amplifiers it earns.
+    The resistance is deliberately absent, which is the correct reading for a
+    packet that met the fight's published figure; every site that re-prices
+    an authored packet afterwards restates it (:func:`_restate_declaration`,
+    umbrella Amendment N, Ruling 1).
+
+    ``ability_amped`` is the engine's own answer for *this* packet, not the
+    rule's: the ability part amp rides an item active on a window, and the
+    proc loops gate it per trigger.  A declaration that read the class off
+    ``source.is_ability_damage`` alone would claim the amp for a proc that
+    fired after the window closed, and the walk would pay an amplifier the
+    pair engine had already declined to.
+    """
+    return tuple(
+        AuthoredDeclaration(
+            cast_proc.proc_mechanic_id(source.item_name),
+            raw_amount,
+            (AttackClass.ABILITY if ability_amped else AttackClass.OTHER).value,
+        )
+    )
+
+
 def _charged_proc_target_share(
     state: FightState,
     source: item_effects.DamageSource,
@@ -7505,29 +7570,43 @@ def _add_item_proc_damage(
         # direct-engine active assumption.
         target_share = _charged_proc_target_share(state, source)
         event_damages: list[float] = []
+        # What one packet of this proc declares, before mitigation and before
+        # the holder's amps.  The target share is folded in because it is a
+        # pair-local *allocation* of one application across the roster's
+        # targets and not an amplifier: the walk prices this slot's share, so
+        # its magnitude is the share.  ``amped`` runs beside it, one entry per
+        # authored packet, and says whether the engine paid the holder's
+        # ability amp for that packet -- which is what the declaration's
+        # attack class has to say, because the gate is per trigger and a
+        # declaration claiming ABILITY for every one would hand the walk an
+        # amp the pair engine had already declined to pay.
+        declared_raw = raw_per_proc * target_share
+        amped: list[bool] = []
         if proc_triggers:
             for trigger in proc_triggers:
                 trigger_time = float(trigger["time"])
-                amp = (
-                    state.ability_amp
-                    if source.is_ability_damage
-                    and (
-                        state.actualizer_active_until <= 0.0
-                        or trigger_time
-                        < state.actualizer_active_until - _CAST_SCHEDULE_EPS
-                    )
-                    else 1.0
+                in_window = source.is_ability_damage and (
+                    state.actualizer_active_until <= 0.0
+                    or trigger_time < state.actualizer_active_until - _CAST_SCHEDULE_EPS
                 )
-                event_damages.append(base_mitigated_per_proc * amp * target_share)
+                amped.append(in_window)
+                event_damages.append(
+                    base_mitigated_per_proc
+                    * (state.ability_amp if in_window else 1.0)
+                    * target_share
+                )
             proc_mitigated = sum(event_damages)
             mitigated_per_proc = (
                 sum(event_damages) / len(event_damages) if event_damages else 0.0
             )
         else:
             amp = state.ability_amp if source.is_ability_damage else 1.0
+            in_window = source.is_ability_damage
             if threshold_time is not None and state.actualizer_active_until > 0.0:
                 if threshold_time >= state.actualizer_active_until - _CAST_SCHEDULE_EPS:
                     amp = 1.0
+                    in_window = False
+            amped.append(in_window)
             mitigated_per_proc = base_mitigated_per_proc * amp * target_share
             proc_mitigated = mitigated_per_proc * procs
 
@@ -7535,6 +7614,16 @@ def _add_item_proc_damage(
             "name": source.display_name,
             "total_damage": proc_mitigated,
             "damage_type": source.damage_type,
+            # This row is the pair engine's preview of a number the coupled
+            # walk owns since ``cast_proc`` retired: the roster composition
+            # reads the stamp and takes the figure below out of every total
+            # it composes, while the pair fight's own receipt publishes it
+            # unchanged.  The row-level declaration is what a *coarse* row
+            # hands the walk -- one whose ledger held no certifiable
+            # boundary, so it authors no event of its own and the
+            # reconstruction synthesizes one (``_row_declaration_share``).
+            "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
+            "declared": _proc_declaration(source, declared_raw * procs, any(amped)),
         }
         if proc_triggers:
             state.breakdown[source.breakdown_key]["damage_events"] = [
@@ -7543,6 +7632,7 @@ def _add_item_proc_damage(
                     "timeline_order": float(trigger["order"]) + 0.5,
                     "damage": event_damages[index],
                     "damage_type": source.damage_type,
+                    "declared": _proc_declaration(source, declared_raw, amped[index]),
                 }
                 for index, trigger in enumerate(proc_triggers)
             ]
@@ -7552,6 +7642,9 @@ def _add_item_proc_damage(
                     "time": threshold_time,
                     "damage": proc_mitigated,
                     "damage_type": source.damage_type,
+                    "declared": _proc_declaration(
+                        source, declared_raw * procs, amped[0]
+                    ),
                 }
             ]
         if source.multi_target_charges:
@@ -7586,6 +7679,11 @@ def _add_item_proc_damage(
             "name": source.display_name,
             "total_damage": ult_proc_mitigated,
             "damage_type": source.damage_type,
+            "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
+            # The zone's duration scaling is already folded into ``raw``
+            # above, so what the declaration states is this packet's own
+            # pre-mitigation magnitude and not the item's base figure.
+            "declared": _proc_declaration(source, raw, False),
         }
         # The zone opens at R1: stamp the proc at the cast timeline's
         # first R cast.  Without a timestamped R cast the row stays
@@ -7601,6 +7699,7 @@ def _add_item_proc_damage(
                     "time": min(r_cast_times),
                     "damage": ult_proc_mitigated,
                     "damage_type": source.damage_type,
+                    "declared": _proc_declaration(source, raw, False),
                 }
             ]
         state.total_damage += ult_proc_mitigated
@@ -9196,11 +9295,21 @@ def _add_single_proc_on_hits(
             "total_damage": total_damage,
             "damage_type": source.damage_type,
             "count": procs,
+            # A ``cast_proc`` row like the ones ``_add_item_proc_damage``
+            # authors, and a preview for the same reason: this family's
+            # numbers are the coupled walk's since it retired.  The late
+            # phase is the one branch that really does fall through to a
+            # coarse row -- a ledger with no certifiable attack boundary
+            # authors no ``stack_events`` -- so the row-level declaration
+            # here is the one the reconstruction splits and hands over.
+            "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
+            "declared": _proc_declaration(source, raw, False),
         }
         if stack_events:
             self_shield_events: list[dict[str, Any]] = []
             for event in stack_events:
                 event["damage"] = total_damage / procs
+                event["declared"] = _proc_declaration(source, raw / procs, False)
                 if effect.self_shield_duration > 0.0:
                     shield_base = (
                         effect.self_shield_melee_base

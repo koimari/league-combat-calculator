@@ -268,6 +268,7 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.RECEIPT_WALK,
     ): ally_packet.WALK_INTERPRETER,
     (RuleFamily.CAST_PROC, EngineLane.PAIR_ENGINE): cast_proc.PAIR_INTERPRETER,
+    (RuleFamily.CAST_PROC, EngineLane.RECEIPT_WALK): cast_proc.WALK_INTERPRETER,
     (
         RuleFamily.COMBAT_STATE,
         EngineLane.DEFENSE_RESOLVER,
@@ -447,7 +448,6 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.CHARGED_STRIKE,
             RuleFamily.SPELLBLADE,
-            RuleFamily.CAST_PROC,
             RuleFamily.PERIODIC,
             RuleFamily.RESISTANCE_SHRED,
             RuleFamily.CRIT_PROFILE,
@@ -455,14 +455,18 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         )
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
-    # ``active_cast``'s receipt-walk twin is gone — the walk prices each item
-    # active from its own declaration through ``ActiveCastWalkInterpreter``,
-    # which is Amendment F's act in the lane Amendment K rules — so only the
-    # compiled lane defers, and it says so in its own words rather than
+    # Two families' receipt-walk twins are gone — the walk prices each item
+    # active and each cast-triggered proc from its own declaration, through
+    # ``ActiveCastWalkInterpreter`` and ``CastProcWalkInterpreter``, which is
+    # Amendment F's act in the lane Amendment K rules — so only the compiled
+    # lane defers for them, and it says so in its own words rather than
     # inheriting a sentence about both walks.
-    (RuleFamily.ACTIVE_CAST, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        _COMPILED_PACKET_FED, (EngineLane.PAIR_ENGINE,)
-    ),
+    **{
+        (family, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+            _COMPILED_PACKET_FED, (EngineLane.PAIR_ENGINE,)
+        )
+        for family in (RuleFamily.ACTIVE_CAST, RuleFamily.CAST_PROC)
+    },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
         _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),

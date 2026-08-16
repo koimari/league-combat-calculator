@@ -1875,7 +1875,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         half.
         """
         families = _repriced_families()
-        assert families == (RuleFamily.ACTIVE_CAST,)
+        assert families == (RuleFamily.ACTIVE_CAST, RuleFamily.CAST_PROC)
         for family in families:
             assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
 
@@ -2909,11 +2909,18 @@ def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(
     for scenario in scenarios:
         parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
         resolved = resolve_scenario(parsed)
+        # A roster scenario prices one pair per enemy; a manual-target one has
+        # no enemies and prices the request's own params.  Both are committed
+        # coupled scenarios and both can cover a family.
         result = run_fight(
             resolved.champion_data,
             parsed.level,
             list(resolved.items),
-            resolved.target_fight_params[0],
+            (
+                resolved.target_fight_params[0]
+                if resolved.target_fight_params
+                else resolved.fight_params
+            ),
         )
         for key, entry in result["breakdown"].items():
             stamp = entry.get("pair_preview_of") if isinstance(entry, Mapping) else None

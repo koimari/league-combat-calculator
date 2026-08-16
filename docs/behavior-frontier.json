@@ -41,7 +41,7 @@
       "class_d": 1
     },
     "calculator/trigger_stream.py": {
-      "class_c": 45
+      "class_c": 53
     }
   },
   "compiled_walk_refusals": {
@@ -126,16 +126,9 @@
       "counts": "declared (family, lane) pairs with no interpreter",
       "deferrals": {
         "by_lane": {
-          "receipt_walk": 12
+          "receipt_walk": 11
         },
         "rows": {
-          "cast_proc/receipt_walk": {
-            "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
-            "overdue": true,
-            "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
-            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
-          },
           "charged_strike/receipt_walk": {
             "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
             "overdue": true,
@@ -220,7 +213,6 @@
         "active_cast/compiled_score_walk",
         "ally_packet/compiled_score_walk",
         "cast_proc/compiled_score_walk",
-        "cast_proc/receipt_walk",
         "charged_strike/compiled_score_walk",
         "charged_strike/receipt_walk",
         "combat_state/compiled_score_walk",
@@ -264,15 +256,8 @@
             ]
           },
           "cast_proc/compiled_score_walk": {
-            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
-            "via": [
-              "pair_engine"
-            ]
-          },
-          "cast_proc/receipt_walk": {
-            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
             "via": [
               "pair_engine"
             ]
@@ -453,7 +438,7 @@
       },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 28
+      "value": 27
     }
   },
   "exclusions": {
@@ -505,7 +490,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 668
+      "sites": 676
     },
     "class_d_non_behavioural": {
       "modules": {
@@ -679,9 +664,9 @@
       "counter_4/receipt_walk": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
-        "deferred": 12,
+        "deferred": 11,
         "gap": 0,
-        "gross": 12,
+        "gross": 11,
         "measured": 0,
         "met": true,
         "owed_to": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
