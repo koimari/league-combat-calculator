@@ -214,7 +214,11 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
             reason=(
                 f"{what}, which happens to equal "
                 f"coupled_golden_exact.{field} since the four bench rosters "
-                "joined that capture on 2026-08-14"
+                "joined that capture on 2026-08-14 — and, since the amp-armed "
+                "capture of 2026-08-15 moved that counter on, equals whichever "
+                "census the integer collides with today; the row admits the "
+                "collision either way, because what it says is what the "
+                "integer IS"
             ),
         )
         # The exact capture's counts became small, common integers the day it
@@ -361,6 +365,38 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
                 "_exact",
                 "`ActionKind`s, every support producer",
                 "the size of `ActionKind`, in the closure criterion",
+            ),
+        )
+    ),
+    *(
+        Allowance(
+            doc=UMBRELLA_NAME,
+            value=21,
+            context=context,
+            reason=(
+                f"{what}, which happens to equal coupled_golden_exact.entries "
+                "since the two amp-armed rosters joined the coupled scenario "
+                "set on 2026-08-15 (umbrella Amendment M, Ruling 2)"
+            ),
+        )
+        # H5's arithmetic counts sites and states a bound; both are the same
+        # small integer the exact capture's entry count just became.
+        for context, what in (
+            (
+                "NO_RUNTIME_BEHAVIOR`, 21 sites",
+                "the site count of a name-keyed container",
+            ),
+            (
+                "21 + 22 = 43",
+                "the same site count and the bound it is measured against",
+            ),
+            (
+                "sites are the count of",
+                "the same site count, as what the bound is the count of",
+            ),
+            (
+                "against a bound of",
+                "that bound, where the measured counter is read against it",
             ),
         )
     ),

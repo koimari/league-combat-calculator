@@ -1,5 +1,14 @@
 {
   "coupled_scenarios": {
+    "amp_armed_mage_roster": {
+      "combat/0:main/incoming": "1021.2",
+      "combat/0:main/outgoing": "2320.0",
+      "combat/1:ally:Pantheon/incoming": "875.3",
+      "combat/1:ally:Pantheon/outgoing": "874.9",
+      "combat/2:enemy:Aatrox/incoming": "3194.9",
+      "combat/2:enemy:Aatrox/outgoing": "1896.6",
+      "fights/0:Aatrox": "3681.8"
+    },
     "cassiopeia_3champ": {
       "combat/0:main/incoming": "1144.5",
       "combat/0:main/outgoing": "768.0",
@@ -66,6 +75,15 @@
       "combat/2:enemy:Aatrox/incoming": "1176.0",
       "combat/2:enemy:Aatrox/outgoing": "3376.3",
       "fights/0:Aatrox": "377.2"
+    },
+    "hexoptics_basic_amp_carry": {
+      "combat/0:main/incoming": "2629.0",
+      "combat/0:main/outgoing": "3597.6",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "703.2",
+      "combat/2:enemy:Aatrox/incoming": "4300.8",
+      "combat/2:enemy:Aatrox/outgoing": "4758.0",
+      "fights/0:Aatrox": "3932.5"
     },
     "immolate_active_bruiser_roster": {
       "combat/0:main/incoming": "2562.0",
@@ -179,16 +197,16 @@
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 19,
-      "leaves": 136,
+      "entries": 21,
+      "leaves": 150,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "52b56bcc2976322d6e06e19aaa5b6dc4eba50f97",
+    "git_head": "e8286702617929ffa0d6699e28e77a3d5312f79f",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 19,
+    "scenario_count": 21,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "b084d5542bf9125c11440270b5775aa114b77d96"
+    "src_tree_sha": "b654708bbc86cd2093a77b4c293c5568dde50920"
   }
 }

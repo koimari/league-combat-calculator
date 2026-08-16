@@ -5,6 +5,7 @@
   "active_cast": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
+    "amp_armed_mage_roster",
     "immolate_active_bruiser_roster"
    ],
    "declared_rules": [
@@ -16,7 +17,7 @@
     "tiamat.active"
    ],
    "deferral_row": "active_cast/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 2575 committed roster values across 2 coupled scenario(s) -- amp_armed_mage_roster 785, immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/active_cast.py",
    "owners": [
     "Hextech Gunblade",
@@ -27,9 +28,10 @@
     "Tiamat"
    ],
    "population_by_scenario": {
+    "amp_armed_mage_roster": 785,
     "immolate_active_bruiser_roster": 1790
    },
-   "population_total": 1790,
+   "population_total": 2575,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -45,6 +47,7 @@
   "cast_proc": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
+    "amp_armed_mage_roster",
     "score_event_scan_holder",
     "score_event_view_holder",
     "score_plain_tuple",
@@ -66,7 +69,7 @@
     "zekes_convergence.ultimate_proc"
    ],
    "deferral_row": "cast_proc/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3537 committed roster values across 9 coupled scenario(s) -- score_event_scan_holder 301, score_event_view_holder 301, score_plain_tuple 287, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4322 committed roster values across 10 coupled scenario(s) -- amp_armed_mage_roster 785, score_event_scan_holder 301, score_event_view_holder 301, score_plain_tuple 287, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
    "interpreter_module": "src/calculator/interpreters/cast_proc.py",
    "owners": [
     "Eclipse",
@@ -79,6 +82,7 @@
     "Zeke's Convergence"
    ],
    "population_by_scenario": {
+    "amp_armed_mage_roster": 785,
     "score_event_scan_holder": 301,
     "score_event_view_holder": 301,
     "score_plain_tuple": 287,
@@ -89,7 +93,7 @@
     "syndra_derived_order_39": 435,
     "syndra_derived_order_60": 449
    },
-   "population_total": 3537,
+   "population_total": 4322,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -211,7 +215,8 @@
   "crit_profile": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster"
+    "crit_onhit_carry_roster",
+    "hexoptics_basic_amp_carry"
    ],
    "declared_rules": [
     "infinity_edge.crit_damage_bonus",
@@ -219,7 +224,7 @@
     "sundered_sky.forced_crit"
    ],
    "deferral_row": "crit_profile/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4852 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, hexoptics_basic_amp_carry 1354",
    "interpreter_module": "src/calculator/interpreters/crit_profile.py",
    "owners": [
     "Infinity Edge",
@@ -227,9 +232,10 @@
     "Sundered Sky"
    ],
    "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498
+    "crit_onhit_carry_roster": 3498,
+    "hexoptics_basic_amp_carry": 1354
    },
-   "population_total": 3498,
+   "population_total": 4852,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -279,7 +285,9 @@
   "delta_amp": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
+    "amp_armed_mage_roster",
     "cleaver_bloodsong_roster",
+    "hexoptics_basic_amp_carry",
     "mandate_abyssal_curse_roster",
     "score_event_view_holder",
     "syndra_custom_order_120",
@@ -306,7 +314,7 @@
     "spear_of_shojin.whole_total_amp"
    ],
    "deferral_row": "delta_amp/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 5653 committed roster values across 9 coupled scenario(s) -- cleaver_bloodsong_roster 1828, mandate_abyssal_curse_roster 876, score_event_view_holder 301, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 7792 committed roster values across 11 coupled scenario(s) -- amp_armed_mage_roster 785, cleaver_bloodsong_roster 1828, hexoptics_basic_amp_carry 1354, mandate_abyssal_curse_roster 876, score_event_view_holder 301, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
    "interpreter_module": "src/calculator/interpreters/delta_amp.py",
    "owners": [
     "Actualizer",
@@ -325,7 +333,9 @@
     "Spear of Shojin"
    ],
    "population_by_scenario": {
+    "amp_armed_mage_roster": 785,
     "cleaver_bloodsong_roster": 1828,
+    "hexoptics_basic_amp_carry": 1354,
     "mandate_abyssal_curse_roster": 876,
     "score_event_view_holder": 301,
     "syndra_custom_order_120": 443,
@@ -335,7 +345,7 @@
     "syndra_derived_order_39": 435,
     "syndra_derived_order_60": 449
    },
-   "population_total": 5653,
+   "population_total": 7792,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,

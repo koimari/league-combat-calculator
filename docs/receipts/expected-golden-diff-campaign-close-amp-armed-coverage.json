@@ -46,6 +46,17 @@
    "hexoptics_basic_amp_carry"
   ]
  },
+ "expected_diff_values": {
+  "/metadata/fingerprint/leaves": {
+   "old": 41093,
+   "new": 47612,
+   "why": "The two amp-armed rosters' own leaves, and nothing else: every leaf the baseline already held is byte-identical across the capture. Stated here because R-17 obliges an allowlist to state both sides of every path it claims, which is umbrella criterion 4's Amendment H carve-out and not a second home -- the figure sits inside the artifact adjudicating this exact leaf, names the leaf by its path, and agrees with docs/receipts/campaign-fingerprints.json, which remains the sole home.",
+   "supersedes": {
+    "receipt": "expected-golden-diff-campaign-close-deferral-coverage.json",
+    "why": "This leaf is one of the sixty escalated-defects-P4-boundary.json pins, and the deferral-coverage allowlist holds the live claim on it. This capture moves it again, so the claim names the claim it replaces rather than the ledger entry four moves back: supersession is a chain, every link is declared in advance, and a boundary row is never edited afterwards."
+   }
+  }
+ },
  "oracle_pass": {
   "status": "NOT_OWED_BY_CITATION",
   "why": "R-15's amendment of 2026-08-14: a membership transition that is the ruled consequence of a declared change is adjudicated BY CITATION, not by verdict. Both scenario occurrences are absent_to_value as the identity-keyed leaf_report classifies them, which is the amendment's first guard; they are rows a captured snapshot did not hold because the scenario did not exist, not values that moved. The ruling that puts them there is one a reader can open, which is the amendment's second guard: the umbrella's Amendment M, Ruling 2 -- 'The covering scenario set gains, by integration act (R-12, R-32 -- a baseline moves in the integration agent's own commit and never inside a semantic slice), at least one scenario arming magic_amp and one arming ability_amp, so the amp term is observed by the baselines and by the oracles rather than shipping behind a green zero-occurrence line.' No oracle receipt is owed on either, and one may not be filed as though the question were a value question: no cached wiki text and no formula in docs/math-foundations.md decides whether a roster should be measured.",

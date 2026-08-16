@@ -112,12 +112,26 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     same three conditions hold of each row, so what the number records is
     that three more artifacts now adjudicate a counter, not that the criterion
     slipped.
+
+    And it fell to two, across two sources, at the amp-armed coverage capture,
+    which moved every coupled census again: all four rows keyed to the
+    deferral capture's figures — its own allowlist row and the three
+    RW-scenarios verdicts on the counters it moved — stopped having a site
+    together, and one arrived, this capture's allowlist claiming the coupled
+    leaf counter in order to supersede the claim before it.  What is left is
+    that row and the pair snapshot's entry count in the oracle receipt that
+    adjudicates it, which no capture since 0A.2 has superseded.  The same
+    capture opened the campaign's first *coincidence* row, which is counted
+    apart from these on purpose: a coincidence says the integer is not the
+    figure at all — an event ordinal in an older allowlist that became visible
+    the moment ``coupled_golden.entries`` moved onto the same small integer —
+    so admitting one is not the carve-out widening.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 5
+    assert block["forced_restatements"] == 2
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 5
+    assert len({row.source for row in forced}) == 2
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )
