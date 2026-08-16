@@ -904,6 +904,135 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > pair rows `THEORETICAL` without the amp term would move leaves in that roster, so the coupled
    > baseline can already see the magic half of the deletion, and this slice's R-20 population is
    > non-empty there before its first `src/` edit.
+   >
+   > **Amendment N — 2026-08-16, the per-packet resistance term, the term census, and
+   > window-armed coverage.** Amendment M added the first term the budgeted from-declaration
+   > pricing stage was missing. A retirement lane that went to start `active_cast` measured the
+   > second and refused half a retirement rather than shipping it:
+   > `survival.pricing.price_declared_packet` (`pricing.py:145`) prices a declaration at the **one**
+   > effective resistance a fight publishes, while the pair engine re-prices already-authored
+   > packets once the complete ledger exists — `_apply_temporary_lethality_windows`
+   > (`damage.py:9798`) for physical packets, `_apply_liandry_reprice` (`damage.py:9336`) for magic
+   > ones. Voltaic Cyclosword's Firmament grants its lethality *after* its own energized packet, so
+   > an item active authored earlier is re-priced afterwards; measured on `mundo_3champ`'s locked
+   > build, a declared raw of `324.423936` was priced by the pair engine at `0.0` and `0.45`
+   > effective armour against published baselines of `12.85` and `15.45`, and pricing it at the
+   > published figure would have deleted 11.4 and 13.0 percent of the packet — the composed roster
+   > leaf *Stridebreaker (active)* falling 647.4 to 568.5. Only R-01 row 8 saw it: no coupled
+   > scenario arms a window, so the slice's R-20 line read a green zero over a population that
+   > could not contain the defect. The finding is
+   > `docs/receipts/expected-golden-diff-campaign-close-active-cast-retirement.json` and gap-ledger
+   > row G4. Three things are ruled here and none of them is re-litigable by a lane.
+   >
+   > **Ruling 1 — the resistance term.** A declaration is priced at **the resistance its own packet
+   > actually met**. `survival.pricing.DeclaredPacket` gains a **per-packet effective-resistance
+   > term**, transported from the authored ledger rather than resolved again at the walk, and kept
+   > in step by **every site that re-prices an authored event** — `_apply_temporary_lethality_windows`
+   > and `_apply_liandry_reprice` today, and whatever Ruling 2's census adds to that list tomorrow.
+   > Pricing a retiring family's declaration at the fight's published baseline is **forbidden**: the
+   > baseline is the fight's resistance and not the packet's, so paying it deletes the temporal
+   > windows — a behaviour change smuggled into a slice labelled a re-spelling, which is the exact
+   > shape Amendment M, Ruling 1 named as its second forbidden shape and the exact shape this
+   > campaign exists to stop. The stage's equivalence fixtures **must** cover a lethality-window
+   > physical case and a Liandry-reprice magic case; a fixture set in which every packet met the
+   > published baseline proves the stage re-spells the case that cannot fail, on the same reasoning
+   > that made Amendment M's fixtures cover `amp != 1.0`. The measured `mundo_3champ` figures above
+   > are the physical **seed**, by their predicate, and what binds numerically is what the fixture's
+   > own instrument produces.
+   >
+   > **Ruling 2 — the term census.** Terms shall not be discovered one halt at a time. Two families
+   > have now been stopped by the same shape — a term the pair engine applies and the pricing stage
+   > does not — each found by the lane that tripped over it, and a third such term would be found
+   > the same way. A **source-derived census** enumerates every **post-authoring packet-mutation
+   > site** in the pair engine: every site that changes an already-authored packet's amount or its
+   > mitigation, which is the amp fold, the two re-pricing sites, and anything else the scan finds.
+   > A gate asserts that each enumerated site is covered by a pricing-stage term **or** by a ruled,
+   > dated exclusion recorded here. **No further family retires while the census shows an uncovered
+   > site.** The census is derived from source and never hand-listed — a hand list is the thing that
+   > failed twice — and it ships with an R-05 negative: an injected mutation site must turn it red.
+   >
+   > **Ruling 3 — window-armed coverage.** By **integration act** (R-12, R-32 — a baseline moves in
+   > the integration agent's own commit and never inside a semantic slice), the covering scenario set
+   > gains at least one scenario arming a **temporary-lethality window** — a Voltaic Cyclosword
+   > holder whose Firmament actually fires — and at least one arming the **Liandry reprice**. The
+   > coverage derivation **reads the window mapping**, the way `holder_amp_declarations`
+   > (`golden_snapshot.py:1199`) already reads the amp-kind mapping and `receipt_walk_families` the
+   > family-to-owner join, so a future re-pricing window that no scenario arms fails the capture on
+   > the commit that declares it rather than being discovered by whoever next re-prices. Armed means
+   > *fired*: a holder whose window opens on no packet is the same emptiness with a scenario name on
+   > it.
+   >
+   > **What this amendment does not do**, each available and refused. It retires no row: all
+   > thirteen stand, `overdue` and gated, and the machine still refuses a fourteenth. It budgets
+   > none of the thirteen slices — it amends the one engine stage Amendment L already budgeted,
+   > adds one gate, and names one integration act. It touches no `src/`, moves no baseline, re-dates
+   > nothing, edits no lane table, and does not read the debt as smaller. And it does not rule the
+   > `active_cast` stop a lane error: refusing half a retirement is what Amendment M, Ruling 1 asked
+   > a lane to do, and what is removed here is the excuse that the next lane would have had to
+   > invent the ruling too.
+   >
+   > **Measured on the commit that lands this**, because four claims in the prose that opened this
+   > amendment are checkable and one of them is wrong in the direction that would mislead the lane
+   > acting on it.
+   >
+   > *The seed figures reproduce exactly.* Unlike Amendment M's, this lane's numbers came with the
+   > configuration to reproduce them, and they do. Dr. Mundo at level 13, one rotation, holding
+   > Serylda's Grudge, Stridebreaker, Voltaic Cyclosword, Bastionbreaker, Trinity Force and
+   > Sorcerer's Shoes — the pinned `mundo_3champ` probe build — into that scenario's two enemies:
+   > the Firmament window is armed on both fights (the `on_hit_once_Voltaic Cyclosword_ability` row,
+   > 15.0 lethality for 4.0s, rescaling 3 and 4 later physical events), the published effective
+   > armour is `12.850000000000001` and `15.450000000000003`, and the `active_Stridebreaker` rows
+   > read `324.4239360000001` and `322.970568442011`. The declared raw is the first of those
+   > exactly, because the window drives that fight's armour to zero. At the published baselines the
+   > same raw prices to `287.48244217988486` and `281.00817323516674`, and the two sum to the
+   > reported 647.4 and 568.5.
+   >
+   > *The second reported leaf is a composed figure and its "before" is not a pair row.* The receipt
+   > also reports *Heart Zapper* moving 198.5 to 202.7 downstream of the first leaf. Mundo's W rows
+   > across the two pair fights sum to `202.7333` on this tree, which is the receipt's **after**
+   > value — so the composed roster leaf is duration-limited by something the pair rows are not, and
+   > its "before" is a coupled-walk figure no pair fight publishes. Recorded rather than smoothed
+   > over: the leaf stands on the receipt's own instrument, its direction is consistent with a target
+   > that survives longer once the active is smaller, and a lane that goes looking for 198.5 among
+   > the breakdown rows will not find it.
+   >
+   > *The census predicate has to cover two shapes, and the obvious one would have missed the term
+   > Amendment M already ruled.* Scanned over `damage.py` for assignment to a `damage`,
+   > `total_damage` or `damage_per_hit` subscript: 14 sites in 8 functions, of which **four**
+   > functions write rows or events they did not author — the two the ruling names, plus
+   > `_reattribute_empowered_swings` (`damage.py:10112`), which moves damage between two authored
+   > rows with the fight total untouched, and `_resolve_starting_shield_outcome`
+   > (`damage.py:10481`), which re-prices every max-health-scaled packet against the target's live
+   > pools and then recomputes `state.total_damage` from the rewritten rows. That is a **third**
+   > re-pricing site the prose does not name, which is what Ruling 2's *anything else the scan
+   > finds* was written for. And the amp fold appears in that scan **not at all**:
+   > `_apply_command_amp` (`damage.py:9743`) and `_apply_general_amplifiers` (`damage.py:9631`)
+   > mutate no packet in place — they read the ordered ledger and author a derived bonus row beside
+   > it — so a census keyed only on in-place packet writes would enumerate this amendment's term and
+   > silently miss Amendment M's. The census owes both shapes.
+   >
+   > *Ruling 3's two scenarios are both armable, neither is armed today, and the magic one cannot
+   > use the shared roster shape.* Measured by running every pair fight of every committed coupled
+   > scenario and of every bench roster: **none** arms a temporary-lethality window and **none**
+   > holds a Liandry burn row, so the term is invisible to both baselines exactly as the stopped
+   > slice reported. The physical half is easy: a Voltaic Cyclosword holder in the ordinary roster shape
+   > arms the window and fires it on 10 events for a Caitlyn roster and 8 for a Jax one. The magic
+   > half is not, and this is the load-bearing correction. The reprice needs **two** participants —
+   > the attacker's Liandry's Torment burn and a defender's lifeline raising maximum health
+   > mid-fight — and the only declaration in the tree that raises it is Protoplasm Harness's
+   > (`protoplasm_harness.lifeline_protoplasm`, the one owner of `THRESHOLD_HEALTH_BONUS`). A fight
+   > that runs past that lifeline's expiry is **withheld** rather than priced, so the roster set's
+   > shared 8-second duration raises `ThresholdExpiryWithheld` and captures nothing: measured, the
+   > arming envelope is a 3-to-5-second fight against a level-18 Protoplasm holder, and at 5 seconds
+   > an Ahri roster holding Liandry's Torment, Rabadon's Deathcap and Void Staff prices a reprice
+   > delta of `10.699001426533528` onto a burn row of `260.8274`. Two consequences the acting lane
+   > needs. The integration act's magic scenario must depart from the roster set's shared duration,
+   > with the departure stated rather than tuned until green. And the window mapping Ruling 3 says
+   > the derivation reads is **two joins, not one**: the lethality side is one holder declaration
+   > (`voltaic_cyclosword.empowered_hit`, the one owner of a `TemporaryLethality` payload over all
+   > 143 owners in `rule_owners()`), and the Liandry side is an attacker declaration joined to a
+   > *defender's*, so a mapping keyed only on the holder's items would report the magic half covered
+   > by an empty set.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
