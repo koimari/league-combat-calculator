@@ -44,6 +44,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import golden_snapshot as gs  # noqa: E402  (path is set above)
+import bench_coupled_optimizer as bench  # noqa: E402  (path is set above)
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
@@ -81,10 +82,12 @@ from src.calculator.survival.pricing import (
     MITIGATED_DAMAGE_TYPES,
     NO_RESISTANCE_PUBLISHED,
     UNPRICEABLE_DAMAGE_TYPE,
+    AuthoredDeclaration,
     DeclaredPacket,
     mitigate_declared,
     price_declared_packet,
 )
+from src.calculator import damage as pair_engine
 from src.calculator.item_support_effects import (
     _declared_authorities,
     producer_item,
@@ -2339,6 +2342,345 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
         assert unamped < reading.pair
         assert unamped * reading.factor(seed) == pytest.approx(reading.pair)
         assert round(reading.pair - unamped, GOLDEN_DECIMALS) > 0.0
+
+
+# ---------------------------------------------------------------------------
+# The per-packet resistance term — the equivalence fixtures inside a window
+# ---------------------------------------------------------------------------
+#
+# Umbrella Amendment N, Ruling 1: a declaration is priced at the resistance ITS
+# OWN PACKET met, and the fixtures "MUST cover a lethality-window physical case
+# and a Liandry-reprice magic case", on the reasoning that made Amendment M's
+# fixtures cover an amp other than 1.0.  A fixture set in which every packet met
+# the figure the fight published proves only the case that cannot fail: a pricer
+# that dropped the term entirely would reproduce the pair engine exactly.
+#
+# HOW THE DECLARATION GETS ONTO A PACKET.  No family has retired, so no authoring
+# site in `src/` stamps one — that inertness is asserted elsewhere in this file
+# and is the point of the stage.  These fixtures stamp one the way a retiring
+# family's own authoring site would: inside the engine step that authors the
+# packet, from the same `state` it prices with, carrying the raw magnitude that
+# step compiled and the resistance the packet met AT AUTHORING TIME.  The rest of
+# `run_fight` then runs untouched, which is what makes this an equivalence
+# fixture rather than a unit test of the restatement: the window that re-prices
+# the packet is the engine's own, resolved where the engine resolves it.
+#
+# WHAT IS MEASURED.  The declaration the packet comes out carrying, and the price
+# the walk's own pricer produces from it, against the number the pair engine put
+# on the row.  Bit-for-bit, because there is nothing here for float association
+# to disagree about: the walk mitigates one magnitude at one resistance, exactly
+# as the engine did.
+#
+# THE SEED.  The physical case is the seed Amendment N measured and adopted by
+# its predicate — Dr. Mundo at level 13, one rotation, on the pinned
+# `mundo_3champ` probe build, into that scenario's two enemies — read from
+# `bench_coupled_optimizer` rather than retyped, so a re-pinned probe build fails
+# here instead of quietly measuring a different fight.
+
+
+@dataclass(frozen=True)
+class WindowSeed:
+    """One fight inside a re-pricing window, and the row it re-prices."""
+
+    name: str
+    breakdown_key: str
+    damage_type: str
+    rule_id: str
+
+
+#: The engine step each seed's family authors its packets in.  Named rather than
+#: guessed: the stamp has to land where the family's own retirement slice would
+#: put it, which is before every step that could re-price what it authored.
+LETHALITY_SEED = WindowSeed(
+    name="stridebreaker_active_inside_a_firmament_window",
+    breakdown_key="active_Stridebreaker",
+    damage_type="physical",
+    rule_id="stridebreaker.active",
+)
+
+LIANDRY_SEED = WindowSeed(
+    name="liandry_burn_after_a_lifeline_raised_the_maximum",
+    breakdown_key="burn_Liandry's Torment",
+    damage_type="magic",
+    rule_id="liandrys_torment.burn",
+)
+
+
+def _mundo_probe_request():
+    """The pinned `mundo_3champ` scenario and probe build, read not retyped."""
+    build = bench.PROBE_BUILDS["mundo_3champ"]
+    return {
+        **bench.MUNDO_SCENARIO,
+        "items": list(build["items"]),
+        "boots": build["boots"],
+    }
+
+
+def _stamping(step, stamp):
+    """Wrap one engine step so it stamps declarations on what it authored."""
+
+    def stamped(state, *args, **kwargs):
+        step(state, *args, **kwargs)
+        stamp(state)
+
+    return stamped
+
+
+def _declare_authored_row(state, seed):
+    """Stamp *seed*'s row with the declaration a retired family would hand over.
+
+    Two facts come off the engine's own `state` and neither is recomputed here:
+    the resistance the packet met at authoring time is the fight's published
+    effective figure for its class, and the raw magnitude is what the row's own
+    events already are, divided back out by that one mitigation.  A retiring
+    family would take the magnitude from its interpreter instead; the number is
+    the same one, and taking it from the row is what keeps this fixture from
+    re-deriving a build context the engine already resolved.
+    """
+    row = state.breakdown.get(seed.breakdown_key)
+    if not isinstance(row, dict):
+        return
+    resistance = (
+        state.resists.effective_armor
+        if seed.damage_type == "physical"
+        else state.resists.effective_mr
+    )
+    factor = apply_resistance(1.0, resistance)
+    for event in row.get("damage_events") or ():
+        event["declared"] = tuple(
+            AuthoredDeclaration(
+                seed.rule_id,
+                float(event["damage"]) / factor,
+                AttackClass.OTHER.value,
+                float(resistance),
+            )
+        )
+
+
+@lru_cache(maxsize=None)
+def _window_readings(seed, request_key):
+    """Every fight of one seed's scenario, run with its row declared.
+
+    Returns one reading per pair fight: the fight's published resistance, the
+    row the engine finished with, and the declaration each of that row's packets
+    came out carrying once every re-pricing step had run.
+    """
+    request = (
+        _mundo_probe_request()
+        if request_key == "mundo_3champ"
+        else dict(
+            next(s for s in gs.COUPLED_SCENARIOS if s.name == request_key).request
+        )
+    )
+    parsed = parse_scenario_request(dict(request), deterministic=True)
+    resolved = resolve_scenario(parsed)
+    step = (
+        pair_engine._add_item_active_damage
+        if seed.damage_type == "physical"
+        else pair_engine._add_burn_damage
+    )
+    attribute = (
+        "_add_item_active_damage"
+        if seed.damage_type == "physical"
+        else "_add_burn_damage"
+    )
+    readings = []
+    original = getattr(pair_engine, attribute)
+    setattr(
+        pair_engine,
+        attribute,
+        _stamping(step, lambda state: _declare_authored_row(state, seed)),
+    )
+    try:
+        for params in resolved.target_fight_params:
+            result = run_fight(
+                resolved.champion_data, parsed.level, list(resolved.items), params
+            )
+            row = result["breakdown"][seed.breakdown_key]
+            readings.append(
+                WindowReading(
+                    published=float(
+                        result["effective_armor"]
+                        if seed.damage_type == "physical"
+                        else result["effective_mr"]
+                    ),
+                    row_total=float(row["total_damage"]),
+                    packets=tuple(
+                        (
+                            float(event["damage"]),
+                            AuthoredDeclaration(*event["declared"]),
+                        )
+                        for event in row["damage_events"]
+                    ),
+                )
+            )
+    finally:
+        setattr(pair_engine, attribute, original)
+    return tuple(readings)
+
+
+@dataclass(frozen=True)
+class WindowReading:
+    """What one pair fight published, and what its packets came out declaring."""
+
+    published: float
+    row_total: float
+    packets: tuple
+
+    def priced(self, seed, packet, *, at_the_published_baseline=False):
+        """The walk's price for one declared packet of this fight."""
+        _, declaration = packet
+        return price_declared_packet(
+            DeclaredPacket(
+                declaration.raw_amount,
+                seed.damage_type,
+                declaration.rule_id,
+                effective_resistance=(
+                    None
+                    if at_the_published_baseline
+                    else declaration.effective_resistance
+                ),
+            ),
+            baseline_effective_armor=self.published,
+            baseline_effective_mr=self.published,
+        )
+
+
+class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
+    """Ruling 1's physical fixture, on the seed the amendment measured."""
+
+    def test_the_window_really_fires_and_the_seed_reproduces(self):
+        """The fixture is worth something only where the two figures differ.
+
+        Both of the scenario's fights arm the Firmament window and both drive
+        this packet's armour below the figure they published, so the forbidden
+        reading and the ruled one are two different numbers on every fight here.
+        """
+        readings = _window_readings(LETHALITY_SEED, "mundo_3champ")
+        assert len(readings) == 2
+        for reading in readings:
+            assert reading.packets
+            for _, declaration in reading.packets:
+                assert 0.0 <= declaration.effective_resistance < reading.published
+        # The amendment's own reading of this seed, asserted rather than
+        # quoted: the first fight's window drives the packet's armour to the
+        # floor, which is why its declared raw and its priced row are the same
+        # number, and the second fight's does not, which is why the two fights
+        # are not one case measured twice.
+        first, second = readings
+        assert first.packets[0][1].effective_resistance == 0.0
+        assert first.packets[0][1].raw_amount == first.row_total
+        assert second.packets[0][1].effective_resistance > 0.0
+
+    def test_the_declaration_prices_to_the_pair_engines_own_number(self):
+        """Bit-exact, at the resistance the packet met — the whole ruling.
+
+        One magnitude at one resistance on both sides, so there is no float
+        association for the two to disagree about and the assertion is equality
+        rather than a tolerance.
+        """
+        for reading in _window_readings(LETHALITY_SEED, "mundo_3champ"):
+            for packet in reading.packets:
+                damage, _ = packet
+                assert reading.priced(LETHALITY_SEED, packet).amount == damage
+
+    def test_pricing_at_the_published_baseline_deletes_the_window(self):
+        """R-05's red for the term, and the forbidden reading, measured.
+
+        The branch Ruling 1 forbids is not an error the tree can raise — it is
+        a smaller number.  So it is priced here and the shortfall asserted: the
+        packet met an armour below the fight's, so paying the fight's figure
+        pays strictly less, by a margin every committed gate can see.
+        """
+        for reading in _window_readings(LETHALITY_SEED, "mundo_3champ"):
+            for packet in reading.packets:
+                damage, _ = packet
+                forbidden = reading.priced(
+                    LETHALITY_SEED, packet, at_the_published_baseline=True
+                ).amount
+                assert forbidden < damage
+                assert round(damage - forbidden, GOLDEN_DECIMALS) > 0.0
+
+
+class TestTheLiandryRepriceKeepsTheDeclarationInStep:
+    """Ruling 1's magic fixture: the reprice moves a magnitude, not a mitigation.
+
+    The other half of the ruling's *kept in step*, and the reason it needs its
+    own fixture rather than a second physical one.  The lethality window leaves
+    the packet's magnitude alone and changes what it met; the max-health reprice
+    leaves what it met alone and changes the magnitude — and it does so by
+    *replacing* the burn's authored ticks, so a declaration that was not carried
+    across would not be wrong, it would be gone.
+    """
+
+    def test_the_reprice_really_fires_on_the_committed_roster(self):
+        """`liandry_reprice_mage_roster` arms it, which is why it exists.
+
+        Ruling 3's integration act added this roster for exactly this: a fight
+        against a Protoplasm Harness holder, short enough that the lifeline's
+        own expiry is not reached, so later burn ticks are priced against a
+        raised maximum.  Armed means fired — the ticks after the lifeline are
+        strictly larger than the ticks before it.
+        """
+        readings = _window_readings(LIANDRY_SEED, "liandry_reprice_mage_roster")
+        amounts = [damage for reading in readings for damage, _ in reading.packets]
+        assert amounts
+        assert max(amounts) > min(amounts)
+
+    def test_the_declaration_prices_to_the_pair_engines_own_tick(self):
+        """Bit-exact, tick by tick, on the repriced ticks and the rest alike."""
+        for reading in _window_readings(LIANDRY_SEED, "liandry_reprice_mage_roster"):
+            for packet in reading.packets:
+                damage, _ = packet
+                assert reading.priced(LIANDRY_SEED, packet).amount == damage
+
+    def test_a_repriced_tick_declares_the_published_resistance_and_a_moved_raw(self):
+        """Which term moved, and which did not, asserted rather than described.
+
+        Every tick met the magic resistance the fight published — the reprice is
+        not a mitigation change — and the repriced ticks carry a raw magnitude
+        strictly above the ticks the reprice did not reach.  A fixture that only
+        checked the price would pass with both terms wrong by cancelling amounts.
+        """
+        raws = []
+        for reading in _window_readings(LIANDRY_SEED, "liandry_reprice_mage_roster"):
+            for _, declaration in reading.packets:
+                assert declaration.effective_resistance == reading.published
+                raws.append(declaration.raw_amount)
+        assert max(raws) > min(raws)
+
+    def test_dropping_the_carry_would_lose_the_declaration_entirely(self):
+        """R-05's red for the carry, at the seam that would drop it.
+
+        The reprice hands the row a freshly built tick list.  Run the same
+        replacement without the carry and the ticks come back carrying no
+        declaration at all — which is the failure mode this half of the ruling
+        exists to stop, and it is a different one from pricing at a stale
+        number.
+        """
+        authored = [{"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)}]
+        repriced = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
+        assert "declared" not in repriced[0]
+        pair_engine._carry_declarations_onto_repriced_ticks(authored, repriced)
+        assert repriced[0]["declared"] == ("fixture.burn", 24.0, "other", 30.0)
+
+    def test_a_replacement_the_carry_cannot_join_is_refused(self):
+        """R-05's second red: a positional carry that cannot say which tick.
+
+        Refused only where a declaration actually rides one of the authored
+        ticks — a burn nobody has retired has nothing to carry, and raising
+        there would be the guard inventing a fight the engine has always run.
+        """
+        undeclared = [{"damage": 10.0}, {"damage": 10.0}]
+        one_tick = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
+        pair_engine._carry_declarations_onto_repriced_ticks(undeclared, one_tick)
+
+        declared = [
+            {"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)},
+            {"damage": 10.0},
+        ]
+        with pytest.raises(RuntimeError, match="positional carry"):
+            pair_engine._carry_declarations_onto_repriced_ticks(declared, one_tick)
 
 
 # ---------------------------------------------------------------------------

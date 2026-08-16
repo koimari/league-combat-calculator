@@ -181,6 +181,7 @@ from .resistance import (
     apply_armor_penetration,
     reduce_resistance,
 )
+from .survival.pricing import AuthoredDeclaration
 
 # Critical strikes deal 200% base damage (this changed once before, from
 # 175%). Items add on top via crit_damage_bonus; anything recovering the
@@ -9333,12 +9334,56 @@ def _add_first_auto_healing(state: FightState) -> None:
     }
 
 
+def _restate_declaration(
+    event: Mapping[str, Any],
+    *,
+    resistance: float | None = None,
+    scale: float | None = None,
+    onto: dict[str, Any] | None = None,
+) -> None:
+    """Keep a re-priced packet's declaration in step with the re-pricing.
+
+    The one home for umbrella Amendment N, Ruling 1's *kept in step* half.
+    A packet whose family has retired reaches the coupled walk as a
+    declaration rather than as a price, and the walk prices it at the
+    magnitude and the resistance the declaration states.  So a site that
+    changes what an already-authored packet is worth has to move the
+    declaration with it: a window that re-prices the packet at a different
+    armour restates ``resistance``, a reprice that scales the packet's
+    magnitude restates ``scale``, and a site that does neither leaves a
+    declaration the walk would price at what the packet used to be.
+
+    ``onto`` is where the restated declaration lands when the site rebuilds
+    its packet instead of editing it in place; by default it lands back on
+    *event*.
+
+    Returns without writing on a packet carrying no declaration, which today
+    is every packet the tree authors: the from-declaration path is inert
+    until a family's retirement slice opts in, and this stays inert with it.
+    """
+    declared = event.get("declared")
+    if declared is None:
+        return
+    declaration = AuthoredDeclaration(*declared)
+    if resistance is not None:
+        declaration = declaration.repriced_at(resistance)
+    if scale is not None:
+        declaration = declaration.rescaled_by(scale)
+    (event if onto is None else onto)["declared"] = tuple(declaration)
+
+
 def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> None:
     """Fold the max-health reprice back onto the burn's own breakdown row.
 
     The burn's row is where this number belongs: it is more of Liandry's own
     damage, not a bonus some other item granted, and filing it anywhere else
     would attribute one item's damage to another.
+
+    The row's authored ticks are replaced by the repriced ones, so a
+    declaration riding a tick is carried across and rescaled by what that
+    tick moved by (:func:`_restate_declaration`, Amendment N, Ruling 1);
+    without that the walk would price a retired burn at its pre-lifeline
+    magnitude and the reprice would vanish from every total holding it.
     """
     liandry_delta = float(adjustments["liandry_delta"])
     if abs(liandry_delta) <= 1e-9:
@@ -9346,9 +9391,53 @@ def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> No
     liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
     if liandry_row is None:  # pragma: no cover - registry invariant
         raise RuntimeError("Liandry adjustment has no breakdown row")
+    repriced = adjustments["liandry_events"]
+    _carry_declarations_onto_repriced_ticks(liandry_row.get("damage_events"), repriced)
     liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
-    liandry_row["damage_events"] = adjustments["liandry_events"]
+    liandry_row["damage_events"] = repriced
     state.total_damage += liandry_delta
+
+
+def _carry_declarations_onto_repriced_ticks(
+    authored: Any, repriced: list[dict[str, Any]]
+) -> None:
+    """Move each authored tick's declaration onto the tick that replaces it.
+
+    The repriced ticks are the same burn's events walked in the same order,
+    so the join is positional.  A length the join cannot trust is refused
+    rather than guessed — but only where a declaration actually rides one of
+    the authored ticks, because a burn nobody has retired has nothing to
+    carry and a raise there would be this function inventing a fight the
+    engine has always run.
+    """
+    if not isinstance(authored, list):
+        return
+    carrying = [
+        event
+        for event in authored
+        if isinstance(event, dict) and event.get("declared") is not None
+    ]
+    if not carrying:
+        return
+    if len(authored) != len(repriced):
+        raise RuntimeError(
+            f"Liandry reprice replaced {len(authored)} authored tick(s) with "
+            f"{len(repriced)}; {len(carrying)} of them carry a declaration the "
+            "walk prices, and a positional carry cannot say which"
+        )
+    for authored_tick, repriced_tick in zip(authored, repriced):
+        if not isinstance(authored_tick, dict):
+            continue
+        authored_damage = float(authored_tick.get("damage", 0.0) or 0.0)
+        _restate_declaration(
+            authored_tick,
+            scale=(
+                float(repriced_tick["damage"]) / authored_damage
+                if authored_damage
+                else 1.0
+            ),
+            onto=repriced_tick,
+        )
 
 
 def _add_shadowflame_cinderbloom(
@@ -9806,6 +9895,11 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
     item amplifiers, and any other post-mitigation modifiers already present
     on the event.  Untimed/coarse rows remain unchanged rather than receiving
     guessed penetration.
+
+    Each rescaled packet's declaration is restated at the armour that packet
+    actually met (:func:`_restate_declaration`, Amendment N, Ruling 1), so a
+    family retired out of these rows is priced inside the window rather than
+    at the one figure the fight publishes.
     """
     old_armor = float(state.resists.effective_armor)
     old_multiplier = apply_resistance(1.0, old_armor)
@@ -9909,6 +10003,10 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 continue
             delta = new_damage - damage
             event["damage"] = new_damage
+            # The packet met ``new_armor``, not the figure the fight
+            # published, and a retired family's declaration is priced at what
+            # its own packet met (Amendment N, Ruling 1).
+            _restate_declaration(event, resistance=new_armor)
             row_delta += delta
             for window in active_windows:
                 window["applied_count"] += 1

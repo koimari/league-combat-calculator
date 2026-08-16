@@ -38,12 +38,26 @@ carries ``holder_amp``, composed at build time by
 mitigated number being re-multiplied.  Umbrella Amendment M, Ruling 1
 (2026-08-15), which is also this term's ordering.
 
+**The per-packet resistance term.**  A fight publishes *one* effective
+armour and one effective magic resistance, and the pair engine does not
+price every packet at them: once the complete authored ledger exists it
+re-prices packets it already authored — ``damage._apply_temporary_lethality_windows``
+rescales later physical packets when a Firmament window opens, and
+``damage._apply_liandry_reprice`` folds a raised maximum health back onto a
+burn's own ticks.  A declaration priced at the fight's published baseline
+would delete those windows from every total that holds one, which is a
+behaviour change wearing a re-spelling's name.  So a :class:`DeclaredPacket`
+carries ``effective_resistance``: the resistance **its own packet met**,
+transported on the declaration from the authored ledger rather than resolved
+again at the walk, and kept in step by every site that re-prices an authored
+event.  Umbrella Amendment N, Ruling 1 (2026-08-16).
+
 **Nothing declares a price yet.**  Every family still reaches the walk as the
 pair engine's timed rows, and this path stays inert until a family's
 retirement slice hands it a :class:`DeclaredPacket` — which is what keeps
-this stage a re-spelling rather than a re-pricing.  The amp term is armed on
-the same terms: it reaches whatever the first retiring family hands it, and
-nothing before that.
+this stage a re-spelling rather than a re-pricing.  Both terms are armed on
+the same terms: they reach whatever the first retiring family hands them,
+and nothing before that.
 """
 
 from __future__ import annotations
@@ -51,6 +65,56 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from ..resistance import apply_resistance
+
+
+class AuthoredDeclaration(NamedTuple):
+    """One packet's declaration as the pair engine's authored ledger carries it.
+
+    Four facts and no price: which rule authored the packet, the
+    pre-mitigation magnitude that rule's own interpreter compiled, the attack
+    class the rule declares — which decides *which* of the holder's
+    amplifiers the packet earns — and the effective resistance the packet
+    itself met.
+
+    It rides the engine's own event, which is why it is a plain tuple on the
+    wire and a named shape here: the ledger has two row spellings (a dict row
+    and a positional light row) and one declaration, and a reader that
+    unpacked the tuple by index in each of them would be two readers of one
+    declaration.  This is the one home of what those four positions mean;
+    ``program.compile.declared_packet_of`` composes the fifth term, the
+    holder's own amps, on the walk's side.
+
+    ``effective_resistance`` is the term umbrella Amendment N, Ruling 1 adds,
+    and the two methods below are the *kept in step* half of that ruling: a
+    site that re-prices an already-authored packet restates the declaration
+    riding it, instead of leaving a magnitude or a mitigation behind that the
+    walk would then price the packet at.  ``None`` is a packet whose ledger
+    published no resistance for its class, which is a refusal at the pricing
+    stage and never a zero.
+    """
+
+    rule_id: str
+    raw_amount: float
+    attack_class: str
+    effective_resistance: float | None = None
+
+    def repriced_at(self, effective_resistance: float) -> "AuthoredDeclaration":
+        """The same declaration, met by a different resistance.
+
+        What a temporary penetration window does to a packet it already
+        authored: the magnitude is unchanged and the mitigation is not.
+        """
+        return self._replace(effective_resistance=float(effective_resistance))
+
+    def rescaled_by(self, factor: float) -> "AuthoredDeclaration":
+        """The same declaration, at a magnitude scaled by *factor*.
+
+        What a max-health reprice does to a burn tick it already authored:
+        the mitigation is unchanged and the magnitude is not.  The scale is
+        the ratio the site applied to the priced packet, so the declaration
+        moves by exactly what the packet moved by.
+        """
+        return self._replace(raw_amount=float(self.raw_amount) * float(factor))
 
 
 class DeclaredPacket(NamedTuple):
@@ -72,12 +136,22 @@ class DeclaredPacket(NamedTuple):
     with no amp armed, which is a measured answer and not a default nobody
     asked for — the amps are resolved for every priced packet, and a
     resolution that found none is what ``1.0`` means.
+
+    ``effective_resistance`` is the **per-packet resistance term** umbrella
+    Amendment N, Ruling 1 adds: the resistance this packet's own pair-engine
+    event met, transported here on the declaration from the authored ledger.
+    ``None`` is a declaration whose ledger transported none, and the packet
+    is then priced at the fight's published baseline — the reading that is
+    correct for a packet no window re-priced and forbidden for one that a
+    window did, which is why the transport stamps the term rather than
+    leaving it to be inferred.
     """
 
     raw_amount: float
     damage_type: str
     rule_id: str
     holder_amp: float = 1.0
+    effective_resistance: float | None = None
 
     @property
     def amped_raw(self) -> float:
@@ -160,6 +234,15 @@ def price_declared_packet(
     between this and a ratio: there the delta re-prices an already-mitigated
     number, here it is part of the mitigation applied once.
 
+    **The packet's own resistance outranks the fight's** (umbrella
+    Amendment N, Ruling 1).  The published baseline is the resistance the
+    *fight* settled at, and a pair engine that re-prices a packet inside a
+    temporary penetration window priced that packet at a different one; the
+    declaration carries what its packet met, so paying the baseline for it
+    would delete the window.  The baselines above are what a declaration
+    that transported no such term is priced at, which is the same number for
+    every packet no window touched.
+
     A refusal is returned rather than raised, because an unpriceable packet
     is a fact about the fight the walk receipts and goes on from, not a
     programming error.
@@ -175,6 +258,8 @@ def price_declared_packet(
         baseline, delta = baseline_effective_armor, dynamic_bonus_armor
     else:
         baseline, delta = baseline_effective_mr, dynamic_bonus_magic_resistance
+    if packet.effective_resistance is not None:
+        baseline = packet.effective_resistance
     if baseline is None:
         return DeclaredPrice(None, None, NO_RESISTANCE_PUBLISHED)
     resistance = float(baseline) + max(0.0, float(delta or 0.0))
@@ -187,6 +272,7 @@ __all__ = [
     "MITIGATED_DAMAGE_TYPES",
     "NO_RESISTANCE_PUBLISHED",
     "UNPRICEABLE_DAMAGE_TYPE",
+    "AuthoredDeclaration",
     "DeclaredPacket",
     "DeclaredPrice",
     "mitigate_declared",

@@ -80,7 +80,7 @@ from ..survival.compile import (
     unrepresentable_template_receipt,
     trigger_time_key,
 )
-from ..survival.pricing import DeclaredPacket
+from ..survival.pricing import AuthoredDeclaration, DeclaredPacket
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -113,11 +113,14 @@ def declared_packet_of(
 ) -> DeclaredPacket:
     """One re-priced packet's declaration, composed for the walk to price.
 
-    The engine ledger carries a retired family's packet as three facts and no
-    price: which rule authored it, the pre-mitigation magnitude that rule's
-    own interpreter compiled, and the attack class the rule declares — which
-    is what decides *which* of the holder's amplifiers this packet earns.
-    The fourth term, the amplifier itself, is resolved on this side from the
+    The engine ledger carries a retired family's packet as the four facts of
+    an :class:`~..survival.pricing.AuthoredDeclaration` and no price: which
+    rule authored it, the pre-mitigation magnitude that rule's own
+    interpreter compiled, the attack class the rule declares — which is what
+    decides *which* of the holder's amplifiers this packet earns — and the
+    effective resistance the packet itself met, which the pair engine's own
+    re-pricing windows keep in step (umbrella Amendment N, Ruling 1).  The
+    fifth term, the amplifier itself, is resolved on this side from the
     declarations that produce it (umbrella Amendment M, Ruling 1): a walk
     that took a pre-multiplied number would be reading the pair engine's
     price again under another name.
@@ -132,18 +135,21 @@ def declared_packet_of(
     damage — the half-performed retirement umbrella Amendment L, Ruling 1
     calls worse than neither half.
     """
-    if not isinstance(declaration, tuple) or len(declaration) != 3:
+    if not isinstance(declaration, tuple) or not 3 <= len(declaration) <= 4:
         raise ValueError(
             f"pair row {source_key!r} is stamped as a re-priced preview and "
             "carries no declaration; the walk has nothing to price and the "
             "pair engine's number has already left the roster total"
         )
-    rule_id, raw_amount, attack_class = declaration
+    authored = AuthoredDeclaration(*declaration)
     return DeclaredPacket(
-        raw_amount=float(raw_amount),
+        raw_amount=float(authored.raw_amount),
         damage_type=damage_type,
-        rule_id=str(rule_id),
-        holder_amp=holder_amps.factor_for(damage_type, AttackClass(attack_class)),
+        rule_id=str(authored.rule_id),
+        holder_amp=holder_amps.factor_for(
+            damage_type, AttackClass(authored.attack_class)
+        ),
+        effective_resistance=authored.effective_resistance,
     )
 
 
