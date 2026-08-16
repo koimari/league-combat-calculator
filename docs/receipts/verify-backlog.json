@@ -843,6 +843,16 @@
     "test(rotation): every declaration is load-bearing on a named surface (c12)"
    ]
   },
+  "campaign-close-active-cast-retirement": {
+   "cites_an_r35_answer_in_a_commit_body": false,
+   "commit_count": 3,
+   "criteria_documents": [],
+   "subjects": [
+    "feat(walk): a re-priced pair preview keeps the packet whose price it awaits (campaign-close-active-cast-retirement)",
+    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-active-cast-retirement)",
+    "docs(receipts): what the retirement measured, and why it was reverted rather than shipped (campaign-close-active-cast-retirement)"
+   ]
+  },
   "campaign-close-amp-armed-coverage": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 4,
@@ -1140,7 +1150,7 @@
  "how_a_row_is_discharged": "A fresh read-only agent that has not read the implementation plan is handed R-35's brief with this row's commit range and the criteria quoted out of its criteria_documents. What it returns is recorded as a pass in verify-ledger.json, and this row goes away because the ledger's residue list no longer holds the tag.",
  "how_to_enumerate_a_range": "git log --reverse --format='%h %s' 584071e..HEAD, keeping the commits whose subject's trailing parenthetical begins with the group's tag. The rows carry subjects rather than shas on purpose: this file is committed inside the commit a sha would point at, so a sha goes stale on the first amend or rebase, and a gate that goes red on a rebase is a gate lanes learn to regenerate without reading. The subjects are exact and git log --grep takes them.",
  "of_which_cite_an_r35_answer_in_a_commit_body": 11,
- "prepared_passes": 94,
+ "prepared_passes": 95,
  "rule": "The residue of runbook criterion 11's first clause, prepared as work somebody can start. One row per slice group with no recorded R-35 answer in docs/receipts/verify-ledger.json: the commits it spans, the plan documents that carry its stated completion criteria, and whether its own commit bodies cite an R-35 answer. The brief is not here -- it is read from R-35 in the runbook, which stays its one home.",
  "what_this_is_not": "It is not an answer to the owed ruling whether_criterion_11s_first_clause_binds_the_campaign_backwards, and no row reads on whether the clause binds backwards. It is not a recorded R-35 answer: every row is a pass that has NOT run, and reading it as coverage would be the unverifiable claim about the past this campaign outlaws. And it does not shrink the denominator -- the row set is asserted equal to the ledger's own residue list, so preparing the work cannot become a way of redefining it.",
  "why_a_lane_may_write_this": "Every field is read from the commit tree, from the committed ledger, or from R-35 itself. Naming the commits a slice spans and the documents its criteria live in is a statement about the QUESTION a verifier would be handed, never about the answer -- the same line the standing-dissent docket draws for an investigator's brief."
