@@ -126,7 +126,7 @@ from collections.abc import Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
-from typing import Any, Callable
+from typing import Any, Callable, NamedTuple
 
 from . import item_effects
 from . import rune_effects
@@ -1026,6 +1026,25 @@ def _calculate_stacking_procs(
     return ability_procs, proc_autos
 
 
+class StackingProc(NamedTuple):
+    """One repeating strike's packet: what it declared, and what it was paid.
+
+    Both halves ride together because a repeating strike re-reads the
+    target's falling health per proc, so the two numbers are per packet and
+    a caller holding only one of them would have to recover the other by
+    dividing a mitigation back out — the ratio step the from-declaration
+    pricing path exists to remove (umbrella Amendment L, Ruling 3).
+
+    ``raw`` is pre-mitigation and already carries the pair-local factor the
+    engine applies outside :func:`_mitigate`, which is the magnitude a
+    declaration states; ``mitigated`` is what the pair engine's own row
+    publishes.
+    """
+
+    raw: float
+    mitigated: float
+
+
 def _simulate_stacking_on_hit_damage(
     effect: item_effects.StackingOnHitEffect,
     base_inputs: item_effects.DamageInputs,
@@ -1060,9 +1079,9 @@ def _simulate_stacking_on_hit_damage(
             the rare item proc that the Wiki tags as basic damage.
 
     Returns:
-        Each proc's mitigated damage in ascending-auto order — the same
-        order as sorted ``proc_autos`` — so callers can stamp per-swing
-        damage events (sum for the total).
+        Each proc as a :class:`StackingProc` in ascending-auto order — the
+        same order as sorted ``proc_autos`` — so callers can stamp per-swing
+        damage events and the declaration each one carries.
     """
     if not proc_autos:
         return []
@@ -1071,7 +1090,7 @@ def _simulate_stacking_on_hit_damage(
     proc_counts: dict[int, int] = Counter(proc_autos)
 
     current_hp = target_health
-    proc_damages: list[float] = []
+    proc_damages: list[StackingProc] = []
 
     for i in range(num_auto_attacks):
         procs_this_auto = proc_counts.get(i, 0)
@@ -1091,9 +1110,11 @@ def _simulate_stacking_on_hit_damage(
                 resists,
                 magic_amp,
             )
+            basic_share = 1.0
             if effect.source.basic_damage and effect.source.damage_type != "true":
                 mitigated *= target_basic_damage_multiplier
-            proc_damages.append(mitigated)
+                basic_share = target_basic_damage_multiplier
+            proc_damages.append(StackingProc(raw_damage * basic_share, mitigated))
             current_hp -= mitigated
 
         # Reduce HP from auto attack + other on-hit damage
@@ -5252,6 +5273,50 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     state.total_damage += total
 
 
+def _strike_declaration(
+    item_name: str,
+    raw_amount: float,
+    attack_class: AttackClass = AttackClass.OTHER,
+) -> tuple[Any, ...]:
+    """One charged-strike packet's declaration, as the retired family states it.
+
+    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
+    rule that authored the packet, its pre-mitigation magnitude, and the
+    attack class that decides which of the holder's own amplifiers it earns.
+    The resistance is deliberately absent, which is the correct reading for a
+    packet that met the fight's published figure; every site that re-prices
+    an authored packet afterwards restates it (:func:`_restate_declaration`,
+    umbrella Amendment N, Ruling 1) — and this family owns the window that
+    does it, since Voltaic Cyclosword's Firmament is one of its own strikes.
+
+    ``AttackClass.OTHER`` is the default because it is what four of the five
+    authoring sites measure: an item's own charged packet is priced by
+    ``_mitigate`` and by nothing else, so a declaration claiming a part amp
+    would hand the walk an amplifier the pair engine never paid.  The
+    ultimate's empowered run is the exception and states it —
+    ``_simulate_auto_attacks`` multiplies Fiendhunter's true instance by the
+    holder's **basic** part amp, because that instance rides the swing
+    itself — which is why the class is an argument rather than a constant.
+    The magic amp needs no class at all: ``_mitigate`` applies it to magic
+    damage whatever delivered it, and ``StaticHolderAmps.factor_for``
+    delivers it off the damage type alone.
+
+    *raw_amount* is what the caller has already folded its pair-local factors
+    into — the on-hit effectiveness of the application that spent the charge,
+    and the target-side basic multiplier the engine applies *after*
+    mitigation for a basic-damage strike.  Both are allocations of one
+    application rather than amplifiers, and mitigation is linear, so folding
+    them into the magnitude is the same real number priced once.
+    """
+    return tuple(
+        AuthoredDeclaration(
+            charged_strike.strike_mechanic_id(item_name),
+            raw_amount,
+            attack_class.value,
+        )
+    )
+
+
 def _shaped_charge_proc_receipts(
     state: FightState,
     rotation: RotationResult,
@@ -5341,12 +5406,20 @@ def _add_shaped_charge_damage(state: FightState, rotation: RotationResult) -> No
             "damage_per_proc": per_proc,
             "total_damage": total_damage,
             "damage_type": source.damage_type,
+            # This row is the pair engine's preview of a number the coupled
+            # walk owns since ``charged_strike`` retired: the roster
+            # composition reads the stamp and takes the figure below out of
+            # every total it composes, while the pair fight's own receipt
+            # publishes it unchanged.
+            "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
+            "declared": _strike_declaration(source.item_name, total_damage),
             "damage_events": [
                 {
                     "time": receipt["time"],
                     "damage": per_proc,
                     "damage_type": source.damage_type,
                     "event_precision": receipt["event_precision"],
+                    "declared": _strike_declaration(source.item_name, per_proc),
                 }
                 for receipt in proc_receipts
             ],
@@ -5798,11 +5871,22 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 }
             )
         if raw_true > 0:
+            assert ultimate_auto_buff is not None
             fiendhunter_events.append(
                 {
                     "time": attack_time,
                     "damage_type": "true",
                     "damage": raw_true * basic_amp,
+                    # The one charged strike whose packet earns a part amp:
+                    # this true instance rides the swing, so the basic amp
+                    # multiplies it below and the declaration says so with
+                    # its class rather than pre-multiplying the magnitude
+                    # (umbrella Amendment M, Ruling 1's ordering).
+                    "declared": _strike_declaration(
+                        ultimate_auto_buff.item_name,
+                        raw_true,
+                        AttackClass.BASIC_ATTACK,
+                    ),
                 }
             )
         # Champion rider: a share of this swing's PRE-mitigation damage
@@ -5912,6 +5996,20 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "count": empowered_autos,
             "total_damage": fiendhunter_true_total,
             "damage_type": "true",
+            # A ``charged_strike`` preview like the four other sites author:
+            # the pair engine's figure leaves every roster total and the
+            # events below carry the declarations the coupled walk prices.
+            "pair_preview_of": charged_strike.strike_mechanic_id(
+                ultimate_auto_buff.item_name
+            ),
+            # The row's own magnitude is the pre-amp one, because the class
+            # above is what earns the amp: ``fiendhunter_true_total`` has
+            # already been multiplied by ``basic_amp`` for display.
+            "declared": _strike_declaration(
+                ultimate_auto_buff.item_name,
+                fiendhunter_true_total / basic_amp,
+                AttackClass.BASIC_ATTACK,
+            ),
             "damage_events": fiendhunter_events,
             "event_phase": "auto",
         }
@@ -8396,6 +8494,14 @@ def _author_energized_ability_proc(
         "total_damage": ability_mitigated,
         "damage_type": source.damage_type,
         "event_phase": "ability",
+        # A ``charged_strike`` preview: the pair engine's figure leaves every
+        # roster total and the walk prices the declaration below.  This is
+        # the one strike whose own window re-prices it — Firmament's extra
+        # lethality applies to its own packet — so
+        # ``_apply_temporary_lethality_windows`` restates the resistance on
+        # this declaration afterwards (umbrella Amendment N, Ruling 1).
+        "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
+        "declared": _strike_declaration(source.item_name, ability_raw),
         "damage_events": [
             {
                 "time": ability_proc_time,
@@ -8405,6 +8511,7 @@ def _author_energized_ability_proc(
                 # before the triggering ability packet at the same time.
                 "timeline_order": -1.0,
                 "event_precision": ability_proc_precision,
+                "declared": _strike_declaration(source.item_name, ability_raw),
             }
         ],
     }
@@ -8869,6 +8976,21 @@ def _add_single_proc_on_hits(
                 swing_times[index] for index in proc_indices if index < len(swing_times)
             ]
             proc_damages: list[float] = []
+            # What each packet of this strike declares, before mitigation and
+            # before the holder's amps.  The target-side basic multiplier is
+            # folded in wherever the engine applies it, because that factor
+            # is a pair-local *allocation* the engine applies after
+            # mitigation rather than an amplifier the walk can compose, and
+            # mitigation is linear so one folded magnitude prices to the same
+            # number.  ``declared_raws`` runs beside ``proc_damages``, one
+            # entry per authored packet, because an energized proc re-reads
+            # the target's falling health and no two of them need be equal.
+            declared_raws: list[float] = []
+            basic_share = (
+                state.target_basic_damage_multiplier
+                if source.basic_damage and source.damage_type != "true"
+                else 1.0
+            )
             for proc_time in proc_times:
                 proc_inputs = _damage_inputs(
                     state,
@@ -8883,6 +9005,7 @@ def _add_single_proc_on_hits(
                 if source.basic_damage and source.damage_type != "true":
                     mitigated_proc *= state.target_basic_damage_multiplier
                 proc_damages.append(mitigated_proc)
+                declared_raws.append(raw_proc * basic_share)
             if not proc_damages:
                 raw_damage = source.raw_damage(inputs) * procs * effectiveness
                 mitigated = _mitigate(
@@ -8891,6 +9014,7 @@ def _add_single_proc_on_hits(
                 if source.basic_damage and source.damage_type != "true":
                     mitigated *= state.target_basic_damage_multiplier
                 proc_damages = [mitigated / procs] * procs
+                declared_raws = [raw_damage * basic_share / procs] * procs
             else:
                 mitigated = sum(proc_damages)
             breakdown[source.breakdown_key] = {
@@ -8900,6 +9024,14 @@ def _add_single_proc_on_hits(
                 "unit": "procs",
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
+                # This row is the pair engine's preview of a number the
+                # coupled walk owns since ``charged_strike`` retired.  The
+                # row-level declaration is what a *coarse* row hands the
+                # walk — one whose procs landed on no timestamped swing, so
+                # it authors no event of its own and the reconstruction
+                # synthesizes one (``_row_declaration_share``).
+                "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
+                "declared": _strike_declaration(source.item_name, sum(declared_raws)),
             }
             if effect.energized_max_stacks > 0:
                 breakdown[source.breakdown_key]["energized_schedule"] = (
@@ -8940,6 +9072,9 @@ def _add_single_proc_on_hits(
                         "time": swing_times[proc_index],
                         "damage": proc_damages[position],
                         "damage_type": source.damage_type,
+                        "declared": _strike_declaration(
+                            source.item_name, declared_raws[position]
+                        ),
                     }
                     for position, proc_index in enumerate(proc_indices)
                 ]
@@ -9196,6 +9331,20 @@ def _add_single_proc_on_hits(
             # earlier procs of this effect folded in).
             total_damage = 0.0
             proc_hp_dealt = 0.0
+            # The declared magnitude of every packet this strike authors, in
+            # the order the packets are authored.  A repeating strike re-reads
+            # the target's falling health per proc, so its raws differ from
+            # each other and one row total split evenly would price the walk's
+            # packets at a number no proc had.  The target-side basic
+            # multiplier is folded in for the reason ``_strike_declaration``
+            # gives: the engine applies it after mitigation and mitigation is
+            # linear.
+            declared_raws: list[float] = []
+            basic_share = (
+                state.target_basic_damage_multiplier
+                if source.basic_damage and source.damage_type != "true"
+                else 1.0
+            )
             for hit_index in ability_procs:
                 app = counted_hits[hit_index]
                 inputs = _damage_inputs(state, max(0.0, app.target_hp - proc_hp_dealt))
@@ -9205,13 +9354,14 @@ def _add_single_proc_on_hits(
                     mitigated *= state.target_basic_damage_multiplier
                 total_damage += mitigated
                 proc_hp_dealt += mitigated
+                declared_raws.append(raw * basic_share)
 
             # Auto-segment procs: unchanged auto-timeline behavior at
             # the auto stream's effectiveness.
             auto_proc_damages: list[float] = []
             if proc_autos:
                 if effect.tracks_target_health:
-                    auto_proc_damages = _simulate_stacking_on_hit_damage(
+                    simulated = _simulate_stacking_on_hit_damage(
                         effect,
                         _damage_inputs(state),
                         state.target_health,
@@ -9226,6 +9376,8 @@ def _add_single_proc_on_hits(
                             state.target_basic_damage_multiplier
                         ),
                     )
+                    auto_proc_damages = [proc.mitigated for proc in simulated]
+                    declared_raws.extend(proc.raw for proc in simulated)
                     total_damage += sum(auto_proc_damages)
                 else:
                     raw = (
@@ -9233,16 +9385,16 @@ def _add_single_proc_on_hits(
                         * len(proc_autos)
                         * effectiveness
                     )
-                    auto_segment_total = _mitigate(
-                        raw, source.damage_type, resists, state.magic_amp
-                    ) * (
-                        state.target_basic_damage_multiplier
-                        if source.basic_damage and source.damage_type != "true"
-                        else 1.0
+                    auto_segment_total = (
+                        _mitigate(raw, source.damage_type, resists, state.magic_amp)
+                        * basic_share
                     )
                     total_damage += auto_segment_total
                     auto_proc_damages = [auto_segment_total / len(proc_autos)] * len(
                         proc_autos
+                    )
+                    declared_raws.extend(
+                        [raw * basic_share / len(proc_autos)] * len(proc_autos)
                     )
 
             breakdown[source.breakdown_key] = {
@@ -9252,6 +9404,13 @@ def _add_single_proc_on_hits(
                 "unit": "procs",
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
+                # This row is the pair engine's preview of a number the
+                # coupled walk owns since ``charged_strike`` retired.  A row
+                # holding an ability-segment proc stays coarse below, so the
+                # row-level declaration is the one the reconstruction splits
+                # and hands over (``_row_declaration_share``).
+                "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
+                "declared": _strike_declaration(source.item_name, sum(declared_raws)),
             }
             # Every proc fired on a timestamped swing: author its events.
             # Ability-segment procs carry no authored timestamps yet, so
@@ -9263,8 +9422,13 @@ def _add_single_proc_on_hits(
                         "time": swing_times[auto_index],
                         "damage": damage,
                         "damage_type": source.damage_type,
+                        "declared": _strike_declaration(
+                            source.item_name, declared_raws[position]
+                        ),
                     }
-                    for auto_index, damage in zip(sorted(proc_autos), auto_proc_damages)
+                    for position, (auto_index, damage) in enumerate(
+                        zip(sorted(proc_autos), auto_proc_damages)
+                    )
                 ]
             state.total_damage += total_damage
 

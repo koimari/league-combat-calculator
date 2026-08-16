@@ -77,53 +77,139 @@ def _sibling_count(reference: AnyValueRef | None, level: int) -> int:
     return NO_SIBLING_COUNT if reference is None else int(resolve(reference, level))
 
 
+def _strike_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """One charged strike's compiled numbers for *lane*.
+
+    The count this strike compiles to, plus the proof its bases resolve.
+    Each shape's count is the thing that decides how often it is paid:
+    empowered attacks, on-hit applications, a cooldown, or the ultimate's
+    own attack count.  All four are build-time numbers.
+
+    The lane is the only thing that varies between the two interpreters
+    below.  Sharing the body rather than spelling it twice is what makes
+    "the walk reads the same declaration the pair engine reads" a property
+    of the tree instead of a claim two functions could drift out of.
+    """
+    payload = rule.payload
+    if isinstance(payload, EmpoweredHitRule):
+        count = payload.max_procs
+    elif isinstance(payload, RepeatingStrikeRule):
+        count = payload.hits_required
+    elif isinstance(payload, ShapedChargeRule):
+        count = payload.cooldown
+    elif isinstance(payload, EmpoweredAutoBuffRule):
+        count = payload.empowered_auto_count
+    elif isinstance(payload, SwingScheduleRule):
+        # A schedule is not spent, so what it compiles to is the ceiling
+        # on what its ramp can hold.  A window-only schedule holds none
+        # and says so with the family's own "no sibling" spelling.
+        stacks = payload.decaying_stacks
+        count = None if stacks is None else stacks.max_stacks
+    else:
+        raise ChargedStrikeInterpretationError(
+            f"{rule.mechanic_id} is not a charged strike rule"
+        )
+    if isinstance(payload, (EmpoweredHitRule, RepeatingStrikeRule, ShapedChargeRule)):
+        damage_formula.compile_formula(payload.formula, ctx)
+    return (
+        KernelField(
+            name=CHARGE_COUNT_FIELD,
+            value=_sibling(count, ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        ),
+    )
+
+
 class ChargedStrikePairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``charged_strike`` family."""
+    """The pair engine's answer for the ``charged_strike`` family.
+
+    Its number is a **preview** for every strike that authors a damage row,
+    since this family retired: those rules declare ``ViewTag.THEORETICAL``
+    on their pair lane and the five engine sites that author their rows
+    stamp ``pair_preview_of``, so the honest one-attacker figure stays in
+    the pair fight's own receipt and leaves every total the roster composes.
+    The two swing schedules are not previews of anything — a schedule is a
+    build-time stat this engine applies and no walk re-prices.
+    """
 
     FAMILY = RuleFamily.CHARGED_STRIKE
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The count this strike compiles to, plus the proof its bases resolve.
+        """This strike's numbers, resolved for the one-attacker engine."""
+        return _strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
 
-        Each shape's count is the thing that decides how often it is paid:
-        empowered attacks, on-hit applications, a cooldown, or the ultimate's
-        own attack count.  All four are build-time numbers.
-        """
-        payload = rule.payload
-        if isinstance(payload, EmpoweredHitRule):
-            count = payload.max_procs
-        elif isinstance(payload, RepeatingStrikeRule):
-            count = payload.hits_required
-        elif isinstance(payload, ShapedChargeRule):
-            count = payload.cooldown
-        elif isinstance(payload, EmpoweredAutoBuffRule):
-            count = payload.empowered_auto_count
-        elif isinstance(payload, SwingScheduleRule):
-            # A schedule is not spent, so what it compiles to is the ceiling
-            # on what its ramp can hold.  A window-only schedule holds none
-            # and says so with the family's own "no sibling" spelling.
-            stacks = payload.decaying_stacks
-            count = None if stacks is None else stacks.max_stacks
-        else:
-            raise ChargedStrikeInterpretationError(
-                f"{rule.mechanic_id} is not a charged strike rule"
-            )
-        if isinstance(
-            payload, (EmpoweredHitRule, RepeatingStrikeRule, ShapedChargeRule)
-        ):
-            damage_formula.compile_formula(payload.formula, ctx)
-        return (
-            KernelField(
-                name=CHARGE_COUNT_FIELD,
-                value=_sibling(count, ctx.level),
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            ),
-        )
+
+class ChargedStrikeWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the ``charged_strike`` family.
+
+    The half that retires ``charged_strike/receipt_walk`` (umbrella
+    Amendment F's act, in the lane Amendment K rules and with the whole
+    shape Amendment L, Ruling 1 requires).  Before it, the coupled walk
+    consumed this family as ``participant_timeline._pair_run_fight``'s
+    already-priced rows, which is what the deferral row said in its own
+    words.  Now each strike's pair event is a declaration and no price: the
+    walk mitigates the declared magnitude itself, at the resistance that
+    packet met, through ``survival.pricing.price_declared_packet``.
+
+    What the declaration has to carry is this family's own arithmetic and
+    not the item active's, which is why it is enumerated at the authoring
+    sites rather than assumed here: a repeating strike's magnitude is
+    re-read per proc against the target's falling health, a basic-damage
+    strike folds the target-side basic multiplier into its magnitude
+    because the engine applies that factor *after* mitigation, and the
+    attack class is ``OTHER`` for every one of them because no site here
+    pays a part amp.
+    """
+
+    FAMILY = RuleFamily.CHARGED_STRIKE
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """This strike's numbers, resolved for the coupled roster walk."""
+        return _strike_fields(rule, ctx, EngineLane.RECEIPT_WALK)
 
 
 PAIR_INTERPRETER = ChargedStrikePairInterpreter()
+WALK_INTERPRETER = ChargedStrikeWalkInterpreter()
+
+
+def strike_mechanic_id(owner: str) -> str:
+    """*owner*'s damage-authoring charged-strike mechanic id, or a stop.
+
+    What the pair engine needs to stamp the rows it authors with the
+    mechanic each row previews: the five authoring sites walk
+    :class:`~..item_effects.DamageSource` rows, which carry an item name and
+    no rule id, and reading the id back off the declaration here is what
+    keeps the stamp from being a second spelling of the mechanic slug inside
+    the engine.
+
+    A **swing schedule** is skipped rather than returned: Guinsoo's Rageblade
+    declares one beside its on-hit strike and Yun Tal Wildarrows declares one
+    alone, and neither authors a damage row — a schedule changes how often
+    the holder swings, which the pair engine applies and no walk re-prices.
+    Returning one here would stamp somebody else's row as a preview of it.
+
+    A stop rather than a default: an unstamped strike row would keep the
+    pair engine's number in every roster total *and* leave the walk pricing
+    the declaration, which is the double count this family's retirement
+    exists to make unrepresentable.
+    """
+    rules = [
+        rule
+        for rule in charged_strike_rules([owner])
+        if not isinstance(rule.payload, SwingScheduleRule)
+    ]
+    if not rules:
+        raise ChargedStrikeInterpretationError(
+            f"{owner} authors a charged strike and declares no damaging "
+            "charged_strike rule, so its pair row has no mechanic to be a "
+            "preview of"
+        )
+    return rules[0].mechanic_id
 
 
 def _payload_of(rule: BehaviorRule, shape: type) -> object:
@@ -517,15 +603,18 @@ __all__ = [
     "NO_SIBLING",
     "NO_SIBLING_COUNT",
     "PAIR_INTERPRETER",
+    "WALK_INTERPRETER",
     "SHAPED_CHARGE_BREAKDOWN_PREFIX",
     "SHAPED_CHARGE_SUFFIX",
     "ChargedStrikeInterpretationError",
     "ChargedStrikePairInterpreter",
     "ChargedStrikeSlots",
+    "ChargedStrikeWalkInterpreter",
     "DecayingStackRamp",
     "RearmedWindow",
     "SwingSchedule",
     "charged_strike_rules",
     "resolve_slots",
+    "strike_mechanic_id",
     "swing_times",
 ]

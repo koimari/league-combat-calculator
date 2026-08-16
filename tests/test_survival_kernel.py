@@ -93,7 +93,12 @@ from src.calculator.item_support_effects import (
     _declared_authorities,
     producer_item,
 )
-from src.calculator.trigger_stream import tuple_incapable_items
+from src.calculator.trigger_stream import (
+    CAPABILITIES,
+    Engine,
+    ViewTag,
+    tuple_incapable_items,
+)
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
@@ -1875,19 +1880,34 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         half.
         """
         families = _repriced_families()
-        assert families == (RuleFamily.ACTIVE_CAST, RuleFamily.CAST_PROC)
+        assert families == (
+            RuleFamily.ACTIVE_CAST,
+            RuleFamily.CAST_PROC,
+            RuleFamily.CHARGED_STRIKE,
+        )
         for family in families:
             assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
 
     def test_no_family_is_half_retired(self):
-        """Every rule of a re-priced family is re-priced, not just some of them.
+        """Every rule of a re-priced family is re-priced or says why it is not.
 
-        A family whose numbers arrive by two routes — some rules priced from
+        A family whose damage arrives by two routes — some rules priced from
         their declarations and the rest consumed as the pair engine's rows —
         is D-60's two engines pricing one mechanic, wearing a retirement's
         name.  The rule set is read from the catalog, so a seventh item
         active declared tomorrow fails here rather than shipping half
         covered.
+
+        A rule that is *not* re-priced is admitted only by its own
+        declaration, never by this test knowing its name: it has to declare a
+        pair half tagged ``APPLIED``, which is the statement "this mechanic's
+        pair-lane number is delivered and previewed by nobody".  That is the
+        honest reading for a ``charged_strike`` swing schedule — Guinsoo's
+        Rageblade's and Yun Tal Wildarrows' ramps change how often the holder
+        swings and author no packet at all, so there is nothing for a walk to
+        price and nothing for a preview to double-count.  An undeclared rule
+        of a re-priced family fails here, which is what keeps the exclusion
+        from being an omission (D-40).
         """
         repriced = walk_repriced_mechanics()
         for family in _repriced_families():
@@ -1898,7 +1918,11 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
                 if rule.family is family
             }
             assert declared, family.value
-            assert declared <= repriced, family.value
+            for mechanic in sorted(declared - repriced):
+                capability = CAPABILITIES.get(mechanic)
+                assert capability is not None, mechanic
+                assert capability.engine is Engine.PAIR, mechanic
+                assert capability.view_tags[Engine.PAIR] is ViewTag.APPLIED, mechanic
 
     def test_every_other_family_still_reaches_the_walk_as_pair_rows(self):
         """The families that have not opted in are unmoved by this path.

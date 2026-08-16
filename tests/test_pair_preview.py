@@ -21,7 +21,10 @@ from __future__ import annotations
 from functools import lru_cache
 
 from src import app as app_module
-from src.calculator.program.build import pair_preview_mechanics
+from src.calculator.program.build import (
+    pair_preview_mechanics,
+    walk_repriced_mechanics,
+)
 from src.calculator.program.compile import WalkCompiler
 from src.calculator.survival.actions import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
@@ -183,11 +186,21 @@ def test_removing_the_item_removes_the_amplification_entirely():
     assert _amped(body, "ally1") == []
 
 
-def _one_previewed_mechanic():
-    """A mechanic the registry declares ``THEORETICAL`` on the pair lane."""
-    previewed = sorted(pair_preview_mechanics())
-    assert previewed, "the registry declares no pair preview to exclude"
-    return previewed[0]
+def _one_dropped_preview_mechanic():
+    """A previewed mechanic whose row a roster composition drops whole.
+
+    Not merely *any* ``THEORETICAL`` mechanic, and the difference is the
+    subject of the two cases below: a rider-delivered preview is a second
+    copy of a number the walk authors elsewhere and its row leaves the
+    composition entirely, while a retired family's preview is the packet the
+    walk is about to price from its own declaration and its row survives
+    carrying that declaration.  Reading the difference off
+    :func:`walk_repriced_mechanics` rather than naming a mechanic is what
+    keeps these cases pointed at dropping the day another family retires.
+    """
+    dropped = sorted(pair_preview_mechanics() - walk_repriced_mechanics())
+    assert dropped, "the registry declares no dropped pair preview to exclude"
+    return dropped[0]
 
 
 def _engine_result_with_a_preview_row():
@@ -197,7 +210,7 @@ def _engine_result_with_a_preview_row():
             "Q": {"total_damage": 100.0},
             "preview_row": {
                 "total_damage": 40.0,
-                "pair_preview_of": _one_previewed_mechanic(),
+                "pair_preview_of": _one_dropped_preview_mechanic(),
             },
             "W": {"total_damage": 60.0},
         },

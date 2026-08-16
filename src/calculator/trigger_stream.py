@@ -958,6 +958,72 @@ _CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# The eleven damaging charged strikes, retired off the pair engine
+# 2026-08-16.  One row per declared rule in ``item_behavior_catalog``'s
+# ``charged_strike`` family that authors a damage row, and the engine
+# function that authors it: this family's rows come from five sites rather
+# than one, because a charge is spent by an attack, by an ability, by an
+# ultimate's empowered run or by every Nth on-hit application, and each of
+# those is timed by a different part of the engine.
+#
+# The two ``swing_rate`` schedules are deliberately not here and are declared
+# as ordinary applied pair halves below: a schedule authors no packet — it
+# changes how often the holder swings — so there is no row to preview and no
+# declaration for a walk to price.
+_CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(mechanic, item, pair_impl)
+    for mechanic, item, pair_impl in (
+        (
+            "bastionbreaker.shaped_charge",
+            "Bastionbreaker",
+            "damage._add_shaped_charge_damage",
+        ),
+        (
+            "dead_mans_plate.empowered_hit",
+            "Dead Man's Plate",
+            "damage._add_single_proc_on_hits",
+        ),
+        (
+            "fiendhunter_bolts.empowered_autos",
+            "Fiendhunter Bolts",
+            "damage._simulate_auto_attacks",
+        ),
+        ("heartsteel.empowered_hit", "Heartsteel", "damage._add_single_proc_on_hits"),
+        (
+            "hullbreaker.repeating_strike",
+            "Hullbreaker",
+            "damage._add_single_proc_on_hits",
+        ),
+        (
+            "kraken_slayer.repeating_strike",
+            "Kraken Slayer",
+            "damage._add_single_proc_on_hits",
+        ),
+        (
+            "rapid_firecannon.empowered_hit",
+            "Rapid Firecannon",
+            "damage._add_single_proc_on_hits",
+        ),
+        (
+            "statikk_shiv.empowered_hit",
+            "Statikk Shiv",
+            "damage._add_single_proc_on_hits",
+        ),
+        ("stormrazor.empowered_hit", "Stormrazor", "damage._add_single_proc_on_hits"),
+        (
+            "umbral_glaive.empowered_hit",
+            "Umbral Glaive",
+            "damage._add_single_proc_on_hits",
+        ),
+        (
+            "voltaic_cyclosword.empowered_hit",
+            "Voltaic Cyclosword",
+            "damage._author_energized_ability_proc",
+        ),
+    )
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1258,7 +1324,29 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- retired families: both halves of one packet ------------------------
     *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
     *_retired_family_halves(_CAST_PROC_RETIREMENT),
+    *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
     # -- pair-engine halves -------------------------------------------------
+    # The two swing schedules of the retired ``charged_strike`` family.  They
+    # sit here rather than among the retirement's paired halves because they
+    # author no packet: a schedule decides how often the holder swings, the
+    # pair engine applies it while building the swing stream that every later
+    # site reads, and nothing about it is a preview of a number the coupled
+    # walk owns.  ``APPLIED`` is that measured, and ``PAIR_ONLY`` says the
+    # schedule is a pair-local fact rather than one a second engine sees.
+    _pair_half(
+        "guinsoos_rageblade.swing_rate",
+        ItemOwner("Guinsoo's Rageblade"),
+        "damage._auto_attack_timestamps",
+        authority=Authority.PAIR_ONLY,
+        view_tag=ViewTag.APPLIED,
+    ),
+    _pair_half(
+        "yun_tal_wildarrows.swing_rate",
+        ItemOwner("Yun Tal Wildarrows"),
+        "damage._auto_attack_timestamps",
+        authority=Authority.PAIR_ONLY,
+        view_tag=ViewTag.APPLIED,
+    ),
     _pair_half(
         "abyssal_mask.magic_amp",
         ItemOwner("Abyssal Mask"),

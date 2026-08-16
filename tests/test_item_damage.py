@@ -215,7 +215,8 @@ def _simulate_kraken_damage(
         "Kraken Slayer", level=level, is_melee=is_melee
     ).stacking_on_hits[0]
     return sum(
-        _simulate_stacking_on_hit_damage(
+        proc.mitigated
+        for proc in _simulate_stacking_on_hit_damage(
             effect,
             DamageInputs({}, level, is_melee, target_health, target_health),
             target_health,
