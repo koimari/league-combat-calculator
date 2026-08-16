@@ -30,6 +30,7 @@
    "why": "Every declaration of this family names the holder as its subject and none of them authors a priced pair-engine row, in the covering population or in a per-owner probe on a ranged and a melee champion. All-pair-local inputs => PAIR_ONLY under the umbrella's own semantic-authority rule, so the pair engine is this family's authoritative home, no second engine prices it, no double-count exists, and the (family, RECEIPT_WALK) deferral row was a schedule category error rather than a debt."
   }
  },
+ "closed_by_lane_declaration_correction": {},
  "families": {
   "combat_state": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -53,6 +54,141 @@
    "deferral_row": "combat_state/receipt_walk",
    "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 2648 committed roster values across 6 coupled scenario(s) -- syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
    "interpreter_module": "src/calculator/interpreters/combat_state.py",
+   "lane_correction_evidence": {
+    "authored_pair_rows": [],
+    "fails_closed_without_the_serving_interpreter": {
+     "by_owner": {
+      "Banshee's Veil": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Edge of Night": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Force of Nature": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Jak'Sho, The Protean": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Seeker's Armguard": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Verdant Barrier": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Zhonya's Hourglass": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      }
+     },
+     "holds": true,
+     "lanes_removed": [
+      "defense_resolver"
+     ],
+     "owners_that_do_not_fail_closed": [],
+     "public_questions_that_need_those_lanes": [
+      "scoring",
+      "target"
+     ],
+     "rule": "Umbrella Amendment Q's backward direction, run on every check. The family's interpreter is removed from the registry the coverage ladder reads and every declaring owner is asked again: the answer must be withheld and must name the missing (family, lane) pair, never a modelled status and never a silent zero."
+    },
+    "holds": true,
+    "reopens_if": "a mechanic of this family ever authors walk-priced rows not fed by the resolver -- measured on every run as the priced pair rows the family authors over its covering population and a probe per owner, and as the per-declaration consumption above -- in which case the receipt-walk lane re-enters _FAMILY_LANES and the deferral row reopens.",
+    "ruled_by": "umbrella Amendment Q",
+    "walk_side_consumption": {
+     "by_declaration": {
+      "banshees_veil.annul": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "spell_shield_ready",
+        "spell_shield_source"
+       ]
+      },
+      "edge_of_night.annul": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "spell_shield_ready",
+        "spell_shield_source"
+       ]
+      },
+      "force_of_nature.steadfast": {
+       "capability_named_walk_impl": "survival.transitions.update_combat_state",
+       "consumed_at": [
+        "survival.transitions._subject_defense_profile"
+       ],
+       "fields_no_engine_reads": [
+        "force_bonus_move_speed_percent"
+       ],
+       "named_impl_is_a_consumer": true,
+       "resolved_fields": [
+        "force_bonus_magic_resistance",
+        "force_bonus_move_speed_percent",
+        "force_immobilize_stacks",
+        "force_max_stacks",
+        "force_stack_duration",
+        "force_stack_interval"
+       ]
+      },
+      "jaksho_the_protean.voidborn_resilience": {
+       "consumed_at": [
+        "survival.transitions._subject_defense_profile"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "jaksho_bonus_resistance_multiplier",
+        "jaksho_max_stacks",
+        "jaksho_stack_interval"
+       ]
+      },
+      "seekers_armguard.time_stop": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "starting_stasis_duration",
+        "starting_stasis_source"
+       ]
+      },
+      "verdant_barrier.annul": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "spell_shield_ready",
+        "spell_shield_source"
+       ]
+      },
+      "zhonyas_hourglass.time_stop": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "starting_stasis_duration",
+        "starting_stasis_source"
+       ]
+      }
+     },
+     "capability_named_impls_that_are_not_consumers": [],
+     "declarations_consumed_nowhere": [],
+     "holds": true,
+     "rule": "Umbrella Amendment Q's forward direction, source-asserted. The fields are what this family's own resolver interpreter writes, run over its declarations; the sites are every read of one of those fields off a resolved defences value, found by walking the source of every module outside the resolver. A declaration nothing consumes means the walk is not fed through the lane this family declares, and the correction does not hold for it."
+    }
+   },
    "owners": [
     "Banshee's Veil",
     "Edge of Night",
@@ -82,6 +218,7 @@
    "route_today": [
     "defense_resolver"
    ],
+   "served_through_its_declared_lane": true,
    "triage": {
     "authored_pair_rows": [],
     "class": "c",
@@ -145,6 +282,7 @@
    "route_today": [
     "pair_engine"
    ],
+   "served_through_its_declared_lane": false,
    "triage": {
     "authored_pair_rows": [
      "active_Titanic Hydra",
@@ -190,6 +328,128 @@
    "deferral_row": "opening_defense/receipt_walk",
    "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
    "interpreter_module": "src/calculator/interpreters/opening_defense.py",
+   "lane_correction_evidence": {
+    "authored_pair_rows": [],
+    "fails_closed_without_the_serving_interpreter": {
+     "by_owner": {
+      "Bloodthirster": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Celestial Opposition": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Kaenic Rookern": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Plated Steelcaps": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Randuin's Omen": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Warden's Mail": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      }
+     },
+     "holds": true,
+     "lanes_removed": [
+      "defense_resolver"
+     ],
+     "owners_that_do_not_fail_closed": [],
+     "public_questions_that_need_those_lanes": [
+      "scoring",
+      "target"
+     ],
+     "rule": "Umbrella Amendment Q's backward direction, run on every check. The family's interpreter is removed from the registry the coverage ladder reads and every declaring owner is asked again: the answer must be withheld and must name the missing (family, lane) pair, never a modelled status and never a silent zero."
+    },
+    "holds": true,
+    "reopens_if": "a mechanic of this family ever authors walk-priced rows not fed by the resolver -- measured on every run as the priced pair rows the family authors over its covering population and a probe per owner, and as the per-declaration consumption above -- in which case the receipt-walk lane re-enters _FAMILY_LANES and the deferral row reopens.",
+    "ruled_by": "umbrella Amendment Q",
+    "walk_side_consumption": {
+     "by_declaration": {
+      "bloodthirster.ichorshield": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.receipt_state._build_state_uncached",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "bloodthirster_shield_cap",
+        "bloodthirster_starting_shield",
+        "general_shield"
+       ]
+      },
+      "celestial_opposition.blessing_of_the_mountain": {
+       "consumed_at": [
+        "survival.receipt_state._build_state_uncached"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "incoming_damage_cooldown",
+        "incoming_damage_linger",
+        "incoming_damage_multiplier",
+        "incoming_damage_source"
+       ]
+      },
+      "kaenic_rookern.magebane": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "magic_shield"
+       ]
+      },
+      "plated_steelcaps.plating": {
+       "consumed_at": [
+        "participant_timeline._simulate_survival._target_factor",
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "basic_damage_multiplier"
+       ]
+      },
+      "randuins_omen.resilience": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "critical_strike_damage_multiplier"
+       ]
+      },
+      "wardens_mail.rock_solid": {
+       "consumed_at": [
+        "participant_timeline._simulate_survival._target_factor",
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "basic_damage_flat_reduction",
+        "basic_damage_flat_reduction_cap"
+       ]
+      }
+     },
+     "capability_named_impls_that_are_not_consumers": [],
+     "declarations_consumed_nowhere": [],
+     "holds": true,
+     "rule": "Umbrella Amendment Q's forward direction, source-asserted. The fields are what this family's own resolver interpreter writes, run over its declarations; the sites are every read of one of those fields off a resolved defences value, found by walking the source of every module outside the resolver. A declaration nothing consumes means the walk is not fed through the lane this family declares, and the correction does not hold for it."
+    }
+   },
    "owners": [
     "Bloodthirster",
     "Celestial Opposition",
@@ -213,6 +473,7 @@
    "route_today": [
     "defense_resolver"
    ],
+   "served_through_its_declared_lane": true,
    "triage": {
     "authored_pair_rows": [],
     "class": "c",
@@ -275,6 +536,7 @@
    "route_today": [
     "pair_engine"
    ],
+   "served_through_its_declared_lane": false,
    "triage": {
     "authored_pair_rows": [
      "burn_Blackfire Torch",
@@ -335,6 +597,7 @@
    "route_today": [
     "pair_engine"
    ],
+   "served_through_its_declared_lane": false,
    "triage": {
     "authored_pair_rows": [],
     "class": "c",
@@ -379,6 +642,7 @@
    "route_today": [
     "pair_engine"
    ],
+   "served_through_its_declared_lane": false,
    "triage": {
     "authored_pair_rows": [
      "on_hit_secondary_Runaan's Hurricane",
@@ -433,6 +697,7 @@
    "route_today": [
     "pair_engine"
    ],
+   "served_through_its_declared_lane": false,
    "triage": {
     "authored_pair_rows": [
      "expose_weakness_Bloodsong",
@@ -476,6 +741,162 @@
    "deferral_row": "threshold_defense/receipt_walk",
    "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4402 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, liandry_reprice_mage_roster 904",
    "interpreter_module": "src/calculator/interpreters/threshold_defense.py",
+   "lane_correction_evidence": {
+    "authored_pair_rows": [],
+    "fails_closed_without_the_serving_interpreter": {
+     "by_owner": {
+      "Guardian Angel": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Hexdrinker": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Immortal Shieldbow": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Maw of Malmortius": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Protoplasm Harness": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Seraph's Embrace": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Sterak's Gage": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      }
+     },
+     "holds": true,
+     "lanes_removed": [
+      "defense_resolver"
+     ],
+     "owners_that_do_not_fail_closed": [],
+     "public_questions_that_need_those_lanes": [
+      "scoring",
+      "target"
+     ],
+     "rule": "Umbrella Amendment Q's backward direction, run on every check. The family's interpreter is removed from the registry the coverage ladder reads and every declaring owner is asked again: the answer must be withheld and must name the missing (family, lane) pair, never a modelled status and never a silent zero."
+    },
+    "holds": true,
+    "reopens_if": "a mechanic of this family ever authors walk-priced rows not fed by the resolver -- measured on every run as the priced pair rows the family authors over its covering population and a probe per owner, and as the per-declaration consumption above -- in which case the receipt-walk lane re-enters _FAMILY_LANES and the deferral row reopens.",
+    "ruled_by": "umbrella Amendment Q",
+    "walk_side_consumption": {
+     "by_declaration": {
+      "guardian_angel.rebirth": {
+       "consumed_at": [
+        "participant_timeline._simulate_survival",
+        "program.compile.revive_candidate_actions",
+        "roster_composition.target_overrides"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "revive_cooldown",
+        "revive_delay",
+        "revive_health_amount",
+        "revive_source"
+       ]
+      },
+      "hexdrinker.lifeline_hexdrinker": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "threshold_shield_amount",
+        "threshold_shield_damage_type",
+        "threshold_shield_duration",
+        "threshold_shield_health_ratio"
+       ]
+      },
+      "immortal_shieldbow.lifeline_shieldbow": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "threshold_shield_amount",
+        "threshold_shield_damage_type",
+        "threshold_shield_duration",
+        "threshold_shield_health_ratio"
+       ]
+      },
+      "maw_of_malmortius.lifeline_maw": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.receipt_state._build_state_uncached",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "maw_lifeline_omnivamp_percent",
+        "threshold_shield_amount",
+        "threshold_shield_damage_type",
+        "threshold_shield_duration",
+        "threshold_shield_health_ratio"
+       ]
+      },
+      "protoplasm_harness.lifeline_protoplasm": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "threshold_health_bonus",
+        "threshold_health_duration",
+        "threshold_health_heal",
+        "threshold_health_ratio"
+       ]
+      },
+      "seraphs_embrace.lifeline_seraph": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "threshold_shield_amount",
+        "threshold_shield_damage_type",
+        "threshold_shield_duration",
+        "threshold_shield_health_ratio"
+       ]
+      },
+      "steraks_gage.lifeline_sterak": {
+       "consumed_at": [
+        "roster_composition.target_overrides",
+        "scenario.resolve_scenario",
+        "survival.transitions.participant_pools"
+       ],
+       "fields_no_engine_reads": [],
+       "resolved_fields": [
+        "threshold_shield_amount",
+        "threshold_shield_damage_type",
+        "threshold_shield_duration",
+        "threshold_shield_health_ratio"
+       ]
+      }
+     },
+     "capability_named_impls_that_are_not_consumers": [],
+     "declarations_consumed_nowhere": [],
+     "holds": true,
+     "rule": "Umbrella Amendment Q's forward direction, source-asserted. The fields are what this family's own resolver interpreter writes, run over its declarations; the sites are every read of one of those fields off a resolved defences value, found by walking the source of every module outside the resolver. A declaration nothing consumes means the walk is not fed through the lane this family declares, and the correction does not hold for it."
+    }
+   },
    "owners": [
     "Guardian Angel",
     "Hexdrinker",
@@ -501,6 +922,7 @@
    "route_today": [
     "defense_resolver"
    ],
+   "served_through_its_declared_lane": true,
    "triage": {
     "authored_pair_rows": [],
     "class": "c",
@@ -524,6 +946,7 @@
  },
  "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
+ "lane_correction_rule": "Umbrella Amendment Q (2026-08-16): a family whose walk-side need is satisfied THROUGH its declared serving lane does not need -- and must not declare -- a RECEIPT_WALK interpreter lane, because one producer is what the one-engine thesis demands. RECEIPT_WALK leaves _FAMILY_LANES for exactly the three measured families the defence resolver feeds, in Amendment O, Ruling 1's shape and on a different ground, and their rows close as lane-declaration CORRECTIONS rather than as retirements. The ground is checked in BOTH directions on every run -- the walk consumes what the resolver built, source-asserted per declaration; and removing the serving interpreter flips every declaring owner to withheld with the missing pair named, never to a silent zero -- and the lane re-enters if a mechanic of the family ever authors walk-priced rows the resolver does not feed. This is not the D-40 move: the declaration is corrected on a measured ground recorded in the umbrella with its check, rather than edited to move a counter.",
  "named_delivery_resolution": {
   "covers_every_declaration": true,
   "family": "damage_routing",
@@ -552,6 +975,11 @@
   "why_it_outlives_the_row": "The row retired on 2026-08-16 and this stayed. The mechanisms the amendment names are what the walk stages for this family now, not what it would have staged, so a shape the ruling does not name or a mechanism that leaves the kernel is a live break rather than a stale note -- and a check that switched itself off the moment its row left would be a delivery term recorded rather than resolved."
  },
  "named_delivery_rule": "Umbrella Amendment P (2026-08-16): the walk-side delivery of damage_routing -- the one row Ruling 2's stop clause fired on -- is the program rider system and the kernel state paths ALREADY IN THE TREE, named per declared payload family. Death's Dance's deferred-damage routing is a Defer rider on the holder's incoming damage events, The Collector's threshold execute an Execute rider on outgoing damage, and Serpent's Fang's shield reduction the kernel's barrier-state adjustment path. Naming a standing mechanism is an amendment's act and never a lane's (Amendment K's precedent), so what this file does with the name is RESOLVE it: each mechanism is looked up in the kernel's own declarations on every run, and a declaration the ruling does not name -- or a named mechanism that leaves the kernel -- turns the term unnamed again, re-stops the row and says which, because the ruling's own conditional stop is that the kernel is never extended inside a retirement slice.",
+ "rows_served_through_their_declared_lane": [
+  "combat_state",
+  "opening_defense",
+  "threshold_defense"
+ ],
  "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
  "scheduled_slices": 8,
  "slices_whose_retiring_act_is_amendment_f_as_written": 5,

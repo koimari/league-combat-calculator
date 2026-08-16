@@ -458,6 +458,160 @@ def test_a_mechanism_leaving_the_kernel_re_stops_the_named_row() -> None:
     ), resolution["unanswered"]
 
 
+def test_a_row_served_through_its_declared_lane_carries_both_directions() -> None:
+    """Amendment Q's ground, checked against the tree rather than the receipt.
+
+    A row whose walk-side need is served through the lane it declares carries
+    the ruling's evidence while it is still open, because the evidence is what
+    a correction would rest on and it may not first be measured by the commit
+    that performs one.  Both directions are re-derived here from the registry,
+    the family's own resolver interpreter and the source scan, so the receipt
+    and the tree would have to agree by accident to pass.
+
+    The list is deliberately not pinned to today's membership: a row whose
+    serving lane gains an interpreter joins it, which is the debt changing
+    shape rather than the rule breaking (D-92).
+    """
+    block = schedule()
+    served = block["rows_served_through_their_declared_lane"]
+    assert served == sorted(
+        family
+        for family, entry in block["families"].items()
+        if entry["served_through_its_declared_lane"]
+    )
+    for family in served:
+        entry = block["families"][family]
+        registered = {
+            lane.value
+            for declared, lane in interpreters.INTERPRETERS
+            if declared.value == family
+        }
+        assert entry["route_today"] != [receipt_walk_schedule.LANE], family
+        assert set(entry["retiring_act"]["retiring_lane"]) <= registered, family
+        evidence = entry["lane_correction_evidence"]
+        assert evidence["ruled_by"] == receipt_walk_schedule.LANE_CORRECTION_RULING
+        assert evidence["holds"] is True, family
+        forwards = evidence["walk_side_consumption"]
+        written = receipt_walk_schedule.resolved_fields(family, entry["owners"])
+        assert set(forwards["by_declaration"]) == set(written), family
+        for mechanic, declared in sorted(written.items()):
+            row = forwards["by_declaration"][mechanic]
+            assert row["resolved_fields"] == list(declared), mechanic
+            assert row["consumed_at"], mechanic
+            for site in row["consumed_at"]:
+                module = site.split(".")[0]
+                assert (ROOT / "src" / "calculator" / module).exists() or (
+                    ROOT / "src" / "calculator" / f"{module}.py"
+                ).exists(), site
+            if "capability_named_walk_impl" in row:
+                assert row["named_impl_is_a_consumer"] is True, mechanic
+        backwards = evidence["fails_closed_without_the_serving_interpreter"]
+        assert backwards["owners_that_do_not_fail_closed"] == [], family
+        assert sorted(backwards["by_owner"]) == entry["owners"], family
+        assert all(
+            answer["status"] == "withheld" and answer["names_the_missing_pair"]
+            for answer in backwards["by_owner"].values()
+        ), family
+
+
+def test_a_declaration_nothing_consumes_turns_the_correction_red() -> None:
+    """R-05 on Amendment Q's forward direction.
+
+    The ruling's ground is that the walk consumes what the resolver built, and
+    the check is a source scan.  A scan that could not go red when a field
+    stopped being read anywhere would be a ground asserted rather than
+    measured, so the event is injected at the scan's own seam -- the resolved
+    state is read nowhere -- and the gate is asserted to fail naming the
+    declarations rather than only the family.
+    """
+    committed = schedule()
+    bare = receipt_walk_schedule._resolved_state_reads  # noqa: SLF001
+    receipt_walk_schedule._resolved_state_reads = lambda: {}  # noqa: SLF001
+    try:
+        failures = receipt_walk_schedule.check(committed)
+        fresh = receipt_walk_schedule.schedule()
+    finally:
+        receipt_walk_schedule._resolved_state_reads = bare  # noqa: SLF001
+    assert any("Amendment Q's check no longer holds" in f for f in failures), failures
+    for family in committed["rows_served_through_their_declared_lane"]:
+        forwards = fresh["families"][family]["lane_correction_evidence"][
+            "walk_side_consumption"
+        ]
+        assert forwards["holds"] is False, family
+        assert forwards["declarations_consumed_nowhere"], family
+
+
+def test_an_owner_that_does_not_fail_closed_turns_the_correction_red() -> None:
+    """R-05 on Amendment Q's backward direction.
+
+    The correction rests on the serving interpreter being the ONE producer,
+    and the observable consequence of that is a named refusal when it is
+    removed.  The event this must catch is the coverage ladder answering a
+    modelled status anyway -- the silent zero -- so it is injected where the
+    ladder decides, and the gate is asserted to fail naming the owners.
+    """
+    committed = schedule()
+    bare = receipt_walk_schedule.item_coverage.unserved_lanes
+    receipt_walk_schedule.item_coverage.unserved_lanes = lambda name, needed: ()
+    try:
+        fresh = receipt_walk_schedule.schedule()
+        failures = receipt_walk_schedule.check(committed)
+    finally:
+        receipt_walk_schedule.item_coverage.unserved_lanes = bare
+    assert any("Amendment Q's check no longer holds" in f for f in failures), failures
+    for family in committed["rows_served_through_their_declared_lane"]:
+        backwards = fresh["families"][family]["lane_correction_evidence"][
+            "fails_closed_without_the_serving_interpreter"
+        ]
+        assert backwards["holds"] is False, family
+        assert backwards["owners_that_do_not_fail_closed"] == sorted(
+            backwards["by_owner"]
+        ), family
+
+
+def test_a_lane_correction_is_closed_in_the_tree_and_not_only_on_paper() -> None:
+    """Amendment Q closes a row; the tree has to agree it is closed.
+
+    The same shape as the reclassification's gate and for the same reason: a
+    ruling names families and this file records the names, and what it may not
+    do is let a name outlive the closure.  Four facts are checked against the
+    tree -- the family no longer declares the receipt-walk lane, no
+    interpreter serves one there, an interpreter DOES serve the lane the
+    correction rests on, and the frontier no longer defers the row -- plus the
+    two directions of the ruling's own check.
+
+    The block is deliberately not asserted non-empty: it is empty until the
+    commit that performs the correction, and a test that demanded a closure
+    would be this file requiring an act rather than gating one.
+    """
+    block = schedule()
+    for family, entry in block["closed_by_lane_declaration_correction"].items():
+        assert family not in block["families"], family
+        assert family not in deferred_families(), family
+        member = next(
+            candidate
+            for candidate in interpreters.RuleFamily
+            if candidate.value == family
+        )
+        assert interpreters.EngineLane.RECEIPT_WALK not in interpreters.lanes_for(
+            member
+        ), family
+        assert (
+            member,
+            interpreters.EngineLane.RECEIPT_WALK,
+        ) not in interpreters.INTERPRETERS, family
+        served = entry["serving_lanes_an_interpreter_answers_for"]
+        assert served, family
+        for lane in served:
+            assert (
+                member,
+                interpreters.EngineLane(lane),
+            ) in interpreters.INTERPRETERS, family
+        assert entry["closed_as"] == "not_a_needed_lane", family
+        assert entry["evidence"]["holds"] is True, family
+        assert entry["evidence"]["authored_pair_rows"] == [], family
+
+
 def test_the_triage_says_it_pays_nothing() -> None:
     """Measuring a debt is the half that can quietly become discounting it."""
     block = schedule()
@@ -477,6 +631,7 @@ def test_the_triage_says_it_pays_nothing() -> None:
         ("respell_a_triage_class", "committed row differs from derived"),
         ("misreport_the_stopped_rows", "committed value differs from derived"),
         ("respell_the_named_delivery_rule", "committed value differs from derived"),
+        ("respell_the_lane_correction_rule", "committed value differs from derived"),
     ],
 )
 def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
@@ -509,6 +664,8 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
         )
     elif mutation == "respell_the_named_delivery_rule":
         mutated["named_delivery_rule"] = "a delivery this file named for itself"
+    elif mutation == "respell_the_lane_correction_rule":
+        mutated["lane_correction_rule"] = "a lane table this file corrected for itself"
     else:
         mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
     failures = receipt_walk_schedule.check(mutated)

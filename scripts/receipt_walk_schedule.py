@@ -85,6 +85,25 @@ the kernel -- re-stops the row and says which.  That is the ruling's own
 conditional stop, *the kernel is never extended inside a retirement slice*,
 made checkable rather than readable.
 
+**A row served through the lane it declares carries its ground while it is
+still open.**  Umbrella Amendment Q (2026-08-16) rules that a family whose
+walk-side need is satisfied *through its declared serving lane* does not need
+-- and must not declare -- a receipt-walk interpreter lane, because one
+producer is what the one-engine thesis demands.  The condition is derived here
+rather than named: a row whose declared route is not the pair engine and whose
+ruled act is already performed publishes the ruling's evidence, in both
+directions the ruling requires.  Forwards, what the family's own resolver
+interpreter writes is joined to every read of those fields off a resolved
+defences value, found by walking the source of every module outside the
+resolver, and a declaration nothing consumes fails.  Backwards, the family's
+interpreter is removed from the registry the coverage ladder reads and every
+declaring owner is asked the public question again: the answer has to be
+``withheld`` naming the missing pair rather than a modelled status, because a
+producer whose absence is not a named refusal is the silent zero this campaign
+is about.  Both run on every check, so the ground a closed row stands on is
+re-measured rather than remembered, and the lane re-enters if a mechanic of the
+family ever authors walk-priced rows the resolver does not feed.
+
 **What this file is not.**  It is not a retirement, and no row here retires
 anything -- every row still standing is ``overdue`` and gated, exactly as
 Amendment F leaves it.  It does not re-date a row, re-scope the debt, or read
@@ -97,7 +116,9 @@ smaller amount of it.
 from __future__ import annotations
 
 import argparse
+import ast
 import dataclasses
+import functools
 import json
 import sys
 from pathlib import Path
@@ -110,9 +131,14 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 # pylint: disable=wrong-import-position,wrong-import-order
 import golden_snapshot  # noqa: E402
 from calculator import interpreters  # noqa: E402
+from calculator import item_coverage  # noqa: E402
 from calculator import shield_ledger  # noqa: E402
 from calculator import trigger_stream  # noqa: E402
-from calculator.item_behavior import Subject  # noqa: E402
+from calculator.item_behavior import (
+    DefenseOption,
+    DefenseSubject,
+    Subject,
+)  # noqa: E402
 from calculator.item_behavior_catalog import behavior_rules, rule_owners  # noqa: E402
 from calculator.program import events  # noqa: E402
 from calculator.survival import actions as survival_actions  # noqa: E402
@@ -122,6 +148,7 @@ SCHEDULE_PATH = RECEIPTS_DIR / "receipt-walk-retirement-schedule.json"
 FRONTIER_PATH = REPO_ROOT / "docs" / "behavior-frontier.json"
 COUPLED_BASELINE_PATH = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
 INTERPRETERS_DIR = REPO_ROOT / "src" / "calculator" / "interpreters"
+CALCULATOR_DIR = REPO_ROOT / "src" / "calculator"
 
 #: The lane whose deferrals this file sizes.  The compiled-score-walk gaps are
 #: a different lane with a different blocker (H5) and are deliberately not here.
@@ -182,6 +209,66 @@ AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
 #: longer defers the row.  Measuring is one act and closing is another, so a
 #: name arrives here in the commit that drops the lane and never before it.
 RECLASSIFIED: tuple[str, ...] = ("crit_profile",)
+
+#: The ruling that corrects a lane DECLARATION rather than closing a debt:
+#: umbrella Amendment Q (2026-08-16).  A family whose walk-side need is
+#: satisfied through its declared serving lane does not need -- and must not
+#: declare -- a receipt-walk interpreter lane, because one producer is what the
+#: one-engine thesis demands.  It is a different act from Amendment O, Ruling
+#: 1's reclassification and carries a different ground: not "the family authors
+#: nothing for the walk to consume" but "what the walk consumes, it consumes
+#: from the lane the family declares".
+LANE_CORRECTION_RULING = "umbrella Amendment Q"
+
+#: The families Amendment Q closes off the receipt walk by lane-declaration
+#: correction.  A ruling names them; every FIELD of the closed row below is
+#: derived, and :func:`_lane_correction_failures` refuses a name the tree does
+#: not agree with -- a family still declaring the lane, one an interpreter
+#: serves there, one whose declared serving lane has no interpreter after all,
+#: or one the frontier still defers.  Measuring is one act and closing is
+#: another, so a name arrives here in the commit that drops the lane and never
+#: before it.
+LANE_CORRECTED: tuple[str, ...] = ()
+
+#: The lanes a caller has to need for the withheld negative to be about the
+#: producer this correction rests on.  Read from ``item_coverage`` rather than
+#: spelled here: the question "what happens to these items when the defence
+#: resolver stops answering" is asked in the vocabulary the coverage ladder
+#: already uses, and a lane set typed here would be a second copy of it.
+RESOLVER_NEEDING_LANES = item_coverage.TARGET_LANES
+
+#: The subject the resolver is run against to derive what each declaration
+#: writes.  It is a probe and not a population: the FIELD NAMES a declaration
+#: writes are what the consumption check joins on, and a subject that armed no
+#: option would make a gated defence look like a declaration that writes
+#: nothing at all.  Every declared option is armed, read off the enum rather
+#: than listed, so a third option arms itself on the commit that declares it.
+PROBE_LEVEL_STATS: Mapping[str, float] = {
+    "health": 2500.0,
+    "max_health": 2500.0,
+    "armor": 100.0,
+    "magic_resistance": 100.0,
+    "attack_damage": 100.0,
+    "bonus_attack_damage": 60.0,
+    "ability_power": 0.0,
+    "bonus_health": 1000.0,
+    "bonus_armor": 60.0,
+    "bonus_magic_resistance": 60.0,
+    "mana": 1000.0,
+}
+
+#: The name a resolved ``StartingDefenses`` is bound to everywhere it is
+#: consumed.  The consumption scan below is an AST predicate over reads *off
+#: that value* rather than a search for a field name in a file, which is what
+#: keeps a same-named attribute of some other record out of the answer.
+RESOLVED_STATE_BINDING = "defenses"
+
+#: Where the resolver builds its answer, excluded from the consumption scan.
+#: A field read inside the producer is not the walk consuming it, and the
+#: exclusion is stated rather than left to chance -- it removes nothing today,
+#: which is the point: the day a resolver module started reading its own
+#: output back, the check would otherwise count that as consumption.
+RESOLVER_SOURCES: tuple[str, ...] = ("interpreters", "defensive_effects.py")
 
 #: Two probe champions, one ranged and one melee, because several declarations
 #: split on range (``MeleeRangedSplit``) and a family measured on one of them
@@ -841,6 +928,427 @@ def _reclassification_failures() -> list[str]:
     return failures
 
 
+def _family_member(family: str) -> interpreters.RuleFamily:
+    """The enum member a family name names, or a stop."""
+    member = next(
+        (
+            candidate
+            for candidate in interpreters.RuleFamily
+            if candidate.value == family
+        ),
+        None,
+    )
+    if member is None:
+        raise ScheduleError(f"{family!r} is not a rule family")
+    return member
+
+
+def _probe_subject(owners: Sequence[str]) -> DefenseSubject:
+    """The subject the resolver is run against to see what a declaration writes.
+
+    Every declared :class:`DefenseOption` is armed for every owner, read off
+    the enum rather than listed.  A gated defence pays nothing without its
+    input by design, so an unarmed probe would report the two stasis
+    declarations writing no field at all -- and "writes nothing" is exactly the
+    answer the consumption check below must not get for the wrong reason.
+    """
+    options = {
+        owner: {option.value: 1.0 for option in DefenseOption} for owner in owners
+    }
+    return DefenseSubject(level=PROBE_LEVEL, stats=PROBE_LEVEL_STATS, options=options)
+
+
+def resolved_fields(family: str, owners: Sequence[str]) -> dict[str, tuple[str, ...]]:
+    """What each declaration of *family* writes into the resolver's state.
+
+    Derived by running the family's own registered resolver interpreter over
+    its declarations, never read from a table: the join the consumption check
+    makes is between what the resolver WRITES and what the walk READS, and a
+    hand-written left side would be a claim about the interpreter rather than
+    the interpreter's own answer.
+    """
+    subject = _probe_subject(owners)
+    written: dict[str, tuple[str, ...]] = {}
+    for owner in owners:
+        for rule in behavior_rules(owner):
+            if rule.family.value != family:
+                continue
+            outcome = interpreters.resolve_defense(rule, subject)
+            written[rule.mechanic_id] = tuple(
+                sorted({field.name for field in outcome.fields})
+            )
+    return written
+
+
+def _binds_resolved_state(node: ast.expr) -> bool:
+    """Whether *node* is the resolved defences value, however it was reached."""
+    if isinstance(node, ast.Name):
+        return node.id == RESOLVED_STATE_BINDING or node.id.endswith(
+            "_" + RESOLVED_STATE_BINDING
+        )
+    if isinstance(node, ast.Attribute):
+        return node.attr == RESOLVED_STATE_BINDING
+    return False
+
+
+def _reads_in(module: str, tree: ast.AST) -> list[tuple[str, str]]:
+    """Every ``(field, site)`` one module reads off the resolved defences.
+
+    Two shapes, because the tree uses two: a plain attribute read, and the
+    ``getattr(defenses, "field", default)`` form the walk uses where a
+    participant may carry no resolved state at all.  The site is the enclosing
+    definition, so what the receipt publishes is a function a reader can open
+    rather than a file to search.
+    """
+    found: list[tuple[str, str]] = []
+
+    def visit(node: ast.AST, enclosing: str) -> None:
+        for child in ast.iter_child_nodes(node):
+            site = enclosing
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                site = f"{enclosing}.{child.name}" if enclosing else child.name
+            if isinstance(child, ast.Attribute) and _binds_resolved_state(child.value):
+                found.append((child.attr, f"{module}.{site}" if site else module))
+            if (
+                isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id == "getattr"
+                and len(child.args) >= 2
+                and _binds_resolved_state(child.args[0])
+                and isinstance(child.args[1], ast.Constant)
+                and isinstance(child.args[1].value, str)
+            ):
+                found.append(
+                    (child.args[1].value, f"{module}.{site}" if site else module)
+                )
+            visit(child, site)
+
+    visit(tree, "")
+    return found
+
+
+@functools.lru_cache(maxsize=1)
+def _resolved_state_reads() -> Mapping[str, tuple[str, ...]]:
+    """Every consumer of the resolver's resolved state, by field, from source.
+
+    This is the source assertion umbrella Amendment Q's forward direction
+    requires, and it is a scan of the tree rather than a list in a receipt:
+    the day a walk-side site stops reading a field, the field's consumer set
+    shrinks here on that commit.  The resolver's own modules are excluded --
+    a producer reading its own output back is not the walk consuming it.
+    """
+    reads: dict[str, set[str]] = {}
+    for path in sorted(CALCULATOR_DIR.rglob("*.py")):
+        relative = path.relative_to(CALCULATOR_DIR).as_posix()
+        if any(relative.startswith(source) for source in RESOLVER_SOURCES):
+            continue
+        module = relative[: -len(".py")].replace("/", ".")
+        for field, site in _reads_in(
+            module, ast.parse(path.read_text(encoding="utf-8"))
+        ):
+            reads.setdefault(field, set()).add(site)
+    return {field: tuple(sorted(sites)) for field, sites in reads.items()}
+
+
+def _capability_impl(mechanic: str) -> str | None:
+    """The walk-side implementation this mechanic's own capability names."""
+    capability = trigger_stream.CAPABILITIES.get(mechanic)
+    if capability is None or capability.engine is not trigger_stream.Engine.WALK:
+        return None
+    return capability.impl
+
+
+def walk_side_consumption(family: str, owners: Sequence[str]) -> dict[str, Any]:
+    """Amendment Q's forward direction: what the walk consumes, and from where.
+
+    Per DECLARATION and never per family, because a family passes this on one
+    mechanic while another of its mechanics reaches the walk from somewhere
+    else entirely -- which is the case the correction may not be made on.  For
+    each declaration: the fields its resolver interpreter writes, the sites
+    that read them off the resolved state, the fields no engine reads at all
+    (published rather than hidden -- a resolved number nothing consumes is a
+    fact about the model, not a failure of this check), and, where the
+    declaration's own ``MechanicCapability`` names a walk-side impl, whether
+    that named module is among the consuming ones.  ``consumed_nowhere`` is
+    the failing set: a declaration none of whose fields any site reads is the
+    walk NOT being fed through the resolver, and the correction does not hold
+    for its family.
+    """
+    reads = _resolved_state_reads()
+    written = resolved_fields(family, owners)
+    per_declaration: dict[str, Any] = {}
+    consumed_nowhere: list[str] = []
+    unbound_impls: list[str] = []
+    for mechanic, fields in sorted(written.items()):
+        sites = sorted({site for field in fields for site in reads.get(field, ())})
+        unread = [field for field in fields if not reads.get(field)]
+        named = _capability_impl(mechanic)
+        modules = {site.rsplit(".", 1)[0] for site in sites}
+        entry: dict[str, Any] = {
+            "resolved_fields": list(fields),
+            "consumed_at": sites,
+            "fields_no_engine_reads": unread,
+        }
+        if named is not None:
+            entry["capability_named_walk_impl"] = named
+            entry["named_impl_is_a_consumer"] = named.rsplit(".", 1)[0] in modules
+            if not entry["named_impl_is_a_consumer"]:
+                unbound_impls.append(f"{mechanic} -> {named}")
+        per_declaration[mechanic] = entry
+        if not sites:
+            consumed_nowhere.append(mechanic)
+    return {
+        "rule": (
+            "Umbrella Amendment Q's forward direction, source-asserted. The "
+            "fields are what this family's own resolver interpreter writes, "
+            "run over its declarations; the sites are every read of one of "
+            "those fields off a resolved defences value, found by walking the "
+            "source of every module outside the resolver. A declaration "
+            "nothing consumes means the walk is not fed through the lane this "
+            "family declares, and the correction does not hold for it."
+        ),
+        "by_declaration": per_declaration,
+        "declarations_consumed_nowhere": consumed_nowhere,
+        "capability_named_impls_that_are_not_consumers": sorted(unbound_impls),
+        "holds": not consumed_nowhere and not unbound_impls,
+    }
+
+
+def withheld_without_the_serving_interpreter(
+    family: str, lanes: Sequence[str], owners: Sequence[str]
+) -> dict[str, Any]:
+    """Amendment Q's backward direction: the producer's absence fails closed.
+
+    Run, not reasoned about.  The family's interpreter is removed from the
+    registry the coverage ladder reads and every declaring owner is asked the
+    public question again: an owner that still answers a modelled status is an
+    owner whose numbers survive the loss of the producer this correction says
+    is their only one, which is the silent zero the campaign is about.  The
+    answer has to be ``withheld`` AND has to name the missing ``(family,
+    lane)`` pair, because a refusal that does not say what is missing is a
+    number withheld for a reason nobody can act on.
+    """
+    member = _family_member(family)
+    removed = {interpreters.EngineLane(lane) for lane in lanes}
+    needed = frozenset(removed)
+    public = sorted(
+        question
+        for question, lane_set in (
+            ("attacker", item_coverage.ATTACKER_LANES),
+            ("scoring", item_coverage.SCORING_LANES),
+            ("target", item_coverage.TARGET_LANES),
+        )
+        if needed & lane_set
+    )
+    standing = item_coverage.INTERPRETERS
+    answers: dict[str, Any] = {}
+    item_coverage.INTERPRETERS = {
+        key: value
+        for key, value in standing.items()
+        if not (key[0] is member and key[1] in removed)
+    }
+    try:
+        for owner in sorted(owners):
+            coverage = item_coverage.item_model_coverage(owner, needed)
+            answers[owner] = {
+                "status": coverage.status,
+                "names_the_missing_pair": all(
+                    f"{family}/{lane}" in coverage.reason for lane in lanes
+                ),
+            }
+    finally:
+        item_coverage.INTERPRETERS = standing
+    unheld = sorted(
+        owner
+        for owner, answer in answers.items()
+        if answer["status"] != "withheld" or not answer["names_the_missing_pair"]
+    )
+    return {
+        "rule": (
+            "Umbrella Amendment Q's backward direction, run on every check. "
+            "The family's interpreter is removed from the registry the "
+            "coverage ladder reads and every declaring owner is asked again: "
+            "the answer must be withheld and must name the missing (family, "
+            "lane) pair, never a modelled status and never a silent zero."
+        ),
+        "lanes_removed": list(lanes),
+        "public_questions_that_need_those_lanes": public,
+        "by_owner": answers,
+        "owners_that_do_not_fail_closed": unheld,
+        "holds": bool(answers) and bool(public) and not unheld,
+    }
+
+
+def _lane_correction_evidence(
+    family: str,
+    owners: Sequence[str],
+    act: Mapping[str, Any],
+    triage: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Both directions of umbrella Amendment Q's check, and its reopening clause.
+
+    Published for every row whose walk-side need is served through the lane it
+    declares, whether or not the correction has been performed for it: the
+    evidence is what the ruling rests on, so it is measured while the row is
+    still open and re-measured after it closes, and a row that stopped
+    satisfying it would go red rather than quietly keep a dropped lane.
+    """
+    forwards = walk_side_consumption(family, owners)
+    backwards = withheld_without_the_serving_interpreter(
+        family, act["retiring_lane"], owners
+    )
+    return {
+        "ruled_by": LANE_CORRECTION_RULING,
+        "walk_side_consumption": forwards,
+        "fails_closed_without_the_serving_interpreter": backwards,
+        "authored_pair_rows": list(triage["authored_pair_rows"]),
+        "reopens_if": (
+            "a mechanic of this family ever authors walk-priced rows not fed "
+            "by the resolver -- measured on every run as the priced pair rows "
+            "the family authors over its covering population and a probe per "
+            "owner, and as the per-declaration consumption above -- in which "
+            "case the receipt-walk lane re-enters _FAMILY_LANES and the "
+            "deferral row reopens."
+        ),
+        "holds": forwards["holds"]
+        and backwards["holds"]
+        and not triage["authored_pair_rows"],
+    }
+
+
+def corrected_rows() -> dict[str, Any]:
+    """The rows Amendment Q closed, with the checks that reopen them.
+
+    A closed row leaves ``families`` above -- the frontier stops deferring it,
+    so the schedule stops sizing it -- and the evidence the closure rests on
+    would leave with it.  This is that record, and every field of it is
+    re-derived on every run: the owners from the catalog, the resolved fields
+    from the family's own interpreter, the consuming sites from the source of
+    every module outside the resolver, and the withheld answer from the
+    coverage ladder with the interpreter removed.
+    """
+    declarations = owners_by_family()
+    covering_by_family = golden_snapshot.covering_scenarios(
+        golden_snapshot.COUPLED_SCENARIOS,
+        {family: set(owners) for family, owners in declarations.items()},
+    )
+    baseline = json.loads(COUPLED_BASELINE_PATH.read_text(encoding="utf-8"))[
+        "coupled_scenarios"
+    ]
+    closed: dict[str, Any] = {}
+    for family in sorted(LANE_CORRECTED):
+        owners = sorted(declarations.get(family, {}))
+        covering = [
+            name for name in covering_by_family.get(family, ()) if name in baseline
+        ]
+        served = sorted(registered_lanes(family) - {LANE})
+        act = {"retiring_lane": served}
+        triage = {"authored_pair_rows": list(authored_rows(family, owners, covering))}
+        closed[family] = {
+            "closed_row": f"{family}/{LANE}",
+            "owners": owners,
+            "declared_rules": sorted(
+                mechanic
+                for ids in declarations.get(family, {}).values()
+                for mechanic in ids
+            ),
+            "covering_coupled_scenarios": covering,
+            "serving_lanes_an_interpreter_answers_for": served,
+            "closed_as": "not_a_needed_lane",
+            "why": (
+                "This family's walk-side need is satisfied THROUGH the lane it "
+                "declares: an interpreter serves that lane, the walk consumes "
+                "the state that interpreter builds, and a receipt-walk "
+                "interpreter beside it would be a second producer of one "
+                "number. One producer is what the one-engine thesis demands, "
+                "so the receipt-walk lane was a declaration this family never "
+                "owed and the deferral row under it was counting the absence "
+                "of a defect rather than a debt."
+            ),
+            "evidence": _lane_correction_evidence(family, owners, act, triage),
+            "ruled_by": LANE_CORRECTION_RULING,
+        }
+    return closed
+
+
+def _lane_correction_failures() -> list[str]:
+    """The tree has to agree that a corrected row is closed, and stay agreeing.
+
+    Five ways it could stop: the family could go on declaring the receipt-walk
+    lane, an interpreter could be registered for it there -- which would make
+    this a retirement wearing a correction's name -- the serving lane the
+    correction rests on could lose its interpreter, the frontier could still
+    defer the row, or either direction of the ruling's own check could stop
+    holding.
+    """
+    failures: list[str] = []
+    rows = deferral_rows()
+    for family, entry in corrected_rows().items():
+        member = _family_member(family)
+        if interpreters.EngineLane.RECEIPT_WALK in interpreters.lanes_for(member):
+            failures.append(
+                f"{family!r} is recorded as closed off the receipt walk by "
+                "lane-declaration correction and still declares that lane; a "
+                "correction the lane table does not carry is a receipt saying "
+                "what the tree denies"
+            )
+        if LANE in registered_lanes(family):
+            failures.append(
+                f"{family!r} is recorded as closed by lane-declaration "
+                "correction and an interpreter serves its receipt-walk lane; "
+                "that is a retirement, which is a different act"
+            )
+        if not entry["serving_lanes_an_interpreter_answers_for"]:
+            failures.append(
+                f"{family!r} is recorded as served through the lane it "
+                "declares and no interpreter serves any lane of it; the ground "
+                "the correction stands on is gone"
+            )
+        if family in rows:
+            failures.append(
+                f"{family!r} is recorded as closed and the frontier still "
+                "defers its receipt-walk row"
+            )
+        evidence = entry["evidence"]
+        forwards = evidence["walk_side_consumption"]
+        if forwards["declarations_consumed_nowhere"]:
+            failures.append(
+                f"{family!r}: nothing outside the resolver consumes what "
+                + ", ".join(forwards["declarations_consumed_nowhere"])
+                + " writes, so this family's walk-side need is not served "
+                "through the lane it declares and the receipt-walk lane "
+                "re-enters"
+            )
+        if forwards["capability_named_impls_that_are_not_consumers"]:
+            failures.append(
+                f"{family!r}: a declaration names a walk-side impl that reads "
+                "none of the fields its own resolver writes -- "
+                + ", ".join(forwards["capability_named_impls_that_are_not_consumers"])
+            )
+        backwards = evidence["fails_closed_without_the_serving_interpreter"]
+        if not backwards["holds"]:
+            failures.append(
+                f"{family!r}: with its serving interpreter removed, "
+                + (
+                    ", ".join(backwards["owners_that_do_not_fail_closed"])
+                    + " do not answer withheld naming the missing pair"
+                    if backwards["owners_that_do_not_fail_closed"]
+                    else "no declaring owner is asked a public question that "
+                    "needs the lane"
+                )
+                + "; a producer whose absence is not a named refusal is the "
+                "silent zero this correction says cannot happen"
+            )
+        if entry["evidence"]["authored_pair_rows"]:
+            failures.append(
+                f"{family!r} is recorded as closed by lane-declaration "
+                "correction and now authors "
+                + ", ".join(entry["evidence"]["authored_pair_rows"])
+                + "; a walk-priced row not fed by the resolver reopens the row"
+            )
+    return failures
+
+
 def _retiring_act(family: str, route: Sequence[str]) -> dict[str, Any]:
     """What retires this row, read off its own declared route.
 
@@ -954,6 +1462,19 @@ def schedule() -> dict[str, Any]:
             ),
         }
         slices[family]["triage"] = _triage(family, slices[family])
+        # Umbrella Amendment Q's condition, derived rather than named: the
+        # row's declared serving lane is not the receipt walk and an
+        # interpreter already answers for it.  A row that satisfies it carries
+        # the ruling's evidence while it is still open, because the evidence
+        # is what the correction rests on and it may not first be measured by
+        # the commit that performs it.
+        act = slices[family]["retiring_act"]
+        served = tuple(route) != (PAIR_ENGINE,) and act["already_performed"]
+        slices[family]["served_through_its_declared_lane"] = served
+        if served:
+            slices[family]["lane_correction_evidence"] = _lane_correction_evidence(
+                family, slices[family]["owners"], act, slices[family]["triage"]
+            )
     lane_corrected = sorted(
         family
         for family, entry in slices.items()
@@ -977,6 +1498,11 @@ def schedule() -> dict[str, Any]:
         for family, entry in slices.items()
         if entry["triage"]["class"] == "c"
         and not entry["triage"]["walk_side_delivery_term"]["named"]
+    )
+    served_through_their_lane = sorted(
+        family
+        for family, entry in slices.items()
+        if entry["served_through_its_declared_lane"]
     )
     return {
         "artifact": "receipt_walk_retirement_schedule",
@@ -1107,7 +1633,27 @@ def schedule() -> dict[str, Any]:
             "pick a family up inherits a measurement instead of rediscovering "
             "the shape that stopped the fifth."
         ),
+        "lane_correction_rule": (
+            "Umbrella Amendment Q (2026-08-16): a family whose walk-side need "
+            "is satisfied THROUGH its declared serving lane does not need -- "
+            "and must not declare -- a RECEIPT_WALK interpreter lane, because "
+            "one producer is what the one-engine thesis demands. RECEIPT_WALK "
+            "leaves _FAMILY_LANES for exactly the three measured families the "
+            "defence resolver feeds, in Amendment O, Ruling 1's shape and on a "
+            "different ground, and their rows close as lane-declaration "
+            "CORRECTIONS rather than as retirements. The ground is checked in "
+            "BOTH directions on every run -- the walk consumes what the "
+            "resolver built, source-asserted per declaration; and removing the "
+            "serving interpreter flips every declaring owner to withheld with "
+            "the missing pair named, never to a silent zero -- and the lane "
+            "re-enters if a mechanic of the family ever authors walk-priced "
+            "rows the resolver does not feed. This is not the D-40 move: the "
+            "declaration is corrected on a measured ground recorded in the "
+            "umbrella with its check, rather than edited to move a counter."
+        ),
+        "rows_served_through_their_declared_lane": served_through_their_lane,
         "closed_by_authority_reclassification": reclassified_rows(),
+        "closed_by_lane_declaration_correction": corrected_rows(),
         "scheduled_slices": len(slices),
         "slices_whose_retiring_act_is_amendment_f_as_written": len(slices)
         - len(lane_corrected),
@@ -1160,6 +1706,9 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
         "triage_by_class",
         "triage_rows_stopping_the_next_retirement_round",
         "closed_by_authority_reclassification",
+        "lane_correction_rule",
+        "rows_served_through_their_declared_lane",
+        "closed_by_lane_declaration_correction",
     ):
         if committed.get(key) != fresh[key]:
             failures.append(f"{key}: committed value differs from derived")
@@ -1170,7 +1719,17 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
             f"every declaration of {resolution['family']} -- "
             + "; ".join(resolution["unanswered"])
         )
+    for family, entry in fresh["families"].items():
+        evidence = entry.get("lane_correction_evidence")
+        if evidence is not None and not evidence["holds"]:
+            failures.append(
+                f"family {family!r}: its walk-side need is served through the "
+                "lane it declares and umbrella Amendment Q's check no longer "
+                "holds for it, so the ground under a lane-declaration "
+                "correction is gone"
+            )
     failures.extend(_reclassification_failures())
+    failures.extend(_lane_correction_failures())
     return failures
 
 
