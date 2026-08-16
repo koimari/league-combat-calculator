@@ -1,0 +1,66 @@
+{
+  "slice": "campaign-close-active-cast-retirement",
+  "decisions": [
+    "R-17",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-62",
+    "D-96",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1 and Ruling 3",
+    "umbrella Amendment M, Ruling 1 and Ruling 3"
+  ],
+  "what_lands": "The second of the fourteen, and the first whose retiring act is Amendment F as written: a receipt-walk interpreter for the active_cast family, so the walk prices the six declared item actives itself instead of consuming the post-mitigation rows participant_timeline._pair_run_fight produces for them. One slice carrying every half Amendment L, Ruling 1 names -- the family's MechanicCapability declarations authored, its pair rows stamped pair_preview_of and declared THEORETICAL, the lane interpreter registered at (ACTIVE_CAST, RECEIPT_WALK) and wired to the from-declaration pricing path, the Quantity/disposition the priced leaf is born with, and the deferral row retired from docs/behavior-frontier.json with its blocked_on text corrected in the same commit (R-36).",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 -- no baseline moves inside any semantic commit of this slice. The code lands against the committed baselines plus this allowlist; a re-capture, if the measurement ever asks for one, is the integration agent's own commit."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "enumerated_at": "38f4702",
+    "rule": "R-20's second half. The count is not readable off the pre-change tree by inspection: this slice moves where a number comes from rather than editing a formula, so which leaves can move is a property of which participants hold an active_cast owner, and that is a fact about the committed scenario set rather than about the diff. The population is therefore enumerated from committed artifacts -- scripts/golden_coupled_baseline.json's scenario subtrees, selected by the family-to-owner join docs/receipts/receipt-walk-retirement-schedule.json publishes -- before the slice's first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the active_cast family on a participant. The six declared rules and their owners are read live from the behaviour catalog over rule_owners(): hextech_gunblade.active (Hextech Gunblade), hextech_rocketbelt.active (Hextech Rocketbelt), profane_hydra.active (Profane Hydra), ravenous_hydra.active (Ravenous Hydra), stridebreaker.active (Stridebreaker), tiamat.active (Tiamat). Two committed coupled scenarios hold one: amp_armed_mage_roster (Hextech Rocketbelt) and immolate_active_bruiser_roster (Stridebreaker). The whole coupled snapshot outside those two subtrees holds no leaf this slice can move.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the same instrument, and the same conservative bound, the retirement schedule uses for the fourteen rows: the whole scenario subtree, because a slice that moves a family's pricing can move any aggregate downstream of it inside that scenario.",
+    "population_by_scenario": {
+      "amp_armed_mage_roster": 785,
+      "immolate_active_bruiser_roster": 1790
+    },
+    "population_total": 2575,
+    "covered_mechanics_by_scenario": {
+      "amp_armed_mage_roster": [
+        "hextech_rocketbelt.active"
+      ],
+      "immolate_active_bruiser_roster": [
+        "stridebreaker.active"
+      ]
+    },
+    "pair_engine_population": {
+      "total": 0,
+      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface and this slice adds no pair-engine arithmetic. What it adds pair-side is two stamps: pair_preview_of on the family's breakdown row, and the row's own declaration on the events under it. Neither is a leaf that baseline holds -- the pair snapshot records each build's sorted breakdown_keys and its total_damage, never a row's inner fields and never an event -- and the pair fight's own receipt publishes a preview unchanged, which is the surface where the single-attacker answer IS the preview. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice.",
+      "keys_unmoved": "breakdown_keys is a key list and this slice adds and removes no row; total_damage is the pair engine's own total and a stamped row still contributes to it."
+    },
+    "predicted": "0 occurrences inside a population of 2575. The walk's from-declaration price and the pair engine's price are the same real number computed with the two multiplications associated differently -- the pair engine mitigates the declared magnitude and then multiplies by the holder's amps, the ruled order composes the amps onto the magnitude and mitigates once (Amendment M, Ruling 1) -- so the two agree to within one unit in the last place, which is four orders of magnitude below the 0.005 golden equality grades to (R-13). A leaf that did move could only move by 0.01, which qualifies under none of R-15's three tests: not >10 percent, not a transition other than value, not >1.0 abs_delta. Zero is therefore the prediction and not a hope, and a first occurrence is a stop.",
+    "occurrences_outside_the_population": null
+  },
+  "why_the_pair_rows_are_stamped_here_and_were_not_at_delta_amp": {
+    "rule": "Amendment L, Ruling 1 requires a retiring family's pair rows to be stamped pair_preview_of and declared THEORETICAL.",
+    "delta_amp": "Discharged as an emptiness: the three static holder amps author no summed pair-engine breakdown row, so the set of pair rows that family authors was empty.",
+    "active_cast": "Not empty. damage._add_item_active_damage authors one breakdown row per declared active, keyed active_<owner>, and adds its mitigated value to state.total_damage. Those are the rows the stamp names, and stamping them is what takes the pair engine's number out of every roster total that held it -- the numeric consequence Amendment L, Ruling 1 requires the slice to carry rather than defer."
+  },
+  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
+  "measured_after": {
+    "dated": null,
+    "commit": null,
+    "qualifying_occurrences": null,
+    "golden": null,
+    "coupled_golden": null,
+    "oracle_receipts_owed": null
+  }
+}
