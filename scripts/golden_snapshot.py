@@ -58,6 +58,13 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.item_behavior import PartAmpRule
+from src.calculator.item_behavior_catalog import (
+    DELTA_AMP_UNMIGRATED_TAGS,
+    behavior_rules,
+    registry_entries,
+    rule_owners,
+)
 from src.calculator.item_support_effects import producer_item
 
 # The sys.path bootstrap above forces every first-party import below it;
@@ -1041,6 +1048,47 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
+    # The three static holder amps (umbrella Amendment M, Ruling 2).  A
+    # holder's own amplifier is a term the pair engine applies and the walk's
+    # from-declaration price does not yet carry, so a family re-priced while
+    # no scenario arms one would delete a measured contribution from every
+    # total that holds it — invisibly, because a baseline in which every amp
+    # is 1.0 observes only the case that cannot fail.
+    #
+    # A mana mage, arming two of them at once on the two cases Ruling 1 names
+    # as its seed fixtures: an Abyssal Mask holder's item active (Hextech
+    # Rocketbelt, mitigated against the holder's own magic amp) and an Abyssal
+    # Mask holder's ability-triggered item proc (Stormsurge, multiplied by the
+    # holder's ability amp).  Actualizer declares that ability amp and it
+    # rides an item active, so the window is authored explicitly — an amp
+    # nobody triggered amplifies nothing, and an unarmed Actualizer would be
+    # the same emptiness with a scenario name on it.
+    CoupledScenario(
+        "amp_armed_mage_roster",
+        _roster_request(
+            "Ahri",
+            ("Actualizer", "Abyssal Mask", "Hextech Rocketbelt", "Stormsurge"),
+            enemies=("Aatrox",),
+            allies=("Pantheon",),
+            item_options={"Actualizer": {"mana_made_real_active": 1}},
+        ),
+    ),
+    # A crit carry, arming the third: Hexoptics C44's Magnification amplifies
+    # every basic-damage part, so the roster attacks at full uptime and its
+    # holder is ranged, which is the side of the declared range split that
+    # earns the whole amp.  Infinity Edge beside it because the amp lands on a
+    # crit_profile roster rather than on a bare weapon.
+    CoupledScenario(
+        "hexoptics_basic_amp_carry",
+        _roster_request(
+            "Caitlyn",
+            ("Hexoptics C44", "Infinity Edge"),
+            enemies=("Aatrox",),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
     *_syndra_pin_scenarios(),
 )
 
@@ -1146,6 +1194,62 @@ def _uncovered_families(scenarios, families):
     """Deferral families no scenario equips a declaring item of (R-12)."""
     covering = covering_scenarios(scenarios, families)
     return tuple(sorted(family for family, names in covering.items() if not names))
+
+
+def holder_amp_declarations():
+    """Each static holder amp, mapped to the items whose declaration produces it.
+
+    R-12's coverage is derived and never typed, and this is its third
+    reading.  :func:`cross_participant_producers` answers *can the baseline
+    see every cross-participant packet source*, :func:`receipt_walk_families`
+    *can it see every family whose numbers the walk still defers*; this
+    answers *can it see every amplifier the holder's own build brings to
+    those numbers*.  The umbrella's Amendment M, Ruling 2 makes that a
+    covering scenario's job: a family re-priced out of the pair engine's rows
+    while no scenario arms an amp would drop the holder's own amplifier from
+    every total that holds it, and a baseline in which every amp is ``1.0``
+    observes only the case that cannot fail.
+
+    Two readings, because the tree declares the holder's static amps two ways
+    and neither of them is an item name.  A **per-part** amp is a
+    :class:`PartAmpRule` in the behaviour catalog, and the part it prices is
+    its own ``typing.attack_classes`` — the question
+    ``delta_amp.part_amp_rules`` asks when the engine prices an ability or a
+    basic attack — so the kind is the declaration's own mechanic suffix and a
+    part amp for a third attack class arrives here already named.  The
+    **magic** amp is the one holder amp that occupies no chain slot, which
+    the catalog says in its own words: ``DELTA_AMP_UNMIGRATED_TAGS`` records
+    it as applied by ``_mitigate`` on the defender's side, so it is read as
+    the registry tag it is declared under rather than as a compiled rule it
+    deliberately has none of.
+
+    Read live from the catalog over every owner in ``rule_owners()``, the way
+    :func:`cross_participant_producers` reads the capability registry, so a
+    fourth amp kind reaches this guard on the commit that declares it and
+    fails the capture until a scenario arms it — rather than being discovered
+    by whoever next re-prices a family.
+    """
+    kinds: dict[str, set[str]] = {}
+    for owner in sorted(rule_owners()):
+        for rule in behavior_rules(owner):
+            if isinstance(rule.payload, PartAmpRule):
+                kinds.setdefault(rule.mechanic_id.rsplit(".", 1)[-1], set()).add(owner)
+        for _registry, _family, entry in registry_entries(owner):
+            tag = str(entry.get("type", "")) if isinstance(entry, Mapping) else ""
+            if tag in DELTA_AMP_UNMIGRATED_TAGS:
+                kinds.setdefault(tag, set()).add(owner)
+    return {kind: frozenset(owners) for kind, owners in sorted(kinds.items())}
+
+
+def _unarmed_amp_kinds(scenarios, amps):
+    """Static holder amps no scenario equips a declaring item of (R-12).
+
+    The same predicate as :func:`_uncovered_families` over a different
+    declaration join, which is why both read :func:`covering_scenarios`
+    rather than spelling "covering" a second time.
+    """
+    covering = covering_scenarios(scenarios, amps)
+    return tuple(sorted(kind for kind, names in covering.items() if not names))
 
 
 def _coupled_receipt(parsed, resolved, *, score_mode):
@@ -1260,7 +1364,7 @@ def cross_participant_producers():
     )
 
 
-def capture_coupled(scenarios, *, producers, families=None, exact=False):
+def capture_coupled(scenarios, *, producers, families=None, amps=None, exact=False):
     """Roster snapshots through the coupled path, covering every producer.
 
     ``producers`` is read, never typed: it was the ``ast`` table
@@ -1270,9 +1374,10 @@ def capture_coupled(scenarios, *, producers, families=None, exact=False):
     ``damage_modifier`` producer with no covering scenario fails here rather
     than passing silently.  ``families`` is R-12's second reading and is read
     the same way, defaulting to :func:`receipt_walk_families`; passing it is
-    the seam a negative test drives the guard through (R-05).  ``exact``
-    writes ``repr(float)`` per-attacker totals instead of the 2-decimal
-    snapshot.
+    the seam a negative test drives the guard through (R-05).  ``amps`` is
+    R-12's third reading, defaulting to :func:`holder_amp_declarations`, and
+    carries the same seam.  ``exact`` writes ``repr(float)`` per-attacker
+    totals instead of the 2-decimal snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
@@ -1296,6 +1401,21 @@ def capture_coupled(scenarios, *, producers, families=None, exact=False):
             "the items each family's row in "
             + SCHEDULE_RECEIPT_PATH.name
             + " names, before capturing the baseline"
+        )
+    amps = holder_amp_declarations() if amps is None else amps
+    unarmed = _unarmed_amp_kinds(scenarios, amps)
+    if unarmed:
+        raise ValueError(
+            "the coupled scenario set arms no holder of "
+            + ", ".join(unarmed)
+            + " — a static holder amp no scenario arms is a term the baseline "
+            "cannot see, so a family re-priced out of the pair engine's rows "
+            "would drop it from every total that holds it and every amp in "
+            "the capture would read 1.0, which is the case that cannot fail "
+            "(umbrella Amendment M, Ruling 2); add a covering scenario "
+            "equipping one of "
+            + ", ".join(sorted({item for kind in unarmed for item in amps[kind]}))
+            + " before capturing the baseline"
         )
     entries = {}
     for scenario in scenarios:

@@ -18,9 +18,15 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
+from src.calculator.interpreters.delta_amp import resolve_part_amp  # noqa: E402
+from src.calculator.item_behavior import PartAmpRule  # noqa: E402
 from src.calculator.item_behavior_catalog import (  # noqa: E402
     behavior_rules,
     rule_owners,
+)
+from src.calculator.item_effects import (  # noqa: E402
+    required_effect_value,
+    resolve_damage_effects,
 )
 from src.calculator.item_support_effects import producer_item  # noqa: E402
 
@@ -705,6 +711,115 @@ class TestDeferralFamilyCoverage:
             for row in _holder(entry)["utility_outcomes"]["item_coverage"]
         }
         assert "critical_mitigation" in coverage["Randuin's Omen"]["dimensions"]
+
+
+class TestHolderAmpCoverage:
+    """R-12's third reading: no static holder amp goes unarmed.
+
+    The umbrella's Amendment M, Ruling 2 makes arming them a covering
+    scenario's job.  The pair engine applies the holder's own amplifiers to
+    an item active and to an ability-triggered item proc; a family re-priced
+    out of those rows while no scenario arms an amp would drop the term from
+    every total that holds it, and a scenario set in which every amp reads
+    ``1.0`` proves only the case that cannot fail.
+    """
+
+    def test_the_scenario_set_arms_every_static_holder_amp(self):
+        assert (
+            gs._unarmed_amp_kinds(gs.COUPLED_SCENARIOS, gs.holder_amp_declarations())
+            == ()
+        )
+
+    def test_every_declared_amp_owner_produces_its_amp_in_the_engine(self):
+        """The mapping is read from the declarations, and the engine agrees.
+
+        Each half is checked against the code that *applies* the amp rather
+        than against a second copy of the join: a per-part amp must resolve
+        for the attack class its own declaration types, and a magic amp must
+        reach ``resolve_damage_effects``.  A hand list in the harness, or a
+        declaration that stopped producing an amp, fails here.
+        """
+        amps = gs.holder_amp_declarations()
+        assert amps
+        for kind, owners in amps.items():
+            assert owners
+            for owner in owners:
+                rules = [
+                    rule
+                    for rule in behavior_rules(owner)
+                    if isinstance(rule.payload, PartAmpRule)
+                    and rule.mechanic_id.endswith(kind)
+                ]
+                if not rules:
+                    assert resolve_damage_effects([{"name": owner}]).magic_amp > 1.0
+                    continue
+                for rule in rules:
+                    for attack_class in rule.payload.typing.attack_classes:
+                        resolved = resolve_part_amp(
+                            [owner],
+                            attack_class,
+                            level=18,
+                            fight_duration_seconds=8.0,
+                            target_bonus_health=0.0,
+                            holder_is_melee=False,
+                        )
+                        assert resolved is not None
+                        assert resolved.owner == owner
+
+    def test_an_amp_no_scenario_arms_fails_the_capture(self):
+        """The permanent negative (R-05), driven through the ``amps`` seam."""
+        amps = dict(gs.holder_amp_declarations())
+        amps["fourth_part_amp"] = frozenset({"Unarmed Relic — Eighth Wonder"})
+        with pytest.raises(ValueError, match="fourth_part_amp"):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                amps=amps,
+            )
+
+    def test_the_mage_roster_arms_the_two_amps_ruling_1_seeds(self, coupled):
+        """Arming means the snapshot *prices* the amp, not merely holds it."""
+        entry = coupled["coupled_scenarios"]["amp_armed_mage_roster"]
+        rows = entry["fights"]["0:Aatrox"]["breakdown"]
+        # The ability amp is armed: it has a row of its own, which an
+        # unarmed Actualizer — an active nobody triggered — would not write.
+        assert rows["ability_amp_Actualizer"]["total_damage"] > 0
+        # Ruling 1's two seed cases, both on an Abyssal Mask holder: an item
+        # active, and an ability-triggered item proc.
+        for row in ("active_Hextech Rocketbelt", "proc_Stormsurge"):
+            assert rows[row]["total_damage"] > 0
+
+    def test_the_magic_amp_is_priced_into_both_seed_rows(self):
+        """The magic amp is a mitigation term, so its arming is a ratio.
+
+        It writes no row of its own, so "armed" is measured by dropping the
+        item that declares it and re-running the same roster: both seed rows
+        fall by exactly the declared amp.  That is the term Amendment M's
+        Ruling 1 says the walk's from-declaration price does not yet carry,
+        and this is the baseline being able to see it.
+        """
+        armed = next(
+            scenario
+            for scenario in gs.COUPLED_SCENARIOS
+            if scenario.name == "amp_armed_mage_roster"
+        )
+        request = json.loads(json.dumps(dict(armed.request)))
+        request["items"] = [name for name in request["items"] if name != "Abyssal Mask"]
+        unamped = gs.coupled_entry(gs.CoupledScenario("unamped", request))
+        with_amp = gs.coupled_entry(armed)["fights"]["0:Aatrox"]["breakdown"]
+        without = unamped["fights"]["0:Aatrox"]["breakdown"]
+        declared = 1.0 + required_effect_value("Abyssal Mask", "magic_amp")
+        for row in ("active_Hextech Rocketbelt", "proc_Stormsurge"):
+            ratio = with_amp[row]["total_damage"] / without[row]["total_damage"]
+            assert ratio == pytest.approx(declared, rel=1e-3)
+
+    def test_the_carry_roster_arms_the_basic_amp(self, coupled):
+        entry = coupled["coupled_scenarios"]["hexoptics_basic_amp_carry"]
+        rows = entry["fights"]["0:Aatrox"]["breakdown"]
+        assert rows["basic_amp_Hexoptics C44"]["total_damage"] > 0
+        # The amp prices basic-damage parts, so the roster has to be making
+        # basic attacks for the row above to be a measurement.
+        assert rows["auto_attacks"]["total_damage"] > 0
 
 
 def _q2_row_was_absent_before_c6(scenario):
