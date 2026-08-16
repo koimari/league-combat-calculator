@@ -1127,6 +1127,111 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > `total_damage` at all. The predicate the triage turns on is exact rather than a heuristic —
    > summing `total_damage` over the rows it counts reproduces the fight's own `total_damage` — which
    > is what keeps "authors no row" from being a reading of the row list.
+   >
+   > **Amendment P — 2026-08-16, `damage_routing`'s named walk-side delivery.**
+   > *Answers the one row Amendment O, Ruling 2's stop clause fired on, published as the whole of
+   > `triage_rows_stopping_the_next_retirement_round` in
+   > `docs/receipts/receipt-walk-retirement-schedule.json`.* The triage landed in full — every open
+   > row classified, `crit_profile` closed by reclassification, gates green — and it stopped exactly
+   > where Ruling 2 said it would, on `damage_routing/receipt_walk`: Death's Dance, Serpent's Fang
+   > and The Collector, class (c), with no interpreter registered in the lane the row declares and
+   > no owner carrying a cross-participant half the walk already stages. Ruling 2's own words are
+   > that such a row stops **rather than having a term invented for it** by the lane that finds it,
+   > and the lane invented nothing, which is what it was asked to do. Naming the term is this file's
+   > act, and it is performed on Amendment K's precedent: name a standing mechanism, invent nothing.
+   >
+   > **RULING — THE NAMED DELIVERY.** `damage_routing`'s walk-side delivery is the **program rider
+   > system and the kernel state paths ALREADY IN THE TREE**. The family's declarations compile to
+   > the appropriate rider or state adjustment, and what consumes each one is the kernel's existing
+   > handling rather than anything this ruling asks a lane to build.
+   >
+   > * **Death's Dance's deferred-damage routing** is a `Defer` rider on the holder's incoming
+   >   damage events. The rider family is declared —
+   >   `Rider = Union[Execute, Defer, Redirect, Wound, AmpBonus]`
+   >   (`src/calculator/program/events.py:259`) — the kernel action carries the state it lands in
+   >   (`src/calculator/survival/actions.py:420`, `deferred_batch_slot: int = NO_SLOT`), and the
+   >   batch arithmetic that pays it down already stands
+   >   (`src/calculator/survival/transitions.py:1629`, `if action.deferred:`).
+   > * **The Collector's threshold execute** is an `Execute` rider on outgoing damage, carried by
+   >   the same action's own fields (`src/calculator/survival/actions.py:417`,
+   >   `execute_threshold_ratio: float = 0.0`) and read where the kernel already decides an
+   >   execution (`src/calculator/survival/transitions.py:1767`,
+   >   `action.execute_threshold_ratio > 0.0`).
+   > * **Serpent's Fang's shield reduction** is the kernel's **barrier-state adjustment path**: the
+   >   surviving share of the shielding the defender gains
+   >   (`src/calculator/shield_ledger.py:93`, `venom_factor: float = 1.0`), written by the walk on
+   >   the hit that applies the venom (`src/calculator/survival/transitions.py:1680`,
+   >   `pools.venom_factor = min(pools.venom_factor, venom_keep)`) and read by the ledger on every
+   >   shield it grants (`src/calculator/shield_ledger.py:389`).
+   >
+   > **The row's retirement act is then the ruled act** — Amendments L, M and N, unchanged and
+   > neither narrowed nor widened — **with rider and state compilation as the interpreter's
+   > output.** That is the one substitution this amendment makes. For the four families retired so
+   > far the interpreter's output is a price the walk pays; here it is a rider on an event the walk
+   > already stages, or an adjustment to state the walk already holds, and Amendment C ruled that
+   > substitution legal for a **rider-delivered** walk half before any of this: a rider carries a
+   > stamp and no `packet_source` at all. Everything else in Ruling 1's shape binds as written: the
+   > family's `MechanicCapability` declarations authored; its pair rows stamped `pair_preview_of`
+   > and declared `ViewTag.THEORETICAL` — of which, measured by the triage, this family authors
+   > none, so that half is discharged as an enumerated **emptiness** exactly as `delta_amp`'s was
+   > and never as a step skipped; the lane interpreter landed and wired; the deferral row retired;
+   > the numeric consequence, the `Expected qualifying occurrences` line with its population
+   > enumerated before the slice's first `src/` edit, and the oracle receipt every qualifying
+   > occurrence then owes. **Equivalence fixtures per owner**, and that plural is load-bearing:
+   > three owners deliver through three different mechanisms, and a fixture set that arms one of
+   > them proves nothing about the two that can still fail — the same argument Amendment M made for
+   > `amp != 1.0`.
+   >
+   > **The stop clause is not removed; it is re-pointed at the one thing that could still stop
+   > this.** IF any owner's effect has no existing rider or state path the kernel can express, the
+   > implementing lane **STOPS blocked, naming exactly which** — the kernel is never extended
+   > inside a retirement slice. A retirement slice that grows a sixth rider family or a new kernel
+   > state field is no longer a re-spelling of what the pair engine already prices; it is a
+   > behaviour change wearing a retirement's name, with no committed baseline able to see the
+   > difference, which is the shape this campaign exists to invert. So the delivery term is named
+   > **and machine-resolved**: the schedule receipt derives, per declaration, the mechanism this
+   > ruling names for its payload family and resolves that mechanism against the tree on every run,
+   > and a fourth mechanic of this family whose payload family this ruling does not name — or a
+   > named mechanism that leaves the kernel — turns the term unnamed again and re-stops the row by
+   > name. A ruling that could only be read is one nobody can be stopped by.
+   >
+   > **What this does not do**, each available and refused. It **retires nothing**: the row stands
+   > `overdue` and gated with the eight beside it, the machine still refuses a tenth, and being
+   > startable is not being started. It **budgets nothing** — naming a delivery is a fact about the
+   > shape of a slice, never a smaller amount of it. It **moves no class letter**: the triage
+   > measures a class from the pair rows a family authors, this family still authors none, and the
+   > receipt goes on saying so. What lifts is the stop, and the row is thereafter treated the way a
+   > class-(a) row is treated — it retires by the ruled act — while its measured class stays (c),
+   > because a letter edited to match a ruling would be the measurement being written from the
+   > conclusion, which is the move Ruling 2 was written to prevent. It **registers no interpreter**
+   > and changes no lane table: an interpreter registered to move a counter without changing what
+   > the walk prices is a counter driven to zero by editing what it counts (D-40), and this
+   > amendment touches no `src/` at all. And it does **not** widen Amendment M: the pricing stage
+   > gains no term here, because none of these three effects is priced — a deferral moves damage in
+   > time, an execute ends a fight, and a venom resizes a barrier, and the reason the triage found
+   > no term for them in Amendment M's shape is that they are not that kind of thing.
+   >
+   > **Measured on the commit that lands this**, because a ruling that names a standing mechanism
+   > is only as good as the standing, and the conditional stop above is exactly the claim a reader
+   > should not take on trust. All three mechanisms resolve in the tree today, checked through the
+   > kernel's own declarations rather than by reading the citations above: the rider families the
+   > kernel declares hold both `Defer` and `Execute`; the survival action declares `deferred`,
+   > `deferred_batch_slot`, `execute_threshold_ratio` and `execute_source`; and the shield ledger's
+   > pools declare `venom_factor`. Every declaration of the family maps to one of the three —
+   > `deaths_dance.ignore_pain` is a `DamageDeferralRule`, `the_collector.execute` an `ExecuteRule`,
+   > `serpents_fang.shield_bypass` a `ShieldBypassRule` — so no owner is left over, which is the
+   > condition the stop clause turns on. Recorded because it comes out the other way from what the
+   > triage's own prose would suggest: the row was stopped for having *no delivery anywhere in the
+   > tree or in an amendment*, and what it actually lacked was an amendment, the tree having held
+   > all three mechanisms since Phase 4 built the rider system.
+   >
+   > **No rulings-owed row closes here.** Amendment O, Ruling 2's stop clause is self-executing —
+   > it names a row rather than opening a question a lane may not answer — so the stop was published
+   > in the schedule receipt and never in `docs/receipts/rulings-owed.json`. That ledger's one open
+   > row is still the first one it opened — whether criterion 11's first clause binds the campaign
+   > backwards — and this ruling does not reach it. Its id is deliberately not written here: an
+   > owed row and an amendment cannot both be true of one question, and the ledger's gate reads
+   > this file for exactly that collision.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
