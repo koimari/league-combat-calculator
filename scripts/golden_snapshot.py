@@ -45,7 +45,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Literal
 
@@ -58,7 +58,15 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_behavior import PartAmpRule
+from src.calculator.item_behavior import (
+    Basis,
+    DefenseField,
+    EmpoweredHitRule,
+    PartAmpRule,
+    PeriodicRule,
+    TemporaryLethality,
+    ThresholdDefenseRule,
+)
 from src.calculator.item_behavior_catalog import (
     DELTA_AMP_UNMIGRATED_TAGS,
     behavior_rules,
@@ -885,15 +893,24 @@ def _syndra_pin_scenarios():
     return tuple(scenarios)
 
 
-def _roster_request(champion, items, *, enemies, allies, **extra):
-    """A time-based roster request with the fields every scenario shares."""
+def _roster_request(champion, items, *, enemies, allies, enemy_items=None, **extra):
+    """A time-based roster request with the fields every scenario shares.
+
+    ``enemy_items`` equips a *defender*, which one covering scenario needs:
+    the max-health reprice joins an attacker's declaration to a defender's,
+    so its lifeline rides the enemy card rather than the holder's item list.
+    """
+    equipped = dict(enemy_items or {})
     request = {
         "champion": champion,
         "level": 18,
         "items": list(items),
         "fight_mode": "time_based",
         "fight_duration": 8,
-        "enemies": [{"champion": name, "level": 18, "items": []} for name in enemies],
+        "enemies": [
+            {"champion": name, "level": 18, "items": list(equipped.get(name, ()))}
+            for name in enemies
+        ],
         "allies": [
             {
                 "champion": name,
@@ -1089,6 +1106,61 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
+    # The two windows in which the pair engine re-prices a packet it already
+    # authored (umbrella Amendment N, Ruling 3).  The walk's
+    # from-declaration price knows only the one effective resistance a fight
+    # publishes, so a family retired while no scenario arms a window would
+    # price every packet at that baseline and delete the window — the
+    # measurement that stopped the active_cast retirement, which only the
+    # bench could see because no committed scenario armed one.  Armed means
+    # *fired*: a holder whose window opens on no packet is the same emptiness
+    # with a scenario name on it.
+    #
+    # An assassin, arming the lethality window: Voltaic Cyclosword's
+    # Firmament grants its flat lethality *after* its own energized packet,
+    # so `damage._apply_temporary_lethality_windows` rescales the later
+    # timestamped physical packets once the complete ledger exists.  The
+    # roster attacks at full uptime because the charge is spent by an attack,
+    # and Eclipse is beside it because its proc is one of the packets the
+    # window re-prices — the `cast_proc` family the stopped retirement names
+    # as blocked next, by the same term.
+    CoupledScenario(
+        "lethality_window_assassin_roster",
+        _roster_request(
+            "Zed",
+            ("Voltaic Cyclosword", "Eclipse", "Serylda's Grudge"),
+            enemies=("Aatrox",),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    # A mage, arming the max-health reprice: Liandry's Torment burns for a
+    # share of the target's maximum health, and a Protoplasm Harness lifeline
+    # raises that maximum mid-fight, so `damage._apply_liandry_reprice` folds
+    # the difference back onto every tick after the lifeline.  It needs two
+    # participants, which is why this is the one window the holder's own
+    # items cannot cover.
+    #
+    # Its duration departs from the roster set's shared eight seconds, and
+    # the departure is the mechanic rather than a tuned number: a fight that
+    # reaches the lifeline's own expiry is *withheld* rather than priced
+    # (`threshold_defense.ThresholdExpiryWithheld`), because the Wiki does
+    # not document what the temporary maximum does to current health when it
+    # lapses.  Measured on this roster, the lifeline arms at t = 2.5 s and
+    # expires at 7.5 s, so eight seconds captures nothing at all and five
+    # captures the reprice.
+    CoupledScenario(
+        "liandry_reprice_mage_roster",
+        _roster_request(
+            "Ahri",
+            ("Liandry's Torment", "Rabadon's Deathcap", "Void Staff"),
+            enemies=("Malphite",),
+            allies=("Pantheon",),
+            enemy_items={"Malphite": ("Protoplasm Harness",)},
+            fight_duration=5,
+        ),
+    ),
     *_syndra_pin_scenarios(),
 )
 
@@ -1252,6 +1324,130 @@ def _unarmed_amp_kinds(scenarios, amps):
     return tuple(sorted(kind for kind, names in covering.items() if not names))
 
 
+# The two re-pricing windows' kind names are the tree's own vocabulary for
+# the declaration that opens each one, never a label invented here: the
+# lethality window is the ``EmpoweredHitRule`` field that carries it, and the
+# max-health window is the defence field a lifeline writes.  A rename in
+# either declaration therefore arrives as a renamed window rather than as a
+# guard that quietly stopped matching.
+LETHALITY_WINDOW = next(
+    field.name
+    for field in fields(EmpoweredHitRule)
+    if TemporaryLethality.__name__ in str(field.type)
+)
+MAX_HEALTH_WINDOW = DefenseField.THRESHOLD_HEALTH_BONUS.value
+
+
+def _temporary_lethality_holders():
+    """Items whose empowered hit grants its holder lethality for a window."""
+    return frozenset(
+        owner
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if isinstance(rule.payload, EmpoweredHitRule)
+        and rule.payload.temporary_lethality is not None
+    )
+
+
+def _target_max_health_periodic_owners():
+    """Items whose periodic damage is priced off the target's maximum health."""
+    return frozenset(
+        owner
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if isinstance(rule.payload, PeriodicRule)
+        for term in rule.payload.formula.terms
+        if term.basis is Basis.TARGET_MAX_HEALTH
+    )
+
+
+def _threshold_health_raisers():
+    """Items whose lifeline raises its holder's maximum health mid-fight."""
+    return frozenset(
+        owner
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if isinstance(rule.payload, ThresholdDefenseRule)
+        and DefenseField.THRESHOLD_HEALTH_BONUS in rule.payload.writes
+    )
+
+
+def repricing_window_declarations():
+    """Each re-pricing window, mapped to the declaration sides a scenario must equip.
+
+    R-12's coverage is derived and never typed, and this is its fourth
+    reading.  :func:`cross_participant_producers` answers *can the baseline
+    see every cross-participant packet source*, :func:`receipt_walk_families`
+    *can it see every family whose numbers the walk still defers*,
+    :func:`holder_amp_declarations` *can it see every amplifier the holder's
+    own build brings to those numbers*; this answers *can it see every
+    window in which the pair engine re-prices a packet it already authored*.
+
+    The umbrella's Amendment N, Ruling 3 makes that a covering scenario's
+    job.  ``survival.pricing.price_declared_packet`` prices a declaration at
+    the one effective resistance a fight publishes, while the pair engine
+    re-prices already-authored packets once the complete ledger exists — so a
+    family retired while no scenario arms a window would price every packet
+    at the fight's baseline, delete the temporal windows, and do it behind a
+    green zero-occurrence line, which is exactly how the ``active_cast``
+    retirement was stopped (``expected-golden-diff-campaign-close-active-cast-retirement.json``).
+
+    **Two joins, not one**, because the tree declares the two windows from
+    opposite ends of a fight.  The lethality window is one *holder*
+    declaration: an ``EmpoweredHitRule`` carrying a
+    :class:`~.item_behavior.TemporaryLethality`, which
+    ``damage._apply_temporary_lethality_windows`` reads back off the authored
+    row to rescale later physical packets.  The max-health window is an
+    *attacker* declaration joined to a *defender's*: a periodic burn priced
+    off :attr:`~.item_behavior.Basis.TARGET_MAX_HEALTH`, and a lifeline that
+    writes :attr:`~.item_behavior.DefenseField.THRESHOLD_HEALTH_BONUS` and so
+    raises that maximum mid-fight, which is the pair the
+    ``damage._apply_liandry_reprice`` walk needs before it can move a number
+    at all.  A mapping keyed only on the holder's own items would report the
+    magic half covered by an empty set.
+
+    Each value is therefore a tuple of *sides*, and a covering scenario is
+    one that equips a declaring item of **every** side — which is what makes
+    the returned mapping usable by the one :func:`covering_scenarios`
+    predicate rather than by a second spelling of "covering".  Read live from
+    the catalog over every owner in ``rule_owners()``, so a third re-pricing
+    window that no scenario arms reaches this guard on the commit that
+    declares it.
+    """
+    windows = {}
+    holders = _temporary_lethality_holders()
+    if holders:
+        windows[LETHALITY_WINDOW] = (holders,)
+    scaled = _target_max_health_periodic_owners()
+    raisers = _threshold_health_raisers()
+    if scaled and raisers:
+        windows[MAX_HEALTH_WINDOW] = (scaled, raisers)
+    return dict(sorted(windows.items()))
+
+
+def window_covering_scenarios(scenarios, windows):
+    """Which scenarios equip a declaring item of *every* side of each window.
+
+    One side is :func:`covering_scenarios` asked once; a window is the
+    intersection over its sides.  Composing the one predicate is what keeps a
+    two-ended join from growing a second definition of "covering".
+    """
+    covering = {}
+    for kind, sides in windows.items():
+        names = None
+        for side in sides:
+            per_side = set(covering_scenarios(scenarios, {kind: side})[kind])
+            names = per_side if names is None else names & per_side
+        covering[kind] = tuple(sorted(names or ()))
+    return covering
+
+
+def _unarmed_repricing_windows(scenarios, windows):
+    """Re-pricing windows no scenario arms (R-12)."""
+    covering = window_covering_scenarios(scenarios, windows)
+    return tuple(sorted(kind for kind, names in covering.items() if not names))
+
+
 def _coupled_receipt(parsed, resolved, *, score_mode):
     """The coupled participant receipt, mirroring calculate's own composition."""
     params = resolved.fight_params
@@ -1364,7 +1560,9 @@ def cross_participant_producers():
     )
 
 
-def capture_coupled(scenarios, *, producers, families=None, amps=None, exact=False):
+def capture_coupled(
+    scenarios, *, producers, families=None, amps=None, windows=None, exact=False
+):
     """Roster snapshots through the coupled path, covering every producer.
 
     ``producers`` is read, never typed: it was the ``ast`` table
@@ -1376,8 +1574,10 @@ def capture_coupled(scenarios, *, producers, families=None, amps=None, exact=Fal
     the same way, defaulting to :func:`receipt_walk_families`; passing it is
     the seam a negative test drives the guard through (R-05).  ``amps`` is
     R-12's third reading, defaulting to :func:`holder_amp_declarations`, and
-    carries the same seam.  ``exact`` writes ``repr(float)`` per-attacker
-    totals instead of the 2-decimal snapshot.
+    ``windows`` its fourth, defaulting to
+    :func:`repricing_window_declarations`; both carry the same seam.
+    ``exact`` writes ``repr(float)`` per-attacker totals instead of the
+    2-decimal snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
@@ -1415,6 +1615,26 @@ def capture_coupled(scenarios, *, producers, families=None, amps=None, exact=Fal
             "(umbrella Amendment M, Ruling 2); add a covering scenario "
             "equipping one of "
             + ", ".join(sorted({item for kind in unarmed for item in amps[kind]}))
+            + " before capturing the baseline"
+        )
+    windows = repricing_window_declarations() if windows is None else windows
+    unarmed_windows = _unarmed_repricing_windows(scenarios, windows)
+    if unarmed_windows:
+        raise ValueError(
+            "the coupled scenario set arms no "
+            + ", ".join(unarmed_windows)
+            + " window — the pair engine re-prices packets it already "
+            "authored inside such a window while the walk's "
+            "from-declaration price knows only the fight's published "
+            "resistance, so a family retired while no scenario arms one "
+            "would delete the window from every packet that met it, "
+            "unseen (umbrella Amendment N, Ruling 3); add a covering "
+            "scenario equipping one item from every side of "
+            + "; ".join(
+                f"{kind}: " + " + ".join(sorted(map(str, side)))
+                for kind in unarmed_windows
+                for side in windows[kind]
+            )
             + " before capturing the baseline"
         )
     entries = {}

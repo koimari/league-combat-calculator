@@ -956,7 +956,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > gains at least one scenario arming a **temporary-lethality window** — a Voltaic Cyclosword
    > holder whose Firmament actually fires — and at least one arming the **Liandry reprice**. The
    > coverage derivation **reads the window mapping**, the way `holder_amp_declarations`
-   > (`golden_snapshot.py:1199`) already reads the amp-kind mapping and `receipt_walk_families` the
+   > (`golden_snapshot.py:1271`) already reads the amp-kind mapping and `receipt_walk_families` the
    > family-to-owner join, so a future re-pricing window that no scenario arms fails the capture on
    > the commit that declares it rather than being discovered by whoever next re-prices. Armed means
    > *fired*: a holder whose window opens on no packet is the same emptiness with a scenario name on

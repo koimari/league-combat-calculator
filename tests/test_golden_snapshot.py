@@ -19,7 +19,17 @@ import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
 from src.calculator.interpreters.delta_amp import resolve_part_amp  # noqa: E402
-from src.calculator.item_behavior import PartAmpRule  # noqa: E402
+from src.calculator.interpreters.threshold_defense import (  # noqa: E402
+    ThresholdExpiryWithheld,
+)
+from src.calculator.item_behavior import (  # noqa: E402
+    Basis,
+    DefenseField,
+    EmpoweredHitRule,
+    PartAmpRule,
+    PeriodicRule,
+    ThresholdDefenseRule,
+)
 from src.calculator.item_behavior_catalog import (  # noqa: E402
     behavior_rules,
     rule_owners,
@@ -820,6 +830,204 @@ class TestHolderAmpCoverage:
         # The amp prices basic-damage parts, so the roster has to be making
         # basic attacks for the row above to be a measurement.
         assert rows["auto_attacks"]["total_damage"] > 0
+
+
+class TestRepricingWindowCoverage:
+    """R-12's fourth reading: no re-pricing window goes unarmed.
+
+    The umbrella's Amendment N, Ruling 3 makes arming them a covering
+    scenario's job.  The pair engine re-prices packets it already authored
+    once the complete ledger exists — a lethality window rescales later
+    physical packets, a lifeline's max-health raise reprices later burn ticks
+    — while the walk's from-declaration price knows only the one effective
+    resistance a fight publishes.  A scenario set that arms neither window
+    can watch a family retire without ever seeing the term leave.
+    """
+
+    def test_the_scenario_set_arms_every_repricing_window(self):
+        assert (
+            gs._unarmed_repricing_windows(
+                gs.COUPLED_SCENARIOS, gs.repricing_window_declarations()
+            )
+            == ()
+        )
+
+    def test_the_window_mapping_is_two_joins_and_both_are_declared(self):
+        """The mapping is read from the declarations, and each side is real.
+
+        The lethality window is one holder declaration; the max-health window
+        is an attacker declaration joined to a *defender's*, and a mapping
+        keyed only on the holder's items would report the second covered by
+        an empty set.  Each side is checked against the declaration that
+        produces it, so a hand list here — or a declaration that stopped
+        carrying its payload — fails.
+        """
+        windows = gs.repricing_window_declarations()
+        assert set(windows) == {gs.LETHALITY_WINDOW, gs.MAX_HEALTH_WINDOW}
+        assert len(windows[gs.LETHALITY_WINDOW]) == 1
+        assert len(windows[gs.MAX_HEALTH_WINDOW]) == 2
+        for sides in windows.values():
+            for side in sides:
+                assert side
+        (holders,) = windows[gs.LETHALITY_WINDOW]
+        for owner in holders:
+            payloads = [
+                rule.payload
+                for rule in behavior_rules(owner)
+                if isinstance(rule.payload, EmpoweredHitRule)
+                and rule.payload.temporary_lethality is not None
+            ]
+            assert payloads
+        scaled, raisers = windows[gs.MAX_HEALTH_WINDOW]
+        for owner in scaled:
+            bases = {
+                term.basis
+                for rule in behavior_rules(owner)
+                if isinstance(rule.payload, PeriodicRule)
+                for term in rule.payload.formula.terms
+            }
+            assert Basis.TARGET_MAX_HEALTH in bases
+        for owner in raisers:
+            written = {
+                field
+                for rule in behavior_rules(owner)
+                if isinstance(rule.payload, ThresholdDefenseRule)
+                for field in rule.payload.writes
+            }
+            assert DefenseField.THRESHOLD_HEALTH_BONUS in written
+
+    def test_a_window_no_scenario_arms_fails_the_capture(self):
+        """The permanent negative (R-05), driven through the ``windows`` seam."""
+        windows = dict(gs.repricing_window_declarations())
+        windows["third_repricing_window"] = (
+            frozenset({"Unarmed Relic — Ninth Wonder"}),
+        )
+        with pytest.raises(ValueError, match="third_repricing_window"):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                windows=windows,
+            )
+
+    def test_a_window_only_one_side_of_which_is_equipped_fails_the_capture(self):
+        """The two-ended join's own negative.
+
+        A one-sided reading would call the lethality window covered by the
+        assassin roster and stop there.  Give that same window a second side
+        no scenario equips and the capture must go red, which is what proves
+        the guard intersects its sides rather than unioning them.
+        """
+        windows = dict(gs.repricing_window_declarations())
+        windows[gs.LETHALITY_WINDOW] = (
+            *windows[gs.LETHALITY_WINDOW],
+            frozenset({"Unarmed Relic — Ninth Wonder"}),
+        )
+        with pytest.raises(ValueError, match=gs.LETHALITY_WINDOW):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                windows=windows,
+            )
+
+    def test_the_assassin_roster_fires_the_lethality_window(self, coupled):
+        """Armed means *fired*: the engine publishes what the window reached."""
+        entry = coupled["coupled_scenarios"]["lethality_window_assassin_roster"]
+        rows = entry["fights"]["0:Aatrox"]["breakdown"]
+        window = rows["on_hit_once_Voltaic Cyclosword_ability"]["temporary_lethality"]
+        assert window["applied_event_count"] > 0
+        # The declared figures, read through the declaration's own value
+        # references — the holder is melee, which is the side of the declared
+        # split this roster earns.
+        declared = next(
+            rule.payload.temporary_lethality
+            for rule in behavior_rules("Voltaic Cyclosword")
+            if isinstance(rule.payload, EmpoweredHitRule)
+            and rule.payload.temporary_lethality is not None
+        )
+        assert window["amount"] == required_effect_value(
+            "Voltaic Cyclosword", declared.melee.key
+        )
+        assert window["duration"] == required_effect_value(
+            "Voltaic Cyclosword", declared.duration.key
+        )
+
+    def test_the_lethality_window_reprices_the_packets_inside_it(self):
+        """The window is a resistance term, so its arming is a ratio.
+
+        Every basic attack inside the window meets the target at the
+        published effective armour *less* the declared lethality, and every
+        one after it meets the published figure.  The step between the two is
+        therefore the ratio of the two armour multipliers — the term
+        ``survival.pricing.price_declared_packet`` does not carry, and this
+        is the baseline being able to see it.
+        """
+        armed = next(
+            scenario
+            for scenario in gs.COUPLED_SCENARIOS
+            if scenario.name == "lethality_window_assassin_roster"
+        )
+        fight = gs.coupled_entry(armed)["fights"]["0:Aatrox"]
+        window = fight["breakdown"]["on_hit_once_Voltaic Cyclosword_ability"][
+            "temporary_lethality"
+        ]
+        autos = [
+            event
+            for event in fight["damage_events"]
+            if event["source"] == "auto_attacks"
+        ]
+        inside = [e["damage"] for e in autos if e["time"] <= window["duration"]]
+        outside = [e["damage"] for e in autos if e["time"] > window["duration"]]
+        assert inside and outside
+        published = float(fight["effective_armor"])
+        windowed = published - float(window["amount"])
+        # Flat penetration cannot drive armour below zero, so the subtraction
+        # above is the engine's own arithmetic only while it stays positive.
+        assert windowed > 0
+        expected = (100.0 + published) / (100.0 + windowed)
+        assert inside[0] / outside[0] == pytest.approx(expected, rel=1e-2)
+
+    def test_the_mage_roster_fires_the_max_health_reprice(self, coupled):
+        """The defender's lifeline arms mid-fight and the burn is repriced.
+
+        Both sides of the join have to show up for this to be a measurement:
+        the defender's declaration triggers, and the attacker's burn ticks
+        step up afterwards by the ratio the raised maximum implies.
+        """
+        entry = coupled["coupled_scenarios"]["liandry_reprice_mage_roster"]
+        fight = entry["fights"]["0:Malphite"]
+        assert fight["threshold_health_triggered"] is True
+        gained = float(fight["threshold_health_bonus_gained"])
+        assert gained > 0
+        ticks = [
+            event["damage"]
+            for event in fight["damage_events"]
+            if event["source"] == "burn_Liandry's Torment"
+        ]
+        assert ticks
+        assert max(ticks) > min(ticks)
+        raised = float(fight["target_effective_max_health"])
+        expected = raised / (raised - gained)
+        assert max(ticks) / min(ticks) == pytest.approx(expected, rel=1e-2)
+
+    def test_the_mage_roster_departs_from_the_shared_duration(self):
+        """The departure is the mechanic, not a tuned number.
+
+        A fight that reaches the lifeline's own expiry is withheld rather
+        than priced, so the roster set's shared eight seconds captures
+        nothing at all on this pair.  The scenario states the shorter fight;
+        this pins that the longer one really is unpriceable, so nobody
+        "simplifies" it back to the shared duration.
+        """
+        armed = next(
+            scenario
+            for scenario in gs.COUPLED_SCENARIOS
+            if scenario.name == "liandry_reprice_mage_roster"
+        )
+        assert armed.request["fight_duration"] < 8
+        shared = json.loads(json.dumps(dict(armed.request)))
+        shared["fight_duration"] = 8
+        with pytest.raises(ThresholdExpiryWithheld):
+            gs.coupled_entry(gs.CoupledScenario("shared_duration", shared))
 
 
 def _q2_row_was_absent_before_c6(scenario):
