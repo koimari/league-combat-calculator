@@ -94,6 +94,24 @@
       "combat/2:enemy:Aatrox/outgoing": "4691.0",
       "fights/0:Aatrox": "5654.8"
     },
+    "lethality_window_assassin_roster": {
+      "combat/0:main/incoming": "2791.0",
+      "combat/0:main/outgoing": "2817.5",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "703.2",
+      "combat/2:enemy:Aatrox/incoming": "3520.7",
+      "combat/2:enemy:Aatrox/outgoing": "4920.0",
+      "fights/0:Aatrox": "3077.2"
+    },
+    "liandry_reprice_mage_roster": {
+      "combat/0:main/incoming": "736.3",
+      "combat/0:main/outgoing": "2257.8",
+      "combat/1:ally:Pantheon/incoming": "678.9",
+      "combat/1:ally:Pantheon/outgoing": "843.6",
+      "combat/2:enemy:Malphite/incoming": "3101.4",
+      "combat/2:enemy:Malphite/outgoing": "1415.2",
+      "fights/0:Malphite": "2282.7"
+    },
     "mandate_abyssal_curse_roster": {
       "combat/0:main/incoming": "1884.9",
       "combat/0:main/outgoing": "2183.7",
@@ -197,16 +215,16 @@
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 21,
-      "leaves": 150,
+      "entries": 23,
+      "leaves": 164,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e8286702617929ffa0d6699e28e77a3d5312f79f",
+    "git_head": "45652c55eb8dbf2f1c40b719d2e4da1472ac84ee",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 21,
+    "scenario_count": 23,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "b654708bbc86cd2093a77b4c293c5568dde50920"
+    "src_tree_sha": "fc31cdb5acee4d39707b42ca0fd9c0a9463f57d1"
   }
 }

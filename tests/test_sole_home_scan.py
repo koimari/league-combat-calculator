@@ -126,6 +126,19 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     figure at all — an event ordinal in an older allowlist that became visible
     the moment ``coupled_golden.entries`` moved onto the same small integer —
     so admitting one is not the carve-out widening.
+
+    The window-armed coverage capture of 2026-08-16 moved every coupled census
+    again, and this time the number does not move at all — which is the case
+    worth writing down, because an unchanged count is exactly what a stale
+    allowlist would also produce.  Both of the previous two rows' fates are
+    visible in the sources rather than in the total: the amp-armed capture's
+    allowlist row stopped having a site, this capture's allowlist arrived
+    claiming the same counter in order to supersede it, and the pair snapshot's
+    entry count in the 0A.2 oracle receipt stands where it has stood since.
+    The coincidence fell to zero in the same commit, its event ordinal having
+    been a site only while ``coupled_golden.entries`` sat on that integer —
+    which is what a coincidence row is supposed to do, since it never said the
+    integer was the figure.
     """
     block = scan.report()
     assert block["forced_restatements"] == 2

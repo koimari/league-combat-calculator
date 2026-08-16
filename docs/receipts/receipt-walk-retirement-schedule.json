@@ -48,6 +48,7 @@
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
     "amp_armed_mage_roster",
+    "lethality_window_assassin_roster",
     "score_event_scan_holder",
     "score_event_view_holder",
     "score_plain_tuple",
@@ -69,7 +70,7 @@
     "zekes_convergence.ultimate_proc"
    ],
    "deferral_row": "cast_proc/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4322 committed roster values across 10 coupled scenario(s) -- amp_armed_mage_roster 785, score_event_scan_holder 301, score_event_view_holder 301, score_plain_tuple 287, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 5706 committed roster values across 11 coupled scenario(s) -- amp_armed_mage_roster 785, lethality_window_assassin_roster 1384, score_event_scan_holder 301, score_event_view_holder 301, score_plain_tuple 287, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
    "interpreter_module": "src/calculator/interpreters/cast_proc.py",
    "owners": [
     "Eclipse",
@@ -83,6 +84,7 @@
    ],
    "population_by_scenario": {
     "amp_armed_mage_roster": 785,
+    "lethality_window_assassin_roster": 1384,
     "score_event_scan_holder": 301,
     "score_event_view_holder": 301,
     "score_plain_tuple": 287,
@@ -93,7 +95,7 @@
     "syndra_derived_order_39": 435,
     "syndra_derived_order_60": 449
    },
-   "population_total": 4322,
+   "population_total": 5706,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -109,7 +111,8 @@
   "charged_strike": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster"
+    "crit_onhit_carry_roster",
+    "lethality_window_assassin_roster"
    ],
    "declared_rules": [
     "bastionbreaker.shaped_charge",
@@ -127,7 +130,7 @@
     "yun_tal_wildarrows.swing_rate"
    ],
    "deferral_row": "charged_strike/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4882 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, lethality_window_assassin_roster 1384",
    "interpreter_module": "src/calculator/interpreters/charged_strike.py",
    "owners": [
     "Bastionbreaker",
@@ -145,9 +148,10 @@
     "Yun Tal Wildarrows"
    ],
    "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498
+    "crit_onhit_carry_roster": 3498,
+    "lethality_window_assassin_roster": 1384
    },
-   "population_total": 3498,
+   "population_total": 4882,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -369,7 +373,8 @@
   "periodic": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
-    "immolate_active_bruiser_roster"
+    "immolate_active_bruiser_roster",
+    "liandry_reprice_mage_roster"
    ],
    "declared_rules": [
     "bamis_cinder.continuous_aura",
@@ -381,7 +386,7 @@
     "unending_despair.fixed_interval"
    ],
    "deferral_row": "periodic/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 1790 committed roster values across 1 coupled scenario(s) -- immolate_active_bruiser_roster 1790",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 2694 committed roster values across 2 coupled scenario(s) -- immolate_active_bruiser_roster 1790, liandry_reprice_mage_roster 904",
    "interpreter_module": "src/calculator/interpreters/periodic.py",
    "owners": [
     "Bami's Cinder",
@@ -393,9 +398,10 @@
     "Unending Despair"
    ],
    "population_by_scenario": {
-    "immolate_active_bruiser_roster": 1790
+    "immolate_active_bruiser_roster": 1790,
+    "liandry_reprice_mage_roster": 904
    },
-   "population_total": 1790,
+   "population_total": 2694,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -519,7 +525,8 @@
   "threshold_defense": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster"
+    "crit_onhit_carry_roster",
+    "liandry_reprice_mage_roster"
    ],
    "declared_rules": [
     "guardian_angel.rebirth",
@@ -531,7 +538,7 @@
     "steraks_gage.lifeline_sterak"
    ],
    "deferral_row": "threshold_defense/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4402 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, liandry_reprice_mage_roster 904",
    "interpreter_module": "src/calculator/interpreters/threshold_defense.py",
    "owners": [
     "Guardian Angel",
@@ -543,9 +550,10 @@
     "Sterak's Gage"
    ],
    "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498
+    "crit_onhit_carry_roster": 3498,
+    "liandry_reprice_mage_roster": 904
    },
-   "population_total": 3498,
+   "population_total": 4402,
    "retiring_act": {
     "act": "A per-family interpreter in this family's own declared serving lane -- defense_resolver -- so that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. That is umbrella criterion 8's property, which is why the act serves D-60 rather than colliding with it: the lane's interpreter is not a second producer of one number, it is the one producer, and the walk consumes what it built. Amendment K rules this act for every row, correcting the lane Amendment F spelled it with and neither narrowing nor widening the debt.",
     "already_performed": true,

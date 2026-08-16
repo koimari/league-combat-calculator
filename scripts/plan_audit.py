@@ -400,6 +400,18 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
             ),
         )
     ),
+    Allowance(
+        doc="phase-3-behavior-rules.md",
+        value=23,
+        context="stat_conversion",
+        reason=(
+            "a withheld-entry count in the compilability argument, which "
+            "happens to equal coupled_golden_exact.entries since the two "
+            "window-armed rosters joined the coupled scenario set on "
+            "2026-08-16 (umbrella Amendment N, Ruling 3); the word beside it "
+            "is 'entries' because it counts registry entries, not scenarios"
+        ),
+    ),
 )
 
 
