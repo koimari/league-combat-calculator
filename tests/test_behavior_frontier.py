@@ -625,10 +625,36 @@ def test_every_gap_row_carries_its_route_into_the_committed_artifact() -> None:
         assert recorded["via"], f"{family.value}/{lane.value} records no route"
 
 
+def _some_deferral_key(receipt) -> str:
+    """One committed deferral row, read rather than named.
+
+    Several reds below drive the gate through *a* row, and which row is not
+    the thing any of them tests.  Naming one made them break on the commit
+    that retired it — which is a true report about a fixture and not about the
+    gate — so the row is read, and the reads stay correct for as long as
+    there is a deferral to defer.
+    """
+    rows = receipt["counters"]["counter_4"]["deferrals"]["rows"]
+    assert rows, "the frontier records no deferral rows to drive the gate through"
+    return sorted(rows)[0]
+
+
+def _some_dated_key(receipt) -> str:
+    """One committed unserved-lane row, read rather than named.
+
+    :func:`_some_deferral_key`'s reason, for the other committed set: the two
+    reds below drive the gate through *a* dated row, and a named one breaks on
+    the commit that serves its lane rather than on a defect in the gate.
+    """
+    dated = receipt["counters"]["counter_4"]["receipts"]["dated"]
+    assert dated, "the frontier records no unserved lanes to drive the gate through"
+    return sorted(dated)[0]
+
+
 def test_a_moved_route_fails_the_gate() -> None:
     """R-05's red for the route clause, at the artifact rather than at import."""
     receipt = _receipt()
-    receipt["counters"]["counter_4"]["receipts"]["dated"]["on_hit_strike/receipt_walk"][
+    receipt["counters"]["counter_4"]["receipts"]["dated"][_some_dated_key(receipt)][
         "via"
     ] = ["defense_resolver"]
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
@@ -646,9 +672,7 @@ def test_a_receipt_missing_the_unserved_lane_section_fails_closed() -> None:
 def test_a_moved_gap_receipt_is_a_diff_in_the_committed_artifact() -> None:
     """D-40: the content is set-equality gated, exactly like the exclusions."""
     receipt = _receipt()
-    receipt["counters"]["counter_4"]["receipts"]["dated"].pop(
-        "on_hit_strike/receipt_walk"
-    )
+    receipt["counters"]["counter_4"]["receipts"]["dated"].pop(_some_dated_key(receipt))
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
     assert any("committed dated set differs" in failure for failure in failures)
 
@@ -743,27 +767,13 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
     row = committed["counters"]["counter_4"]["deferrals"]["rows"][
-        "on_hit_strike/receipt_walk"
+        _some_deferral_key(committed)
     ]
     row["recorded_stage"] = "Phase 4 S3 — one kernel, five views"
 
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
     assert any("is half-landed" in failure for failure in failures)
-
-
-def _some_deferral_key(receipt) -> str:
-    """One committed deferral row, read rather than named.
-
-    Three reds below drive the gate through *a* row, and which row is not the
-    thing any of them tests.  Naming one made them break on the commit that
-    retired it — which is a true report about a fixture and not about the
-    gate — so the row is read, and the reads stay correct for as long as
-    there is a deferral to defer.
-    """
-    rows = receipt["counters"]["counter_4"]["deferrals"]["rows"]
-    assert rows, "the frontier records no deferral rows to drive the gate through"
-    return sorted(rows)[0]
 
 
 def test_a_moved_or_missing_deferral_set_fails_the_gate() -> None:

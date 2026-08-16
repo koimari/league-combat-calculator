@@ -2870,7 +2870,7 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
 
 
 def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
-    """The thirty-one, by name, with the value each one declares.
+    """The thirty-nine, by name, with the value each one declares.
 
     Pinned rather than derived: D-66's whole point is that the answer is a
     per-mechanic fact, so a test that recomputed it from some property of the
@@ -2885,13 +2885,14 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     ``PER_HOLDER`` is that fact declared, not a default it fell through to —
     the field has none.
 
-    The six item actives, the eight cast-triggered procs and the eleven
-    damaging charged strikes joined on 2026-08-16, when ``active_cast``,
-    ``cast_proc`` and ``charged_strike`` retired off the pair engine.  Their
-    answer is per-holder for the same reason and one step more plainly: each
-    one's walk half prices *its own holder's* packet, so two roster members
-    holding one item pay two packets and an aura key would silently drop the
-    second — which is the incident's own shape mandated by a rule.
+    The six item actives, the eight cast-triggered procs, the eleven damaging
+    charged strikes and the eight on-hit strikes joined on 2026-08-16, when
+    ``active_cast``, ``cast_proc``, ``charged_strike`` and ``on_hit_strike``
+    retired off the pair engine.  Their answer is per-holder for the same
+    reason and one step more plainly: each one's walk half prices *its own
+    holder's* packet, so two roster members holding one item pay two packets
+    and an aura key would silently drop the second — which is the incident's
+    own shape mandated by a rule.
     """
     declared = {
         mechanic: capability.holder_stacking.value
@@ -2902,6 +2903,7 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "abyssal_mask.unmake": "idempotent_aura",
         "bastionbreaker.shaped_charge": "per_holder",
         "black_cleaver.carve": "per_holder",
+        "blade_of_the_ruined_king.on_hit": "per_holder",
         "bloodletters_curse.vile_decay": "per_holder",
         "bloodsong.expose_weakness": "per_holder",
         "dead_mans_plate.empowered_hit": "per_holder",
@@ -2909,6 +2911,7 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "fiendhunter_bolts.empowered_autos": "per_holder",
         "heartsteel.empowered_hit": "per_holder",
         "hextech_alternator.proc": "per_holder",
+        "guinsoos_rageblade.on_hit": "per_holder",
         "hextech_gunblade.active": "per_holder",
         "hextech_rocketbelt.active": "per_holder",
         "hullbreaker.repeating_strike": "per_holder",
@@ -2916,18 +2919,24 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "kraken_slayer.repeating_strike": "per_holder",
         "ludens_echo.proc": "per_holder",
         "malignance.ultimate_proc": "per_holder",
+        "muramana.on_hit": "per_holder",
+        "nashors_tooth.on_hit": "per_holder",
         "profane_hydra.active": "per_holder",
         "rapid_firecannon.empowered_hit": "per_holder",
         "ravenous_hydra.active": "per_holder",
+        "recurve_bow.on_hit": "per_holder",
         "scouts_slingshot.proc": "per_holder",
         "shadowflame.cinderbloom": "per_holder",
         "statikk_shiv.empowered_hit": "per_holder",
         "stormrazor.empowered_hit": "per_holder",
         "stormsurge.proc": "per_holder",
         "stridebreaker.active": "per_holder",
+        "terminus.on_hit": "per_holder",
+        "titanic_hydra.on_hit": "per_holder",
         "tiamat.active": "per_holder",
         "umbral_glaive.empowered_hit": "per_holder",
         "voltaic_cyclosword.empowered_hit": "per_holder",
+        "wits_end.on_hit": "per_holder",
         "zazzaks_realmspike.proc": "per_holder",
         "zekes_convergence.ultimate_proc": "per_holder",
     }

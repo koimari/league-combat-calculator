@@ -612,7 +612,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Nine now, and the rows that left are why the count is written as a derived
+# Eight now, and the rows that left are why the count is written as a derived
 # length rather than restated in prose anywhere below.  ``delta_amp`` retired
 # on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
 # fourteen and rules its retiring act to be the walk-side delivery of the
@@ -635,7 +635,13 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # an ``Execute`` rider and the shield ledger's barrier-state adjustment, and
 # the walk stages those instead of the ratio the pair engine used to stamp on
 # its own events and the venom it used to read from the name-keyed effects
-# registry.  In each case the receipt
+# registry.  ``on_hit_strike`` retired on 2026-08-16 as well, over one
+# authoring site and its eight mechanics: ``damage._layer_on_hit_effects``
+# lays every declared strike onto the fight's swing applications and now
+# stamps each row it authors as a preview and hands the walk a declaration per
+# application, which Blade of the Ruined King needs one of because its
+# magnitude is re-read against the target's falling health and no two of its
+# applications share a number.  In each case the receipt
 # walk reads that family's declaration
 # through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
 # deferring a gap the tree no longer holds would fail the gate below rather
@@ -708,7 +714,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "on_hit_strike",
     "periodic",
     "resistance_shred",
     "secondary_target",

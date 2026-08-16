@@ -540,79 +540,6 @@
   }
  },
  "families": {
-  "on_hit_strike": {
-   "coupled_baseline_is_blind_to_this_family": false,
-   "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster"
-   ],
-   "declared_rules": [
-    "blade_of_the_ruined_king.on_hit",
-    "guinsoos_rageblade.on_hit",
-    "muramana.on_hit",
-    "nashors_tooth.on_hit",
-    "recurve_bow.on_hit",
-    "terminus.on_hit",
-    "titanic_hydra.on_hit",
-    "wits_end.on_hit"
-   ],
-   "deferral_row": "on_hit_strike/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
-   "interpreter_module": "src/calculator/interpreters/on_hit_strike.py",
-   "owners": [
-    "Blade of the Ruined King",
-    "Guinsoo's Rageblade",
-    "Muramana",
-    "Nashor's Tooth",
-    "Recurve Bow",
-    "Terminus",
-    "Titanic Hydra",
-    "Wit's End"
-   ],
-   "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498
-   },
-   "population_total": 3498,
-   "retiring_act": {
-    "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
-    "already_performed": false,
-    "retiring_lane": [
-     "receipt_walk"
-    ],
-    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
-   },
-   "route_today": [
-    "pair_engine"
-   ],
-   "served_through_its_declared_lane": false,
-   "triage": {
-    "authored_pair_rows": [
-     "active_Titanic Hydra",
-     "muramana_ability",
-     "on_hit_Blade of the Ruined King",
-     "on_hit_Guinsoo's Rageblade",
-     "on_hit_Muramana",
-     "on_hit_Nashor's Tooth",
-     "on_hit_Recurve Bow",
-     "on_hit_Terminus",
-     "on_hit_Titanic Hydra",
-     "on_hit_Wit's End",
-     "on_hit_secondary_Runaan's Hurricane"
-    ],
-    "class": "a",
-    "class_means": "authors-own-rows: this family's declarations author 11 priced pair-engine row(s), so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act (Amendments L/M/N).",
-    "declared_subjects": [
-     "undeclared",
-     "undeclared",
-     "undeclared",
-     "undeclared",
-     "undeclared",
-     "undeclared",
-     "undeclared",
-     "undeclared"
-    ],
-    "ruled_by": "umbrella Amendment O, Ruling 2"
-   }
-  },
   "periodic": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
@@ -877,13 +804,12 @@
  "named_delivery_rule": "Umbrella Amendment P (2026-08-16): the walk-side delivery of damage_routing -- the one row Ruling 2's stop clause fired on -- is the program rider system and the kernel state paths ALREADY IN THE TREE, named per declared payload family. Death's Dance's deferred-damage routing is a Defer rider on the holder's incoming damage events, The Collector's threshold execute an Execute rider on outgoing damage, and Serpent's Fang's shield reduction the kernel's barrier-state adjustment path. Naming a standing mechanism is an amendment's act and never a lane's (Amendment K's precedent), so what this file does with the name is RESOLVE it: each mechanism is looked up in the kernel's own declarations on every run, and a declaration the ruling does not name -- or a named mechanism that leaves the kernel -- turns the term unnamed again, re-stops the row and says which, because the ruling's own conditional stop is that the kernel is never extended inside a retirement slice.",
  "rows_served_through_their_declared_lane": [],
  "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
- "scheduled_slices": 5,
- "slices_whose_retiring_act_is_amendment_f_as_written": 5,
+ "scheduled_slices": 4,
+ "slices_whose_retiring_act_is_amendment_f_as_written": 4,
  "slices_whose_retiring_lane_amendment_k_corrects": [],
  "slices_whose_ruled_act_is_already_performed": [],
  "triage_by_class": {
   "a": [
-   "on_hit_strike",
    "periodic",
    "secondary_target",
    "spellblade"

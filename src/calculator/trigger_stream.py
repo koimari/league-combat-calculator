@@ -1024,6 +1024,36 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# The eight on-hit strikes, retired off the pair engine 2026-08-16.  One row
+# per declared rule in ``item_behavior_catalog``'s ``on_hit_strike`` family,
+# and one authoring site for all of them: ``damage._layer_on_hit_effects``
+# lays every declared strike onto the applications of the fight's swings,
+# whether the strike's magnitude is fixed per application or re-read against
+# the target's falling health.
+#
+# Three rows the committed triage lists for this family are deliberately
+# absent, because no declaration of this family authors them: Titanic
+# Crescent (``active_Titanic Hydra``) and Muramana's Shock on abilities
+# (``muramana_ability``) are compiled out of the number registry rather than
+# out of a rule, and ``on_hit_secondary_Runaan's Hurricane`` belongs to the
+# ``secondary_target`` family, whose deferral still stands.  The triage
+# measures a family's rows by removing the ITEM, which is conservative by
+# construction and lists every mechanic that item holds.
+_ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(f"{slug}.on_hit", item, "damage._layer_on_hit_effects")
+    for slug, item in (
+        ("blade_of_the_ruined_king", "Blade of the Ruined King"),
+        ("guinsoos_rageblade", "Guinsoo's Rageblade"),
+        ("muramana", "Muramana"),
+        ("nashors_tooth", "Nashor's Tooth"),
+        ("recurve_bow", "Recurve Bow"),
+        ("terminus", "Terminus"),
+        ("titanic_hydra", "Titanic Hydra"),
+        ("wits_end", "Wit's End"),
+    )
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1325,6 +1355,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
     *_retired_family_halves(_CAST_PROC_RETIREMENT),
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
+    *_retired_family_halves(_ON_HIT_STRIKE_RETIREMENT),
     # -- the retired ``damage_routing`` family: three riders, no packet -----
     #
     # The fifth family to retire off the pair engine (2026-08-16) and the

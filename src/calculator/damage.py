@@ -1045,6 +1045,26 @@ class StackingProc(NamedTuple):
     mitigated: float
 
 
+class OnHitProc(NamedTuple):
+    """One current-health on-hit application: declared, and paid.
+
+    :class:`StackingProc`'s shape for the other family that re-reads the
+    target's falling health per packet.  Blade of the Ruined King is the one
+    of the eight declared on-hit strikes whose magnitude moves between
+    applications of the same fight, so its row's applications cannot share a
+    single declared number and cannot recover one by dividing the row total
+    by the hit count either — the two applications either side of a big auto
+    attack are priced against different health.
+
+    ``raw`` is pre-mitigation and already carries the on-hit effectiveness of
+    the application that spent it, which is the magnitude a declaration
+    states; ``mitigated`` is what the pair engine's own row publishes.
+    """
+
+    raw: float
+    mitigated: float
+
+
 def _simulate_stacking_on_hit_damage(
     effect: item_effects.StackingOnHitEffect,
     base_inputs: item_effects.DamageInputs,
@@ -1222,7 +1242,7 @@ def _simulate_current_health_on_hit(
     phantom_hit_autos: set[int] | None = None,
     double_hit_all: bool = False,
     effectiveness: float = 1.0,
-) -> tuple[float, int]:
+) -> tuple[float, int, list["OnHitProc"]]:
     """Simulate a current-health on-hit against decreasing target HP.
 
     BoRK's passive deals physical damage based on the target's *current*
@@ -1248,9 +1268,10 @@ def _simulate_current_health_on_hit(
             damage (Azir soldiers apply on-hit at 50%).
 
     Returns:
-        Tuple of (total mitigated BoRK damage, total BoRK hit count,
-        each hit's mitigated damage in application order — one entry per
-        counted hit, so callers can stamp per-swing damage events).
+        Tuple of (total mitigated BoRK damage, total BoRK hit count, each
+        hit as an :class:`OnHitProc` in application order — one entry per
+        counted hit, so callers can stamp per-swing damage events and the
+        declaration each one carries).
     """
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
@@ -1258,7 +1279,7 @@ def _simulate_current_health_on_hit(
     current_hp = target_health
     total_damage = 0.0
     total_hits = 0
-    hit_damages: list[float] = []
+    hit_damages: list[OnHitProc] = []
 
     for i in range(num_auto_attacks):
         # How many times BoRK procs this auto (1 normally, +1 on phantom hit,
@@ -1286,7 +1307,7 @@ def _simulate_current_health_on_hit(
             )
             total_damage += mitigated
             total_hits += 1
-            hit_damages.append(mitigated)
+            hit_damages.append(OnHitProc(raw_damage, mitigated))
 
             current_hp -= mitigated
 
@@ -6129,6 +6150,44 @@ class OnHitResult:
     phantom_ability_stack_positions: set[int] = field(default_factory=set)
 
 
+def _on_hit_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+    """One on-hit packet's declaration, as the retired family states it.
+
+    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
+    rule that authored the packet, its pre-mitigation magnitude, and the
+    attack class that decides which of the holder's own amplifiers it earns.
+
+    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
+    is measured rather than defaulted: all eight declared strikes reach the
+    target through :func:`_mitigate` and through nothing else, so none of
+    them earns a part amp and a declaration claiming one would hand the walk
+    an amplifier the pair engine never paid.  The magic amp needs no class at
+    all — ``_mitigate`` applies it to magic damage whatever delivered it, and
+    ``StaticHolderAmps.factor_for`` delivers it off the damage type, which is
+    live for the four of the eight that declare magic.
+
+    The resistance is deliberately absent, which is the correct reading for a
+    packet that met the fight's published figure: the term census enumerates
+    every site that re-prices an already-authored packet and none of them
+    touches an on-hit row, so there is nothing for
+    :func:`_restate_declaration` to restate here (umbrella Amendment N,
+    Ruling 1).
+
+    *raw_amount* is what the caller has already folded the on-hit
+    effectiveness of the carrying application into.  That factor allocates
+    one application rather than amplifying it, the engine applies it before
+    mitigation, and mitigation is linear — so folding it into the magnitude
+    is the same real number priced once.
+    """
+    return tuple(
+        AuthoredDeclaration(
+            on_hit_strike.strike_mechanic_id(item_name),
+            raw_amount,
+            AttackClass.OTHER.value,
+        )
+    )
+
+
 def _layer_on_hit_effects(
     state: FightState,
     autos: AutoAttackResult,
@@ -6240,18 +6299,35 @@ def _layer_on_hit_effects(
             application_times.append(swing_time)
 
     def swing_event_row(
-        times: list[float], damages: list[float], damage_type: str
+        times: list[float],
+        damages: list[float],
+        damage_type: str,
+        declarations: list[tuple[Any, ...]] | None = None,
     ) -> dict[str, Any]:
-        """Row fields authoring one typed event per (time, damage) pair."""
+        """Row fields authoring one typed event per (time, damage) pair.
+
+        ``declarations`` is one per event for a row whose family has retired
+        off the pair engine, and ``None`` for every row still delivered as the
+        pair engine's own price.  It rides through the sort beside its own
+        damage rather than being stamped afterwards: the events are ordered by
+        time and an application's declared magnitude belongs to the
+        application, not to the position it lands in.
+        """
+        declared = declarations or [None] * len(damages)
         ordered = sorted(
-            zip(times, damages),
-            key=lambda pair: float(pair[0]),
+            zip(times, damages, declared),
+            key=lambda triple: float(triple[0]),
         )
         return {
             "event_phase": "auto",
             "damage_events": [
-                {"time": time, "damage": damage, "damage_type": damage_type}
-                for time, damage in ordered
+                {
+                    "time": time,
+                    "damage": damage,
+                    "damage_type": damage_type,
+                    **({} if declaration is None else {"declared": declaration}),
+                }
+                for time, damage, declaration in ordered
             ],
         }
 
@@ -6278,16 +6354,33 @@ def _layer_on_hit_effects(
             result.static_on_hit_by_type.get(source.damage_type, 0.0) + per_hit
         )
 
+        declaration = _on_hit_declaration(source.item_name, raw_per_hit)
         breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "count": hits,
             "damage_per_hit": per_hit,
             "total_damage": item_damage,
             "damage_type": source.damage_type,
+            # This row is the pair engine's preview of a number the coupled
+            # walk owns since ``on_hit_strike`` retired: the roster
+            # composition reads the stamp and takes the figure above out of
+            # every total it composes, while the pair fight's own receipt
+            # publishes it unchanged.  The row-level declaration is what a
+            # *coarse* row hands the walk — one whose applications landed on
+            # no resolvable swing schedule, so it authors no event of its own
+            # and the reconstruction synthesizes one
+            # (``_row_declaration_share``).
+            "pair_preview_of": on_hit_strike.strike_mechanic_id(source.item_name),
+            "declared": _on_hit_declaration(source.item_name, raw_per_hit * hits),
         }
         if application_times:
             breakdown[source.breakdown_key].update(
-                swing_event_row(application_times, [per_hit] * hits, source.damage_type)
+                swing_event_row(
+                    application_times,
+                    [per_hit] * hits,
+                    source.damage_type,
+                    [declaration] * hits,
+                )
             )
 
     # Ability-carried on-hit effects can be timestamped from the same
@@ -6597,6 +6690,16 @@ def _layer_on_hit_effects(
             "damage_per_hit": result.current_health_on_hit_avg,
             "total_damage": current_health_total,
             "damage_type": source.damage_type,
+            # A preview like the static strikes above author, and the one of
+            # the eight whose applications do not share a magnitude: the
+            # declaration on each event below is that application's own raw
+            # value, and the row's is their sum rather than an average
+            # multiplied back up.
+            "pair_preview_of": on_hit_strike.strike_mechanic_id(source.item_name),
+            "declared": _on_hit_declaration(
+                source.item_name,
+                sum(proc.raw for proc in current_health_hit_damages),
+            ),
         }
         # The simulation walks the same application order the swing
         # schedule authored, so its per-hit values stamp one event each.
@@ -6606,8 +6709,12 @@ def _layer_on_hit_effects(
             breakdown[source.breakdown_key].update(
                 swing_event_row(
                     application_times,
-                    current_health_hit_damages,
+                    [proc.mitigated for proc in current_health_hit_damages],
                     source.damage_type,
+                    [
+                        _on_hit_declaration(source.item_name, proc.raw)
+                        for proc in current_health_hit_damages
+                    ],
                 )
             )
 

@@ -351,6 +351,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): on_hit_strike.PAIR_INTERPRETER,
     (
+        RuleFamily.ON_HIT_STRIKE,
+        EngineLane.RECEIPT_WALK,
+    ): on_hit_strike.WALK_INTERPRETER,
+    (
         RuleFamily.OPENING_DEFENSE,
         EngineLane.DEFENSE_RESOLVER,
     ): opening_defense.RESOLVER_INTERPRETER,
@@ -518,7 +522,6 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             via=(EngineLane.PAIR_ENGINE,),
         )
         for family in (
-            RuleFamily.ON_HIT_STRIKE,
             RuleFamily.SPELLBLADE,
             RuleFamily.PERIODIC,
             RuleFamily.RESISTANCE_SHRED,
@@ -534,14 +537,15 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
-    # Four families' receipt-walk twins are gone — the walk reads each item
-    # active, each cast-triggered proc, each charged strike and every routing
-    # rule from its own declaration, through ``ActiveCastWalkInterpreter``,
-    # ``CastProcWalkInterpreter``, ``ChargedStrikeWalkInterpreter`` and
-    # ``DamageRoutingWalkInterpreter``, which is Amendment F's act in the lane
+    # Five families' receipt-walk twins are gone — the walk reads each item
+    # active, each cast-triggered proc, each charged strike, every routing
+    # rule and every on-hit strike from its own declaration, through
+    # ``ActiveCastWalkInterpreter``, ``CastProcWalkInterpreter``,
+    # ``ChargedStrikeWalkInterpreter``, ``DamageRoutingWalkInterpreter`` and
+    # ``OnHitStrikeWalkInterpreter``, which is Amendment F's act in the lane
     # Amendment K rules — so only the compiled lane defers for them, and it
     # says so in its own words rather than inheriting a sentence about both
-    # walks.  ``damage_routing`` is the one of the four whose interpreter
+    # walks.  ``damage_routing`` is the one of the five whose interpreter
     # hands the walk no price: umbrella Amendment P names its delivery as the
     # rider and kernel-state paths already in the tree, so what retires the
     # row is the walk reading the declaration rather than the walk paying it.
@@ -554,6 +558,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.CAST_PROC,
             RuleFamily.CHARGED_STRIKE,
             RuleFamily.DAMAGE_ROUTING,
+            RuleFamily.ON_HIT_STRIKE,
         )
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(

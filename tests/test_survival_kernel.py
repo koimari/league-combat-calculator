@@ -65,7 +65,7 @@ from src.calculator.program.build import (
 )
 from src.calculator.item_effects import DamageInputs
 from src.calculator.participant_timeline import Combatant
-from src.calculator.program.compile import action_from_event
+from src.calculator.program.compile import action_from_event, declared_packet_of
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -1884,6 +1884,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
             RuleFamily.ACTIVE_CAST,
             RuleFamily.CAST_PROC,
             RuleFamily.CHARGED_STRIKE,
+            RuleFamily.ON_HIT_STRIKE,
         )
         for family in families:
             assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
@@ -2876,6 +2877,12 @@ def _priced_declarations(scenario_name):
     Recorded at ``survival.transitions.apply_declared_price`` — the one site a
     declaration becomes a number — so what the case reads is the walk's own
     arithmetic and not a reconstruction of it.
+
+    The subject and the event id ride beside the source key because D-62's
+    uniqueness is keyed on ``(mechanic, subject, event_id)`` and a row is not
+    an event: a family that authors one packet per swing authors many events
+    under one row, and a key that stopped at the row would call a fight's
+    fourteen honest applications a double count.
     """
     scenario = next(
         entry for entry in gs.COUPLED_SCENARIOS if entry.name == scenario_name
@@ -2887,7 +2894,11 @@ def _priced_declarations(scenario_name):
         priced = real(ctx, action, state)
         recorded.append(
             (
-                action.source_key,
+                (
+                    action.source_key,
+                    action.subject,
+                    EVENT_SLOTS.text(action.event_slot),
+                ),
                 action.declared,
                 priced,
                 {
@@ -2971,11 +2982,19 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
 
     Two things a set relation cannot say.  Every packet the walk priced from
     this family's declaration was priced **once** — one pricing per
-    ``(source_key, rule)`` per fight, so no packet is paid by both the
-    declaration and the pair engine's row that carried it.  And the amount the
-    walk paid is the declaration's own price rather than the figure the pair
-    engine put on the packet, which is what "the pair row left the roster
-    total" means when it is a number rather than a claim.
+    ``(mechanic, subject, event_id)``, which is D-62's own key — so no packet
+    is paid by both the declaration and the pair engine's row that carried it.
+    And the amount the walk paid is the declaration's own price rather than
+    the figure the pair engine put on the packet, which is what "the pair row
+    left the roster total" means when it is a number rather than a claim.
+
+    The event id is part of the key rather than the row alone.  Every family
+    that had retired before ``on_hit_strike`` authored at most one priced
+    packet per row per fight in its covering population, so a
+    ``(source_key, rule)`` key was accidentally unique there and stopped being
+    so the moment a family authored one packet per swing.  Keying on the row
+    would then have read a fight's fourteen honest applications as a double
+    count, which is the opposite of what D-62 says.
     """
     scenarios = _covering_scenarios_of(family)
     assert scenarios, f"no committed coupled scenario equips {family.value}"
@@ -2988,7 +3007,7 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
         if record[1] is not None and record[1].rule_id in repriced
     ]
     assert priced, f"the walk priced no declaration of {family.value}"
-    keys = [(source_key, packet.rule_id) for source_key, packet, _, _ in priced]
+    keys = [(identity, packet.rule_id) for identity, packet, _, _ in priced]
     assert len(keys) == len(set(keys))
 
     for source_key, packet, amount, resistances in priced:
@@ -3001,3 +3020,136 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
         # mitigated here from a raw magnitude.
         assert amount == price_declared_packet(packet, **resistances).amount
         assert 0.0 < amount < packet.amped_raw, source_key
+
+
+# ---------------------------------------------------------------------------
+# on_hit_strike: an equivalence fixture per declaring owner
+# ---------------------------------------------------------------------------
+#
+# The two cases above run the committed coupled scenarios, and exactly one of
+# this family's eight owners is on one: `crit_onhit_carry_roster` holds Blade
+# of the Ruined King and nothing committed holds the other seven.  A green
+# zero over a population that cannot contain the defect is the shape umbrella
+# Amendment N was written about, and umbrella Amendment P's answer for a
+# family whose owners the covering set cannot reach is EQUIVALENCE FIXTURES
+# PER OWNER -- a fixture set arming one owner proves nothing about the ones
+# that can still fail.
+#
+# Two things vary across the eight and both are exercised here rather than
+# argued.  Four of them declare magic, so the holder's magic amp is a live
+# term for half this family, and the probe arms it: an Abyssal Mask on the
+# holder makes `StaticHolderAmps.magic` something other than 1.0, on
+# Amendment M, Ruling 1's own reasoning that a fixture set in which every amp
+# is 1.0 proves the stage re-spells the case that cannot fail.  And one of
+# them re-reads the target's falling health per application, so its
+# applications do not share a magnitude, which the per-event comparison sees
+# because it compares every event and not a row total.
+
+#: The holder the probe equips, and the one item beside the owner under test.
+#: Abyssal Mask is not decoration: it is the tree's only declaration of the
+#: holder's static magic amp, so without it every magic strike below would be
+#: priced at an amp of 1.0.
+_ON_HIT_PROBE_CHAMPION = "Caitlyn"
+_ON_HIT_AMP_OWNER = "Abyssal Mask"
+
+
+def _on_hit_owners() -> tuple[str, ...]:
+    """Every item declaring an ``on_hit_strike`` rule, read from the catalog."""
+    return tuple(
+        sorted(
+            {
+                rule.owner
+                for owner in rule_owners()
+                for rule in behavior_rules(owner)
+                if rule.family is RuleFamily.ON_HIT_STRIKE
+            }
+        )
+    )
+
+
+@lru_cache(maxsize=None)
+def _on_hit_probe(owner: str):
+    """One pair fight holding *owner* and the amp owner, with its walk inputs.
+
+    The fight, the holder's resolved stats and the holder's own static amps —
+    the three things the walk composes a :class:`DeclaredPacket` out of — read
+    from the same instruments the coupled composition reads them from
+    (``participant_timeline._holder_amps_of``'s own call), so what this
+    compares is the walk's arithmetic rather than a restatement of it.
+    """
+    champion = gs.fetch_champion_data()[_ON_HIT_PROBE_CHAMPION]
+    by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
+    items = [by_name[owner], by_name[_ON_HIT_AMP_OWNER]]
+    params = FightParams(
+        target_health=gs.SNAPSHOT_TARGET_HEALTH,
+        target_bonus_health=0.0,
+        target_armor=gs.SNAPSHOT_TARGET_ARMOR,
+        target_magic_resistance=gs.SNAPSHOT_TARGET_MR,
+        fight_duration_seconds=gs.ONE_ROTATION_DURATION,
+        auto_attack_uptime=1.0,
+        one_rotation=False,
+        deterministic=True,
+    )
+    level = 18
+    result = run_fight(champion, level, list(items), params)
+    stats = calculate_total_stats(champion, level, list(items))
+    amps = delta_amp.resolve_static_holder_amps(
+        list(items),
+        holder_stats=stats,
+        ability_amp_armed=False,
+        level=level,
+        fight_duration_seconds=float(params.fight_duration_seconds),
+        target_bonus_health=0.0,
+        holder_is_melee=bool(stats.get("is_melee")),
+    )
+    return result, amps
+
+
+@pytest.mark.parametrize("owner", _on_hit_owners())
+def test_every_on_hit_owner_prices_from_its_declaration_to_the_pair_engines_number(
+    owner,
+):
+    """One owner, every application: the walk's price is the pair engine's.
+
+    The equivalence this family's retirement rests on, stated per owner
+    because the committed coupled set reaches one of the eight.  For every
+    event the pair engine authored under this owner's row, the declaration
+    riding it, composed with the holder's own amps and mitigated once, equals
+    the number the pair engine put on that event — which is what makes the
+    retirement a re-spelling before it is a re-pricing (umbrella Amendment L,
+    Ruling 3).
+    """
+    result, amps = _on_hit_probe(owner)
+    row = result["breakdown"][f"on_hit_{owner}"]
+    assert row["pair_preview_of"] in walk_repriced_mechanics()
+    events = row["damage_events"]
+    assert events, owner
+
+    magnitudes = set()
+    for event in events:
+        packet = declared_packet_of(
+            event["declared"],
+            str(event["damage_type"]),
+            f"on_hit_{owner}",
+            amps,
+        )
+        price = price_declared_packet(
+            packet,
+            baseline_effective_armor=float(result["effective_armor"]),
+            baseline_effective_mr=float(result["effective_mr"]),
+        )
+        assert price.amount == pytest.approx(float(event["damage"]), rel=1e-12)
+        magnitudes.add(packet.raw_amount)
+        # The amp term is delivered rather than defaulted, and a magic strike
+        # is where that is visible: the probe holds the one item in the tree
+        # that declares the holder's static magic amp.
+        expected_amp = amps.magic if packet.damage_type == "magic" else 1.0
+        assert packet.holder_amp == expected_amp
+        if packet.damage_type == "magic":
+            assert packet.holder_amp > 1.0
+
+    # The one owner whose applications do not share a magnitude proves the
+    # per-application declaration is doing work: a row total split evenly
+    # would have priced its packets at a number no application had.
+    tracks_health = row["pair_preview_of"] == "blade_of_the_ruined_king.on_hit"
+    assert (len(magnitudes) > 1) is tracks_health

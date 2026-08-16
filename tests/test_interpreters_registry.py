@@ -590,12 +590,15 @@ def test_a_route_the_registry_does_not_serve_is_refused(
 ) -> None:
     """R-05's red for the route clause, one shape per way a route can lie.
 
-    ``on_hit_strike``'s compiled lane is the subject because its real route —
+    ``spellblade``'s compiled lane is the subject because its real route —
     the pair engine — is the one every packet-fed row stands on, so each
     substitution below is that row with its one true sentence replaced by a
-    plausible false one.
+    plausible false one.  It is spellblade rather than ``on_hit_strike``
+    because the ``unserved`` case needs a receipt walk no interpreter serves,
+    and a family whose retirement slice then serves it turns that red green
+    for a reason with nothing to do with the clause it tests.
     """
-    pair = (RuleFamily.ON_HIT_STRIKE, EngineLane.COMPILED_SCORE_WALK)
+    pair = (RuleFamily.SPELLBLADE, EngineLane.COMPILED_SCORE_WALK)
     monkeypatch.setattr(
         interpreters,
         "UNSERVED_LANE_RECEIPTS",
