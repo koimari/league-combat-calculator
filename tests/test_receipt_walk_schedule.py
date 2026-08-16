@@ -21,6 +21,7 @@ seam ``check()`` takes.
 from __future__ import annotations
 
 import copy
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -30,8 +31,12 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import receipt_walk_schedule  # noqa: E402  pylint: disable=wrong-import-position
-from calculator import interpreters  # noqa: E402  pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
+import receipt_walk_schedule  # noqa: E402
+from calculator import interpreters  # noqa: E402
+from calculator import shield_ledger  # noqa: E402
+from calculator.program import events  # noqa: E402
+from calculator.survival import actions  # noqa: E402
 
 SCHEDULE = ROOT / "docs" / "receipts" / "receipt-walk-retirement-schedule.json"
 FRONTIER = ROOT / "docs" / "behavior-frontier.json"
@@ -271,6 +276,62 @@ def test_every_open_row_carries_a_triage_class_that_was_measured() -> None:
             assert "named" in triage["walk_side_delivery_term"], family
 
 
+def test_a_named_delivery_is_resolved_against_the_kernel_and_not_asserted() -> None:
+    """Amendment P's ruling, as the resolution rather than as a citation.
+
+    The ruling names standing mechanisms and invents none, so the receipt may
+    not simply *record* that a delivery exists: every mechanism the ruling
+    names is looked up in the kernel's own declarations, and the row is named
+    only when all of them resolve.  Both halves are checked here against the
+    kernel directly rather than against the derivation that wrote the
+    receipt -- the rider families off ``RIDER_KINDS``, the state fields off
+    the records that declare them -- so the two would have to agree by
+    accident to pass.
+    """
+    block = schedule()
+    term = block["families"]["damage_routing"]["triage"]["walk_side_delivery_term"]
+    assert term["named"] is True
+    assert term["ruled_by"] == receipt_walk_schedule.NAMED_DELIVERY_RULING
+    riders = {kind.__name__ for kind in events.RIDER_KINDS}
+    state = {
+        "survival.actions.SurvivalAction": set(
+            actions.SurvivalAction._fields
+        ),  # noqa: SLF001  pylint: disable=protected-access
+        "shield_ledger.ShieldPools": {
+            field.name for field in dataclasses.fields(shield_ledger.ShieldPools)
+        },
+    }
+    named = {
+        path
+        for paths in receipt_walk_schedule.AMENDMENT_P_DELIVERY.values()
+        for path in paths
+    }
+    assert named, "the ruling names no mechanism at all"
+    for path in named:
+        holder, _, leaf = path.rpartition(".")
+        expected = riders if holder == "program.events" else state[holder]
+        assert leaf in expected, path
+        assert path in term["where"], path
+
+
+def test_the_named_delivery_covers_every_declaration_of_the_ruled_family() -> None:
+    """The condition Amendment P's stop clause turns on, checked per owner.
+
+    The ruling names a mechanism per payload family and stops the lane, by
+    name, on any owner's effect the kernel has no path for.  So the mapping is
+    asserted total over the family's *declarations* rather than over a list of
+    three items: a fourth mechanic declaring a shape the ruling does not name
+    fails here on the commit that declares it.
+    """
+    entry = schedule()["families"]["damage_routing"]
+    payloads = receipt_walk_schedule._declared_payloads(  # noqa: SLF001
+        "damage_routing", entry["owners"]
+    )
+    assert payloads
+    for mechanic, payload in payloads:
+        assert payload in receipt_walk_schedule.AMENDMENT_P_DELIVERY, mechanic
+
+
 def test_a_class_c_row_with_no_named_delivery_term_is_named_as_a_stop() -> None:
     """Ruling 2's stop clause, as a derivation rather than as a sentence.
 
@@ -354,6 +415,39 @@ def test_the_machine_check_reopens_a_closed_row_on_an_authored_row() -> None:
     ), failures
 
 
+def test_a_mechanism_leaving_the_kernel_re_stops_the_named_row() -> None:
+    """R-05, on Amendment P's conditional stop.
+
+    The ruling names mechanisms that stand in the tree and says in terms that
+    a lane STOPS blocked, naming exactly which, if one of them cannot be
+    expressed -- the kernel is never extended inside a retirement slice.  A
+    check that could not go red on that event would be a delivery term
+    recorded rather than resolved, so the event is injected through the
+    resolver's own seam and three things are asserted about the result: the
+    gate fails, the row returns to the stopped list, and the failure names the
+    declaration whose mechanism went missing rather than only the family.
+    """
+    committed = schedule()
+    bare = receipt_walk_schedule._mechanism_stands  # noqa: SLF001
+
+    def gone(path: str) -> bool:
+        return bare(path) and path != "shield_ledger.ShieldPools.venom_factor"
+
+    receipt_walk_schedule._mechanism_stands = gone  # noqa: SLF001
+    try:
+        failures = receipt_walk_schedule.check(committed)
+        fresh = receipt_walk_schedule.schedule()
+    finally:
+        receipt_walk_schedule._mechanism_stands = bare  # noqa: SLF001
+    assert any("damage_routing" in failure for failure in failures), failures
+    assert fresh["triage_rows_stopping_the_next_retirement_round"] == ["damage_routing"]
+    why = fresh["families"]["damage_routing"]["triage"]["walk_side_delivery_term"][
+        "why"
+    ]
+    assert "serpents_fang.shield_bypass" in why
+    assert "no walk-side delivery term" in why
+
+
 def test_the_triage_says_it_pays_nothing() -> None:
     """Measuring a debt is the half that can quietly become discounting it."""
     block = schedule()
@@ -371,7 +465,8 @@ def test_the_triage_says_it_pays_nothing() -> None:
         ("respell_a_corrected_lane", "committed value differs from derived"),
         ("claim_an_unperformed_act", "committed value differs from derived"),
         ("respell_a_triage_class", "committed row differs from derived"),
-        ("unstop_a_stopped_row", "committed value differs from derived"),
+        ("misreport_the_stopped_rows", "committed value differs from derived"),
+        ("respell_the_named_delivery_rule", "committed value differs from derived"),
     ],
 )
 def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
@@ -393,8 +488,17 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
     elif mutation == "respell_a_triage_class":
         family = sorted(mutated["families"])[0]
         mutated["families"][family]["triage"]["class"] = "a"
-    elif mutation == "unstop_a_stopped_row":
-        mutated["triage_rows_stopping_the_next_retirement_round"] = []
+    elif mutation == "misreport_the_stopped_rows":
+        # Symmetric difference rather than an emptying: the stopped list is
+        # empty whenever every class-(c) row has a named delivery term, and a
+        # mutation that emptied it would silently stop being a mutation on the
+        # day a ruling names the last one (D-92).
+        stopped = set(mutated["triage_rows_stopping_the_next_retirement_round"])
+        mutated["triage_rows_stopping_the_next_retirement_round"] = sorted(
+            stopped ^ {sorted(mutated["families"])[0]}
+        )
+    elif mutation == "respell_the_named_delivery_rule":
+        mutated["named_delivery_rule"] = "a delivery this file named for itself"
     else:
         mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
     failures = receipt_walk_schedule.check(mutated)

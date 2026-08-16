@@ -71,6 +71,20 @@ rows, which Ruling 1 closes by authority reclassification; ``c`` authors none
 and reaches participants through rows it does not author, which owes a named
 walk-side delivery term and stops the next retirement round if it has none.
 
+**A named delivery is resolved here and never merely recorded.**  Three shapes
+count as named -- the row's own ruled act already performed, every owner
+carrying a cross-participant half the walk stages, or a dated umbrella
+amendment naming the delivery -- and the third is the one that could have been
+a sentence.  Amendment P (2026-08-16) names ``damage_routing``'s: the program
+rider system and the kernel state paths already in the tree, one per declared
+payload family.  Naming a standing mechanism is an amendment's act and never a
+lane's, so what this file does with the name is look it up: every mechanism the
+ruling names is resolved against the kernel's own declarations on every run,
+and a declaration the ruling does not cover -- or a named mechanism that leaves
+the kernel -- re-stops the row and says which.  That is the ruling's own
+conditional stop, *the kernel is never extended inside a retirement slice*,
+made checkable rather than readable.
+
 **What this file is not.**  It is not a retirement, and no row here retires
 anything -- every row still standing is ``overdue`` and gated, exactly as
 Amendment F leaves it.  It does not re-date a row, re-scope the debt, or read
@@ -83,6 +97,7 @@ smaller amount of it.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -95,9 +110,12 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 # pylint: disable=wrong-import-position,wrong-import-order
 import golden_snapshot  # noqa: E402
 from calculator import interpreters  # noqa: E402
+from calculator import shield_ledger  # noqa: E402
 from calculator import trigger_stream  # noqa: E402
 from calculator.item_behavior import Subject  # noqa: E402
 from calculator.item_behavior_catalog import behavior_rules, rule_owners  # noqa: E402
+from calculator.program import events  # noqa: E402
+from calculator.survival import actions as survival_actions  # noqa: E402
 
 RECEIPTS_DIR = REPO_ROOT / "docs" / "receipts"
 SCHEDULE_PATH = RECEIPTS_DIR / "receipt-walk-retirement-schedule.json"
@@ -123,6 +141,36 @@ PAIR_ENGINE = "pair_engine"
 #: classifies and by the closure that ruling performs.
 RECLASSIFICATION_RULING = "umbrella Amendment O, Ruling 1"
 TRIAGE_RULING = "umbrella Amendment O, Ruling 2"
+
+#: The ruling that names the walk-side delivery of the one row Ruling 2's stop
+#: clause fired on, and the family it names it for.  The family is scoped
+#: because the ruling is: it answers one row, and a mapping that silently
+#: reached a second family would be this file widening an amendment.
+NAMED_DELIVERY_RULING = "umbrella Amendment P"
+NAMED_DELIVERY_FAMILY = "damage_routing"
+
+#: What umbrella Amendment P (2026-08-16) NAMES, per declared payload family:
+#: the standing kernel mechanism that carries that declaration's walk-side
+#: numbers.  The amendment names them; this file **resolves** each name against
+#: the tree on every run (:func:`_mechanism_stands`), so a named mechanism that
+#: leaves the kernel, or a fourth mechanic of the family whose payload family
+#: the amendment does not name, turns the delivery term unnamed again and
+#: re-stops the row.  That is the ruling's own conditional stop -- *the kernel
+#: is never extended inside a retirement slice* -- made checkable rather than
+#: readable.
+AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
+    "DamageDeferralRule": (
+        "program.events.Defer",
+        "survival.actions.SurvivalAction.deferred",
+        "survival.actions.SurvivalAction.deferred_batch_slot",
+    ),
+    "ExecuteRule": (
+        "program.events.Execute",
+        "survival.actions.SurvivalAction.execute_threshold_ratio",
+        "survival.actions.SurvivalAction.execute_source",
+    ),
+    "ShieldBypassRule": ("shield_ledger.ShieldPools.venom_factor",),
+}
 
 #: The families Amendment O, Ruling 1 closes off the receipt walk.  A ruling
 #: names a family; every FIELD of the closed row below is derived, and
@@ -408,21 +456,110 @@ def _cross_participant_halves(owners: Sequence[str]) -> dict[str, list[str]]:
     return halves
 
 
+def _kernel_mechanisms() -> dict[str, frozenset[str]]:
+    """Every mechanism a named delivery may land in, read from the kernel.
+
+    Two shapes, because Amendment P names two: a rider family the kernel's
+    own :data:`~..program.events.RIDER_KINDS` declares, and a field of a
+    kernel state record.  Both are read off the declaring object rather than
+    listed here, so a mechanism that leaves the kernel stops resolving on the
+    commit that removes it instead of on the day somebody re-reads a receipt.
+    """
+    return {
+        "program.events": frozenset(kind.__name__ for kind in events.RIDER_KINDS),
+        "survival.actions.SurvivalAction": frozenset(
+            survival_actions.SurvivalAction._fields  # pylint: disable=protected-access
+        ),
+        "shield_ledger.ShieldPools": frozenset(
+            field.name for field in dataclasses.fields(shield_ledger.ShieldPools)
+        ),
+    }
+
+
+def _mechanism_stands(path: str) -> bool:
+    """Whether one mechanism umbrella Amendment P names is in the tree today."""
+    holder, _, leaf = path.rpartition(".")
+    return leaf in _kernel_mechanisms().get(holder, frozenset())
+
+
+def _declared_payloads(
+    family: str, owners: Sequence[str]
+) -> tuple[tuple[str, str], ...]:
+    """Each declaration of *family* as ``(mechanic_id, payload family)``.
+
+    The payload family is what Amendment P's mapping is keyed on: the ruling
+    names a kernel mechanism per SHAPE of declaration -- a deferral, an
+    execute, a shield bypass -- rather than per mechanic id, so a second owner
+    declaring an existing shape is delivered by the ruling and a new shape is
+    not.
+    """
+    return tuple(
+        sorted(
+            (rule.mechanic_id, type(rule.payload).__name__)
+            for owner in owners
+            for rule in behavior_rules(owner)
+            if rule.family.value == family
+        )
+    )
+
+
+def _amendment_named_delivery(
+    family: str, owners: Sequence[str]
+) -> tuple[dict[str, tuple[str, ...]], tuple[str, ...]]:
+    """Amendment P's delivery for each declaration, and what it does not cover.
+
+    Returns the resolved mechanisms keyed by mechanic id, and the declarations
+    the ruling leaves unanswered -- a shape it does not name, or one whose
+    named mechanism no longer stands in the kernel.  A non-empty second half
+    is the ruling's own conditional stop firing: *if any owner's effect has no
+    existing rider or state path the kernel can express, the implementing lane
+    STOPS blocked naming exactly which*.  It is returned rather than raised
+    because naming which is the whole of what the stop buys.
+    """
+    if family != NAMED_DELIVERY_FAMILY:
+        return {}, ()
+    resolved: dict[str, tuple[str, ...]] = {}
+    unanswered: list[str] = []
+    for mechanic, payload in _declared_payloads(family, owners):
+        mechanisms = AMENDMENT_P_DELIVERY.get(payload, ())
+        missing = [path for path in mechanisms if not _mechanism_stands(path)]
+        if not mechanisms:
+            unanswered.append(
+                f"{mechanic} ({payload}): umbrella Amendment P names no kernel "
+                "mechanism for this declaration's payload family"
+            )
+        elif missing:
+            unanswered.append(
+                f"{mechanic} ({payload}): the mechanism the ruling names no "
+                "longer stands in the kernel -- " + ", ".join(missing)
+            )
+        else:
+            resolved[f"{mechanic} ({payload})"] = mechanisms
+    return resolved, tuple(unanswered)
+
+
 def _delivery_term(
     family: str, owners: Sequence[str], act: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Whether a class-(c) row's walk-side delivery term is named, and where.
 
     Amendment O, Ruling 2 requires one before such a row may retire, and
-    forbids a lane from inventing one.  Two shapes count as named and both are
-    read from the tree.  The row's own ruled retiring act may already be
-    performed -- ``INTERPRETERS`` holding the key for the lane the row
-    declares is Amendment K's delivery, standing in the tree today.  Or every
-    declaring owner may carry a cross-participant half the walk already
-    stages, which is the SPLIT shape: the shred's roster number reaches the
-    walk as the ``damage_modifier`` packet its own coupled half emits.
-    Neither present is a row that STOPS the next retirement round, named here
-    rather than papered over.
+    forbids a LANE from inventing one.  Three shapes count as named and every
+    one of them is resolved against the tree.  The row's own ruled retiring
+    act may already be performed -- ``INTERPRETERS`` holding the key for the
+    lane the row declares is Amendment K's delivery, standing in the tree
+    today.  Or every declaring owner may carry a cross-participant half the
+    walk already stages, which is the SPLIT shape: the shred's roster number
+    reaches the walk as the ``damage_modifier`` packet its own coupled half
+    emits.  Or a dated umbrella amendment may NAME the delivery, which is what
+    Amendment P does for ``damage_routing`` -- the program rider system and
+    the kernel state paths already in the tree, one per declared payload
+    family.  The third shape is an amendment's act and never a lane's, and it
+    is machine-resolved rather than recorded: every mechanism the ruling names
+    is looked up in the kernel on every run, so a declaration the ruling does
+    not cover, or a mechanism that leaves the kernel, re-stops the row and
+    names which.  None of the three present is a row that STOPS the next
+    retirement round, named here rather than papered over.
     """
     if act["already_performed"]:
         return {
@@ -450,6 +587,26 @@ def _delivery_term(
                 )
             ),
         }
+    resolved, unanswered = _amendment_named_delivery(family, owners)
+    if resolved and not unanswered:
+        return {
+            "named": True,
+            "ruled_by": NAMED_DELIVERY_RULING,
+            "where": (
+                "umbrella Amendment P (2026-08-16) names this family's "
+                "walk-side delivery as the program rider system and the kernel "
+                "state paths ALREADY IN THE TREE, one per declared payload "
+                "family, and every mechanism it names stands in the kernel "
+                "today: "
+                + "; ".join(
+                    f"{mechanic}: {', '.join(paths)}"
+                    for mechanic, paths in sorted(resolved.items())
+                )
+                + ". The retirement act is then the ruled act (Amendments "
+                "L/M/N) with rider and state compilation as the interpreter's "
+                "output, and equivalence fixtures per owner."
+            ),
+        }
     return {
         "named": False,
         "why": (
@@ -460,6 +617,16 @@ def _delivery_term(
             "anywhere in the tree or in an amendment. Amendment O, Ruling 2 "
             "stops the next retirement round here rather than letting a lane "
             "invent one."
+            + (
+                " Umbrella Amendment P names this family's delivery and the "
+                "ruling's own conditional stop has fired on: "
+                + "; ".join(unanswered)
+                + ". The kernel is never extended inside a retirement slice, "
+                "so the lane stops blocked naming exactly which rather than "
+                "growing one."
+                if unanswered
+                else ""
+            )
         ),
     }
 
@@ -872,6 +1039,24 @@ def schedule() -> dict[str, Any]:
             "the pair engine by ablation, never asserted, and is diff-gated "
             "with the rest of this file."
         ),
+        "named_delivery_rule": (
+            "Umbrella Amendment P (2026-08-16): the walk-side delivery of "
+            "damage_routing -- the one row Ruling 2's stop clause fired on -- "
+            "is the program rider system and the kernel state paths ALREADY IN "
+            "THE TREE, named per declared payload family. Death's Dance's "
+            "deferred-damage routing is a Defer rider on the holder's incoming "
+            "damage events, The Collector's threshold execute an Execute rider "
+            "on outgoing damage, and Serpent's Fang's shield reduction the "
+            "kernel's barrier-state adjustment path. Naming a standing "
+            "mechanism is an amendment's act and never a lane's (Amendment K's "
+            "precedent), so what this file does with the name is RESOLVE it: "
+            "each mechanism is looked up in the kernel's own declarations on "
+            "every run, and a declaration the ruling does not name -- or a "
+            "named mechanism that leaves the kernel -- turns the term unnamed "
+            "again, re-stops the row and says which, because the ruling's own "
+            "conditional stop is that the kernel is never extended inside a "
+            "retirement slice."
+        ),
         "triage_by_class": by_class,
         "triage_rows_stopping_the_next_retirement_round": stopped,
         "what_the_triage_does_not_do": (
@@ -931,6 +1116,7 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
         "scheduled_slices",
         "slices_whose_retiring_lane_amendment_k_corrects",
         "slices_whose_ruled_act_is_already_performed",
+        "named_delivery_rule",
         "triage_by_class",
         "triage_rows_stopping_the_next_retirement_round",
         "closed_by_authority_reclassification",
