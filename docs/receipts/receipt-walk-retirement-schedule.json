@@ -1,7 +1,35 @@
 {
  "a_second_and_smaller_mismatch": "ANSWERED 2026-08-15, and kept because a mismatch that is only deleted is one no reader can check was ever real. delta_amp/receipt_walk declared via = ['pair_engine'], so it was counted here as taking Amendment F's act as written, while its own reason named two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and said neither of them was the rule. The structured route and the prose beside it therefore described different things, and only the structured one was gated. Amendment K answered it in the same sentence as the three: the declaration is the route (D-40), so the row's act was the receipt-walk one, and correcting the reason would be a behaviour claim owing its own slice rather than a schedule's edit. That slice has landed. Amendment M, Ruling 1 ordered this family first of the fourteen and ruled its act to be the walk-side delivery of the holder's static, pair-local amplifiers; interpreters.delta_amp.WALK_INTERPRETER performs it, the receipt walk now reads the amp declaration through its own lane, and the row retired -- so the mismatched reason is gone with the row it belonged to, and the compiled-score-walk row that shared it now names that walk alone (R-36). No family row above records this mismatch any more, which is the only correct state once the row it described has retired.",
  "artifact": "receipt_walk_retirement_schedule",
- "closed_by_authority_reclassification": {},
+ "closed_by_authority_reclassification": {
+  "crit_profile": {
+   "authored_pair_rows": [],
+   "closed_as": "not_a_gap",
+   "closed_row": "crit_profile/receipt_walk",
+   "covering_coupled_scenarios": [
+    "crit_onhit_carry_roster",
+    "hexoptics_basic_amp_carry"
+   ],
+   "declared_rules": [
+    "infinity_edge.crit_damage_bonus",
+    "navori_flickerblade.cooldown_refund",
+    "sundered_sky.forced_crit"
+   ],
+   "declared_subjects": [
+    "holder",
+    "holder",
+    "holder"
+   ],
+   "owners": [
+    "Infinity Edge",
+    "Navori Flickerblade",
+    "Sundered Sky"
+   ],
+   "reopens_if": "any mechanic of this family ever authors a priced pair-engine row, or any declaration of it stops naming the holder as its subject. Both are re-measured here on every run and diff-gated against the committed block, so the reopening is the tree's act and not a reader's.",
+   "ruled_by": "umbrella Amendment O, Ruling 1",
+   "why": "Every declaration of this family names the holder as its subject and none of them authors a priced pair-engine row, in the covering population or in a per-owner probe on a ranged and a melee champion. All-pair-local inputs => PAIR_ONLY under the umbrella's own semantic-authority rule, so the pair engine is this family's authoritative home, no second engine prices it, no double-count exists, and the (family, RECEIPT_WALK) deferral row was a schedule category error rather than a debt."
+  }
+ },
  "families": {
   "combat_state": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -72,53 +100,6 @@
      "named": true,
      "where": "interpreters.INTERPRETERS holds the (combat_state, defense_resolver) key, which is the delivery umbrella Amendment K rules for this row and it stands in the tree today"
     }
-   }
-  },
-  "crit_profile": {
-   "coupled_baseline_is_blind_to_this_family": false,
-   "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster",
-    "hexoptics_basic_amp_carry"
-   ],
-   "declared_rules": [
-    "infinity_edge.crit_damage_bonus",
-    "navori_flickerblade.cooldown_refund",
-    "sundered_sky.forced_crit"
-   ],
-   "deferral_row": "crit_profile/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 4852 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, hexoptics_basic_amp_carry 1354",
-   "interpreter_module": "src/calculator/interpreters/crit_profile.py",
-   "owners": [
-    "Infinity Edge",
-    "Navori Flickerblade",
-    "Sundered Sky"
-   ],
-   "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498,
-    "hexoptics_basic_amp_carry": 1354
-   },
-   "population_total": 4852,
-   "retiring_act": {
-    "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
-    "already_performed": false,
-    "retiring_lane": [
-     "receipt_walk"
-    ],
-    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
-   },
-   "route_today": [
-    "pair_engine"
-   ],
-   "triage": {
-    "authored_pair_rows": [],
-    "class": "b",
-    "class_means": "pair-local fold into holder-own rows: this family authors no priced pair-engine row anywhere in the covering population or in a per-owner probe, and every declaration names the holder as its subject, so the fold lands in the holder's own champion rows. All-pair-local inputs => PAIR_ONLY, so the pair engine is this family's authoritative home and the row closes as not_a_gap by Amendment O, Ruling 1's reclassification rather than by a retirement.",
-    "declared_subjects": [
-     "holder",
-     "holder",
-     "holder"
-    ],
-    "ruled_by": "umbrella Amendment O, Ruling 1"
    }
   },
   "damage_routing": {
@@ -593,8 +574,8 @@
  "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
  "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
- "scheduled_slices": 10,
- "slices_whose_retiring_act_is_amendment_f_as_written": 7,
+ "scheduled_slices": 9,
+ "slices_whose_retiring_act_is_amendment_f_as_written": 6,
  "slices_whose_retiring_lane_amendment_k_corrects": [
   "combat_state",
   "opening_defense",
@@ -611,9 +592,6 @@
    "periodic",
    "secondary_target",
    "spellblade"
-  ],
-  "b": [
-   "crit_profile"
   ],
   "c": [
    "combat_state",

@@ -634,6 +634,20 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # than pass it.  The debt is smaller because the tree changed, which is the
 # only reason a deferral count may ever move.
 #
+# ``crit_profile`` left on 2026-08-16 and it did **not** retire, which is why
+# it is recorded apart from the four above.  Umbrella Amendment O, Ruling 1
+# reclassified the family ``PAIR_ONLY`` on a measurement: its three
+# declarations all name ``Subject.HOLDER`` and none of them authors a
+# pair-engine row a total holds, so the pair engine is its authoritative home,
+# no second engine prices it, and the ``(family, receipt_walk)`` row it used
+# to carry was a schedule category error rather than a debt.  ``_FAMILY_LANES``
+# stopped declaring the lane, so the gap is gone and this row would fail the
+# gate below if it stayed.  What makes that a correction rather than a
+# re-count is that the emptiness is re-measured on every run of
+# ``receipt_walk_schedule.py --check``, over the family's covering population
+# and over a probe per owner, and the row comes back the day a mechanic of
+# the family authors one.
+#
 # Declared ``(family, lane)`` pairs on the receipt walk that have no
 # interpreter and cannot get one in this phase: their numbers arrive through
 # the pair engine's timed rows today, and only Phase 4's S3 — one kernel, five
@@ -666,7 +680,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
     "combat_state",
-    "crit_profile",
     "damage_routing",
     "on_hit_strike",
     "opening_defense",

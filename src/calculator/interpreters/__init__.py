@@ -175,10 +175,27 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
+    # The crit profile owes the receipt walk NOTHING, and that is a ruling
+    # rather than an omission: umbrella Amendment O, Ruling 1 (2026-08-16)
+    # reclassifies it under this campaign's own semantic-authority rule.  Every
+    # one of its three declarations names ``Subject.HOLDER`` and none of them
+    # authors a pair-engine row a total holds -- the crit bonus is a multiplier
+    # folded into the champion's own ``auto_attacks`` row, the cooldown refund
+    # authors no damage at all, and the forced crit authors one row stamped
+    # ``informational`` that is summed into nothing.  All-pair-local inputs =>
+    # PAIR_ONLY, so the pair engine is this family's authoritative home, no
+    # second engine prices it, and the walk lane it used to declare was a
+    # schedule category error rather than a debt.  The compiled score walk is
+    # NOT reclassified with it: that lane has its own blocker (H5) and its own
+    # row below.  What makes this legal where D-40 forbids editing a lane table
+    # from inside the counter it moves is that the emptiness is measured
+    # first and stays measured: ``scripts/receipt_walk_schedule.py`` re-runs
+    # the pair engine over this family's covering population and over a probe
+    # per owner on every check, and the day a mechanic of it authors a row the
+    # gate goes red and this lane comes back.
     RuleFamily.CRIT_PROFILE: frozenset(
         {
             EngineLane.PAIR_ENGINE,
-            EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
@@ -407,6 +424,19 @@ _COMPILED_PACKET_FED = (
     "own; the receipt walk reads the declaration itself since this family "
     "retired"
 )
+# What is left of ``_PACKET_FED`` once a family's receipt-walk half has been
+# RECLASSIFIED rather than retired: the compiled lane still stages the pair
+# engine's packets, and the receipt walk is owed nothing at all — not because
+# it reads the declaration itself, which is the retired shape, but because the
+# family authors no pair row and its numbers never leave the holder's own.
+_COMPILED_PACKET_FED_PAIR_ONLY = (
+    "the compiled score walk consumes this family as the pair engine's timed "
+    "rows — participant_timeline._pair_run_fight prices the pair and "
+    "survival/compile.py stages the resulting packets — so the declaration "
+    "reaches it through the pair interpreter rather than through one of its "
+    "own; the receipt walk is owed nothing by this family, whose declarations "
+    "author no pair row and fold only into the holder's own"
+)
 _RESOLVER_FED = (
     "the walks stage what the defence resolver already built, so the "
     "declaration reaches them through the resolver interpreter; a walk-lane "
@@ -453,11 +483,19 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.SPELLBLADE,
             RuleFamily.PERIODIC,
             RuleFamily.RESISTANCE_SHRED,
-            RuleFamily.CRIT_PROFILE,
             RuleFamily.DAMAGE_ROUTING,
         )
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
+    # The crit profile's receipt-walk twin is gone and it did not retire: the
+    # lane table above no longer declares that lane at all, because umbrella
+    # Amendment O, Ruling 1 reclassified this family PAIR_ONLY on its measured
+    # emptiness.  It could not keep the shared reason either, for the same
+    # kind of contradiction that took delta_amp's: the sentence opens "both
+    # walks consume this family", and one of them no longer asks.
+    (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+        _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
+    ),
     # Three families' receipt-walk twins are gone — the walk prices each item
     # active, each cast-triggered proc and each charged strike from its own
     # declaration, through ``ActiveCastWalkInterpreter``,

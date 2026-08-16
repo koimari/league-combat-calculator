@@ -128,11 +128,12 @@ TRIAGE_RULING = "umbrella Amendment O, Ruling 2"
 #: names a family; every FIELD of the closed row below is derived, and
 #: :func:`_reclassification_failures` refuses a name the tree does not agree
 #: with -- a family still declaring the lane, or one an interpreter serves,
-#: is not a family this ruling closed.  Empty while the triage that identifies
-#: the class-(b) rows lands: measuring is one act and closing is another, and
-#: a name added here before the lane table drops the lane would be this file
-#: claiming a closure the tree denies.
-RECLASSIFIED: tuple[str, ...] = ()
+#: is not a family this ruling closed.  ``crit_profile`` is here because
+#: Ruling 1 names it and the tree agrees: ``_FAMILY_LANES`` no longer declares
+#: its receipt-walk lane, no interpreter serves one, and the frontier no
+#: longer defers the row.  Measuring is one act and closing is another, so a
+#: name arrives here in the commit that drops the lane and never before it.
+RECLASSIFIED: tuple[str, ...] = ("crit_profile",)
 
 #: Two probe champions, one ranged and one melee, because several declarations
 #: split on range (``MeleeRangedSplit``) and a family measured on one of them

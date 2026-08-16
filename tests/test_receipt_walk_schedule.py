@@ -294,6 +294,66 @@ def test_a_class_c_row_with_no_named_delivery_term_is_named_as_a_stop() -> None:
         assert "no walk-side delivery term" in term["why"], family
 
 
+def test_a_reclassified_row_is_closed_in_the_tree_and_not_only_on_paper() -> None:
+    """Amendment O, Ruling 1 closes a row; the tree has to agree it is closed.
+
+    A ruling names a family and this file records the name.  What it may not
+    do is let the name outlive the closure, so three facts are checked against
+    the tree rather than against the receipt that wrote them: the family no
+    longer declares the receipt-walk lane, no interpreter serves one -- which
+    would make this a retirement wearing a reclassification's name -- and the
+    frontier no longer defers the row.
+    """
+    block = schedule()
+    closed = block["closed_by_authority_reclassification"]
+    assert closed, "the reclassification record is empty; Ruling 1 named a family"
+    for family, entry in closed.items():
+        assert family not in block["families"], family
+        assert family not in deferred_families(), family
+        member = next(
+            candidate
+            for candidate in interpreters.RuleFamily
+            if candidate.value == family
+        )
+        assert interpreters.EngineLane.RECEIPT_WALK not in interpreters.lanes_for(
+            member
+        ), family
+        assert (
+            member,
+            interpreters.EngineLane.RECEIPT_WALK,
+        ) not in interpreters.INTERPRETERS, family
+        assert entry["closed_as"] == "not_a_gap", family
+        assert entry["authored_pair_rows"] == [], family
+        assert set(entry["declared_subjects"]) == {"holder"}, family
+
+
+def test_the_machine_check_reopens_a_closed_row_on_an_authored_row() -> None:
+    """R-05, on the clause that makes the closure conditional rather than final.
+
+    Ruling 1 closes the row *with a machine check*: the zero-authored-rows
+    property is re-measured on every run and the row reopens if a future
+    mechanic of the family ever authors one.  A check that could not go red on
+    that event would be a closure dressed as a condition, so the event is
+    injected -- one of the family's own owners is made to author a row -- and
+    the gate is asserted to fail naming the reclassification block.
+    """
+    committed = schedule()
+    bare = receipt_walk_schedule._probe_rows  # noqa: SLF001
+
+    def authoring(champion, items):
+        rows = bare(champion, items)
+        return rows | {"a_row_this_family_did_not_used_to_author"} if items else rows
+
+    receipt_walk_schedule._probe_rows = authoring  # noqa: SLF001
+    try:
+        failures = receipt_walk_schedule.check(committed)
+    finally:
+        receipt_walk_schedule._probe_rows = bare  # noqa: SLF001
+    assert any(
+        "closed_by_authority_reclassification" in failure for failure in failures
+    ), failures
+
+
 def test_the_triage_says_it_pays_nothing() -> None:
     """Measuring a debt is the half that can quietly become discounting it."""
     block = schedule()
