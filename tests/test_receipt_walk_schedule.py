@@ -211,6 +211,98 @@ def test_the_schedule_retires_nothing() -> None:
         assert "retired" not in entry
 
 
+def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
+    """The whole triage turns on "a row a total holds", so it is checked exactly.
+
+    Amendment O, Ruling 1 distinguishes a row a family authors from a row that
+    publishes a difference and is summed into no total.  If that predicate
+    were a heuristic, every class below it would be one.  It is not: summing
+    ``total_damage`` over exactly the rows :func:`priced_rows` returns
+    reproduces the fight's own ``total_damage``, so a row the predicate drops
+    is a row the total genuinely does not hold.  The probe deliberately holds
+    one informational-row item (Sundered Sky), one execute (The Collector) and
+    one heal row (Bloodthirster's lifesteal), which are the three shapes that
+    would otherwise be counted as authored.
+    """
+    champions = receipt_walk_schedule.golden_snapshot.fetch_champion_data()
+    by_name = {
+        data["name"]: data
+        for data in receipt_walk_schedule.golden_snapshot.fetch_item_data().values()
+    }
+    held = ["Sundered Sky", "The Collector", "Bloodthirster"]
+    result = receipt_walk_schedule.golden_snapshot._run_fight(  # noqa: SLF001
+        champions["Caitlyn"],
+        receipt_walk_schedule.PROBE_LEVEL,
+        [by_name[name] for name in held],
+        auto_attack_uptime=1.0,
+        one_rotation=False,
+    )
+    priced = receipt_walk_schedule.priced_rows(result)
+    assert {"sundered_sky", "execute", "heal_lifesteal"}.isdisjoint(priced)
+    assert sum(
+        float(result["breakdown"][key]["total_damage"]) for key in priced
+    ) == pytest.approx(float(result["total_damage"]), rel=0, abs=1e-9)
+
+
+def test_every_open_row_carries_a_triage_class_that_was_measured() -> None:
+    """Amendment O, Ruling 2: measured once, for every row, not one halt at a time.
+
+    The class is checked against the measurement rather than against a list of
+    families, so a family whose declarations start authoring a row -- or stop
+    -- re-derives its class on the same commit.  The three classes are
+    asserted to partition the open rows, because a row with no class is
+    exactly the row the next retirement round would walk into blind.
+    """
+    block = schedule()
+    by_class = block["triage_by_class"]
+    assert set(by_class) <= {"a", "b", "c"}
+    assert sorted(family for names in by_class.values() for family in names) == sorted(
+        block["families"]
+    )
+    for family, entry in block["families"].items():
+        triage = entry["triage"]
+        assert triage["class"] in {"a", "b", "c"}, family
+        authored = triage["authored_pair_rows"]
+        assert (triage["class"] == "a") is bool(authored), family
+        if triage["class"] == "b":
+            assert set(triage["declared_subjects"]) == {"holder"}, family
+        if triage["class"] == "c":
+            assert set(triage["declared_subjects"]) != {"holder"}, family
+            assert "named" in triage["walk_side_delivery_term"], family
+
+
+def test_a_class_c_row_with_no_named_delivery_term_is_named_as_a_stop() -> None:
+    """Ruling 2's stop clause, as a derivation rather than as a sentence.
+
+    A class-(c) row may not retire until somebody names its walk-side
+    delivery term, and a lane may not invent one.  The stopped list is
+    therefore derived from the per-row term check, and it is asserted equal to
+    it rather than pinned to today's membership -- naming a term for one of
+    these rows is the debt getting startable, and a test that went red when
+    its subject improved would pin the gap instead of the rule (D-92).
+    """
+    block = schedule()
+    stopped = block["triage_rows_stopping_the_next_retirement_round"]
+    assert stopped == sorted(
+        family
+        for family, entry in block["families"].items()
+        if entry["triage"]["class"] == "c"
+        and not entry["triage"]["walk_side_delivery_term"]["named"]
+    )
+    for family in stopped:
+        term = block["families"][family]["triage"]["walk_side_delivery_term"]
+        assert "no walk-side delivery term" in term["why"], family
+
+
+def test_the_triage_says_it_pays_nothing() -> None:
+    """Measuring a debt is the half that can quietly become discounting it."""
+    block = schedule()
+    assert "It retires nothing and it budgets nothing" in (
+        block["what_the_triage_does_not_do"]
+    )
+    assert "measured" in block["triage_rule"]
+
+
 @pytest.mark.parametrize(
     "mutation,expected",
     [
@@ -218,6 +310,8 @@ def test_the_schedule_retires_nothing() -> None:
         ("shrink_a_population", "committed row differs from derived"),
         ("respell_a_corrected_lane", "committed value differs from derived"),
         ("claim_an_unperformed_act", "committed value differs from derived"),
+        ("respell_a_triage_class", "committed row differs from derived"),
+        ("unstop_a_stopped_row", "committed value differs from derived"),
     ],
 )
 def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
@@ -236,6 +330,11 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
         mutated["slices_whose_ruled_act_is_already_performed"] = sorted(
             mutated["families"]
         )
+    elif mutation == "respell_a_triage_class":
+        family = sorted(mutated["families"])[0]
+        mutated["families"][family]["triage"]["class"] = "a"
+    elif mutation == "unstop_a_stopped_row":
+        mutated["triage_rows_stopping_the_next_retirement_round"] = []
     else:
         mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
     failures = receipt_walk_schedule.check(mutated)

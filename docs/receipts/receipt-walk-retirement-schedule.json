@@ -1,6 +1,7 @@
 {
  "a_second_and_smaller_mismatch": "ANSWERED 2026-08-15, and kept because a mismatch that is only deleted is one no reader can check was ever real. delta_amp/receipt_walk declared via = ['pair_engine'], so it was counted here as taking Amendment F's act as written, while its own reason named two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and said neither of them was the rule. The structured route and the prose beside it therefore described different things, and only the structured one was gated. Amendment K answered it in the same sentence as the three: the declaration is the route (D-40), so the row's act was the receipt-walk one, and correcting the reason would be a behaviour claim owing its own slice rather than a schedule's edit. That slice has landed. Amendment M, Ruling 1 ordered this family first of the fourteen and ruled its act to be the walk-side delivery of the holder's static, pair-local amplifiers; interpreters.delta_amp.WALK_INTERPRETER performs it, the receipt walk now reads the amp declaration through its own lane, and the row retired -- so the mismatched reason is gone with the row it belonged to, and the compiled-score-walk row that shared it now names that walk alone (R-36). No family row above records this mismatch any more, which is the only correct state once the row it described has retired.",
  "artifact": "receipt_walk_retirement_schedule",
+ "closed_by_authority_reclassification": {},
  "families": {
   "combat_state": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -52,7 +53,26 @@
    },
    "route_today": [
     "defense_resolver"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "c",
+    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2",
+    "walk_side_delivery_term": {
+     "named": true,
+     "where": "interpreters.INTERPRETERS holds the (combat_state, defense_resolver) key, which is the delivery umbrella Amendment K rules for this row and it stands in the tree today"
+    }
+   }
   },
   "crit_profile": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -88,7 +108,18 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "b",
+    "class_means": "pair-local fold into holder-own rows: this family authors no priced pair-engine row anywhere in the covering population or in a per-owner probe, and every declaration names the holder as its subject, so the fold lands in the holder's own champion rows. All-pair-local inputs => PAIR_ONLY, so the pair engine is this family's authoritative home and the row closes as not_a_gap by Amendment O, Ruling 1's reclassification rather than by a retirement.",
+    "declared_subjects": [
+     "holder",
+     "holder",
+     "holder"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 1"
+   }
   },
   "damage_routing": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -122,7 +153,22 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "c",
+    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
+    "declared_subjects": [
+     "target",
+     "target",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2",
+    "walk_side_delivery_term": {
+     "named": false,
+     "why": "no interpreter is registered in the lane this row declares, and Death's Dance, Serpent's Fang, The Collector declare no cross-participant half the walk stages -- so this family's roster-relevant numbers have no walk-side delivery term anywhere in the tree or in an amendment. Amendment O, Ruling 2 stops the next retirement round here rather than letting a lane invent one."
+    }
+   }
   },
   "on_hit_strike": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -166,7 +212,35 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [
+     "active_Titanic Hydra",
+     "muramana_ability",
+     "on_hit_Blade of the Ruined King",
+     "on_hit_Guinsoo's Rageblade",
+     "on_hit_Muramana",
+     "on_hit_Nashor's Tooth",
+     "on_hit_Recurve Bow",
+     "on_hit_Terminus",
+     "on_hit_Titanic Hydra",
+     "on_hit_Wit's End",
+     "on_hit_secondary_Runaan's Hurricane"
+    ],
+    "class": "a",
+    "class_means": "authors-own-rows: this family's declarations author 11 priced pair-engine row(s), so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act (Amendments L/M/N).",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2"
+   }
   },
   "opening_defense": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -206,7 +280,25 @@
    },
    "route_today": [
     "defense_resolver"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "c",
+    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2",
+    "walk_side_delivery_term": {
+     "named": true,
+     "where": "interpreters.INTERPRETERS holds the (opening_defense, defense_resolver) key, which is the delivery umbrella Amendment K rules for this row and it stands in the tree today"
+    }
+   }
   },
   "periodic": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -250,7 +342,31 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [
+     "burn_Blackfire Torch",
+     "burn_Fated Ashes",
+     "burn_Liandry's Torment",
+     "damage_amp_Liandry's Torment",
+     "immolate_Bami's Cinder",
+     "immolate_Hollow Radiance",
+     "immolate_Sunfire Aegis",
+     "periodic_Unending Despair"
+    ],
+    "class": "a",
+    "class_means": "authors-own-rows: this family's declarations author 8 priced pair-engine row(s), so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act (Amendments L/M/N).",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2"
+   }
   },
   "resistance_shred": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -286,7 +402,21 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "c",
+    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
+    "declared_subjects": [
+     "target",
+     "target"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2",
+    "walk_side_delivery_term": {
+     "named": true,
+     "where": "every declaring owner carries a cross-participant half the walk already stages, so this family's roster numbers reach it as that half's own packet: Black Cleaver: black_cleaver.carve -> Black Cleaver \u2014 Carve; Bloodletter's Curse: bloodletters_curse.vile_decay -> Bloodletter's Curse \u2014 Vile Decay"
+    }
+   }
   },
   "secondary_target": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -316,7 +446,19 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [
+     "on_hit_secondary_Runaan's Hurricane",
+     "secondary_Runaan's Hurricane"
+    ],
+    "class": "a",
+    "class_means": "authors-own-rows: this family's declarations author 2 priced pair-engine row(s), so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act (Amendments L/M/N).",
+    "declared_subjects": [
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2"
+   }
   },
   "spellblade": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -358,7 +500,31 @@
    },
    "route_today": [
     "pair_engine"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [
+     "expose_weakness_Bloodsong",
+     "spellblade_Bloodsong",
+     "spellblade_Dusk and Dawn",
+     "spellblade_Essence Reaver",
+     "spellblade_Iceborn Gauntlet",
+     "spellblade_Lich Bane",
+     "spellblade_Sheen",
+     "spellblade_Trinity Force"
+    ],
+    "class": "a",
+    "class_means": "authors-own-rows: this family's declarations author 8 priced pair-engine row(s), so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act (Amendments L/M/N).",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2"
+   }
   },
   "threshold_defense": {
    "coupled_baseline_is_blind_to_this_family": false,
@@ -402,7 +568,26 @@
    },
    "route_today": [
     "defense_resolver"
-   ]
+   ],
+   "triage": {
+    "authored_pair_rows": [],
+    "class": "c",
+    "class_means": "roster-relevant fold: this family authors no priced pair-engine row, and its declarations do not all name the holder as their subject -- a target-subject rule lands on a shared defender every roster participant meets, and a payload declaring no subject writes the defence fields whose inputs are the subject's live state under combined fire. Its numbers therefore reach participants through rows it does not author, so it may not be reclassified, and it owes a NAMED walk-side delivery term in Amendment M's shape before it retires.",
+    "declared_subjects": [
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared",
+     "undeclared"
+    ],
+    "ruled_by": "umbrella Amendment O, Ruling 2",
+    "walk_side_delivery_term": {
+     "named": true,
+     "where": "interpreters.INTERPRETERS holds the (threshold_defense, defense_resolver) key, which is the delivery umbrella Amendment K rules for this row and it stands in the tree today"
+    }
+   }
   }
  },
  "families_with_no_covering_coupled_scenario": [],
@@ -420,7 +605,30 @@
   "opening_defense",
   "threshold_defense"
  ],
+ "triage_by_class": {
+  "a": [
+   "on_hit_strike",
+   "periodic",
+   "secondary_target",
+   "spellblade"
+  ],
+  "b": [
+   "crit_profile"
+  ],
+  "c": [
+   "combat_state",
+   "damage_routing",
+   "opening_defense",
+   "resistance_shred",
+   "threshold_defense"
+  ]
+ },
+ "triage_rows_stopping_the_next_retirement_round": [
+  "damage_routing"
+ ],
+ "triage_rule": "Umbrella Amendment O, Ruling 2 (2026-08-16): before any further retirement round, EVERY remaining open deferral row is measured for the property that stopped crit_profile -- which priced pair-engine rows the family's declarations actually author -- and classified here. (a) authors-own-rows: retires by the ruled act (Amendments L/M/N). (b) pair-local fold into holder-own rows: closes by Ruling 1's authority reclassification, each with its machine check. (c) roster-relevant fold: requires a NAMED walk-side delivery term in Amendment M's shape, and a class-(c) row lacking one STOPS the next retirement round rather than having a term invented for it. The measurement is derived from the pair engine by ablation, never asserted, and is diff-gated with the rest of this file.",
  "what_already_performed_does_not_mean": "Not that the row retires. INTERPRETERS holding the ruled key is the act being done; the deferral stands because the family still declares a receipt-walk lane the table has no interpreter for, and D-40 forbids editing that table from inside the counter it moves. So this list is the count of acts performed, never a count of debts paid -- rows in, slices out, one for one. It is published per row because it is the one thing about an act that can be false, and it replaces a flag that said settled on every row and so could not tell a reader anything.",
+ "what_the_triage_does_not_do": "It retires nothing and it budgets nothing. A class-(a) row is a behaviour-changing slice nobody has budgeted, exactly as before; a class-(c) row with a named delivery term is startable and not started; and a class-(c) row without one is stopped by name, which is the whole of what Ruling 2 buys -- the eleventh lane to pick a family up inherits a measurement instead of rediscovering the shape that stopped the fifth.",
  "what_this_is_not": "It is not a retirement and no row here retires anything: every row still standing is overdue and gated, exactly as Amendment F leaves it. It does not re-date a row, re-scope the debt or read it as smaller -- one row out is one slice landed, never one debt re-counted -- and it registers no interpreter, because an interpreter registered to move a counter without changing what the walk prices is a counter driven to zero by editing what it counts. Its row set is read from the frontier's own deferrals, so a row leaves here only once the tree has stopped deferring it: delta_amp left on 2026-08-15, when Amendment M, Ruling 1's act landed and the receipt walk began reading that family's declaration through its own interpreter.",
  "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it": "Amendment F describes all fourteen rows as the families whose numbers participant_timeline._pair_run_fight produces today. Eleven declare that route in their own via field. Three -- combat_state, opening_defense, threshold_defense -- declare the defence resolver instead, and their rows say in their own words that a walk-lane interpreter there would be a second producer of one number, which is what D-60 and umbrella criterion 8 forbid. So Amendment F's act, spelled with the receipt walk, named for those three the act the campaign's own criterion rules out. That was measured here and routed to an owed ruling, which answered it on 2026-08-15: umbrella Amendment K rules the retiring act per LANE rather than per walk -- a per-family interpreter in the family's own declared serving lane, whichever lane the row's via names -- discharging criterion 8's own property that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. Every row therefore has a settled act, derived from its own route rather than assumed uniform, and the three moves a lane may still not make are unchanged in force: registering an interpreter that changes nothing the walk prices, editing the lane table so a family stops owing the walk an answer, and reading fourteen as eleven.",
  "why_a_lane_may_write_this": "R-20's second half makes enumerating a qualifying population a pre-edit act, performed from committed artifacts. Every field here is read from the committed frontier, the behaviour catalog, the committed coupled scenario set or the committed coupled baseline. Nothing here decides what a slice should do; it says how big each one is, which is what 'unbudgeted' was the absence of."

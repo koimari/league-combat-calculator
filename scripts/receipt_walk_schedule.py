@@ -56,11 +56,28 @@ row, and the row left this file with it.  The mismatch it carried is kept as
 an answered record rather than deleted, because a mismatch that is only
 deleted is one no reader can check was ever real.
 
+**Every open row also carries its triage class**, which umbrella Amendment O,
+Ruling 2 (2026-08-16) makes a one-time act in front of any further retirement
+round.  The fifth family attempted, ``crit_profile``, stopped on a property
+nobody had measured for the others: it authors no pair-engine row at all, so
+Amendment L, Ruling 1's shape -- both halves of which name a pair row the
+family authors -- had nothing to stamp.  Ruling 2 says that shape is measured
+once, for every remaining row, rather than rediscovered one halt at a time.
+So each row publishes which priced pair rows its declarations actually author,
+measured by ablation over the covering population and over a per-owner probe,
+and the class that follows: ``a`` authors its own rows and retires by the
+ruled act; ``b`` authors none and folds pair-locally into the holder's own
+rows, which Ruling 1 closes by authority reclassification; ``c`` authors none
+and reaches participants through rows it does not author, which owes a named
+walk-side delivery term and stops the next retirement round if it has none.
+
 **What this file is not.**  It is not a retirement, and no row here retires
 anything -- every row still standing is ``overdue`` and gated, exactly as
 Amendment F leaves it.  It does not re-date a row, re-scope the debt, or read
 the debt as smaller: one row out is one slice landed, never one debt
-re-counted.
+re-counted.  The triage adds no exception to that: measuring a row is not
+paying it, and a class is a fact about the shape of the work rather than a
+smaller amount of it.
 """
 
 from __future__ import annotations
@@ -78,6 +95,8 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 # pylint: disable=wrong-import-position,wrong-import-order
 import golden_snapshot  # noqa: E402
 from calculator import interpreters  # noqa: E402
+from calculator import trigger_stream  # noqa: E402
+from calculator.item_behavior import Subject  # noqa: E402
 from calculator.item_behavior_catalog import behavior_rules, rule_owners  # noqa: E402
 
 RECEIPTS_DIR = REPO_ROOT / "docs" / "receipts"
@@ -99,6 +118,35 @@ RULING = "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engin
 #: The lane whose interpreter Amendment F named, and the only lane the eleven
 #: pair-engine-fed rows are retired by.
 PAIR_ENGINE = "pair_engine"
+
+#: Umbrella Amendment O's two rulings, cited by every row the triage below
+#: classifies and by the closure that ruling performs.
+RECLASSIFICATION_RULING = "umbrella Amendment O, Ruling 1"
+TRIAGE_RULING = "umbrella Amendment O, Ruling 2"
+
+#: The families Amendment O, Ruling 1 closes off the receipt walk.  A ruling
+#: names a family; every FIELD of the closed row below is derived, and
+#: :func:`_reclassification_failures` refuses a name the tree does not agree
+#: with -- a family still declaring the lane, or one an interpreter serves,
+#: is not a family this ruling closed.  Empty while the triage that identifies
+#: the class-(b) rows lands: measuring is one act and closing is another, and
+#: a name added here before the lane table drops the lane would be this file
+#: claiming a closure the tree denies.
+RECLASSIFIED: tuple[str, ...] = ()
+
+#: Two probe champions, one ranged and one melee, because several declarations
+#: split on range (``MeleeRangedSplit``) and a family measured on one of them
+#: is measured on half its own rules.  They are a fixture and not a
+#: population: the population is the covering scenario set, enumerated per
+#: family above, and these probes only widen the *domain* the zero is claimed
+#: over so that an owner no covering scenario equips is still measured.
+PROBE_CHAMPIONS: tuple[str, str] = ("Caitlyn", "Darius")
+
+#: The probe fight: level 18, autos at full uptime and not one rotation, so
+#: on-hit, charge, spellblade and periodic paths all run.  A row a family
+#: authors only in a longer fight would otherwise read as a row it authors
+#: nowhere.
+PROBE_LEVEL = 18
 
 
 class ScheduleError(RuntimeError):
@@ -181,6 +229,410 @@ def registered_lanes(family: str) -> set[str]:
         for declared, lane in interpreters.INTERPRETERS
         if declared.value == family
     }
+
+
+def priced_rows(result: Mapping[str, Any]) -> frozenset[str]:
+    """The breakdown rows a fight's own ``total_damage`` holds.
+
+    This is the predicate umbrella Amendment O, Ruling 1 turns on, and it is
+    exact rather than a heuristic: summing ``total_damage`` over the rows this
+    returns reproduces the fight's ``total_damage`` to the last bit, which
+    :mod:`tests.test_receipt_walk_schedule` asserts rather than assumes.  Two
+    kinds of row are outside it and both are outside it for the ruling's own
+    stated reason.  A row carrying ``informational`` publishes a *difference*
+    a priced row already holds and is summed into no total -- Sundered Sky's
+    forced crit and The Collector's execute are both that shape.  A row with
+    no ``total_damage`` at all is not damage: the heal rows carry
+    ``total_amount`` and a ``unit``.  A family whose only rows are those two
+    kinds authors nothing a roster total holds, which is what "authors no pair
+    row" means.
+    """
+    return frozenset(
+        key
+        for key, entry in (result.get("breakdown") or {}).items()
+        if isinstance(entry, Mapping)
+        and not entry.get("informational")
+        and entry.get("total_damage") is not None
+    )
+
+
+def _stripped(request: Mapping[str, Any], owners: frozenset[str]) -> dict[str, Any]:
+    """*request* with every one of *owners* off every participant.
+
+    The ablation removes the ITEM, so it removes the mechanic and the item's
+    stat line together.  That makes the instrument conservative in the one
+    direction that matters: a row that survives the removal is not this
+    family's, and a family measured to author no row is one whose whole item
+    removal authors none -- strictly stronger than its mechanic authoring
+    none, and never weaker.
+    """
+    out = json.loads(json.dumps(dict(request)))
+    for loadout in (out, *out.get("allies", ()), *out.get("enemies", ())):
+        if "items" in loadout:
+            loadout["items"] = [name for name in loadout["items"] if name not in owners]
+        if loadout.get("boots") in owners:
+            loadout.pop("boots")
+        options = loadout.get("item_options")
+        if isinstance(options, Mapping):
+            loadout["item_options"] = {
+                name: value for name, value in options.items() if name not in owners
+            }
+    return out
+
+
+def _scenario_rows(request: Mapping[str, Any]) -> tuple[frozenset[str], ...]:
+    """The priced rows of every pair fight one coupled scenario request runs.
+
+    The same entry ``golden_snapshot.coupled_entry`` takes, run for its pair
+    fights alone: this measures what the PAIR ENGINE authors, which is the
+    engine the reclassification is about.
+    """
+    parsed = golden_snapshot.parse_scenario_request(dict(request), deterministic=True)
+    resolved = golden_snapshot.resolve_scenario(parsed)
+    if not resolved.enemies:
+        runs = [resolved.fight_params]
+    else:
+        runs = list(resolved.target_fight_params)
+    return tuple(
+        priced_rows(
+            golden_snapshot.run_fight(
+                resolved.champion_data, parsed.level, list(resolved.items), params
+            )
+        )
+        for params in runs
+    )
+
+
+def _probe_rows(champion: str, items: Sequence[str]) -> frozenset[str]:
+    """The priced rows one probe champion authors holding *items*."""
+    champions = golden_snapshot.fetch_champion_data()
+    by_name = {
+        data["name"]: data for data in golden_snapshot.fetch_item_data().values()
+    }
+    return priced_rows(
+        golden_snapshot._run_fight(  # pylint: disable=protected-access
+            champions[champion],
+            PROBE_LEVEL,
+            [by_name[name] for name in items],
+            auto_attack_uptime=1.0,
+            one_rotation=False,
+        )
+    )
+
+
+def authored_rows(
+    family: str, owners: Sequence[str], covering: Sequence[str]
+) -> tuple[str, ...]:
+    """Which priced pair-engine rows *family*'s declarations author.
+
+    Ablation, over two domains, and the union of what both find.
+
+    The first is the **covering population** umbrella Amendment O, Ruling 1
+    names: every committed coupled scenario putting one of this family's
+    owners on a participant, run pair fight by pair fight with the family's
+    items on and off.  A row present with them and absent without them is a
+    row this family authors.
+
+    The second is one probe per owner, on a ranged and a melee champion, and
+    it is what makes the zero a claim about the FAMILY rather than about the
+    scenarios that happen to hold it.  Two of ``crit_profile``'s three owners
+    are equipped by no covering scenario; without the probes, a mechanic of
+    theirs that authored a row would be invisible to the check that is
+    supposed to reopen the closed row when one does.
+    """
+    held = frozenset(owners)
+    found: set[str] = set()
+    by_name = {
+        scenario.name: scenario for scenario in golden_snapshot.COUPLED_SCENARIOS
+    }
+    for name in covering:
+        scenario = by_name[name]
+        with_them = _scenario_rows(scenario.request)
+        without = _scenario_rows(_stripped(scenario.request, held))
+        for full, ablated in zip(with_them, without):
+            found |= full - ablated
+    for champion in PROBE_CHAMPIONS:
+        bare = _probe_rows(champion, ())
+        for owner in owners:
+            found |= _probe_rows(champion, (owner,)) - bare
+    return tuple(sorted(found))
+
+
+def _subjects(family: str, owners: Sequence[str]) -> tuple[str, ...]:
+    """Each declaration's declared ``Subject``, or ``undeclared`` for none.
+
+    The umbrella's semantic-authority rule decides authority by what a rule's
+    inputs and effects reach, and the catalog already declares that per
+    payload.  ``Subject.HOLDER`` is a pair-local fold into the holder's own
+    rows; ``Subject.TARGET`` lands on a shared defender every roster
+    participant meets; a payload declaring no subject at all writes
+    ``DefenseField``s the defence resolver owns, and the subject's live state
+    under combined fire is a roster input by that rule's own words.  So this
+    is read rather than judged.
+    """
+    return tuple(
+        sorted(
+            (
+                rule.payload.subject.value
+                if isinstance(getattr(rule.payload, "subject", None), Subject)
+                else "undeclared"
+            )
+            for owner in owners
+            for rule in behavior_rules(owner)
+            if rule.family.value == family
+        )
+    )
+
+
+def _cross_participant_halves(owners: Sequence[str]) -> dict[str, list[str]]:
+    """Each owner's declared halves that modify ANOTHER participant's damage.
+
+    Read through ``trigger_stream.cross_participant_packet_source``, which is
+    D-07's semantic with one home (Amendment C, extended by Amendment M,
+    Ruling 3), so "this family's roster numbers already have a named walk-side
+    delivery" is answered by the same function the producer set is filtered
+    with rather than by a second reading of it.
+    """
+    halves: dict[str, list[str]] = {}
+    for owner in owners:
+        named = []
+        for rule in behavior_rules(owner):
+            capability = trigger_stream.CAPABILITIES.get(rule.mechanic_id)
+            if capability is None:
+                continue
+            source = trigger_stream.cross_participant_packet_source(capability)
+            if source is not None:
+                named.append(f"{rule.mechanic_id} -> {source}")
+        halves[owner] = sorted(named)
+    return halves
+
+
+def _delivery_term(
+    family: str, owners: Sequence[str], act: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Whether a class-(c) row's walk-side delivery term is named, and where.
+
+    Amendment O, Ruling 2 requires one before such a row may retire, and
+    forbids a lane from inventing one.  Two shapes count as named and both are
+    read from the tree.  The row's own ruled retiring act may already be
+    performed -- ``INTERPRETERS`` holding the key for the lane the row
+    declares is Amendment K's delivery, standing in the tree today.  Or every
+    declaring owner may carry a cross-participant half the walk already
+    stages, which is the SPLIT shape: the shred's roster number reaches the
+    walk as the ``damage_modifier`` packet its own coupled half emits.
+    Neither present is a row that STOPS the next retirement round, named here
+    rather than papered over.
+    """
+    if act["already_performed"]:
+        return {
+            "named": True,
+            "where": (
+                "interpreters.INTERPRETERS holds the ("
+                + family
+                + ", "
+                + ", ".join(act["retiring_lane"])
+                + ") key, which is the delivery umbrella Amendment K rules for "
+                "this row and it stands in the tree today"
+            ),
+        }
+    halves = _cross_participant_halves(owners)
+    if halves and all(halves.values()):
+        return {
+            "named": True,
+            "where": (
+                "every declaring owner carries a cross-participant half the "
+                "walk already stages, so this family's roster numbers reach it "
+                "as that half's own packet: "
+                + "; ".join(
+                    f"{owner}: {', '.join(named)}"
+                    for owner, named in sorted(halves.items())
+                )
+            ),
+        }
+    return {
+        "named": False,
+        "why": (
+            "no interpreter is registered in the lane this row declares, and "
+            + ", ".join(sorted(owner for owner, named in halves.items() if not named))
+            + " declare no cross-participant half the walk stages -- so this "
+            "family's roster-relevant numbers have no walk-side delivery term "
+            "anywhere in the tree or in an amendment. Amendment O, Ruling 2 "
+            "stops the next retirement round here rather than letting a lane "
+            "invent one."
+        ),
+    }
+
+
+def _triage(family: str, entry: Mapping[str, Any]) -> dict[str, Any]:
+    """One row's Amendment O, Ruling 2 class, measured rather than asserted.
+
+    Three classes, and the measurement decides which.  A family that authors
+    priced pair rows is class ``a`` and retires by the ruled act.  A family
+    that authors none divides on where its numbers go instead: every
+    declaration naming the HOLDER as its subject is the pair-local fold
+    Ruling 1 reclassifies (class ``b``); anything else reaches a participant
+    through rows it does not author (class ``c``) and owes a named walk-side
+    delivery term before it may retire.
+    """
+    rows = authored_rows(family, entry["owners"], entry["covering_coupled_scenarios"])
+    subjects = _subjects(family, entry["owners"])
+    holder_scoped = bool(subjects) and set(subjects) == {Subject.HOLDER.value}
+    if rows:
+        return {
+            "authored_pair_rows": list(rows),
+            "declared_subjects": list(subjects),
+            "class": "a",
+            "class_means": (
+                "authors-own-rows: this family's declarations author "
+                f"{len(rows)} priced pair-engine row(s), so Amendment L, "
+                "Ruling 1's shape has something to stamp and the row retires "
+                "by the ruled act (Amendments L/M/N)."
+            ),
+            "ruled_by": TRIAGE_RULING,
+        }
+    if holder_scoped:
+        return {
+            "authored_pair_rows": [],
+            "declared_subjects": list(subjects),
+            "class": "b",
+            "class_means": (
+                "pair-local fold into holder-own rows: this family authors no "
+                "priced pair-engine row anywhere in the covering population or "
+                "in a per-owner probe, and every declaration names the holder "
+                "as its subject, so the fold lands in the holder's own "
+                "champion rows. All-pair-local inputs => PAIR_ONLY, so the "
+                "pair engine is this family's authoritative home and the row "
+                "closes as not_a_gap by Amendment O, Ruling 1's "
+                "reclassification rather than by a retirement."
+            ),
+            "ruled_by": RECLASSIFICATION_RULING,
+        }
+    return {
+        "authored_pair_rows": [],
+        "declared_subjects": list(subjects),
+        "class": "c",
+        "class_means": (
+            "roster-relevant fold: this family authors no priced pair-engine "
+            "row, and its declarations do not all name the holder as their "
+            "subject -- a target-subject rule lands on a shared defender every "
+            "roster participant meets, and a payload declaring no subject "
+            "writes the defence fields whose inputs are the subject's live "
+            "state under combined fire. Its numbers therefore reach "
+            "participants through rows it does not author, so it may not be "
+            "reclassified, and it owes a NAMED walk-side delivery term in "
+            "Amendment M's shape before it retires."
+        ),
+        "walk_side_delivery_term": _delivery_term(
+            family, entry["owners"], entry["retiring_act"]
+        ),
+        "ruled_by": TRIAGE_RULING,
+    }
+
+
+def reclassified_rows() -> dict[str, Any]:
+    """The rows Amendment O, Ruling 1 closed, with the check that reopens them.
+
+    A closed row leaves ``families`` above -- the frontier stops deferring it,
+    so the schedule stops sizing it -- and everything a reader would want to
+    check about the closure would leave with it.  This is that record, and
+    every field of it is re-derived on every run: the owners from the catalog,
+    the covering scenarios from the scenario set, and the authored-row
+    measurement from the pair engine itself.  **That measurement is the
+    machine check the ruling requires.**  The day a mechanic of a closed
+    family authors a priced pair row, this block stops matching the committed
+    one, the gate goes red, and the row is reopened by the tree rather than by
+    somebody remembering to look.
+    """
+    declarations = owners_by_family()
+    covering_by_family = golden_snapshot.covering_scenarios(
+        golden_snapshot.COUPLED_SCENARIOS,
+        {family: set(owners) for family, owners in declarations.items()},
+    )
+    baseline = json.loads(COUPLED_BASELINE_PATH.read_text(encoding="utf-8"))[
+        "coupled_scenarios"
+    ]
+    closed: dict[str, Any] = {}
+    for family in sorted(RECLASSIFIED):
+        owners = sorted(declarations.get(family, {}))
+        covering = [
+            name for name in covering_by_family.get(family, ()) if name in baseline
+        ]
+        closed[family] = {
+            "closed_row": f"{family}/{LANE}",
+            "owners": owners,
+            "declared_rules": sorted(
+                mechanic
+                for ids in declarations.get(family, {}).values()
+                for mechanic in ids
+            ),
+            "covering_coupled_scenarios": covering,
+            "authored_pair_rows": list(authored_rows(family, owners, covering)),
+            "declared_subjects": list(_subjects(family, owners)),
+            "ruled_by": RECLASSIFICATION_RULING,
+            "closed_as": "not_a_gap",
+            "why": (
+                "Every declaration of this family names the holder as its "
+                "subject and none of them authors a priced pair-engine row, in "
+                "the covering population or in a per-owner probe on a ranged "
+                "and a melee champion. All-pair-local inputs => PAIR_ONLY "
+                "under the umbrella's own semantic-authority rule, so the pair "
+                "engine is this family's authoritative home, no second engine "
+                "prices it, no double-count exists, and the (family, "
+                "RECEIPT_WALK) deferral row was a schedule category error "
+                "rather than a debt."
+            ),
+            "reopens_if": (
+                "any mechanic of this family ever authors a priced pair-engine "
+                "row, or any declaration of it stops naming the holder as its "
+                "subject. Both are re-measured here on every run and diff-gated "
+                "against the committed block, so the reopening is the tree's "
+                "act and not a reader's."
+            ),
+        }
+    return closed
+
+
+def _reclassification_failures() -> list[str]:
+    """The tree has to agree that a reclassified row is closed.
+
+    A ruling names a family and this file records the name; what it may not
+    do is let the name outlive the closure.  Three ways it could: the family
+    could go on declaring the receipt-walk lane, an interpreter could be
+    registered for it after all -- which would make this a retirement wearing
+    a reclassification's name -- or the frontier could still defer the row.
+    """
+    failures: list[str] = []
+    rows = deferral_rows()
+    for family in RECLASSIFIED:
+        member = next(
+            (
+                candidate
+                for candidate in interpreters.RuleFamily
+                if candidate.value == family
+            ),
+            None,
+        )
+        if member is None:
+            failures.append(f"{family!r} is reclassified and is not a rule family")
+            continue
+        if interpreters.EngineLane.RECEIPT_WALK in interpreters.lanes_for(member):
+            failures.append(
+                f"{family!r} is recorded as closed off the receipt walk and "
+                "still declares that lane; a reclassification the lane table "
+                "does not carry is a receipt saying what the tree denies"
+            )
+        if LANE in registered_lanes(family):
+            failures.append(
+                f"{family!r} is recorded as closed by reclassification and an "
+                "interpreter serves its receipt-walk lane; that is a "
+                "retirement, which is a different act with a different receipt"
+            )
+        if family in rows:
+            failures.append(
+                f"{family!r} is recorded as closed and the frontier still "
+                "defers its receipt-walk row"
+            )
+    return failures
 
 
 def _retiring_act(family: str, route: Sequence[str]) -> dict[str, Any]:
@@ -295,6 +747,7 @@ def schedule() -> dict[str, Any]:
                 )
             ),
         }
+        slices[family]["triage"] = _triage(family, slices[family])
     lane_corrected = sorted(
         family
         for family, entry in slices.items()
@@ -310,6 +763,15 @@ def schedule() -> dict[str, Any]:
         for family, entry in slices.items()
         if entry["coupled_baseline_is_blind_to_this_family"]
     ]
+    by_class: dict[str, list[str]] = {}
+    for family, entry in sorted(slices.items()):
+        by_class.setdefault(entry["triage"]["class"], []).append(family)
+    stopped = sorted(
+        family
+        for family, entry in slices.items()
+        if entry["triage"]["class"] == "c"
+        and not entry["triage"]["walk_side_delivery_term"]["named"]
+    )
     return {
         "artifact": "receipt_walk_retirement_schedule",
         "rule": (
@@ -394,6 +856,33 @@ def schedule() -> dict[str, Any]:
             "above records this mismatch any more, which is the only correct "
             "state once the row it described has retired."
         ),
+        "triage_rule": (
+            "Umbrella Amendment O, Ruling 2 (2026-08-16): before any further "
+            "retirement round, EVERY remaining open deferral row is measured "
+            "for the property that stopped crit_profile -- which priced "
+            "pair-engine rows the family's declarations actually author -- and "
+            "classified here. (a) authors-own-rows: retires by the ruled act "
+            "(Amendments L/M/N). (b) pair-local fold into holder-own rows: "
+            "closes by Ruling 1's authority reclassification, each with its "
+            "machine check. (c) roster-relevant fold: requires a NAMED "
+            "walk-side delivery term in Amendment M's shape, and a class-(c) "
+            "row lacking one STOPS the next retirement round rather than "
+            "having a term invented for it. The measurement is derived from "
+            "the pair engine by ablation, never asserted, and is diff-gated "
+            "with the rest of this file."
+        ),
+        "triage_by_class": by_class,
+        "triage_rows_stopping_the_next_retirement_round": stopped,
+        "what_the_triage_does_not_do": (
+            "It retires nothing and it budgets nothing. A class-(a) row is a "
+            "behaviour-changing slice nobody has budgeted, exactly as before; "
+            "a class-(c) row with a named delivery term is startable and not "
+            "started; and a class-(c) row without one is stopped by name, "
+            "which is the whole of what Ruling 2 buys -- the eleventh lane to "
+            "pick a family up inherits a measurement instead of rediscovering "
+            "the shape that stopped the fifth."
+        ),
+        "closed_by_authority_reclassification": reclassified_rows(),
         "scheduled_slices": len(slices),
         "slices_whose_retiring_act_is_amendment_f_as_written": len(slices)
         - len(lane_corrected),
@@ -441,9 +930,13 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
         "scheduled_slices",
         "slices_whose_retiring_lane_amendment_k_corrects",
         "slices_whose_ruled_act_is_already_performed",
+        "triage_by_class",
+        "triage_rows_stopping_the_next_retirement_round",
+        "closed_by_authority_reclassification",
     ):
         if committed.get(key) != fresh[key]:
             failures.append(f"{key}: committed value differs from derived")
+    failures.extend(_reclassification_failures())
     return failures
 
 
