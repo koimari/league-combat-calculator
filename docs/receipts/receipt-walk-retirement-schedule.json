@@ -1,5 +1,5 @@
 {
- "a_second_and_smaller_mismatch": "delta_amp/receipt_walk declares via = ['pair_engine'], so it is counted above as taking Amendment F's act as written, while its own reason names two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and says neither of them is the rule. The structured route and the prose beside it therefore describe different things, and only the structured one is gated. Amendment K answers it in the same sentence as the three: the declaration is the route (D-40), so this row's act is the receipt-walk one, and correcting via would be a behaviour claim owing its own slice rather than a schedule's edit. It stays recorded here because a prose sentence that disagrees with a gated declaration is a thing a reader should be able to find.",
+ "a_second_and_smaller_mismatch": "ANSWERED 2026-08-15, and kept because a mismatch that is only deleted is one no reader can check was ever real. delta_amp/receipt_walk declared via = ['pair_engine'], so it was counted here as taking Amendment F's act as written, while its own reason named two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and said neither of them was the rule. The structured route and the prose beside it therefore described different things, and only the structured one was gated. Amendment K answered it in the same sentence as the three: the declaration is the route (D-40), so the row's act was the receipt-walk one, and correcting the reason would be a behaviour claim owing its own slice rather than a schedule's edit. That slice has landed. Amendment M, Ruling 1 ordered this family first of the fourteen and ruled its act to be the walk-side delivery of the holder's static, pair-local amplifiers; interpreters.delta_amp.WALK_INTERPRETER performs it, the receipt walk now reads the amp declaration through its own lane, and the row retired -- so the mismatched reason is gone with the row it belonged to, and the compiled-score-walk row that shared it now names that walk alone (R-36). No family row above records this mismatch any more, which is the only correct state once the row it described has retired.",
  "artifact": "receipt_walk_retirement_schedule",
  "families": {
   "active_cast": {
@@ -270,82 +270,6 @@
     "immolate_active_bruiser_roster": 1790
    },
    "population_total": 1790,
-   "retiring_act": {
-    "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
-    "already_performed": false,
-    "retiring_lane": [
-     "receipt_walk"
-    ],
-    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
-   },
-   "route_today": [
-    "pair_engine"
-   ]
-  },
-  "delta_amp": {
-   "coupled_baseline_is_blind_to_this_family": false,
-   "covering_coupled_scenarios": [
-    "amp_armed_mage_roster",
-    "cleaver_bloodsong_roster",
-    "hexoptics_basic_amp_carry",
-    "mandate_abyssal_curse_roster",
-    "score_event_view_holder",
-    "syndra_custom_order_120",
-    "syndra_custom_order_39",
-    "syndra_custom_order_60",
-    "syndra_derived_order_120",
-    "syndra_derived_order_39",
-    "syndra_derived_order_60"
-   ],
-   "declared_rules": [
-    "actualizer.ability_part_amp",
-    "bloodsong.expose_weakness",
-    "first_strike.opening_window_amp",
-    "haunting_guise.whole_total_amp",
-    "hexoptics_c44.basic_part_amp",
-    "horizon_focus.hypershot",
-    "immortal_path.whole_total_amp",
-    "imperial_mandate.command",
-    "liandrys_torment.whole_total_amp",
-    "lord_dominiks_regards.whole_total_amp",
-    "press_the_attack.lasting_proc_amp",
-    "riftmaker.whole_total_amp",
-    "shadowflame.cinderbloom",
-    "spear_of_shojin.whole_total_amp"
-   ],
-   "deferral_row": "delta_amp/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 7792 committed roster values across 11 coupled scenario(s) -- amp_armed_mage_roster 785, cleaver_bloodsong_roster 1828, hexoptics_basic_amp_carry 1354, mandate_abyssal_curse_roster 876, score_event_view_holder 301, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449",
-   "interpreter_module": "src/calculator/interpreters/delta_amp.py",
-   "owners": [
-    "Actualizer",
-    "Bloodsong",
-    "First Strike",
-    "Haunting Guise",
-    "Hexoptics C44",
-    "Horizon Focus",
-    "Immortal Path",
-    "Imperial Mandate",
-    "Liandry's Torment",
-    "Lord Dominik's Regards",
-    "Press the Attack",
-    "Riftmaker",
-    "Shadowflame",
-    "Spear of Shojin"
-   ],
-   "population_by_scenario": {
-    "amp_armed_mage_roster": 785,
-    "cleaver_bloodsong_roster": 1828,
-    "hexoptics_basic_amp_carry": 1354,
-    "mandate_abyssal_curse_roster": 876,
-    "score_event_view_holder": 301,
-    "syndra_custom_order_120": 443,
-    "syndra_custom_order_39": 429,
-    "syndra_custom_order_60": 443,
-    "syndra_derived_order_120": 449,
-    "syndra_derived_order_39": 435,
-    "syndra_derived_order_60": 449
-   },
-   "population_total": 7792,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,
@@ -637,9 +561,9 @@
  },
  "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
- "rule": "Umbrella criterion 7's fourteen receipt-walk deferrals, sized as the fourteen slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
- "scheduled_slices": 14,
- "slices_whose_retiring_act_is_amendment_f_as_written": 11,
+ "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
+ "scheduled_slices": 13,
+ "slices_whose_retiring_act_is_amendment_f_as_written": 10,
  "slices_whose_retiring_lane_amendment_k_corrects": [
   "combat_state",
   "opening_defense",
@@ -650,8 +574,8 @@
   "opening_defense",
   "threshold_defense"
  ],
- "what_already_performed_does_not_mean": "Not that the row retires. INTERPRETERS holding the ruled key is the act being done; the deferral stands because the family still declares a receipt-walk lane the table has no interpreter for, and D-40 forbids editing that table from inside the counter it moves. So this list is the count of acts performed, never a count of debts paid -- fourteen rows in, fourteen slices out. It is published per row because it is the one thing about an act that can be false, and it replaces a flag that said settled on every row and so could not tell a reader anything.",
- "what_this_is_not": "It is not a retirement and no row here retires anything: the deferrals stand, overdue and gated, exactly as Amendment F leaves them. It does not re-date a row, re-scope the debt or read it as smaller -- fourteen rows in, fourteen slices out -- and it registers no interpreter, because an interpreter registered to move a counter without changing what the walk prices is a counter driven to zero by editing what it counts.",
+ "what_already_performed_does_not_mean": "Not that the row retires. INTERPRETERS holding the ruled key is the act being done; the deferral stands because the family still declares a receipt-walk lane the table has no interpreter for, and D-40 forbids editing that table from inside the counter it moves. So this list is the count of acts performed, never a count of debts paid -- rows in, slices out, one for one. It is published per row because it is the one thing about an act that can be false, and it replaces a flag that said settled on every row and so could not tell a reader anything.",
+ "what_this_is_not": "It is not a retirement and no row here retires anything: every row still standing is overdue and gated, exactly as Amendment F leaves it. It does not re-date a row, re-scope the debt or read it as smaller -- one row out is one slice landed, never one debt re-counted -- and it registers no interpreter, because an interpreter registered to move a counter without changing what the walk prices is a counter driven to zero by editing what it counts. Its row set is read from the frontier's own deferrals, so a row leaves here only once the tree has stopped deferring it: delta_amp left on 2026-08-15, when Amendment M, Ruling 1's act landed and the receipt walk began reading that family's declaration through its own interpreter.",
  "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it": "Amendment F describes all fourteen rows as the families whose numbers participant_timeline._pair_run_fight produces today. Eleven declare that route in their own via field. Three -- combat_state, opening_defense, threshold_defense -- declare the defence resolver instead, and their rows say in their own words that a walk-lane interpreter there would be a second producer of one number, which is what D-60 and umbrella criterion 8 forbid. So Amendment F's act, spelled with the receipt walk, named for those three the act the campaign's own criterion rules out. That was measured here and routed to an owed ruling, which answered it on 2026-08-15: umbrella Amendment K rules the retiring act per LANE rather than per walk -- a per-family interpreter in the family's own declared serving lane, whichever lane the row's via names -- discharging criterion 8's own property that the family's numbers reach the walk through exactly one interpreter instead of arriving already priced by the pair engine. Every row therefore has a settled act, derived from its own route rather than assumed uniform, and the three moves a lane may still not make are unchanged in force: registering an interpreter that changes nothing the walk prices, editing the lane table so a family stops owing the walk an answer, and reading fourteen as eleven.",
  "why_a_lane_may_write_this": "R-20's second half makes enumerating a qualifying population a pre-edit act, performed from committed artifacts. Every field here is read from the committed frontier, the behaviour catalog, the committed coupled scenario set or the committed coupled baseline. Nothing here decides what a slice should do; it says how big each one is, which is what 'unbudgeted' was the absence of."
 }

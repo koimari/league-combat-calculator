@@ -612,7 +612,19 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Fourteen declared ``(family, lane)`` pairs on the receipt walk have no
+# Thirteen now, and the row that left is why the count is written as a derived
+# length rather than restated in prose anywhere below.  ``delta_amp`` retired
+# on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
+# fourteen and rules its retiring act to be the walk-side delivery of the
+# holder's static, pair-local amplifiers, and
+# ``interpreters.delta_amp.WALK_INTERPRETER`` performs it — so the receipt
+# walk reads that family's declaration through its own lane, ``INTERPRETERS``
+# holds the ruled key, and a row deferring a gap the tree no longer holds
+# would fail the gate below rather than pass it.  The debt is one slice
+# smaller because the tree changed, which is the only reason a deferral count
+# may ever move.
+#
+# Declared ``(family, lane)`` pairs on the receipt walk that have no
 # interpreter and cannot get one in this phase: their numbers arrive through
 # the pair engine's timed rows today, and only Phase 4's S3 — one kernel, five
 # views, with the ``OutcomeLedger`` and its end-of-walk projection — can move
@@ -649,7 +661,6 @@ COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
     "combat_state",
     "crit_profile",
     "damage_routing",
-    "delta_amp",
     "on_hit_strike",
     "opening_defense",
     "periodic",

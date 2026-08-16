@@ -752,10 +752,26 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
     assert any("is half-landed" in failure for failure in failures)
 
 
+def _some_deferral_key(receipt) -> str:
+    """One committed deferral row, read rather than named.
+
+    Three reds below drive the gate through *a* row, and which row is not the
+    thing any of them tests.  Naming one made them break on the commit that
+    retired it — which is a true report about a fixture and not about the
+    gate — so the row is read, and the reads stay correct for as long as
+    there is a deferral to defer.
+    """
+    rows = receipt["counters"]["counter_4"]["deferrals"]["rows"]
+    assert rows, "the frontier records no deferral rows to drive the gate through"
+    return sorted(rows)[0]
+
+
 def test_a_moved_or_missing_deferral_set_fails_the_gate() -> None:
     """D-40: the rows are diff-gated exactly like the exclusions are."""
     receipt = _receipt()
-    receipt["counters"]["counter_4"]["deferrals"]["rows"].pop("delta_amp/receipt_walk")
+    receipt["counters"]["counter_4"]["deferrals"]["rows"].pop(
+        _some_deferral_key(receipt)
+    )
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
     assert any("committed deferral set differs" in failure for failure in failures)
 
@@ -876,7 +892,7 @@ def test_a_row_whose_stage_shipped_without_saying_so_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = "delta_amp/receipt_walk"
+    key = _some_deferral_key(committed)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["overdue"] = False

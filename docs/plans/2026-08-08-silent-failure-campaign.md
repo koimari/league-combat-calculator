@@ -816,7 +816,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:7979`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
    > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:7509`);
-   > `survival.pricing.price_declared_packet` (`pricing.py:105`) has neither. So
+   > `survival.pricing.price_declared_packet` (`pricing.py:145`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
    > holds it. The same lane measured a second thing: a retired family's `PAIRED` walk half, declared

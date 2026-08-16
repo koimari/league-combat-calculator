@@ -38,6 +38,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from ..ability_spec import AttackClass
 from ..item_behavior import (
@@ -71,6 +72,7 @@ from ..item_behavior import (
     chain_rank,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_effects import resolve_damage_effects
 from ..value_ref import resolve
 
 # The field names a delta-amp rule compiles to.  A slot's magnitude is a
@@ -216,6 +218,55 @@ def _magnitude_fields(
     return (field(AMP_FRACTION_FIELD, magnitude_fraction(magnitude, ctx)),)
 
 
+def _amp_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """Every number one amp rule contributes, stamped for the asking lane.
+
+    The fraction always; the window bounds when the activation declares an
+    absolute one.  This is the single path from a declaration to a number an
+    engine uses — a caller that resolved a `ValueRef` itself would be a
+    second reader of the same declaration — and the *lane* is the only thing
+    that varies between the two interpreters below.  Sharing the body rather
+    than spelling it twice is what makes "the walk reads the same
+    declaration the pair engine reads" a property of the tree instead of a
+    claim two functions could drift out of.
+    """
+    payload = rule.payload
+    if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
+        raise DeltaAmpInterpretationError(f"{rule.mechanic_id} is not a delta-amp rule")
+
+    def field(name: str, value: float) -> KernelField:
+        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+
+    fields = list(_magnitude_fields(payload.magnitude, ctx, field))
+    if isinstance(payload.activation, AbsoluteWindow):
+        fields.append(
+            field(WINDOW_START_FIELD, resolve(payload.activation.start, ctx.level))
+        )
+        fields.append(
+            field(WINDOW_END_FIELD, resolve(payload.activation.end, ctx.level))
+        )
+    if isinstance(payload.activation, LivePredicate):
+        # The *threshold* is a sourced number and compiles here; the pool it
+        # is compared against does not exist yet and must not be guessed at
+        # build time.  That asymmetry is what ``requires_live_pool`` names,
+        # and it is why the comparison lives in ``live_predicate_holds`` and
+        # not in a field.
+        fields.append(
+            field(
+                LIVE_THRESHOLD_FIELD, resolve(payload.activation.threshold, ctx.level)
+            )
+        )
+    if isinstance(payload.activation, TriggerWindow):
+        fields.append(
+            field(
+                WINDOW_DURATION_FIELD, resolve(payload.activation.duration, ctx.level)
+            )
+        )
+    return tuple(fields)
+
+
 class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
     """The pair engine's answer for the ``delta_amp`` family."""
 
@@ -223,58 +274,47 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Every number this rule contributes, resolved against the registries.
+        """This rule's numbers, resolved for the one-attacker engine."""
+        return _amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
 
-        The fraction always; the window bounds when the activation declares
-        an absolute one.  This is the single path from a declaration to a
-        number the engine uses — a caller that resolved a `ValueRef` itself
-        would be a second reader of the same declaration.
-        """
-        payload = rule.payload
-        if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
-            raise DeltaAmpInterpretationError(
-                f"{rule.mechanic_id} is not a delta-amp rule"
-            )
 
-        def field(name: str, value: float) -> KernelField:
-            return KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
+class DeltaAmpWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the ``delta_amp`` family.
 
-        fields = list(_magnitude_fields(payload.magnitude, ctx, field))
-        if isinstance(payload.activation, AbsoluteWindow):
-            fields.append(
-                field(WINDOW_START_FIELD, resolve(payload.activation.start, ctx.level))
-            )
-            fields.append(
-                field(WINDOW_END_FIELD, resolve(payload.activation.end, ctx.level))
-            )
-        if isinstance(payload.activation, LivePredicate):
-            # The *threshold* is a sourced number and compiles here; the
-            # pool it is compared against does not exist yet and must not be
-            # guessed at build time.  That asymmetry is what
-            # ``requires_live_pool`` names, and it is why the comparison
-            # lives in ``live_predicate_holds`` and not in a field.
-            fields.append(
-                field(
-                    LIVE_THRESHOLD_FIELD,
-                    resolve(payload.activation.threshold, ctx.level),
-                )
-            )
-        if isinstance(payload.activation, TriggerWindow):
-            fields.append(
-                field(
-                    WINDOW_DURATION_FIELD,
-                    resolve(payload.activation.duration, ctx.level),
-                )
-            )
-        return tuple(fields)
+    The half the umbrella's Amendment M, Ruling 1 rules as this family's
+    retirement act.  Before it, the coupled walk read no amp declaration at
+    all: the holder's own static, pair-local amplifiers reached it already
+    folded into ``participant_timeline._pair_run_fight``'s rows, which is
+    what ``delta_amp/receipt_walk``'s deferral said in its own words.  A walk
+    that prices a family's declaration itself has nowhere to take an amp from
+    under that arrangement, and would silently drop it — so the walk reads
+    the declaration through this interpreter and composes the result onto the
+    packet it prices (:func:`resolve_static_holder_amps`,
+    ``survival.pricing.DeclaredPacket``).
+
+    It compiles the same fields the pair interpreter does, stamped with its
+    own lane.  Two lanes reading one declaration is the shape D-60 asks for;
+    two lanes computing one number from two bodies is the shape it forbids.
+    """
+
+    FAMILY = RuleFamily.DELTA_AMP
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """This rule's numbers, resolved for the coupled roster walk."""
+        return _amp_fields(rule, ctx, EngineLane.RECEIPT_WALK)
 
 
 PAIR_INTERPRETER = DeltaAmpPairInterpreter()
+WALK_INTERPRETER = DeltaAmpWalkInterpreter()
+
+#: Which interpreter answers for a lane.  The two resolvers below take a lane
+#: rather than an interpreter, so a caller names the engine it is pricing for
+#: and never reaches past the registry to pick a compiler.
+_INTERPRETER_OF_LANE: Mapping[EngineLane, Any] = {
+    EngineLane.PAIR_ENGINE: PAIR_INTERPRETER,
+    EngineLane.RECEIPT_WALK: WALK_INTERPRETER,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -646,18 +686,27 @@ def resolve_part_amp(
     fight_duration_seconds: float,
     target_bonus_health: float,
     holder_is_melee: bool,
+    lane: EngineLane = EngineLane.PAIR_ENGINE,
 ) -> PartAmp | None:
     """The per-part amp for one attack class, or ``None`` if nobody has it.
 
     ``None`` is an answer and not a zero, exactly as it is for a chain slot:
     no holder declares a per-part amp for this damage, so no rule ran and
     there is no multiplier to report.
+
+    ``lane`` names the engine asking, and selects the interpreter that
+    answers.  The two compile identical values and differ only in the lane
+    their fields carry, so the coupled walk's reading of an amp declaration
+    is the pair engine's reading — which is the point: the walk has to be
+    able to deliver the holder's amps *itself* without becoming a second
+    place the amp is computed (D-60).
     """
     rules = part_amp_rules(owners, attack_class)
     if not rules:
         return None
+    interpreter = _INTERPRETER_OF_LANE[lane]
     compiled = tuple(
-        PAIR_INTERPRETER.compile(
+        interpreter.compile(
             rule,
             build_context(
                 rule.owner,
@@ -670,6 +719,133 @@ def resolve_part_amp(
         for rule in rules
     )
     return PartAmp(attack_class=attack_class, rules=rules, fields=compiled)
+
+
+def _armed_part_multiplier(
+    owners: Sequence[str],
+    attack_class: AttackClass,
+    *,
+    armed: bool,
+    holder_stats: Mapping[str, float],
+    build: Mapping[str, Any],
+) -> tuple[float, str]:
+    """The walk's reading of one part amp: its multiplier and its holder.
+
+    ``armed`` is the caller's answer to whether the amp's activation is up at
+    all — an item active nobody triggered amplifies nothing — and an unarmed
+    build, or one holding no such amp, gets ``(1.0, "")``: a multiplier that
+    changes no number, and no holder to attribute it to.  That pairing is
+    deliberate, so an amp can never be reported against an item whose window
+    did not run, which is the same convention ``damage._part_amp`` states for
+    the pair engine.  Both reach the number through :func:`resolve_part_amp`,
+    each naming its own lane — one compiler, two engines asking.
+    """
+    if not armed:
+        return 1.0, ""
+    amp = resolve_part_amp(owners, attack_class, lane=EngineLane.RECEIPT_WALK, **build)
+    if amp is None:
+        return 1.0, ""
+    return amp.multiplier(holder_stats), amp.owner
+
+
+@dataclass(frozen=True, slots=True)
+class StaticHolderAmps:
+    """The holder's own static, pair-local amplifiers, resolved for one build.
+
+    Three numbers, and the umbrella's Amendment M measured that they come
+    from **two** declaration shapes rather than one, which is why this type
+    exists instead of a bare float per caller.  ``ability`` and ``basic`` are
+    :class:`PartAmpRule` declarations of this family, selected by the attack
+    class they price.  ``magic`` is not: it is Abyssal Mask's Unmake, family
+    ``ALLY_PACKET``, applied by ``damage._mitigate`` on the defender's side
+    and occupying no chain slot — which the catalog says in its own words
+    through ``DELTA_AMP_UNMIGRATED_TAGS``.  A reader who went looking for the
+    magic amp among the ``delta_amp`` declarations would find nothing and
+    drop the term, and dropping it is the exact deletion Amendment M,
+    Ruling 1 exists to forbid; so both readings meet here, once.
+
+    "Static" and "pair-local" are the scope: these are the amplifiers the
+    holder's own build brings to its own damage, resolved at build time and
+    unchanging through the fight.  The timed, roster-wide modifiers a
+    ``damage_modifier`` packet carries are a different thing, arrive through
+    ``ActionKind.DAMAGE_MODIFIER``, and are not composed here.
+    """
+
+    magic: float = 1.0
+    ability: float = 1.0
+    basic: float = 1.0
+    ability_owner: str = ""
+    basic_owner: str = ""
+
+    def factor_for(self, damage_type: str, attack_class: AttackClass) -> float:
+        """What one packet of this class and this delivery is multiplied by.
+
+        The pair engine's own order, read off the two sites that apply these
+        amps: ``damage._mitigate`` multiplies magic damage by the magic amp
+        whatever delivered it, and the part amp multiplies on top of that —
+        by the ability amp for an ability-delivered part
+        (``damage._add_item_proc_damage``) and by the basic amp for a swing
+        (``damage._mitigate_basic_attack_swing``).  ``AttackClass.OTHER``
+        takes neither part amp, because neither declaration's typing claims
+        it.
+        """
+        factor = self.magic if damage_type == "magic" else 1.0
+        if attack_class is AttackClass.ABILITY:
+            factor *= self.ability
+        elif attack_class is AttackClass.BASIC_ATTACK:
+            factor *= self.basic
+        return factor
+
+
+def resolve_static_holder_amps(
+    items: Sequence[Mapping[str, Any]],
+    *,
+    holder_stats: Mapping[str, float],
+    ability_amp_armed: bool,
+    **build: Any,
+) -> StaticHolderAmps:
+    """One holder's three static amps, read from the declarations that produce them.
+
+    The reading the **coupled walk** makes so it can deliver the holder's amps
+    itself rather than receiving them pre-multiplied inside another engine's
+    rows — Amendment M, Ruling 1's retiring act for this family, in one
+    function.
+
+    ``build`` is :func:`resolve_part_amp`'s own build context — level, fight
+    duration, target bonus health, holder range — forwarded rather than
+    re-listed, so a fact the compiler starts needing arrives here without an
+    edit and a fact it stops needing cannot linger.
+
+    ``ability_amp_armed`` is the caller's answer to whether the ability amp's
+    window is up, because that amp rides an item active and a build that never
+    triggered it amplifies nothing — the same question
+    ``damage._resolve_combat_state`` answers from ``actualizer_active_until``.
+    It is a required argument rather than a defaulted one: guessing it would
+    arm an amp nobody triggered, which is a number invented rather than
+    delivered.
+    """
+    owners = [str(item.get("name", "")) for item in items]
+    ability, ability_owner = _armed_part_multiplier(
+        owners,
+        AttackClass.ABILITY,
+        armed=ability_amp_armed,
+        holder_stats=holder_stats,
+        build=build,
+    )
+    basic, basic_owner = _armed_part_multiplier(
+        owners,
+        AttackClass.BASIC_ATTACK,
+        armed=True,
+        holder_stats=holder_stats,
+        build=build,
+    )
+    return StaticHolderAmps(
+        magic=resolve_damage_effects(items).magic_amp,
+        ability=ability,
+        basic=basic,
+        ability_owner=ability_owner,
+        basic_owner=basic_owner,
+    )
 
 
 def slot_rules(owners: Sequence[str], slot: AmpChainSlot) -> tuple[BehaviorRule, ...]:
@@ -737,11 +913,15 @@ __all__ = [
     "AmpSlot",
     "DeltaAmpInterpretationError",
     "DeltaAmpPairInterpreter",
+    "DeltaAmpWalkInterpreter",
     "PAIR_INTERPRETER",
+    "WALK_INTERPRETER",
     "PartAmp",
+    "StaticHolderAmps",
     "magnitude_fraction",
     "part_amp_rules",
     "resolve_part_amp",
     "resolve_slot",
+    "resolve_static_holder_amps",
     "slot_rules",
 ]

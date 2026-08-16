@@ -126,7 +126,7 @@
       "counts": "declared (family, lane) pairs with no interpreter",
       "deferrals": {
         "by_lane": {
-          "receipt_walk": 14
+          "receipt_walk": 13
         },
         "rows": {
           "active_cast/receipt_walk": {
@@ -169,13 +169,6 @@
             "overdue": true,
             "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
-            "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
-          },
-          "delta_amp/receipt_walk": {
-            "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: the fourteen rows sized as the fourteen slices Amendment F says they are, each with the qualifying population R-20's second half requires before its first src/ edit, and each now carrying the settled retiring act Amendment K rules. Eleven are eleven behaviour-changing slices no phase has budgeted. For the three the resolver feeds, INTERPRETERS already holds the (family, DEFENSE_RESOLVER) key, so the ruled act is performed and what stands is the receipt-walk lane the table still declares -- which no lane may edit from inside the counter it moves (D-40).",
-            "overdue": true,
-            "overdue_because": "the campaign range carries the slice tag 'campaign-close' from 1e209e2 and its declared successor 'campaign-close-report' from 86aa1d2, so the stage this row defers to has shipped and the campaign ran on past it",
-            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
             "recorded_stage": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"
           },
           "on_hit_strike/receipt_walk": {
@@ -245,7 +238,6 @@
         "damage_routing/compiled_score_walk",
         "damage_routing/receipt_walk",
         "delta_amp/compiled_score_walk",
-        "delta_amp/receipt_walk",
         "on_hit_strike/compiled_score_walk",
         "on_hit_strike/receipt_walk",
         "opening_defense/compiled_score_walk",
@@ -357,15 +349,8 @@
             ]
           },
           "delta_amp/compiled_score_walk": {
-            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "reason": "the compiled score walk reads no amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
-            "via": [
-              "pair_engine"
-            ]
-          },
-          "delta_amp/receipt_walk": {
-            "reason": "neither walk reads an amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
-            "retires_at": "Closeout 2026-08-15 \u2014 the declared lane's interpreter",
             "via": [
               "pair_engine"
             ]
@@ -483,7 +468,7 @@
       },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 30
+      "value": 29
     }
   },
   "exclusions": {
@@ -709,9 +694,9 @@
       "counter_4/receipt_walk": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
-        "deferred": 14,
+        "deferred": 13,
         "gap": 0,
-        "gross": 14,
+        "gross": 13,
         "measured": 0,
         "met": true,
         "owed_to": "Closeout 2026-08-15 \u2014 the declared lane's interpreter"

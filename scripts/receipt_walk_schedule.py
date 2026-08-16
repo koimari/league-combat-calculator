@@ -1,4 +1,4 @@
-"""Counter 4's fourteen receipt-walk deferrals, sized as slices.
+"""Counter 4's outstanding receipt-walk deferrals, sized as slices.
 
 Umbrella criterion 7 is partially discharged, and Amendment F says why in
 terms: the fourteen ``(family, RECEIPT_WALK)`` rows defer to a stage that
@@ -12,7 +12,8 @@ edit: where an occurrence count is not knowable in advance, the slice declares
 the *population* instead, enumerated from committed artifacts -- the baseline
 files, the scenario set, the registries.
 
-So this file is fourteen declared populations, every field derived:
+So this file is one declared population per still-deferred family, every field
+derived:
 
 * the family's declarations and their owners, read from the behaviour catalog;
 * which committed coupled scenarios put one of those owners on a participant,
@@ -40,18 +41,26 @@ numbers reach the walk through exactly one interpreter instead of arriving
 already priced by the pair engine.  So this file derives each row's act from
 its route, and every row has a settled one.  What each row still publishes for
 itself is whether that act has been **performed**: ``INTERPRETERS`` holds the
-ruled key for the three the resolver feeds and not for the eleven, which is
-the one thing about an act that can be false and so the one worth a field.
-``delta_amp``, which declares the
-pair engine in its structured route while its prose names a second one, is
-answered by the same sentence: the declaration is the route (D-40), so its act
-is the receipt-walk one, and the prose mismatch is recorded beside it as a
-behaviour claim owing its own slice rather than a schedule's edit.
+ruled key for the three the resolver feeds and not for the rest, which is the
+one thing about an act that can be false and so the one worth a field.
+
+``delta_amp`` was the fourteenth row and is the first to leave.  Its structured
+route declared the pair engine while its prose named a second one, which
+Amendment K answered without correcting -- the declaration is the route (D-40),
+so the correction was a behaviour claim owing its own slice.  That slice landed
+on 2026-08-15 under Amendment M, Ruling 1, which ordered this family first and
+ruled its act to be the walk-side delivery of the holder's static, pair-local
+amplifiers; the receipt walk now reads the family's declaration through
+``interpreters.delta_amp.WALK_INTERPRETER``, the frontier stopped deferring the
+row, and the row left this file with it.  The mismatch it carried is kept as
+an answered record rather than deleted, because a mismatch that is only
+deleted is one no reader can check was ever real.
 
 **What this file is not.**  It is not a retirement, and no row here retires
-anything -- the deferrals stand, ``overdue`` and gated, exactly as
-Amendment F leaves them.  It does not re-date a row, re-scope the debt, or
-read the debt as smaller: fourteen rows in, fourteen slices out.
+anything -- every row still standing is ``overdue`` and gated, exactly as
+Amendment F leaves it.  It does not re-date a row, re-scope the debt, or read
+the debt as smaller: one row out is one slice landed, never one debt
+re-counted.
 """
 
 from __future__ import annotations
@@ -304,8 +313,8 @@ def schedule() -> dict[str, Any]:
     return {
         "artifact": "receipt_walk_retirement_schedule",
         "rule": (
-            "Umbrella criterion 7's fourteen receipt-walk deferrals, sized as "
-            "the fourteen slices Amendment F says they are. One row per "
+            "Umbrella criterion 7's outstanding receipt-walk deferrals, sized "
+            "as the slices Amendment F says they are. One row per "
             "family: its declarations and their owners, the committed coupled "
             "scenarios that put one of those owners on a participant, the size "
             "of each such scenario's committed snapshot, and the "
@@ -314,13 +323,18 @@ def schedule() -> dict[str, Any]:
         ),
         "gate": "tests/test_receipt_walk_schedule.py",
         "what_this_is_not": (
-            "It is not a retirement and no row here retires anything: the "
-            "deferrals stand, overdue and gated, exactly as Amendment F leaves "
-            "them. It does not re-date a row, re-scope the debt or read it as "
-            "smaller -- fourteen rows in, fourteen slices out -- and it "
-            "registers no interpreter, because an interpreter registered to "
-            "move a counter without changing what the walk prices is a counter "
-            "driven to zero by editing what it counts."
+            "It is not a retirement and no row here retires anything: every "
+            "row still standing is overdue and gated, exactly as Amendment F "
+            "leaves it. It does not re-date a row, re-scope the debt or read "
+            "it as smaller -- one row out is one slice landed, never one debt "
+            "re-counted -- and it registers no interpreter, because an "
+            "interpreter registered to move a counter without changing what "
+            "the walk prices is a counter driven to zero by editing what it "
+            "counts. Its row set is read from the frontier's own deferrals, "
+            "so a row leaves here only once the tree has stopped deferring "
+            "it: delta_amp left on 2026-08-15, when Amendment M, Ruling 1's "
+            "act landed and the receipt walk began reading that family's "
+            "declaration through its own interpreter."
         ),
         "why_a_lane_may_write_this": (
             "R-20's second half makes enumerating a qualifying population a "
@@ -354,21 +368,31 @@ def schedule() -> dict[str, Any]:
             "stops owing the walk an answer, and reading fourteen as eleven."
         ),
         "a_second_and_smaller_mismatch": (
-            "delta_amp/receipt_walk declares via = ['pair_engine'], so it is "
-            "counted above as taking Amendment F's act as written, while its "
-            "own reason names two routes -- 'a holder-side amp reaches it "
+            "ANSWERED 2026-08-15, and kept because a mismatch that is only "
+            "deleted is one no reader can check was ever real. "
+            "delta_amp/receipt_walk declared via = ['pair_engine'], so it was "
+            "counted here as taking Amendment F's act as written, while its "
+            "own reason named two routes -- 'a holder-side amp reaches it "
             "already priced inside the pair engine's damage rows, and a "
             "cross-participant one as the damage_modifier packet "
             "item_support_effects emits, which survival/transitions stages as "
-            "an ActionKind.DAMAGE_MODIFIER' -- and says neither of them is the "
-            "rule. The structured route and the prose beside it therefore "
-            "describe different things, and only the structured one is gated. "
-            "Amendment K answers it in the same sentence as the three: the "
-            "declaration is the route (D-40), so this row's act is the "
-            "receipt-walk one, and correcting via would be a behaviour claim "
-            "owing its own slice rather than a schedule's edit. It stays "
-            "recorded here because a prose sentence that disagrees with a gated "
-            "declaration is a thing a reader should be able to find."
+            "an ActionKind.DAMAGE_MODIFIER' -- and said neither of them was "
+            "the rule. The structured route and the prose beside it therefore "
+            "described different things, and only the structured one was "
+            "gated. Amendment K answered it in the same sentence as the "
+            "three: the declaration is the route (D-40), so the row's act was "
+            "the receipt-walk one, and correcting the reason would be a "
+            "behaviour claim owing its own slice rather than a schedule's "
+            "edit. That slice has landed. Amendment M, Ruling 1 ordered this "
+            "family first of the fourteen and ruled its act to be the "
+            "walk-side delivery of the holder's static, pair-local "
+            "amplifiers; interpreters.delta_amp.WALK_INTERPRETER performs it, "
+            "the receipt walk now reads the amp declaration through its own "
+            "lane, and the row retired -- so the mismatched reason is gone "
+            "with the row it belonged to, and the compiled-score-walk row "
+            "that shared it now names that walk alone (R-36). No family row "
+            "above records this mismatch any more, which is the only correct "
+            "state once the row it described has retired."
         ),
         "scheduled_slices": len(slices),
         "slices_whose_retiring_act_is_amendment_f_as_written": len(slices)
@@ -381,7 +405,7 @@ def schedule() -> dict[str, Any]:
             "declares a receipt-walk lane the table has no interpreter for, "
             "and D-40 forbids editing that table from inside the counter it "
             "moves. So this list is the count of acts performed, never a "
-            "count of debts paid -- fourteen rows in, fourteen slices out. It "
+            "count of debts paid -- rows in, slices out, one for one. It "
             "is published per row because it is the one thing about an act "
             "that can be false, and it replaces a flag that said settled on "
             "every row and so could not tell a reader anything."

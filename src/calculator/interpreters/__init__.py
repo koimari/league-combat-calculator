@@ -278,6 +278,7 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): damage_routing.PAIR_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): delta_amp.WALK_INTERPRETER,
     (
         RuleFamily.STAT_DERIVATION,
         EngineLane.PAIR_ENGINE,
@@ -396,22 +397,23 @@ _PROFILE_FED = (
     "interpreter — survival/compile.py prices it against the striker's own "
     "resistances — so neither half arrives as the rule"
 )
-_PAIR_PRICED_OR_PACKET_FED = (
-    "neither walk reads an amp declaration: a holder-side amp reaches it "
-    "already priced inside the pair engine's damage rows, and a cross-"
-    "participant one as the damage_modifier packet item_support_effects "
-    "emits, which survival/transitions stages as an "
-    "ActionKind.DAMAGE_MODIFIER — two routes, neither of them the rule"
+_COMPILED_PAIR_PRICED_OR_PACKET_FED = (
+    "the compiled score walk reads no amp declaration: a holder-side amp "
+    "reaches it already priced inside the pair engine's damage rows, and a "
+    "cross-participant one as the damage_modifier packet item_support_effects "
+    "emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER"
+    " — two routes, neither of them the rule"
 )
 
-# One row per unserved pair a declaration reaches.  ``delta_amp``'s compiled
-# lane was absent while every amp rule carried its own ``ReceiptOnly`` (the
-# stronger per-rule form, D-101) and could not have landed sooner, since D-92
-# refuses a row no declaration reaches; H5's stage flipped those rules, so
-# this row is now all that stands between that lane and an unreceipted zero.
-# The receipt walk's rows are counter 4's fourteen deferrals; the compiled
-# lane's rows are not deferrals.  Neither carries a stage — see UnservedLane.
-_AMP_LANE = UnservedLane(_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
+# One row per unserved pair a declaration reaches, carrying no stage — see
+# UnservedLane.  ``delta_amp``'s compiled lane is all that stands between that
+# lane and an unreceipted zero since H5's stage made those rules compilable
+# (D-101, D-92).  Its receipt-walk twin is gone — Amendment M, Ruling 1 rules
+# this family first of the fourteen and its act to be the walk-side delivery
+# of the holder's static amps, which ``DeltaAmpWalkInterpreter`` performs —
+# and the shared reason went with it, since it opened "neither walk reads an
+# amp declaration" and a row leaving that behind would contradict the tree.
+_AMP_LANE = UnservedLane(_COMPILED_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
@@ -466,7 +468,6 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         reason=_TEMPLATE_FED,
         via=(EngineLane.RECEIPT_WALK,),
     ),
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): _AMP_LANE,
     (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK): _AMP_LANE,
 }
 

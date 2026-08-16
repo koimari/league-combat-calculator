@@ -25,10 +25,25 @@ levels because two callers want different halves:
   the armed delta is simply part of the resistance the raw value meets
   rather than a second factor applied to a mitigated one.
 
+**The declared amp term.**  The pair engine applies the holder's own static,
+pair-local amplifiers to the numbers it prices — ``damage._mitigate``
+multiplies magic damage by the holder's magic amp, and the per-part amps
+multiply the ability and basic-attack parts on top of it.  A walk that priced
+a family's declaration without them would delete a measured contribution from
+every total that holds it, which is worse than the ratio path it replaces
+because that path at least refuses by name.  So a :class:`DeclaredPacket`
+carries ``holder_amp``, composed at build time by
+``interpreters.delta_amp.resolve_static_holder_amps`` and applied
+**pre-mitigation**: the composed value is mitigated once rather than a
+mitigated number being re-multiplied.  Umbrella Amendment M, Ruling 1
+(2026-08-15), which is also this term's ordering.
+
 **Nothing declares a price yet.**  Every family still reaches the walk as the
 pair engine's timed rows, and this path stays inert until a family's
 retirement slice hands it a :class:`DeclaredPacket` — which is what keeps
-this stage a re-spelling rather than a re-pricing.
+this stage a re-spelling rather than a re-pricing.  The amp term is armed on
+the same terms: it reaches whatever the first retiring family hands it, and
+nothing before that.
 """
 
 from __future__ import annotations
@@ -45,11 +60,36 @@ class DeclaredPacket(NamedTuple):
     much as for the receipt: a declaration the walk could not price has to
     be able to name what went unpaid, because the alternative reading of an
     unpriced packet is an anonymous zero nobody notices.
+
+    ``holder_amp`` is the **declared amp term** the umbrella's Amendment M,
+    Ruling 1 adds to this stage: the holder's own static, pair-local
+    amplifiers, composed for this packet's damage class and delivery by
+    ``interpreters.delta_amp.StaticHolderAmps.factor_for`` and resolved at
+    build time from the declarations that produce them.  It rides on the
+    packet rather than being folded into ``raw_amount`` by each family,
+    because a family that pre-multiplied its own declaration would be an
+    undeclared second producer of one number (D-60).  ``1.0`` is a holder
+    with no amp armed, which is a measured answer and not a default nobody
+    asked for — the amps are resolved for every priced packet, and a
+    resolution that found none is what ``1.0`` means.
     """
 
     raw_amount: float
     damage_type: str
     rule_id: str
+    holder_amp: float = 1.0
+
+    @property
+    def amped_raw(self) -> float:
+        """The declaration composed with the holder's amps, still unmitigated.
+
+        The composition is **pre-mitigation**, which is the ordering
+        Amendment M, Ruling 1 rules and the reason the term rides here rather
+        than being applied to the priced number: the composed value is
+        mitigated once, instead of a mitigated number being re-multiplied by
+        an amplifier the way a ratio path would have to do it.
+        """
+        return float(self.raw_amount) * float(self.holder_amp)
 
 
 #: The damage classes a resistance answers for.  ``true`` is deliberately
@@ -127,7 +167,7 @@ def price_declared_packet(
     damage_type = packet.damage_type
     if damage_type == "true":
         return DeclaredPrice(
-            mitigate_declared(packet.raw_amount, damage_type, 0.0), None
+            mitigate_declared(packet.amped_raw, damage_type, 0.0), None
         )
     if damage_type not in MITIGATED_DAMAGE_TYPES:
         return DeclaredPrice(None, None, UNPRICEABLE_DAMAGE_TYPE)
@@ -139,7 +179,7 @@ def price_declared_packet(
         return DeclaredPrice(None, None, NO_RESISTANCE_PUBLISHED)
     resistance = float(baseline) + max(0.0, float(delta or 0.0))
     return DeclaredPrice(
-        mitigate_declared(packet.raw_amount, damage_type, resistance), resistance
+        mitigate_declared(packet.amped_raw, damage_type, resistance), resistance
     )
 
 

@@ -504,6 +504,18 @@ def apply_declared_price(
         declared_price={
             "rule": packet.rule_id,
             "raw": round(float(packet.raw_amount), 6),
+            # The declared amp term, published beside the raw value rather
+            # than only inside the amount: a receipt that showed only the
+            # product could not tell a big declaration from an amplified
+            # one, and the whole reason the term rides the packet is that
+            # somebody has to be able to see it (Amendment M, Ruling 1).
+            # Unrounded, and the only unrounded number in this row: the
+            # others are walk-accumulated damage, where six decimals is the
+            # noise floor, while this is a build-time fold of two or three
+            # sourced fractions that a reader compares against the
+            # declaration itself.  Rounding it would also raise counter 6's
+            # kernel ratchet, which is declared non-increasing (D-71).
+            "holder_amp": float(packet.holder_amp),
             # ``None`` for true damage, which met no resistance — a receipt
             # that spelled that as 0.0 would read as "mitigated at zero
             # armour", a different and checkable claim.

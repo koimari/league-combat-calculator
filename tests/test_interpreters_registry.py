@@ -441,9 +441,14 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
     the dated table — the flip made those rules compilable, so the per-rule
     receipt that used to excuse the lane is gone and a route had to be named
     for it instead.  That makes the narrowing below load-bearing rather than
-    incidental: the stub's table deliberately holds only the receipt-walk
-    row, so the compiled lane reaches the per-rule branch this test exists
-    for, which no live declaration reaches any more.
+    incidental: the stub's tables serve every lane but the compiled one, so
+    it reaches the per-rule branch this test exists for, which no live
+    declaration reaches any more.
+
+    The narrowing serves the receipt walk from the live registration rather
+    than excusing it from the dated table, because Amendment M, Ruling 1
+    retired that row: the family's walk interpreter landed, and a fixture
+    excusing a lane the tree serves would be testing a tree nobody has.
     """
     assert (
         RuleFamily.DELTA_AMP,
@@ -466,22 +471,16 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
         interpreters,
         "INTERPRETERS",
         {
-            (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): interpreters.INTERPRETERS[
-                (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE)
+            (RuleFamily.DELTA_AMP, lane): interpreters.INTERPRETERS[
+                (RuleFamily.DELTA_AMP, lane)
             ]
+            for lane in (EngineLane.PAIR_ENGINE, EngineLane.RECEIPT_WALK)
         },
     )
-    monkeypatch.setattr(
-        interpreters,
-        "UNSERVED_LANE_RECEIPTS",
-        {
-            (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): (
-                interpreters.UNSERVED_LANE_RECEIPTS[
-                    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK)
-                ]
-            )
-        },
-    )
+    # Empty rather than narrowed: with both served lanes registered, every
+    # dated row would be one no declaration in this one-rule tree reaches,
+    # which the reverse direction of the check reports as stale.
+    monkeypatch.setattr(interpreters, "UNSERVED_LANE_RECEIPTS", {})
     interpreters.validate_registrations()
 
     _only_rule(monkeypatch, _StubRule(RuleFamily.DELTA_AMP, Compilable()))

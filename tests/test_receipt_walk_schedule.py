@@ -193,10 +193,20 @@ def test_whether_a_ruled_act_is_already_performed_is_read_from_the_registry() ->
 
 
 def test_the_schedule_retires_nothing() -> None:
-    """Sizing a debt may not become paying it."""
+    """Sizing a debt may not become paying it.
+
+    The count it may not restate is no longer a literal.  A row leaves this
+    file when the *tree* stops deferring it — the row set is read from the
+    frontier's own deferrals — so a schedule that named its own size would go
+    stale on the first retirement and would have to be re-typed by the lane
+    that landed it, which is the shape D-40 forbids.  What is pinned instead
+    is the sentence that says a departure is a landed slice and never a
+    re-count.
+    """
     block = schedule()
     assert "no row here retires anything" in block["what_this_is_not"]
-    assert "fourteen rows in, fourteen slices out" in block["what_this_is_not"]
+    assert "one row out is one slice landed" in block["what_this_is_not"]
+    assert "never one debt re-counted" in block["what_this_is_not"]
     for entry in block["families"].values():
         assert "retired" not in entry
 

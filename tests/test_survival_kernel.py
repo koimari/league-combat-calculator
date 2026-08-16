@@ -29,6 +29,7 @@ when that producer is a second packet on an item some fixture already equips
 """
 
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -46,7 +47,14 @@ import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.interpreters import INTERPRETERS, periodic
+from src.calculator.ability_spec import AttackClass
+from src.calculator.interpreters import (
+    INTERPRETERS,
+    active_cast,
+    cast_proc,
+    delta_amp,
+    periodic,
+)
 from src.calculator.interpreters.reactive import thorns_effects
 from src.calculator.item_behavior import EngineLane, RuleFamily
 from src.calculator.item_effects import DamageInputs
@@ -1739,13 +1747,20 @@ class TestTheWalkPricesADeclaredPacketItself:
         assert row["damage"] == round(apply_resistance(252.0, DECLARED_SUBJECT_MR), 6)
 
     def test_the_receipt_names_the_rule_and_the_resistance_it_met(self):
-        """A priced declaration publishes its arithmetic, not just a total."""
+        """A priced declaration publishes its arithmetic, not just a total.
+
+        The amp term is in the row for the same reason the raw value is: a
+        receipt carrying only the product cannot tell a large declaration
+        from an amplified one, and the whole point of the term riding the
+        packet is that it stays separately readable.
+        """
         row = _walk_one_declared_packet(
             DeclaredPacket(252.0, "magic", "fixture.periodic")
         )
         assert row["declared_price"] == {
             "rule": "fixture.periodic",
             "raw": 252.0,
+            "holder_amp": 1.0,
             "resistance": DECLARED_SUBJECT_MR,
             "amount": round(apply_resistance(252.0, DECLARED_SUBJECT_MR), 6),
         }
@@ -2001,3 +2016,329 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
             ).amount
             != pair
         )
+
+
+# ---------------------------------------------------------------------------
+# The declared amp term — the equivalence fixtures at amp != 1.0
+# ---------------------------------------------------------------------------
+#
+# Amendment L, Ruling 3's fixture above runs on a roster where every static
+# holder amp reads 1.0, which is the case that cannot fail: with no amp armed,
+# a pricer that dropped the term entirely would still reproduce the pair
+# engine exactly.  Amendment M, Ruling 1 therefore requires the fixtures to
+# cover `amp != 1.0`, and names the two cases: an Abyssal Mask holder's item
+# active, and an Abyssal Mask holder's ability-triggered item proc.  Both live
+# on `amp_armed_mage_roster`, the covering scenario the coverage act landed for
+# exactly this — Ahri holding Actualizer (the ability part amp, its Mana Made
+# Real window authored), Abyssal Mask (the magic amp), Hextech Rocketbelt (the
+# active) and Stormsurge (the ability-triggered proc).
+#
+# What the numbers here are is measured, never typed: the raw declaration comes
+# from the family's own interpreter, the resistance and the priced row from the
+# pair engine's own result, and the amps from `resolve_static_holder_amps` —
+# the reading the walk itself makes.
+#
+# THE ORDERING, AND WHAT IT COSTS, MEASURED.  The pair engine applies these
+# amps *after* mitigation: `damage._mitigate` returns
+# `apply_resistance(raw, mr) * magic_amp`, and `_add_item_proc_damage`
+# multiplies that by the ability amp.  Ruling 1 rules the walk's term
+# **pre-mitigation** instead, so the composed value is mitigated once rather
+# than a mitigated number being re-multiplied.  Multiplication is commutative
+# but not associative in IEEE 754, so `(raw * amp) * m` and `(raw * m) * amp`
+# are the same real number rounded at two different points, and on both seeds
+# they land one unit in the last place apart.  That is stated and pinned rather
+# than smoothed over: each fixture asserts both associations exactly, asserts
+# the gap is at most one ULP, and asserts the two agree at the precision every
+# committed baseline grades to — so the ruled ordering is implemented, the
+# difference it costs is a measured number, and neither can drift in silence.
+
+#: Where the golden baselines round.  A difference this size is invisible to
+#: every committed gate, which is the fact the ULP assertions below make
+#: checkable instead of assumed.
+GOLDEN_DECIMALS = 2
+
+
+@dataclass(frozen=True)
+class AmpArmedSeed:
+    """One seed case: a declaring family, its pair row, and the amps on it.
+
+    `attack_class` is how the pair engine delivers the number, which is what
+    selects the part amp — the same question `StaticHolderAmps.factor_for`
+    asks, so the fixture cannot disagree with the composition it is checking
+    about which amps a packet is entitled to.
+    """
+
+    name: str
+    scenario: str
+    breakdown_key: str
+    attack_class: Any
+    raw_of: Any
+
+
+def _amp_armed_fight(seed):
+    """The seed's committed scenario, run through the pair engine.
+
+    The scenario is resolved by name against `golden_snapshot.COUPLED_SCENARIOS`
+    rather than rebuilt here, so a roster edited out from under these fixtures
+    fails to resolve instead of quietly comparing a different fight.
+    """
+    scenario = next(s for s in gs.COUPLED_SCENARIOS if s.name == seed.scenario)
+    parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
+    resolved = resolve_scenario(parsed)
+    params = resolved.target_fight_params[0]
+    result = run_fight(
+        resolved.champion_data, parsed.level, list(resolved.items), params
+    )
+    stats = calculate_total_stats(
+        resolved.champion_data,
+        parsed.level,
+        list(resolved.items),
+        item_options=params.item_options,
+        role=params.role,
+        role_quest_complete=params.role_quest_complete,
+        external_stat_bonuses=params.ally_stat_bonuses,
+    )
+    return parsed, resolved, params, result, stats
+
+
+@lru_cache(maxsize=None)
+def _amp_armed_reading(seed):
+    """One seed's raw value, resistances, amps and pair-engine number.
+
+    Every element is read from an instrument: the declaration's raw value from
+    the declaring family's interpreter, the resistance and the priced row from
+    the pair engine's own result, and the amps from the walk's own reading of
+    the declarations that produce them.
+    """
+    parsed, resolved, params, result, stats = _amp_armed_fight(seed)
+    is_melee = bool(stats.get("is_melee", True))
+    build = {
+        "level": parsed.level,
+        "fight_duration_seconds": float(params.fight_duration_seconds),
+        "target_bonus_health": max(0.0, float(params.target_bonus_health or 0.0)),
+        "holder_is_melee": is_melee,
+    }
+    source = seed.raw_of(
+        [str(item["name"]) for item in resolved.items], seed.breakdown_key, build
+    )
+    raw = source.raw_damage(
+        DamageInputs(
+            champion_stats=stats,
+            level=parsed.level,
+            is_melee=is_melee,
+            target_max_health=float(params.target_health),
+            target_current_health=float(params.target_health),
+        )
+    )
+    amps = delta_amp.resolve_static_holder_amps(
+        list(resolved.items),
+        holder_stats=stats,
+        # The window is authored by the scenario's own item options, which is
+        # what makes this roster the one that arms the ability amp at all.
+        ability_amp_armed=True,
+        **build,
+    )
+    return AmpArmedReading(
+        raw=raw,
+        damage_type=source.damage_type,
+        effective_mr=float(result["effective_mr"]),
+        effective_armor=float(result["effective_armor"]),
+        amps=amps,
+        pair=result["breakdown"][seed.breakdown_key]["total_damage"],
+    )
+
+
+@dataclass(frozen=True)
+class AmpArmedReading:
+    """What one seed measured, so four cases read it by name and not by index."""
+
+    raw: float
+    damage_type: str
+    effective_mr: float
+    effective_armor: float
+    amps: Any
+    pair: float
+
+    def factor(self, seed) -> float:
+        """The composed amp this packet is entitled to, the walk's own reading."""
+        return self.amps.factor_for(self.damage_type, seed.attack_class)
+
+    def pair_association(self, seed) -> float:
+        """The pair engine's own multiply order, reproduced term by term.
+
+        Mitigate first, then each amp in turn onto the already-mitigated
+        number: `_mitigate` applies the magic amp, and the part amp is a
+        second multiplication at the call site (`_add_item_proc_damage` for
+        an ability part, `_mitigate_basic_attack_swing` for a swing).  Folding
+        the two amps together first and multiplying once would be a third
+        association and reproduce neither engine, which is exactly why this
+        is spelled as the sequence the engine performs.
+        """
+        value = apply_resistance(self.raw, self.effective_mr)
+        if self.damage_type == "magic":
+            value *= self.amps.magic
+        if seed.attack_class is AttackClass.ABILITY:
+            value *= self.amps.ability
+        elif seed.attack_class is AttackClass.BASIC_ATTACK:
+            value *= self.amps.basic
+        return value
+
+    def priced(self, seed, *, amped: bool = True):
+        """The walk's price for this seed, with or without the declared term."""
+        packet = DeclaredPacket(
+            self.raw,
+            self.damage_type,
+            f"fixture.{seed.name}",
+            holder_amp=self.factor(seed) if amped else 1.0,
+        )
+        return price_declared_packet(
+            packet,
+            baseline_effective_armor=self.effective_armor,
+            baseline_effective_mr=self.effective_mr,
+        )
+
+
+def _active_source(owners, breakdown_key, build):
+    """The item active the pair engine prices, from its own interpreter."""
+    return next(
+        source
+        for source in active_cast.active_sources(owners, **build)
+        if source.breakdown_key == breakdown_key
+    )
+
+
+def _cast_proc_source(owners, breakdown_key, build):
+    """The ability-triggered item proc, from its own interpreter."""
+    return next(
+        effect.source
+        for effect in cast_proc.resolve_slots(owners, **build).cooldown_procs
+        if effect.source.breakdown_key == breakdown_key
+    )
+
+
+AMP_ARMED_SEEDS = (
+    AmpArmedSeed(
+        name="abyssal_holder_item_active",
+        scenario="amp_armed_mage_roster",
+        breakdown_key="active_Hextech Rocketbelt",
+        # An item active is neither an ability part nor a swing, so only the
+        # magic amp reaches it — which is the pair engine's own reading in
+        # `_add_item_active_damage`, where `_mitigate` is handed `magic_amp`
+        # and nothing else.
+        attack_class=AttackClass.OTHER,
+        raw_of=_active_source,
+    ),
+    AmpArmedSeed(
+        name="abyssal_holder_ability_triggered_proc",
+        scenario="amp_armed_mage_roster",
+        breakdown_key="proc_Stormsurge",
+        # `_add_item_proc_damage` multiplies its mitigated per-proc figure by
+        # `state.ability_amp` when the source is ability damage, on top of the
+        # magic amp `_mitigate` already applied — so this seed carries both
+        # amps and is the one that fails if either is dropped.
+        attack_class=AttackClass.ABILITY,
+        raw_of=_cast_proc_source,
+    ),
+)
+
+
+@pytest.mark.parametrize("seed", AMP_ARMED_SEEDS, ids=lambda seed: seed.name)
+class TestTheDeclaredAmpTermReproducesThePairEngines:
+    """Amendment M, Ruling 1's fixture: the term, on a roster that arms it."""
+
+    def test_the_seed_really_arms_an_amp(self, seed):
+        """A fixture at amp 1.0 proves only the case that cannot fail."""
+        reading = _amp_armed_reading(seed)
+        assert reading.factor(seed) > 1.0
+        assert reading.raw > 0.0
+        assert reading.pair > 0.0
+
+    def test_the_two_associations_are_each_exact_and_one_ulp_apart(self, seed):
+        """The ordering Ruling 1 chose, and the price of choosing it.
+
+        Three exact claims and one bound, so the reading is complete: the
+        pair engine's number *is* its post-mitigation association, the walk's
+        price *is* the pre-mitigation one Ruling 1 rules, and the two differ
+        by at most one unit in the last place.  Asserting only "they are
+        close" would hide an ordering nobody chose; asserting equality alone
+        would be false.
+        """
+        reading = _amp_armed_reading(seed)
+        factor = reading.factor(seed)
+
+        assert reading.pair_association(seed) == reading.pair
+
+        amount = reading.priced(seed).amount
+        assert amount == apply_resistance(reading.raw * factor, reading.effective_mr)
+        assert abs(amount - reading.pair) <= math.ulp(reading.pair)
+
+    def test_the_term_survives_every_gate_the_campaign_grades_with(self, seed):
+        """The difference the ordering costs is invisible to the baselines.
+
+        Stated as an assertion rather than as a claim in a comment: the two
+        associations agree at the precision the committed golden files round
+        to, so the ruled ordering cannot move a leaf any gate reads.
+        """
+        reading = _amp_armed_reading(seed)
+        assert round(reading.priced(seed).amount, GOLDEN_DECIMALS) == round(
+            reading.pair, GOLDEN_DECIMALS
+        )
+
+    def test_dropping_the_term_would_be_visible(self, seed):
+        """R-05's red for the term itself, on the seed that carries it.
+
+        The deletion Ruling 1 exists to forbid, made a measurable event: a
+        packet priced with no amp falls short of the pair engine's number by
+        the holder's own amplifier, and the shortfall clears golden's own
+        precision by a wide margin.
+        """
+        reading = _amp_armed_reading(seed)
+        unamped = reading.priced(seed, amped=False).amount
+        assert unamped < reading.pair
+        assert unamped * reading.factor(seed) == pytest.approx(reading.pair)
+        assert round(reading.pair - unamped, GOLDEN_DECIMALS) > 0.0
+
+
+# ---------------------------------------------------------------------------
+# D-62's uniqueness, for the number this slice arms
+# ---------------------------------------------------------------------------
+
+
+def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
+    """D-62, stated for the term Amendment M, Ruling 1 lands.
+
+    The double count a retirement act could create: one family's number
+    delivered twice, once as the pair engine's row and once as the walk's own
+    amp'd price.  The guard is structural and holds on both sides at once — a
+    previewed pair row is excluded from everything the roster composes, and
+    the walk pays a declaration only where a packet carries one.
+
+    It holds vacuously today, and that is the reason to pin it now rather than
+    on the commit that first pays one: this is the invariant the next thirteen
+    retirement slices land against, and an invariant nobody wrote down before
+    the first slice is one the first slice gets to define.
+    """
+    from src.calculator.program.build import pair_preview_mechanics
+
+    # No static holder amp is among the previewed mechanics, because none of
+    # the three authors a summed pair row to preview: they are factors inside
+    # `_mitigate` and `_add_item_proc_damage`, and the one row that names an
+    # amp — `ability_amp_<owner>` — is stamped `informational` and never added
+    # to the pair total.  The owners are read from the same amp-kind join the
+    # coverage guard makes, so a fourth amp kind arrives here declared.
+    amp_owners = {
+        owner for owners in gs.holder_amp_declarations().values() for owner in owners
+    }
+    assert amp_owners
+    previewed_owners = {
+        mechanic.split(".", 1)[0] for mechanic in pair_preview_mechanics()
+    }
+    assert not previewed_owners & {
+        owner.lower().replace(" ", "_").replace("'", "") for owner in amp_owners
+    }
+
+    # And the walk's side: a packet carrying no declaration pays the pair
+    # engine's number and never the walk's, so the two contributions cannot
+    # both exist for one packet by construction rather than by review.
+    assert SurvivalAction().declared is None
+    assert declared_packet_construction_sites() == ()
