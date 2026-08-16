@@ -1,0 +1,65 @@
+{
+  "slice": "campaign-close-on-hit-strike-retired",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-66",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 1 and Ruling 3",
+    "umbrella Amendment N, Ruling 1 and Ruling 2",
+    "umbrella Amendment O, Ruling 2"
+  ],
+  "what_this_is": "The R-20 population of on_hit_strike/receipt_walk, the sixth of the fourteen to retire, enumerated from committed artifacts BEFORE this slice's first src/ edit, together with what a declaration of this family has to carry -- written down in advance so a short total is a stop rather than a discovery.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97: the code lands against the committed baselines plus this allowlist, and no baseline moves inside the semantic commit."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. What can move is a property of which participants hold a declaring owner of the on_hit_strike family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json at 23d2ad0, whose own fields are derived from the behaviour catalog and from scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the on_hit_strike family on a participant. The eight owners are read live from the behaviour catalog over rule_owners() -- Blade of the Ruined King, Guinsoo's Rageblade, Muramana, Nashor's Tooth, Recurve Bow, Terminus, Titanic Hydra, Wit's End -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard, so the population and the guard cannot disagree about which rosters can see the family.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the whole scenario subtree, because a slice that moves a family's pricing can move any aggregate downstream of it inside that scenario.",
+    "population_by_scenario": {
+      "crit_onhit_carry_roster": 3498
+    },
+    "population_total": 3498,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface, and this slice adds no pair-engine arithmetic: the two stamps it adds pair-side -- pair_preview_of on each on-hit row and the row's own declaration on the events under it -- are not leaves that baseline holds, which records each build's sorted breakdown_keys and its total_damage and neither a row's inner fields nor an event. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice."
+    },
+    "which_owners_the_population_can_actually_see": "ONE of the eight. crit_onhit_carry_roster puts Blade of the Ruined King on the Caitlyn; no committed coupled scenario holds Guinsoo's Rageblade, Muramana, Nashor's Tooth, Recurve Bow, Terminus, Titanic Hydra or Wit's End. Recorded BEFORE the edit rather than discovered after it, because a green zero over a population that cannot contain the defect is exactly the shape that stopped the active_cast retirement (umbrella Amendment N). The one owner the population holds is, however, the family's HARD shape rather than its easy one: BoRK is the only one of the eight whose formula reads the target's current health, so its per-application magnitudes differ from each other inside one row and a declaration that split the row total evenly would price the walk's packets at a number no application had. The seven static owners are covered by this slice's own equivalence fixtures, per owner, in the shape umbrella Amendment P required of damage_routing's three."
+  },
+  "what_a_declaration_of_this_family_has_to_carry": {
+    "rule": "Enumerated in advance, in the idiom the charged_strike slice used: writing down what the walk will have to read is what makes a wrong number a stop instead of a discovery.",
+    "the_magnitude_is_per_application": "damage._layer_on_hit_effects authors one on-hit row per declaring item and one damage event per APPLICATION of it -- the swing, its Rageblade phantom re-application and a double-shot extra all ride the same swing's timestamp. Seven of the eight strikes are a fixed per-application number, so every event of their row declares the same magnitude. The eighth, Blade of the Ruined King, is re-read against the target's falling health per application by damage._simulate_current_health_on_hit, which today returns only the MITIGATED value per hit; the declaration needs the raw beside it, one per hit, the way _simulate_stacking_on_hit_damage was made to return a StackingProc when charged_strike retired.",
+    "the_on_hit_effectiveness_is_folded_in": "damage._on_hit_effectiveness scales every application's raw value (an Azir soldier applies on-hit at 50%). It is an ALLOCATION of one application rather than an amplifier the walk can compose, and the pair engine applies it pre-mitigation, so it is folded into the declared magnitude -- mitigation is linear, so one folded magnitude prices to the same real number.",
+    "the_attack_class_is_OTHER_for_all_eight": "Measured rather than defaulted: every on-hit row is priced by damage._mitigate and by nothing else, so no part amp is earned. The magic amp needs no class at all -- _mitigate multiplies magic damage by the holder's magic amp whatever delivered it, and StaticHolderAmps.factor_for delivers it off the damage type alone. Four of the eight declare magic (Guinsoo's Rageblade, Nashor's Tooth, Terminus, Wit's End) and four declare physical (Blade of the Ruined King, Muramana, Recurve Bow, Titanic Hydra), so the amp term is live for half this family and a declaration that pre-multiplied it would be the undeclared second producer D-60 forbids.",
+    "the_resistance_is_absent": "No site re-prices an on-hit packet after authoring it -- the term census enumerates every post-authoring packet-mutation site in the pair engine and none of them touches an on_hit_ row -- so the declaration carries no per-packet resistance term and the walk prices it at the fight's published baseline, which is the correct reading for a packet no window re-priced (umbrella Amendment N, Ruling 1).",
+    "the_coarse_row_shape": "A fight whose swing schedule does not resolve authors the row with no damage_events at all (damage._layer_on_hit_effects leaves application_times empty). The row still has to state its declaration, because the reconstruction then synthesizes one event per typed part and damage._row_declaration_share splits the declaration the way the damage was split."
+  },
+  "what_this_family_authors_that_this_slice_does_NOT_stamp": {
+    "rule": "The committed triage measures a family's authored pair rows by ITEM ablation, which is conservative by construction -- removing the item removes every mechanic it holds, not only the mechanic of this family. Three of the eleven rows it lists for on_hit_strike are authored by no declaration of this family, and recording that before the edit is what keeps a row that stays priced from reading as a half-performed retirement.",
+    "active_Titanic Hydra": "Titanic Crescent, compiled by item_effects._compile_auto_cooldown from the number registry. Titanic Hydra declares exactly one behaviour rule, titanic_hydra.on_hit, so this row has no declaration of this family behind it and nothing for a walk to price from one.",
+    "muramana_ability": "Muramana's Shock on abilities, compiled by item_effects._compile_per_ability_hit. Muramana declares muramana.on_hit and muramana.attack_damage_from_max_mana (family stat_derivation); neither authors this row.",
+    "on_hit_secondary_Runaan's Hurricane": "The secondary_target family's own row -- runaans_hurricane.secondary_target -- carrying the copy that lands on a second target. It is a DIFFERENT packet from the primary application, its family is still deferred, and it goes on arriving as the pair engine's timed row. Stamping it here would retire somebody else's row inside this slice."
+  },
+  "why_the_family_is_startable_now": {
+    "the_class": "Class (a), authors-own-rows, in the committed triage (umbrella Amendment O, Ruling 2): eight declarations authoring eight priced pair-engine rows, so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act rather than by reclassification.",
+    "the_standing_precondition": "umbrella Amendment N, Ruling 2's source-derived term census is green -- python scripts/term_census.py --check reports 29 post-authoring packet-mutation sites, 0 uncovered, 3 static holder amps, 0 unfolded -- which is the standing precondition on any further family retiring.",
+    "the_covering_scenario": "Amendment L, Ruling 2's prerequisite is met without an integration act: crit_onhit_carry_roster already puts a declaring owner on a participant, so the coupled baseline is not blind to this family and this slice's R-20 population is non-empty before its first src/ edit."
+  }
+}
