@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from types import MappingProxyType
-from typing import Any
+from typing import Any, NamedTuple
 
 from .ability_spec import (
     CC_KIND_VOCABULARY,
@@ -740,6 +740,11 @@ def cross_participant_packet_source(capability: MechanicCapability) -> str | Non
 
 _SUPPORT_IMPL = "item_support_effects.derive_item_support_effects"
 _KNIGHTS_VOW_IMPL = "item_support_effects.schedule_knights_vow"
+# Where a retired family's walk half turns its declaration into a number: one
+# pricing site for every such half, because "the family's numbers reach the
+# walk through exactly one interpreter" is the property the retirement act
+# discharges (umbrella Amendment K).
+_DECLARED_PRICE_IMPL = "survival.transitions.apply_declared_price"
 
 
 def _walk_item(  # pylint: disable=too-many-arguments
@@ -832,6 +837,105 @@ def _pair_half(
         view_tags=MappingProxyType({Engine.PAIR: view_tag}),
         holder_stacking=None,
     )
+
+
+#: How a retired family's pair half is named: the rule's own mechanic id with
+#: this suffix.  One spelling, so the walk half can carry the catalog's id
+#: verbatim — which is what ``damage``'s ``pair_preview_of`` stamp reads off
+#: the declaration — and the preview it pairs against is derived rather than
+#: typed twice.
+PREVIEW_SUFFIX = "_preview"
+
+
+class RetiredFamilyMechanic(NamedTuple):
+    """One mechanic of a family whose numbers the coupled walk now prices.
+
+    ``mechanic`` is the catalog's own rule id, because the pair engine stamps
+    its row with exactly that (``pair_preview_of``) and a second spelling
+    here would be the join failing silently.  It is also what the
+    :class:`HolderPacket` names, and that is not redundancy: the walk reads a
+    re-priced packet through the ``AuthoredDeclaration`` riding it, whose
+    ``rule_id`` is this string, so the delivery reference is the identifier
+    the number actually arrives under rather than a second one invented for
+    the table.  ``pair_impl`` is the engine function that authors the row the
+    declaration rides.
+    """
+
+    mechanic: str
+    item: str
+    pair_impl: str
+
+
+def _retired_family_halves(
+    mechanics: tuple[RetiredFamilyMechanic, ...],
+) -> tuple[MechanicCapability, ...]:
+    """Both declared halves of every mechanic of one retired family.
+
+    A retirement act is one slice carrying both halves at once (umbrella
+    Amendment L, Ruling 1): the pair engine's row becomes a
+    ``ViewTag.THEORETICAL`` preview and the coupled walk prices the family's
+    own declaration.  Either half alone is worse than neither — the walk
+    without the stamp prices the family twice into one roster total, the
+    stamp without the walk deletes the family's number from every total that
+    held it — so the two are generated from one row rather than written
+    apart, and a mechanic cannot acquire one of them by itself.
+
+    The walk half is a :class:`HolderPacket`: it prices the damage of the
+    participant holding the item, so no second participant's number moves
+    when it resolves and the mechanic is **not** a cross-participant producer
+    (umbrella Amendment M, Ruling 3).  ``PER_HOLDER`` is the arming answer
+    for the same reason — two roster members holding one item each pay their
+    own packet, and an aura key would silently drop the second (D-66).
+
+    ``impl`` on the walk half is the one pricing site every such half shares,
+    which is the property the retirement discharges: the family's numbers
+    reach the walk through exactly one interpreter, in the lane it declares
+    (umbrella Amendment K).  Its pair half's ``impl`` is the engine function
+    that authors the previewed row, so the two ends of the join are both
+    resolvable against source.
+    """
+    halves: list[MechanicCapability] = []
+    for entry in mechanics:
+        preview = f"{entry.mechanic}{PREVIEW_SUFFIX}"
+        halves.append(
+            _pair_half(
+                preview,
+                ItemOwner(entry.item),
+                entry.pair_impl,
+                authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+                view_tag=ViewTag.THEORETICAL,
+            )
+        )
+        halves.append(
+            _walk_item(
+                entry.mechanic,
+                entry.item,
+                HolderPacket(entry.mechanic),
+                holder_stacking=HolderStacking.PER_HOLDER,
+                authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+                pairing=Pairing.PAIRED,
+                pair_of=preview,
+                impl=_DECLARED_PRICE_IMPL,
+            )
+        )
+    return tuple(halves)
+
+
+# The six item actives, retired off the pair engine 2026-08-16.  One row per
+# declared rule in ``item_behavior_catalog``'s ``active_cast`` family: the
+# walk prices each from its own declaration and the pair engine's row is the
+# honest single-attacker preview of it.
+_ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(f"{slug}.active", item, "damage._add_item_active_damage")
+    for slug, item in (
+        ("hextech_gunblade", "Hextech Gunblade"),
+        ("hextech_rocketbelt", "Hextech Rocketbelt"),
+        ("profane_hydra", "Profane Hydra"),
+        ("ravenous_hydra", "Ravenous Hydra"),
+        ("stridebreaker", "Stridebreaker"),
+        ("tiamat", "Tiamat"),
+    )
+)
 
 
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
@@ -1131,6 +1235,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         impl=_KNIGHTS_VOW_IMPL,
     ),
+    # -- retired families: both halves of one packet ------------------------
+    *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
     # -- pair-engine halves -------------------------------------------------
     _pair_half(
         "abyssal_mask.magic_amp",

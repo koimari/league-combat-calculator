@@ -2,48 +2,6 @@
  "a_second_and_smaller_mismatch": "ANSWERED 2026-08-15, and kept because a mismatch that is only deleted is one no reader can check was ever real. delta_amp/receipt_walk declared via = ['pair_engine'], so it was counted here as taking Amendment F's act as written, while its own reason named two routes -- 'a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER' -- and said neither of them was the rule. The structured route and the prose beside it therefore described different things, and only the structured one was gated. Amendment K answered it in the same sentence as the three: the declaration is the route (D-40), so the row's act was the receipt-walk one, and correcting the reason would be a behaviour claim owing its own slice rather than a schedule's edit. That slice has landed. Amendment M, Ruling 1 ordered this family first of the fourteen and ruled its act to be the walk-side delivery of the holder's static, pair-local amplifiers; interpreters.delta_amp.WALK_INTERPRETER performs it, the receipt walk now reads the amp declaration through its own lane, and the row retired -- so the mismatched reason is gone with the row it belonged to, and the compiled-score-walk row that shared it now names that walk alone (R-36). No family row above records this mismatch any more, which is the only correct state once the row it described has retired.",
  "artifact": "receipt_walk_retirement_schedule",
  "families": {
-  "active_cast": {
-   "coupled_baseline_is_blind_to_this_family": false,
-   "covering_coupled_scenarios": [
-    "amp_armed_mage_roster",
-    "immolate_active_bruiser_roster"
-   ],
-   "declared_rules": [
-    "hextech_gunblade.active",
-    "hextech_rocketbelt.active",
-    "profane_hydra.active",
-    "ravenous_hydra.active",
-    "stridebreaker.active",
-    "tiamat.active"
-   ],
-   "deferral_row": "active_cast/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 2575 committed roster values across 2 coupled scenario(s) -- amp_armed_mage_roster 785, immolate_active_bruiser_roster 1790",
-   "interpreter_module": "src/calculator/interpreters/active_cast.py",
-   "owners": [
-    "Hextech Gunblade",
-    "Hextech Rocketbelt",
-    "Profane Hydra",
-    "Ravenous Hydra",
-    "Stridebreaker",
-    "Tiamat"
-   ],
-   "population_by_scenario": {
-    "amp_armed_mage_roster": 785,
-    "immolate_active_bruiser_roster": 1790
-   },
-   "population_total": 2575,
-   "retiring_act": {
-    "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
-    "already_performed": false,
-    "retiring_lane": [
-     "receipt_walk"
-    ],
-    "ruled_by": "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
-   },
-   "route_today": [
-    "pair_engine"
-   ]
-  },
   "cast_proc": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
@@ -570,8 +528,8 @@
  "families_with_no_covering_coupled_scenario": [],
  "gate": "tests/test_receipt_walk_schedule.py",
  "rule": "Umbrella criterion 7's outstanding receipt-walk deferrals, sized as the slices Amendment F says they are. One row per family: its declarations and their owners, the committed coupled scenarios that put one of those owners on a participant, the size of each such scenario's committed snapshot, and the Expected qualifying occurrences line R-20's second half requires a slice to declare BEFORE its first src/ edit.",
- "scheduled_slices": 13,
- "slices_whose_retiring_act_is_amendment_f_as_written": 10,
+ "scheduled_slices": 12,
+ "slices_whose_retiring_act_is_amendment_f_as_written": 9,
  "slices_whose_retiring_lane_amendment_k_corrects": [
   "combat_state",
   "opening_defense",

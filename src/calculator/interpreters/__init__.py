@@ -23,6 +23,13 @@ an eighteen-branch god module cannot carry eighteen test front doors, and the
 derived front-door check (D-95) is what would notice.
 """
 
+# This module's length is one row per ``(family, lane)`` and one dated receipt
+# per gap, and both sets are the campaign's own vocabulary: splitting the
+# registry from the reasons would put the count in one file and the excuse in
+# another, which is exactly the prose-outruns-code shape counter 4 exists to
+# measure.  Same trade, same idiom, as ``trigger_stream``'s own table.
+# pylint: disable=too-many-lines
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -253,6 +260,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): active_cast.PAIR_INTERPRETER,
     (
+        RuleFamily.ACTIVE_CAST,
+        EngineLane.RECEIPT_WALK,
+    ): active_cast.WALK_INTERPRETER,
+    (
         RuleFamily.ALLY_PACKET,
         EngineLane.RECEIPT_WALK,
     ): ally_packet.WALK_INTERPRETER,
@@ -380,6 +391,17 @@ _PACKET_FED = (
     "reaches them through the pair interpreter rather than through one of "
     "its own"
 )
+# What is left of ``_PACKET_FED`` once a family's receipt-walk half has
+# retired: the compiled lane alone still stages the pair engine's packets, and
+# a row that went on saying "both walks" would contradict the tree it excuses.
+_COMPILED_PACKET_FED = (
+    "the compiled score walk consumes this family as the pair engine's timed "
+    "rows — participant_timeline._pair_run_fight prices the pair and "
+    "survival/compile.py stages the resulting packets — so the declaration "
+    "reaches it through the pair interpreter rather than through one of its "
+    "own; the receipt walk reads the declaration itself since this family "
+    "retired"
+)
 _RESOLVER_FED = (
     "the walks stage what the defence resolver already built, so the "
     "declaration reaches them through the resolver interpreter; a walk-lane "
@@ -427,13 +449,20 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.SPELLBLADE,
             RuleFamily.CAST_PROC,
             RuleFamily.PERIODIC,
-            RuleFamily.ACTIVE_CAST,
             RuleFamily.RESISTANCE_SHRED,
             RuleFamily.CRIT_PROFILE,
             RuleFamily.DAMAGE_ROUTING,
         )
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
+    # ``active_cast``'s receipt-walk twin is gone — the walk prices each item
+    # active from its own declaration through ``ActiveCastWalkInterpreter``,
+    # which is Amendment F's act in the lane Amendment K rules — so only the
+    # compiled lane defers, and it says so in its own words rather than
+    # inheriting a sentence about both walks.
+    (RuleFamily.ACTIVE_CAST, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+        _COMPILED_PACKET_FED, (EngineLane.PAIR_ENGINE,)
+    ),
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
         _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),

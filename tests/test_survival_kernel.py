@@ -77,6 +77,7 @@ from src.calculator.survival import (
     build_states,
     run_survival_walk,
 )
+from src.calculator.survival import transitions
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
     MITIGATED_DAMAGE_TYPES,
@@ -1830,34 +1831,110 @@ class TestTheWalkPricesADeclaredPacketItself:
         assert "declared_price" not in row
 
 
-class TestThePathIsInertUntilAFamilyOptsIn:
-    """Amendment L, Ruling 3's inertness clause, asserted not assumed."""
+def _repriced_families() -> tuple[RuleFamily, ...]:
+    """Every family whose packets the walk re-prices from their declarations.
 
-    def test_no_packet_the_tree_produces_carries_a_declaration(self):
-        """Zero construction sites in `src/`, its two declared homes aside.
+    Read off the declarations rather than listed, so the family a retirement
+    slice opts in arrives here on the commit that declares it and the tests
+    below cannot silently stop covering one.
+    """
+    repriced = walk_repriced_mechanics()
+    return tuple(
+        sorted(
+            {
+                rule.family
+                for owner in rule_owners()
+                for rule in behavior_rules(owner)
+                if rule.mechanic_id in repriced
+            },
+            key=lambda family: family.value,
+        )
+    )
 
-        This is what makes the stage a re-spelling rather than a re-pricing:
-        every family still reaches the walk as the pair engine's timed rows,
-        so both compared baselines and every bench counter are unmovable by
-        this path until a retirement slice opts one in.
 
-        The predicate is the *opt-in*, not the composition site.  The
-        composition exists — one home, gated — and what keeps it unreached is
-        that no mechanic declares a walk half whose packet the walk re-prices.
-        Asserting the site count alone would have made the transport itself
-        look like the behaviour change, which it is not; asserting the empty
-        opt-in set is the claim that is actually load-bearing, and it is the
-        one a retirement slice moves.
+class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
+    """Amendment L, Ruling 3's inertness clause, once a family has opted in.
+
+    The clause was never "this path stays unreached"; it was "this path is
+    inert **until a family's retirement slice opts in**", and one has.  What
+    the clause still buys, and what these cases assert, is that the opt-in is
+    a *declaration* — the set is read off the registry, it is exactly the
+    families whose receipt-walk interpreter is registered, and every family
+    outside it still reaches the walk as the pair engine's timed rows.
+    """
+
+    def test_the_opt_in_set_is_the_families_with_a_receipt_walk_interpreter(self):
+        """A family re-priced with no interpreter to price it is a deletion.
+
+        The two declarations have to agree: the capability says the walk owns
+        the number and the registry says which interpreter hands it one.  A
+        ``HolderPacket`` half declared for a family no receipt-walk
+        interpreter serves would take the pair engine's number out of every
+        roster total with nothing replacing it — the half-performed
+        retirement umbrella Amendment L, Ruling 1 calls worse than neither
+        half.
+        """
+        families = _repriced_families()
+        assert families == (RuleFamily.ACTIVE_CAST,)
+        for family in families:
+            assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
+
+    def test_no_family_is_half_retired(self):
+        """Every rule of a re-priced family is re-priced, not just some of them.
+
+        A family whose numbers arrive by two routes — some rules priced from
+        their declarations and the rest consumed as the pair engine's rows —
+        is D-60's two engines pricing one mechanic, wearing a retirement's
+        name.  The rule set is read from the catalog, so a seventh item
+        active declared tomorrow fails here rather than shipping half
+        covered.
+        """
+        repriced = walk_repriced_mechanics()
+        for family in _repriced_families():
+            declared = {
+                rule.mechanic_id
+                for owner in rule_owners()
+                for rule in behavior_rules(owner)
+                if rule.family is family
+            }
+            assert declared, family.value
+            assert declared <= repriced, family.value
+
+    def test_every_other_family_still_reaches_the_walk_as_pair_rows(self):
+        """The families that have not opted in are unmoved by this path.
+
+        Stated as the complement rather than as a count, because the number
+        of retirements is exactly what the next slices move: what must stay
+        true is that a family nobody retired carries no declaration and is
+        therefore unreachable from the from-declaration pricer.
+        """
+        repriced = walk_repriced_mechanics()
+        untouched = {
+            rule.mechanic_id
+            for owner in rule_owners()
+            for rule in behavior_rules(owner)
+            if rule.family not in _repriced_families()
+        }
+        assert untouched
+        assert not untouched & repriced
+
+    def test_the_composition_still_has_exactly_its_two_homes(self):
+        """One declaring module and one composing module, and nothing else.
+
+        The transport is not what a retirement moves: a family opts in by
+        declaring a walk half, never by building a `DeclaredPacket` of its
+        own.  A second composition site would be a family pricing its own
+        declaration behind the registry's back, which is the second reader of
+        one declaration this scan exists to catch.
         """
         assert declared_packet_construction_sites() == ()
-        assert walk_repriced_mechanics() == frozenset()
 
     def test_the_default_action_declares_nothing(self):
         """The field's default is the inertness, so it is asserted too."""
         assert SurvivalAction().declared is None
 
     def test_the_inertness_scan_has_a_permanent_injection_seam(self):
-        """R-05: the first family to opt in is a finding, on demand."""
+        """R-05: a second composition site is a finding, on demand."""
         injected = {
             PRICING_MODULE: "class DeclaredPacket(NamedTuple):\n",
             "src/calculator/interpreters/periodic.py": (
@@ -2731,3 +2808,165 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
     # previews, so no packet can carry the pair engine's number *and* the
     # walk's.
     assert walk_repriced_mechanics() <= pair_preview_mechanics()
+
+
+# ---------------------------------------------------------------------------
+# D-62's uniqueness, per retired family, on the roster that can see it
+# ---------------------------------------------------------------------------
+#
+# The case above is the structural half and holds over the registry.  This one
+# runs a committed coupled scenario that equips a declaring owner and reads
+# what the two engines actually produced, because the failure this guards is a
+# number appearing twice in one total and a set relation cannot see a number.
+#
+# Nothing is typed: the family, its owners and the covering scenario are all
+# read, so the family a later retirement slice opts in is covered here on the
+# commit that declares it.
+
+
+def _repriced_owners_of(family):
+    """The item names declaring a mechanic of *family* that the walk re-prices."""
+    repriced = walk_repriced_mechanics()
+    return frozenset(
+        rule.owner
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if rule.family is family and rule.mechanic_id in repriced
+    )
+
+
+def _covering_scenarios_of(family):
+    """Committed coupled scenarios equipping a declaring owner of *family*."""
+    owners = _repriced_owners_of(family)
+    return tuple(
+        scenario
+        for scenario in gs.COUPLED_SCENARIOS
+        if scenario.equipped() & owners and not scenario.score_mode
+    )
+
+
+@lru_cache(maxsize=None)
+def _priced_declarations(scenario_name):
+    """Every declaration the coupled walk priced in one scenario, as it priced it.
+
+    Recorded at ``survival.transitions.apply_declared_price`` — the one site a
+    declaration becomes a number — so what the case reads is the walk's own
+    arithmetic and not a reconstruction of it.
+    """
+    scenario = next(
+        entry for entry in gs.COUPLED_SCENARIOS if entry.name == scenario_name
+    )
+    recorded = []
+    real = transitions.apply_declared_price
+
+    def probe(ctx, action, state):
+        priced = real(ctx, action, state)
+        recorded.append(
+            (
+                action.source_key,
+                action.declared,
+                priced,
+                {
+                    "baseline_effective_armor": action.baseline_effective_armor,
+                    "baseline_effective_mr": action.baseline_effective_mr,
+                    "dynamic_bonus_armor": state.get("dynamic_bonus_armor", 0.0),
+                    "dynamic_bonus_magic_resistance": state.get(
+                        "dynamic_bonus_magic_resistance", 0.0
+                    ),
+                },
+            )
+        )
+        return priced
+
+    transitions.apply_declared_price = probe
+    try:
+        gs.coupled_entry(scenario)
+    finally:
+        transitions.apply_declared_price = real
+    return tuple(recorded)
+
+
+@pytest.mark.parametrize(
+    "family", _repriced_families(), ids=lambda family: family.value
+)
+def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(family):
+    """One family, both halves, on a roster that holds it (D-62, criterion 8).
+
+    The pair engine authors the row and stamps it as a preview of the mechanic
+    that declared it; every event under that row carries the declaration and
+    no price the walk would have to trust.  The walk then prices exactly that
+    declaration.  Both halves at once is what umbrella Amendment L, Ruling 1
+    requires and what makes the number arrive once: the stamp is what takes
+    the pair engine's figure out of the roster total, and the declaration is
+    what puts the walk's own figure into it.
+    """
+    scenarios = _covering_scenarios_of(family)
+    assert scenarios, f"no committed coupled scenario equips {family.value}"
+    previews = pair_preview_mechanics()
+    repriced = walk_repriced_mechanics()
+
+    rows = 0
+    for scenario in scenarios:
+        parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
+        resolved = resolve_scenario(parsed)
+        result = run_fight(
+            resolved.champion_data,
+            parsed.level,
+            list(resolved.items),
+            resolved.target_fight_params[0],
+        )
+        for key, entry in result["breakdown"].items():
+            stamp = entry.get("pair_preview_of") if isinstance(entry, Mapping) else None
+            if stamp not in repriced:
+                continue
+            rows += 1
+            assert stamp in previews, key
+            events = entry.get("damage_events")
+            assert isinstance(events, list) and events, key
+            for event in events:
+                declaration = event.get("declared")
+                assert declaration is not None, key
+                authored = AuthoredDeclaration(*declaration)
+                assert authored.rule_id == stamp, key
+                assert authored.raw_amount > 0.0, key
+    assert rows, f"no pair row previewed {family.value}"
+
+
+@pytest.mark.parametrize(
+    "family", _repriced_families(), ids=lambda family: family.value
+)
+def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family):
+    """The number arrives once, measured on the walk that pays it.
+
+    Two things a set relation cannot say.  Every packet the walk priced from
+    this family's declaration was priced **once** — one pricing per
+    ``(source_key, rule)`` per fight, so no packet is paid by both the
+    declaration and the pair engine's row that carried it.  And the amount the
+    walk paid is the declaration's own price rather than the figure the pair
+    engine put on the packet, which is what "the pair row left the roster
+    total" means when it is a number rather than a claim.
+    """
+    scenarios = _covering_scenarios_of(family)
+    assert scenarios, f"no committed coupled scenario equips {family.value}"
+    repriced = walk_repriced_mechanics()
+
+    priced = [
+        record
+        for scenario in scenarios
+        for record in _priced_declarations(scenario.name)
+        if record[1] is not None and record[1].rule_id in repriced
+    ]
+    assert priced, f"the walk priced no declaration of {family.value}"
+    keys = [(source_key, packet.rule_id) for source_key, packet, _, _ in priced]
+    assert len(keys) == len(set(keys))
+
+    for source_key, packet, amount, resistances in priced:
+        assert amount is not None, source_key
+        # The paid number, re-computed from the declaration and the
+        # resistances that packet met.  Equality is what says the roster total
+        # holds the walk's price; a total still holding the pair engine's row
+        # would have to be a different number, because the pair engine's is
+        # what the packet's own `damage` field carries and this one is
+        # mitigated here from a raw magnitude.
+        assert amount == price_declared_packet(packet, **resistances).amount
+        assert 0.0 < amount < packet.amped_raw, source_key

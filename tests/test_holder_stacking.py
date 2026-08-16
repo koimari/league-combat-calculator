@@ -27,6 +27,8 @@ from src.calculator.program.amp import ArmingLedger, arm_key
 from src.calculator.program.build import arming_stacking
 from src.calculator.trigger_stream import (
     CAPABILITIES,
+    SELF_SCOPED_DELIVERIES,
+    HolderPacket,
     HolderStacking,
     RiderDelivery,
     packet_source_literal,
@@ -49,18 +51,22 @@ def _arming() -> tuple[tuple[str, str, HolderStacking], ...]:
     mechanic, and a hand list would silently stop covering the next one the
     day somebody declares it.
 
-    The filter is ``packet_source_literal`` and not "carries something in
+    The filter is a **self-scoped** delivery and not "carries something in
     ``packet_source``", because the arming question is only ever asked of a
-    half that arms.  A **rider-delivered** half authors no packet and arms
-    nothing — its bonus rides an event its own holder already produced — so
-    it has no arming key, and :func:`_rider_delivered` covers it instead.
-    Handing it a ``RiderDelivery`` as if it were a packet source would test
-    the ledger against a key ``src/`` never builds.
+    half that arms a modifier on somebody else's subject.  A
+    **rider-delivered** half authors no packet at all — its bonus rides an
+    event its own holder already produced — and a retired family's
+    **holder packet** modifies its own holder's damage, so neither has an
+    arming key and neither can collide with a second holder.
+    :func:`_rider_delivered` and :func:`_holder_packet_delivered` cover them
+    instead; handing either one to the ledger would test it against a key
+    ``src/`` never builds.
     """
     return tuple(
         (capability.mechanic, source, capability.holder_stacking)
         for capability in sorted(CAPABILITIES.values(), key=lambda cap: cap.mechanic)
         if capability.holder_stacking is not None
+        and not isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES)
         and (source := packet_source_literal(capability)) is not None
     )
 
@@ -75,19 +81,32 @@ def _rider_delivered() -> tuple[tuple[str, HolderStacking], ...]:
     )
 
 
+def _holder_packet_delivered() -> tuple[tuple[str, HolderStacking], ...]:
+    """Every dual-sided mechanic whose walk half re-prices its holder's packet."""
+    return tuple(
+        (capability.mechanic, capability.holder_stacking)
+        for capability in sorted(CAPABILITIES.values(), key=lambda cap: cap.mechanic)
+        if capability.holder_stacking is not None
+        and isinstance(capability.packet_source, HolderPacket)
+    )
+
+
 def test_every_dual_sided_mechanic_is_covered_here():
     """A vacuous parametrisation would make the tests below pass by emptiness.
 
-    Six dual-sided mechanics: five arm packets and one delivers a rider, and
-    the two counts are asserted separately so a mechanic silently changing
+    Twelve dual-sided mechanics in three delivery shapes: five arm packets on
+    another participant, one delivers a rider, and six re-price their own
+    holder's packet since ``active_cast`` retired off the pair engine.  The
+    three counts are asserted separately so a mechanic silently changing
     which kind it is shows up here rather than as a test that stopped
     running.
     """
     assert len(_arming()) == 5
     assert len(_rider_delivered()) == 1
-    assert len(_arming()) + len(_rider_delivered()) == len(
-        [cap for cap in CAPABILITIES.values() if cap.holder_stacking is not None]
-    )
+    assert len(_holder_packet_delivered()) == 6
+    assert (
+        len(_arming()) + len(_rider_delivered()) + len(_holder_packet_delivered())
+    ) == len([cap for cap in CAPABILITIES.values() if cap.holder_stacking is not None])
 
 
 @pytest.mark.parametrize("mechanic, stacking", _rider_delivered())
@@ -103,6 +122,24 @@ def test_a_rider_delivered_mechanic_declares_stacking_and_arms_nothing(
     field has none — and the ledger is deliberately never asked, because a
     dedupe key for a mechanic that arms nothing would be an answer to a
     question the declaration does not pose.
+    """
+    assert stacking is HolderStacking.PER_HOLDER
+    armed = {declared for declared, _ in arming_stacking().values()}
+    assert mechanic not in armed
+
+
+@pytest.mark.parametrize("mechanic, stacking", _holder_packet_delivered())
+def test_a_holder_packet_declares_stacking_and_arms_nothing(mechanic, stacking):
+    """A retired family's answer to the same question, in its own shape.
+
+    An item active's walk half prices *its own holder's* packet, so two
+    roster members holding one item pay two disjoint packets and their
+    contributions can never be the same one counted twice.  ``PER_HOLDER`` is
+    that fact declared rather than a default it fell through to — the field
+    has none — and the ledger is deliberately never asked, for the reason it
+    is never asked of a rider: a dedupe key for a mechanic that arms no
+    modifier on anyone else's subject would answer a question the
+    declaration does not pose.
     """
     assert stacking is HolderStacking.PER_HOLDER
     armed = {declared for declared, _ in arming_stacking().values()}

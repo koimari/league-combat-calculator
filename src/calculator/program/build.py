@@ -37,6 +37,7 @@ from ..item_behavior import Compilable, Compilability, EngineLane
 from ..survival.actions import TransitionRank
 from ..trigger_stream import (
     CAPABILITIES,
+    SELF_SCOPED_DELIVERIES,
     Engine,
     HolderPacket,
     HolderStacking,
@@ -452,10 +453,13 @@ def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
     under a key nothing recognises.  Only dual-sided halves appear, because
     only they declare a :class:`~..trigger_stream.HolderStacking`, and a
     packet whose source is absent from this mapping is admitted without a
-    dedupe key ever being built.  The key is read through
-    ``packet_source_literal``, so a rider-delivered half — which arms nothing
-    and carries a stamp rather than a packet source — stays out by the shape
-    of its declaration instead of by a coincidence of dict typing.
+    dedupe key ever being built.  A **self-scoped** delivery stays out by the
+    shape of its declaration rather than by a coincidence of dict typing: a
+    rider carries a stamp and no packet source at all, and a retired family's
+    holder packet modifies its own holder's damage, so neither one arms a
+    modifier on a subject that a second holder could collide with.  A dedupe
+    key for a mechanic that arms nothing would be an answer to a question the
+    declaration does not pose.
 
     Cached because the composition asks once per support packet and the
     registry is frozen at import.
@@ -468,6 +472,7 @@ def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
             )
             for capability in CAPABILITIES.values()
             if capability.holder_stacking is not None
+            and not isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES)
             and (source := packet_source_literal(capability)) is not None
         }
     )

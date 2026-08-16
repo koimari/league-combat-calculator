@@ -7985,6 +7985,23 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
     same one the coarse ledger encoded — is that it fires with the end
     of the rotation opener, so its event is stamped at the last accepted
     damaging cast (fight start when there are no casts).
+
+    **This row is a preview since ``active_cast`` retired** (2026-08-16,
+    umbrella Amendment F's act in Amendment K's lane, with Amendment L,
+    Ruling 1's shape).  The number below is the honest single-attacker
+    answer and the pair fight's own receipt publishes it unchanged; the
+    roster composition reads ``pair_preview_of``, sees the mechanic's pair
+    lane declared ``ViewTag.THEORETICAL``, and takes the number out of every
+    total it composes.  The event keeps its place there carrying the
+    ``AuthoredDeclaration`` the coupled walk prices instead — the rule, the
+    pre-mitigation magnitude, and the attack class that decides which of the
+    holder's own amps the packet earns.  ``AttackClass.OTHER`` is that class
+    and it is measured rather than assumed: ``_mitigate`` above applies the
+    holder's magic amp and no part amp, so an active earns neither the
+    ability nor the basic-attack multiplier.  The resistance the packet met
+    is left for the ledger to state — absent here because this packet meets
+    the fight's published figure, and restated by
+    :func:`_restate_declaration` at every site that re-prices it afterwards.
     """
     if not state.include_actives:
         return
@@ -8002,6 +8019,13 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
                 "time": active_time,
                 "damage": active_mitigated,
                 "damage_type": source.damage_type,
+                "declared": tuple(
+                    AuthoredDeclaration(
+                        active_cast.active_mechanic_id(source.item_name),
+                        raw_active,
+                        AttackClass.OTHER.value,
+                    )
+                ),
             }
         ]
         state.breakdown[source.breakdown_key] = {
@@ -8009,6 +8033,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
             "total_damage": active_mitigated,
             "damage_type": source.damage_type,
             "damage_events": damage_events,
+            "pair_preview_of": active_cast.active_mechanic_id(source.item_name),
         }
         if source.lifesteal_effectiveness > 0.0:
             heal_amount = _active_lifesteal_amount(

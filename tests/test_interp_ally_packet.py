@@ -49,15 +49,19 @@ class TestTheProducerVocabularyIsBoundToPhaseTwo:
     def _packet_capabilities() -> frozenset[str]:
         """Walk halves that emit a *packet* an ally producer could author.
 
-        ``packet_source_literal`` rather than "carries something in
-        ``packet_source``": a rider-delivered half authors no packet at all,
-        so no ally producer can name it and requiring one would demand a
-        producer for a mechanic that emits nothing.
+        Self-scoped deliveries are out, and for one reason in two shapes: an
+        ally producer authors a packet *onto another participant*, so a half
+        whose subject is its own holder is not one any producer could name.
+        A rider-delivered half authors no packet at all; a retired family's
+        holder packet is authored by the pair engine out of the holder's own
+        build and merely re-priced here.  Requiring a producer for either
+        would demand an ally template for a number no ally grants.
         """
         return frozenset(
             capability.mechanic
             for capability in ts.CAPABILITIES.values()
             if capability.engine is ts.Engine.WALK
+            and not isinstance(capability.packet_source, ts.SELF_SCOPED_DELIVERIES)
             and ts.packet_source_literal(capability) is not None
         )
 

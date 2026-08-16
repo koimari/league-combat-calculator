@@ -31,7 +31,13 @@ from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator import trigger_stream as ts
-from src.calculator.item_behavior import AllyProducer, LivePredicate, RuleFamily
+from src.calculator.interpreters import INTERPRETERS
+from src.calculator.item_behavior import (
+    AllyProducer,
+    EngineLane,
+    LivePredicate,
+    RuleFamily,
+)
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
@@ -1110,6 +1116,14 @@ def name_guarded_impls(
     alone the identity is simply false for the other two producers —
     ``schedule_knights_vow`` guards ``Knight's Vow`` in the same module, and
     the ally-effects producer guards its items in another one.
+
+    A **self-scoped** delivery is out of scope, and that is the check's own
+    semantic rather than an exemption.  This fold is over impls that build a
+    packet by asking whether an item name is in a build; a retired family's
+    walk half builds nothing — it prices the declaration riding a packet the
+    pair engine already authored — so it dispatches on no name and has none
+    to guard.  Including it would ask a name-guard question of the one shape
+    that exists precisely so the engine stops asking item names (D-42).
     """
     capabilities = capabilities or ts.CAPABILITIES
     sources = sources or live_sources()
@@ -1118,6 +1132,8 @@ def name_guarded_impls(
         if not isinstance(capability.owner, ts.ItemOwner):
             continue
         if capability.engine is not ts.Engine.WALK:
+            continue
+        if isinstance(capability.packet_source, ts.SELF_SCOPED_DELIVERIES):
             continue
         if ts.packet_source_literal(capability) is None:
             continue
@@ -1433,16 +1449,27 @@ def _delivery_defects(
 ) -> tuple[str, ...]:
     """One paired half's delivery reference, resolved against what delivers it.
 
-    Two deliveries, two resolutions, and the second is not a weaker version
-    of the first.  A packet-delivered half names a ``source`` literal, and
-    the check is that the literal is really in the builder's source — the
-    incident's own failure was a claim about code that nothing read the code
-    to confirm.  A rider-delivered half names no packet and therefore has no
-    literal to grep for: its stamp is the mechanic id its rule carries and
-    its rows publish, so it resolves against the **declaration**, which must
-    hold a rule of that id whose activation is a live predicate.  That is
-    what makes a stamp deliverable, and a stamp naming no such rule is the
-    same defect one layer over.
+    Three deliveries, three resolutions, and neither of the last two is a
+    weaker version of the first.  A packet-delivered half names a ``source``
+    literal, and the check is that the literal is really in the builder's
+    source — the incident's own failure was a claim about code that nothing
+    read the code to confirm.  A rider-delivered half names no packet and
+    therefore has no literal to grep for: its stamp is the mechanic id its
+    rule carries and its rows publish, so it resolves against the
+    **declaration**, which must hold a rule of that id whose activation is a
+    live predicate.  That is what makes a stamp deliverable, and a stamp
+    naming no such rule is the same defect one layer over.
+
+    A :class:`~src.calculator.trigger_stream.HolderPacket` half resolves
+    against the declaration for the same kind of reason and a different one.
+    Its number arrives on a packet the *pair engine* authored, identified by
+    the ``AuthoredDeclaration`` riding it — so the literal to resolve is a
+    rule id, not a string in the walk's own pricing site, and grepping the
+    pricing site for it would be a check that could never pass.  What makes
+    the delivery real is that the owner declares a rule of that id and that
+    the rule's family has a receipt-walk interpreter to price it: a half
+    claiming to re-price a family no interpreter serves is the pair engine's
+    number leaving a roster total with nothing replacing it.
     """
     delivery = ts.delivery_reference(capability)
     if isinstance(capability.packet_source, ts.RiderDelivery):
@@ -1457,6 +1484,29 @@ def _delivery_defects(
             return (
                 f"{mechanic}: rider stamp {delivery!r} names no declared "
                 f"live-predicate rule of {owner!r}",
+            )
+        return ()
+    if isinstance(capability.packet_source, ts.HolderPacket):
+        owner = getattr(capability.owner, "name", "")
+        rule = next(
+            (
+                declared
+                for declared in behavior_rules(owner)
+                if declared.mechanic_id == delivery
+            ),
+            None,
+        )
+        if rule is None:
+            return (
+                f"{mechanic}: holder packet {delivery!r} names no declared "
+                f"rule of {owner!r}",
+            )
+        if (rule.family, EngineLane.RECEIPT_WALK) not in INTERPRETERS:
+            return (
+                f"{mechanic}: holder packet {delivery!r} declares "
+                f"{rule.family.value}, which no receipt-walk interpreter "
+                "serves, so the pair engine's number would leave the roster "
+                "total with nothing replacing it",
             )
         return ()
     text = sources.get(_impl_path(capability.impl), "")
@@ -2820,13 +2870,13 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
 
 
 def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
-    """The six, by name, with the value each one declares.
+    """The twelve, by name, with the value each one declares.
 
     Pinned rather than derived: D-66's whole point is that the answer is a
     per-mechanic fact, so a test that recomputed it from some property of the
     row would be the second answer the field exists to prevent.  Abyssal Mask
-    is the aura; the other five are per-holder, and two of those five carry
-    an unanswered ``[H]`` id rather than a ruling.
+    is the aura; every other row is per-holder, and two of them carry an
+    unanswered ``[H]`` id rather than a ruling.
 
     Shadowflame's Cinderbloom is per-holder for a reason worth stating,
     because it is the one row that arms nothing: its bonus rides its own
@@ -2834,6 +2884,13 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     packets and their contributions can never be the same one counted twice.
     ``PER_HOLDER`` is that fact declared, not a default it fell through to —
     the field has none.
+
+    The six item actives joined on 2026-08-16, when ``active_cast`` retired
+    off the pair engine.  Their answer is per-holder for the same reason and
+    one step more plainly: each one's walk half prices *its own holder's*
+    packet, so two roster members holding one item pay two packets and an
+    aura key would silently drop the second — which is the incident's own
+    shape mandated by a rule.
     """
     declared = {
         mechanic: capability.holder_stacking.value
@@ -2845,8 +2902,14 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "black_cleaver.carve": "per_holder",
         "bloodletters_curse.vile_decay": "per_holder",
         "bloodsong.expose_weakness": "per_holder",
+        "hextech_gunblade.active": "per_holder",
+        "hextech_rocketbelt.active": "per_holder",
         "imperial_mandate.command": "per_holder",
+        "profane_hydra.active": "per_holder",
+        "ravenous_hydra.active": "per_holder",
         "shadowflame.cinderbloom": "per_holder",
+        "stridebreaker.active": "per_holder",
+        "tiamat.active": "per_holder",
     }
 
 
