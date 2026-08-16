@@ -845,12 +845,13 @@
   },
   "campaign-close-active-cast-retirement": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
+   "commit_count": 4,
    "criteria_documents": [],
    "subjects": [
     "feat(walk): a re-priced pair preview keeps the packet whose price it awaits (campaign-close-active-cast-retirement)",
     "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-active-cast-retirement)",
-    "docs(receipts): what the retirement measured, and why it was reverted rather than shipped (campaign-close-active-cast-retirement)"
+    "docs(receipts): what the retirement measured, and why it was reverted rather than shipped (campaign-close-active-cast-retirement)",
+    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-active-cast-retirement)"
    ]
   },
   "campaign-close-amp-armed-coverage": {
