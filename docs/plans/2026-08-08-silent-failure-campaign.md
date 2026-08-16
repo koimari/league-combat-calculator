@@ -1033,6 +1033,100 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > 143 owners in `rule_owners()`), and the Liandry side is an attacker declaration joined to a
    > *defender's*, so a mapping keyed only on the holder's items would report the magic half covered
    > by an empty set.
+   >
+   > **Amendment O — 2026-08-16, authority reclassification, and the triage of every remaining row.**
+   > A retirement lane that went to start `crit_profile`
+   > measured that the family authors **no pair-engine row anywhere in its covering population** —
+   > `infinity_edge.crit_damage_bonus` folds into the champion's own `auto_attacks` row,
+   > `navori_flickerblade.cooldown_refund` authors no damage at all, and `sundered_sky.forced_crit`
+   > authors one row carrying `informational: true` that is summed into no total. So Amendment L,
+   > Ruling 1's shape — both halves of which name a pair row the family authors — has nothing to
+   > stamp and the walk's pricing stage nothing to price, and the three ways to force it are each
+   > already forbidden in terms. The lane refused all three, filed its measurement at
+   > `docs/receipts/expected-golden-diff-campaign-close-crit-profile-retirement.json`, and opened an
+   > owed ruling. That was correct and it is answered here. Two rulings, neither re-litigable by a
+   > lane.
+   >
+   > **Ruling 1 — reclassification, not retirement.** Under this file's own semantic-authority rule
+   > three sections above — *all-pair-local inputs ⇒ `PAIR_ONLY`* — a family whose mechanics author
+   > **no pair row** and fold **only into the holder's own champion rows** is `PAIR_ONLY`: the pair
+   > engine is its authoritative home, no second engine prices it, and no double-count exists for a
+   > preview stamp to prevent. Its `(family, RECEIPT_WALK)` deferral row was therefore a **schedule
+   > category error** rather than a debt, and it closes as `not_a_gap` **by authority
+   > reclassification** — a different act from a retirement, with a different receipt, and it is not
+   > available to a family that authors a row. It closes **with a machine check**: the
+   > zero-authored-rows property is measured over the covering population by a derived test, and the
+   > row **REOPENS** if a future mechanic of the family ever authors one. `crit_profile` closes this
+   > way now. The owed row
+   > `whether_a_family_that_authors_no_pair_row_can_retire_off_the_pair_engine` is answered by this
+   > amendment and moves to `answered[]` under its own closure rule, keeping its question beside it.
+   >
+   > **This is not a D-40 exclusion and not a re-count**, and the distinction is the whole of why the
+   > act is legal. A lane editing `_FAMILY_LANES` so a family stops owing the walk an answer, while
+   > the walk goes on consuming that family's numbers from somewhere, is a counter driven to zero by
+   > editing what it counts — the move Amendments K, L, M and N each refuse in terms and the one
+   > D-40 exists to forbid. What is ruled here is the opposite: the walk consumes **nothing** from
+   > this family, because the family authors nothing for it to consume, and that is measured before
+   > the table moves rather than asserted after. Amendment F's fourteen are **not read as thirteen**:
+   > one row leaves as mis-scheduled and says so in its own words, which is a correction to the
+   > schedule and not a discount on the debt.
+   >
+   > **Ruling 2 — triage, once.** Before any further retirement round, **every** remaining open
+   > deferral row is measured for the same property and classified in the schedule receipt.
+   > **(a) authors-own-rows** — retires by the ruled act (Amendments L/M/N), unchanged.
+   > **(b) pair-local fold into holder-own rows** — closes by Ruling 1's reclassification, each with
+   > its own machine check. **(c) roster-relevant fold**, its numbers reaching other participants or
+   > roster totals through rows it does not author — requires a **NAMED walk-side delivery term** in
+   > Amendment M's shape, and **if any class-(c) row lacks one the next retirement round STOPS**,
+   > with the row named, rather than a lane inventing a term for it. The triage measurement is
+   > **derived**, committed to `docs/receipts/receipt-walk-retirement-schedule.json`, and diff-gated
+   > by `tests/test_receipt_walk_schedule.py`. Terms were not to be discovered one halt at a time
+   > (Amendment N, Ruling 2); neither are shapes.
+   >
+   > **What this amendment does not do**, each available and refused. It retires no row: the nine
+   > that remain after the reclassification stand `overdue` and gated, and the machine still refuses
+   > a tenth. It budgets none of them — a class is a fact about the shape of a slice, never a smaller
+   > amount of it. It re-dates nothing, reads the debt as no smaller, and registers no interpreter.
+   > And it does not rule the `crit_profile` stop a lane error: refusing to force a ruled shape onto
+   > a family that cannot carry it is what Amendment M, Ruling 1 asked a lane to do, and what is
+   > removed here is the excuse that the next lane would have had to rediscover the shape.
+   >
+   > **Measured on the commit that lands this**, because the prose that opened this amendment
+   > describes one family and the ruling binds ten, and three of the checkable claims come out
+   > differently from the way a reader would guess.
+   >
+   > *The no-row shape is the common case among what is left, not the exception.* Measured by
+   > ablation over every covering coupled scenario and over a per-owner probe on a ranged and a melee
+   > champion, **six** of the ten open rows author no priced pair-engine row at all — `combat_state`,
+   > `crit_profile`, `damage_routing`, `opening_defense`, `resistance_shred` and `threshold_defense`
+   > — and only four author one. Had Ruling 2 not been written, five further retirement attempts
+   > would have hit the shape that stopped the fifth, one at a time.
+   >
+   > *Exactly one of the six is class (b), and the discriminator is a declaration the catalog already
+   > carries.* `crit_profile` is the only family all of whose declarations name `Subject.HOLDER`.
+   > `resistance_shred` and `damage_routing` declare `Subject.TARGET` payloads, which land on a
+   > shared defender every roster participant meets; `combat_state`, `opening_defense` and
+   > `threshold_defense` declare `DefenseField` writers with no subject, whose inputs are the
+   > subject's live state under combined fire — a roster input by the authority rule's own list. So
+   > Ruling 1 closes one row and not six, and the class-(b) test is read from the payload rather than
+   > judged. The obvious alternative test does **not** work and is recorded so nobody rebuilds it:
+   > ablating a family and watching the other participants is confounded by survival coupling —
+   > measured, removing `crit_profile`'s owners from `crit_onhit_carry_roster` moves the enemy
+   > Aatrox's *outgoing* damage and the holder's *incoming*, because a target that takes less damage
+   > lives longer, and that would have classified the one genuine class-(b) row as class (c).
+   >
+   > *One class-(c) row lacks a named delivery term and it is `damage_routing`.* Three of the five —
+   > `combat_state`, `opening_defense`, `threshold_defense` — have Amendment K's delivery standing in
+   > the tree today, `INTERPRETERS` holding the `(family, DEFENSE_RESOLVER)` key. `resistance_shred`
+   > has the `SPLIT` shape: both its owners declare a cross-participant half the walk already stages
+   > (`black_cleaver.carve`, `bloodletters_curse.vile_decay`). `damage_routing`'s three owners
+   > declare none, and no interpreter serves its lane, so **the next retirement round stops there by
+   > name**. Also recorded, because it would otherwise be mistaken for a row: `the_collector.execute`
+   > authors an `execute` row carrying `informational: true`, the same shape as
+   > `sundered_sky.forced_crit`, and Bloodthirster's lifesteal authors a heal row with no
+   > `total_damage` at all. The predicate the triage turns on is exact rather than a heuristic —
+   > summing `total_damage` over the rows it counts reproduces the fight's own `total_damage` — which
+   > is what keeps "authors no row" from being a reading of the row list.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
