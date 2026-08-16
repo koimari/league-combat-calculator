@@ -1,0 +1,127 @@
+{
+  "receipt_id": "oracle-RW-window-scenarios-leaf0",
+  "runbook": "R-18/R-19 (blinded independent oracle, with recorded amendments)",
+  "date": "2026-08-16",
+  "scenario": "lethality_window_assassin_roster",
+  "leaf_path": "/coupled_scenarios/lethality_window_assassin_roster",
+  "transition_kind": "absent_to_value (membership)",
+
+  "old_value": null,
+  "old_value_note": "<absent> - the leaf did not exist in the prior golden baseline.",
+  "new_value": "<captured scenario subtree for coupled_scenarios/lethality_window_assassin_roster>",
+  "new_value_note": "The captured subtree itself lives in scripts/golden_baseline.json, which R-18/R-19 blinding forbids this investigator from reading (scripts/, src/, tests/, docs/plans/, docs/receipts/, git history are all off-limits). The verification below is therefore of (a) whether the leaf legitimately belongs in the baseline at all, and (b) whether the game-data substrate and the closed-form invariants that any 'lethality window over an assassin roster' subtree must satisfy are sound and reproducible from primary cached sources. Numeric leaf-by-leaf agreement of the subtree was NOT checkable under blinding and is explicitly out of scope.",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": ["data/champions.json", "data/items.json", "data/README.md", "data/wiki/README.md", "data/wiki/article-index.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Section 2.1 (The 100/(100+R) identity)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.2 (Penetration and reduction order: exact composition)",
+      "quote": "apply_{armor,magic}_penetration(R, f, p): R \u2190 max(0, R\u00b7(1 \u2212 p) \u2212 f)              [% first, then flat, floor 0]"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.2, 'Floor.'",
+      "quote": "Penetration cannot reduce resistance below 0; excess lethality/flat pen is wasted, never converted into damage-amplifying negative resistance (max(0, \u2026))."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 table row 'Stat growth (growth_stat)'",
+      "quote": "base + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121))   |   EXACT   |   Level cap 20 (top lane)"
+    },
+    {
+      "source": "data/champions.json - per-champion stats.armor.flat / stats.armor.perLevel, and roles[] containing 'ASSASSIN'",
+      "quote": "50 champions carry the ASSASSIN role in the cache: Ahri, Akali, Akshan, Ambessa, Aurora, Briar, Camille, Diana, Ekko, Elise, Evelynn, Fiora, Fizz, Gwen, Irelia, Jax, Kassadin, Katarina, Kayn, Khazix, Leblanc, LeeSin, Locke, Lucian, Malzahar, MasterYi, Naafiri, Nidalee, Nilah, Nocturne, Pantheon, Pyke, Qiyana, Quinn, Rengar, Riven, Samira, Shaco, Sylas, Talon, Tristana, Tryndamere, Twitch, Vayne, Vi, Viego, Yasuo, Yone, Zaahen, Zed. Example: Aatrox-style record shape, armor {flat: 38, perLevel: 4.8}."
+    },
+    {
+      "source": "data/items.json - stats.lethality.flat plus modes / championRestriction / acquisitionNote (item_source availability fields documented in data/README.md)",
+      "quote": "Summoner's Rift-legal legendary lethality items and their flat lethality: Bastionbreaker 22, Youmuu's Ghostblade 18, Umbral Glaive 18, Axiom Arc 18, Hubris 18, Profane Hydra 18, Edge of Night 15, Serpent's Fang 15, The Collector 10, Voltaic Cyclosword 10. Withheld from ordinary SR builds by 'classic sr 5v5': false - Duskblade of Draktharr 20, Prowler's Claw 22, Regicide 15, Spectral Cutlass 15, Hellfire Hatchet 12. Components: Guardian's Dirk 11, Serrated Dirk 10, The Brutalizer 5, Lifeline 5."
+    },
+    {
+      "source": "data/items.json - Youmuu's Ghostblade mainText (cached wiki shop text)",
+      "quote": "<stats><attention> 55</attention> Attack Damage<br><attention> 18</attention> Lethality<br><attention> 4%</attention> Move Speed</stats>"
+    },
+    {
+      "source": "data/items.json - Voltaic Cyclosword passive branch (cached wiki text)",
+      "quote": "When fully {{tip|Energized}}, your next basic attack [[on-hit]] grants you {{as|{{rd|15|12}} lethality}} for 4 seconds and deals {{as|'''bonus''' physical damage}} equal to {{as|{{rd|9%|7%}} of the target's '''current''' health}}, capped at 200 against non-champions."
+    }
+  ],
+
+  "independent_computation": {
+    "claim_under_test": "A golden leaf named /coupled_scenarios/lethality_window_assassin_roster is a well-posed, data-backed scenario whose defining quantity - the 'lethality window' - is computable from the cached wiki data and the quoted formulas, and whose addition to the baseline is legitimate.",
+
+    "step_1_definition": {
+      "text": "Lethality is flat armor penetration applied to the target's armor at the flat-pen step. Composing the two quoted identities, the damage amplification a physical-damage attacker gains from a lethality total X against a target of armor A (no percent pen, no reduction) is amp(A, X) = m(max(0, A - X)) / m(A) = (100 + A) / (100 + max(0, A - X)).",
+      "sources": ["docs/math-foundations.md 2.1", "docs/math-foundations.md 2.2 + Floor"]
+    },
+
+    "step_2_window_theorem": {
+      "text": "amp(A, X) is a single-peaked (unimodal) function of A with the peak exactly at A = X. Proof: for A < X the floor binds, post-pen armor is 0, and amp = (100 + A)/100, strictly increasing in A. For A >= X, d/dA [(100+A)/(100+A-X)] = [(100+A-X) - (100+A)] / (100+A-X)^2 = -X/(100+A-X)^2 < 0, strictly decreasing. Hence the maximum is at A = X and equals amp_max = 1 + X/100 exactly. This is the 'window': below it lethality is wasted against the 0 floor, above it the convex 100/(100+R) mitigation curve decays its value as 1/(100+A) per point.",
+      "marginal_value_identity": "d/dX amp(A, X) at X = 0+ equals 1/(100 + A) - i.e. each point of lethality is worth 1/(100+A) of fractional damage, which is the quantity that decays with target level."
+    },
+
+    "step_3_roster_armor": {
+      "method": "For each of the 50 ASSASSIN-role champions in data/champions.json, armor(L) = armor.flat + armor.perLevel * (L-1) * (0.7025 + 0.0175*(L-1)); roster mean taken over all 50.",
+      "table": [
+        {"level": 1,  "mean_armor": 30.76,  "min": {"champion": "Malzahar", "armor": 18.00},  "max": {"champion": "Pantheon", "armor": 40.00}},
+        {"level": 6,  "mean_armor": 48.59,  "min": {"champion": "Malzahar", "armor": 36.56},  "max": {"champion": "Pantheon", "armor": 59.55}},
+        {"level": 11, "mean_armor": 70.38,  "min": {"champion": "Kassadin", "armor": 56.10},  "max": {"champion": "Pantheon", "armor": 83.44}},
+        {"level": 16, "mean_armor": 96.11,  "min": {"champion": "Kassadin", "armor": 78.90},  "max": {"champion": "Pantheon", "armor": 111.65}},
+        {"level": 18, "mean_armor": 107.52, "min": {"champion": "Kassadin", "armor": 89.00},  "max": {"champion": "Pantheon", "armor": 124.15}},
+        {"level": 20, "mean_armor": 119.55, "min": {"champion": "Kassadin", "armor": 99.66},  "max": {"champion": "Pantheon", "armor": 137.34}}
+      ]
+    },
+
+    "step_4_window_curve": {
+      "note": "amp(A(level), X) for the roster-mean armor path, and the marginal worth of one lethality point.",
+      "columns": ["level", "mean_armor", "amp@10", "amp@18", "amp@28", "amp@54", "pct_damage_per_lethality_point"],
+      "rows": [
+        [1,  30.76,  1.0828, 1.1596, 1.2725, 1.3076, "0.7648%"],
+        [3,  37.42,  1.0785, 1.1507, 1.2559, 1.3742, "0.7277%"],
+        [6,  48.59,  1.0722, 1.1378, 1.2322, 1.4859, "0.6730%"],
+        [9,  61.19,  1.0661, 1.1257, 1.2102, 1.5038, "0.6204%"],
+        [11, 70.38,  1.0624, 1.1181, 1.1967, 1.4640, "0.5869%"],
+        [13, 80.20,  1.0588, 1.1110, 1.1840, 1.4279, "0.5549%"],
+        [16, 96.11,  1.0537, 1.1011, 1.1666, 1.3800, "0.5099%"],
+        [18, 107.52, 1.0506, 1.0950, 1.1560, 1.3518, "0.4819%"],
+        [20, 119.55, 1.0477, 1.0893, 1.1462, 1.3262, "0.4555%"]
+      ],
+      "reading": "Against the assassin roster's own armor path, one point of lethality is worth 0.7648% extra physical damage at level 1 and 0.4555% at the level-20 cap - a 40.4% decay in marginal value. That monotone decay is the closing edge of the window."
+    },
+
+    "step_5_peak_verification": {
+      "note": "Numerical search over level in [1, 20] against the roster-mean armor path, confirming the closed form amp_max = 1 + X/100 at A = X.",
+      "rows": [
+        {"lethality_X": 10, "numeric_peak_amp": 1.0828, "at_level": 1.00,  "roster_mean_armor": 30.76, "closed_form_1_plus_X_over_100": 1.10, "note": "roster armor already exceeds X at level 1, so the observed peak is the left boundary of the level domain, not the theorem's peak"},
+        {"lethality_X": 18, "numeric_peak_amp": 1.1596, "at_level": 1.00,  "roster_mean_armor": 30.76, "closed_form_1_plus_X_over_100": 1.18, "note": "same - window already past its peak at level 1"},
+        {"lethality_X": 28, "numeric_peak_amp": 1.2725, "at_level": 1.00,  "roster_mean_armor": 30.76, "closed_form_1_plus_X_over_100": 1.28, "note": "peak sits just below level 1 (A = 28 < 30.76)"},
+        {"lethality_X": 54, "numeric_peak_amp": 1.5388, "at_level": 7.30,  "roster_mean_armor": 53.88, "closed_form_1_plus_X_over_100": 1.54, "note": "interior peak; numeric max lands at mean armor 53.88 vs X = 54, agreeing with A = X to 0.12 armor / 0.08% amp"},
+        {"lethality_X": 94, "numeric_peak_amp": 1.9395, "at_level": 15.61, "roster_mean_armor": 93.95, "closed_form_1_plus_X_over_100": 1.94, "note": "94 = max SR-legal 5-legendary stack (Bastionbreaker 22 + 4x18); numeric max at mean armor 93.95 vs X = 94, agreeing to 0.05 armor / 0.03% amp"}
+      ],
+      "conclusion": "The numeric search reproduces the closed form to within the level-grid resolution in every case with an interior peak. The window is real, unimodal, and its location is exactly the level at which the target roster's armor equals the attacker's lethality total."
+    },
+
+    "step_6_availability_bound": {
+      "text": "The realistic SR lethality range is bounded by the cached modes table, not by a name list (data/README.md item-source fields). Max ordinary SR 5-legendary lethality stack = 22 (Bastionbreaker) + 18 (Youmuu's) + 18 (Umbral Glaive) + 18 (Axiom Arc or Hubris) + 18 (Profane Hydra) = 94, transiently 109 with Voltaic Cyclosword's Energized +15 melee branch. Duskblade (20), Prowler's Claw (22) and Regicide (15) all carry 'classic sr 5v5': false with price 0 and are correctly outside that bound. The roster's armor spans 18.00 (Malzahar, L1) to 137.34 (Pantheon, L20), so the window peak A = X is reachable inside the roster's own level range for every stack size from 18 to 94 - i.e. the scenario name describes a genuinely non-degenerate region of the parameter space, not a saturated or an empty one."
+    }
+  },
+
+  "findings": [
+    "The scenario's premise is sound and fully reproducible from primary cached sources: the amplification identity, the 0-floor, the unimodal window with closed-form peak 1 + X/100 at A = X, and the 40.4% decay in per-point lethality value from level 1 to level 20 all follow from the two quoted formulas plus data/champions.json armor growth.",
+    "No contradiction was found between the leaf's existence and anything in data/ or docs/math-foundations.md. The 50-champion ASSASSIN roster exists in the cache, the SR-legal lethality item pool exists with a coherent 10..94 range, and no lethality item in the cache carries a champion restriction that would make an assassin roster ill-formed.",
+    "The cache shows no level-scaling term anywhere on the lethality stat (stats.lethality is a plain flat field on every item; no cached wiki text references a per-level lethality conversion). A window scenario built on flat 1:1 lethality is consistent with the cache; the retired 0.6 + 0.4*level/18 conversion has no representation in the data.",
+    "Two roster members, 'Locke' and 'Zaahen', are champions this investigator does not recognize from prior knowledge. They are present in the cached data with well-formed stat blocks, so per the fetch-don't-guess rule they are treated as real cache entries, not as anomalies. Flagged only as an observation.",
+    "SCOPE LIMIT: the captured subtree's individual numbers were not compared, because the baseline file is inside the blinded region. This receipt certifies the leaf's legitimacy and its mathematical/data substrate, not per-leaf numeric agreement."
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_rationale": "This is an absent-to-value membership transition: a new coupled scenario entering the golden baseline. 'old_value_correct' would assert that the leaf ought to remain absent - i.e. that a lethality-window scenario over an assassin roster is ill-posed or unsupported by the data. The independent computation refutes that: the window is a real, closed-form, non-degenerate phenomenon (peak amp = 1 + X/100 exactly at target armor = lethality total; per-point value decaying 0.7648% -> 0.4555% across levels 1-20 on this roster), it is computable end-to-end from data/champions.json + data/items.json + the quoted docs/math-foundations.md identities, and the roster and item pool it needs both exist in the cache with SR-legal availability. 'both_wrong' is likewise unsupported - nothing indicates the leaf should hold some third value instead of existing. The addition is therefore judged correct, with the stated scope limit that per-leaf numeric agreement inside the subtree was not verifiable under R-18/R-19 blinding.",
+  "confidence": "high on membership legitimacy and on the substrate computation; not applicable to per-leaf numeric agreement (out of scope under blinding)",
+  "committed": false
+}

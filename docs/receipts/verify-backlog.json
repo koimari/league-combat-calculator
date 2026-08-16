@@ -1153,12 +1153,13 @@
   },
   "campaign-close-window-armed-coverage": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
+   "commit_count": 4,
    "criteria_documents": [],
    "subjects": [
     "test(golden): a covering scenario for every re-pricing window, derived (campaign-close-window-armed-coverage)",
     "chore(baseline): capture the two window-armed rosters, and the artifacts that move with them (campaign-close-window-armed-coverage)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-window-armed-coverage)"
+    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-window-armed-coverage)",
+    "docs(receipts): six verdicts on the window-armed capture, filed though none was owed (campaign-close-window-armed-coverage)"
    ]
   },
   "umbrella [H] table": {

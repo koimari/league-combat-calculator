@@ -1,0 +1,99 @@
+{
+  "receipt": "oracle-RW-window-scenarios-leaf4",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "date": "2026-08-16",
+  "investigator": "independent oracle subagent (no knowledge of the change under test)",
+  "evidence_tree": {
+    "construction": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle4",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history"]
+  },
+  "scenario": "coupled snapshot shape counter",
+  "leaf_path": "/metadata/fingerprint/entries",
+  "old_value": 17,
+  "new_value": 19,
+
+  "independent_computation": {
+    "result": "NOT DERIVABLE FROM THE PERMITTED EVIDENCE — no independent value could be computed",
+    "why": "The leaf is a harness structural counter (a count of entries in a snapshot fingerprint under /metadata/), not a game-domain quantity. Nothing in the cached wiki text or in docs/math-foundations.md defines a snapshot fingerprint, an 'entries' count, or any rule that would fix its cardinality. An oracle restricted to game data + the math doc has no lever on it.",
+    "search_performed": [
+      "grep -i 'fingerprint' over all of data/  -> 0 hits",
+      "grep -i 'fingerprint|entries|snapshot shape|coupled snapshot' over docs/math-foundations.md -> 0 hits",
+      "grep '\"entries\"' over every JSON in data/ -> 0 hits (the key does not exist in the cache)",
+      "grep -i 'snapshot' over data/ -> only game-mechanic stat-snapshot prose (Rell 'Break the Mold' snapshots target armor/MR; Trundle R 'Subjugate' snapshots max health/armor/MR). Both are in-game stat snapshots, unrelated to a fingerprint entry count.",
+      "exhaustive structural scan: walked every JSON under data/ (excluding the 324 per-item files and the two >3MB caches) for any dict or list whose length is 17 or 19, to find a countable set the leaf might mirror"
+    ],
+    "structural_scan_result": {
+      "length_17_or_19_containers_found": 20,
+      "only_top_level_container": "data/runes.json (17 keystone entries)",
+      "others": "deep leaves with no relation to a snapshot shape: classification-report.json /champions/N/unclassified lists (17 or 19), /sanity_checks (19), unclassified.json mirrors, champion-audit/batch-7.json (19 champions), wiki/article-index.json '/Multitool/cats' and '/Tournament of Souls/cats' (17), wiki-atoms/damage.json /12/keywords (17)"
+    },
+    "candidate_anchors_tested_and_rejected": [
+      {
+        "hypothesis": "entries = the 17 keystone runes in data/runes.json (data/README.md: 'runes.json holds the 17 keystones')",
+        "verdict": "REJECTED as an anchor. The count 17 does match the cache exactly at HEAD, but there is no stated or implied link between a keystone roster and a per-scenario snapshot fingerprint, and the scenario name ('coupled snapshot shape counter') is about output shape, not rune selection. Recorded only because it is the single top-level 17 in the whole evidence tree and would be the one way the new value could be contradicted; the link cannot be established without reading src/ or scripts/, which the runbook forbids."
+      },
+      {
+        "hypothesis": "entries = the number of stat fields in a champion stat snapshot",
+        "verdict": "REJECTED. data/champions.json stats blocks carry 32 keys (20 excluding the aram*/urf* mode modifiers); no subset rule in the evidence yields 17 or 19 non-arbitrarily."
+      },
+      {
+        "hypothesis": "entries = the number of item-granted stat channels",
+        "verdict": "REJECTED. data/items.json exposes 22 distinct stat keys (abilityHaste, abilityPower, armor, armorPenetration, attackDamage, attackSpeed, cooldownReduction, criticalStrikeChance, criticalStrikeDamage, goldPer10, healAndShieldPower, health, healthRegen, lethality, lifesteal, magicPenetration, magicResistance, mana, manaRegen, movespeed, omnivamp, tenacity). Reaching 17 or 19 requires an arbitrary exclusion list, and equally arbitrary lists reach either value — a sign of no real anchor."
+      },
+      {
+        "hypothesis": "entries = the verification corpus size",
+        "verdict": "REJECTED. data/practice-corpus/scenarios.json holds 22 scenarios, neither 17 nor 19."
+      },
+      {
+        "hypothesis": "the math doc's 'coupled' machinery (Section 3) fixes the count",
+        "verdict": "REJECTED. Section 3 defines the coupled participant-timeline score f(S), |L| = 116 eligible legendaries, k = 5 slots, C(116,5) ~ 1.60e8 subsets. It quantifies the search space, never the shape or entry count of a serialized snapshot."
+      }
+    ],
+    "reasoning": "Every derivation route allowed by the runbook terminates without a value. The leaf sits under /metadata/, its name ('fingerprint/entries') and its scenario's name ('shape counter') both describe bookkeeping over the snapshot's own structure, and such a counter is defined only by the emitting code. Its correct value is whatever the snapshot's structure actually is at HEAD — a fact readable only from scripts/golden_baseline.json and src/, both outside this oracle's evidence tree by construction. Consequently this oracle can neither corroborate nor falsify 19. The one datum that could in principle have contradicted the new value (data/runes.json holding exactly 17 entries at HEAD, per data/README.md) is not linkable to this leaf by any evidence available here, so it does not constitute a contradiction — only an unresolved coincidence worth flagging to the parent, which can check whether the fingerprint is computed over the rune roster."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/README.md",
+      "quote": "runes.json holds the 17 keystones, parsed from the wiki's `Template:Rune data <name>` pages by src/calculator/rune_parser.py",
+      "used_for": "the only top-level '17' in the cache; tested as an anchor and rejected as unlinkable"
+    },
+    {
+      "source": "data/runes.json (HEAD)",
+      "quote": "17 top-level entries: Press the Attack, Lethal Tempo, Fleet Footwork, Conqueror, Electrocute, Dark Harvest, Hail of Blades, Summon Aery, Arcane Comet, Stormraider's Surge, Deathfire Touch, Grasp of the Undying, Aftershock, Guardian, Glacial Augment, Unsealed Spellbook, First Strike",
+      "used_for": "direct count corroborating the README; still 17 at HEAD"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 3.1 (Exact formulation)",
+      "quote": "L = eligible legendary items (116 in the current cache ...), k = max_legendary_slots (default 5), f(S) = the coupled participant-timeline score ... C(116, 5) ~ 1.60 x 10^8 subsets",
+      "used_for": "the only place the word 'coupled' is defined; contains no snapshot-shape or entry-count rule"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 4 (Variance and confidence)",
+      "quote": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "used_for": "confirms the golden snapshot is a harness artifact whose structure the doc never specifies"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (Formula-audit table)",
+      "quote": "table of 22 engine families with EXACT/APPROX verdicts (resistance, penetration, stat growth, attack speed, ability haste, auto DPS, crit expectation, rotation casts, DoT totals, stacking DoT, on-hit stacking, phantom hits, burn items, grievous wounds, shields, grey health, revive, BIS score, stat rounding, Terminus/BC ramps)",
+      "used_for": "exhaustive check that no audited formula family produces a metadata entry count"
+    },
+    {
+      "source": "data/champions.json (HEAD)",
+      "quote": "stats keys: health, healthRegen, mana, manaRegen, armor, magicResistance, attackDamage, movespeed, acquisitionRadius, selectionRadius, pathingRadius, gameplayRadius, criticalStrikeDamage, criticalStrikeDamageModifier, attackSpeed, attackSpeedRatio, attackCastTime, attackTotalTime, attackDelayOffset, attackRange, aram*/urf* modifiers (32 total)",
+      "used_for": "rejecting the stat-snapshot-field hypothesis"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json (HEAD)",
+      "quote": "22 scenarios; purpose: 'Practice-Tool reproducible verification corpus...'",
+      "used_for": "rejecting the corpus-size hypothesis"
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_qualification": "NON-FALSIFICATION, NOT CORROBORATION. This oracle found no evidence contradicting 19 and no evidence supporting 17 over 19; the leaf is outside the domain any wiki-cache/math-doc oracle can adjudicate. The runbook's three-way enum has no 'unverifiable' option, and asserting old_value_correct or both_wrong would be a positive claim this investigation cannot support, so the recorded new value is left standing. The parent must NOT read this as independent confirmation of 19: a /metadata/fingerprint/entries count is validated by inspecting the snapshot's own structure at HEAD (scripts/golden_baseline.json + the emitting code), which is exactly what this oracle is forbidden to do.",
+  "flag_to_parent": "Only unresolved coincidence: data/runes.json contains exactly 17 entries at HEAD and data/README.md pins that roster at 17. If the fingerprint's 'entries' is computed over the rune roster (or any other cached-data roster) rather than over the snapshot's output shape, then 19 contradicts the cache and the correct value would be 17. Confirm what the fingerprint enumerates before accepting the +2.",
+  "committed": false
+}

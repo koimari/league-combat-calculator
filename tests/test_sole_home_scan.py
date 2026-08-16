@@ -139,12 +139,26 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     been a site only while ``coupled_golden.entries`` sat on that integer —
     which is what a coincidence row is supposed to do, since it never said the
     integer was the figure.
+
+    And it rose to five, across five sources, the same day, when the
+    RW-window-scenarios oracle pass filed verdicts on three of the counters
+    that capture moved.  This is the second time the pattern has run --- a
+    capture moves every coupled census, the rows keyed to the previous figures
+    retire together, and then the oracle pass on that capture's own leaves
+    raises the count by one row per counter it adjudicates --- so the number
+    moving is the mechanism being legible rather than the criterion slipping.
+    Each of the three meets Amendment H's three conditions against the figure
+    the capture made live.  The fourth counter that capture moved drew a
+    verdict too and is *not* among these rows: ``/metadata/scenario_count`` is
+    not a ``/metadata/fingerprint/`` leaf, so no shape context puts its integer
+    in the scan's reach --- the detection rule holding the jurisdiction its own
+    docstring states, which is why the residue is five and not six.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 2
+    assert block["forced_restatements"] == 5
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 2
+    assert len({row.source for row in forced}) == 5
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )
