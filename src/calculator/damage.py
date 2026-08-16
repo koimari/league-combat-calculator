@@ -9391,8 +9391,9 @@ def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> No
     liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
     if liandry_row is None:  # pragma: no cover - registry invariant
         raise RuntimeError("Liandry adjustment has no breakdown row")
-    repriced = adjustments["liandry_events"]
-    _carry_declarations_onto_repriced_ticks(liandry_row.get("damage_events"), repriced)
+    repriced = _carry_declarations_onto_repriced_ticks(
+        liandry_row.get("damage_events"), adjustments["liandry_events"]
+    )
     liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
     liandry_row["damage_events"] = repriced
     state.total_damage += liandry_delta
@@ -9400,7 +9401,7 @@ def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> No
 
 def _carry_declarations_onto_repriced_ticks(
     authored: Any, repriced: list[dict[str, Any]]
-) -> None:
+) -> list[dict[str, Any]]:
     """Move each authored tick's declaration onto the tick that replaces it.
 
     The repriced ticks are the same burn's events walked in the same order,
@@ -9409,16 +9410,21 @@ def _carry_declarations_onto_repriced_ticks(
     the authored ticks, because a burn nobody has retired has nothing to
     carry and a raise there would be this function inventing a fight the
     engine has always run.
+
+    Returns the repriced ticks, so the replacement the caller installs is
+    visibly a function of the ticks it replaces rather than a list that
+    arrived from somewhere else — which is the same thing the term census
+    reads to tell a re-pricing from an authoring.
     """
     if not isinstance(authored, list):
-        return
+        return repriced
     carrying = [
         event
         for event in authored
         if isinstance(event, dict) and event.get("declared") is not None
     ]
     if not carrying:
-        return
+        return repriced
     if len(authored) != len(repriced):
         raise RuntimeError(
             f"Liandry reprice replaced {len(authored)} authored tick(s) with "
@@ -9438,6 +9444,7 @@ def _carry_declarations_onto_repriced_ticks(
             ),
             onto=repriced_tick,
         )
+    return repriced
 
 
 def _add_shadowflame_cinderbloom(
@@ -10583,6 +10590,14 @@ def _resolve_starting_shield_outcome(
 
     TDD remains damage dealt. Shields are reported as a separate defensive
     outcome so the UI does not hide how much of that damage reached health.
+
+    A max-health- or missing-health-scaled packet is re-priced here against
+    the target's live pools, which makes this the third site that changes what
+    an already-authored packet is worth — the one umbrella Amendment N's prose
+    did not name and its Ruling 2 census found.  Each such packet's
+    declaration is restated by the ratio the packet moved by, and rides back
+    onto the authored event with the number
+    (:func:`_restate_declaration`, Ruling 1's *kept in step*).
     """
     repriced = False
     pools = shield_ledger.build_pools(
@@ -10634,6 +10649,10 @@ def _resolve_starting_shield_outcome(
                 live_damage = remaining * live_raw / raw_damage
                 if abs(live_damage - remaining) > 1e-9:
                     repriced = True
+                    # The declaration moves by exactly what the packet moved
+                    # by (Amendment N, Ruling 1, through the site Ruling 2's
+                    # census added to the kept-in-step list).
+                    _restate_declaration(event, scale=live_damage / remaining)
                     remaining = live_damage
                     event["damage"] = live_damage
             outcome = shield_ledger.absorb(
@@ -10643,21 +10662,27 @@ def _resolve_starting_shield_outcome(
                 heal_drip.start(pools, event_time, outcome)
 
     if repriced:
-        repriced_by_source: dict[str, list[float]] = {}
+        # Each source's repriced packets, and the declaration each of them
+        # came out carrying: the ledger this walk mutated is a copy of the
+        # rows' own events, so a restatement made above reaches the authored
+        # packet only by riding back with the number beside it.
+        repriced_by_source: dict[str, list[tuple[float, Any]]] = {}
         for event in damage_events:
             repriced_by_source.setdefault(str(event.get("source_key", "")), []).append(
-                float(event.get("damage", 0.0))
+                (float(event.get("damage", 0.0)), event.get("declared"))
             )
         for source_key, entry in state.breakdown.items():
             values = repriced_by_source.get(source_key)
             if not values:
                 continue
-            entry["total_damage"] = sum(values)
+            entry["total_damage"] = sum(damage for damage, _ in values)
             declared = entry.get("damage_events")
             if isinstance(declared, list):
                 for index, nested in enumerate(declared):
                     if isinstance(nested, dict) and index < len(values):
-                        nested["damage"] = values[index]
+                        nested["damage"], declaration = values[index]
+                        if declaration is not None:
+                            nested["declared"] = declaration
         state.total_damage = sum(
             float(entry.get("total_damage", 0.0))
             for entry in state.breakdown.values()
