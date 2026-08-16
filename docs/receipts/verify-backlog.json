@@ -987,11 +987,13 @@
   },
   "campaign-close-crit-profile-retirement": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
+   "commit_count": 4,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): this slice's R-20 population, and the measurement that stopped it (campaign-close-crit-profile-retirement)",
-    "docs(receipts): the ruling the stopped retirement owes, opened where the campaign keeps them (campaign-close-crit-profile-retirement)"
+    "docs(receipts): the ruling the stopped retirement owes, opened where the campaign keeps them (campaign-close-crit-profile-retirement)",
+    "fix(receipts): the stopped retirement's receipt names the baselines it was measured against (campaign-close-crit-profile-retirement)",
+    "fix(receipts): the backlog row of the group that just fixed a gate names the commit that fixed it (campaign-close-crit-profile-retirement)"
    ]
   },
   "campaign-close-declared-pricing": {
