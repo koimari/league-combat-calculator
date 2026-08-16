@@ -1,5 +1,4 @@
 {
-  "slice": "campaign-close-active-cast-retirement",
   "decisions": [
     "R-17",
     "R-20",
@@ -14,25 +13,49 @@
     "umbrella Amendment L, Ruling 1 and Ruling 3",
     "umbrella Amendment M, Ruling 1 and Ruling 3"
   ],
-  "what_lands": "The second of the fourteen, and the first whose retiring act is Amendment F as written: a receipt-walk interpreter for the active_cast family, so the walk prices the six declared item actives itself instead of consuming the post-mitigation rows participant_timeline._pair_run_fight produces for them. One slice carrying every half Amendment L, Ruling 1 names -- the family's MechanicCapability declarations authored, its pair rows stamped pair_preview_of and declared THEORETICAL, the lane interpreter registered at (ACTIVE_CAST, RECEIPT_WALK) and wired to the from-declaration pricing path, the Quantity/disposition the priced leaf is born with, and the deferral row retired from docs/behavior-frontier.json with its blocked_on text corrected in the same commit (R-36).",
+  "expected_qualifying_occurrences": 0,
   "landed_against": {
-    "golden": "scripts/golden_baseline.json",
-    "coupled_golden": "scripts/golden_coupled_baseline.json",
     "coupled_exact": "scripts/golden_coupled_exact.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "golden": "scripts/golden_baseline.json",
     "rule": "R-17/R-32/D-97 -- no baseline moves inside any semantic commit of this slice. The code lands against the committed baselines plus this allowlist; a re-capture, if the measurement ever asks for one, is the integration agent's own commit."
   },
-  "expected_qualifying_occurrences": 0,
+  "measured_after": {
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical. Zero of the 2575 enumerated leaves moved, which is what the prediction said would happen and is NOT what makes the slice safe: both covering scenarios happen to price their active at the resistance the fight publishes, so neither can see the defect below.",
+    "dated": "2026-08-16",
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical. The declared pair-engine population of 0 held.",
+    "occurrences_outside_the_population": "R-01 row 8. mundo_3champ's score and winner moved deterministically (3305.0 -> 3427.7, repeated twice, identical with and without the compiled walk), which is the gate's 'search poisoning' row firing. Isolated to a build rather than to the search: with the pre-slice winner's five items locked, the composed roster leaf 'Stridebreaker (active)' reads 647.4 before and 568.5 after -- -78.9, -12.18 percent -- and 'Heart Zapper' moves 198.5 -> 202.7 downstream of it. Both clear R-15's bar. Neither leaf is in the committed coupled baseline, so R-20's population could not bound them; the bench found what the two covering scenarios cannot see.",
+    "outcome": "STOPPED. The slice was implemented in full, measured, and reverted; only its prerequisite (38f4702) and this receipt stand.",
+    "qualifying_occurrences_inside_the_population": 0,
+    "the_defect_this_measured": {
+      "measured_on": {
+        "declared_raw": 324.423936,
+        "scenario": "scripts/bench_coupled_optimizer.MUNDO_SCENARIO, items [Serylda's Grudge, Stridebreaker, Voltaic Cyclosword, Bastionbreaker, Trinity Force], boots Sorcerer's Shoes",
+        "vs_cassiopeia": {
+          "armour_the_pair_engine_actually_priced_at": 0.0,
+          "deleted": "11.4 percent of the packet",
+          "pair_engine_row": 324.4239360000001,
+          "published_baseline_effective_armor": 12.850000000000001,
+          "walk_from_declaration_price": 287.48244217988486
+        },
+        "vs_vayne": {
+          "armour_the_pair_engine_actually_priced_at": 0.45,
+          "deleted": "13.0 percent of the packet",
+          "pair_engine_row": 322.970568442011,
+          "published_baseline_effective_armor": 15.450000000000003,
+          "walk_from_declaration_price": 281.00817323516674
+        }
+      },
+      "mechanism": "damage._apply_temporary_lethality_windows (damage.py) rescales later timestamped physical packets by the ratio of a new and old armour multiplier once the complete authored ledger exists -- Voltaic Cyclosword's Firmament grants flat lethality AFTER its own energized packet, so an active authored earlier is re-priced afterwards. The per-fight figure program.compile.pair_resistance_baselines publishes, which survival.pricing.price_declared_packet takes as baseline_effective_armor, is the fight's resistance and not the packet's.",
+      "reported_for_oracle_investigation": "Two leaves qualify under R-15 and neither is a baseline leaf, so no baseline moved and no oracle receipt is owed under R-19. They are reported here as the measurement that stopped the slice: composed roster leaf 'Stridebreaker (active)' 647.4 -> 568.5, and 'Heart Zapper' 198.5 -> 202.7, on the locked mundo_3champ build named above.",
+      "summary": "The from-declaration pricing stage prices a packet at the fight's ONE published effective resistance, and the pair engine prices an item active at a time-varying one. Where the two differ, retiring the family deletes the difference.",
+      "what_the_ruling_would_have_to_settle": "Whether a retiring family's declaration is priced at the fight's published baseline (today's stage, which deletes the window) or at the resistance its own packet met (which needs the declaration to carry a per-packet resistance the ledger does not transport, kept in step by every site that re-prices an authored event -- _apply_temporary_lethality_windows for physical packets and _apply_liandry_reprice for magic ones). The second is a term on the budgeted stage in exactly the shape Amendment M added the amp term; the first is a behaviour change nobody has priced.",
+      "who_else_this_blocks": "cast_proc, on the same stage and the same term: eclipse.proc and scouts_slingshot.proc are physical packets a Firmament window rescales, and the magic procs sit under the same class of post-authoring reprice. Its covering scenarios hold no such window either, so its R-20 population would have reported zero for the same reason this one did.",
+      "why_the_slice_stopped_rather_than_shipping": "Umbrella Amendment M, Ruling 1 names two forbidden shapes for a retirement act, and this is the second of them: a family re-priced out of the pair engine's rows that drops a term the pair engine applied deletes a measured contribution from every total that holds one. The amp term was the first such term and Amendment M ruled it; this is a second, and Amendment M's own words -- 'Both are ruled here and neither is re-litigable by a lane' -- are why a lane measures it and does not invent the ruling."
+    }
+  },
+  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
   "qualifying_population": {
-    "enumerated_before_first_edit": true,
-    "enumerated_at": "38f4702",
-    "rule": "R-20's second half. The count is not readable off the pre-change tree by inspection: this slice moves where a number comes from rather than editing a formula, so which leaves can move is a property of which participants hold an active_cast owner, and that is a fact about the committed scenario set rather than about the diff. The population is therefore enumerated from committed artifacts -- scripts/golden_coupled_baseline.json's scenario subtrees, selected by the family-to-owner join docs/receipts/receipt-walk-retirement-schedule.json publishes -- before the slice's first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
-    "predicate": "Every committed coupled scenario that puts a declaring owner of the active_cast family on a participant. The six declared rules and their owners are read live from the behaviour catalog over rule_owners(): hextech_gunblade.active (Hextech Gunblade), hextech_rocketbelt.active (Hextech Rocketbelt), profane_hydra.active (Profane Hydra), ravenous_hydra.active (Ravenous Hydra), stridebreaker.active (Stridebreaker), tiamat.active (Tiamat). Two committed coupled scenarios hold one: amp_armed_mage_roster (Hextech Rocketbelt) and immolate_active_bruiser_roster (Stridebreaker). The whole coupled snapshot outside those two subtrees holds no leaf this slice can move.",
-    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the same instrument, and the same conservative bound, the retirement schedule uses for the fourteen rows: the whole scenario subtree, because a slice that moves a family's pricing can move any aggregate downstream of it inside that scenario.",
-    "population_by_scenario": {
-      "amp_armed_mage_roster": 785,
-      "immolate_active_bruiser_roster": 1790
-    },
-    "population_total": 2575,
     "covered_mechanics_by_scenario": {
       "amp_armed_mage_roster": [
         "hextech_rocketbelt.active"
@@ -41,26 +64,29 @@
         "stridebreaker.active"
       ]
     },
+    "enumerated_at": "38f4702",
+    "enumerated_before_first_edit": true,
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the same instrument, and the same conservative bound, the retirement schedule uses for the fourteen rows: the whole scenario subtree, because a slice that moves a family's pricing can move any aggregate downstream of it inside that scenario.",
+    "occurrences_outside_the_population": null,
     "pair_engine_population": {
+      "keys_unmoved": "breakdown_keys is a key list and this slice adds and removes no row; total_damage is the pair engine's own total and a stamped row still contributes to it.",
       "total": 0,
-      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface and this slice adds no pair-engine arithmetic. What it adds pair-side is two stamps: pair_preview_of on the family's breakdown row, and the row's own declaration on the events under it. Neither is a leaf that baseline holds -- the pair snapshot records each build's sorted breakdown_keys and its total_damage, never a row's inner fields and never an event -- and the pair fight's own receipt publishes a preview unchanged, which is the surface where the single-attacker answer IS the preview. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice.",
-      "keys_unmoved": "breakdown_keys is a key list and this slice adds and removes no row; total_damage is the pair engine's own total and a stamped row still contributes to it."
+      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface and this slice adds no pair-engine arithmetic. What it adds pair-side is two stamps: pair_preview_of on the family's breakdown row, and the row's own declaration on the events under it. Neither is a leaf that baseline holds -- the pair snapshot records each build's sorted breakdown_keys and its total_damage, never a row's inner fields and never an event -- and the pair fight's own receipt publishes a preview unchanged, which is the surface where the single-attacker answer IS the preview. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice."
     },
+    "population_by_scenario": {
+      "amp_armed_mage_roster": 785,
+      "immolate_active_bruiser_roster": 1790
+    },
+    "population_total": 2575,
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the active_cast family on a participant. The six declared rules and their owners are read live from the behaviour catalog over rule_owners(): hextech_gunblade.active (Hextech Gunblade), hextech_rocketbelt.active (Hextech Rocketbelt), profane_hydra.active (Profane Hydra), ravenous_hydra.active (Ravenous Hydra), stridebreaker.active (Stridebreaker), tiamat.active (Tiamat). Two committed coupled scenarios hold one: amp_armed_mage_roster (Hextech Rocketbelt) and immolate_active_bruiser_roster (Stridebreaker). The whole coupled snapshot outside those two subtrees holds no leaf this slice can move.",
     "predicted": "0 occurrences inside a population of 2575. The walk's from-declaration price and the pair engine's price are the same real number computed with the two multiplications associated differently -- the pair engine mitigates the declared magnitude and then multiplies by the holder's amps, the ruled order composes the amps onto the magnitude and mitigates once (Amendment M, Ruling 1) -- so the two agree to within one unit in the last place, which is four orders of magnitude below the 0.005 golden equality grades to (R-13). A leaf that did move could only move by 0.01, which qualifies under none of R-15's three tests: not >10 percent, not a transition other than value, not >1.0 abs_delta. Zero is therefore the prediction and not a hope, and a first occurrence is a stop.",
-    "occurrences_outside_the_population": null
+    "rule": "R-20's second half. The count is not readable off the pre-change tree by inspection: this slice moves where a number comes from rather than editing a formula, so which leaves can move is a property of which participants hold an active_cast owner, and that is a fact about the committed scenario set rather than about the diff. The population is therefore enumerated from committed artifacts -- scripts/golden_coupled_baseline.json's scenario subtrees, selected by the family-to-owner join docs/receipts/receipt-walk-retirement-schedule.json publishes -- before the slice's first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would."
   },
+  "slice": "campaign-close-active-cast-retirement",
+  "what_lands": "The second of the fourteen, and the first whose retiring act is Amendment F as written: a receipt-walk interpreter for the active_cast family, so the walk prices the six declared item actives itself instead of consuming the post-mitigation rows participant_timeline._pair_run_fight produces for them. One slice carrying every half Amendment L, Ruling 1 names -- the family's MechanicCapability declarations authored, its pair rows stamped pair_preview_of and declared THEORETICAL, the lane interpreter registered at (ACTIVE_CAST, RECEIPT_WALK) and wired to the from-declaration pricing path, the Quantity/disposition the priced leaf is born with, and the deferral row retired from docs/behavior-frontier.json with its blocked_on text corrected in the same commit (R-36). MEASURED AND STOPPED 2026-08-16 -- see measured_after: the act was implemented in full and reverted, because performing it on this tree deletes a term the pair engine applies. What stands from this slice group is the prerequisite transport (38f4702) and this receipt.",
   "why_the_pair_rows_are_stamped_here_and_were_not_at_delta_amp": {
-    "rule": "Amendment L, Ruling 1 requires a retiring family's pair rows to be stamped pair_preview_of and declared THEORETICAL.",
+    "active_cast": "Not empty. damage._add_item_active_damage authors one breakdown row per declared active, keyed active_<owner>, and adds its mitigated value to state.total_damage. Those are the rows the stamp names, and stamping them is what takes the pair engine's number out of every roster total that held it -- the numeric consequence Amendment L, Ruling 1 requires the slice to carry rather than defer.",
     "delta_amp": "Discharged as an emptiness: the three static holder amps author no summed pair-engine breakdown row, so the set of pair rows that family authors was empty.",
-    "active_cast": "Not empty. damage._add_item_active_damage authors one breakdown row per declared active, keyed active_<owner>, and adds its mitigated value to state.total_damage. Those are the rows the stamp names, and stamping them is what takes the pair engine's number out of every roster total that held it -- the numeric consequence Amendment L, Ruling 1 requires the slice to carry rather than defer."
-  },
-  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
-  "measured_after": {
-    "dated": null,
-    "commit": null,
-    "qualifying_occurrences": null,
-    "golden": null,
-    "coupled_golden": null,
-    "oracle_receipts_owed": null
+    "rule": "Amendment L, Ruling 1 requires a retiring family's pair rows to be stamped pair_preview_of and declared THEORETICAL."
   }
 }
