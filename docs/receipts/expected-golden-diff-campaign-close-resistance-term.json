@@ -1,0 +1,68 @@
+{
+  "slice": "campaign-close-resistance-term",
+  "decisions": [
+    "R-05",
+    "R-12",
+    "R-17",
+    "R-20",
+    "R-30",
+    "R-32",
+    "D-60",
+    "D-62",
+    "D-97",
+    "umbrella Amendment L, Ruling 3",
+    "umbrella Amendment M, Ruling 1",
+    "umbrella Amendment N, Ruling 1 and Ruling 2"
+  ],
+  "what_lands": "Umbrella Amendment N's first two rulings, performed. Ruling 1: survival.pricing.DeclaredPacket gains a per-packet effective-resistance term, transported from the authored ledger as the fourth fact of the declaration a re-priced pair preview already carries, and kept in step by every site that re-prices an authored event -- damage._apply_temporary_lethality_windows and damage._apply_liandry_reprice as the ruling names them, plus whatever Ruling 2's census adds to that list. Ruling 2: a source-derived census of every post-authoring packet-mutation site in the pair engine, gated, with an R-05 negative that turns it red on an injected site. Ruling 3 is not performed here and needs nothing from this slice: it landed as its own integration act (campaign-close-window-armed-coverage), and the two rosters it added are what makes this slice's equivalence fixtures measurable at all.",
+  "landed_against": {
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "golden": "scripts/golden_baseline.json",
+    "rule": "R-17/R-32/D-97 -- no baseline moves inside any semantic commit of this slice. The code lands against the committed baselines; a re-capture, if the measurement ever asks for one, is the integration agent's own commit."
+  },
+  "qualifying_population": {
+    "rule": "R-20's second half. The count is knowable by inspection here -- the stage is inert and the restatement is a strict no-op on a packet carrying no declaration -- but the population is still enumerated from committed artifacts before the slice's first src/ edit, because inertness is the whole claim and a claim measured after the edit measures the fix rather than predicting it.",
+    "enumerated_at": "acf1b81",
+    "enumerated_before_first_edit": true,
+    "method": "Every committed coupled scenario in scripts/golden_snapshot.COUPLED_SCENARIOS, resolved and run through calculator.pipeline.run_fight for each of its target fights, counting the authored damage events that carry a `declared` field -- which is the one field this slice's transport widens and the only route by which any of its code can move a number.",
+    "declared_events_by_scenario": {
+      "amp_armed_mage_roster": 0,
+      "catalyst_roster": 0,
+      "cleaver_bloodsong_roster": 0,
+      "crit_onhit_carry_roster": 0,
+      "dream_maker_roster": 0,
+      "hexoptics_basic_amp_carry": 0,
+      "immolate_active_bruiser_roster": 0,
+      "lethality_window_assassin_roster": 0,
+      "liandry_reprice_mage_roster": 0,
+      "mandate_abyssal_curse_roster": 0,
+      "score_event_scan_holder": 0,
+      "score_event_view_holder": 0,
+      "score_plain_tuple": 0,
+      "syndra_custom_order_120": 0,
+      "syndra_custom_order_39": 0,
+      "syndra_custom_order_60": 0,
+      "syndra_derived_order_120": 0,
+      "syndra_derived_order_39": 0,
+      "syndra_derived_order_60": 0
+    },
+    "declared_events_total": 0,
+    "walk_repriced_mechanics": [],
+    "the_two_windows_are_armed_and_hold_no_declaration": "The same enumeration counts the rows the two re-pricing windows fire on, because a population of zero declared events is only meaningful beside a non-zero population of the thing being re-priced: lethality_window_assassin_roster publishes one row carrying a temporary_lethality receipt and liandry_reprice_mage_roster publishes one Liandry burn row, and neither row's events carry a declaration. That pair is exactly the state Ruling 3's integration act created and Ruling 1 is written for -- the windows are visible to the coupled baseline for the first time, and nothing yet reaches them from the declaration side.",
+    "pair_engine_population": {
+      "total": 0,
+      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface, and it records each build's sorted breakdown_keys and its total_damage. This slice adds no pair-engine arithmetic: the three restatement calls it adds edit a packet's `declared` field and nothing else, and that field is absent from every packet the tree authors (the enumeration above). No key is added or removed and no total moves, so zero is a declared population rather than an observation and a single diff there stops the slice."
+    },
+    "predicted": "0 occurrences on both compared baselines. The population above bounds it: the from-declaration pricing path is reached only by a packet carrying a declaration, no packet the tree authors carries one, and the restatement home returns without writing on exactly that condition. Any occurrence at all is therefore outside the population and stops the slice."
+  },
+  "expected_qualifying_occurrences": 0,
+  "measured_after": {
+    "dated": "2026-08-16",
+    "golden": "PENDING -- filled by the slice's own gate run.",
+    "coupled_golden": "PENDING -- filled by the slice's own gate run.",
+    "qualifying_occurrences_inside_the_population": null,
+    "occurrences_outside_the_population": null
+  },
+  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice."
+}
