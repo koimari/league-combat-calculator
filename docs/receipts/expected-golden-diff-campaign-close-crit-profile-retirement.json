@@ -1,0 +1,69 @@
+{
+  "slice": "campaign-close-crit-profile-retirement",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 1"
+  ],
+  "what_was_attempted": "crit_profile/receipt_walk, the fifth of the fourteen and the second family of this slice group, in Amendment L, Ruling 1's whole shape: the family's three mechanics declaring both halves, its pair rows stamped pair_preview_of and declared THEORETICAL, interpreters.crit_profile gaining a WALK_INTERPRETER registered at (CRIT_PROFILE, RECEIPT_WALK), and the deferral row retiring with it.",
+  "what_landed": "Nothing in src/. The slice is STOPPED before its first src/ edit, on a measurement, and this receipt is what a stopped retirement leaves behind. The precedent is campaign-close-active-cast-retirement, which measured a missing term and reverted rather than shipping half a retirement; the difference is that that one's missing half was a term a ruling could add to a budgeted stage, and this one's is the retiring act itself.",
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half, discharged in the order it requires even though the slice then stopped: the population was enumerated from committed artifacts -- the committed docs/receipts/receipt-walk-retirement-schedule.json at f9d2817 and scripts/golden_coupled_baseline.json's scenario subtrees -- before any src/ edit was attempted for this family. A stopped slice publishes its population for the same reason a shipped one does: the next lane to pick this family up inherits a measured bound rather than an estimate.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the crit_profile family on a participant. The three owners are read live from the behaviour catalog over rule_owners() -- Infinity Edge, Navori Flickerblade, Sundered Sky -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "crit_onhit_carry_roster": 3498,
+      "hexoptics_basic_amp_carry": 1354
+    },
+    "population_total": 4852,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "No src/ edit landed, so no leaf of either baseline could move. Both compares read 'snapshot identical' on the commit that files this receipt."
+    },
+    "occurrences_outside_the_population": 0
+  },
+  "the_measurement_that_stopped_it": {
+    "what_was_measured": "Which pair-engine breakdown rows the crit_profile family authors, run over both covering scenarios' roster shapes and over each of the three owners alone, ranged and melee.",
+    "infinity_edge.crit_damage_bonus": "Authors no breakdown row on any build measured. Its number is a multiplier on the critical-strike damage of the champion's own basic attacks, folded into the auto_attacks row while that row is priced.",
+    "navori_flickerblade.cooldown_refund": "Authors no breakdown row and no damage at all. It refunds a share of the holder's remaining ability cooldowns on a basic attack, which changes how many casts a rotation holds and therefore moves the ability rows -- rows this family does not own.",
+    "sundered_sky.forced_crit": "Authors one row, `sundered_sky`, and that row carries `informational: true`: it publishes the DIFFERENCE the forced crit made to the auto row as a display figure and is summed into no total. Its sibling `heal_Sundered Sky` is a heal, not damage. Measured on a Caitlyn and on a Darius, with and without the other two owners.",
+    "the_covering_scenarios_hold_only_the_first": "crit_onhit_carry_roster and hexoptics_basic_amp_carry both equip Infinity Edge and neither equips Sundered Sky or Navori Flickerblade, so across the whole enumerated population of 4852 the family authors zero pair-engine rows -- not one to stamp and not one to withhold."
+  },
+  "why_the_ruled_act_cannot_be_performed_in_the_ruled_shape": {
+    "the_shape": "Amendment L, Ruling 1 rules the retirement act as one behaviour slice carrying BOTH halves at once: the family's pair rows stamped pair_preview_of and declared THEORETICAL, and the lane interpreter wired to the from-declaration pricing path, with the family's numeric consequence -- 'the pair row leaving the roster total, the walk's own number entering it'. Both halves name a pair row this family authors. It authors none.",
+    "the_three_ways_out_and_why_each_is_refused": {
+      "stamp_the_row_the_number_is_folded_into": "auto_attacks would have to be stamped as a preview of infinity_edge.crit_damage_bonus. That row is the champion's own basic-attack damage with every other on-swing contribution folded into it, so stamping it takes a number this family did not author out of every roster total and hands the walk a declaration for damage that is not this family's -- the deletion Ruling 1's second forbidden shape names, at the largest row in the fight.",
+      "register_the_interpreter_alone": "(CRIT_PROFILE, RECEIPT_WALK) could be registered with an interpreter compiling the same fields the pair lane compiles and handing the walk nothing. Amendment K refuses this in terms -- 'it registers no interpreter that emits fields nothing consumes: a counter driven to zero by editing what it counts is worse than the gap' -- and it is D-40's own prohibition.",
+      "split_the_pair_engine_s_auto_row": "The crit bonus could be made a row of its own so that this family had one to preview. That is a pair-engine behaviour change with its own golden consequence and its own slice; this slice's gate is zero pair-engine golden diffs, and re-shaping the basic-attack ledger is not this family's retirement."
+    },
+    "why_the_delta_amp_shape_does_not_reach_it_either": "delta_amp is the one family already retired without stamping a pair row, and its receipt records the stamping half as discharged-by-emptiness for exactly the reason this one would: the three static holder amps author no row either. What made that legal is that Amendment M, Ruling 1 NAMED delta_amp's walk-side delivery -- the holder's static amps, composed onto every DeclaredPacket the walk prices -- so the interpreter it registered delivers a term the walk's own pricer consumes. Measured here: the pricing stage has no crit term of any kind, and none of the packets it prices crits. Across the committed coupled scenarios the tree authors 17 previewed pair rows and 0 of them carry a crit split (num_crits or crit_damage_per_hit). So there is no term for a crit_profile walk interpreter to deliver, and registering one would be the second refused way out above rather than the delta_amp shape."
+  },
+  "the_ruled_prerequisite_that_is_missing": {
+    "what": "A ruling naming crit_profile's retiring act's walk-side delivery, in the way umbrella Amendment M, Ruling 1 named delta_amp's -- or, alternatively, a ruling that this family's numbers are not the walk's to price and that its deferral row is closed on a different ground than a retirement.",
+    "why_no_lane_may_write_it": "Both readings re-scope a debt the umbrella sized. Amendment F sizes the receipt-walk debt at fourteen slices and Amendment K settles the lane each is spelled in; neither reaches a family with no packet, and choosing for it is a lane deciding what its own criterion means, which umbrella criterion 11 forbids a phase document from doing.",
+    "row_opened": "docs/receipts/rulings-owed.json, whether_a_family_that_authors_no_pair_row_can_retire_off_the_pair_engine"
+  },
+  "what_this_receipt_does_not_do": "It does not retire the row, re-date it, read the debt as smaller, or touch _FAMILY_LANES. crit_profile/receipt_walk stands in docs/behavior-frontier.json, overdue and gated, with its blocker unchanged; the schedule still sizes it at 4852 leaves across two covering scenarios; and the machine still refuses a row the tree no longer defers. What is removed is the excuse that nobody had measured why this one is different.",
+  "measured_after": {
+    "dated": "2026-08-16",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15); no src/ edit landed for this family, so no leaf of the enumerated 4852 could move and none did."
+  }
+}
