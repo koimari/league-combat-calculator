@@ -1232,6 +1232,86 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > backwards — and this ruling does not reach it. Its id is deliberately not written here: an
    > owed row and an amendment cannot both be true of one question, and the ledger's gate reads
    > this file for exactly that collision.
+   >
+   > **Amendment Q — 2026-08-16, the lane a served walk-side need does not owe.**
+   > *Answers the eighth row of `docs/receipts/rulings-owed.json`,
+   > `what_retires_a_deferral_whose_ruled_act_is_performed_in_another_lane`, opened by the
+   > retirement lane that went to start `combat_state/receipt_walk` and measured that its ruled
+   > retiring act was already performed.* That lane measured three things and refused three moves.
+   > The `(family, DEFENSE_RESOLVER)` interpreters are registered for `combat_state`,
+   > `opening_defense` and `threshold_defense`, so Amendment K's act is done for all three; the walk
+   > consumes the resolver's resolved state rather than a pair-engine row — `force_of_nature.steadfast`'s
+   > own capability names the walk-side implementation reading it
+   > (`src/calculator/trigger_stream.py:1495`), and that function is in the tree
+   > (`src/calculator/survival/transitions.py:360`) — and a receipt-walk interpreter there would be
+   > a **second producer of one number**, which D-60 and criterion 8 forbid in terms. The rows
+   > persisted anyway, because `_FAMILY_LANES` (`src/calculator/interpreters/__init__.py:114`) still
+   > declared `RECEIPT_WALK` a needed lane and `interpreters.uninterpreted_pairs()` therefore kept
+   > the pair. The lane stopped, filed its measurement and opened the row. That was correct and it
+   > is answered here.
+   >
+   > **RULING — LANE-DECLARATION CORRECTION.** A family whose walk-side need is satisfied
+   > **through its declared serving lane** does not need — and **must not declare** — a
+   > `RECEIPT_WALK` interpreter lane. One producer is precisely what the one-engine thesis demands,
+   > so a table that goes on asking a second lane for an answer the first lane already gives is
+   > asking for the thing criterion 8 forbids, and the deferral row underneath it is counting the
+   > absence of a defect. `RECEIPT_WALK` therefore leaves `_FAMILY_LANES` for **exactly these three
+   > measured families**, on the measured ground, in Amendment O, Ruling 1's shape — **with a
+   > machine check in both directions and a reopening condition**, and the three rows close as
+   > lane-declaration corrections rather than as retirements.
+   >
+   > **The check runs in both directions, because one direction is a half-check.** Forwards: the
+   > named walk-side implementation reads the resolver's resolved state, **source-asserted** — the
+   > fields each declaration writes are derived by running the family's own resolver interpreter,
+   > the sites consuming them are derived by walking every module outside the resolver for a read of
+   > that field off a resolved defences value, and a declaration nothing consumes fails the gate by
+   > name. Backwards: deleting the family's resolver interpreter must flip its items to
+   > **`withheld` with a named receipt**, never to a silent zero — run on every check rather than
+   > reasoned about, over every declaring owner, and an **R-05 negative** proves the red. The
+   > forwards half alone would let a family whose numbers reached the walk from somewhere else keep
+   > its lane dropped; the backwards half alone would let a family nothing consumes keep it. The
+   > **reopening condition** is the third clause: if a mechanic of one of these families ever
+   > authors walk-priced rows not fed by the resolver, the lane **re-enters** and the row reopens —
+   > measured on every run by the same ablation the triage uses.
+   >
+   > **This is not D-40's prohibition, and the distinction is the whole of why the act is legal.**
+   > D-40 forbids a counter driven to zero by editing what it counts — a lane table edited so a
+   > family stops owing the walk an answer *while the walk goes on consuming that family's numbers
+   > from somewhere*. Here the walk consumes this family's numbers from **the lane the family
+   > declares**, that is measured before the table moves and stays measured after it, and the
+   > declaration is corrected **on a ground recorded in this file with its check** rather than
+   > edited to move a counter. Amendment K's three refusals stand exactly as written and none of
+   > them is this act: no interpreter is registered that emits fields nothing consumes, Amendment
+   > F's fourteen are not read as eleven, and what changes is a declaration that was wrong rather
+   > than a debt that was owed.
+   >
+   > **What this amendment does not do**, each available and refused. It **retires nothing**: no
+   > interpreter is registered, no walk begins pricing anything it did not price, and the five rows
+   > that remain stand `overdue` and gated with the machine still refusing a sixth. It **budgets
+   > nothing**. It **reads the debt as no smaller**: three rows leave as mis-declared and say so in
+   > their own words, which is a correction to a declaration and not a discount on a debt, exactly
+   > as Amendment O, Ruling 1's one row left as mis-scheduled. It does **not** reclassify these
+   > families `PAIR_ONLY` — Amendment O, Ruling 1 measured them out of that class in its own
+   > paragraph, and this is the other ground. And it **moves no triage class letter**: all three
+   > stay class (c), measured from the pair rows they author, which is none.
+   >
+   > **Measured on the commit that lands this**, because the ruling's ground is a claim about the
+   > tree and two of the checkable claims come out differently from the way a reader would guess.
+   > All twenty declarations of the three families have their resolved fields consumed outside the
+   > resolver, and the consuming sites are four modules rather than one — the walk's own transitions
+   > and receipt state, the participant timeline, and the roster composition that hands a defender's
+   > resolved state to the pair fights the walk runs. **One resolved field is consumed nowhere and
+   > it is published rather than hidden**: Steadfast's move-speed bonus, which no engine in this
+   > model reads, so the check is stated per declaration and the unread residue enumerated beside
+   > it. And every one of the twenty declaring owners flips to `withheld` naming its own
+   > `(family, defense_resolver)` pair when the resolver interpreter is removed — twenty for twenty,
+   > including the owners that declare a second family as well, which is the case a spot check
+   > would have missed.
+   >
+   > **The rulings-owed row closes here** — `what_retires_a_deferral_whose_ruled_act_is_performed_in_another_lane`
+   > moves to `answered[]` under that ledger's own closure rule, keeping its question beside it.
+   > The ledger's one remaining open row is the first one it opened, whether criterion 11's first
+   > clause binds the campaign backwards, and this ruling does not reach it.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
