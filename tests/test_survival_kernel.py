@@ -57,6 +57,11 @@ from src.calculator.interpreters import (
 )
 from src.calculator.interpreters.reactive import thorns_effects
 from src.calculator.item_behavior import EngineLane, RuleFamily
+from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
+from src.calculator.program.build import (
+    pair_preview_mechanics,
+    walk_repriced_mechanics,
+)
 from src.calculator.item_effects import DamageInputs
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event
@@ -1638,6 +1643,33 @@ DECLARED_PACKET_CONSTRUCTION = re.compile(r"\bDeclaredPacket\s*\(")
 
 PRICING_MODULE = "src/calculator/survival/pricing.py"
 
+#: The one module allowed to *compose* a declared packet, as against the one
+#: allowed to declare the type.  A roster composes a pair fight in two
+#: places, and `program/compile.py` is where both of them meet
+#: (`declared_packet_of`), so a second composition site anywhere else is the
+#: second reader of one declaration this scan exists to catch.
+COMPOSITION_MODULE = "src/calculator/program/compile.py"
+
+#: The two homes a `DeclaredPacket(` line may legally appear in.  Everything
+#: else is a family pricing its own declaration behind the registry's back.
+DECLARED_PACKET_HOMES = (PRICING_MODULE, COMPOSITION_MODULE)
+
+
+def _repriced_owners() -> frozenset[str]:
+    """Which item names own a mechanic the walk re-prices from its declaration.
+
+    The opt-in set, spelled the way a fixture asks about it: `Sunfire Aegis`
+    rather than `sunfire_aegis.continuous_aura`, so a fixture states the item
+    it is built on and never a mechanic-id spelling it would have to keep in
+    step by hand.
+    """
+    return frozenset(
+        rule.owner
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if rule.mechanic_id in walk_repriced_mechanics()
+    )
+
 
 def _src_sources() -> Mapping[str, str]:
     """Every `src/calculator/` module's text, keyed by repo-relative path."""
@@ -1660,7 +1692,8 @@ def declared_packet_construction_sites(
     return tuple(
         path
         for path, text in sorted((sources or _src_sources()).items())
-        if path != PRICING_MODULE and DECLARED_PACKET_CONSTRUCTION.search(text)
+        if path not in DECLARED_PACKET_HOMES
+        and DECLARED_PACKET_CONSTRUCTION.search(text)
     )
 
 
@@ -1798,14 +1831,23 @@ class TestThePathIsInertUntilAFamilyOptsIn:
     """Amendment L, Ruling 3's inertness clause, asserted not assumed."""
 
     def test_no_packet_the_tree_produces_carries_a_declaration(self):
-        """Zero construction sites in `src/`, its own home aside.
+        """Zero construction sites in `src/`, its two declared homes aside.
 
         This is what makes the stage a re-spelling rather than a re-pricing:
         every family still reaches the walk as the pair engine's timed rows,
         so both compared baselines and every bench counter are unmovable by
-        this path until a retirement slice writes the first construction.
+        this path until a retirement slice opts one in.
+
+        The predicate is the *opt-in*, not the composition site.  The
+        composition exists — one home, gated — and what keeps it unreached is
+        that no mechanic declares a walk half whose packet the walk re-prices.
+        Asserting the site count alone would have made the transport itself
+        look like the behaviour change, which it is not; asserting the empty
+        opt-in set is the claim that is actually load-bearing, and it is the
+        one a retirement slice moves.
         """
         assert declared_packet_construction_sites() == ()
+        assert walk_repriced_mechanics() == frozenset()
 
     def test_the_default_action_declares_nothing(self):
         """The field's default is the inertness, so it is asserted too."""
@@ -1967,7 +2009,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
         tree carries a declaration at all.
         """
         assert (PRICING_EQUIVALENCE.family, EngineLane.RECEIPT_WALK) not in INTERPRETERS
-        assert declared_packet_construction_sites() == ()
+        assert not _repriced_owners() & {PRICING_EQUIVALENCE.owner}
 
     def test_the_declaration_prices_to_the_pair_engines_own_number(self):
         """Bit-exact, on identical inputs — the fixture this stage owes.
@@ -2318,8 +2360,6 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
     retirement slices land against, and an invariant nobody wrote down before
     the first slice is one the first slice gets to define.
     """
-    from src.calculator.program.build import pair_preview_mechanics
-
     # No static holder amp is among the previewed mechanics, because none of
     # the three authors a summed pair row to preview: they are factors inside
     # `_mitigate` and `_add_item_proc_damage`, and the one row that names an
@@ -2342,3 +2382,10 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
     # both exist for one packet by construction rather than by review.
     assert SurvivalAction().declared is None
     assert declared_packet_construction_sites() == ()
+
+    # And the join that makes the two sides one property: every mechanic whose
+    # pair row is a preview is either dropped from the roster composition or
+    # re-priced from its declaration, never both.  The two sets partition the
+    # previews, so no packet can carry the pair engine's number *and* the
+    # walk's.
+    assert walk_repriced_mechanics() <= pair_preview_mechanics()

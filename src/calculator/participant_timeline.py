@@ -55,8 +55,14 @@ from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
 from .item_behavior import BelowHalfHealingRule, RegenerationRule, ThresholdRegenRule
+from .ability_spec import AttackClass
+from .interpreters.delta_amp import (
+    StaticHolderAmps,
+    resolve_static_holder_amps,
+)
 from .item_effects import (
     ThornsEffect,
+    actualizer_active_seconds,
     serpents_fang_venom,
 )
 from .resistance import (
@@ -84,6 +90,7 @@ from .survival import (
     resolve_grievous as _grievous_pack,
     support_transition_rank,
 )
+from .survival.pricing import DeclaredPacket
 
 # The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
 # both layers, so this module is where the logical builder and the kernel it
@@ -105,6 +112,7 @@ from .program.amp import (
 from .program.build import (
     ParamPatch,
     arming_stacking,
+    dropped_pair_previews,
     pair_preview_sources,
     roster_program,
 )
@@ -128,6 +136,7 @@ from .program.rung import (
 from .program.compile import (
     WalkCompiler,
     action_from_event,
+    declared_packet_of,
     grey_health_heal_action,
     modifier_delivery_receipt,
     pair_resistance_baselines,
@@ -358,6 +367,7 @@ def _pair_packet(  # pylint: disable=too-many-arguments
     defender_index: int = 0,
     champion_data: Mapping[str, Any] | None = None,
     live_amps: Sequence[LiveAmpRider] = (),
+    holder_amps: StaticHolderAmps | None = None,
 ) -> dict[str, Any]:
     """Enrich one pair fight's events exactly once.
 
@@ -387,6 +397,14 @@ def _pair_packet(  # pylint: disable=too-many-arguments
     as events of their own: the bonus must die with its host, so a packet a
     spell shield or a death stops carries no bonus without anything having
     to cancel one.
+
+    ``holder_amps`` are the attacker's own static, pair-local amplifiers
+    (:func:`~.interpreters.delta_amp.resolve_static_holder_amps`), needed by
+    exactly one thing: composing the :class:`~.survival.pricing.DeclaredPacket`
+    of a retired family's packet, whose price the walk owes and whose amp
+    term the pair engine no longer applied for it.  ``None`` is legal only
+    while this pair fight carries no such packet, and a fight that carries
+    one without them is refused rather than priced at an unamplified value.
     """
     events: list[dict[str, Any]] = []
     cast_timeline = result.get("cast_timeline", [])
@@ -404,6 +422,20 @@ def _pair_packet(  # pylint: disable=too-many-arguments
     # the preview of it are both in one total, which is a double count with
     # no symptom (D-62).
     previewed = pair_preview_sources(result_breakdown)
+    # Of those, the rows whose packet the walk *re-prices* rather than
+    # drops: a retired family's declaration is priced from the packet the
+    # pair engine timed, so the event survives carrying its declaration and
+    # only the pair engine's number leaves the roster total.  A preview the
+    # walk delivers some other way (a rider) is dropped whole, as before.
+    dropped = dropped_pair_previews(result_breakdown)
+    repriced = previewed - dropped
+    if repriced and holder_amps is None:
+        raise ValueError(
+            f"{attacker_id} carries {len(repriced)} re-priced pair preview(s) "
+            "and no resolved static holder amps; pricing them without the "
+            "holder's own amplifiers would silently drop a term the pair "
+            "engine applied"
+        )
     champion_wounds = (
         champion_grievous_wound_sources(champion_data)
         if champion_data is not None
@@ -436,7 +468,7 @@ def _pair_packet(  # pylint: disable=too-many-arguments
                 "event-id numbering"
             )
         source_key = str(event.get("source_key", ""))
-        if source_key in previewed:
+        if source_key in dropped:
             # ``continue`` rather than a filtered list: ``index`` is the
             # per-pair event id, and re-numbering the survivors would move
             # every public id downstream of the first preview.
@@ -483,6 +515,13 @@ def _pair_packet(  # pylint: disable=too-many-arguments
             live_amp = live_amp_for(live_amps, str(event.get("damage_type", "")))
             if live_amp is not None:
                 enriched["_live_amp"] = live_amp
+        if source_key in repriced:
+            enriched["_declared"] = declared_packet_of(
+                event.get("declared"),
+                str(event.get("damage_type", "")),
+                source_key,
+                holder_amps,
+            )
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)),
             TransitionRank.DAMAGE,
@@ -567,9 +606,43 @@ def _pair_packet(  # pylint: disable=too-many-arguments
                 ),
             }
             for source, entry in result_breakdown.items()
-            if isinstance(entry, Mapping) and source not in previewed
+            if isinstance(entry, Mapping) and source not in dropped
         },
     }
+
+
+def _holder_amps_of(
+    attacker: Combatant, defender: Combatant, params: FightParams
+) -> StaticHolderAmps:
+    """*attacker*'s own static, pair-local amplifiers, resolved for this pair.
+
+    The composition-site twin of :func:`_live_amps_of`, and it takes the same
+    three inputs for the same reason: the attacker's owners and level, and
+    the defender's bonus health, which a declared magnitude may be stated per
+    hundred of.
+
+    ``ability_amp_armed`` is read off the attacker's own resolved combat
+    state rather than assumed, because the ability amp rides an item active
+    and a build that never triggered it amplifies nothing — an amp armed by
+    a default would be a number invented rather than delivered.
+    """
+    return resolve_static_holder_amps(
+        list(attacker.items),
+        holder_stats=attacker.stats,
+        ability_amp_armed=(
+            params.include_actives
+            and actualizer_active_seconds(
+                attacker.items,
+                params.item_options,
+                fight_duration_seconds=params.fight_duration_seconds,
+            )
+            > 0.0
+        ),
+        level=attacker.level,
+        fight_duration_seconds=params.fight_duration_seconds,
+        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
+        holder_is_melee=bool(attacker.stats.get("is_melee")),
+    )
 
 
 def _live_amps_of(
@@ -2762,6 +2835,7 @@ def _context_setup(
                 defender_index,
                 champion_data=attacker.champion_data,
                 live_amps=_live_amps_of(attacker, defender, params),
+                holder_amps=_holder_amps_of(attacker, defender, params),
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -2891,6 +2965,7 @@ def _build_signature_panel(
                 "main",
                 champion_data=attacker.champion_data,
                 live_amps=_live_amps_of(attacker, main, params),
+                holder_amps=_holder_amps_of(attacker, main, params),
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -3089,6 +3164,7 @@ def _score_with_search_context(
             defender_index,
             champion_wounds=main_champion_wounds,
             live_amps=_live_amps_of(main, defender, params),
+            holder_amps=_holder_amps_of(main, defender, params),
         )
     if first_result is not None and first_defender is not None:
         # The item support scan reads per-event target/id fields that only
@@ -3128,7 +3204,7 @@ def _score_with_search_context(
             # as in ``_pair_packet``: ``index`` is the per-pair event id
             # and re-numbering the survivors would move every id after
             # the first preview.
-            scan_previewed = pair_preview_sources(first_result.get("breakdown") or {})
+            scan_previewed = dropped_pair_previews(first_result.get("breakdown") or {})
             support_scan_events = []
             for index, event in enumerate(first_result.get("damage_events", [])):
                 if str(event.get("source_key", "")) in scan_previewed:
@@ -3762,6 +3838,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         defender_index,
                         champion_data=attacker.champion_data,
                         live_amps=_live_amps_of(attacker, defender, params),
+                        holder_amps=_holder_amps_of(attacker, defender, params),
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet

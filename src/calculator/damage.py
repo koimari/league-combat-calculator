@@ -1323,7 +1323,7 @@ def _ordered_damage_events(
     fourth damage type.
 
     ``light=True`` returns ``(sort_key, damage, damage_type, source_key,
-    raw_formula, raw_damage)`` tuples instead of full rows — the same
+    raw_formula, raw_damage, declared)`` tuples instead of full rows — the same
     events, the same ``(time, order, phase, sequence)`` order, one shared
     iteration — for the mid-fight consumers (threshold-trigger scans,
     amplifier delta authoring) that never serve the returned ledger
@@ -1376,6 +1376,13 @@ def _ordered_damage_events(
                     source_key,
                     raw_formula,
                     0.0 if raw_damage is None else raw_damage,
+                    # A row reconstructed here has no authored event list, so
+                    # it cannot be a retired family's declared packet: both
+                    # families that hand the walk a declaration author their
+                    # own ``damage_events`` and reach ``add_declared_events``
+                    # below.  The slot is still present, because the two row
+                    # shapes are one shape and a reader indexes it positionally.
+                    None,
                 )
             )
             sequence += 1
@@ -1480,6 +1487,7 @@ def _ordered_damage_events(
                         source_key,
                         event.get("raw_formula"),
                         float(event.get("raw_damage", 0.0) or 0.0),
+                        event.get("declared"),
                     )
                 )
                 sequence += 1
@@ -1526,6 +1534,15 @@ def _ordered_damage_events(
             raw_formula = event.get("raw_formula")
             if raw_formula is not None:
                 row["raw_formula"] = raw_formula
+            # The declaration this packet is a price of, for a family whose
+            # retirement moved the pricing to the walk: ``(mechanic_id,
+            # pre-mitigation magnitude)``.  Absent on every packet whose
+            # family the pair engine still prices, which is what keeps the
+            # walk's from-declaration path reachable only by a family that
+            # opted in.
+            declared = event.get("declared")
+            if declared is not None:
+                row["declared"] = declared
             basic_attack = event.get("basic_attack")
             if basic_attack:
                 row["basic_attack"] = True

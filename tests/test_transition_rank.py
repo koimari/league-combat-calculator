@@ -426,6 +426,7 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
         "event:1",
         0,
         None,
+        None,
         False,
         False,
         None,

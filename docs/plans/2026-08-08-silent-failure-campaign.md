@@ -813,9 +813,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > re-pricing"*. A retirement lane that went to start `delta_amp` measured that the path as built
    > does not carry one term the pair engine does. `damage._add_item_active_damage` mitigates an item
    > active's raw value against the holder's magic amplifier —
-   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:7979`) — and
+   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:7993`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
-   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:7509`);
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:7523`);
    > `survival.pricing.price_declared_packet` (`pricing.py:145`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that

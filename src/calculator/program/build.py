@@ -38,6 +38,7 @@ from ..survival.actions import TransitionRank
 from ..trigger_stream import (
     CAPABILITIES,
     Engine,
+    HolderPacket,
     HolderStacking,
     packet_source_literal,
 )
@@ -358,6 +359,87 @@ def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
         for source, entry in result_breakdown.items()
         if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
     )
+
+
+@cache
+def walk_repriced_mechanics() -> frozenset[str]:
+    """Previewed mechanics whose packet the walk re-prices instead of dropping.
+
+    A ``THEORETICAL`` pair row says the coupled walk owns the number.  It
+    does not say *how* the walk gets one, and the two answers need opposite
+    treatment of the pair engine's own event.
+
+    A **rider-delivered** walk half amplifies an event the walk already
+    carries, so the preview's event is a second copy of a number the walk
+    authors elsewhere and is dropped — Shadowflame's Cinderbloom, and the
+    only shape this join had before a family retired off the pair engine.  A
+    :class:`~..trigger_stream.HolderPacket` half prices *this* packet: the
+    walk reads the family's declaration and mitigates it at the resistance
+    the roster actually presented, so the pair engine's event survives as the
+    packet being re-priced and only its **number** leaves the roster total.
+    Dropping it would delete the family's damage instead of re-pricing it,
+    which is the half-performed retirement umbrella Amendment L, Ruling 1
+    calls worse than neither half.
+
+    The delivery shape is therefore the whole rule, read off the declaration
+    rather than off a list of families: a walk half that names a
+    ``HolderPacket`` and pairs with a previewed pair half is a family the
+    walk re-prices, and one that does not is a family whose preview is a
+    duplicate.  Both spellings of the mechanic land in the set for the reason
+    :func:`pair_preview_mechanics` keeps both — the pair engine stamps its
+    rows with whichever id its declared rule carries.
+
+    Cached because the registry is frozen at import.
+    """
+    previews = pair_preview_mechanics()
+    if not previews:
+        return frozenset()
+    repriced: set[str] = set()
+    for capability in CAPABILITIES.values():
+        if capability.engine is not Engine.WALK:
+            continue
+        if not isinstance(capability.packet_source, HolderPacket):
+            continue
+        repriced.add(capability.mechanic)
+        if capability.pair_of is not None:
+            repriced.add(capability.pair_of)
+    return frozenset(repriced) & previews
+
+
+def pair_repriced_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """Which of one pair fight's preview rows the walk re-prices, not drops.
+
+    A subset of :func:`pair_preview_sources` by construction, and the
+    difference between the two sets is exactly what a composition drops.
+    Both readings live here, next to each other, for the reason
+    :func:`pair_preview_sources` gives for living here at all: a roster
+    composes a pair fight in two places, and two copies of "is this row a
+    duplicate or a packet awaiting its price" would answer identically until
+    one of them was not updated.
+    """
+    repriced = walk_repriced_mechanics()
+    if not repriced:
+        return frozenset()
+    return frozenset(
+        source
+        for source, entry in result_breakdown.items()
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in repriced
+    )
+
+
+def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """The preview rows a roster composition leaves out entirely.
+
+    The one subtraction, with one home: every preview row minus the ones the
+    walk re-prices.  Call sites ask this rather than differencing the two
+    sets themselves, because a site that forgot the subtraction would drop a
+    packet the walk was about to price and delete a family's damage with no
+    symptom.
+    """
+    previewed = pair_preview_sources(result_breakdown)
+    if not previewed:
+        return frozenset()
+    return previewed - pair_repriced_sources(result_breakdown)
 
 
 @cache
@@ -690,7 +772,12 @@ __all__ = [
     "Projection",
     "build_program",
     "derivation_order",
+    "dropped_pair_previews",
+    "pair_preview_mechanics",
+    "pair_preview_sources",
     "pair_program",
+    "pair_repriced_sources",
+    "walk_repriced_mechanics",
     "roster_program",
     "route_policy_of",
 ]

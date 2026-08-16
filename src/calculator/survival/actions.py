@@ -617,6 +617,7 @@ _I_SOURCE = _INDEX("source")
 _I_EVENT_SLOT = _INDEX("event_slot")
 _I_SEQUENCE = _INDEX("sequence")
 _I_LIVE_AMP = _INDEX("live_amp")
+_I_DECLARED = _INDEX("declared")
 _I_IS_ABILITY = _INDEX("is_ability")
 _I_BASIC_ATTACK = _INDEX("basic_attack")
 _I_BASELINE_ARMOR = _INDEX("baseline_effective_armor")
@@ -641,6 +642,7 @@ def compiled_damage_action(
     event_slot: int,
     sequence: Any,
     live_amp: LiveAmp | None,
+    declared: DeclaredPacket | None,
     is_ability: bool,
     basic_attack: bool,
     baseline_effective_armor: float | None,
@@ -660,6 +662,12 @@ def compiled_damage_action(
     a compiler that forgot to pass it would score a build whose
     amplification it silently dropped, which is the incident.  Every call
     site states it, ``None`` included.
+
+    ``declared`` carries the same warning and joined for the same reason.
+    It is the declaration a retired family handed the walk to price, and a
+    compiler that omitted it would score that family at the pair engine's
+    number *after* the pair engine's row had already left the total -- the
+    packet priced twice on one path and not at all on the other.
 
     ``is_ability`` and ``basic_attack`` have no defaults for the same
     reason, and they joined at the H5 stage.  They are how a packet says
@@ -698,6 +706,7 @@ def compiled_damage_action(
     row[_I_EVENT_SLOT] = event_slot
     row[_I_SEQUENCE] = sequence
     row[_I_LIVE_AMP] = live_amp
+    row[_I_DECLARED] = declared
     row[_I_IS_ABILITY] = is_ability
     row[_I_BASIC_ATTACK] = basic_attack
     row[_I_BASELINE_ARMOR] = baseline_effective_armor

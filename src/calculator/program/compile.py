@@ -80,10 +80,17 @@ from ..survival.compile import (
     unrepresentable_template_receipt,
     trigger_time_key,
 )
+from ..survival.pricing import DeclaredPacket
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
-from .build import Program, Projection, arming_stacking, pair_preview_sources
+from .build import (
+    Program,
+    Projection,
+    arming_stacking,
+    dropped_pair_previews,
+    pair_preview_sources,
+)
 from .caches import program_fingerprint, roster_fingerprint
 from .identity import event_id_text
 
@@ -99,6 +106,45 @@ _DAMAGE_ACTION_KINDS = frozenset(
         ActionKind.REDIRECT,
     }
 )
+
+
+def declared_packet_of(
+    declaration: Any, damage_type: str, source_key: str, holder_amps: Any
+) -> DeclaredPacket:
+    """One re-priced packet's declaration, composed for the walk to price.
+
+    The engine ledger carries a retired family's packet as three facts and no
+    price: which rule authored it, the pre-mitigation magnitude that rule's
+    own interpreter compiled, and the attack class the rule declares — which
+    is what decides *which* of the holder's amplifiers this packet earns.
+    The fourth term, the amplifier itself, is resolved on this side from the
+    declarations that produce it (umbrella Amendment M, Ruling 1): a walk
+    that took a pre-multiplied number would be reading the pair engine's
+    price again under another name.
+
+    One home for both compositions, because a roster composes a pair fight in
+    two places and the score path is the one that picks the optimizer's
+    winner.
+
+    A packet stamped as re-priced with no declaration on it is a stop, not a
+    fallback: the pair engine's number has already left the roster total by
+    the time this runs, so returning nothing would delete the family's
+    damage — the half-performed retirement umbrella Amendment L, Ruling 1
+    calls worse than neither half.
+    """
+    if not isinstance(declaration, tuple) or len(declaration) != 3:
+        raise ValueError(
+            f"pair row {source_key!r} is stamped as a re-priced preview and "
+            "carries no declaration; the walk has nothing to price and the "
+            "pair engine's number has already left the roster total"
+        )
+    rule_id, raw_amount, attack_class = declaration
+    return DeclaredPacket(
+        raw_amount=float(raw_amount),
+        damage_type=damage_type,
+        rule_id=str(rule_id),
+        holder_amp=holder_amps.factor_for(damage_type, AttackClass(attack_class)),
+    )
 
 
 def action_from_event(
@@ -223,6 +269,11 @@ def action_from_event(
         # ``None`` is "nobody declared one", which the kernel tells apart
         # from a bonus that measured zero.
         live_amp=get("_live_amp"),
+        # The declaration this packet's retired family handed the walk, if
+        # its row was stamped as a re-priced preview.  ``None`` is "the pair
+        # engine still prices this family", which is every packet whose
+        # family has not retired.
+        declared=get("_declared"),
         baseline_effective_armor=(
             float(baseline_armor) if baseline_armor is not None else None
         ),
@@ -548,6 +599,12 @@ class WalkCompiler:
                     event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
                     sequence=event.get("sequence"),
                     live_amp=event.get("_live_amp"),
+                    # Composed once, by ``_pair_packet``, exactly like
+                    # ``_live_amp`` beside it: this method compiles packets
+                    # that path already enriched, and re-composing the
+                    # declaration here would be a second reader of one
+                    # declaration.
+                    declared=event.get("_declared"),
                     # How the packet was delivered, read off the same two
                     # enriched fields ``action_from_event`` reads (H5).  An
                     # armed damage modifier restricts itself by attack class
@@ -682,6 +739,7 @@ class WalkCompiler:
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
         live_amps: Sequence[LiveAmpRider] = (),
+        holder_amps: Any = None,
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -718,8 +776,27 @@ class WalkCompiler:
         holders declare none — never because a caller may leave it out and
         have the amplification quietly vanish, which is why the two stamping
         sites read the same :func:`~.amp.live_amp_for`.
+
+        ``holder_amps`` is the third field of that same shape: the attacker's
+        own static, pair-local amplifiers, needed to compose the declaration
+        of a re-priced preview and required — not defaulted — the moment this
+        fight carries one.
         """
-        previewed = pair_preview_sources(result.get("breakdown") or {})
+        result_breakdown = result.get("breakdown") or {}
+        previewed = pair_preview_sources(result_breakdown)
+        # A preview the walk *re-prices* keeps its packet on both paths: the
+        # pair engine's number leaves the total either way, but a re-priced
+        # family's packet is the thing the walk is about to price from its
+        # declaration, so dropping it would delete the family's damage.
+        dropped = dropped_pair_previews(result_breakdown)
+        repriced = previewed - dropped
+        if repriced and holder_amps is None:
+            raise ValueError(
+                f"{attacker_id} carries {len(repriced)} re-priced pair "
+                "preview(s) and no resolved static holder amps; pricing them "
+                "without the holder's own amplifiers would silently drop a "
+                "term the pair engine applied"
+            )
         order_a, order_b = participant_order(attacker_id)
         # The event-id *string* stays in the sort key (position 6) and the
         # action carries only its slot, so the loop below interns once per
@@ -803,7 +880,7 @@ class WalkCompiler:
                 time_value = row["time"]
                 sequence = row["sequence"]
                 source_key = row["source_key"]
-            if source_key in previewed:
+            if source_key in dropped:
                 # ``continue`` rather than a filtered list, exactly as in
                 # ``_pair_packet``: ``index`` is the per-pair event id and
                 # re-numbering the survivors would move every public id
@@ -818,6 +895,7 @@ class WalkCompiler:
                 wound_damage = damage = row[1]
                 raw_formula = row[4]
                 raw_damage = row[5]
+                declaration = row[6]
                 source = source_key
                 # A light ledger row carries no delivery metadata, so
                 # neither flag can be answered from it.  That is recorded
@@ -832,6 +910,7 @@ class WalkCompiler:
                 damage = wound_damage if wound_damage > 0.0 else 0.0
                 raw_formula = row.get("raw_formula")
                 raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
+                declaration = row.get("declared")
                 source = str(row.get("source", source_key))
                 is_ability = bool(row.get("is_ability"))
                 basic_attack = bool(row.get("basic_attack"))
@@ -897,6 +976,13 @@ class WalkCompiler:
                     slot_of(event_id),
                     sequence,
                     live_amp_for(live_amps, damage_type),
+                    (
+                        declared_packet_of(
+                            declaration, damage_type, source_key, holder_amps
+                        )
+                        if source_key in repriced
+                        else None
+                    ),
                     is_ability,
                     basic_attack,
                     baseline_armor,
