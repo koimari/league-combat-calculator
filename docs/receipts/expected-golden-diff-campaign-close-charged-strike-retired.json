@@ -44,7 +44,8 @@
       "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface, and this slice adds no pair-engine arithmetic: the two stamps it adds pair-side -- pair_preview_of on each strike row and the row's own declaration on the events under it -- are not leaves that baseline holds, which records each build's sorted breakdown_keys and its total_damage and neither a row's inner fields nor an event. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice."
     },
     "predicted": "0 occurrences inside a population of 4882. The walk's from-declaration price and the pair engine's are the same real number with the multiplications associated differently -- the pair engine mitigates and then applies the holder's amps, the walk composes the amps pre-mitigation and mitigates once (Amendment M, Ruling 1) -- so the two agree to within one unit in the last place, four orders of magnitude below the 0.005 golden equality grades to (R-13). The resistance each side prices at is the same one under Amendment N, Ruling 1. A leaf that did move could only move by 0.01, which qualifies under none of R-15's three tests.",
-    "occurrences_outside_the_population": null
+    "occurrences_outside_the_population": 0,
+    "enumerated_at": "00b0941"
   },
   "what_a_declaration_of_this_family_has_to_carry": {
     "why_it_is_written_down_in_advance": "This family is not one authoring site and not one arithmetic. A charge is spent by an attack, by an ability, by an ultimate's empowered run or by every Nth on-hit application, and the engine times each of those in a different place -- so what a declaration owes is enumerated here before the edit rather than discovered by whichever total came out short (Amendment M, Ruling 1's second forbidden shape, a deletion wearing a re-spelling's name).",
@@ -61,5 +62,16 @@
     "what_keeps_it_honest": "D-62's uniqueness is asserted on the family that did retire, not assumed for the two that had nothing to retire: no leaf sums a pair-authored preview and the walk's price, measured per family by the two parametrised cases in tests/test_survival_kernel.py, which now run for charged_strike because the family is read off the declarations."
   },
   "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
-  "measured_after": null
+  "measured_after": {
+    "dated": "2026-08-16",
+    "commit": "0b8bded",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical. The declared pair-engine population of 0 held.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical. Zero of the 4882 enumerated leaves moved.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15) and there were none, in a population enumerated in advance and non-empty.",
+    "what_the_walk_actually_priced": "A zero on a baseline is evidence a family's numbers did not move; it is not evidence the walk priced anything. Read off survival.transitions.apply_declared_price itself over the two covering scenarios: the walk priced kraken_slayer.repeating_strike at 86.58782853380173 on on_hit_Kraken Slayer and voltaic_cyclosword.empowered_hit at 152.23529411764704 on on_hit_once_Voltaic Cyclosword_ability, one pricing per (source_key, rule), each equal to the declaration's own price re-computed from the resistances that packet met. The pair engine's own rows carry 86.58782853380173 and 152.23529411764707 for the same two packets, so the two engines agree to one unit in the last place -- four orders of magnitude below the 0.005 the golden equality grades to.",
+    "the_window_case_is_the_one_that_matters": "lethality_window_assassin_roster publishes an effective armour of 68.0 and the Firmament packet never meets it: Firmament's extra lethality applies to its own packet, so damage._apply_temporary_lethality_windows restates the declaration's resistance and the walk prices it at what the packet met. Pricing it at the published baseline instead would have been the deletion umbrella Amendment N, Ruling 1 forbids, on the exact packet the ruling was written for -- and it is this family's own strike, which is why this family is the first that could exercise the term end to end.",
+    "the_gate_the_population_could_not_bound": "R-01 row 8 is green on all four bench scenarios with and without the compiled walk, and mundo_3champ's winning build holds Voltaic Cyclosword and Bastionbreaker -- two of this family's owners, re-priced from their declarations inside a searched build -- with its score unchanged at 3305.0. That row is the one that saw the missing resistance term when no committed scenario could; it sees this family's re-pricing too, and it did not move."
+  }
 }
