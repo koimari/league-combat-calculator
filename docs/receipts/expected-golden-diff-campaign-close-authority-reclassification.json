@@ -1,0 +1,67 @@
+{
+  "slice": "campaign-close-authority-reclassification",
+  "decisions": [
+    "R-01",
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-92",
+    "D-93",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 1",
+    "umbrella Amendment N, Ruling 2",
+    "umbrella Amendment O, Ruling 1",
+    "umbrella Amendment O, Ruling 2"
+  ],
+  "what_this_slice_group_does": "Two ruled acts and no retirement. Amendment O, Ruling 1 reclassifies a no-row family off the receipt walk -- a family whose mechanics author no pair-engine row and fold only into the holder's OWN champion rows is PAIR_ONLY under the umbrella's own semantic-authority rule, so its (family, RECEIPT_WALK) deferral row was a schedule category error and closes as not_a_gap rather than by a retirement; crit_profile closes that way here, with a machine check that reopens it if a future mechanic of the family ever authors a row. Amendment O, Ruling 2 measures EVERY remaining open deferral row for the same property, once, before any further retirement round, and commits the classification to the schedule receipt where it is diff-gated.",
+  "expected_qualifying_occurrences": 0,
+  "expected_qualifying_occurrences_line": "Expected qualifying occurrences: 0 -- bounded by the enumerated population of 13199 committed roster values across 13 covering coupled scenario(s): cleaver_bloodsong_roster 1828, crit_onhit_carry_roster 3498, hexoptics_basic_amp_carry 1354, immolate_active_bruiser_roster 1790, liandry_reprice_mage_roster 904, mandate_abyssal_curse_roster 876, score_event_scan_holder 301, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449.",
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": []
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97. Both semantic commits of this group land against the committed baselines with an empty claim set, and the receipt names the baselines anyway: a reader checking that the zero reported below is a zero on the surfaces the campaign gates could not otherwise tell which surfaces those were."
+  },
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. The population is enumerated from committed artifacts -- the committed docs/receipts/receipt-walk-retirement-schedule.json at 6b8011b and scripts/golden_coupled_baseline.json's scenario subtrees -- before this group's first src/ edit, and this receipt is the commit that files it. The count cannot be read off the pre-change tree by inspection because a reclassification changes which (family, lane) pairs counter 4 declares, and counter 4's own receipt is a committed artifact whose derived rows a reader would otherwise have to take on trust.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of ANY still-deferred receipt-walk family on a participant. The ten families and their owners are read live from the behaviour catalog over rule_owners(), joined to the frontier's own (family, receipt_walk) deferral rows -- the same join golden_snapshot.receipt_walk_families() makes for the coverage guard -- and the covering predicate is golden_snapshot.covering_scenarios, which is the one home of what covering means.",
+    "why_the_population_is_every_family_and_not_only_the_one_that_closes": "The triage measurement runs the pair engine over every covering scenario of every remaining row, and the reclassification edits the lane table counter 4 derives its declared pairs from. Narrowing the population to crit_profile's two covering rosters would be a guess that the other eight families' scenarios cannot move, which is exactly the guess R-20's second half replaces with an enumeration.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "cleaver_bloodsong_roster": 1828,
+      "crit_onhit_carry_roster": 3498,
+      "hexoptics_basic_amp_carry": 1354,
+      "immolate_active_bruiser_roster": 1790,
+      "liandry_reprice_mage_roster": 904,
+      "mandate_abyssal_curse_roster": 876,
+      "score_event_scan_holder": 301,
+      "syndra_custom_order_120": 443,
+      "syndra_custom_order_39": 429,
+      "syndra_custom_order_60": 443,
+      "syndra_derived_order_120": 449,
+      "syndra_derived_order_39": 435,
+      "syndra_derived_order_60": 449
+    },
+    "population_total": 13199,
+    "covering_scenario_count": 13,
+    "occurrences_outside_the_population": 0
+  },
+  "why_zero_is_predicted_rather_than_hoped": "The reclassification's whole src/ reach is the declaration table interpreters._FAMILY_LANES and the unserved-lane row beside it. Neither is on a pricing path: EngineLane.RECEIPT_WALK is absent from item_coverage.ATTACKER_LANES, SCORING_LANES and TARGET_LANES, so no coverage rung, no optimizer eligibility answer and no payload reads it; lanes_for's other two readers are counter 4's own declared-pair set and DEFENSE_FAMILIES, which crit_profile is not in. No interpreter is registered, no mechanic is declared, no row is stamped and no packet is priced. A leaf that moved here would therefore be an occurrence outside the predicted zero and would stop the slice, which is what makes stating the zero a gate rather than a hope.",
+  "measured_after": "NOT YET MEASURED. This receipt is filed before the group's first edit, which is the order R-20's second half requires; the measurement lands in its own commit beside the prediction above, so a reader can see which number was predicted and which was observed rather than one number that was written once."
+}
