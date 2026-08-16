@@ -70,6 +70,7 @@ __all__ = [
     "Engine",
     "EngineOwner",
     "Field",
+    "HolderPacket",
     "ItemOwner",
     "MechanicCapability",
     "MechanicOwner",
@@ -255,9 +256,11 @@ _ENRICHED_FIELDS = frozenset({Field.EVENT_ID, Field.TARGET_ID})
 # additionally say the pair engine sees it too.  Declaring one is *necessary*
 # for a cross-participant producer and not sufficient — the sufficient
 # reading is :func:`cross_participant_packet_source`, which additionally
-# requires the half to deliver a packet, because a rider-delivered half
-# amplifies its own holder's event and modifies nobody else's damage
-# (D-07, Amendment C).  A producer is one the coupled golden baseline must
+# requires the half's delivery to reach *another* participant: a
+# rider-delivered half amplifies its own holder's event, and a
+# :class:`HolderPacket` half packets its own holder's damage, so neither
+# modifies anybody else's (D-07, Amendment C; Amendment M, Ruling 3).  A
+# producer is one the coupled golden baseline must
 # hold a scenario for (R-12), and the instrument reads CAPABILITIES through
 # that function rather than re-spelling either condition.
 CROSS_PARTICIPANT_AUTHORITIES = frozenset(
@@ -545,6 +548,50 @@ class RiderDelivery:
     stamp: str
 
 
+@dataclass(frozen=True, slots=True)
+class HolderPacket:
+    """A walk half that packets a number onto **its own holder's** damage.
+
+    The second self-scoped delivery, and the counterpart of
+    :class:`RiderDelivery` on the other axis.  A rider is self-scoped because
+    of *how* it travels — stamped on an event its holder already authored.
+    This one travels as an ordinary walk packet, with a ``source`` literal
+    like any other, and is self-scoped because of *whose damage it modifies*:
+    a retired family's walk half prices the damage of the participant holding
+    the item, so no second participant's number moves when it resolves.
+
+    Declaring it as its own type inside the same field is what keeps D-07's
+    semantic the thing the producer set is keyed on.  Amendment C settled
+    that "carries something in ``packet_source``" may not stand in for
+    "modifies another participant's damage", and keyed rider-delivery out of
+    the set on that reasoning; the umbrella's **Amendment M, Ruling 3**
+    (2026-08-15) rules the same semantic for packet-delivered halves, so that
+    a family retiring off the pair engine does not enrol in the ruled six
+    merely because its retirement slice had to declare a walk half.  A ruled
+    count moved to satisfy a validator is the move both amendments refuse,
+    from the two delivery shapes.
+
+    Everything else a packet-delivered half is asked for still answers the
+    same way: :func:`packet_source_literal` and :func:`delivery_reference`
+    both return the literal, because this *is* a packet and consumers that
+    arm on its source have to find it.  Only
+    :func:`cross_participant_packet_source` — the one reading that asks
+    *whose* damage — says no.
+    """
+
+    #: The ``source`` literal this half's packets carry, verbatim — the same
+    #: string a cross-participant half would put in ``packet_source``.
+    source: str
+
+
+#: The two deliveries whose subject is the half's own holder.  Named once so
+#: the three readings below branch on one set rather than on two ``isinstance``
+#: pairs that could drift apart: a self-scoped delivery is the *semantic*
+#: D-07 keys on (Amendment C for the rider, Amendment M, Ruling 3 for the
+#: holder packet), and a third one would join here rather than at three sites.
+SELF_SCOPED_DELIVERIES = (RiderDelivery, HolderPacket)
+
+
 # Thirteen fields: Phase 2's eleven plus the two Phase 4 writes here.  A
 # declaration record is exactly as wide as the facts it declares.
 @dataclass(frozen=True, slots=True)
@@ -582,16 +629,19 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
             ``pairing is UNPAIRED_KNOWN_DEFECT``.
         impl: the dotted path of the function that implements this half.
         packet_source: this half's **delivery reference** — the walk packet's
-            ``source`` string verbatim for a packet-delivered half, a
+            ``source`` string verbatim for a half whose packet modifies
+            another participant's damage, a :class:`HolderPacket` naming the
+            same literal for one whose packet modifies its own holder's, a
             :class:`RiderDelivery` naming the rider stamp for a half whose
             number rides an event the walk already carries, and ``None`` for
-            a half that delivers neither.  Read it through
+            a half that delivers none of the three.  Read it through
             :func:`packet_source_literal`, :func:`delivery_reference` or
             :func:`cross_participant_packet_source` rather than directly:
             each names one of the three different questions the field is
             asked, and answering them by an ``is not None`` test is what let
             "carries something here" stand in for "modifies another
-            participant's damage" (D-07, Amendment C).
+            participant's damage" (D-07, Amendment C; Amendment M, Ruling 3
+            for the packet-delivered self-scoped half).
         view_tags: what this half's numbers *mean*, keyed by the engine that
             produces them — ``APPLIED`` for a number the coupled walk
             delivered, ``THEORETICAL`` for a pair-engine preview of one
@@ -618,7 +668,7 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
     pair_of: str | None
     divergence_ref: str | None
     impl: str
-    packet_source: str | RiderDelivery | None
+    packet_source: str | RiderDelivery | HolderPacket | None
     view_tags: Mapping[Engine, ViewTag]
     holder_stacking: HolderStacking | None
 
@@ -628,44 +678,62 @@ def packet_source_literal(capability: MechanicCapability) -> str | None:
 
     ``None`` twice over: for a half that emits nothing, and for a
     rider-delivered one, whose number arrives stamped on an event somebody
-    else authored and is therefore findable under no packet source.
+    else authored and is therefore findable under no packet source.  A
+    :class:`HolderPacket` half *is* packet-delivered and answers with its
+    literal, because everything that arms on a packet source has to find it
+    — self-scoped says whose damage moves, not whether a packet exists.
     """
     source = capability.packet_source
+    if isinstance(source, HolderPacket):
+        return source.source
     return source if isinstance(source, str) else None
 
 
 def delivery_reference(capability: MechanicCapability) -> str | None:
     """The literal this half's number arrives under — packet or rider.
 
-    The one reading that treats the two deliveries alike, and the one
-    ``PAIRED`` asks: a paired walk half has to name *some* delivery for its
-    pair half to be paired against, and this is that name.
+    The one reading that treats every delivery alike, and the one ``PAIRED``
+    asks: a paired walk half has to name *some* delivery for its pair half to
+    be paired against, and this is that name.
     """
     source = capability.packet_source
-    return source.stamp if isinstance(source, RiderDelivery) else source
+    if isinstance(source, RiderDelivery):
+        return source.stamp
+    if isinstance(source, HolderPacket):
+        return source.source
+    return source
 
 
 def cross_participant_packet_source(capability: MechanicCapability) -> str | None:
     """The packet through which this half modifies ANOTHER participant's damage.
 
-    D-07's semantic with one home (Amendment C): the producer set is a
-    filter over this function rather than a hand list, so a seventh producer
-    joins it on the commit that declares one.  Three conditions, each of
-    which drops a half that modifies no other participant's damage — a pair
-    half authors no walk packet; an authority outside
-    :data:`CROSS_PARTICIPANT_AUTHORITIES` says no second engine sees the
-    mechanic; and a rider-delivered half amplifies the event it rides, which
-    belongs to its own holder.
+    D-07's semantic with one home (Amendment C, extended by Amendment M,
+    Ruling 3): the producer set is a filter over this function rather than a
+    hand list, so a seventh producer joins it on the commit that declares
+    one.  Three conditions, each of which drops a half that modifies no other
+    participant's damage — a pair half authors no walk packet; an authority
+    outside :data:`CROSS_PARTICIPANT_AUTHORITIES` says no second engine sees
+    the mechanic; and a **self-scoped delivery** modifies damage that belongs
+    to its own holder.
 
-    That third condition is the amendment.  Keying the set on "a walk half
-    with a cross-participant authority that carries *anything* in
-    ``packet_source``" would enrol Shadowflame's Cinderbloom — whose subject
-    is the holder — the moment its walk half is declared, and a ruled count
+    That third condition is the amendment, and it now reads the semantic
+    rather than the delivery shape.  Amendment C wrote it as "not a rider",
+    because a rider amplifies the event it rides and that event is its
+    holder's.  Amendment M rules the same question for a *packet*-delivered
+    half: a retired family's walk half prices its own holder's damage, so
+    :class:`HolderPacket` drops out here for the reason
+    :class:`RiderDelivery` does and not for a second reason.  Keying the set
+    on "a walk half with a cross-participant authority that carries
+    *anything* in ``packet_source``" would enrol Shadowflame's Cinderbloom —
+    whose subject is the holder — the moment its walk half is declared, and
+    would enrol every retiring family after it; either way a ruled count
     would have moved to satisfy a validator.
     """
     if capability.engine is not Engine.WALK:
         return None
     if capability.authority not in CROSS_PARTICIPANT_AUTHORITIES:
+        return None
+    if isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES):
         return None
     return packet_source_literal(capability)
 
@@ -1288,13 +1356,15 @@ def _validate_registry() -> None:
                 f"{mechanic} declares impl={capability.impl!r}, which is not a "
                 "dotted path to the function implementing it"
             )
-        if isinstance(capability.packet_source, RiderDelivery) and not (
-            capability.packet_source.stamp.strip()
+        if (
+            isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES)
+            and not (delivery_reference(capability) or "").strip()
         ):
             raise TriggerRegistryError(
-                f"{mechanic} declares a RiderDelivery with an empty stamp; a "
-                "rider naming nothing is a number no reader can trace back to "
-                "the mechanic that authored it"
+                f"{mechanic} declares a "
+                f"{type(capability.packet_source).__name__} naming nothing; a "
+                "delivery with an empty literal is a number no reader can "
+                "trace back to the mechanic that authored it"
             )
         _validate_pairing(mechanic, capability)
         _validate_view_semantics(mechanic, capability)

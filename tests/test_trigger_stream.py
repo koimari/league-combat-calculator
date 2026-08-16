@@ -943,18 +943,23 @@ def test_a_rider_delivered_paired_half_is_a_legal_declaration(monkeypatch):
     assert ts.packet_source_literal(rider) is None
 
 
-def test_a_rider_delivery_naming_nothing_is_rejected(monkeypatch):
-    """R-05's red for the amendment's own branch.
+@pytest.mark.parametrize(
+    "empty", [ts.RiderDelivery("  "), ts.HolderPacket("")], ids=["rider", "holder"]
+)
+def test_a_self_scoped_delivery_naming_nothing_is_rejected(monkeypatch, empty):
+    """R-05's red for the amendment's own branch, for both self-scoped shapes.
 
-    An empty stamp is the rider-side spelling of the packet with no source:
-    a delivery reference nobody can grep for is a number no reader can trace
-    back to the mechanic that authored it.
+    An empty literal is the self-scoped spelling of the packet with no
+    source: a delivery reference nobody can grep for is a number no reader
+    can trace back to the mechanic that authored it.  One clause covers both
+    because it reads ``SELF_SCOPED_DELIVERIES``, so Amendment M's shape
+    arrived already checked rather than with a second copy of the check.
     """
     broken = dict(ts.CAPABILITIES)
-    broken["synthetic.mechanic"] = _capability(packet_source=ts.RiderDelivery("  "))
+    broken["synthetic.mechanic"] = _capability(packet_source=empty)
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="empty stamp"):
+    with pytest.raises(ts.TriggerRegistryError, match="naming nothing"):
         ts._validate_registry()
 
 
@@ -1719,6 +1724,38 @@ def test_a_rider_delivered_half_is_not_a_cross_participant_producer(monkeypatch)
         packet_source="Synthetic — Packet",
     )
     assert ts.cross_participant_packet_source(packeted) == "Synthetic — Packet"
+
+
+def test_a_holder_scoped_packet_half_is_not_a_cross_participant_producer(monkeypatch):
+    """Amendment M, Ruling 3 — the same semantic, the other delivery shape.
+
+    A retiring family's walk half prices *its own holder's* damage and
+    delivers it as an ordinary walk packet.  Keyed on "packet-delivered with
+    a cross-participant authority" it would join the ruled six on the commit
+    its retirement slice declares it, which is the ruled count moving to
+    satisfy a validator that Amendment C already refused from the rider side.
+
+    Three assertions, because the distinction has to hold without becoming a
+    hole: the holder packet is not a producer, the producer set does not move
+    when one is declared, and its literal is still findable through the two
+    readings that ask whether a packet exists rather than whose damage it
+    moves.
+    """
+    import scripts.golden_snapshot as gs
+
+    holder = _capability(
+        mechanic="synthetic.holder_scoped",
+        authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+        packet_source=ts.HolderPacket("Synthetic — Holder Packet"),
+    )
+    assert ts.cross_participant_packet_source(holder) is None
+    monkeypatch.setattr(
+        gs, "CAPABILITIES", {**ts.CAPABILITIES, holder.mechanic: holder}
+    )
+    assert gs.cross_participant_producers() == RULED_CROSS_PARTICIPANT_PRODUCERS
+
+    assert ts.packet_source_literal(holder) == "Synthetic — Holder Packet"
+    assert ts.delivery_reference(holder) == "Synthetic — Holder Packet"
 
 
 def test_the_coupled_producer_source_reads_the_capability_registry():
