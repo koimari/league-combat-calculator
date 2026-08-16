@@ -514,6 +514,28 @@ def test_a_row_served_through_its_declared_lane_carries_both_directions() -> Non
         ), family
 
 
+def families_under_amendment_q(block: dict) -> tuple[tuple[str, dict], ...]:
+    """Every family Amendment Q's check ranges over, open row or closed.
+
+    The evidence moves house when a row closes -- from the open row's
+    ``lane_correction_evidence`` to the closed block's ``evidence`` -- and the
+    check has to keep running either side of that move, because a ground that
+    stopped being measured once its row left would be a closure nobody could
+    ever reopen.  So the negatives below range over both and never over one.
+    """
+    served = tuple(
+        (family, block["families"][family]["lane_correction_evidence"])
+        for family in block["rows_served_through_their_declared_lane"]
+    )
+    closed = tuple(
+        (family, entry["evidence"])
+        for family, entry in sorted(
+            block["closed_by_lane_declaration_correction"].items()
+        )
+    )
+    return served + closed
+
+
 def test_a_declaration_nothing_consumes_turns_the_correction_red() -> None:
     """R-05 on Amendment Q's forward direction.
 
@@ -521,8 +543,8 @@ def test_a_declaration_nothing_consumes_turns_the_correction_red() -> None:
     the check is a source scan.  A scan that could not go red when a field
     stopped being read anywhere would be a ground asserted rather than
     measured, so the event is injected at the scan's own seam -- the resolved
-    state is read nowhere -- and the gate is asserted to fail naming the
-    declarations rather than only the family.
+    state is read nowhere -- and the gate is asserted to fail naming each
+    family and the declarations it lost.
     """
     committed = schedule()
     bare = receipt_walk_schedule._resolved_state_reads  # noqa: SLF001
@@ -532,11 +554,14 @@ def test_a_declaration_nothing_consumes_turns_the_correction_red() -> None:
         fresh = receipt_walk_schedule.schedule()
     finally:
         receipt_walk_schedule._resolved_state_reads = bare  # noqa: SLF001
-    assert any("Amendment Q's check no longer holds" in f for f in failures), failures
-    for family in committed["rows_served_through_their_declared_lane"]:
-        forwards = fresh["families"][family]["lane_correction_evidence"][
-            "walk_side_consumption"
-        ]
+    subjects = families_under_amendment_q(committed)
+    assert subjects, "Amendment Q's check ranges over nothing at all"
+    for family, _ in subjects:
+        assert any(
+            family in failure and "consumes what" in failure for failure in failures
+        ), failures
+    for family, evidence in families_under_amendment_q(fresh):
+        forwards = evidence["walk_side_consumption"]
         assert forwards["holds"] is False, family
         assert forwards["declarations_consumed_nowhere"], family
 
@@ -558,11 +583,16 @@ def test_an_owner_that_does_not_fail_closed_turns_the_correction_red() -> None:
         failures = receipt_walk_schedule.check(committed)
     finally:
         receipt_walk_schedule.item_coverage.unserved_lanes = bare
-    assert any("Amendment Q's check no longer holds" in f for f in failures), failures
-    for family in committed["rows_served_through_their_declared_lane"]:
-        backwards = fresh["families"][family]["lane_correction_evidence"][
-            "fails_closed_without_the_serving_interpreter"
-        ]
+    subjects = families_under_amendment_q(committed)
+    assert subjects, "Amendment Q's check ranges over nothing at all"
+    for family, evidence in subjects:
+        owners = evidence["fails_closed_without_the_serving_interpreter"]["by_owner"]
+        assert any(
+            family in failure and all(owner in failure for owner in owners)
+            for failure in failures
+        ), failures
+    for family, evidence in families_under_amendment_q(fresh):
+        backwards = evidence["fails_closed_without_the_serving_interpreter"]
         assert backwards["holds"] is False, family
         assert backwards["owners_that_do_not_fail_closed"] == sorted(
             backwards["by_owner"]
@@ -651,8 +681,13 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
             mutated["families"]
         )
     elif mutation == "respell_a_triage_class":
+        # Flipped against the row's own class rather than set to a letter: "a"
+        # is the commonest class among the open rows, so writing it over the
+        # alphabetically first row silently stopped being a mutation on the day
+        # that row's class became "a" (D-92).
         family = sorted(mutated["families"])[0]
-        mutated["families"][family]["triage"]["class"] = "a"
+        triage = mutated["families"][family]["triage"]
+        triage["class"] = "c" if triage["class"] == "a" else "a"
     elif mutation == "misreport_the_stopped_rows":
         # Symmetric difference rather than an emptying: the stopped list is
         # empty whenever every class-(c) row has a named delivery term, and a
@@ -667,6 +702,13 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
     elif mutation == "respell_the_lane_correction_rule":
         mutated["lane_correction_rule"] = "a lane table this file corrected for itself"
     else:
-        mutated["slices_whose_retiring_lane_amendment_k_corrects"] = []
+        # Symmetric difference, for the reason the stopped list uses one: every
+        # row whose lane Amendment K corrected has since closed by Amendment
+        # Q's lane-declaration correction, so the list is empty and emptying it
+        # again would be a mutation that mutates nothing.
+        corrected = set(mutated["slices_whose_retiring_lane_amendment_k_corrects"])
+        mutated["slices_whose_retiring_lane_amendment_k_corrects"] = sorted(
+            corrected ^ {sorted(mutated["families"])[0]}
+        )
     failures = receipt_walk_schedule.check(mutated)
     assert any(expected in failure for failure in failures), failures

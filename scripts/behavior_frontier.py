@@ -656,6 +656,27 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # and over a probe per owner, and the row comes back the day a mechanic of
 # the family authors one.
 #
+# ``combat_state``, ``opening_defense`` and ``threshold_defense`` left on
+# 2026-08-16 and they did **not** retire either, on a ground of their own.
+# Umbrella Amendment Q corrected the lane DECLARATION: a family whose
+# walk-side need is satisfied through its declared serving lane does not need,
+# and must not declare, a receipt-walk interpreter lane, because one producer
+# is what the one-engine thesis demands.  All three declare
+# ``defense_resolver``, an interpreter answers for it, and what the receipt
+# walk consumes for them is the state that interpreter built — so the
+# receipt-walk lane was asking a second engine for a number the first one
+# already produces, and the deferral row under it was counting the absence of
+# a defect.  ``_FAMILY_LANES`` stopped declaring the lane, so the gap is gone
+# and these rows would fail the gate below if they stayed.  What makes that a
+# correction rather than a re-count is that the ground is measured in **both**
+# directions on every run of ``receipt_walk_schedule.py --check``: what each
+# family's resolver interpreter writes is joined to every read of those fields
+# off a resolved defences value outside the resolver, and removing the
+# resolver interpreter is asserted to flip every declaring owner to
+# ``withheld`` naming the missing pair rather than to a silent zero.  The day
+# a mechanic of one of them authors a walk-priced row the resolver does not
+# feed, the lane comes back and the row with it.
+#
 # Declared ``(family, lane)`` pairs on the receipt walk that have no
 # interpreter and cannot get one in this phase: their numbers arrive through
 # the pair engine's timed rows today, and only Phase 4's S3 — one kernel, five
@@ -687,14 +708,11 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "combat_state",
     "on_hit_strike",
-    "opening_defense",
     "periodic",
     "resistance_shred",
     "secondary_target",
     "spellblade",
-    "threshold_defense",
 )
 
 # ── the stages the campaign has shipped, and what a passed stage owes ──────

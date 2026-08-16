@@ -228,7 +228,11 @@ LANE_CORRECTION_RULING = "umbrella Amendment Q"
 #: or one the frontier still defers.  Measuring is one act and closing is
 #: another, so a name arrives here in the commit that drops the lane and never
 #: before it.
-LANE_CORRECTED: tuple[str, ...] = ()
+LANE_CORRECTED: tuple[str, ...] = (
+    "combat_state",
+    "opening_defense",
+    "threshold_defense",
+)
 
 #: The lanes a caller has to need for the withheld negative to be about the
 #: producer this correction rests on.  Read from ``item_coverage`` rather than

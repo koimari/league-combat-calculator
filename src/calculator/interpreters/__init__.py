@@ -211,26 +211,48 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
         }
     ),
     # Defence families are built by the defensive resolver and then have to
-    # survive both walks; the pair engine reads the resolver's output rather
-    # than the rule.
+    # survive the compiled walk; the pair engine reads the resolver's output
+    # rather than the rule.
+    #
+    # Three of them owe the RECEIPT WALK nothing, and that is a ruling rather
+    # than an omission: umbrella Amendment Q (2026-08-16) corrects the
+    # declaration for the three families the defence resolver feeds.  Their
+    # walk-side need is satisfied THROUGH the lane they declare -- an
+    # interpreter answers for ``defense_resolver``, and what the receipt walk
+    # consumes is the state that interpreter built (``update_combat_state``
+    # reads Steadfast's stack schedule; the ledger's pools read the lifeline
+    # shields; the opening state carries the annuls and the stasis) -- so a
+    # receipt-walk interpreter beside it would be a second producer of one
+    # number, which D-60 and criterion 8 forbid.  One producer is what the
+    # one-engine thesis demands, so the receipt-walk lane was a declaration
+    # these families never owed.  The compiled score walk is NOT corrected
+    # with them: that lane has its own blocker (H5) and its own rows below.
+    #
+    # What makes this legal where D-40 forbids editing a lane table from
+    # inside the counter it moves is that the ground is measured before the
+    # table moves and stays measured after it, in both directions:
+    # ``scripts/receipt_walk_schedule.py`` joins what each family's resolver
+    # interpreter writes to every read of those fields off a resolved
+    # defences value in the source outside the resolver, and removes the
+    # resolver interpreter to assert that every declaring owner then answers
+    # ``withheld`` naming the missing pair rather than a silent zero.  The day
+    # a mechanic of one of them authors a walk-priced row the resolver does
+    # not feed, the gate goes red and the lane comes back.
     RuleFamily.OPENING_DEFENSE: frozenset(
         {
             EngineLane.DEFENSE_RESOLVER,
-            EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
     RuleFamily.THRESHOLD_DEFENSE: frozenset(
         {
             EngineLane.DEFENSE_RESOLVER,
-            EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
     RuleFamily.COMBAT_STATE: frozenset(
         {
             EngineLane.DEFENSE_RESOLVER,
-            EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
@@ -446,6 +468,19 @@ _RESOLVER_FED = (
     "declaration reaches them through the resolver interpreter; a walk-lane "
     "interpreter here would be a second producer of one number"
 )
+# What is left of ``_RESOLVER_FED`` once a family's receipt-walk lane has been
+# CORRECTED away: the compiled lane still stages what the resolver built, and
+# the receipt walk is not a lane this family declares at all.  It could not
+# keep the shared sentence, which opens "the walks" and would go on describing
+# a lane the table no longer holds — the same contradiction that took
+# ``delta_amp``'s and ``crit_profile``'s.
+_COMPILED_RESOLVER_FED = (
+    "the compiled score walk stages what the defence resolver already built, "
+    "so the declaration reaches it through the resolver interpreter; a "
+    "walk-lane interpreter here would be a second producer of one number, "
+    "which is why the receipt walk no longer declares a lane for this family "
+    "at all"
+)
 _TEMPLATE_FED = (
     "the compiled kernel stages support templates from the packets "
     "item_support_effects emits, not from the declaration; the packet kinds "
@@ -530,9 +565,16 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),
+    # The three resolver-fed families' receipt-walk twins are gone and none of
+    # them retired: the lane table above no longer declares that lane, because
+    # umbrella Amendment Q corrected a declaration these families never owed —
+    # what the receipt walk consumes for them, it consumes from the lane they
+    # declare, so a second lane asking for the same number is the second
+    # producer criterion 8 forbids.  Only the compiled lane defers for them,
+    # and it says so in a sentence of its own.
     **{
-        (family, lane): UnservedLane(
-            reason=_RESOLVER_FED,
+        (family, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+            reason=_COMPILED_RESOLVER_FED,
             via=(EngineLane.DEFENSE_RESOLVER,),
         )
         for family in (
@@ -540,7 +582,6 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.THRESHOLD_DEFENSE,
             RuleFamily.COMBAT_STATE,
         )
-        for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
     # Reactive's receipt half is no longer a gap — the coupled timeline
     # compiles the strike-back declaration at its own boundary through the

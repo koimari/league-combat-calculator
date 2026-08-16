@@ -58,9 +58,14 @@ def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
         assert interpreters.lanes_for(family)
     # 53 until 2026-08-16, when umbrella Amendment O, Ruling 1 reclassified
     # crit_profile PAIR_ONLY on a measured emptiness and its receipt-walk lane
-    # left the table.  The literal moves only when a ruling moves it, which is
-    # what makes an unruled edit here a red rather than a re-typed number.
-    assert len(interpreters.declared_pairs()) == 52
+    # left the table; then 49 the same day, when umbrella Amendment Q corrected
+    # the declaration of the three families the defence resolver feeds --
+    # combat_state, opening_defense and threshold_defense -- whose walk-side
+    # need is served through the lane they declare and which therefore never
+    # owed a receipt-walk interpreter lane at all.  The literal moves only when
+    # a ruling moves it, which is what makes an unruled edit here a red rather
+    # than a re-typed number.
+    assert len(interpreters.declared_pairs()) == 49
 
 
 def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
