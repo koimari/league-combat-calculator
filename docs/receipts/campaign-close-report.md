@@ -1172,3 +1172,56 @@ grade and neither moves here, exactly as sections 14.3 and 14.4 leave G4 and G6
 where the ledger has them. What changes is that the clause's own denominator is
 written down: 62 open rows is a number that can be re-derived, argued with and
 driven down, and "nine" was a true figure about the wrong set.
+
+*The table above is measured at `832a91f`, the commit that landed this subsection,
+over the 127 passes the ledger then held. One block has landed since — round 128,
+which 15.5 records — and it moves `NOT_DISCHARGED` 89 → **90** and `fixed`
+20 → **21**, leaving `documented_open` unchanged at **62**. The table is left at
+its anchor and the moved pair is stated here, so no figure is rewritten and none
+goes stale.*
+
+### 15.5 The closeout's own verdict, recorded
+
+The pass that returned the three figures above is itself a recorded verdict now:
+**round 128** of [`verify-ledger.json`](verify-ledger.json), over
+`campaign-close-final-integration`'s four commits, answered by this group. It is the
+campaign's second recorded verdict on a lane whose job was answering somebody else's,
+and it carries the one criterion the verifier failed with the evidence it ran, plus
+the six behaviours it named that those four commit bodies do not mention.
+
+Recording it moves the coverage block: `campaign-close-final-integration` leaves
+`slice_groups_without_one` for the list a recorded verdict puts a group on, and this
+answering group's own tag takes its place there. The residue is **2** again, of
+**126** slice tags, with `residue_with_no_verdict_anywhere` **0** and
+[`verify-backlog.json`](verify-backlog.json) preparing **2** startable passes. The
+two remaining tags are `campaign-close-verify-p4-batch`, whose range no verifier's
+brief has reached, and `campaign-close-final-integration-r35`, which cannot verify
+itself — the same honest pair section 14.2 records, one lane further on.
+
+The six findings, and what each is:
+
+| # | The finding | Disposition |
+|---|---|---|
+| 1 | `0be8f37`'s body calls the block it writes round 128 three times; the block it added is round 127 | `documented_open` |
+| 2 | `b02e4ca` and `9ee7505` both regenerate `verify-backlog.json` and neither body says so | `documented_open` |
+| 3 | `b02e4ca` wrote the `campaign-close-verify-p4-batch` attribution into `rulings-owed.json`, not just the report | `fixed` — `0a2bee2`, with 15.2 |
+| 4 | `b02e4ca`'s "It fell -- 118 to 2 over three days" is a new dated figure its body does not flag | `fixed` — `6a357b4`, with 15.1 |
+| 5 | `9ee7505`'s "what this closeout did not close" counts nine over one batch, not 62 over the ledger | `fixed` — `832a91f`, with 15.4 |
+| 6 | `a431e34` moved `slice_groups_citing_a_verdict_in_a_commit_body` 17 → 18, gaining its own tag, unremarked | `documented_open` |
+
+**Three are `documented_open` and none of them can be anything else.** Each is a
+sentence in a filed commit body, and each names an artifact that is already correct:
+the ledger really does hold 127 passes at `0be8f37` with no holes, the backlog really
+was regenerated correctly, and the citation counter is derived rather than authored so
+nothing in it is wrong. What was missing is disclosure, in bodies nobody may amend.
+What a lane does control is its own practice, and every commit of this group names
+each gated receipt it regenerates and each counter it moves, under a heading of its
+own. Finding 6 is the second measured instance of the state the ledger already
+docketed as `a_groups_own_next_commit_can_flip_its_citation_state`, and that block's
+ruling stands: the shape is recorded rather than repaired, because widening a derived
+flag into an attribution changes what the counter claims and that is a runbook matter.
+
+**Nothing here re-grades a verdict.** A verdict is the verifier's artifact and a
+disposition is the lane's — the ledger's `when_a_later_lane_answers_a_sweep_row` says
+it in those words — so the NOT_DISCHARGED stands as returned, with `answered_at`
+naming the three commits that answered it.

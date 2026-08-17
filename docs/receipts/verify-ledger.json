@@ -17838,6 +17838,91 @@
      "answered_at": []
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-final-integration",
+   "round": 128,
+   "backfilled": false,
+   "residue_sweep": false,
+   "verified_commits": [
+    "a431e34",
+    "0be8f37",
+    "b02e4ca",
+    "9ee7505"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "6a357b4",
+    "0a2bee2",
+    "86114ed",
+    "832a91f"
+   ],
+   "what_this_round_is": "A live R-35 pass, not a sweep: a fresh read-only Opus 5 verifier that had not read the plan was handed this slice group's four commits and its stated completion criteria immediately after the group landed, and returned one criterion NOT_DISCHARGED plus six behaviours the four commit bodies do not mention and one statement of what did not move. It is answered by the slice group campaign-close-final-integration-r35, whose commits are named per row. What this block records is exactly what the pass handed the answering lane: the criterion it failed, with the evidence it ran, and the findings. The pass's other criteria came back reproduced and their per-criterion evidence was not handed over, so none is transcribed -- writing them in from the answering lane's account of a report it did not receive is the reconstruction what_this_ledger_does_not_hold refuses, and the honest record is the half that exists. Recording it moves campaign-close-final-integration out of slice_groups_without_one; the answering group's own tag takes its place there, because a lane cannot verify itself and the residue says so rather than closing on a lane's word.",
+   "criteria": [
+    {
+     "id": "close-reports-closeout-section-accurate",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Most of section 14 reproduces exactly -- I re-ran every instrument it cites and matched: counter_4 = 16 with deferrals.rows == {}; receipt_walk_schedule --check exit 0 with families == {}, scheduled_slices 0, both list fields []; INTERPRETERS holds exactly 13 (family, RECEIPT_WALK) keys; closed_by_authority_reclassification == ['crit_profile'] and closed_by_lane_declaration_correction == ['combat_state','opening_defense','threshold_defense'] (1+3, leaving 10); term_census 29/0, 9/0, 3/0; standing scan 34/83/597, 11 blocking, 7 citation + 4 open debt; docket clusters 1, cleared 3; tests.collected pin 8128 vs 8534 measured = 406; rounds 110 and 111 exist and are all-DISCHARGED; the 23 blocks a431e34 transcribed carry 14 NOT_DISCHARGED of which 9 are documented_open and 5 are 'fixed' (3 naming e44e3fa/642b823/fb2909d, 2 with empty answered_at) -- exactly as 14.5 says. THREE ERRORS defeat 'accurate': (1) docs/receipts/campaign-close-report.md:859 says the residue is 'down from 118 on 2026-08-14', which contradicts 14.2's own table twenty lines later ('residue | 67 | 2' for 2026-08-14). I walked the ledger's git history: residue was 67 at 0f3adca and 68 at b12a2fe (both 2026-08-14); 118 was reached at 9961bf2 on 2026-08-17, the commit immediately before the backfill. Over the three days the residue went 67 -> 118 -> 2, so 'down from 118 on 2026-08-14' misstates both the figure's date and the trajectory. (2) 14.2 (line 894): 'campaign-close-verify-p4-batch, whose verdict lives in a commit body and whose range no verifier's brief ever reached' is self-contradictory and false on the first clause. No verdict about that group exists anywhere -- a431e34's own body enumerates the 12 untranscribed journal reports and none is a pass over it. Its cites_an_r35_answer_in_a_commit_body flag is true only because its own commit 209da2f transcribes verdicts about six OTHER slices; that is precisely the attribution limitation the ledger's own coverage block records in a_groups_own_next_commit_can_flip_its_citation_state ('what the derivation cannot do is tell WHOSE answer a body carries'). 14.1's weaker phrasing ('both remaining tags cite a verdict a reader can open') is defensible; 14.2's is not. (3) 14.1 finding-4 row cites 'ledger round 110' as a fresh verifier that 're-measured every clause of the answering group and returned it DISCHARGED' for the tests.collected re-pin minor. Round 110 verifies campaign-close-minor-findings-r35 (verified_commits 8aa1ee1, ecc6497, 51ccdce, 264aeb9, 3b0a030) and all seven of its criteria are about round 6's row and its gated-justification-string findings. 1bd837e, where the R-32 amendment landed, belongs to campaign-close-minor-findings, whose only ledger rounds are 6 and 7 -- both NOT_DISCHARGED. No ledger round measures the act that closed minor 4. Section 14 is also ungated: plan_audit.py runs over docs/plans/*.md only, so nothing in the tree would catch any of these three.",
+     "disposition": "fixed",
+     "answered_at": [
+      "6a357b4",
+      "0a2bee2",
+      "86114ed"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "Three corrections, one per commit, each landing beside the sentence it corrects rather than over it, which is section 9's rule for this report and the rule round 7's verifier found broken when an earlier lane rewrote a 13.1 sentence in place. 6a357b4 is the dated residue figure: read commit by commit out of the row's own measurement artifact, the residue was 62 at c029024, 67 at 0f3adca and 76 at a323202 (all 2026-08-14), 118 at 9961bf2 -- its highest reading anywhere in the file's history, on 2026-08-17 -- 47 at the backfill a455839 and 2 at 0be8f37, so it ROSE over the three days and the whole of the fall is inside the last one; the same figure's second home, rulings-owed.json's consequence_of_leaving_it_open, is corrected with it. 0a2bee2 is the attribution: the second clause re-measures true (no verified_commits list in any pass contains 209da2f) and the first is false (no verdict about that group exists anywhere), the flag being a conjunction over commit bodies that 209da2f satisfies by transcribing verdicts about six other slices; rulings-owed.json's what_the_measurement_now_reads carries the same sentence and is corrected with it. 86114ed is the citation: round 110 verifies campaign-close-minor-findings-r35 and all seven of its criterion ids begin round6-, while 1bd837e appears only in rounds 6 and 7, so minor 4 is closed by a ruling and measured by no pass. The three corrections are sections 15.1, 15.2 and 15.3; no figure above them is rewritten and no gap or criterion is re-graded. The pass's fourth observation -- that section 14 is ungated -- is answered by tests/test_campaign_close_report_figures.py, which re-derives every figure section 15 states from the artifacts and ships with a permanent negative test."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "0be8f37 misnumbers the block it writes. Its body says 'Round 128 is that report, transcribed' three times over; the block it actually added is round 127. verify-ledger.json's passes went 126 -> 127 across that commit and max(round) at HEAD is 127, with min 1 and no holes. The ledger is right and the commit body is wrong about its own artifact.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Re-measured and confirmed: at 0be8f37 the file holds 127 passes, min(round) 1, max(round) 127, no holes, and the block that commit added is round 127 -- campaign-close-sweep-findings. A filed commit body cannot be amended, and the artifact it misdescribes is already right, so there is nothing in the tree to repair and the row is documented rather than fixed. Recorded here because this is the file a reader would open to check the body's claim. The number the body used now exists: this block is round 128, and it is a different block about a different slice group, which is the confusion the record has to prevent."
+    },
+    {
+     "finding": "b02e4ca and 9ee7505 both rewrite docs/receipts/verify-backlog.json and neither body says so. b02e4ca bumps campaign-close-final-integration's commit_count 2 -> 3 and 9ee7505 bumps it 3 -> 4, each appending its own subject via `--write --pending`. Their bodies mention only 'verify_backlog.py --check exit 0', and 9ee7505 additionally describes itself as 'Doc-only'. a431e34 and 0be8f37 disclose the same regeneration explicitly, so the omission is inconsistent within the group rather than a house style. The edit is mechanical and gate-forced, but it is a second gated receipt the commit changed.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-backlog.json",
+     "note": "The two bodies stand and cannot be amended, so the finding is documented and not fixed. What the answering group changed is its own practice, in the only place a lane controls it: every one of campaign-close-final-integration-r35's commits names the regeneration, the flag or counter it moves and why the gate forces it, under a heading of its own. 'Doc-only' and 'gates exit 0' are true sentences that hide a second gated receipt moving, and a reader diffing the commit is the only one who would find it -- which is the campaign's own failure shape at receipt scale."
+    },
+    {
+     "finding": "b02e4ca writes the campaign-close-verify-p4-batch mis-attribution into rulings-owed.json, not just the report. Its new what_the_measurement_now_reads field asserts 'The residue is campaign-close-verify-p4-batch, whose verdict lives in a commit body and whose range no verifier ever reached'. The commit body advertises the change as reading a measurement artifact instead of restating a figure; it does not mention that the new field also states an attribution the ledger's own coverage block says the citation flag cannot support.",
+     "disposition": "fixed",
+     "answered_at": [
+      "0a2bee2"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Same correction as the criterion's second error and the same commit, because it is one sentence with two homes and the owed-ruling row is the home that matters more: it is where a reader goes for what is measured and what is not. The field gains a dated line beside the sentence giving both clauses their measurement -- 209da2f in no verified_commits list, no verdict about the group anywhere, the flag a conjunction over commit bodies satisfied by verdicts about six other slices -- and quoting the coverage block's own words for the limitation. Nothing about the ruling moves and the residue's size is unchanged by the correction."
+    },
+    {
+     "finding": "b02e4ca's dated correction introduces a new dated figure the body does not flag. It appends 'It fell -- 118 to 2 over three days' to consequence_of_leaving_it_open. The residue on 2026-08-14 was 67 (0f3adca) / 68 (b12a2fe); 118 was first reached on 2026-08-17 at 9961bf2. The body describes the edit only as correcting the clause 'what it does not do is fall', so the new figure enters an owed-ruling row unannounced and carries the same date error that lands in report section 14.1.",
+     "disposition": "fixed",
+     "answered_at": [
+      "6a357b4"
+     ],
+     "artifact": "docs/receipts/rulings-owed.json",
+     "note": "Same correction as the criterion's first error and the same commit. The field gains a further dated line carrying the six readings the ledger's own history holds -- 62 at c029024, 67 at 0f3adca, 76 at a323202 on 2026-08-14; 118 at 9961bf2, 47 at a455839 and 2 at 0be8f37 on 2026-08-17 -- and states the trajectory the original reversed: the residue rose 62 -> 118 as the denominator grew, and the whole fall 118 -> 2 is inside one day. Both sentences stay written, because a justification that is only deleted is one no reader can check was ever real."
+    },
+    {
+     "finding": "9ee7505's 'what this closeout did not close' is scoped narrower than the tree, and the body repeats the scoping. It records 'nine NOT_DISCHARGED sweep rows standing documented_open' -- true of the 23 blocks a431e34 transcribed. Ledger-wide at HEAD there are 89 NOT_DISCHARGED criteria rows, 62 of them still disposition=documented_open. Runbook criterion 11's second clause ('no barrier is crossed with an open NOT DISCHARGED') is therefore unmet by 62, not by 9, and a closeout section whose whole job is recording what stayed open does not surface that number.",
+     "disposition": "fixed",
+     "answered_at": [
+      "832a91f"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "Section 15.4 states the ledger-wide count where the clause's own denominator belongs: over the 127 passes recorded before this block, 808 DISCHARGED, 115 PHASE_TIP_ONLY and 89 NOT_DISCHARGED, of which 20 fixed, 7 fixed_and_gated and 62 documented_open, the 62 standing across 24 slice groups and 27 rounds -- 43 in backfilled blocks, 9 in residue-sweep blocks, 10 in live passes. Nine is left standing as the true figure about the batch it was about. No grade moves: section 6's criterion 11 and campaign-gap-ledger.json remain the authority, exactly as 14.3 and 14.4 leave G4 and G6, and a lane that re-graded a criterion off a count it had just taken would be doing the thing this campaign exists to stop."
+    },
+    {
+     "finding": "a431e34 moved a third coverage counter its body does not name as moving. slice_groups_citing_a_verdict_in_a_commit_body went 17 -> 18, gaining campaign-close-final-integration -- the group's own tag flipping its own citation state from inside, the exact shape the ledger already docketed for campaign-close-receipt-walk-r35. The body reports covered / residue / residue_with_no_verdict_anywhere and argues the self-reference in prose, but never states this list changed. Weakest of the six; noting it because the ledger treats that counter as a distinct coverage state.",
+     "disposition": "documented_open",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Confirmed by diff: across a431e34 the citation list goes 17 -> 18 and the tag it gains is the group's own. The counter is derived, not authored, so nothing in it is wrong and there is nothing to repair -- what is missing is a sentence in a body that cannot be amended, so the row is documented. It is the second measured instance of the state a_groups_own_next_commit_can_flip_its_citation_state records, and that block already says why the shape is recorded rather than repaired: widening the flag into an attribution is a change to what a derived counter claims, which is a runbook matter and not a lane's. This answering group's own commits name the counter each time they move it, which is the half a lane does control."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -17932,6 +18017,7 @@
    "campaign-close-dispositions",
    "campaign-close-dissent-docket",
    "campaign-close-dissent-readjudication",
+   "campaign-close-final-integration",
    "campaign-close-gap-ledger",
    "campaign-close-gate-quality",
    "campaign-close-identity-pairing",
@@ -17970,12 +18056,11 @@
    "umbrella [H] table"
   ],
   "slice_groups_without_one": [
-   "campaign-close-final-integration",
    "campaign-close-final-integration-r35",
    "campaign-close-verify-p4-batch"
   ],
   "untagged_commits": 159,
-  "residue": 3,
+  "residue": 2,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
