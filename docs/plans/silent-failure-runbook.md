@@ -226,6 +226,33 @@ R-20's second half — **when `<n>` is not knowable before the edit, declare the
 
 **R-32 — Baselines never move inside a semantic commit.** `golden_baseline.json`, `golden_coupled_baseline.json`, `golden_coupled_exact.json`, `campaign-fingerprints.json` and `item-coverage-classification.json` move in their own commits, authored by the integration agent — **except `campaign-fingerprints.json`'s `wall{stage}`, `alloc{scenario}` and `demonstrated_red{gate}` keys, which the owning lane writes in a receipt-only commit touching no `src/`** (R-28, R-05); every other key in that file is the integration agent's. Why the carve-out: R-28 requires a stage's wall baseline before the stage's second commit and R-05 requires a gate's demonstrated red before its first green is cited, and neither moment is an integration commit — an integration-only writer makes ten stage baselines and every new gate's red unwritable, so Phase 4's criterion 17 could never be discharged.
 
+> **Amendment R-32 — 2026-08-17, a `tests{collected}` re-pin is the owning lane's write.** The
+> carve-out above enumerates three keys, and one write in this campaign's history sits outside all
+> three: `86aa1d2` moved `campaign-fingerprints.json`'s `tests.collected` in a lane's receipt-only
+> commit, disclosed in its own body and caught by the sign-off pass that read it. The write is ruled
+> here rather than re-recorded, and the choice is not a preference. Re-recording it through the
+> integration path means either editing a filed commit — the one act every rule about this campaign's
+> evidence forbids — or a second commit writing the same value again, which leaves the first write
+> exactly as far outside the rule as it was. Neither makes the runbook true of the history. This
+> does, and it grants what the history shows rather than a class around it.
+>
+> **The carve-out gains a fourth key: `tests{collected}`, written by the owning lane in a
+> receipt-only commit touching no `src/`, no gate script and neither compared baseline, with the move
+> disclosed in that commit's body.** Disclosure is three facts, and they are the three the original
+> write already carried: the old and the new value with the tip each was measured on; a cause in
+> R-34's shape for the difference between them; and the statement that `skipped` and `xfailed` are
+> unmoved. Why, and it is R-32's own reason applied to a key the first carve-out missed: R-01 row 1's
+> second half reads `collected` against a pinned count, so the pin must move whenever a lane's slices
+> declare new node ids, and that moment is a lane's commit and never an integration one. An
+> integration-only writer makes every slice group's declared new tests unpinnable — the same deadlock
+> the wall and demonstrated-red keys were carved out of, and the same one D-94 diagnosed in the
+> corpus gate.
+>
+> **`skipped` and `xfailed` stay the integration agent's.** That is the boundary that keeps this
+> carve-out off the half of R-01 row 1 it exists to protect: a lane may move the count of tests that
+> ran, and may not move the count of tests that quietly stopped running. A commit moving either of
+> those two under this carve-out is not inside it, and R-32's ordinary rule applies to it unchanged.
+
 **R-36 — Machine-derived frontier and audit receipts are slice-local and move *with* the slice that moves their count.** `docs/behavior-frontier.json`, `docs/migration-frontier.json` and `docs/cast-dependency-audit.json` are produced by their script on the commit whose counters they record; holding them back would make every counter-moving slice red until an integration commit it is forbidden to contain — the same deadlock D-94 diagnosed in the corpus gate. Coverage moves inside a Phase 3 slice land against the **committed** classification receipt plus `docs/receipts/expected-coverage-diff-<slice>.json`, the R-17 allowlist mechanism, enumerating every moved key with its reason. `EXPECTED_WITHHOLDING_PREFIXES` is a gate script, not a receipt, and R-32 does not reach it (D-96 requires it move in the same commit).
 
 **R-37 — The plan documents are gated like source.** The campaign machine-checks every `src/` claim and
