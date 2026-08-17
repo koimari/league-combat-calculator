@@ -8,165 +8,12 @@
  },
  "gate": "tests/test_verify_backlog.py",
  "groups": {
-  "campaign-close-bench-exact": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "chore(baselines): the exact capture gains the four rosters its criterion names (campaign-close-bench-exact)"
-   ]
-  },
-  "campaign-close-boundary": {
+  "campaign-close-final-integration": {
    "cites_an_r35_answer_in_a_commit_body": true,
    "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
-    "chore(baseline): the campaign's second and last closing re-capture (campaign-close-boundary)"
-   ]
-  },
-  "campaign-close-charge-price": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "fix(champions): a stocked Dark Sphere charge pays Dark Sphere's mana (campaign-close-charge-price)"
-   ]
-  },
-  "campaign-close-charge-price-oracle": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the charge-price slice's eight owed verdicts land, none dissenting (campaign-close-charge-price-oracle)"
-   ]
-  },
-  "campaign-close-coverage-population": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "chore(receipts): the coverage population regains the slice group that landed it (campaign-close-coverage-population)"
-   ]
-  },
-  "campaign-close-coverage-prose-census": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the coverage-prose row gains the census clause 2 turns on (campaign-close-coverage-prose-census)"
-   ]
-  },
-  "campaign-close-dissent-docket": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the twenty-two open debts get a docket somebody can start (campaign-close-dissent-docket)"
-   ]
-  },
-  "campaign-close-dissent-readjudication": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): nineteen of the twenty-two docketed dissents are answered (campaign-close-dissent-readjudication)"
-   ]
-  },
-  "campaign-close-gap-ledger": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the final per-gap state gets one home, and the last table is held to it (campaign-close-gap-ledger)"
-   ]
-  },
-  "campaign-close-gate-quality": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "test(gates): three assertions that would have gone red when their gap improved (campaign-close-gate-quality)"
-   ]
-  },
-  "campaign-close-identity-pairing": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "fix(gates): identity pairing reaches a cast row and a bare-string list (campaign-close-identity-pairing)"
-   ]
-  },
-  "campaign-close-investigator-brief": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(instruments): a docketed dissent's re-adjudication brief is one command away (campaign-close-investigator-brief)"
-   ]
-  },
-  "campaign-close-lane-ownership": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the lane that fired clause 2 declares itself a writer of syndra.py (campaign-close-lane-ownership)"
-   ]
-  },
-  "campaign-close-ledger-boundary": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "fix(app): a contested outcome reaches the boundary as a named refusal (campaign-close-ledger-boundary)"
-   ]
-  },
-  "campaign-close-minor-findings-r35": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the gap ledger's G4 blocker says what the tree holds, not what it held (campaign-close-minor-findings-r35)",
-    "docs(receipts): section 13.1's breakdown counts all eight commits it accepts (campaign-close-minor-findings-r35)",
-    "perf(receipts): the mismatch narration reads the declaration, not a re-derivation of it (campaign-close-minor-findings-r35)",
-    "test(receipts): the two fields 08afece restored gain the gate that keeps them (campaign-close-minor-findings-r35)",
-    "docs(receipts): the R-35 pass this group answers, recorded with its criterion-11 line (campaign-close-minor-findings-r35)"
-   ]
-  },
-  "campaign-close-minor-findings-r35-2": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the gap ledger's G4 scheduled_work says what the tree holds, not what it held (campaign-close-minor-findings-r35-2)",
-    "docs(receipts): section 13.1's correction is the appended paragraph alone, as its own receipt says (campaign-close-minor-findings-r35-2)",
-    "fix(receipts): the mismatch narration spells its counts off the list it names (campaign-close-minor-findings-r35-2)",
-    "test(receipts): the join's red names the break it injects instead of counting to one (campaign-close-minor-findings-r35-2)",
-    "docs(receipts): the second R-35 pass over this group, recorded with its criterion-11 line (campaign-close-minor-findings-r35-2)"
-   ]
-  },
-  "campaign-close-ratchet": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "chore(gates): the two instruments the bench-exact move touched keep their pylint score (campaign-close-ratchet)"
-   ]
-  },
-  "campaign-close-report": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 2,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this pass, its verdicts, and R-01 row 1's second half re-pinned (campaign-close-report)",
-    "docs(receipts): the fourth pass, its verdicts recorded, and the one thing left named (campaign-close-report)"
-   ]
-  },
-  "campaign-close-standing-dissents": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(gates): a capture that pins over a standing dissent fails a gate (campaign-close-standing-dissents)"
+    "docs(receipts): the sweep batch's remaining four verifiers, transcribed into the ledger (campaign-close-final-integration)"
    ]
   },
   "campaign-close-sweep-findings": {
@@ -186,30 +33,6 @@
     "docs(receipts): the second sweep batch's eighteen R-35 verdicts, with what this lane's fixes answered (campaign-close-sweep-findings)"
    ]
   },
-  "campaign-close-verify-backfill": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the campaign's rendered R-35 verdicts, transcribed into the ledger (campaign-close-verify-backfill)"
-   ]
-  },
-  "campaign-close-verify-backlog": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the residue of the sign-off clause becomes work somebody can start (campaign-close-verify-backlog)"
-   ]
-  },
-  "campaign-close-verify-coverage": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the verification residue is graded, and its ruling is owed (campaign-close-verify-coverage)"
-   ]
-  },
   "campaign-close-verify-p4-batch": {
    "cites_an_r35_answer_in_a_commit_body": true,
    "commit_count": 1,
@@ -217,20 +40,12 @@
    "subjects": [
     "docs(receipts): six residue slices' R-35 verdicts, transcribed from the pass that rendered them (campaign-close-verify-p4-batch)"
    ]
-  },
-  "umbrella [H] table": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): H2 is recorded as deferred, default shipped (umbrella [H] table)"
-   ]
   }
  },
  "how_a_row_is_discharged": "A fresh read-only agent that has not read the implementation plan is handed R-35's brief with this row's commit range and the criteria quoted out of its criteria_documents. What it returns is recorded as a pass in verify-ledger.json, and this row goes away because the ledger's residue list no longer holds the tag.",
  "how_to_enumerate_a_range": "git log --reverse --format='%h %s' 584071e..HEAD, keeping the commits whose subject's trailing parenthetical begins with the group's tag. The rows carry subjects rather than shas on purpose: this file is committed inside the commit a sha would point at, so a sha goes stale on the first amend or rebase, and a gate that goes red on a rebase is a gate lanes learn to regenerate without reading. The subjects are exact and git log --grep takes them.",
- "of_which_cite_an_r35_answer_in_a_commit_body": 9,
- "prepared_passes": 25,
+ "of_which_cite_an_r35_answer_in_a_commit_body": 3,
+ "prepared_passes": 3,
  "rule": "The residue of runbook criterion 11's first clause, prepared as work somebody can start. One row per slice group with no recorded R-35 answer in docs/receipts/verify-ledger.json: the commits it spans, the plan documents that carry its stated completion criteria, and whether its own commit bodies cite an R-35 answer. The brief is not here -- it is read from R-35 in the runbook, which stays its one home.",
  "what_this_is_not": "It is not an answer to the owed ruling whether_criterion_11s_first_clause_binds_the_campaign_backwards, and no row reads on whether the clause binds backwards. It is not a recorded R-35 answer: every row is a pass that has NOT run, and reading it as coverage would be the unverifiable claim about the past this campaign outlaws. And it does not shrink the denominator -- the row set is asserted equal to the ledger's own residue list, so preparing the work cannot become a way of redefining it.",
  "why_a_lane_may_write_this": "Every field is read from the commit tree, from the committed ledger, or from R-35 itself. Naming the commits a slice spans and the documents its criteria live in is a statement about the QUESTION a verifier would be handed, never about the answer -- the same line the standing-dissent docket draws for an investigator's brief."
