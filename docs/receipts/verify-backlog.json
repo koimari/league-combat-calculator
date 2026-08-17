@@ -10,10 +10,11 @@
  "groups": {
   "campaign-close-certification": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
+   "commit_count": 2,
    "criteria_documents": [],
    "subjects": [
-    "fix(gates): a dissent is measured against the current filed reading of its leaf (campaign-close-certification)"
+    "fix(gates): a dissent is measured against the current filed reading of its leaf (campaign-close-certification)",
+    "docs(receipts): G6 closes on the ruled correction its own blocker named (campaign-close-certification)"
    ]
   },
   "campaign-close-final-integration-r35": {

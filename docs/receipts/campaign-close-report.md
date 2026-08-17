@@ -1328,3 +1328,109 @@ time.
 No baseline moves in this lane, no `src/` is touched, and both compared baselines
 read `snapshot identical`, so there is nothing for a boundary re-capture to absorb
 and none is performed.
+
+---
+
+## 16. The fifth remediation pass — the two majors, closed by the acts their blockers named
+
+*Appended 2026-08-17, after a certification review withheld sign-off with one
+blocker and two majors. Everything above this line stays exactly as written, for
+the reason section 9 gives. Unlike section 15, this section **does** re-grade, and
+says on whose authority: it moves the gap rows whose named blockers have been
+discharged, in the shape §12.5 established when it corrected criteria 1 and 4 —
+"a criterion graded short of what its own blockers say is the same defect as one
+graded past them", and "nothing here re-reads the criterion: both closures are
+recorded in the umbrella by its owner, and this line states their consequence".
+Every closure below is an act a reader can open: a commit in the campaign range,
+or an amendment the umbrella's owner wrote. None of them is an implementation
+lane deciding what a criterion means, and the one thing that would be — runbook
+criterion 11 — is not closed here, and §16.3 says why in its own words.*
+
+*§16.4 is now the report's final gap table. `FINAL_TABLE_HEADING` in
+[`tests/test_campaign_gap_ledger.py`](../../tests/test_campaign_gap_ledger.py)
+moves to it in the same commit that writes it, which is the deliberate act that
+file's own comment asks for — "a fifth appended section must move this constant
+deliberately, which is the moment somebody notices the table it points at is no
+longer the last one". §12.4 stays as written and stops being read.*
+
+### 16.1 G6 — the clause-2 correction landed, and the instrument could not see it
+
+G6's blocker said four standing oracle dissents stood as open debts in the
+`syndra_cast_timeline_ordinal` cluster, that what they owed was clause 2's ruled
+`src/` correction re-opening the producing slice, and that "an implementation lane
+can be neither a ruling nor a slice it must not scope for itself".
+
+The first half of that stopped being true before this review ran. The ruling is
+the R-15/R-18 amendment's clause 2, written by the umbrella's owner: *a sustained
+dissent re-opens the producing correction as a ruled `src/` fix*. The scoping was
+done by the filed receipts and not by a lane —
+[`oracle-DKT-syndra_cast_timeline_ordinal-leaf1.json`](oracle-DKT-syndra_cast_timeline_ordinal-leaf1.json)
+computes the whole cast timeline member by member, and `cast_timeline[6]/slot`
+cleared, so the receipts themselves say the `recast_of="Q"` stamp is right and
+only the price was wrong. The docket refused to name which of the two must move
+and never had to; reading the receipts is what its own `what_the_slice_inherits`
+says the slice's first act is.
+
+`b299978` is that slice. A synthetic slot owns no cached ability entry, so
+`champions/engine.py`'s resource stamp returned at its first guard, the `Q2` entry
+carried no `resource_cost` key at all, and every consumer read the absent key
+through its own `.get("resource_cost", 0.0)`. A whole Dark Sphere cast was
+published as free because nobody wrote its price — not a wrong number, a number
+defaulted to zero on the way out, which is this campaign's own failure shape.
+`4f41e6e` pinned the leaf at 60.0 afterwards, which is the order clause 2 requires:
+the row's own words are that the baseline may not absorb the address *until* the
+slice lands.
+
+What was left was measurement, and it was wrong in the instrument rather than in
+the tree. `standing_dissent_scan.py` asked, of every standing adverse receipt,
+whether the committed baseline differs from "the one the oracle certified" — and
+read that value out of `old_value`, which certifies for an `old_value_correct`
+verdict and for no other. A `both_wrong` receipt certifies **neither** committed
+side and writes the number its whole-series computation reached under
+`oracle_correct_value`. So the two DKT receipts read as pinned over at exactly the
+moment the tree agreed with them, and — the direction that mattered — a baseline
+still holding the value they refuted would have compared *equal* and left the
+population silently. Reading a receipt at what it certified retires those two and
+is a red the scan gains, not one it gives up;
+`test_a_baseline_holding_a_refuted_value_is_reported` asserts both directions.
+
+The two C6 receipts under them leave by clause 3 instead. Clause 3 makes
+supersession explicit — the filing that supersedes names the receipt it replaces
+and states the defect in that receipt's brief — and the scan could only ever infer
+supersession from a later same-leaf `new_value_correct` verdict, which is the one
+verdict a clause-2 re-adjudication never carries. Four guards admit the declared
+form, and the strict one is that the superseding filing must itself be out of the
+blocking population, so a chain of dissents can never retire a live pin.
+
+Measured on this pass's tip by `standing_dissent_scan.py --check`: **7** blocking
+of **34** standing across **597** receipts, all seven `citation`, **0** open debts.
+The docket's `clusters` is empty and every row it ever held is in `cleared[]`,
+joined to what answered it. No dissent was decided here: all four leave against a
+committed baseline holding 60.0, the only value any filed computation reached.
+
+**G6 → CLOSED**, named to `b299978` and `4f41e6e`.
+
+### 16.4 The gaps, as they finally stand
+
+*The report's final table, derived-checked against
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) by
+`tests/test_campaign_gap_ledger.py`. §12.4's preamble applies to it word for word,
+including which artifact owns each live figure: the ledger names them and its gate
+reads each at run time, so no count in this table has a second home.*
+
+| # | State | Blocks | Where it stands |
+|---|---|---|---|
+| **G1** | **CLOSED** | umbrella criterion 5 | `09956f8`, the campaign's second and last closing re-capture. |
+| **G2** | **CLOSED** | umbrella criterion 1's emission clause | `4b8779e`, unblocked by **Amendment E**. |
+| **G3** | **CLOSED** | umbrella criterion 8 | `69e7323`. 290 applied contributions claimed, 0 unidentified. |
+| **G4** | **OPEN** | umbrella criterion 7, and Amendment B's exit clause behind it | Fourteen `RECEIPT_WALK` deferral rows. |
+| **G5** | **CLOSED** | umbrella criterion 4's non-plan half | **Amendment H**, mechanised at `1e209e2`. |
+| **G6** | **CLOSED** | runbook criterion 9's repo-wide reading | `b299978` is clause 2's ruled `src/` slice and `4f41e6e` is the pin that followed it; §16.1. 0 open debts, and 7 blocking members all `citation`. |
+| **G7** | **CLOSED** | Phase 4's criterion 14, and criterion 16's fallback-cause clause | `5c19b1f` and `0f3adca`. |
+| **G8** | **CLOSED** | umbrella criterion 11's `[H]` clause, read strictly | `1de067b`. |
+| **G9** | **OPEN BY DESIGN** | nothing | `enhanced_consume` has no producing champion; H6's ruling is that Phase 5 ships exactly this. |
+| **G10** | **CLOSED** | umbrella criterion 1's frontend change budget clause | **Amendment I**. |
+| **G11** | **OPEN** | nothing this campaign's criteria assert | Two defects in cached wiki text, not in `src/` (`98351d1`). Outside this scope and gated where it sits. |
+| **G12** | **CLOSED** | nothing — a live operational risk, not an unmet criterion | `19b03d7`, unblocked by **Amendment G**. |
+| **G13** | **CLOSED** | runbook criterion 12 | `6549e32`. |
+| **G14** | **OPEN** | runbook criterion 11's first clause | The campaign's one certification blocker, and an owed ruling. Not a lane's; §16.3 measures what it now costs and closes nothing. |

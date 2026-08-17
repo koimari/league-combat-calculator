@@ -40,7 +40,7 @@ UMBRELLA = ROOT / "docs" / "plans" / "2026-08-08-silent-failure-campaign.md"
 #: here rather than found by position: a fifth appended section must move this
 #: constant deliberately, which is the moment somebody notices the table it
 #: points at is no longer the last one.
-FINAL_TABLE_HEADING = "### 12.4 The gaps, as they finally stand"
+FINAL_TABLE_HEADING = "### 16.4 The gaps, as they finally stand"
 
 #: A gap id anywhere in the report, in the bold spelling every table uses.
 GAP_IN_REPORT = re.compile(r"\*\*(G\d+)")
