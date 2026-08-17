@@ -55,7 +55,7 @@
   "which_owners_the_population_can_actually_see": "THE ONLY ONE. Wind's Fury is the whole family -- runaans_hurricane.secondary_target is its single declaration -- and both covering scenarios put it on a participant, so unlike every retirement before it this family's covering population reaches every declaring owner and umbrella Amendment P's per-owner fixtures are owed for the arithmetic rather than for coverage. What the population cannot reach is a TERM, not an owner: swing_term_armed_carry_roster is the scenario umbrella Amendment R, Ruling 4's integration act landed for exactly this, so the enemy-held basic-attack swing terms are inside the population and Warden's Mail's capped flat subtraction -- the one term that folds into no magnitude -- is armed on a defender a basic-attack router attacks.",
   "predicted": "0 occurrences inside a population of 6636. The bolt row's declaration is the share of the attacker's damage the family's own interpreter compiles, composed with the two target-side FACTORS that fold and carrying the blend and the capped flat subtraction that do not (umbrella Amendment R, Ruling 1); the copied on-hit row's declarations are the SOURCE families' own magnitudes routed at the secondary subject (Ruling 3). Both are the same multiplications the pair engine performs on the same raw values, so no leaf can move and a leaf that did would qualify under R-15 rather than being absorbed.",
   "occurrences_outside_the_population": 0,
-  "enumerated_at": "PENDING -- this commit"
+  "enumerated_at": "63c29b2"
  },
  "what_a_declaration_of_this_family_has_to_carry": {
   "rule": "Enumerated in advance, in the idiom the eight retirements before it used. This family needs it most: it is the only one whose two rows are declared by two DIFFERENT producers, and getting that wrong is the D-60 question the first attempt stopped on.",
@@ -81,12 +81,16 @@
  },
  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
  "measured_after": {
-  "dated": "PENDING",
-  "commit": "PENDING",
-  "qualifying_occurrences": "PENDING",
-  "occurrences_outside_the_population": "PENDING",
-  "golden": "PENDING",
-  "coupled_golden": "PENDING",
-  "oracle_receipts_owed": "PENDING"
+  "dated": "2026-08-17",
+  "commit": "b7f64cb",
+  "qualifying_occurrences": 0,
+  "occurrences_outside_the_population": 0,
+  "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical. The declared pair-engine population of 0 held. Two things could have moved it and neither did: the two keys the Wind's Fury block now stamps on its rows are not values the one-attacker surface records, and the copied row's events split per contributing source without changing a single amount, damage-type total or row total.",
+  "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical. Zero of the 6636 enumerated leaves moved.",
+  "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15) and there were none, in a population enumerated in advance and non-empty.",
+  "what_the_walk_actually_staged": "Read at survival.transitions.apply_declared_price, the one site a declaration becomes a number, over both covering scenarios. crit_onhit_carry_roster: two bolt packets declaring runaans_hurricane.secondary_target at a raw of 188.10000000000002 with no routing, priced to 331.6942 between them, and two copied packets declaring blade_of_the_ruined_king.on_hit at a raw of 145.98 and 88.4476, each carrying a RoutingProvenance naming runaans_hurricane.secondary_target, priced to 104.6552. Those are the committed baseline's own two source totals for that participant -- Runaan's Hurricane (Wind's Fury bolt) 331.7 and Runaan's Hurricane copied on-hit (secondary) 104.7 -- so the pair row left the roster total and the walk's own number entered it. swing_term_armed_carry_roster: four bolts at a raw of 119.79000000000002 priced to 226.9889 and four copied packets priced to 152.7521, with the bolt declarations carrying the swing composition (crit_chance 0.5, crit branch 275.517, Warden's Mail flat 15.0 capped at 0.2) that the enemy-held terms armed.",
+  "two_producers_measured_rather_than_described": "The bolt declarations name runaans_hurricane.secondary_target and carry no routing; the copied declarations name the on_hit_strike mechanic that owns each magnitude and carry the routing that re-delivered it. Both sets are read off the engine's own rows by a case in tests/test_survival_kernel.py and asserted disjoint, which is D-60's half of the retirement stated as a measurement: one producer each, two subjects, no number declared twice.",
+  "the_case_that_was_passing_vacuously": "Recorded because it is a defect this slice found in a gate rather than in the tree. test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk ran the FIRST pair of each covering scenario; this family's rows exist only at a SECONDARY roster target, so its parametrised case would have reported green over a family it never reached. It now walks every pair of the scenario and asserts it saw a row of the family under test.",
+  "the_gate_the_population_could_not_bound": "R-01 row 8 is green on all four bench scenarios with and without the compiled walk, and every winner and score is unchanged (cassiopeia_3champ 4003.1, cassiopeia_5champ 5010.8, mundo_3champ 3305.0, syndra_mandate_3champ 4642.3) with residuals 79 / 19 / 12 / 98."
  }
 }
