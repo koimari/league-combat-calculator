@@ -572,6 +572,82 @@
      "note": "No action owed by any of it. Kept as a row because a round that re-measured its predecessor's open items and found them honest is different evidence from a round that did not look, and the two are indistinguishable once the transcript is gone."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-minor-findings",
+   "round": 6,
+   "verified_commits": [
+    "1bd837e",
+    "0f56650",
+    "03a5533",
+    "bd3489e",
+    "08afece",
+    "e2183a0"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "8aa1ee1",
+    "ecc6497",
+    "51ccdce",
+    "264aeb9"
+   ],
+   "what_this_round_is": "An independent read-only R-35 pass over the six commits of campaign-close-minor-findings -- the group that dispositioned the second sign-off review's three minor findings plus two receipt-hygiene catches. It returned one criterion NOT_DISCHARGED and five behaviours the commit bodies do not mention, and it is answered by the slice group campaign-close-minor-findings-r35, whose commits are named per row. What this row records is exactly what the pass handed the answering lane: the criterion it failed, with the evidence it ran, and the five findings. The pass's other criteria were returned DISCHARGED and their per-criterion evidence was not handed over, so none is transcribed here -- writing them in from the answering lane's memory of a report it did not receive is the reconstruction what_this_ledger_does_not_hold refuses, and the honest record is the half that exists. Recording the pass is also what settles a state the pass itself made false: e2183a0's body says 'No independent read-only pass was run over this group and none is claimed', which was true on 2026-08-17 when it was written and is not true of this tree, so the group leaves slice_groups_without_one for the list a recorded verdict puts it on.",
+   "criteria": [
+    {
+     "id": "no_gated_receipt_carries_a_justification_string_the_tree_contradicts",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "docs/receipts/campaign-gap-ledger.json, gated by tests/test_campaign_gap_ledger.py per its own gate field: row G4's blocker (6221 characters) ended '...which unblocks the RE-ATTEMPT of secondary_target/receipt_walk and does not perform it: the row stays overdue, both remaining rows still stand, and the census gate -- now over both halves of a mitigation -- is the thing that says whether either may retire.' The tree contradicts every clause: docs/behavior-frontier.json's counters.counter_4.deferrals.rows is {} and targets['counter_4/receipt_walk'] reads deferred 0, gap 0, met true; docs/receipts/receipt-walk-retirement-schedule.json's families is {} and its slices_whose_retiring_lane_amendment_k_corrects is []. The same row's own note ends 'G4's blocker is discharged: all fourteen rows have left', so the record contradicted itself -- the shape 03a5533 named and repaired in campaign-stages.json. 03a5533 dispositioned this one as 'a dated chronological narration ... left as the record of its date', and both halves of that fail on inspection: the offending clause carries no date -- a regex over the blocker returns 2026-08-15 three times, 2026-08-16 twice and 2026-08-17 once, none of them attached to the Amendment R paragraph's closing sentence -- and the ledger's own header refuses the narration reading, its rule saying 'A reader who opens only this file has the answer' and its why_the_report_is_not_the_ledger saying 'A ledger is a record of state, as it now is. Collapsing the two is what produced the drift.' Boundary cases the pass checked and deliberately did not count: verify-ledger.json's umbrella-1 and umbrella-7 notes and rulings-owed.json's one owed row also read stale, but each sits under an explicit dated field and is therefore a record of its date in the way the rule permits.",
+     "disposition": "fixed",
+     "answered_at": [
+      "8aa1ee1"
+     ],
+     "artifact": "docs/receipts/campaign-gap-ledger.json",
+     "note": "Fixed the way the same sweep fixed the two stage records, and not by deletion: both stale sentences stay written and unedited, because each was true on the day its amendment was performed and a justification that is only deleted is one no reader can check was ever real. The blocker gains a dated re-measurement beside them naming every artifact behind it -- an empty deferral set, both counter-4 targets met, an empty families block, thirteen (family, RECEIPT_WALK) interpreter keys -- and states what now stands in the row's way instead: the re-grade, which re-reads umbrella criterion 7's grade and the report's final table with it and is the owner's, not a lane's. The row is not re-graded: state reads OPEN before the edit and OPEN after it, and the field says so where a reader meets it, which is what keeps the row inside how_a_row_closes."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "Section 13.1 of docs/receipts/campaign-close-report.md miscounts the population it accepts, and no commit body mentions it. 'What the acceptance does not say' read 'Five of them are docs-subject commits whose src/ edits are prose, and three are refactor/fix commits in the Phase 3 coverage work.' The table's own eight subjects are 4 docs (4e9f26a, 5d89453, 518a6e3, e9c0f78), 1 test (581fd19), 2 refactor (8e1e23b, 6ab477b) and 1 fix (6c4f0a2) -- 4 + 3 = 7, and the dropped commit is 581fd19, the one of the eight the breakdown described in no clause at all.",
+     "disposition": "fixed",
+     "answered_at": [
+      "ecc6497"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "The arithmetic is corrected in a dated paragraph appended under the sentence rather than written over it, which is section 9's rule for this report. The pass additionally read 581fd19 as 'the one of the eight with a substantive src/ edit'; re-measured, that half does not hold and the answering commit says so rather than repeating it -- git show --stat 581fd19 -- src/ is src/calculator/damage.py +13/-5 and the whole diff sits inside _ridden_parent_slot's docstring, which that commit's own body states in terms. So the correction is arithmetic and changes nothing about what the acceptance covers; what was wrong is the one sentence written to bound what the acceptance claims."
+    },
+    {
+     "finding": "bd3489e's added corrected_rows() call at scripts/receipt_walk_schedule.py:1509 is not free, and the body's 'Prose only, and measured as such' paragraph implicitly denies that it costs anything. Measured by instrumenting Path.read_text and timing each call inside schedule(): the new call was the cold one at 271 file reads / 0.772 s and the pre-existing call at :1683 fell to 1 read / 0.118 s on warm caches -- net about +1 read and +0.12 s on every --check, --write and test invocation. It re-derives the whole corrected-rows block purely to take its key set, and that key set is sorted(LANE_CORRECTED), the module constant at :231.",
+     "disposition": "fixed",
+     "answered_at": [
+      "51ccdce"
+     ],
+     "artifact": "scripts/receipt_walk_schedule.py",
+     "note": "The call is narrowed to the declaration it was re-deriving. corrected_rows()'s own loop is 'for family in sorted(LANE_CORRECTED)' with no filter, so the two key sets are equal by construction, and LANE_CORRECTED is gated in both directions by _lane_correction_failures() on every --check -- so nothing bd3489e bought is given back: the narration still names all three families whether their rows stand or not, and a name that stopped being a closed row still fails. Measured after: schedule() 275 -> 274 reads, --check best-of-5 1.559 s -> 1.441 s, and the written receipt byte-for-byte unchanged. The full derivation stays at :1683, where the field publishes the evidence rather than the names."
+    },
+    {
+     "finding": "08afece restores two fields no gate holds, and the body argues the shape wants them without saying nothing enforces them. tests/test_standing_dissent_scan.py asserted carried_by only on open_debt rows, skipping every kind that is not open_debt, and the_receipt_is_not_deleted had zero consumers anywhere in scripts/ or tests/. Both restored fields could therefore vanish again exactly the way carried_by vanished at ac4bb2c. Related shape claim: the subject 'the two fields every other one carries' is true of the_receipt_is_not_deleted -- all 7 citation rows carry it -- and false of carried_by, which after that commit only this row has.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "264aeb9"
+     ],
+     "artifact": "tests/test_standing_dissent_scan.py",
+     "note": "Two gates, shaped differently because the two fields are. the_receipt_is_not_deleted joins the citation branch of test_every_row_is_one_of_the_two_kinds_and_says_something, as a requirement of the KIND: a citation adjudicates a receipt without superseding it, and clause 3 of the R-15/R-18 amendment is why every citation owes that sentence. carried_by is not gated that way and could not be -- six of the seven citations carry no escalation and owe none -- so the JOIN is what is gated: test_a_row_an_open_escalation_names_names_it_back walks every open entry of every escalated-defects-*.json for an adjudication_row pointer naming this file and requires the row it names to name the escalation and entry back. Derived by walking for the key, so a pointer in a new escalation joins the gate on the commit that writes it. R-05's red ships with it, injected as the defect actually happened: a row that is present, adjudicates the pointed receipt and carries no carried_by. The subject's overstated half is corrected in the answering commit's body, since a filed body cannot be amended."
+    },
+    {
+     "finding": "e2183a0 records the group under slice_groups_without_one with cites_an_r35_answer_in_a_commit_body false and states 'No independent read-only pass was run over this group and none is claimed', while 08afece's own body opens 'Two receipt-hygiene catches from an R-35 verifier.' An R-35 verifier demonstrably fed two of this group's six commits and no commit reconciles the two statements. e2183a0 also openly says it steered its prose around the derived flag, whose sole input is commit-body text the lane writing it controls.",
+     "disposition": "fixed",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Answered by the commit this row is committed inside, which is why answered_at is empty and not why it is unanswered -- the same reason this block names slice groups rather than shas. The two statements are reconciled by separating what they are about, and then by the tree moving under both. e2183a0's sentence is about a pass over THIS GROUP's own commits, of which there had been none; 08afece's verifier had read an earlier range and its two catches are what this group answered, so neither sentence was false and the pair was unreadable because the group verified and the group answering were never distinguished. What settles it is not a wording choice: a pass over this group's six commits has now run, it is round 6 above, and the group moves to slice_groups_with_a_verdict_in_this_ledger. The derived flag is untouched and is not written around here -- this group's answering commits name R-35 and carry verdict words, so campaign-close-minor-findings-r35 enters slice_groups_citing_a_verdict_in_a_commit_body by derivation on the commit that lands it. That the flag's only input is prose the writing lane controls stays true and stays disclosed; naming a stronger input is a runbook change and is not a lane's."
+    },
+    {
+     "finding": "e2183a0's coverage-state line does not add up: 'Measured over all six subjects before this one was written: 4 of 5 name a mechanism and 0 of 5 carry an answer word.' Six subjects, denominators of five, in the one sentence that records the measurement the ledger entry rests on.",
+     "disposition": "fixed",
+     "answered_at": [],
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Re-measured over the group's six commits with the test's own two patterns, MECHANISM_NAMES and VERDICT_WORDS, at tests/test_verify_ledger.py:153-154. Mechanism: 1bd837e, 0f56650, 03a5533 and 08afece yes, bd3489e no, e2183a0 yes. Answer word: none of the six. So the denominators were the right ones and the subject was wrong -- the measurement is over the FIVE subjects that existed before e2183a0 was written, where it is 4 of 5 and 0 of 5; over all six it is 5 of 6 and 0 of 6. Either way the flag e2183a0 recorded was correct, which is why this is graded a wrong sentence about a right number rather than a wrong flag. Recorded here because a filed commit body cannot be amended and the sentence is the one a reader would check the ledger entry against."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -580,7 +656,8 @@
   "what_this_block_does_not_do": "It does not reconstruct a verdict. The earlier passes' verdicts live only in the commit bodies that answer them, and rebuilding them here from those bodies would be a record derived from the thing it is supposed to check independently -- the reason the ledger began mid-campaign. What is recorded is whether a slice group has a verdict IN THIS LEDGER, which is a fact about this file and is checkable without reading a single body. What it now DOES do is grade the residue instead of collapsing it: a slice group whose own commits record an R-35 verdict, naming the mechanism and carrying a verdict word, is listed by name under slice_groups_citing_a_verdict_in_a_commit_body (by name and not by sha: the ledger is committed inside the commit a sha would point at, so a sha here goes stale the moment that commit is amended). That is deliberately weaker than a recorded verdict -- a commit body is the LANE's transcription of the verifier's answer, not the verifier's artifact -- and it is a strict subset of the groups with none here, never a substitute. Collapsing 'a citation a reader can open' with 'nothing at all' is what made a ledger holding one pass and a ledger holding forty look alike to every gate.",
   "slice_groups_with_a_verdict_in_this_ledger": [
    "campaign-close",
-   "campaign-close-receipt-walk-ruling"
+   "campaign-close-receipt-walk-ruling",
+   "campaign-close-minor-findings"
   ],
   "slice_groups_without_one": [
    "3.2",
@@ -699,7 +776,7 @@
    "campaign-close-swing-composition",
    "campaign-close-spellblade-retired",
    "campaign-close-secondary-target-retired",
-   "campaign-close-minor-findings"
+   "campaign-close-minor-findings-r35"
   ],
   "untagged_commits": 159,
   "residue": 117,
@@ -715,11 +792,12 @@
    "campaign-close",
    "campaign-close-boundary",
    "campaign-close-dissent-docket",
+   "campaign-close-minor-findings-r35",
    "campaign-close-receipt-walk-r35",
    "campaign-close-report",
    "campaign-close-verify-coverage"
   ],
-  "residue_with_no_verdict_anywhere": 106,
+  "residue_with_no_verdict_anywhere": 105,
   "prepared_work": {
    "artifact": "docs/receipts/verify-backlog.json",
    "gate": "tests/test_verify_backlog.py",
