@@ -1078,3 +1078,35 @@ error there: `b02e4ca` appended "It fell -- 118 to 2 over three days" to
 beside it rather than by deletion, which is this campaign's rule for a justification
 the tree contradicts: a sentence that is only deleted is one no reader can check was
 ever real.
+
+### 15.2 A citation flag says a body carries an answer, never whose
+
+Section 14.2 says what is left is two tags, the first being
+"`campaign-close-verify-p4-batch`, whose verdict lives in a commit body and whose
+range no verifier's brief ever reached". The two clauses contradict each other — a
+verdict living in a commit body is a verdict some verifier rendered — and only the
+second survives measurement.
+
+**The second clause is true and re-measured.** No `verified_commits` list in any of
+the ledger's passes contains `209da2f`, which is that group's only commit. No
+verifier's brief has ever reached it.
+
+**The first is false.** No verdict about `campaign-close-verify-p4-batch` exists
+anywhere. What exists is the flag: [`verify-backlog.json`](verify-backlog.json)'s
+row for the group reads `cites_an_r35_answer_in_a_commit_body: true`, and that flag
+is derived — `tests/test_verify_ledger.py::_groups_citing_a_verdict_in_a_commit_body`
+is a conjunction over the group's own commit bodies, a mechanism name **and** a
+verdict word. `209da2f`'s body carries both because it transcribes R-35 verdicts
+about six *other* slices — `P4C`, `P4C-P4E-C2R`, `P4C/P4F`, `P4-arbitrate`,
+`P4-R18-amend`, `P4-H2-ccscope` — which is the whole reason that commit exists.
+
+The ledger already records this exact limitation, in the same coverage block the
+counter lives in: `a_groups_own_next_commit_can_flip_its_citation_state` says "what
+the derivation cannot do is tell WHOSE answer a body carries", and calls the
+citation state "deliberately weaker than a recorded verdict". Section 14.1's weaker
+phrasing — "both remaining tags cite a verdict a reader can open" — is exactly what
+the flag supports and stands unaltered. Section 14.2's stronger one does not, and
+neither does the copy `b02e4ca` wrote into [`rulings-owed.json`](rulings-owed.json)'s
+`what_the_measurement_now_reads`, where it entered an owed-ruling row while that
+commit's body advertised the change as reading a measurement artifact instead of
+restating a figure. Both sentences stay written; the measurement lands beside each.
