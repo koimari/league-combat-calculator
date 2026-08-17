@@ -158,6 +158,18 @@
       "combat/2:enemy:Aatrox/outgoing": "3510.5",
       "fights/0:Aatrox": "1643.9"
     },
+    "swing_term_armed_carry_roster": {
+      "combat/0:main/incoming": "2797.3",
+      "combat/0:main/outgoing": "4813.6",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "716.6",
+      "combat/2:enemy:Aatrox/incoming": "2610.6",
+      "combat/2:enemy:Aatrox/outgoing": "3050.2",
+      "combat/3:enemy:Malphite/incoming": "2919.6",
+      "combat/3:enemy:Malphite/outgoing": "1876.1",
+      "fights/0:Aatrox": "3483.1",
+      "fights/1:Malphite": "4353.2"
+    },
     "syndra_custom_order_120": {
       "combat/0:/incoming": "0.0",
       "combat/0:/outgoing": "0.0",
@@ -215,16 +227,16 @@
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 23,
-      "leaves": 164,
+      "entries": 24,
+      "leaves": 174,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "45652c55eb8dbf2f1c40b719d2e4da1472ac84ee",
+    "git_head": "9f203860734ef48f40b43a37dd90bfb7cd668e2c",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 23,
+    "scenario_count": 24,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "fc31cdb5acee4d39707b42ca0fd9c0a9463f57d1"
+    "src_tree_sha": "b51b2599e68e3d242978b33051a66c696b42229a"
   }
 }

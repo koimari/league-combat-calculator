@@ -8,7 +8,8 @@
    "closed_row": "crit_profile/receipt_walk",
    "covering_coupled_scenarios": [
     "crit_onhit_carry_roster",
-    "hexoptics_basic_amp_carry"
+    "hexoptics_basic_amp_carry",
+    "swing_term_armed_carry_roster"
    ],
    "declared_rules": [
     "infinity_edge.crit_damage_bonus",
@@ -205,7 +206,8 @@
    "closed_as": "not_a_needed_lane",
    "closed_row": "opening_defense/receipt_walk",
    "covering_coupled_scenarios": [
-    "immolate_active_bruiser_roster"
+    "immolate_active_bruiser_roster",
+    "swing_term_armed_carry_roster"
    ],
    "declared_rules": [
     "bloodthirster.ichorshield",
@@ -543,21 +545,23 @@
   "secondary_target": {
    "coupled_baseline_is_blind_to_this_family": false,
    "covering_coupled_scenarios": [
-    "crit_onhit_carry_roster"
+    "crit_onhit_carry_roster",
+    "swing_term_armed_carry_roster"
    ],
    "declared_rules": [
     "runaans_hurricane.secondary_target"
    ],
    "deferral_row": "secondary_target/receipt_walk",
-   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 3498 committed roster values across 1 coupled scenario(s) -- crit_onhit_carry_roster 3498",
+   "expected_qualifying_occurrences": "Expected qualifying occurrences: bounded by the enumerated population of 6636 committed roster values across 2 coupled scenario(s) -- crit_onhit_carry_roster 3498, swing_term_armed_carry_roster 3138",
    "interpreter_module": "src/calculator/interpreters/secondary_target.py",
    "owners": [
     "Runaan's Hurricane"
    ],
    "population_by_scenario": {
-    "crit_onhit_carry_roster": 3498
+    "crit_onhit_carry_roster": 3498,
+    "swing_term_armed_carry_roster": 3138
    },
-   "population_total": 3498,
+   "population_total": 6636,
    "retiring_act": {
     "act": "A receipt-walk interpreter for this family: the walk prices it itself instead of consuming the pair engine's timed rows that participant_timeline._pair_run_fight produces. This is Amendment F's named act and it describes this row as written.",
     "already_performed": false,

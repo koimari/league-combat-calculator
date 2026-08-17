@@ -412,6 +412,18 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
             "is 'entries' because it counts registry entries, not scenarios"
         ),
     ),
+    Allowance(
+        doc=UMBRELLA_NAME,
+        value=24,
+        context="counter reads",
+        reason=(
+            "H5's measured counter of name-keyed sites, read against its own "
+            "bound, which happens to equal coupled_golden_exact.entries since "
+            "the swing-term-armed roster joined the coupled scenario set on "
+            "2026-08-16 (umbrella Amendment R, Ruling 4); the sentence is "
+            "about sites and a bound and about no capture at all"
+        ),
+    ),
 )
 
 

@@ -153,12 +153,31 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     not a ``/metadata/fingerprint/`` leaf, so no shape context puts its integer
     in the scan's reach --- the detection rule holding the jurisdiction its own
     docstring states, which is why the residue is five and not six.
+
+    And it fell to two, across two sources, at the swing-term coverage capture
+    of 2026-08-16, which moved every coupled census a seventh time: all four
+    rows keyed to the window-armed capture's figures --- its own allowlist row
+    and the three RW-window-scenarios verdicts on the counters it moved ---
+    stopped having a site together, and one arrived, this capture's allowlist
+    claiming the coupled leaf counter in order to supersede the claim before
+    it.  What is left is that row and the pair snapshot's entry count in the
+    0A.2 oracle receipt, which no capture since has superseded.  The
+    *coincidence* count rose from zero to one in the same commit, and it is
+    the one worth reading twice: the Phase 4 boundary capture's own R-34 line
+    of cause states a leaf delta of the same small integer
+    ``coupled_golden.entries`` has now moved onto, in a sentence about ten
+    containers and about no fingerprint at all.  That is the second time an
+    entry counter passing through the small integers has lit up such a
+    sentence, so it is a recurring event rather than an anomaly --- and it is
+    counted apart from the carve-out on purpose, because a coincidence says
+    the integer is not the figure.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 5
+    assert block["forced_restatements"] == 2
+    assert block["coincidences"] == 1
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 5
+    assert len({row.source for row in forced}) == 2
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )
