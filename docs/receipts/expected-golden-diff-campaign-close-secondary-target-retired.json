@@ -1,0 +1,92 @@
+{
+ "slice": "campaign-close-secondary-target-retired",
+ "decisions": [
+  "R-15",
+  "R-17",
+  "R-19",
+  "R-20",
+  "R-30",
+  "R-32",
+  "R-36",
+  "D-40",
+  "D-60",
+  "D-62",
+  "D-66",
+  "D-97",
+  "umbrella Amendment F",
+  "umbrella Amendment K",
+  "umbrella Amendment L, Ruling 1",
+  "umbrella Amendment M, Ruling 1",
+  "umbrella Amendment M, Ruling 3",
+  "umbrella Amendment N, Ruling 1",
+  "umbrella Amendment N, Ruling 2",
+  "umbrella Amendment O, Ruling 2",
+  "umbrella Amendment R, Ruling 1",
+  "umbrella Amendment R, Ruling 2",
+  "umbrella Amendment R, Ruling 3",
+  "umbrella Amendment R, Ruling 4"
+ ],
+ "what_this_is": "The R-20 population of secondary_target/receipt_walk, the LAST of umbrella Amendment F's fourteen and the tenth to retire, enumerated from committed artifacts BEFORE this slice's first src/ edit, together with what a declaration of this family has to carry and what its retirement may NOT touch -- written down in advance so a moved number is a stop rather than a discovery. It is the second attempt: docs/receipts/expected-golden-diff-campaign-close-secondary-target-retirement.json is the first, which STOPPED and opened the tenth rulings-owed row rather than shipping half a retirement.",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17/R-32/D-97: the code lands against the committed baselines plus this allowlist, and no baseline moves inside the semantic commit."
+ },
+ "expected_qualifying_occurrences": 0,
+ "expected_diff_paths": {
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": []
+ },
+ "qualifying_population": {
+  "enumerated_before_first_edit": true,
+  "rule": "R-20's second half. What can move is a property of which participants hold the declaring owner of the secondary_target family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json, whose own fields are derived from the behaviour catalog and from scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
+  "predicate": "Every committed coupled scenario that puts the one declaring owner of the secondary_target family on a participant. The owner is read live from the behaviour catalog over rule_owners() -- Runaan's Hurricane -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard, so the population and the guard cannot disagree about which rosters can see the family.",
+  "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the whole scenario subtree, because a slice that moves a family's numbers onto its own declaration can move any aggregate downstream of it inside that scenario.",
+  "population_by_scenario": {
+   "crit_onhit_carry_roster": 3498,
+   "swing_term_armed_carry_roster": 3138
+  },
+  "population_total": 6636,
+  "pair_engine_population": {
+   "total": 0,
+   "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface and it records breakdown TOTALS and breakdown key sets, never the keys a row carries beside its number nor how many events a row splits into. This slice adds pair_preview_of and declared to the two rows the Wind's Fury block authors, splits the copied on-hit row's events per CONTRIBUTING SOURCE rather than per damage type, and changes no arithmetic: every event's damage, every row total and every breakdown key is what it was. Zero pair-engine golden diffs is therefore a declared population of zero, and a single diff there stops the slice."
+  },
+  "which_owners_the_population_can_actually_see": "THE ONLY ONE. Wind's Fury is the whole family -- runaans_hurricane.secondary_target is its single declaration -- and both covering scenarios put it on a participant, so unlike every retirement before it this family's covering population reaches every declaring owner and umbrella Amendment P's per-owner fixtures are owed for the arithmetic rather than for coverage. What the population cannot reach is a TERM, not an owner: swing_term_armed_carry_roster is the scenario umbrella Amendment R, Ruling 4's integration act landed for exactly this, so the enemy-held basic-attack swing terms are inside the population and Warden's Mail's capped flat subtraction -- the one term that folds into no magnitude -- is armed on a defender a basic-attack router attacks.",
+  "predicted": "0 occurrences inside a population of 6636. The bolt row's declaration is the share of the attacker's damage the family's own interpreter compiles, composed with the two target-side FACTORS that fold and carrying the blend and the capped flat subtraction that do not (umbrella Amendment R, Ruling 1); the copied on-hit row's declarations are the SOURCE families' own magnitudes routed at the secondary subject (Ruling 3). Both are the same multiplications the pair engine performs on the same raw values, so no leaf can move and a leaf that did would qualify under R-15 rather than being absorbed.",
+  "occurrences_outside_the_population": 0,
+  "enumerated_at": "PENDING -- this commit"
+ },
+ "what_a_declaration_of_this_family_has_to_carry": {
+  "rule": "Enumerated in advance, in the idiom the eight retirements before it used. This family needs it most: it is the only one whose two rows are declared by two DIFFERENT producers, and getting that wrong is the D-60 question the first attempt stopped on.",
+  "the_bolt_row_is_the_ROUTERS_OWN_PACKET": "secondary_Runaan's Hurricane carries a declared SHARE of the attacker's damage -- SecondaryTargetSlot.bolt_damage, the interpreter's own compiled damage_share against the champion's attack damage -- at the on-hit effectiveness of the swing that fired it. No other family declares that magnitude, so the declaration names runaans_hurricane.secondary_target and carries no routing provenance: it did not re-deliver anybody's packet, it is the packet. That is exactly how tests/test_survival_kernel.py's committed swing-composition fixture (_declare_swing_row, landed with Ruling 1) stamps it, which is the campaign's own spelling of what this slice would do.",
+  "the_bolt_is_a_BASIC_ATTACK_SWING": "It is priced by damage._mitigate_basic_attack_swing and not by _mitigate, so the attack class is AttackClass.BASIC_ATTACK -- the holder's basic amp is a live term for it, which no retired family before this one has had -- and the declaration carries a survival.pricing.BasicAttackSwing: the crit blend weight, the crit branch's own folded magnitude, and Warden's Mail's flat with its cap and instance count. The plating multiplier and the target's critical-strike damage multiplier FOLD into the two branch magnitudes because a pure factor on a linear mitigation prices to the same real number (Ruling 1). The blend is authored only where the fight is deterministic: a non-deterministic fight prices one branch and a declaration claiming a blend would price a fight the engine did not run.",
+  "the_bolt_carries_the_resistance_ITS_packet_met": "state.resists.effective_armor at authoring time, transported on the declaration, because a bolt is a physical event on the ordinary ledger and damage._apply_temporary_lethality_windows can re-price one -- and where it does it restates the declaration at the armour the packet actually met (_restate_declaration, umbrella Amendment N, Ruling 1).",
+  "the_copied_row_declares_NOTHING_OF_ITS_OWN": "on_hit_secondary_Runaan's Hurricane is the attack's own on-hit packets re-delivered at the bolt's target. umbrella Amendment R, Ruling 3 rules secondary_target a ROUTING family: the copied packet is priced from the SOURCE family's declaration composed with the router's share, keeps the source mechanic as its rule_id so D-62 attributes it at (source mechanic, secondary subject, event_id), and records the routing in provenance. The share is 1.0 -- the router re-delivers on-hit packets whole rather than sharing them -- and the provenance is what stops a reader seeing one mechanic's magnitude paid at two subjects with nothing saying how the second got there.",
+  "the_copied_rows_EVENTS_SPLIT_PER_SOURCE": "Today the row authors one event per (application, damage type) whose amount is the SUM over every contributing source of that type. A declaration is one producer's magnitude, so a summed event cannot carry one: the events split per contributing source instead, which leaves every amount, every row total and every damage-type total exactly where it was and is invisible to both baselines in the covering population, where exactly one source contributes.",
+  "an_UNATTRIBUTABLE_CONTRIBUTION_LEAVES_THE_ROW_UNSTAMPED": "A copied packet's contributors are the item on-hit strikes (on_hit_strike, retired), the stack-gated copied on-hits (charged_strike, retired) and the CHAMPION ability on-hits, which are a champion's own numbers and no item rule declares them. A row holding one of those has a magnitude no declaration states, so the row is left unstamped and stays priced by the pair engine -- fail-closed, all-or-nothing per row, never a row whose walk price is missing a contributor. No participant of either covering scenario is such a champion; the conditional is named here rather than discovered."
+ },
+ "what_this_slice_may_NOT_do": {
+  "no_magnitude_field_on_the_router": "umbrella Amendment R, Ruling 3 in terms: the router's declaration carries exactly the routing facts it carries today -- max_targets and damage_share -- and gains none. A routing family that declared the magnitude it routes would be a second producer of a number a source family already declares, which is what criterion 8 forbids and precisely why the first attempt could not answer this itself. The committed gate reads the compiled field set off the slot the seed fight resolved, so a third compiled field fails on the commit that adds it.",
+  "no_second_producer_for_the_copied_row": "The copied packets' rule_id stays the source mechanic's. A routed packet whose rule_id became the router's would file a source family's damage under a family that declared none.",
+  "no_new_pricing_stage_term": "umbrella Amendment R, Ruling 1 landed the basic-attack swing composition and Ruling 2 widened the census over authoring-time mitigation terms; the census is green. This slice adds no term to survival.pricing -- it carries the routing on the declaration so route_declared_packet stays the one home of what a route does to a packet, and it prices through the composition that already exists.",
+  "no_cross_participant_producer_moves": "umbrella Amendment M, Ruling 3: a retired family's walk half prices ITS OWN HOLDER's damage at a subject the holder is attacking, so it is not a cross-participant producer and D-07's ruled six stand unedited.",
+  "no_row_the_family_does_not_author_is_stamped": "on_hit_chain_<item> is Electrospark's chain copy and belongs to the charged_strike family's own delivery; on_hit_secondary_<item> for a cleave item is Hydra's cleave. Neither is a declaration of this family and neither is stamped."
+ },
+ "why_the_family_is_startable_now": {
+  "the_class": "Class (a), authors-own-rows, in the committed triage (umbrella Amendment O, Ruling 2): two priced pair-engine rows, so Amendment L, Ruling 1's shape has something to stamp.",
+  "the_ruling_the_first_attempt_owed": "umbrella Amendment R (2026-08-16) answers both directions the stopped receipt named -- what the pricing stage owes a basic-attack-delivered packet (Ruling 1) and which family owns a copied packet's magnitude (Ruling 3) -- and all four of its rulings are performed: Rulings 1, 2 and 3 by campaign-close-swing-composition and Ruling 4 by campaign-close-swing-term-coverage.",
+  "the_standing_precondition": "umbrella Amendment R, Ruling 2's widened term census is green -- 29 post-authoring packet-mutation sites, 0 uncovered, 9 authoring-time mitigation terms, 0 uncovered, 3 static holder amps, 0 unfolded -- which is the standing precondition on any further family retiring, and it is this family's own halt that widened it.",
+  "the_covering_scenarios": "Both are committed. crit_onhit_carry_roster carried the first attempt's population; swing_term_armed_carry_roster is Ruling 4's integration act, which arms the enemy-held swing terms the first attempt measured nothing could see."
+ },
+ "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
+ "measured_after": {
+  "dated": "PENDING",
+  "commit": "PENDING",
+  "qualifying_occurrences": "PENDING",
+  "occurrences_outside_the_population": "PENDING",
+  "golden": "PENDING",
+  "coupled_golden": "PENDING",
+  "oracle_receipts_owed": "PENDING"
+ }
+}
