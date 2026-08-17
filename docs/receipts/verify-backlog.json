@@ -21,11 +21,12 @@
   },
   "campaign-close-final-integration-r35": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the residue's dated figure is read from the ledger's own history (campaign-close-final-integration-r35)",
-    "docs(receipts): the citation flag is stated as what it derives, not whose answer it found (campaign-close-final-integration-r35)"
+    "docs(receipts): the citation flag is stated as what it derives, not whose answer it found (campaign-close-final-integration-r35)",
+    "docs(receipts): no ledger round measures the act that closed the tests.collected minor (campaign-close-final-integration-r35)"
    ]
   },
   "campaign-close-verify-p4-batch": {

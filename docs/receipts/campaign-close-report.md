@@ -1110,3 +1110,32 @@ neither does the copy `b02e4ca` wrote into [`rulings-owed.json`](rulings-owed.js
 `what_the_measurement_now_reads`, where it entered an owed-ruling row while that
 commit's body advertised the change as reading a measurement artifact instead of
 restating a figure. Both sentences stay written; the measurement lands beside each.
+
+### 15.3 No ledger round measures the act that closed minor 4
+
+Section 14.1's finding-4 row closes the `tests.collected` minor and adds: "A fresh
+verifier re-measured every clause of the answering group and returned it DISCHARGED
+— ledger round 110." Round 110 does not read on that act.
+
+Measured over [`verify-ledger.json`](verify-ledger.json) at this tip:
+
+* Round **110** verifies the slice group `campaign-close-minor-findings-r35` over
+  `8aa1ee1`, `ecc6497`, `51ccdce`, `264aeb9`, `3b0a030`, and every one of its seven
+  criterion ids begins `round6-`. All seven read on round 6's ledger row and on the
+  gated-justification-string findings — which is finding **5**, not finding 4.
+* Minor 4 closed by R-32's amendment of 2026-08-17, which landed at `1bd837e`.
+  `1bd837e` carries the tag `campaign-close-minor-findings`, whose only ledger
+  rounds are **6** and **7**. Each returned exactly one criterion,
+  `no_gated_receipt_carries_a_justification_string_the_tree_contradicts`, and each
+  returned it **NOT_DISCHARGED**. Neither reads on the re-pin.
+* Searching every `verified_commits` list in all 127 passes for `1bd837e` returns
+  rounds 6 and 7 and nothing else.
+
+So the honest state of minor 4 is **closed by a ruling and measured by no pass**.
+The disposition section 14.1 records stands — R-32's carve-out now grants what the
+history shows, and the runbook was amended rather than the history rewritten — and
+what does not stand is the sentence claiming a verifier re-measured it. Finding 5's
+citation of rounds 110 and 111 is correct, reads on the group those rounds actually
+verify, and is untouched.
+
+This is the third and last of the three figures the pass returned NOT DISCHARGED.
