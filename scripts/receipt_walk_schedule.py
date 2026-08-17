@@ -1498,6 +1498,15 @@ def schedule() -> dict[str, Any]:
         for family, entry in slices.items()
         if tuple(entry["route_today"]) != (PAIR_ENGINE,)
     )
+    # The mismatch narration below names the families whose row declared the
+    # defence resolver rather than the pair engine.  ``lane_corrected`` reads
+    # the rows still standing, which is what the live field wants and what the
+    # sentence must not depend on: once those rows close the list empties and
+    # the sentence renders "Three --  -- declare the defence resolver instead",
+    # a justification whose subject a retirement round took away.  The closed
+    # rows keep their own record, so the narration reads both and stays true of
+    # a debt that has been paid.
+    lane_corrected_ever = sorted(set(lane_corrected) | set(corrected_rows()))
     performed = sorted(
         family
         for family, entry in slices.items()
@@ -1560,7 +1569,7 @@ def schedule() -> dict[str, Any]:
             "Amendment F describes all fourteen rows as the families whose "
             "numbers participant_timeline._pair_run_fight produces today. "
             "Eleven declare that route in their own via field. Three -- "
-            + ", ".join(lane_corrected)
+            + ", ".join(lane_corrected_ever)
             + " -- declare the defence resolver instead, and their rows say in "
             "their own words that a walk-lane interpreter there would be a "
             "second producer of one number, which is what D-60 and umbrella "
