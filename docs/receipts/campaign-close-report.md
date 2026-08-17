@@ -1794,8 +1794,9 @@ Amendment R-32 puts the first with the owning lanes, and the second needs a
 worktree this lane may not create. The suite is green with `skipped` and
 `xfailed` both 0.
 
-**And this pass proved the point against itself.** Its own declarations sum to
-twenty-nine and the suite moved by thirty-one. The missing two are in `bfbc33a`,
+**And this pass proved the point against itself.** Measured at `993f97e`, where
+the scan above is anchored: its own declarations sum to twenty-nine and the
+suite moved by thirty-one. The missing two are in `bfbc33a`,
 whose body declares four node ids and enumerates five in the same sentence,
 while six landed: the sixth is the parametrised live-figure check, which gained
 a case when that commit added a counter to `live_figures` — a node id the tree
@@ -1804,6 +1805,20 @@ ids at this tip. The correction is here rather than in the body, because a body
 is not amendable, and it is the same finding the minor names one level in: a
 declaration written as prose is checked by nobody, including the lane writing
 it.
+
+**And the half of the minor that *is* this lane's, done.** Amendment R-32's
+fourth carve-out says the pin moves whenever a lane's slices declare new node
+ids and that the moment is a lane's commit; this pass's slices declared some, so
+the pin moved in a receipt-only commit touching no `src/`, no gate script and
+neither compared baseline. No figure of it is restated here: the old value, the
+new one, the tip each was measured on, the per-slice decomposition of this
+pass's own declarations and the disclosure that the passes between never
+re-pinned all live in [`campaign-fingerprints.json`](campaign-fingerprints.json)'s
+`tests` block, which is the artifact that owns them. What the move does not do is
+claim the intervening declarations as this pass's, and the block says so in its
+own words. What it does is stop the pin describing a tip that no longer exists,
+so the next lane's *"collected = the pinned count + declared new"* is an
+arithmetic somebody can do.
 
 **The commits outside the denominator.** Named to whoever rules, in the owed row
 itself, at `d5e95f0` — with the two things a lane may not do about it written
