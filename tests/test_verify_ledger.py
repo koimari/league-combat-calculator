@@ -234,6 +234,23 @@ def _groups_citing_a_verdict_in_a_commit_body() -> list[str]:
     return sorted(cited)
 
 
+#: A bare integer -- not the 35 of ``R-35``, not the 11 of a criterion id, not a
+#: path fragment.  What it matches is a count somebody wrote down.
+_BARE_INTEGER = re.compile(r"(?<![\w.\-/])\d+")
+
+
+def _undated_counts(note: str) -> list[str]:
+    """Sentences of ``note`` that state a count before any date is in force."""
+    offending: list[str] = []
+    dated = False
+    for sentence in note.split(". "):
+        if "2026-" in sentence:
+            dated = True
+        if _BARE_INTEGER.search(sentence) and not dated:
+            offending.append(sentence)
+    return offending
+
+
 class TestTheCoverageBlockIsTheClauseSDenominator:
     """Criterion 11's first clause, given something to quantify over.
 
@@ -302,6 +319,38 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
             in self.coverage["what_this_block_does_not_do"]
         )
         assert self.coverage["why_the_residue_cannot_be_closed_retroactively"].strip()
+
+    def test_every_count_the_residue_note_states_is_dated(self) -> None:
+        """The note may reason freely; it may not carry an undated count.
+
+        Round 129's first finding is that this note went on stating a population
+        -- "10 of the groups ... cite one in a commit body", "60-odd fresh R-35
+        passes" -- that the backfill had already made false, and that nothing in
+        the tree would catch it.  The counters beside it are derived and gated;
+        the note is prose, and prose that restates a derived number is the second
+        home criterion 4 exists to forbid.
+
+        So the rule is the weakest one that would have caught it: a count in
+        this note must sit inside a **dated clause**.  The note is an undated
+        preamble -- the reasoning, which has no number in it and needs none --
+        followed by clauses each opening with the date it was measured on.  A
+        count a reader can date is a reading; a count in the preamble is a claim
+        about now, and about now the derived counters beside it are the
+        authority.
+
+        What it does not catch, said plainly rather than left to be discovered:
+        a count appended to an already-dated clause takes that clause's date.
+        That is still a date a reader can place, which is the property being
+        gated; a stronger rule would have to know which sentence arrived last.
+        """
+        note = self.coverage["why_the_residue_cannot_be_closed_retroactively"]
+        assert _undated_counts(note) == []
+
+    def test_the_dated_count_rule_has_a_red_it_can_reproduce(self) -> None:
+        """R-05, on the shape the finding actually had: an undated count."""
+        note = self.coverage["why_the_residue_cannot_be_closed_retroactively"]
+        doctored = "Closing those is 60-odd fresh R-35 passes. " + note
+        assert _undated_counts(doctored)
 
 
 def _pass(round_number: int) -> dict:
