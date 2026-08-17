@@ -44,6 +44,19 @@ later pass moves one of them the choice is the one section 15.5 already had to
 make: restate the figure, or anchor it at the commit that stated it the way
 ``SECTION_15_5_ANCHOR`` does.  The mechanism exists now, which is the whole of
 what 15.5's anchoring bought.
+
+Section 17 joins on the same terms and made the choice section 16.6 wrote down:
+round 129 moved two of 16.3's readings, so those seven are anchored at
+``SECTION_16_3_ANCHOR`` and 17 states the live ones.  Two of 17's own figures are
+readings of the campaign's *commit bodies*, which grow with every commit
+including the one that states them, so they are anchored too and the section
+names the anchor.
+
+The guarantee is a property here rather than a list.  ``ungated_figures`` scans a
+section for a bold figure nothing in this file reads -- the shape all three
+sections use for a figure they state -- so a figure added later is caught instead
+of being silently ungated, which is what "re-derives every figure" claimed and
+an enumeration could not deliver.
 """
 
 from __future__ import annotations
@@ -119,9 +132,21 @@ def section_15() -> str:
 
 @lru_cache(maxsize=1)
 def section_16() -> str:
-    """The report from its section 16 heading to the end of the file."""
+    """The report's section 16, bounded at 17 for section 15's own reason.
+
+    It ran to the end of the file until section 17 existed, which was true and
+    stopped being so; an unbounded section lets a gate match a figure a later
+    section states and report it as this one's.
+    """
     text = REPORT.read_text(encoding="utf-8")
-    return text[text.index("\n## 16.") :]
+    return text[text.index("\n## 16.") : text.index("\n## 17.")]
+
+
+@lru_cache(maxsize=1)
+def section_17() -> str:
+    """The report from its section 17 heading to the end of the file."""
+    text = REPORT.read_text(encoding="utf-8")
+    return text[text.index("\n## 17.") :]
 
 
 @lru_cache(maxsize=1)
@@ -882,3 +907,206 @@ def test_every_claim_15_6_counts_is_a_check_this_file_holds() -> None:
     source = Path(__file__).read_text(encoding="utf-8")
     for name in CLAIM_TESTS:
         assert f"def {name}(" in source, name
+
+
+# --------------------------------------------------------------------------
+# Section 17: the certification re-review.
+#
+# Its figures are read *live*, because they are facts about this tip -- except
+# the two that are readings of the campaign's commit bodies, which grow with
+# every commit and are therefore anchored the way every other moving reading in
+# this file is.  The section states the anchor itself.
+# --------------------------------------------------------------------------
+
+#: The commit section 17.4's commit-body scan was run over.  A body-derived
+#: figure moves with the next commit, including the one that states it, so it is
+#: read at the tip it was measured on and the section says so.
+SECTION_17_4_ANCHOR = "993f97e"
+
+#: The file section 17.4's node-id correction is about.
+SECTION_17_4_FILE = "tests/test_campaign_gap_ledger.py"
+
+#: How a commit body declares node ids, in the three spellings the campaign
+#: actually used.  This is not a parser for a declaration format -- there is no
+#: such format, which is 17.4's finding -- it is the measurement that says so.
+_DECLARES = (
+    re.compile(r"[+](\d+)\s+(?:new\s+)?node ids?", re.I),
+    re.compile(r"declar\w*\s+(\d+)\s+node ids?", re.I),
+    re.compile(
+        r"(declares no new node id|No new node id is declared|no node id is)", re.I
+    ),
+)
+
+
+@lru_cache(maxsize=1)
+def node_id_declarations() -> tuple[int, int]:
+    """``(bodies a parser can read, bodies mentioning node ids it cannot)``."""
+    out = subprocess.run(
+        ["git", "log", "--format=%h\x1f%b\x1e", f"584071e..{SECTION_17_4_ANCHOR}"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    parsed = unparsed = 0
+    for chunk in out.split("\x1e"):
+        chunk = chunk.strip()
+        if not chunk or "\x1f" not in chunk:
+            continue
+        _sha, body = chunk.split("\x1f", 1)
+        if "node id" not in body.lower():
+            continue
+        if any(pattern.search(body) for pattern in _DECLARES):
+            parsed += 1
+        else:
+            unparsed += 1
+    return parsed, unparsed
+
+
+@lru_cache(maxsize=1)
+def collected_node_ids() -> str:
+    """How many node ids one test file holds at this tip, collected not counted."""
+    out = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", SECTION_17_4_FILE],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    match = re.search(r"(\d+) tests? collected", out)
+    assert match is not None, out[-400:]
+    return match.group(1)
+
+
+def round_129() -> dict:
+    """The pass section 17 is about."""
+    return next(block for block in here() if block["round"] == 129)
+
+
+def findings_with(disposition: str) -> str:
+    """How many of round 129's findings carry this disposition."""
+    return str(
+        sum(
+            1
+            for row in round_129()["unmentioned_behaviour"]
+            if row["disposition"] == disposition
+        )
+    )
+
+
+#: Section 17's figures.  Live from the instruments they were measured with; the
+#: body-derived pair is anchored, and the section names the anchor.
+FIGURES_17: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "17.1 covered tags",
+        r"Coverage moves to \*\*(\d+)\*\* tags",
+        lambda: str(
+            len(ledger()["coverage"]["slice_groups_with_a_verdict_in_this_ledger"])
+        ),
+    ),
+    (
+        "17.1 derived tags",
+        r"tags with a verdict\s+of \*\*(\d+)\*\*",
+        lambda: slice_tag_total_at(ledger()["coverage"]),
+    ),
+    (
+        "17.1 residue",
+        r"and the residue is \*\*(\d+)\*\*",
+        lambda: str(ledger()["coverage"]["residue"]),
+    ),
+    (
+        "17.2 findings fixed",
+        r"dispositioned: \*\*(\d+)\*\* fixed",
+        lambda: findings_with("fixed"),
+    ),
+    (
+        "17.2 findings documented",
+        r"fixed and \*\*(\d+)\*\*\s+documented",
+        lambda: findings_with("documented_open"),
+    ),
+    (
+        "17.3 residue",
+        r"The residue is \*\*(\d+)\*\*:",
+        lambda: str(ledger()["coverage"]["residue"]),
+    ),
+    (
+        "17.3 prepared passes",
+        r"prepares \*\*(\d+)\*\* startable",
+        lambda: str(json.loads(BACKLOG.read_text(encoding="utf-8"))["prepared_passes"]),
+    ),
+    (
+        "17.3 not discharged",
+        r"\*\*(\d+)\*\*\s+`NOT_DISCHARGED` rows stand",
+        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+    ),
+    (
+        "17.3 recorded passes",
+        r"the ledger's \*\*(\d+)\*\* passes",
+        lambda: str(len(here())),
+    ),
+    (
+        "17.3 documented_open",
+        r"of which \*\*(\d+)\*\*\s+are `documented_open`",
+        lambda: disposition_count(here(), "documented_open"),
+    ),
+    (
+        "17.3 untagged commits",
+        r"the \*\*(\d+)\*\* commits in the range",
+        lambda: str(ledger()["coverage"]["untagged_commits"]),
+    ),
+    (
+        "17.4 parseable declarations",
+        r"\*\*(\d+)\*\* commit\s+bodies state a node-id declaration",
+        lambda: str(node_id_declarations()[0]),
+    ),
+    (
+        "17.4 unparseable mentions",
+        r"\*\*(\d+)\*\* more mention node ids",
+        lambda: str(node_id_declarations()[1]),
+    ),
+    (
+        "17.4 node ids in the file",
+        r"The file holds \*\*(\d+)\*\* node\s+ids",
+        collected_node_ids,
+    ),
+    (
+        "17.6 the gate's own size",
+        r"\*\*(\d+)\*\* figures, the count itself among them",
+        lambda: str(len(FIGURES_17)),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", FIGURES_17, ids=[case[0] for case in FIGURES_17])
+def test_every_figure_section_17_states_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """Section 17 states what a certification review is still owed, so it is read."""
+    _label, pattern, measured = case
+    assert stated(section_17(), pattern) == measured()
+
+
+@pytest.mark.parametrize("case", FIGURES_17, ids=[case[0] for case in FIGURES_17])
+def test_the_section_17_gate_fails_when_a_stated_figure_drifts(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """R-05's permanent red for section 17, injected as 15's and 16's are."""
+    _label, pattern, measured = case
+    text = section_17()
+    match = re.search(pattern, text)
+    assert match is not None
+    drifted = str(int(match.group(1)) + 1)
+    doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
+    assert stated(doctored, pattern) != measured()
+
+
+def test_section_17_states_no_figure_this_file_does_not_read() -> None:
+    """The completeness scan, over the section that ships it."""
+    assert ungated_figures(section_17(), FIGURES_17, [], []) == []
+
+
+def test_the_r01_verdict_table_section_17_states_carries_no_figure() -> None:
+    """15.8's ruling, held: a gate reading is a verdict here, never a number."""
+    table = section_17()[section_17().index("### 17.7") :]
+    assert "GREEN" in table
+    assert re.search(r"\*\*(\d+)\*\*", table) is None

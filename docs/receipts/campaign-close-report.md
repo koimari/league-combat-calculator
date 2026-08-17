@@ -1662,3 +1662,214 @@ one open ruling belongs to the campaign's owner, and §16.3 states what the
 question now costs and the third branch nobody had written down. Everything else
 in both documents is discharged, or discharged under a named amendment, with its
 residue measured, gated and owned.
+
+## 17. The certification re-review — one verdict found, four defects fixed, one decision still the owner's
+
+*Appended 2026-08-17. Section 9's rule applies to it as to every section before
+it: nothing above is rewritten, and where this pass moved a figure an earlier
+section stated, that figure is anchored at the commit that stated it and read
+out of git rather than restated. §16.3's seven ledger readings are anchored that
+way, at `3799bef`.*
+
+A certification review withheld sign-off with one blocker and two minors. The
+blocker is that runbook criterion 11 is not discharged and cannot be discharged
+by any lane — which is true, and this section does not claim otherwise. What
+this pass did is everything a lane may do around it, and one thing nobody had
+noticed was available.
+
+### 17.1 The thing that was available: a verdict already rendered, never recorded
+
+Criterion 11's first clause had a residue of three, and the review named all
+three as *"prepared as startable rows in verify-backlog.json, none run"*. One of
+them had been run. An R-35 verifier — a fresh read-only Opus 5 handed round
+128's brief verbatim, *"plus any subsequent fix commits up to current HEAD"* —
+was spawned on 2026-08-17 at HEAD `04cdfbf`, after the whole
+`campaign-close-final-integration-r35` group had landed. It verified twelve
+commits in its own words, returned all four criteria `DISCHARGED`, and named
+five behaviours the twelve commit bodies do not mention. Its report sat in the
+orchestration journal and in no artifact.
+
+Recording it is the ledger's own admissible route, and the one it distinguishes
+by name from the reconstruction it refuses: the `backfill` and `residue_sweep`
+blocks transcribe *the verifier's artifact*, joined to a slice tag **by commit**
+— *"a tag is covered when a verifier verified a commit that carries it"* — and
+never a later reader's account of a commit body. Eight of the twelve carry the
+tag; the verifier's evidence names six of them by sha while re-deriving their
+corrections rather than trusting them.
+
+Round 129 is that transcription. Coverage moves to **125** tags with a verdict
+of **128** derived from commit subjects, and the residue is **3**, over a
+membership one group younger: `campaign-close-final-integration-r35` left it on
+a verifier's artifact and `campaign-close-certification-r2`, this pass's own
+tag, took a place beside `campaign-close-certification`'s. That is the mechanism
+§16.3 measured, holding exactly: recording a verdict is itself a commit, a
+commit carries a tag, and a tag with no verdict is residue.
+
+### 17.2 What the verifier found, and what happened to each
+
+Five findings, four of them defects in the campaign's own closing artifacts —
+each a claim a receipt made that the tree contradicted, which is the failure
+shape this campaign exists to remove, arriving inside the pass that was
+removing it. Round 129's findings, dispositioned: **4** fixed and **1**
+documented.
+
+| # | The finding | Disposition |
+|---|---|---|
+| 1 | the verify ledger's residue note states a population the backfill falsified | `fixed` — `bf5b808` |
+| 2 | G14's blocker holds a value and its note says the residue does not fall | `fixed` — `bfbc33a` |
+| 3 | the owed row's measurement went stale inside the lane that wrote it | `fixed` — `16ebb97` |
+| 4 | the section gate pins abbreviated shas and shells out to `git show` | `documented_open` |
+| 5 | the section gate's coverage claim is an enumeration, not a property | `fixed` — `e5abdbe` |
+
+Each fix ships the gate the finding says did not exist, and each gate carries
+R-05's red: a count in the residue note must sit inside a dated clause; an open
+gap row's blocker may hold no count and must name a `live_figures` key that
+grades that gap; the owed row's dated reading is anchored at `b02e4ca` and
+re-derived out of git while its live readings are named rather than restated;
+and both gated sections are now *scanned* for a bold figure nothing reads
+instead of holding a list of the figures somebody remembered.
+
+Finding 4 is documented rather than fixed, and the reason is that the
+alternative is a different fragility rather than none. An amend or rebase of a
+pinned anchor turns R-01 row 1 red; resolving anchors by commit subject instead
+goes red on a reworded subject. What makes the trade deliberate is that every
+anchor is a named constant with a comment saying what it anchors, so moving one
+is an act rather than an accident — and the verifier rates the finding low
+severity itself.
+
+### 17.3 The blocker, and what is left of it
+
+Runbook criterion 11 stands **NOT DISCHARGED**, exactly as §12.5 grades it and
+§16.3 restates it, and nothing in this section supersedes that sentence.
+
+*Clause 1 — every slice has a recorded verdict.* The residue is **3**:
+`campaign-close-verify-p4-batch`, whose single commit no verifier's brief has
+ever reached; `campaign-close-certification`, the previous pass's tag; and this
+pass's own. [`verify-backlog.json`](verify-backlog.json) prepares **3** startable
+passes and this lane ran none, for the reason it could not: R-35's verifier is
+*a fresh read-only Opus 5 that has not read the plan*, and a lane that has read
+the plan writing one would be the unverifiable claim about the past Phase 1
+outlaws. What this lane could do was record a verdict somebody else's verifier
+had already rendered, which is a transcription and not a verdict, and it is
+done.
+
+*Clause 2 — no barrier is crossed with an open `NOT DISCHARGED`.* **90**
+`NOT_DISCHARGED` rows stand over the ledger's **129** passes, of which **60**
+are `documented_open`. None moved in this pass and none could: re-dispositioning
+a verifier's finding about the lanes being checked is the reconstruction
+`what_this_ledger_does_not_hold` refuses. Round 129's four fixed rows are
+*finding* rows, not criterion rows, so this clause is unmoved by them and says
+so.
+
+**What is still owed, and by whom.** [`rulings-owed.json`](rulings-owed.json)'s
+`whether_criterion_11s_first_clause_binds_the_campaign_backwards` is the one
+open row, and three branches now stand priced beside it rather than two: bind
+the clause backwards and schedule the residue's prepared passes; read it
+forwards and let the forward gate hold the next slice group; or rule that a
+group's verdict may be recorded by a commit carrying that same group's tag,
+which §16.3 measured is the only branch that terminates. This pass added the
+input the ruler needs and did not have — the **159** commits in the range
+carrying no slice tag, named in the owed row itself as part of the same
+question, because whether an untagged commit is outside "every slice" or
+evidence the convention was not universal is the same question the clause asks.
+
+**A lane may not choose among the three**, and the three shortcuts stay refused
+by name: manufacture a verdict, reconstruct one from the bodies of the lanes
+being checked, or shrink the denominator. So the campaign is not certified
+against its own runbook, the reason is one decision with an owner, and every
+input that decision needs is now in one artifact a reader can open.
+
+### 17.4 The two minors
+
+**R-01 row 1's second half.** The review is right that *"collected = pinned
+count + declared new"* is not dischargeable from the fingerprints receipt alone,
+and this pass measured whether the route the review names — walking the
+declaring lanes' commit bodies — could discharge it. It cannot. Measured over
+`584071e..993f97e`, **60** commit bodies state a node-id declaration a parser
+can read and **37** more mention node ids in a phrasing no parser reads, and the
+parseable ones sum past the collected count, because commit prose quotes other
+commits' declarations and is not a declaration format. So the arithmetic is
+dischargeable by a re-pin or by re-collecting at the pin's anchor commit:
+Amendment R-32 puts the first with the owning lanes, and the second needs a
+worktree this lane may not create. The suite is green with `skipped` and
+`xfailed` both 0.
+
+**And this pass proved the point against itself.** Its own declarations sum to
+twenty-nine and the suite moved by thirty-one. The missing two are in `bfbc33a`,
+whose body declares four node ids and enumerates five in the same sentence,
+while six landed: the sixth is the parametrised live-figure check, which gained
+a case when that commit added a counter to `live_figures` — a node id the tree
+generated from data rather than one anybody typed. The file holds **56** node
+ids at this tip. The correction is here rather than in the body, because a body
+is not amendable, and it is the same finding the minor names one level in: a
+declaration written as prose is checked by nobody, including the lane writing
+it.
+
+**The commits outside the denominator.** Named to whoever rules, in the owed row
+itself, at `d5e95f0` — with the two things a lane may not do about it written
+beside it: retro-tagging a subject rewrites the history the denominator is
+derived from, and declaring the untagged commits "not really slices" is the
+denominator-shrinking shortcut said out loud.
+
+### 17.5 The gaps, and the report's final table
+
+**No gap row changes state in this pass.** G14 stays `OPEN` on the ruling it has
+always named, its blocker corrected to name a counter rather than hold one; G11
+stays `OPEN` on the two cached-data defects outside this campaign's scope; every
+closed row stays closed. §16.4 therefore remains the report's final gap table
+and this section states none, which is what the gap ledger's own rule asks for:
+one place holds the state, and a second table restating it is a second home.
+
+### 17.6 What gates section 17
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states from the instrument it was measured
+with — the verify ledger's coverage block and pass rows, the backlog, round
+129's own finding rows, and for the node-id figures a scan of the campaign
+range's commit bodies anchored at `993f97e` and a live collection of the file
+they are about. **15** figures, the count itself among them, each with
+R-05's red beside it, and the completeness scan §17.2's fifth finding bought
+now runs over this section too: a bold figure this file does not read fails the
+gate on the commit that writes it.
+
+One thing this section forced, and it is the same thing section 16 forced when
+it arrived: `section_16()` read from its heading to the end of the file, which
+was right until a section 17 existed and would have let this section's figures
+be matched as that one's. It is bounded at `## 17.` now.
+
+### 17.7 The R-01 matrix on this pass's tip
+
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**What each row read is in this pass's commit bodies, not here**, for the reason
+§15.8 ruled and §16.7 restates: a gate reading cannot be re-derived without
+re-running the gate it came from, so the one place this section could carry an
+ungated number is the one place it carries none.
+
+**No `src/` is touched in this pass and no baseline moves in it** —
+`git diff --name-only 3799bef..HEAD -- src/` and the same over R-32's five
+baselines are both empty over the whole range, and both compared baselines read
+`snapshot identical` on every commit here.
+
+**What is left, in one sentence.** Runbook criterion 11 is not discharged, the
+one decision that could discharge it is the owner's and now has all three of its
+branches, its population hole and its exact cost written in the row that asks
+it — and every defect a fresh verifier found in the artifacts that say so has
+been fixed and gated.
