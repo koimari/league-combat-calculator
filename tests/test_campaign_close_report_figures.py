@@ -57,6 +57,14 @@ SEARCH_ANCHOR = "86114ed"
 BATCH = "a431e34"
 BATCH_PARENT = "1e7c342"
 
+#: The commit that wrote section 15.5.  Its coverage figures were "about this
+#: tip" when they were written and stopped being so the moment another slice
+#: group shipped -- which is a thing the campaign expects to happen, not a
+#: defect in the section.  So they are read where every other moving reading in
+#: this file is read: at the commit that stated them, out of git.  The anchor is
+#: named rather than inferred, so moving it is a deliberate act.
+SECTION_15_5_ANCHOR = "e4338b7"
+
 
 @lru_cache(maxsize=1)
 def section_15() -> str:
@@ -166,28 +174,29 @@ def here() -> list[dict]:
     return ledger()["passes"]
 
 
-def coverage() -> dict:
-    """The coverage block at this tip."""
-    return ledger()["coverage"]
-
-
-def slice_tag_total() -> str:
-    """Every derived slice tag: the covered ones plus the residue."""
-    block = coverage()
+def slice_tag_total_at(block: dict) -> str:
+    """The same sum over one coverage block, whichever commit it came from."""
     return str(
         len(block["slice_groups_with_a_verdict_in_this_ledger"])
         + len(block["slice_groups_without_one"])
     )
 
 
-def prepared_passes() -> str:
-    """How many startable passes the backlog holds."""
-    return str(json.loads(BACKLOG.read_text(encoding="utf-8"))["prepared_passes"])
+def coverage_at(sha: str) -> dict:
+    """The coverage block as one commit left it."""
+    return ledger_at(sha)["coverage"]
 
 
-def latest_round() -> str:
-    """The highest round in the ledger, which is the block 15.5 records."""
-    return str(max(block["round"] for block in here()))
+def prepared_passes_at(sha: str) -> str:
+    """How many startable passes the backlog held at one commit."""
+    blob = subprocess.run(
+        ["git", "show", f"{sha}:docs/receipts/verify-backlog.json"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    return str(json.loads(blob)["prepared_passes"])
 
 
 def pass_count(sha: str) -> str:
@@ -323,22 +332,34 @@ FIGURES: list[tuple[str, str, Callable[[], str]]] = [
         r"unchanged at \*\*(\d+)\*\*",
         lambda: disposition_count(here(), "documented_open"),
     ),
-    ("15.5 the round recorded", r"\*\*round (\d+)\*\* of", latest_round),
+    (
+        "15.5 the round recorded",
+        r"\*\*round (\d+)\*\* of",
+        lambda: str(
+            max(block["round"] for block in ledger_at(SECTION_15_5_ANCHOR)["passes"])
+        ),
+    ),
     (
         "15.5 residue",
         r"The residue is \*\*(\d+)\*\* again",
-        lambda: str(coverage()["residue"]),
+        lambda: str(coverage_at(SECTION_15_5_ANCHOR)["residue"]),
     ),
-    ("15.5 slice tags", r"\*\*(\d+)\*\* slice tags, with", slice_tag_total),
+    (
+        "15.5 slice tags",
+        r"\*\*(\d+)\*\* slice tags, with",
+        lambda: slice_tag_total_at(coverage_at(SECTION_15_5_ANCHOR)),
+    ),
     (
         "15.5 residue with no verdict anywhere",
         r"`residue_with_no_verdict_anywhere` \*\*(\d+)\*\*",
-        lambda: str(coverage()["residue_with_no_verdict_anywhere"]),
+        lambda: str(
+            coverage_at(SECTION_15_5_ANCHOR)["residue_with_no_verdict_anywhere"]
+        ),
     ),
     (
         "15.5 prepared passes",
         r"preparing \*\*(\d+)\*\* startable passes",
-        prepared_passes,
+        lambda: prepared_passes_at(SECTION_15_5_ANCHOR),
     ),
     (
         "15.1 the figure it fell from",

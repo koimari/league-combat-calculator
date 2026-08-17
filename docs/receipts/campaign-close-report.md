@@ -1198,6 +1198,16 @@ two remaining tags are `campaign-close-verify-p4-batch`, whose range no verifier
 brief has reached, and `campaign-close-final-integration-r35`, which cannot verify
 itself — the same honest pair section 14.2 records, one lane further on.
 
+*Anchored 2026-08-17. The five figures in the paragraph above were readings of
+this tip when `e4338b7` wrote them, and a reading of this tip stops being one the
+moment another slice group ships — which is a thing this campaign expects to
+happen and not a defect in the section. They stay exactly as written, and
+`tests/test_campaign_close_report_figures.py` now reads them where it already
+reads 15.1's six and 15.4's table: at the commit that stated them,
+`git show e4338b7:docs/receipts/verify-ledger.json`. The live figures are in
+`verify-ledger.json`'s coverage block, which is where §12.4 says they live, and
+§16.3 states them as of that section's own tip.*
+
 The six findings, and what each is:
 
 | # | The finding | Disposition |

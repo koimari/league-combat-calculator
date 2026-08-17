@@ -257,3 +257,123 @@ def test_the_standing_set_the_scan_reads_is_the_pinned_one(scan) -> None:
     )
     pinned = set(ledger["defects"][0]["standing_receipts"])
     assert set(scan.standing_dissents(scan.oracle_receipts())) == pinned
+
+
+def test_a_receipt_is_read_at_the_value_it_certified(scan) -> None:
+    """``old_value`` certifies for one verdict and the scan used it for all.
+
+    ``old_value_correct`` is the verdict that certifies ``old_value``.  A
+    ``both_wrong`` receipt certifies *neither* committed side and writes the
+    number its whole-series computation reached under ``oracle_correct_value``,
+    so reading ``old_value`` there asked whether the baseline held a value the
+    receipt had refuted.
+    """
+    refuted_only = {"verdict": "both_wrong", "old_value": 100.0, "new_value": 0.0}
+    computed = dict(refuted_only, oracle_correct_value=60.0)
+    assert scan.certified_value(refuted_only) == 100.0
+    assert scan.certified_value(computed) == 60.0
+
+
+def test_a_baseline_holding_a_refuted_value_is_reported(scan) -> None:
+    """R-05's red for the reading above, and it is the direction that mattered.
+
+    Under ``certified = old_value`` a baseline still pinned at the number a
+    ``both_wrong`` receipt refuted compared *equal* to it and left the blocking
+    population silently — an absorption the scan existed to catch, invisible to
+    the scan.  Both directions are asserted here, so the fix cannot be read as
+    the check merely becoming quieter.
+    """
+    receipts = {
+        "oracle-fabricated-both-wrong.json": {
+            "verdict": "both_wrong",
+            "leaf_path": "coupled_scenarios/x/combat/events[0]/damage",
+            "old_value": 100.0,
+            "new_value": 0.0,
+            "oracle_correct_value": 60.0,
+        }
+    }
+    body = receipts["oracle-fabricated-both-wrong.json"]
+    assert not scan._same(100.0, scan.certified_value(body))  # the refuted value
+    assert not scan._same(0.0, scan.certified_value(body))  # the other refuted one
+    assert scan._same(60.0, scan.certified_value(body))  # what it computed
+
+
+def test_a_certified_number_is_read_through_its_spelling(scan) -> None:
+    """Filed receipts spell a certified number both ways, and both are numbers.
+
+    Clause 3 forbids editing a filed receipt into a house style, so ``"60.0"``
+    and ``60.0`` have to compare as the one number they are — five committed
+    adverse receipts spell theirs as a string.  A value that is not a number
+    is still compared as the string it is.
+    """
+    assert scan._same(60.0, "60.0")
+    assert scan._same("34", 34)
+    assert not scan._same(60.0, "61.0")
+    assert not scan._same("a reason string", "a different reason string")
+
+
+def test_a_declared_supersession_answers_a_dissent(scan) -> None:
+    """Clause 3's supersession, which the scan could only ever infer.
+
+    :func:`standing_dissents` reads supersession off a later same-leaf
+    ``new_value_correct`` verdict.  Clause 3 states it explicitly instead —
+    the filing names the receipt it replaces and the defect in that receipt's
+    brief — and a clause-2 re-adjudication never carries the verdict word the
+    inferred reading looks for.
+    """
+    receipts = {
+        "oracle-superseded.json": {"verdict": "old_value_correct", "old_value": 1.0},
+        "oracle-reposed.json": {
+            "date": "2026-08-15",
+            "verdict": "both_wrong",
+            "supersedes": "oracle-superseded.json",
+            "superseded_brief_defect": "the brief priced a member of an inserted series",
+        },
+    }
+    pinned = (scan.Pinned("oracle-superseded.json", "coupled_golden", "x", 1.0, 2.0),)
+    assert scan.superseded_by(receipts) == {
+        "oracle-superseded.json": ("oracle-reposed.json",)
+    }
+    assert scan.answered_by_a_supersession(receipts, pinned) == (
+        "oracle-superseded.json",
+    )
+
+
+def test_a_supersession_by_a_still_pinned_filing_answers_nothing(scan) -> None:
+    """R-05's red for the arm above — the guard that keeps it from being a door.
+
+    A chain of dissents must never retire a live pin.  The filing that
+    supersedes has to be out of the blocking population itself, which means
+    the committed baseline already holds what the current reading certifies;
+    while it does not, the superseded receipt keeps its row.  The two other
+    guards are asserted in the same shape: a filing that names no defect in
+    the brief it replaces is oracle shopping and supersedes nothing, and one
+    dated earlier than the receipt it names does not supersede it (R-19).
+    """
+    receipts = {
+        "oracle-superseded.json": {
+            "date": "2026-08-14",
+            "verdict": "old_value_correct",
+            "old_value": 1.0,
+        },
+        "oracle-reposed.json": {
+            "date": "2026-08-15",
+            "verdict": "both_wrong",
+            "supersedes": "oracle-superseded.json",
+            "superseded_brief_defect": "the brief priced a member of an inserted series",
+        },
+    }
+    both_pinned = (
+        scan.Pinned("oracle-superseded.json", "coupled_golden", "x", 1.0, 2.0),
+        scan.Pinned("oracle-reposed.json", "coupled_golden", "x", 3.0, 2.0),
+    )
+    assert scan.answered_by_a_supersession(receipts, both_pinned) == ()
+
+    no_defect = json.loads(json.dumps(receipts))
+    no_defect["oracle-reposed.json"].pop("superseded_brief_defect")
+    assert scan.superseded_by(no_defect) == {}
+
+    dated_earlier = json.loads(json.dumps(receipts))
+    dated_earlier["oracle-reposed.json"]["date"] = "2026-08-13"
+    only_the_dissent = (both_pinned[0],)
+    assert scan.answered_by_a_supersession(dated_earlier, only_the_dissent) == ()

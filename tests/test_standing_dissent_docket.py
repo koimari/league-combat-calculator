@@ -38,17 +38,25 @@ that list from becoming the resting place a routed debt was already refused:
 every receipt in it is joined, through the adjudication ledger, to what
 answered it.
 
-There are two such joins, because the campaign has two instruments for
-answering a question.  A superseded receipt joins to a filed receipt that
-exists, adjudicates the *same leaf*, and carries ``new_value_correct``.  A
-receipt answered by a **ruling** joins to the ruling instead — the row it
-closed in ``rulings-owed.json`` and the amendment recorded verbatim in the
-umbrella — and it has to, because the whole content of a routed row is that
-no investigation can clear it: demanding a superseding receipt there would
-demand exactly the oracle shopping clause 3 makes unwritable.
-:func:`closure_mechanism` is where the two-way split lives, so it cannot drift
-into prose and so R-05's negative can refuse the third state — a row that left
-``clusters`` because somebody moved it.
+There are three such joins, because the amendment has three instruments for
+answering a question and the docket's own remedies are those three.  A
+superseded receipt joins to a filed receipt that exists, adjudicates the *same
+leaf*, and carries ``new_value_correct``.  A receipt answered by a **ruling**
+joins to the ruling instead — the row it closed in ``rulings-owed.json`` and
+the amendment recorded verbatim in the umbrella — and it has to, because the
+whole content of a routed row is that no investigation can clear it: demanding
+a superseding receipt there would demand exactly the oracle shopping clause 3
+makes unwritable.  And a receipt answered by **clause 2** joins to the ruled
+``src/`` slice its own ``what_is_owed`` names: the sha, checked to exist in the
+campaign range, and — the guard that makes this arm evidence rather than an
+assertion — the value that slice landed, checked against what the committed
+baseline now holds at the receipt's own address.  That arm was written on
+2026-08-17, when the first row in the campaign closed by it; until then no
+cluster had reached clause 2, and a third mechanism nobody had used would have
+been a shape with nothing behind it.  :func:`closure_mechanism` is where the
+three-way split lives, so it cannot drift into prose and so R-05's negative can
+refuse the fourth state — a row that left ``clusters`` because somebody moved
+it.
 
 The coverage-prose row is the one that closed that second way, and it is why
 :func:`_row` reads both lists: a measurement recomputed by id must follow the
@@ -69,6 +77,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -243,9 +252,23 @@ def test_an_undocketed_debt_turns_the_check_red() -> None:
     )
 
 
-@pytest.mark.parametrize("cluster", _clusters(), ids=[c["id"] for c in _clusters()])
-def test_every_cluster_is_startable(cluster) -> None:
-    """A row somebody can begin, rather than a remedy somebody can agree with."""
+def test_every_cluster_is_startable() -> None:
+    """A row somebody can begin, rather than a remedy somebody can agree with.
+
+    A loop rather than a parametrisation, for the reason
+    :func:`test_an_investigated_cluster_files_receipts_that_exist_and_agree`
+    gives below and for the moment that reason arrived: ``clusters`` emptied
+    on 2026-08-17 when the last row closed, and an empty parameter set is a
+    *skip* that R-01 row 1 counts.  A docket with nothing left to hand
+    anybody must read as a check with nothing to say, never as three tests
+    that quietly stopped running.
+    """
+    for cluster in _clusters():
+        _the_cluster_is_startable(cluster)
+
+
+def _the_cluster_is_startable(cluster: dict) -> None:
+    """One row's startability — the body the loop above runs per cluster."""
     for key in REQUIRED:
         assert cluster[key], f"{cluster['id']} is missing {key}"
     assert len(cluster["defect_in_the_prior_brief"].split()) >= 30, cluster["id"]
@@ -297,16 +320,16 @@ def test_an_investigated_cluster_files_receipts_that_exist_and_agree() -> None:
         assert adverse <= set(cluster["receipts"]), cluster["id"]
 
 
-@pytest.mark.parametrize("cluster", _clusters(), ids=[c["id"] for c in _clusters()])
-def test_every_docketed_receipt_exists(cluster) -> None:
-    for name in cluster["receipts"]:
-        assert (RECEIPTS / name).exists(), name
-    for name in cluster.get("supersedes_on_filing", ()):
-        assert name in cluster["receipts"], name
+def test_every_docketed_receipt_exists() -> None:
+    """A loop, for the reason the two tests around it give."""
+    for cluster in _clusters():
+        for name in cluster["receipts"]:
+            assert (RECEIPTS / name).exists(), name
+        for name in cluster.get("supersedes_on_filing", ()):
+            assert name in cluster["receipts"], name
 
 
-@pytest.mark.parametrize("cluster", _clusters(), ids=[c["id"] for c in _clusters()])
-def test_a_cluster_answered_by_a_ruling_names_the_owed_row(cluster) -> None:
+def test_a_cluster_answered_by_a_ruling_names_the_owed_row() -> None:
     """The load-bearing one: "it needs a decision" must point at the decision.
 
     A cluster that routes to a ruling files no superseding receipt, so the
@@ -323,16 +346,21 @@ def test_a_cluster_answered_by_a_ruling_names_the_owed_row(cluster) -> None:
     An answered row is held to more, not less: it must name the amendment
     that answers it, and that amendment must be findable verbatim in the
     umbrella, so "answered" is a fact about a document rather than a claim.
+
+    A loop rather than a parametrisation, for the reason its two siblings
+    give: an empty ``clusters`` is a state this docket can reach, and R-01
+    row 1 counts a skip.
     """
-    if disposition(cluster) != "owed_ruling":
-        assert "owed_ruling_id" not in cluster, cluster["id"]
-        return
     rulings = json.loads(RULINGS.read_text(encoding="utf-8"))
     rows = {row["id"]: row for row in rulings["owed"] + rulings["answered"]}
-    assert cluster["owed_ruling_id"] in rows, cluster["id"]
-    row = rows[cluster["owed_ruling_id"]]
-    if row in rulings["answered"]:
-        assert row["amendment"] in UMBRELLA.read_text(encoding="utf-8"), row["id"]
+    for cluster in _clusters():
+        if disposition(cluster) != "owed_ruling":
+            assert "owed_ruling_id" not in cluster, cluster["id"]
+            continue
+        assert cluster["owed_ruling_id"] in rows, cluster["id"]
+        row = rows[cluster["owed_ruling_id"]]
+        if row in rulings["answered"]:
+            assert row["amendment"] in UMBRELLA.read_text(encoding="utf-8"), row["id"]
 
 
 def test_a_row_may_not_owe_two_remedies() -> None:
@@ -354,20 +382,70 @@ def test_a_row_may_not_owe_two_remedies() -> None:
 def closure_mechanism(name: str, ledger: dict) -> str:
     """Which instrument answered one cleared receipt, read off the ledger.
 
-    Two and there is no third, because a docket row is answered by a receipt
-    or by a ruling and *moved* by nothing.  ``supersession`` is a row in the
-    ledger's ``cleared`` naming the receipt that discharged it;
-    ``ruling`` is a live ``citation`` row naming the ruling that decides the
-    leaf — the shape a routed cluster closes in, where no receipt supersedes
-    the dissent and none may.  A pure function over the ledger, so R-05's
-    negative needs no file on disk.
+    Three and there is no fourth, because the R-15/R-18 amendment has three
+    ways to answer a question and *moving a row* is none of them.
+    ``ruled_correction`` is a row in the ledger's ``cleared`` naming the
+    commit that landed clause 2's ``src/`` slice; ``supersession`` is a row
+    there naming the receipt that discharged it; ``ruling`` is a live
+    ``citation`` row naming the ruling that decides the leaf — the shape a
+    routed cluster closes in, where no receipt supersedes the dissent and none
+    may.  The clause-2 arm is read first because a row can carry both keys:
+    the receipt that re-posed the question and the correction that answered
+    it are different acts, and it is the correction that discharged the debt.
+    A pure function over the ledger, so R-05's negative needs no file on disk.
     """
-    if any(row["receipt"] == name for row in ledger["cleared"]):
-        return "supersession"
+    cleared = {row["receipt"]: row for row in ledger["cleared"]}
+    if name in cleared:
+        return (
+            "ruled_correction"
+            if cleared[name].get("cleared_by_commit")
+            else ("supersession")
+        )
     live = {row["receipt"]: row for row in ledger["adjudications"]}
     if name in live and live[name]["kind"] == "citation":
         return "ruling"
     raise AssertionError(f"{name} is cleared and no ledger row says by what")
+
+
+def _the_correction_landed_and_the_baseline_holds_it(row: dict, scan) -> None:
+    """Clause 2's closure, checked against the tree rather than taken on trust.
+
+    A debt whose remedy is a ruled ``src/`` correction is discharged by two
+    facts and this asserts both.  The slice exists — the sha is a commit, the
+    same check the gap ledger runs on a closure that names one.  And the
+    correction reached the address: the value the row says it landed is the
+    value a committed baseline now holds at the receipt's own leaf.  Without
+    the second, "clause 2 fired" would be a sentence, and a sentence is what
+    the docket refuses on every other row.
+    """
+    sha = row["cleared_by_commit"]
+    assert (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+        ).returncode
+        == 0
+    ), sha
+    landed = row["the_value_the_correction_landed"]
+    body = json.loads((RECEIPTS / row["receipt"]).read_text(encoding="utf-8"))
+    snapshots = {
+        name: json.loads(path.read_text(encoding="utf-8"))
+        for name, path in scan.BASELINES
+        if path.exists()
+    }
+    for address in scan._addresses(body):  # pylint: disable=protected-access
+        for snapshot in snapshots.values():
+            committed = scan._resolve(
+                snapshot, address
+            )  # pylint: disable=protected-access
+            if committed is not scan.ABSENT:
+                assert scan._same(  # pylint: disable=protected-access
+                    committed, landed
+                ), f"{row['receipt']}: baseline holds {committed!r}, not {landed!r}"
+                return
+    raise AssertionError(f"{row['receipt']}: no baseline holds the address at all")
 
 
 def test_a_cleared_cluster_was_answered_rather_than_moved(scan) -> None:
@@ -396,6 +474,9 @@ def test_a_cleared_cluster_was_answered_rather_than_moved(scan) -> None:
         assert closure["how_it_closed"].strip(), cluster["id"]
         for name in cluster["receipts"]:
             assert name not in debts, f"{name} is cleared and still an open debt"
+            if closure_mechanism(name, ledger) == "ruled_correction":
+                _the_correction_landed_and_the_baseline_holds_it(answers[name], scan)
+                continue
             if closure_mechanism(name, ledger) == "ruling":
                 assert cluster["owed_ruling_id"] in answered_rulings, cluster["id"]
                 row = answered_rulings[cluster["owed_ruling_id"]]
@@ -446,7 +527,11 @@ def test_the_recorded_counts_reproduce(scan) -> None:
         name: counted[name] for name in sorted(REMEDY_KEYS)
     }
     assert sum(counted.values()) == len(_clusters())
-    assert scan.report()["by_kind"]["open_debt"] == len(open_debts())
+    # ``.get`` rather than a subscript: ``by_kind`` is a Counter over the
+    # blocking population, so the key disappears when the last open debt
+    # clears.  A KeyError there would be the gate failing on the campaign
+    # succeeding, which is the one red nobody can act on.
+    assert scan.report()["by_kind"].get("open_debt", 0) == len(open_debts())
 
 
 def _reason_prose_receipts() -> list[dict]:

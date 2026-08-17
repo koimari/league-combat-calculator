@@ -99,6 +99,25 @@ def receipt_date(body: Mapping[str, Any]) -> str | None:
     return found[0] if found else None
 
 
+def certified_value(body: Mapping[str, Any]) -> Any:
+    """The value this receipt says is right.
+
+    ``old_value`` is that value for an ``old_value_correct`` verdict and for
+    that verdict only.  A ``both_wrong`` receipt certifies **neither**
+    committed side, and where its whole-series computation produced the right
+    number it writes that number under ``oracle_correct_value``.  Reading
+    ``old_value`` there asks whether the baseline holds a value the receipt
+    *refuted*, which is backwards in both directions at once: a baseline since
+    corrected to the computed value reads as pinned over the dissent, and a
+    baseline still holding the refuted ``old_value`` reads as agreeing with
+    it.  The second direction is the dangerous one -- it is a real absorption
+    the scan could not see -- so this is a red the check gains, not one it
+    gives up.
+    """
+    computed = body.get("oracle_correct_value")
+    return body.get("old_value") if computed is None else computed
+
+
 def oracle_receipts() -> dict[str, dict]:
     """Every committed oracle receipt, keyed by filename."""
     return {
@@ -187,12 +206,36 @@ class Pinned:
     committed: Any
 
 
+def _as_number(value: Any) -> float | None:
+    """``value`` as a number when it is one, however the receipt spells it.
+
+    Filed receipts spell a certified number both ways -- ``60.0`` and
+    ``"60.0"`` -- and clause 3 of the R-15/R-18 amendment forbids editing a
+    filed receipt into a house style, which is the same reason
+    :func:`_addresses` tries both address conventions rather than declaring
+    one correct.  A *value* rule, so a sixth spelling of a number joins by
+    being one; anything that is not a number stays a string and is compared
+    as one.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            return None
+    return None
+
+
 def _same(committed: Any, certified: Any) -> bool:
     """Whether the baseline holds what the oracle certified."""
     if isinstance(committed, bool) or isinstance(certified, bool):
         return committed == certified
-    if isinstance(committed, (int, float)) and isinstance(certified, (int, float)):
-        return abs(committed - certified) < 1e-9
+    left, right = _as_number(committed), _as_number(certified)
+    if left is not None and right is not None:
+        return abs(left - right) < 1e-9
     return committed == certified
 
 
@@ -219,7 +262,7 @@ def pinned_over(
     blocking: list[Pinned] = []
     for name in standing:
         body = receipts[name]
-        certified = body.get("old_value")
+        certified = certified_value(body)
         found: tuple[str, str, Any] | None = None
         for address in _addresses(body):
             for baseline, snapshot in snapshots.items():
@@ -240,6 +283,96 @@ def pinned_over(
         if not _same(committed, certified):
             blocking.append(Pinned(name, baseline, address, certified, committed))
     return tuple(blocking)
+
+
+def _named_receipts(node: Any) -> Iterable[str]:
+    """Every oracle-receipt filename spelled anywhere inside ``node``.
+
+    ``supersedes`` is a bare string in some filings and a list in others, and
+    clause 3 of the R-15/R-18 amendment forbids editing a filed receipt into
+    one house style.  So the field is read by *value* rather than by shape,
+    the same rule :func:`receipt_date` follows for dates.
+    """
+    if isinstance(node, str):
+        if node.startswith("oracle-") and node.endswith(".json"):
+            yield node
+    elif isinstance(node, Mapping):
+        for value in node.values():
+            yield from _named_receipts(value)
+    elif isinstance(node, (list, tuple)):
+        for value in node:
+            yield from _named_receipts(value)
+
+
+def _records_a_brief_defect(body: Mapping[str, Any]) -> bool:
+    """Whether this filing states the defect in the brief it replaces.
+
+    Clause 3's own requirement, and the one that makes a re-run unwritable
+    rather than merely discouraged: *"a re-run whose receipt names no defect
+    in the brief it replaces is oracle shopping"*.  Three spellings of the
+    key are live in filed receipts, so the rule is on the key's meaning and
+    not on a list of names.
+    """
+    return any(
+        "defect" in key and isinstance(value, str) and value.strip()
+        for key, value in body.items()
+    )
+
+
+def superseded_by(receipts: Mapping[str, dict]) -> dict[str, tuple[str, ...]]:
+    """``{superseded receipt: the filings that supersede it}`` under clause 3.
+
+    Supersession has two readings in this campaign and the scan could see
+    only one.  :func:`standing_dissents` computes the first -- a later
+    same-leaf ``new_value_correct`` verdict -- which is how nineteen docketed
+    dissents cleared.  Clause 3 states the second and makes it explicit: the
+    receipt that supersedes **names** the one it replaces and states the
+    defect in that receipt's brief, and both stand.  The two are not the same
+    reading, and the gap between them is exactly the case clause 2 exists
+    for: a whole-series re-adjudication that answers an underdetermined brief
+    with an adverse verdict of its own supersedes the receipt it re-poses and
+    carries no ``new_value_correct`` for the first reading to find.
+    """
+    superseded: dict[str, list[str]] = defaultdict(list)
+    for name, body in sorted(receipts.items()):
+        if not _records_a_brief_defect(body):
+            continue
+        for target in _named_receipts(body.get("supersedes")):
+            if target in receipts and target != name:
+                superseded[target].append(name)
+    return {name: tuple(filings) for name, filings in superseded.items()}
+
+
+def answered_by_a_supersession(
+    receipts: Mapping[str, dict], blocking: Iterable[Pinned]
+) -> tuple[str, ...]:
+    """Blocking members a filed supersession has already answered.
+
+    Four guards, and each is a sentence of the amendment rather than a
+    convenience.  The superseding filing must **name** this receipt and must
+    **record the defect** in the brief it replaces (:func:`superseded_by`,
+    clause 3).  It must be dated **no earlier** than the receipt it
+    supersedes, which is R-19's own ordering.  And it must itself be **out of
+    the blocking population** -- the baseline must already hold what the
+    reading that superseded certifies -- so a chain of dissents can never
+    retire a live pin, and a supersession can never be the thing that hides
+    an absorption.  Nothing here decides a dissent: the superseded receipt is
+    neither edited nor deleted, and what leaves the population is a question
+    two independent filings have answered the same way.
+    """
+    members = tuple(blocking)
+    still_pinned = {item.receipt for item in members}
+    supersessions = superseded_by(receipts)
+    answered: list[str] = []
+    for item in members:
+        dissent_date = receipt_date(receipts[item.receipt]) or ""
+        if any(
+            filing not in still_pinned
+            and (receipt_date(receipts[filing]) or "") >= dissent_date
+            for filing in supersessions.get(item.receipt, ())
+        ):
+            answered.append(item.receipt)
+    return tuple(sorted(answered))
 
 
 def load_adjudications() -> dict[str, dict]:
@@ -276,7 +409,9 @@ def report() -> dict[str, Any]:
     """The scan, as the committed receipt records it."""
     receipts = oracle_receipts()
     standing = standing_dissents(receipts)
-    blocking = pinned_over(receipts, standing)
+    pinned = pinned_over(receipts, standing)
+    answered = answered_by_a_supersession(receipts, pinned)
+    blocking = tuple(item for item in pinned if item.receipt not in answered)
     rows = load_adjudications()
     kinds = Counter(
         rows[item.receipt]["kind"] for item in blocking if item.receipt in rows
@@ -288,6 +423,7 @@ def report() -> dict[str, Any]:
         ),
         "standing": len(standing),
         "blocking": len(blocking),
+        "answered_by_a_supersession": list(answered),
         "by_kind": dict(sorted(kinds.items())),
         "unadjudicated": list(unadjudicated(blocking, rows)),
         "stale_rows": list(stale_rows(blocking, rows)),

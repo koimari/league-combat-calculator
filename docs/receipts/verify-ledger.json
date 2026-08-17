@@ -18056,11 +18056,12 @@
    "umbrella [H] table"
   ],
   "slice_groups_without_one": [
+   "campaign-close-certification",
    "campaign-close-final-integration-r35",
    "campaign-close-verify-p4-batch"
   ],
   "untagged_commits": 159,
-  "residue": 2,
+  "residue": 3,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -18072,6 +18073,7 @@
    "S10",
    "campaign-close",
    "campaign-close-boundary",
+   "campaign-close-certification",
    "campaign-close-dissent-docket",
    "campaign-close-final-integration",
    "campaign-close-final-integration-r35",
@@ -18100,7 +18102,13 @@
    "what_it_is_not": "Coverage. Every row is a pass that has NOT run, and the backlog says so in its own words. It answers no part of the owed ruling and shrinks no denominator: its row set is asserted equal to this list, so preparing the work cannot become a way of redefining it.",
    "why_it_exists": "why_the_residue_cannot_be_closed_retroactively says the residue closes by re-running R-35 over the historical ranges as scheduled work with its own briefs. No range and no brief existed anywhere in the tree, so the backwards branch of the owed ruling had a cost nobody could price beyond 'sixty-odd passes' and work nobody could begin. It now has one row per pass."
   },
-  "how_the_residue_was_measured_backwards": "On 2026-08-17 the campaign's rendered R-35 verdicts were transcribed out of the orchestration journals into `passes` -- see the `backfill` block. What is left in slice_groups_without_one is the true residue of the first clause: slice tags no verifier's commit range ever reached. The clause is no longer measured against a ledger that started mid-campaign; it is measured against every verdict the campaign actually rendered."
+  "how_the_residue_was_measured_backwards": "On 2026-08-17 the campaign's rendered R-35 verdicts were transcribed out of the orchestration journals into `passes` -- see the `backfill` block. What is left in slice_groups_without_one is the true residue of the first clause: slice tags no verifier's commit range ever reached. The clause is no longer measured against a ledger that started mid-campaign; it is measured against every verdict the campaign actually rendered.",
+  "a_lane_that_works_adds_a_row_to_this_list": {
+   "dated": "2026-08-17",
+   "what_happened": "The slice group campaign-close-certification -- the pass answering a certification review's blocker and two majors -- is a tag no verifier has read, so it takes the explicit line the forward gate requires rather than a verdict a lane may not write for itself. residue 2 -> 3, in the commit that introduced the tag rather than in the one after it.",
+   "why_it_is_recorded_here_and_not_only_in_a_body": "It is the mechanism the owed ruling has to price, and it is a property of the clause rather than of any lane: every act that records a verdict is itself a commit, every commit carries a slice tag, and a tag with no verdict is residue. So the residue cannot reach zero by anybody working; it reaches zero only if the act that records the last verdict carries a tag that already has one. Measured over this ledger's own history: rounds 123-127 were recorded by lanes whose own tags then needed verdicts, and got them from later rounds, and round 128's recording lane -- campaign-close-final-integration-r35 -- is the live end of that chain today. Round 128's note states the convention that keeps the chain alive, in its own words: the answering group's own tag takes the residue's place 'because a lane cannot verify itself and the residue says so rather than closing on a lane's word'. That is a choice and not an impossibility, and naming it is a statement about the QUESTION the owed ruling asks -- the same line verify-backlog.json draws when it prices a branch it may not choose. Nothing here chooses one.",
+   "and_its_citation_flag_is_true_without_anybody_having_answered_it": "residue_with_no_verdict_anywhere stays 0, and that is the derivation's known limit rather than a fact about this group. The flag is computed from a commit body naming the mechanism and carrying a verdict word, and this pass's bodies do both -- they discuss verifiers and verdicts at length because the corrections are about how a verdict is read. No R-35 answer about campaign-close-certification exists anywhere. This is exactly what a_groups_own_next_commit_can_flip_its_citation_state records: 'what the derivation cannot do is tell WHOSE answer a body carries'. The flag is left derived and the limitation is restated on the row it now applies to, rather than the bodies being worded around the predicate -- which is what ff9a488 did and what the same block records as the shape to avoid."
+  }
  },
  "vocabulary_notes": {
   "PHASE_TIP_ONLY": "A third status the campaign's verifiers used and returned: a criterion stated over a phase tip, which the slice's own tip cannot decide. It is recorded as they wrote it. Folding it into DISCHARGED or NOT_DISCHARGED would be this ledger inventing a verdict rather than transcribing one.",
