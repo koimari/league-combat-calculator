@@ -804,12 +804,26 @@ missing. So the finding is a fact about the campaign's first three days and
 about nothing since, and the count that would make it a live gap is zero.
 
 **What the acceptance does not say.** It does not say the eight moved no
-numbers. Five of them are `docs`-subject commits whose `src/` edits are prose,
-and three are `refactor`/`fix` commits in the Phase 3 coverage work; what any of
-them moved is knowable only from their own bodies and from the baselines of
-their day, and no reconstruction is attempted here. What is recorded is that
-they declared no count in advance and that nothing can now make them have done
-so.
+numbers. Four of them are `docs`-subject commits whose `src/` edits are prose,
+one is a `test`-subject commit whose only `src/` edit is a docstring, and three
+are `refactor`/`fix` commits in the Phase 3 coverage work; what any of them
+moved is knowable only from their own bodies and from the baselines of their
+day, and no reconstruction is attempted here. What is recorded is that they
+declared no count in advance and that nothing can now make them have done so.
+
+*Corrected 2026-08-17.* The breakdown above read "Five of them are
+`docs`-subject commits whose `src/` edits are prose, and three are
+`refactor`/`fix` commits" — 4 + 3 against a table of eight. The commit the
+arithmetic dropped is `581fd19`, the one of the eight whose subject is neither
+`docs` nor `refactor`/`fix`, and it is the only one of the eight whose `src/`
+edit was never described here at all. Measured: `git show --stat 581fd19 --
+src/` is `src/calculator/damage.py`, +13/−5, and the whole of it is inside
+`_ridden_parent_slot`'s docstring, which that commit's own body states in terms
+("the only `src/` edit is `_ridden_parent_slot`'s docstring"). So the dropped
+row changes nothing about what the acceptance covers — this is an arithmetic
+correction and not a re-grade — but it was dropped from the one sentence written
+to bound what the acceptance claims, which is the sentence a reader checks the
+bound against.
 
 ### 13.2 The other two minors
 
