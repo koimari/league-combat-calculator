@@ -23,13 +23,14 @@
   },
   "campaign-close-certification-r2": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 4,
+   "commit_count": 5,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)",
     "docs(receipts): the owed row's measurement is anchored, and its live figures are named (campaign-close-certification-r2)",
     "docs(receipts): the residue note stops stating a population the tree contradicts (campaign-close-certification-r2)",
-    "docs(receipts): G14 names the counter that owns its cost, and its note says what fell (campaign-close-certification-r2)"
+    "docs(receipts): G14 names the counter that owns its cost, and its note says what fell (campaign-close-certification-r2)",
+    "test(gates): the report sections are scanned for an ungated figure, not enumerated (campaign-close-certification-r2)"
    ]
   },
   "campaign-close-verify-p4-batch": {

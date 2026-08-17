@@ -745,3 +745,140 @@ def test_the_section_16_gate_fails_when_a_stated_figure_drifts(
     drifted = str(int(match.group(1)) + 1)
     doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
     assert stated(doctored, pattern) != measured()
+
+
+# --------------------------------------------------------------------------
+# Completeness.
+#
+# Round 129's fifth finding is that this file's guarantee reads stronger than
+# its check: section 15.6 says the file "re-derives every figure this section
+# states", and what the file holds is a *list* of figures.  A figure added to a
+# section later is silently ungated and the stated count still passes.
+#
+# So the sections are scanned instead.  Every bold integer -- the spelling both
+# sections use for a figure they state -- is either matched by a figure
+# pattern, matched by a check that lives outside ``FIGURES``, or named as an
+# identifier with the reason it is not a count.  A sixth kind of number arriving
+# in either section turns this red on the commit that writes it.
+# --------------------------------------------------------------------------
+
+#: How both sections spell a figure they state.
+BOLD_FIGURE = re.compile(r"\*\*(\d+)\*\*")
+
+#: The six non-numeric claims section 15.6 counts.  Named rather than counted
+#: by introspection: the sentence is about these six assertions, and a rename
+#: that silently kept the count would be the drift this file exists to catch.
+CLAIM_TESTS = (
+    "test_no_verifier_has_reached_the_p4_batch_range",
+    "test_the_p4_batch_row_is_flagged_only_as_citing_a_body",
+    "test_round_110_reads_on_round_6s_row_and_not_on_the_re_pin",
+    "test_the_commit_that_closed_minor_4_is_verified_only_by_rounds_6_and_7",
+    "test_the_three_groups_15_4_calls_five_each_really_hold_five",
+    "test_every_phrase_15_quotes_from_section_14_is_really_there",
+)
+
+#: Figures a section states that are gated somewhere other than its ``FIGURES``
+#: list.  Keeping them out of that list keeps the list's own stated size true.
+ALSO_GATED_15: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "15.6 claims",
+        r"figures and \*\*(\d+)\*\* claims",
+        lambda: str(len(CLAIM_TESTS)),
+    ),
+]
+
+#: Bold integers that NAME something -- a ledger round, a finding's ordinal --
+#: rather than counting anything.  Each says why, and each names the check that
+#: reads the thing it names, so an identifier cannot become a resting place for
+#: an ungated count.
+IDENTIFIERS_15: list[tuple[str, str]] = [
+    (
+        r"Round \*\*(110)\*\* verifies",
+        "a ledger round number; test_round_110_reads_on_round_6s_row_and_not_on"
+        "_the_re_pin asserts what that round holds",
+    ),
+    (
+        r"rounds are \*\*(6)\*\* and",
+        "a ledger round number; "
+        "test_the_commit_that_closed_minor_4_is_verified_only_by_rounds_6_and_7"
+        " asserts the pair",
+    ),
+    (
+        r"\*\*6\*\* and \*\*(7)\*\*",
+        "the other half of that pair, asserted by the same check",
+    ),
+    (
+        r"which is finding \*\*(5)\*\*",
+        "an ordinal naming one of round 6's findings, not a count of anything",
+    ),
+]
+
+IDENTIFIERS_16: list[tuple[str, str]] = []
+
+
+def covered_spans(
+    section: str,
+    figures: list[tuple[str, str, Callable[[], str]]],
+    also: list[tuple[str, str, Callable[[], str]]],
+    identifiers: list[tuple[str, str]],
+) -> set[tuple[int, int]]:
+    """Where in ``section`` a number is already accounted for."""
+    spans: set[tuple[int, int]] = set()
+    patterns = [pattern for _label, pattern, _measured in figures + also]
+    patterns += [pattern for pattern, _reason in identifiers]
+    for pattern in patterns:
+        for match in re.finditer(pattern, section):
+            spans.add(match.span(1))
+    return spans
+
+
+def ungated_figures(
+    section: str,
+    figures: list[tuple[str, str, Callable[[], str]]],
+    also: list[tuple[str, str, Callable[[], str]]],
+    identifiers: list[tuple[str, str]],
+) -> list[str]:
+    """Every bold integer in ``section`` that nothing here reads."""
+    spans = covered_spans(section, figures, also, identifiers)
+    return [
+        section[max(0, match.start() - 60) : match.end()]
+        for match in BOLD_FIGURE.finditer(section)
+        if match.span(1) not in spans
+    ]
+
+
+def test_section_15_states_no_figure_this_file_does_not_read() -> None:
+    """The guarantee 15.6 makes, asserted as a property instead of a list."""
+    assert ungated_figures(section_15(), FIGURES, ALSO_GATED_15, IDENTIFIERS_15) == []
+
+
+def test_section_16_states_no_figure_this_file_does_not_read() -> None:
+    """The same property for the section that closes two gap rows."""
+    assert ungated_figures(section_16(), FIGURES_16, [], IDENTIFIERS_16) == []
+
+
+@pytest.mark.parametrize("section", ["15", "16"])
+def test_the_completeness_scan_has_a_red_it_can_reproduce(section: str) -> None:
+    """R-05, on the finding's own shape: a figure added to a section later."""
+    text = section_15() if section == "15" else section_16()
+    figures = FIGURES if section == "15" else FIGURES_16
+    also = ALSO_GATED_15 if section == "15" else []
+    identifiers = IDENTIFIERS_15 if section == "15" else IDENTIFIERS_16
+    doctored = text + "\n\nA later pass measured **4321** of them.\n"
+    assert ungated_figures(doctored, figures, also, identifiers)
+
+
+@pytest.mark.parametrize("case", ALSO_GATED_15, ids=[case[0] for case in ALSO_GATED_15])
+def test_every_figure_gated_outside_the_list_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """15.6's count of its own non-numeric claims, re-derived from the names."""
+    _label, pattern, measured = case
+    assert stated(section_15(), pattern) == measured()
+
+
+def test_every_claim_15_6_counts_is_a_check_this_file_holds() -> None:
+    """A named claim that is not a test is a claim nobody runs."""
+    source = Path(__file__).read_text(encoding="utf-8")
+    for name in CLAIM_TESTS:
+        assert f"def {name}(" in source, name
