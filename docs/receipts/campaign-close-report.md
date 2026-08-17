@@ -747,3 +747,78 @@ docket of twenty-two investigations somebody can now start.
 `plan_audit.py` (R-37): **exit 0 — 8 plan documents clean.**
 `sole_home_scan.py --check`, `standing_dissent_scan.py --check`,
 `behavior_frontier.py --check` and `migration_frontier.py --check`: all exit 0.
+
+---
+
+## 13. The minor findings, dispositioned
+
+*Appended 2026-08-17, after the second sign-off review's three **minor** findings
+were left standing rather than closed — §12.1 records two of them as "not
+actionable" and "disclosed, left standing". Everything above this line stays as
+written, for the reason section 9 gives. Nothing here re-grades a gap or a
+criterion: a minor finding that closes closes as a record, and the two grades
+this report ends on are untouched.*
+
+### 13.1 The eight historical commits with no R-20 line — **ACCEPTED, CLOSED**
+
+R-20 requires every semantic slice to carry an `Expected qualifying occurrences`
+line, and eight commits in the campaign range touch `src/` without one. Two
+passes recorded that as "not actionable" and moved on, which is true about the
+remedy and is not a disposition: an unactionable finding with no dated record is
+indistinguishable, one pass later, from a finding nobody read. This is that
+record, and with it the finding is closed rather than carried.
+
+**The population, enumerated rather than described.** Measured over
+`584071e..HEAD` by the same rule R-20 states — a commit whose diff touches any
+path under `src/`, and whose body contains no declaration of a qualifying
+occurrence count in either of the two spellings the campaign has used:
+
+| Commit | Date | Subject |
+|---|---|---|
+| `4e9f26a` | 2026-08-09 | docs(survival): disclose what 0A.4 decided without saying so |
+| `5d89453` | 2026-08-09 | docs(survival): disclose the four 0A.4 behaviours 4e9f26a still missed |
+| `581fd19` | 2026-08-09 | test(pipeline): the six C6 behaviours its commit bodies did not name (C6) |
+| `518a6e3` | 2026-08-11 | docs(behavior): the defensive closure's prose names the population it has |
+| `8e1e23b` | 2026-08-11 | refactor(coverage): the three target registries, deleted (3.8) |
+| `6c4f0a2` | 2026-08-11 | fix(behavior): NO_RUNTIME_BEHAVIOR asserts only the absence it reviewed (3.8) |
+| `e9c0f78` | 2026-08-11 | docs(behavior): the frontier's invariant sentence, corrected (3.8) |
+| `6ab477b` | 2026-08-11 | refactor(coverage): the outcome declaration moves to a home of its own (3.8) |
+
+Eight of the 252 `src/`-touching commits in the range. All eight are Phase 0 and
+Phase 1/3 work from the campaign's first three days; the newest of them is
+`6ab477b`.
+
+**Why it is accepted rather than remedied.** The remedy R-20 names is a
+declaration made *before* the slice's first `src/` edit — measure, then mutate,
+then pin. A line written onto a commit today would be neither: it would be a
+count read off a tree the edit already changed, which is the exact failure mode
+R-20's second half exists to forbid, and it could only be attached by editing a
+filed commit, which this campaign's evidence chain does not permit. History is
+unreachable in both directions. The honest disposition is a record, not a
+repair.
+
+**What makes the acceptance bounded rather than open-ended.** The class is
+closed by measurement and not by intention: **129 `src/`-touching commits
+followed the newest of the eight, and 129 of them carry a declaration.** None is
+missing. So the finding is a fact about the campaign's first three days and
+about nothing since, and the count that would make it a live gap is zero.
+
+**What the acceptance does not say.** It does not say the eight moved no
+numbers. Five of them are `docs`-subject commits whose `src/` edits are prose,
+and three are `refactor`/`fix` commits in the Phase 3 coverage work; what any of
+them moved is knowable only from their own bodies and from the baselines of
+their day, and no reconstruction is attempted here. What is recorded is that
+they declared no count in advance and that nothing can now make them have done
+so.
+
+### 13.2 The other two minors
+
+* **The `tests.collected` re-pin outside R-32's carve-out** — closed by amending
+  R-32, dated 2026-08-17 in the runbook. The carve-out gains `tests{collected}`
+  as a fourth lane-written key, on the receipt-only commit shape `86aa1d2`
+  already used, with `skipped` and `xfailed` left to the integration agent so the
+  half of R-01 row 1 that catches a test quietly becoming a skip is out of a
+  lane's reach. The runbook now grants what the history shows; the history is not
+  rewritten to fit the runbook.
+* **Stale justification strings in gated receipts** — swept, with the sweep's own
+  commit naming each string it moved and the measurement that made it stale.
