@@ -51,7 +51,7 @@
   "which_owners_the_population_can_actually_see": "ONE of the seven. cleaver_bloodsong_roster puts Bloodsong on its Jax and no committed coupled scenario holds any of the other six, so the covering population reaches bloodsong.spellblade and nothing else. That is the shape umbrella Amendment N was written about and umbrella Amendment P's answer for it is EQUIVALENCE FIXTURES PER OWNER: a fixture set arming one owner proves nothing about the six that can still fail, and two of the six declare MAGIC -- dusk_and_dawn.spellblade and lich_bane.spellblade -- so the holder's own magic amp is a live term for a third of this family and is armed in the fixture rather than left at 1.0.",
   "predicted": "0 occurrences inside a population of 1828. The walk's price for a spellblade proc is the declared raw magnitude composed with the holder's static amps and mitigated once at the resistance the packet met, which is exactly the three multiplications damage._mitigate performs on the same raw value inside the pair engine -- the same declaration, the same registry numbers, the same resistance. The slice replaces which engine performs the mitigation, not the number it mitigates, so no leaf can move and a leaf that did would qualify under R-15 rather than being absorbed.",
   "occurrences_outside_the_population": 0,
-  "enumerated_at": "PENDING -- this commit"
+  "enumerated_at": "49a844a"
  },
  "what_a_declaration_of_this_family_has_to_carry": {
   "rule": "Enumerated in advance, in the idiom the charged_strike, on_hit_strike, periodic and resistance_shred slices used: writing down what the walk will have to read is what makes a wrong number a stop instead of a discovery.",
@@ -74,12 +74,16 @@
  },
  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
  "measured_after": {
-  "dated": "PENDING",
-  "commit": "PENDING",
-  "qualifying_occurrences": "PENDING",
-  "occurrences_outside_the_population": "PENDING",
-  "golden": "PENDING",
-  "coupled_golden": "PENDING",
-  "oracle_receipts_owed": "PENDING"
+  "dated": "2026-08-17",
+  "commit": "4e340f3",
+  "qualifying_occurrences": 0,
+  "occurrences_outside_the_population": 0,
+  "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical. The declared pair-engine population of 0 held: the two keys this slice adds to the rows damage._add_spellblade_damage authors are not values the one-attacker surface records, and no arithmetic in that function moved.",
+  "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical. Zero of the 1828 enumerated leaves moved.",
+  "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15) and there were none, in a population enumerated in advance and non-empty.",
+  "what_the_walk_actually_staged": "A zero on a baseline is evidence a family's numbers did not move; it is not evidence the walk read anything. Recorded at survival.transitions.apply_declared_price -- the one site a declaration becomes a number -- over the covering scenario: on cleaver_bloodsong_roster the walk priced TWO bloodsong.spellblade packets, both on the enemy Aatrox, each declaring a raw magnitude of 140.0 at a holder amp of 1.0 and paid 73.22175732217573 after the fight's own armour, summing to 146.44351464435147. Those are the same two events the pair engine authored on spellblade_Bloodsong at the same figure, which is what 'the pair row left the roster total and the walk's own number entered it' means when it is a number rather than a claim. The row's third authored proc is outside the window the walk stages, exactly as it was before this slice -- which is why the roster total is unmoved rather than larger.",
+  "the_holder_amp_the_population_could_not_see": "The covering owner declares PHYSICAL, so its packets are priced at a holder amp of 1.0 and the committed population cannot observe the amp term for this family at all. The per-owner equivalence fixture is where it is observed: seven pair fights, one per declaring owner, each holding an Abyssal Mask beside the owner under test, and the two magic spellblades -- dusk_and_dawn.spellblade and lich_bane.spellblade -- are asserted to price at a magic amp strictly greater than 1.0 while the five physical ones price at exactly 1.0. Every proc event of all seven prices from its declaration to the number the pair engine put on that event.",
+  "one_magnitude_per_fight_is_asserted_rather_than_assumed": "Unlike on_hit_strike, whose Blade of the Ruined King re-reads the target's falling health per application, every proc of one spellblade fight shares a magnitude. That is asserted per owner -- the set of declared raw amounts across a row's events has size one -- so a future site that started splitting a total it does not split fails here rather than pricing the walk's packets at a number no proc had.",
+  "the_gate_the_population_could_not_bound": "R-01 row 8 is green on all four bench scenarios with and without the compiled walk, and every winner and score is unchanged (cassiopeia_3champ 4003.1, cassiopeia_5champ 5010.8, mundo_3champ 3305.0, syndra_mandate_3champ 4642.3) with residuals 79 / 19 / 12 / 98."
  }
 }
