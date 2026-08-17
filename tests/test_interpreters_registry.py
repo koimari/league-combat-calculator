@@ -22,14 +22,17 @@ from src.calculator import interpreters
 from src.calculator import item_coverage
 from src.calculator import item_effects
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters import damage_routing
+from src.calculator.interpreters import damage_routing, resistance_shred
+from src.calculator.interpreters.ally_packet import AllyPacketSlot
 from src.calculator.item_behavior import (
+    AllyProducer,
     Compilable,
     DefenseField,
     DefenseSubject,
     EngineLane,
     ReceiptOnly,
     ReceiptScope,
+    Resistance,
     RuleFamily,
     SUBJECT_AUTHORITY,
     Subject,
@@ -847,3 +850,114 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
         )
         assert fields
         assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)
+
+
+# ── resistance_shred's per-owner equivalence fixtures ─────────────────────
+#
+# Umbrella Amendment P's plural, for the family that retired on the same
+# ground: two owners, two resistances, two declared summation models, and the
+# retirement is a re-spelling only if BOTH of them read the same numbers
+# afterwards that the walk read before.  Unlike the routing family this one's
+# covering population reaches every owner -- Black Cleaver is on two committed
+# coupled scenarios and Bloodletter's Curse on a third -- so these fixtures are
+# owed for the arithmetic rather than for coverage, and they state it where a
+# reader can see both spellings side by side.
+
+_SHRED_OWNERS = (
+    ("Black Cleaver", Resistance.ARMOR, AllyProducer.CARVE, "armor_reduction"),
+    (
+        "Bloodletter's Curse",
+        Resistance.MAGIC_RESIST,
+        AllyProducer.VILE_DECAY,
+        "mr_reduction",
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "owner,resistance,producer,prefix", _SHRED_OWNERS, ids=lambda value: str(value)
+)
+def test_the_walk_shred_ramp_equals_the_ally_packet_numbers_it_replaced(
+    owner: str, resistance, producer, prefix: str
+) -> None:
+    """The ramp the walk stages, against the second spelling it stopped reading.
+
+    ``item_support_effects`` built this family's ``damage_modifier`` packet
+    out of the ALLY_PACKET declaration's own copy of the per-stack fraction
+    and the stack cap.  Since the family retired it reads the ``resistance_shred``
+    declaration through the interpreter registered in the lane the family
+    declares.  One mechanic, one declaration -- and this is the fixture that
+    makes "the same numbers" a measured fact rather than a claim about two
+    registry entries nobody compared.
+    """
+    (ally_rule,) = [
+        candidate
+        for candidate in catalog.behavior_rules(owner)
+        if candidate.family is RuleFamily.ALLY_PACKET
+    ]
+    ally = AllyPacketSlot(ally_rule)
+    assert ally.producer is producer
+    slot = resistance_shred.walk_slot(
+        [owner],
+        resistance,
+        level=13,
+        fight_duration_seconds=0.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None
+    assert slot.owner == owner
+    assert slot.per_stack == ally.value(f"{prefix}_per_stack")
+    assert slot.max_stacks == int(ally.value(f"{prefix}_max_stacks"))
+    assert all(
+        field.lane is EngineLane.RECEIPT_WALK and field.rule_id == slot.rule.mechanic_id
+        for field in slot.fields
+    )
+
+
+def test_both_lanes_of_a_shred_compile_one_declaration_to_one_ramp() -> None:
+    """The pair engine's reading and the walk's are the same declaration.
+
+    The property umbrella Amendment K's act discharges, stated as an equality
+    rather than as a shared function: whatever the pair engine resolves into
+    its own combat state, the walk stages the same numbers for the
+    cross-participant packet, and only the lane stamped on the compiled fields
+    differs.
+    """
+    for owner, resistance, _producer, _prefix in _SHRED_OWNERS:
+        facts = {
+            "level": 13,
+            "fight_duration_seconds": 0.0,
+            "target_bonus_health": 0.0,
+            "holder_is_melee": True,
+        }
+        pair = resistance_shred.resolve_slot([owner], resistance, **facts)
+        walk = resistance_shred.walk_slot([owner], resistance, **facts)
+        assert pair is not None and walk is not None
+        assert [(field.name, field.value) for field in pair.fields] == [
+            (field.name, field.value) for field in walk.fields
+        ]
+        assert {field.lane for field in pair.fields} == {EngineLane.PAIR_ENGINE}
+        assert {field.lane for field in walk.fields} == {EngineLane.RECEIPT_WALK}
+
+
+def test_a_cross_participant_shred_packet_with_no_declared_ramp_is_a_stop() -> None:
+    """The emitter refuses a reduction packet whose ramp nothing declares.
+
+    The half that keeps the retirement from being a silent deletion: a build
+    holding the cross-participant producer but declaring no shred of that
+    resistance used to reach the ally packet's own numbers, and now reaches
+    a named stop.  A modifier nobody declared is not a modifier measuring
+    zero.
+    """
+    assert (
+        resistance_shred.walk_slot(
+            ["Bloodletter's Curse"],
+            Resistance.ARMOR,
+            level=13,
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        )
+        is None
+    )

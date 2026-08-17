@@ -612,7 +612,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Seven now, and the rows that left are why the count is written as a derived
+# Eight now, and the rows that left are why the count is written as a derived
 # length rather than restated in prose anywhere below.  ``delta_amp`` retired
 # on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
 # fourteen and rules its retiring act to be the walk-side delivery of the
@@ -647,8 +647,17 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # splits the row's one declaration across the ticks it authors under it, which
 # is also the first family whose packets an existing re-pricing site moves --
 # ``damage._apply_liandry_reprice`` rescales the declaration on every tick it
-# re-prices.  In each case the receipt
-# walk reads that family's declaration
+# re-prices.  ``resistance_shred`` retired on 2026-08-16 as well and is the
+# SECOND whose interpreter hands the walk no price, on a ground of its own
+# rather than ``damage_routing``'s: a shred is not damage — it moves the
+# target's resistance before penetration is applied — so every number it
+# changes belongs to some other family's packet.  Its named walk-side delivery
+# was already in the tree, the ``damage_modifier`` packet its owners' ``SPLIT``
+# partners emit, and what retired the row is
+# ``interpreters.resistance_shred.WALK_INTERPRETER`` becoming the one reading
+# of the ramp that packet is built from, in place of the ally-packet
+# declaration's own second copy of the same two numbers.  In each case the
+# receipt walk reads that family's declaration
 # through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
 # deferring a gap the tree no longer holds would fail the gate below rather
 # than pass it.  The debt is smaller because the tree changed, which is the
@@ -720,7 +729,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "resistance_shred",
     "secondary_target",
     "spellblade",
 )

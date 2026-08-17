@@ -316,3 +316,43 @@ def test_the_retired_routing_family_has_no_preview_to_double_count() -> None:
         assert capability.view_tags[Engine.WALK] is ViewTag.APPLIED, mechanic
         assert type(capability.packet_source).__name__ == "RiderDelivery", mechanic
         assert f"{mechanic}_preview" not in CAPABILITIES, mechanic
+
+
+def test_the_retired_shred_family_has_no_preview_to_double_count() -> None:
+    """D-62's uniqueness for ``resistance_shred``, which is an emptiness too.
+
+    The second family to retire with nothing to keep apart, and it gets there
+    a different way from ``damage_routing``.  A shred is not damage at all: it
+    moves the TARGET's resistance before penetration is applied, so it authors
+    no priced pair row -- the triage measured exactly that -- and the walk's
+    pricer never sees it either, because there is no packet of this family for
+    a ``DeclaredPacket`` to be.
+
+    Four claims, and the fourth is the one this shape needs that the routing
+    family's did not.  Neither declaration is a previewed mechanic; neither is
+    re-priced by the walk's pricer; each is the ``APPLIED`` pair-local half of
+    a ``SPLIT`` with no ``_preview`` twin, which is what says the pair engine
+    still owns its own reading under H1; and each has a walk-side half that
+    names it through ``pair_of`` and delivers a packet -- the cross-participant
+    term umbrella Amendment O, Ruling 2 required this family to have named
+    before it could retire.  A future mechanic of the family that authored a
+    pair row would have to declare a preview to be honest, and it would fail
+    here rather than quietly summing beside the reduction the walk stages.
+    """
+    shreds = {
+        "black_cleaver.armor_reduction": "black_cleaver.carve",
+        "bloodletters_curse.mr_reduction": "bloodletters_curse.vile_decay",
+    }
+    assert not set(shreds) & pair_preview_mechanics()
+    assert not set(shreds) & walk_repriced_mechanics()
+    for mechanic, partner in sorted(shreds.items()):
+        capability = CAPABILITIES[mechanic]
+        assert capability.engine is Engine.PAIR, mechanic
+        assert capability.view_tags[Engine.PAIR] is ViewTag.APPLIED, mechanic
+        assert capability.authority is Authority.SPLIT, mechanic
+        assert f"{mechanic}_preview" not in CAPABILITIES, mechanic
+        walk = CAPABILITIES[partner]
+        assert walk.engine is Engine.WALK, partner
+        assert walk.view_tags[Engine.WALK] is ViewTag.APPLIED, partner
+        assert walk.pair_of == mechanic, partner
+        assert isinstance(walk.packet_source, str) and walk.packet_source, partner

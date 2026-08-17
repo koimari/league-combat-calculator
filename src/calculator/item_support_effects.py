@@ -44,8 +44,9 @@ from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 # declare Everlasting?" — rather than by spelling the item that has it, and
 # every number comes back through the rule's own references, so a key no
 # declaration carries is a stop instead of a silent registry read.
-from .item_behavior import AllyProducer, PacketKind
+from .item_behavior import AllyProducer, PacketKind, Resistance
 from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
+from .interpreters.resistance_shred import ShredSlot, walk_slot as _shred_walk_slot
 
 # Phase 4's routing layer.  A crowd-control mark's subject is a decision the
 # ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
@@ -122,6 +123,49 @@ def _producer(
             "combine"
         )
     return found[0] if found else None
+
+
+def _shred_ramp(
+    attacker: Any, names: Collection[str], resistance: Resistance, producer: str
+) -> ShredSlot:
+    """This holder's declared shred of *resistance*, on the receipt-walk lane.
+
+    The walk's cross-participant emitter used to read the ramp off the
+    *ally-packet* declaration's own copy of the two numbers, which made the
+    shred a mechanic with two declarations — the shape Serpent's Fang's venom
+    had before ``damage_routing`` retired, and the shape a score and a receipt
+    come to disagree about.  Since ``resistance_shred`` retired off the pair
+    engine (2026-08-16) both sides read the family's own declaration, through
+    the interpreter registered in the lane the family declares.
+
+    A holder of the cross-participant half whose build declares no shred is a
+    **stop**: the packet would otherwise be emitted with no ramp behind it,
+    which is a modifier nobody declared rather than a modifier measuring zero.
+
+    Two of the four :class:`~.item_behavior.BuildContext` facts are stated
+    rather than passed through, and stating them is the point of the
+    defaultless keywords: no ``resistance_shred`` declaration reads a fight
+    duration or a target's bonus health — a shred is a per-stack fraction and
+    a stack cap, both plain registry references — so this is a fact about the
+    family and not a defaulted zero flattening a ramp nobody looked at, the
+    same way ``participant_timeline._routing_build`` states it for
+    ``damage_routing``.
+    """
+    slot = _shred_walk_slot(
+        sorted(frozenset(names)),
+        resistance,
+        level=int(attacker.stats.get("level", 1) or 1),
+        fight_duration_seconds=0.0,
+        target_bonus_health=0.0,
+        holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+    )
+    if slot is None:
+        raise ValueError(
+            f"{attacker.participant_id} declares the {producer} producer and no "
+            f"{resistance.value} resistance_shred rule; the walk would stage a "
+            "reduction packet whose ramp no declaration states"
+        )
+    return slot
 
 
 def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
@@ -830,20 +874,33 @@ def derive_item_support_effects(
     # neither never walks it at all, which is what the hand-maintained
     # damage-trigger name set bought before the registry existed.
     if carve is not None or vile_decay is not None:
+        # The ramp both branches multiply and cap by, read once through the
+        # family's own receipt-walk interpreter rather than off each ally
+        # packet's second copy of it (``resistance_shred`` retired 2026-08-16).
+        armor_shred = (
+            None
+            if carve is None
+            else _shred_ramp(attacker, names, Resistance.ARMOR, "carve")
+        )
+        mr_shred = (
+            None
+            if vile_decay is None
+            else _shred_ramp(attacker, names, Resistance.MAGIC_RESIST, "vile_decay")
+        )
         for event in _stack_triggers(damage_events):
             target = _target_by_id(all_actors, event.target_id)
             if target is None:
                 continue
             damage_type = event.damage_type
             source_id = event.event_id
-            if carve is not None and damage_type == "physical":
+            if armor_shred is not None and damage_type == "physical":
                 key = (target.participant_id, "armor")
                 stacks = min(
-                    int(carve.value("armor_reduction_max_stacks")),
+                    armor_shred.max_stacks,
                     reduction_stacks.get(key, 0) + 1,
                 )
                 reduction_stacks[key] = stacks
-                percent = stacks * carve.value("armor_reduction_per_stack")
+                percent = stacks * armor_shred.per_stack
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -869,14 +926,14 @@ def derive_item_support_effects(
                         stack_count=stacks,
                     )
                 )
-            if vile_decay is not None and damage_type == "magic" and event.is_ability:
+            if mr_shred is not None and damage_type == "magic" and event.is_ability:
                 key = (target.participant_id, "mr")
                 stacks = min(
-                    int(vile_decay.value("mr_reduction_max_stacks")),
+                    mr_shred.max_stacks,
                     reduction_stacks.get(key, 0) + 1,
                 )
                 reduction_stacks[key] = stacks
-                percent = stacks * vile_decay.value("mr_reduction_per_stack")
+                percent = stacks * mr_shred.per_stack
                 packets.append(
                     _packet(
                         attacker=attacker,

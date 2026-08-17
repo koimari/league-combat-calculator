@@ -376,6 +376,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): resistance_shred.PAIR_INTERPRETER,
     (
+        RuleFamily.RESISTANCE_SHRED,
+        EngineLane.RECEIPT_WALK,
+    ): resistance_shred.WALK_INTERPRETER,
+    (
         RuleFamily.SECONDARY_TARGET,
         EngineLane.PAIR_ENGINE,
     ): secondary_target.PAIR_INTERPRETER,
@@ -525,10 +529,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             reason=_PACKET_FED,
             via=(EngineLane.PAIR_ENGINE,),
         )
-        for family in (
-            RuleFamily.SPELLBLADE,
-            RuleFamily.RESISTANCE_SHRED,
-        )
+        for family in (RuleFamily.SPELLBLADE,)
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
     # The crit profile's receipt-walk twin is gone and it did not retire: the
@@ -540,19 +541,24 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
-    # Six families' receipt-walk twins are gone — the walk reads each item
+    # Seven families' receipt-walk twins are gone — the walk reads each item
     # active, each cast-triggered proc, each charged strike, every routing
-    # rule, every on-hit strike and every periodic cadence from its own
-    # declaration, through ``ActiveCastWalkInterpreter``,
-    # ``CastProcWalkInterpreter``, ``ChargedStrikeWalkInterpreter``,
-    # ``DamageRoutingWalkInterpreter``, ``OnHitStrikeWalkInterpreter`` and
-    # ``PeriodicWalkInterpreter``, which is Amendment F's act in the lane
-    # Amendment K rules — so only the compiled lane defers for them, and it
-    # says so in its own words rather than inheriting a sentence about both
-    # walks.  ``damage_routing`` is the one of the six whose interpreter
-    # hands the walk no price: umbrella Amendment P names its delivery as the
-    # rider and kernel-state paths already in the tree, so what retires the
-    # row is the walk reading the declaration rather than the walk paying it.
+    # rule, every on-hit strike, every periodic cadence and every stacking
+    # resistance shred from its own declaration, through
+    # ``ActiveCastWalkInterpreter``, ``CastProcWalkInterpreter``,
+    # ``ChargedStrikeWalkInterpreter``, ``DamageRoutingWalkInterpreter``,
+    # ``OnHitStrikeWalkInterpreter``, ``PeriodicWalkInterpreter`` and
+    # ``ResistanceShredWalkInterpreter``, which is Amendment F's act in the
+    # lane Amendment K rules — so only the compiled lane defers for them, and
+    # it says so in its own words rather than inheriting a sentence about both
+    # walks.  Two of the seven hand the walk no price and for two different
+    # reasons.  ``damage_routing``'s delivery is the rider and kernel-state
+    # paths umbrella Amendment P names, already in the tree.
+    # ``resistance_shred``'s is the cross-participant packet its owners'
+    # ``SPLIT`` partners already emit: a shred is not damage — it moves the
+    # target's resistance before penetration — so what retires that row is the
+    # walk reading the family's own ramp instead of the ally-packet
+    # declaration's second copy of it.
     **{
         (family, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
             _COMPILED_PACKET_FED, (EngineLane.PAIR_ENGINE,)
@@ -564,6 +570,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.DAMAGE_ROUTING,
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.PERIODIC,
+            RuleFamily.RESISTANCE_SHRED,
         )
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
