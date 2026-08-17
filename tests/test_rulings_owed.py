@@ -286,6 +286,28 @@ def test_every_live_figure_resolves_in_the_artifact_that_owns_it(
         assert isinstance(payload, int), name
 
 
+def test_the_population_hole_is_named_and_carries_no_count_of_its_own() -> None:
+    """The untagged commits are part of this ruling, and are named as such.
+
+    The denominator is derived from a commit subject's trailing tag, so a
+    commit carrying none sits outside it.  The ledger reports them rather than
+    dropping them, and what they *are* -- outside "every slice", or evidence
+    the convention was not universal -- is the same question the first clause
+    asks.  A certification review asked that it be named to whoever rules, so
+    it is named here rather than filed as a gap somebody could close by
+    adopting a reading.
+
+    The field carries no count: the number moves with every commit, so it is
+    read through ``live_figures`` like every other reading this row makes.
+    """
+    row = _open_row()
+    field = row["what_else_the_same_ruling_must_settle"]
+    assert "commits_outside_the_denominator" in field
+    assert "commits_outside_the_denominator" in row["live_figures"]
+    undated = re.sub(r"\d{4}-\d{2}-\d{2}", "", field)
+    assert re.search(r"(?<![\w.\-/])\d+", undated) is None, undated
+
+
 def test_the_row_states_no_live_figure_it_could_instead_read() -> None:
     """The mechanism, asserted rather than promised.
 
