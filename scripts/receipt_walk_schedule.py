@@ -234,6 +234,36 @@ LANE_CORRECTED: tuple[str, ...] = (
     "threshold_defense",
 )
 
+#: Amendment F's own figure for the size of the receipt-walk debt, quoted from
+#: the amendment rather than derived from the tree: every row it names has since
+#: left, so nothing here can re-count them.  The mismatch narration below quotes
+#: the amendment about its fourteen and derives every other count in the
+#: sentence FROM it, so the sentence cannot say "Three" over a list of four.
+AMENDMENT_F_ROWS = 14
+
+#: The count words that narration spells.  Prose spells a small number as a
+#: word, and a word typed beside a derived list is the same defect one field
+#: along: the list moves and the word does not.  Sized to the debt so a count
+#: outside it fails by name rather than rendering a digit into prose.
+_COUNT_WORDS: tuple[str, ...] = (
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+)
+
+
 #: The lanes a caller has to need for the withheld negative to be about the
 #: producer this correction rests on.  Read from ``item_coverage`` rather than
 #: spelled here: the question "what happens to these items when the defence
@@ -291,6 +321,63 @@ PROBE_LEVEL = 18
 
 class ScheduleError(RuntimeError):
     """The schedule does not say what the tree says."""
+
+
+def spelled(count: int) -> str:
+    """``count`` as the word the mismatch narration spells it with."""
+    if not 0 <= count < len(_COUNT_WORDS):
+        raise ScheduleError(
+            f"the mismatch narration cannot spell {count}: the count words are "
+            f"sized to Amendment F's {AMENDMENT_F_ROWS} rows, so a count "
+            "outside them means the debt this receipt narrates is not the one "
+            "the amendment named"
+        )
+    return _COUNT_WORDS[count]
+
+
+def mismatch_narration(lane_corrected_ever: Sequence[str]) -> str:
+    """Amendment F's route mismatch, every count spelled off its own list.
+
+    Takes the families rather than reading them, so the one property the
+    sentence has to have -- that its count words and its names describe the
+    same set -- is reachable by a test with a set of its own instead of only
+    on whatever the tree happens to hold.
+    """
+    corrected = len(lane_corrected_ever)
+    return (
+        "Amendment F describes all "
+        + spelled(AMENDMENT_F_ROWS)
+        + " rows as the families whose "
+        "numbers participant_timeline._pair_run_fight produces today. "
+        + spelled(AMENDMENT_F_ROWS - corrected).capitalize()
+        + " declare that route in their own via field. "
+        + spelled(corrected).capitalize()
+        + " -- "
+        + ", ".join(lane_corrected_ever)
+        + " -- declare the defence resolver instead, and their rows say in "
+        "their own words that a walk-lane interpreter there would be a "
+        "second producer of one number, which is what D-60 and umbrella "
+        "criterion 8 forbid. So Amendment F's act, spelled with the receipt "
+        "walk, named for those "
+        + spelled(corrected)
+        + " the act the campaign's own criterion "
+        "rules out. That was measured here and routed to an owed ruling, "
+        "which answered it on 2026-08-15: umbrella Amendment K rules the "
+        "retiring act per LANE rather than per walk -- a per-family "
+        "interpreter in the family's own declared serving lane, whichever "
+        "lane the row's via names -- discharging criterion 8's own property "
+        "that the family's numbers reach the walk through exactly one "
+        "interpreter instead of arriving already priced by the pair engine. "
+        "Every row therefore has a settled act, derived from its own route "
+        "rather than assumed uniform, and the three moves a lane may still "
+        "not make are unchanged in force: registering an interpreter that "
+        "changes nothing the walk prices, editing the lane table so a family "
+        "stops owing the walk an answer, and reading "
+        + spelled(AMENDMENT_F_ROWS)
+        + " as "
+        + spelled(AMENDMENT_F_ROWS - corrected)
+        + "."
+    )
 
 
 def _frontier() -> Mapping[str, Any]:
@@ -1509,7 +1596,11 @@ def schedule() -> dict[str, Any]:
     # evidence block, and gated in both directions by
     # ``_lane_correction_failures``, so reading the declaration is reading the
     # closed rows and not a second list.  The narration reads both and stays
-    # true of a debt that has been paid.
+    # true of a debt that has been paid.  Its COUNT WORDS come off this same
+    # list through :func:`spelled`, and its complement off Amendment F's own
+    # figure, because a word typed beside a derived list is the same defect one
+    # field along: a fourth family here would otherwise render "Three -- a, b,
+    # c, d --".
     lane_corrected_ever = sorted(set(lane_corrected) | set(LANE_CORRECTED))
     performed = sorted(
         family
@@ -1570,27 +1661,7 @@ def schedule() -> dict[str, Any]:
             "one is, which is what 'unbudgeted' was the absence of."
         ),
         "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it": (
-            "Amendment F describes all fourteen rows as the families whose "
-            "numbers participant_timeline._pair_run_fight produces today. "
-            "Eleven declare that route in their own via field. Three -- "
-            + ", ".join(lane_corrected_ever)
-            + " -- declare the defence resolver instead, and their rows say in "
-            "their own words that a walk-lane interpreter there would be a "
-            "second producer of one number, which is what D-60 and umbrella "
-            "criterion 8 forbid. So Amendment F's act, spelled with the receipt "
-            "walk, named for those three the act the campaign's own criterion "
-            "rules out. That was measured here and routed to an owed ruling, "
-            "which answered it on 2026-08-15: umbrella Amendment K rules the "
-            "retiring act per LANE rather than per walk -- a per-family "
-            "interpreter in the family's own declared serving lane, whichever "
-            "lane the row's via names -- discharging criterion 8's own property "
-            "that the family's numbers reach the walk through exactly one "
-            "interpreter instead of arriving already priced by the pair engine. "
-            "Every row therefore has a settled act, derived from its own route "
-            "rather than assumed uniform, and the three moves a lane may still "
-            "not make are unchanged in force: registering an interpreter that "
-            "changes nothing the walk prices, editing the lane table so a family "
-            "stops owing the walk an answer, and reading fourteen as eleven."
+            mismatch_narration(lane_corrected_ever)
         ),
         "a_second_and_smaller_mismatch": (
             "ANSWERED 2026-08-15, and kept because a mismatch that is only "

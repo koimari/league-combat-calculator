@@ -642,6 +642,39 @@ def test_a_lane_correction_is_closed_in_the_tree_and_not_only_on_paper() -> None
         assert entry["evidence"]["authored_pair_rows"] == [], family
 
 
+def test_the_mismatch_narrations_counts_are_spelled_off_its_own_list() -> None:
+    """The count word moves with the list, or the sentence outlives its subject.
+
+    ``bd3489e`` made the narration's SUBJECT derived and left its COUNT WORD
+    typed, which is the same defect one field along: on a fourth
+    lane-corrected family the sentence rendered "Three -- a, b, c, d --".
+    Driven with a list of its own rather than with the tree's, because the
+    property is about what the sentence does when the list moves and the tree
+    has held three names since Amendment Q closed them.
+    """
+    committed = schedule()[
+        "where_the_measurement_disagreed_with_the_prose_and_what_ruled_it"
+    ]
+    named = sorted(receipt_walk_schedule.LANE_CORRECTED)
+    assert committed == receipt_walk_schedule.mismatch_narration(named)
+    assert "Three -- " + ", ".join(named) + " --" in committed
+    assert "Eleven declare that route" in committed
+
+    grown = named + ["a_family_amendment_q_has_not_closed"]
+    moved = receipt_walk_schedule.mismatch_narration(grown)
+    assert "Four -- " + ", ".join(grown) + " --" in moved
+    assert "Ten declare that route" in moved
+    assert "named for those four the act" in moved
+    assert "reading fourteen as ten." in moved
+
+
+def test_a_count_the_narration_cannot_spell_fails_by_name() -> None:
+    """R-05 for the spelling: the words are sized to the debt, and say so."""
+    with pytest.raises(receipt_walk_schedule.ScheduleError) as raised:
+        receipt_walk_schedule.spelled(receipt_walk_schedule.AMENDMENT_F_ROWS + 1)
+    assert "cannot spell 15" in str(raised.value)
+
+
 def test_the_triage_says_it_pays_nothing() -> None:
     """Measuring a debt is the half that can quietly become discounting it."""
     block = schedule()
