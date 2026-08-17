@@ -23,10 +23,11 @@
   },
   "campaign-close-certification-r2": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
+   "commit_count": 2,
    "criteria_documents": [],
    "subjects": [
-    "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)"
+    "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)",
+    "docs(receipts): the owed row's measurement is anchored, and its live figures are named (campaign-close-certification-r2)"
    ]
   },
   "campaign-close-verify-p4-batch": {
