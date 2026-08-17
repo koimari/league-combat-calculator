@@ -17733,6 +17733,111 @@
      "answered_at": []
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-sweep-findings",
+   "round": 127,
+   "backfilled": false,
+   "residue_sweep": false,
+   "verified_commits": [
+    "c7cdd75",
+    "ff1c3fd",
+    "04d1e90",
+    "73cf18d",
+    "246d3c4",
+    "aa1d6c1",
+    "09e8192",
+    "8f2a80b",
+    "47b20fa",
+    "1e7c342"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "1e7c342"
+   ],
+   "what_this_round_is": "A live R-35 pass, not a sweep: a fresh read-only Opus 5 verifier that had not read the plan was handed this slice group's ten commits and its stated completion criterion -- 'Every surfaced finding fixed with gates green and its ledger entry updated, or escalated as blocked' -- immediately after the group landed, and returned all four criteria DISCHARGED with four behaviours the commit bodies do not mention. The group it verifies is itself the lane that answered eight of the previous sweep's NOT_DISCHARGED rows, so this is the campaign's first recorded verdict on an answering pass. Transcribed from the orchestration journal line holding the returned report; the verdicts are the verifier's.",
+   "provenance": {
+    "verifier_labels": [
+     "Ledger-findings-fix"
+    ],
+    "agent_ids": [
+     "a4bdf217f1c71f601"
+    ],
+    "journal_key": "v2:6f53f2e548389e5bd51c39b31b2947971f206bc51aafb36d0599573815c6a66e",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 4,
+    "all_discharged_as_returned": {
+     "a4bdf217f1c71f601": true
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-sweep-findings/every-surfaced-finding-fixed-or-escalated",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The sweep surfaced 8 NOT_DISCHARGED criteria across the 18 new pass blocks in docs/receipts/verify-ledger.json (counted with a script over passes[85:]: 112 criteria, 98 DISCHARGED / 6 PHASE_TIP_ONLY / 8 NOT_DISCHARGED), plus round 85's open row. All 8 carry disposition 'fixed': 7 name an answering commit (ff1c3fd, 04d1 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-sweep-findings/gates-green",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Run by me on HEAD=1e7c342, clean tree: `python -m pytest -q` -> 8534 passed in 332s, 0 failed/skipped (the claimed 8534 collected / 8534 passed reproduces to the id); `python scripts/golden_snapshot.py compare scripts/golden_baseline.json` -> 'OK: snapshot identical'; same for scripts/golden_coupled_baseline.json -> 'O [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-sweep-findings/ledger-entry-updated-per-finding",
+     "verdict": "DISCHARGED",
+     "what_was_found": "A structural JSON diff of docs/receipts/verify-ledger.json between 47b20fa and 1e7c342 shows exactly: passes 85 -> 103 (18 blocks, rounds 86..103, one per slice tag), slice_groups_with_a_verdict_in_this_ledger 81 -> 99, slice_groups_without_one 42 -> 25, residue 42 -> 25, slice_groups_citing_a_verdict_in_a_commit_body  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-sweep-findings/recording-honesty-no-verdict-re-graded",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Extra check I ran because the criterion's 'or escalated as blocked' branch depends on it. No NOT_DISCHARGED verdict was softened: all 8 still read NOT_DISCHARGED in the committed ledger and only `disposition` moved, which 47b20fa's new residue_sweep sentence explicitly licenses ('a verdict is the verifier's artifact an [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "campaign-close-sweep-findings/unmentioned-1",
+     "finding": "The identical R-20 ordering defect is left standing one receipt over, unmentioned. 73cf18d flips enumerated_before_first_edit true -> false in docs/receipts/expected-golden-diff-campaign-close-active-cast-retirement.json on the ground that enumerated_at (38f4702) IS the group's first src/ edit. A scan of every docs/rec [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-sweep-findings/unmentioned-2",
+     "finding": "aa1d6c1's disclosure -- the commit whose entire subject is that a gate line under-reported its reds -- itself under-reports. Both its body and the receipt field it adds state that the crit-profile receipt read out of 644f898 has top-level keys 'slice, decisions, what_was_attempted, what_landed, expected_qualifying_occu [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-sweep-findings/unmentioned-3",
+     "finding": "73cf18d flips a committed R-20 flag to false without noting that it leaves a sibling commit's subject line asserting the opposite. 4c70b78's subject is 'this slice's R-20 population, enumerated before its first src/ edit (campaign-close-active-cast-retirement)' -- that subject is now contradicted by the receipt it file [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-sweep-findings/unmentioned-4",
+     "finding": "A second-order effect of ff1c3fd that its own new block invalidates: the block asserts '`git log -- docs/receipts/expected-golden-diff-P4-S9-dispositions.json` returns one commit, bf4a6d3' as the proof the population was never widened. That command now returns two commits (ff1c3fd itself, then bf4a6d3), so the stated r [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
   }
  ],
  "coverage": {
@@ -17854,6 +17959,7 @@
    "campaign-close-secondary-target-retirement",
    "campaign-close-spellblade-retired",
    "campaign-close-standing-dissents",
+   "campaign-close-sweep-findings",
    "campaign-close-swing-composition",
    "campaign-close-swing-term-coverage",
    "campaign-close-swing-term-ruling",
@@ -17865,11 +17971,10 @@
   ],
   "slice_groups_without_one": [
    "campaign-close-final-integration",
-   "campaign-close-sweep-findings",
    "campaign-close-verify-p4-batch"
   ],
   "untagged_commits": 159,
-  "residue": 3,
+  "residue": 2,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
