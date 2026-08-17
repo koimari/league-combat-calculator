@@ -13923,6 +13923,1777 @@
      "answered_at": []
     }
    ]
+  },
+  {
+   "slice_group": "D-12",
+   "round": 86,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "343f679"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "343f679"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 0,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "a_criterion_charged_against_the_whole_brief": "The verifier returned one criterion stamped ALL-SLICES rather than with a slice tag, charging every slice in the brief at once. One returned criterion is one row, so it is filed here, under the brief's first tag, and the other five blocks of this agent say where it went. Splitting it into six would make this ledger's criterion count disagree with its verifier's."
+   },
+   "criteria": [
+    {
+     "id": "D-12/P0-C15-six-sentinels-present-and-green",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_phase0_sentinels.py holds exactly six sentinel classes (TestNoTwoCommandWindowsOverlap D-12, TestCommandExpiryBoundaryDiverges D-13, TestIsAttackOrSpellVersusFromAllSources D-04, TestCommandMarksOnlyTheFirstPairDefender H2, TestAbyssalAuraHasNoRangeOrDeathCondition D-66, TestSupportValueMixesUnits D-14/H3); [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "D-12/P0-C15-each-names-its-decision-id-in-the-failure-message",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Every assert message in the five new classes opens with its id: 'D-12: ...' (5 asserts), 'D-13: ...' (3), 'H2: ...' (2), 'D-66: ...' (4), 'D-14: ...' (3). Read at both 343f679 (git show 343f679:tests/test_phase0_sentinels.py) and HEAD.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "D-12/P0-C15-each-pins-its-own-population-against-a-non-zero-number",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Named module constants, each asserted by a dedicated population test: COMMAND_CC_AUTHORS=3, TIMED_CROSS_PARTICIPANT_PRODUCERS=5, FROM_ALL_SOURCES_PRODUCERS=5, SENTINEL_ROSTER_ENEMIES=3/COMMAND_MARKED_ENEMIES=1, UNIT_MIXED_SUPPORT_EVENTS=3/UNIT_MIXED_SUPPORT_UNITS=2, plus TIME_BASED_WITHHOLDING_CHAMPIONS=4. All non-zero [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "D-12/P0-C15-command-sweep-covers-the-whole-registry-and-is-non-empty",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Ran the sweep directly: `registered_champion_names()` = 173; `command_sweep().swept == tuple(registered_champion_names())` asserted in-test; authors = ['Ahri','Pantheon','Syndra'] (non-empty, = COMMAND_CC_AUTHORS); withheld = [\"Kai'Sa\",'Karthus','Taliyah','Vi'] (4 = TIME_BASED_WITHHOLDING_CHAMPIONS); window duration 4. [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "D-12/R-20-expected-qualifying-occurrences-declared",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Body carries 'Expected qualifying occurrences: 0. Structural, not measured'. `git show --stat 343f679` -> only tests/test_item_support_effects.py and tests/test_phase0_sentinels.py; zero src/ files, so no baseline has a movable input. 17 new node ids counted in the diff, matching the body's '5408 + 17 declared new'.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "D-12/umbrella-C10-no-src-plus-baseline-in-one-commit",
+     "verdict": "DISCHARGED",
+     "what_was_found": "343f679 touches neither src/ nor any of R-32's five baselines; tests-only. The `declared_classes_by_producer` -> `declared_packet_keywords` generalisation is confined to tests/test_item_support_effects.py and is named in the body.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "ALL-SLICES/umbrella-C11-a-recorded-verify-verdict-exists",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "docs/receipts/verify-ledger.json's own coverage block lists all six of D-12, R-16, R-19, 'P2a line', P4-S9-ledger-join and P4-integration-final under slice_groups_without_one (47 of 122). P4-S9-ledger-join and P4-integration-final additionally appear under slice_groups_citing_a_verdict_in_a_commit_body -- i.e. their bo [...]",
+     "answered_at": [],
+     "disposition": "fixed",
+     "note": "Answered by the commit this file is committed inside, which cannot name its own sha -- the same limitation the coverage block records for the citation list. All six tags the criterion names (D-12, R-16, R-19, 'P2a line', P4-S9-ledger-join, P4-integration-final) leave slice_groups_without_one in that commit, carrying this verifier's report as rounds 86 through 91. Criterion 11's first clause is closed for this brief and the residue shrinks by the six.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
+   ],
+   "unmentioned_behaviour": []
+  },
+  {
+   "slice_group": "R-16",
+   "round": 87,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "993eb2d",
+    "58fad18"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "58fad18"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 0,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "where_the_all_slices_criterion_went": "This agent returned one ALL-SLICES criterion charging every slice in the brief. It is recorded once, in round 86 under 'D-12', and it names this slice too."
+   },
+   "criteria": [
+    {
+     "id": "R-16/receipt-only-no-src-no-baseline",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --stat 993eb2d` -> docs/receipts/escalated-defects-P4-S9.json + tests/test_escalated_defects_p4_s9.py only. `git show --stat 58fad18` -> the receipt JSON alone. Neither touches src/ nor any of golden_baseline.json / golden_coupled_baseline.json / golden_coupled_exact.json / campaign-fingerprints.json / item-c [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-16/escalation-lives-in-a-committed-artifact-not-a-commit-body",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The open finding is carried by docs/receipts/escalated-defects-P4-S9.json with a declared `gate`: tests/test_escalated_defects_p4_s9.py, exactly the Shape row R-16 names. 993eb2d's own body states the rule it is obeying ('an escalation living only in a commit body is absorbed by the next baseline re-capture').",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-16/both-halves-of-the-reproducer-actually-run",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Reproducer half 2 verified at both commits: `git grep -n 'OutcomeLedger(' 993eb2d -- src/` and `... 58fad18 -- src/` both return nothing, exactly as 58fad18's body claims. Half 1 (every live coupled disposition is MEASURED) is consistent with the tree at that date: the coupled baseline at 993eb2d carries no `dispositio [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-16/an-entry-closes-by-inversion-not-deletion",
+     "verdict": "DISCHARGED",
+     "what_was_found": "At HEAD escalated-defects-P4-S9.json has defects=[] and retired=['no_production_path_emits_a_non_measured_disposition']; the gate test file still exists with its assertions flipped (test_the_outcome_ledger_is_the_receipt_walks_companion, test_a_live_walk_fills_the_ledger_the_site_builds, test_a_refused_row_publishes_a_ [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": []
+  },
+  {
+   "slice_group": "R-19",
+   "round": 88,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "4043e17",
+    "b8b62bb",
+    "03aba5e",
+    "21118e2"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "ff1c3fd"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "where_the_all_slices_criterion_went": "This agent returned one ALL-SLICES criterion charging every slice in the brief. It is recorded once, in round 86 under 'D-12', and it names this slice too."
+   },
+   "criteria": [
+    {
+     "id": "R-19/receipts-land-at-the-ruled-path-with-a-closed-set-verdict",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Parsed every receipt of the four commits: oracle-P3-3.8-leaf0..47 (48), oracle-S6S7-leaf0..81 (82), oracle-P4-S7-shadowflame-leaf0 (1), oracle-S9-leaf0..11 (12). All 143 sit at docs/receipts/oracle-<slice>-<leaf-slug>.json, every verdict is a member of {new_value_correct, old_value_correct, both_wrong}, every receipt c [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-19/no-baseline-moves-in-an-oracle-commit",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --stat` on 4043e17, b8b62bb, 21118e2 -> docs/receipts/ additions only. 03aba5e additionally edits docs/receipts/expected-golden-diff-P4-S7-shadowflame.json, which is an allowlist receipt, not a baseline. No src/ in any of the four.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-19/4043e17-verdict-tally-and-dissent-handling",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Measured by family: item_coverage[0] 23 new_value_correct + 1 old_value_correct; item_coverage[1] 23 old_value_correct + 1 new_value_correct; zero both_wrong -- exactly the body's '23 of 24' twice. The two crossing dissents are oracle-P3-3.8-leaf24 (old_value_correct, .../item_coverage[0]/reason) and leaf25 (new_value_ [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-19/b8b62bb-verdict-tally-and-escalated-dissents",
+     "verdict": "DISCHARGED",
+     "what_was_found": "82 receipts measured as 78 new_value_correct / 2 old_value_correct / 2 both_wrong, matching the body exactly. The four named dissents resolve as claimed: leaf46 both_wrong on .../events[62]/raw_damage; leaf10 old_value_correct and leaf30 both_wrong both on .../events[82]/* (the ordinal-substitution pair); leaf24 old_va [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-19/03aba5e-P4-criterion-12-downward-diff-carries-its-own-receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "oracle-P4-S7-shadowflame-leaf0.json filed, verdict new_value_correct, and expected-golden-diff-P4-S7-shadowflame.json's oracle_receipts.status moves from 'OWED and NOT FILED for one downward move' to 'FILED - docs/receipts/oracle-P4-S7-shadowflame-leaf0.json, verdict new_value_correct', with the full oracle block writt [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "R-19/21118e2-occurrences-were-declared-in-advance-R-20",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The body says twelve investigators 'adjudicated the twelve occurrences the S9 allowlist (docs/receipts/expected-golden-diff-P4-S9-dispositions.json) enumerated in advance'. That allowlist declares expected_qualifying_occurrences: 10, qualifying_population.size: 10, measured.coupled_golden_diffs_this_slice_adds: 10, and [...]",
+     "answered_at": [
+      "ff1c3fd"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by ff1c3fd (campaign-close-sweep-findings). Re-measured and confirmed: the allowlist declares ten and declares the two snapshot shape counters separately, as expected diff paths counted in nothing, and `git log` over the file returns one commit (bf4a6d3) preceding 21118e2, so the population was never widened. R-20's remedy is a declaration made before the edit and is unreachable now -- widening the population today would be a count read off the changed tree, the shape R-20's second half forbids -- so the file gains a dated record of the two occurrences that landed outside it, with what bounds the acceptance measured rather than intended. The verdict is not re-graded.",
+     "artifact": "docs/receipts/expected-golden-diff-P4-S9-dispositions.json"
+    },
+    {
+     "id": "R-19/repo-wide-enforcement-of-the-blocking-half",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "R-19's 'no baseline is re-captured while any qualifying occurrence lacks one' is vacuous for these four commits (none moves a baseline). Its repo-wide mechanisation is not a property of this slice: it is carried as gap G6 in docs/receipts/campaign-close-report.md and as the open entry in escalated-defects-P4-integratio [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "cross-phase-joins#1/unmentioned-3",
+     "finding": "R-19 (21118e2): the commit files two oracle receipts on /metadata/fingerprint/leaves and /metadata/fingerprint/numeric_leaves -- snapshot self-statistics, a leaf class the S9 allowlist never enumerated and whose count it fixes at 10. The receipts themselves are honest (they decline to certify why the artifact changed), [...]",
+     "disposition": "fixed",
+     "note": "The same charge as this pass's R-19 R-20 criterion, returned separately; answered by the same commit, ff1c3fd, which records the two occurrences that landed outside the enumerated population in the file that enumerated it.",
+     "answered_at": [
+      "ff1c3fd"
+     ],
+     "artifact": "docs/receipts/expected-golden-diff-P4-S9-dispositions.json"
+    },
+    {
+     "id": "cross-phase-joins#1/unmentioned-5",
+     "finding": "R-19 (03aba5e): the allowlist now stores the oracle's mechanism -- that the removed 10.4 was Cinderbloom amplifying a *physical* instance -- as `independent_finding`, while the same commit's body records the contradicting fact that Cinderbloom's declared typing is damage_classes={MAGIC, TRUE} and both engines gate on i [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P2a line",
+   "round": 89,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "1617f1b"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "1617f1b"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "where_the_all_slices_criterion_went": "This agent returned one ALL-SLICES criterion charging every slice in the brief. It is recorded once, in round 86 under 'D-12', and it names this slice too."
+   },
+   "criteria": [
+    {
+     "id": "P2a-line/the-defect-is-real-and-fixed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Old spelling `int(_float(row.get('sequence', -1)) or -1)` maps 0 -> -1 because 0.0 is falsy. Exercised the replacement directly: `_sequence` gives 0->0, 7->7, '3'->3, 3.5->3, and None/absent/'third'/inf/nan -> -1, which is the body's enumeration verbatim. `pytest tests/test_trigger_stream.py` -> 120 passed.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P2a-line/the-latency-claim-that-no-consumer-reads-Trigger.sequence",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n '\\.sequence' 1617f1b -- src/` returns exactly four hits, all `action.sequence` on SurvivalAction (survival/compile.py:311,:333, survival/transitions.py:351,:740). `event_triggers` has one caller inside trigger_stream.py itself, and no src/ site reads `.sequence` off a Trigger. The 'latent today' claim hold [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P2a-line/the-pin-carries-its-own-control",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The new test asserts `'\\n sequence = 0\\n' in src/calculator/damage.py`; that initialiser is live at damage.py:1418, so a ledger that started numbering from one takes the test with it, as the body claims.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P2a-line/R-20-zero-qualifying-occurrences-measured",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Body declares and measures 0. Verified structurally (the changed value is unread) and confirmed at HEAD: `golden_snapshot.py compare scripts/golden_baseline.json` -> 'OK: snapshot identical', `compare scripts/golden_coupled_baseline.json` -> 'OK: snapshot identical'.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "cross-phase-joins#1/unmentioned-6",
+     "finding": "P2a line (1617f1b): `-0.0` also flips from -1 to 0 under the new parse (it was falsy under the old `... or -1` fold). Subsumed by the ruling 'zero is a sequence', but it is not in the body's or the test's enumeration of cases; the test also omits the 3.5 -> 3 case the body states (verified true by direct call).",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P4-S9-ledger-join",
+   "round": 90,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "47c5218",
+    "ff5e31d",
+    "69e7323"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "04d1e90"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "where_the_all_slices_criterion_went": "This agent returned one ALL-SLICES criterion charging every slice in the brief. It is recorded once, in round 86 under 'D-12', and it names this slice too."
+   },
+   "criteria": [
+    {
+     "id": "P4-S9-ledger-join/umbrella-C8-one-APPLIED-contribution-per-(mechanic,subject,event_id)-over-a-real-fight",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep 'OutcomeLedger(' HEAD -- src/` now returns exactly one site, src/calculator/survival/receipt_state.py:412, which the gate pins as {'survival/receipt_state.py': 1}. outcome_state._claim_applied keys (action.source_key, action.subject, action.event_slot) and raises DuplicateApplied on a second claim. Drove the [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/live_damage-is-unmapped-as-a-ruling",
+     "verdict": "DISCHARGED",
+     "what_was_found": "47c5218 removes `'live_damage': 'applied'` from OutcomeLedger._WRITE_ALIASES; at HEAD the mapping is {damage, applied_amount -> applied; _applied_to_health, overkill, shield_absorbed, skipped_reason}. transitions.py writes live_damage once (line 1686) inside the annotate call the module docstring lists under diagnostic [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/an-input-restore-is-not-an-outcome",
+     "verdict": "DISCHARGED",
+     "what_was_found": "OutcomeLedger.restore exists at outcome_state.py:370 ('An input, not an outcome. Dropped, and that is the whole point.'); both adapters implement it as their write, and the Knight's Vow holder-gate path now calls ledger.restore rather than ledger.write.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/what-the-rule-did-not-range-over-is-published",
+     "verdict": "DISCHARGED",
+     "what_was_found": "_claim_applied routes NO_SLOT actions to _unidentified_applied instead of the uniqueness key, and unidentified_contributions() (outcome_state.py:538) publishes them. Measured 0 unidentified across all ten live ledgers, which is the statement 'D-62 covered that corpus entirely'.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/no-baseline-touched-and-R-20-zero-declared",
+     "verdict": "DISCHARGED",
+     "what_was_found": "None of 47c5218, ff5e31d, 69e7323 touches scripts/golden_baseline.json, scripts/golden_coupled_baseline.json, scripts/golden_coupled_exact.json, campaign-fingerprints.json or item-coverage-classification.json. Each body carries an 'Expected qualifying occurrences: 0' line with its population argument. Confirmed at HEAD [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/the-emission-half-stays-open-with-its-reproducer",
+     "verdict": "DISCHARGED",
+     "what_was_found": "69e7323 keeps escalated-defects-P4-S9.json open, names the block precisely (38 coupled leaves, each a text_change on a disposition string) and states the rule gap. Timeline checks out: the umbrella's Amendment E, which supplies the missing ruling, landed at 60b94de on 2026-08-14 18:04, after the join at 14:25, so 'the [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-S9-ledger-join/the-24-refusals-are-the-baseline-rows-the-body-names",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "69e7323's body says '24 observed refusals -- the same 24 rows the committed coupled baseline publishes with a skipped_reason'. The 24 reproduces as the ledger's own count, but the committed coupled baseline at 69e7323 publishes 14 such rows, all in cleaver_bloodsong_roster (attacker_dead 8, target_dead 5, outside_windo [...]",
+     "answered_at": [
+      "04d1e90"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by 04d1e90 (campaign-close-sweep-findings), and the finding does not reproduce. Measured on the coupled baseline as committed at 69e7323: fourteen rows carry a skipped_reason under combat/events (attacker_dead 8, target_dead 5, outside_window 1) and ten more under combat/healing_events (trigger_event_skipped 7, target_dead 3), all in cleaver_bloodsong_roster, and no other scenario in that baseline carries one. Fourteen and ten, so the identification stands as written; the sweep's count read combat/events alone, and its reported split is that section's split. What was really wrong is that the sentence gave a reader no way to walk to the population, so the receipt now carries the split beside the total. The verdict stands as rendered.",
+     "artifact": "docs/receipts/escalated-defects-P4-S9.json"
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "cross-phase-joins#1/unmentioned-1",
+     "finding": "P4-S9-ledger-join (69e7323): the join makes OutcomeLedger's three raising methods reachable on every serving path. src/app.py wraps each view in one catch that, at that commit, named ProjectionStarvation alone, so OutcomeRewritten / DuplicateApplied on /api/calculate, /api/bis or /api/optimize returned a bare 500 with [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P4-integration-final",
+   "round": 91,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "48d5f16",
+    "8357432",
+    "9114084"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "9114084"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "ad5ed79aee13333a6"
+    ],
+    "journal_key": "v2:ee659706e18258b1ad4de0913f08cad70930804d5310267f40830b1b72057d8d",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"D-12\", \"R-16\", \"R-19\", \"P2a line\", \"P4-S9-ledger-join\", \"P4-integration-final\"] -- under the criteria reference 'Cross-phase rule and decision tags plus the Phase-4 closing joins', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "ad5ed79aee13333a6": false
+    },
+    "where_the_all_slices_criterion_went": "This agent returned one ALL-SLICES criterion charging every slice in the brief. It is recorded once, in round 86 under 'D-12', and it names this slice too."
+   },
+   "criteria": [
+    {
+     "id": "P4-integration-final/48d5f16-thirteen-receipts-cover-exactly-the-prior-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "13 receipts added, nothing edited or deleted (git show --stat). Verified the set-equality claim by parsing files: the 13 new leaf paths equal the union of the ten oracle-S9-leaf0..9 dispositions leaves and the three oracle-P4-R18-amend-leaf0..2 leaves -- 13 = 13, empty on both differences. Verdicts 12 new_value_correct [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/48d5f16-the-one-dissent-is-not-absorbed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "oracle-P4-integration-final-leaf1.json, old_value_correct on /coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions, is neither deleted nor edited; no src/, no tests/, no scripts/, no baseline move in the commit; the body names the R-15 amendment, the citation set (D-72, D-63, umbrella criterion 1, Phase 4 cri [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/8357432-the-three-moved-totals-reproduce",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Diffed scripts/golden_coupled_exact.json across c2b3d88^..c2b3d88: exactly five leaves move, three of them totals -- combat/0:main/outgoing 3226.1 -> 3310.1, combat/1:ally:Lulu/outgoing 848.8 -> 731.8, combat/2:enemy:Aatrox/incoming 4074.9 -> 4041.9 -- plus metadata/git_head (ab655cc -> 92f309f, c2b3d88's parent, as th [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/8357432-the-hole-is-closed-by-a-digest-and-the-false-note-is-not-edited",
+     "verdict": "DISCHARGED",
+     "what_was_found": "campaign-fingerprints.json gains coupled_golden_exact_values.sha256 (cb9c9d9a...) with its rule stated, plus a provenance 'VERIFIED' entry; the digest is deliberately not a golden_snapshot.fingerprint() field, so compare's jurisdiction is untouched (confirmed: both compares still read 'snapshot identical' at HEAD). not [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/9114084-the-adverse-verdict-enumeration-reproduces",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Re-enumerated the tree at 9114084 by git ls-tree + parse: 550 oracle receipts, verdicts {new_value_correct 469, old_value_correct 70, both_wrong 11} = 81 adverse -- the body's figures exactly. The entry's measured block records standing 51 with by_family {P3-3.8 24, P5-retire 17, P5-resolver 5, C6 3, C2 1, P4-integrati [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/9114084-the-gate-is-set-equality-with-permanent-negatives",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_standing_oracle_dissents.py asserts the standing set is exactly the pinned one, that every pinned receipt still exists, that every receipt yields a leaf address under one of three schemas, that every verdict is in R-19's closed set, and carries R-05 negatives (test_a_new_adverse_verdict_would_turn_the_gate_r [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-integration-final/R-16-the-escalation-is-an-artifact-not-a-body",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/escalated-defects-P4-integration-final.json exists with why_this_file_exists citing R-16 verbatim, how_an_entry_closes requiring gate inversion rather than deletion, and gate: tests/test_standing_oracle_dissents.py. The entry is still open at HEAD, correctly -- the gap is repo-wide R-19 enforcement, which [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "cross-phase-joins#1/unmentioned-2",
+     "finding": "P4-integration-final (8357432): the commit writes new keys -- a `corrections` array and `coupled_golden_exact_values` plus its provenance entry -- into docs/receipts/campaign-fingerprints.json, which R-32 assigns to the integration agent except for wall{stage} / alloc{scenario} / demonstrated_red{gate}. None of the wri [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "cross-phase-joins#1/unmentioned-4",
+     "finding": "P4-integration-final (48d5f16): the pass files thirteen oracle receipts on `combat/dispositions` leaves that three committed S9 allowlists already declare NOT_OWED_NO_OLD_VALUE and that the umbrella's Amendment E of the same date rules 'may not be filed as though the question were a value question'. The cost is permane [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-active-cast-retirement",
+   "round": 92,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "38f4702",
+    "4c70b78",
+    "fbd88c9",
+    "33391d4"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "73cf18d"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    },
+    "a_criterion_charged_against_the_whole_brief": "None: every criterion this agent returned carries a slice tag."
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-active-cast-retirement/commit-bodies",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All four bodies (38f4702, 4c70b78, fbd88c9, 33391d4) check out. 'No src/ from the retirement remains': `git show 33391d4:src/calculator/interpreters/__init__.py` registers only (ACTIVE_CAST, PAIR_ENGINE) at line 252-254 and `active_cast.py` has zero WALK_INTERPRETER occurrences at all three of 38f4702/4c70b78/33391d4. [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-active-cast-retirement/r20-pre-edit-population",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The load-bearing clause is not met as written. The slice's own R-20 receipt records `\"enumerated_at\": \"38f4702\"` beside `\"enumerated_before_first_edit\": true`, but 38f4702 IS a src/ commit of this slice group (src/calculator/damage.py, participant_timeline.py, program/build.py, program/compile.py, survival/actions.py) [...]",
+     "answered_at": [
+      "73cf18d"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by 73cf18d (campaign-close-sweep-findings). The receipt's enumerated_before_first_edit flag is now false, which is what the tree holds: 38f4702 is this slice group's first src/ edit, carries its tag, and precedes 4c70b78, the commit that filed the receipt. enumerated_at is left naming the commit it always named. Re-measured with the instrument the receipt's own method field names, over the committed coupled baseline at 38f4702^, 38f4702 and 4c70b78: 785 + 1790 = 2575 at all three, so the bound was not measured off the fix and the declaration's substance stands. The ordering clause did not, and it is corrected rather than argued away.",
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-active-cast-retirement.json"
+    },
+    {
+     "id": "campaign-close-active-cast-retirement/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-campaign-close-active-cast-retirement.json carries expected_qualifying_occurrences 0, the landed_against block naming all three baselines, population_by_scenario {785, 1790} = 2575 (reproduced), and a measured_after block recording outcome STOPPED with the out-of-population occurrence [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-active-cast-retirement/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/receipt-walk-retirement-schedule.json at 38f4702 publishes for `active_cast` exactly the owners the receipt names (Hextech Gunblade, Hextech Rocketbelt, Profane Hydra, Ravenous Hydra, Stridebreaker, Tiamat) and exactly the two covering scenarios (amp_armed_mage_roster, immolate_active_bruiser_roster), wit [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-active-cast-retirement/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/behavior-frontier.json counter_4 deferrals: 13 receipt_walk rows at 38f4702 and still 13 at 4c70b78, active_cast/receipt_walk among them -- nothing was retired, which is what a reverted retirement must show. `python scripts/behavior_frontier.py --check` exits 0 at HEAD.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-active-cast-retirement/gates",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "Per-commit R-01 matrices ('Row 1: 8282 passed' at 38f4702, '8283 passed' at 33391d4) are not re-runnable by a read-only agent without checking out those trees, so they are unverified at their own commits. At the phase tip: pytest 8534 passed / 0 failed; `golden_snapshot.py compare scripts/golden_baseline.json` and `... [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-1#1/unmentioned-4",
+     "finding": "active-cast prerequisite (38f4702): the body describes the transport but not that participant_timeline now resolves `_holder_amps_of(attacker, defender, params)` at three call sites on every pair fight, i.e. unconditional per-fight work whose only consumer is a code path the same commit asserts is inert. It also adds a [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-combat-state-retirement",
+   "round": 93,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "bf89528",
+    "4ad159b",
+    "6af6689",
+    "35cf787"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "246d3c4"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-combat-state-retirement/commit-bodies",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "One checkable claim in the bodies is false and it is a citation ordinal. 4ad159b: 'Eighth row of this ledger, and the second opened by a retirement lane'; 6af6689 repeats 'opened the eighth rulings-owed row'. Measured: docs/receipts/rulings-owed.json at bf89528 holds 8 rows (7 answered + 1 owed), so the row this slice [...]",
+     "answered_at": [
+      "246d3c4"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by 246d3c4 (campaign-close-sweep-findings). Measured: rulings-owed.json holds 8 rows at 4ad159b's parent and 9 at 4ad159b, so the row this slice opened is the ninth; 36e146c's 'an eighth row' is correct and a11bfc9's 'Tenth' is only arithmetic if this one is the ninth. The two bodies cannot be edited, so the ordinal lands in the slice's own receipt, in the block that describes the row -- which also serves 36a2772's inherited citation of the same row. rulings-owed.json is not touched: it is a ruled artifact no lane may write, and its row never carried the ordinal.",
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-combat-state-retirement.json"
+    },
+    {
+     "id": "campaign-close-combat-state-retirement/r20-pre-edit-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All four commits touch only docs/receipts/*.json -- no src/ edit exists anywhere in the slice, so 'before the first src/ edit' is vacuously and actually satisfied. The declared population reproduces exactly: population_size over scripts/golden_coupled_baseline.json at bf89528 gives syndra_custom_order_39 429, _60 443, [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-combat-state-retirement/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-campaign-close-combat-state-retirement.json carries landed_against (all three baselines, with the reason a stopped slice still names them), expected_qualifying_occurrences 0, qualifying_population.enumerated_before_first_edit true with the method and the seven-owner predicate read fro [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-combat-state-retirement/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "receipt-walk-retirement-schedule.json at bf89528 lists for combat_state precisely the six syndra covering scenarios and the seven owners the receipt names, retiring_act.already_performed true with retiring_lane defense_resolver, triage class (c). The stop's framing was subsequently honoured by the tree: at HEAD the sch [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-combat-state-retirement/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "counter_4 deferral rows: 9 receipt_walk rows at bf89528 (combat_state, damage_routing, on_hit_strike, opening_defense, periodic, resistance_shred, secondary_target, spellblade, threshold_defense) and unchanged through 35cf787 -- 'nine rows still stand, overdue and gated' is exactly what the frontier shows. Nothing reti [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-combat-state-retirement/gates",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "Per-commit gate lines not re-runnable read-only. Checkable in-file arithmetic verifies: 35cf787's criterion-11 line ('residue 104 -> 106, no-answer counter 93 -> 95') matches verify-ledger.json across 35cf787^..35cf787 exactly, and the backlog rows it writes match the commits the group spans (4). At HEAD: pytest 8534 p [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-1#1/unmentioned-6",
+     "finding": "combat-state (4ad159b, 6af6689) and, inherited, damage-routing (36a2772): all three call the rulings-owed row this batch opened for the resolver-fed families 'the eighth', but docs/receipts/rulings-owed.json held 8 rows before it (7 dated 2026-08-14 plus crit_profile's, opened by 36e146c in this same batch and correctl [...]",
+     "disposition": "fixed",
+     "note": "The same charge as this pass's combat-state commit-bodies criterion, returned separately and extending it to 36a2772's inherited citation; answered by the same commit, 246d3c4, which numbers the row where the row is described, which is where a reader of 36a2772 arrives too.",
+     "answered_at": [
+      "246d3c4"
+     ],
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-combat-state-retirement.json"
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-crit-profile-retirement",
+   "round": 94,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "644f898",
+    "36e146c",
+    "fa7819e",
+    "6b8011b"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "aa1d6c1"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-crit-profile-retirement/commit-bodies",
+     "verdict": "DISCHARGED",
+     "what_was_found": "644f898's ordinal 'an eighth row' is correct (7 rows existed: 6 answered + 1 owed). Its central measurement -- the family authors zero priced pair-engine rows across the covering population -- is machine-confirmed at HEAD by the derived schedule block closed_by_authority_reclassification.crit_profile with authored_pair [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-crit-profile-retirement/r20-pre-edit-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "No src/ edit in any of the four commits (644f898, 36e146c, fa7819e, 6b8011b touch only docs/receipts/*.json). Population reproduces exactly: population_size at 644f898 gives crit_onhit_carry_roster 3498 + hexoptics_basic_amp_carry 1354 = 4852, matching the body and receipt.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-crit-profile-retirement/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The receipt is complete as it now stands -- population block, predicate, the three-owner measurement, the three refused ways out, and landed_against. Caveat recorded under the gates criterion: the landed_against block was MISSING when the receipt first landed at 644f898 (`git show 644f898:...crit-profile-retirement.jso [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-crit-profile-retirement/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "receipt-walk-retirement-schedule.json at 644f898 lists for crit_profile exactly the two covering scenarios and three owners the receipt names, with already_performed false. The row is still sized there (not re-dated, not dropped), as the body claims.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-crit-profile-retirement/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "counter_4 holds 10 receipt_walk rows at 644f898 including crit_profile/receipt_walk, unchanged across the slice -- 'the row is not retired, not re-dated and not read as smaller' holds against the file.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-crit-profile-retirement/gates",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "644f898's gate line reads 'R-01 rows 2-11 green. Row 1 is green but for test_verify_ledger's criterion-11 denominator' -- that understates the red. A second row-1 test was also failing on that commit: tests/test_coupled_golden_allowlist.py::test_every_receipt_names_the_baseline_it_landed_against, which exists at 644f89 [...]",
+     "answered_at": [
+      "aa1d6c1"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by aa1d6c1 (campaign-close-sweep-findings). Reproduced: the receipt 644f898 filed carries no landed_against block at all -- read out of that commit, its top-level keys are slice, decisions, what_was_attempted, what_landed, expected_qualifying_occurrences, qualifying_population, the_measurement_that_stopped_it and why_the_ruled_act_cannot_be_performed_in_the_ruled_shape -- and the gate that requires it exists at that commit, so R-01 row 1 was red for two causes and the body named one. Repaired inside the group at fa7819e; the disclosure lands on the receipt that commit filed, because the repair is not the disclosure.",
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-crit-profile-retirement.json"
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-1#1/unmentioned-5",
+     "finding": "crit-profile (644f898): the receipt it landed omitted the `landed_against` block its own committed gate requires, so tests/test_coupled_golden_allowlist.py::test_every_receipt_names_the_baseline_it_landed_against was red on that commit -- a red the body's gate line does not mention (it names only the criterion-11 denom [...]",
+     "disposition": "fixed",
+     "note": "The same charge as this pass's crit-profile gates criterion, returned separately; answered by the same commit, aa1d6c1, which discloses the second red on the receipt 644f898 filed.",
+     "answered_at": [
+      "aa1d6c1"
+     ],
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-crit-profile-retirement.json"
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-secondary-target-retirement",
+   "round": 95,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "7824aa3",
+    "a11bfc9",
+    "b50bc39"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "b50bc39"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 0,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-secondary-target-retirement/commit-bodies",
+     "verdict": "DISCHARGED",
+     "what_was_found": "I independently reproduced every measured number in 7824aa3/a11bfc9/b50bc39. Probe: Caitlyn level 18, items [Runaan's Hurricane, Blade of the Ruined King], deterministic, auto_attack_uptime 1.0, one_rotation False, roster_target_count 2, roster_target_index 1, target_armor 50.0. Row `secondary_Runaan's Hurricane` total [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-secondary-target-retirement/r20-pre-edit-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All three commits touch only docs/receipts/*.json -- no src/ edit. Population reproduces exactly: population_size over crit_onhit_carry_roster in the committed coupled baseline at 7824aa3 = 3498, matching the declared bound; and the receipt records the pair-engine population as 0 'because no src/ edit landed', which is [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-secondary-target-retirement/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-campaign-close-secondary-target-retirement.json carries landed_against, expected_qualifying_occurrences 0, qualifying_population with enumerated_before_first_edit true and the single-owner predicate (Runaan's Hurricane, matching the catalog), and the_stop with verdict STOPPED and the [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-secondary-target-retirement/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "receipt-walk-retirement-schedule.json at 7824aa3 gives secondary_target one covering scenario (crit_onhit_carry_roster), one owner, already_performed false, and triage class 'a' with authored_pair_rows exactly [\"on_hit_secondary_Runaan's Hurricane\", \"secondary_Runaan's Hurricane\"] -- the same two rows my probe produced [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-secondary-target-retirement/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "counter_4 holds exactly 2 receipt_walk rows (secondary_target, spellblade) at 7824aa3 and still 2 at b50bc39 -- 'two rows stand where two stood', nothing retired by this slice.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-secondary-target-retirement/gates",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "Per-commit R-01 lines not re-runnable read-only; a docs-only slice cannot move a baseline and none moved (no src/, no scripts/, no baseline files touched by any of the three commits). At HEAD: pytest 8534 passed, both golden compares 'snapshot identical', all derived-receipt --check scripts exit 0.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": []
+  },
+  {
+   "slice_group": "campaign-close-charged-strike-retired",
+   "round": 96,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "00b0941",
+    "0b8bded",
+    "a4c883a",
+    "e76a87b",
+    "680dcb4"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "680dcb4"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-charged-strike-retired/commit-bodies",
+     "verdict": "DISCHARGED",
+     "what_was_found": "0b8bded's structural claims verify. Thirteen mechanics in the catalog for charged_strike; trigger_stream._CHARGED_STRIKE_RETIREMENT holds 11 entries and _retired_family_halves generates both halves per entry, so 11 ViewTag.THEORETICAL `*_preview` pair halves and 11 APPLIED HolderPacket/PER_HOLDER walk halves exist (cou [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-charged-strike-retired/r20-pre-edit-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Order is right: 00b0941 is docs-only (adds the receipt) and precedes the slice's only src/ commit 0b8bded. Population reproduces exactly: population_size at 00b0941 gives crit_onhit_carry_roster 3498 + lethality_window_assassin_roster 1384 = 4882, the declared bound. The declared pair-engine population of 0 is consiste [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-charged-strike-retired/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Receipt landed at 00b0941 before the edit and the measurement was appended at a4c883a: qualifying_occurrences 0, occurrences_outside_the_population 0, both baselines identical, plus what_the_walk_actually_priced (kraken_slayer.repeating_strike 86.58782853380173 vs the pair engine's 86.58782853380173; voltaic_cyclosword [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-charged-strike-retired/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "receipt-walk-retirement-schedule.json at 00b0941 lists charged_strike's 13 owners and the two covering scenarios the receipt names, already_performed false; 0b8bded removes the row (-60 lines) in the same commit that registers the interpreter, and `receipt_walk_schedule.py --check` plus tests/test_receipt_walk_schedule [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-charged-strike-retired/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "counter_4 receipt_walk rows: 11 at 00b0941 -> 10 at 0b8bded with charged_strike gone, matching 'the deferral set is 10'. I also checked the counter cannot be moved by the bookkeeping edit alone: scripts/behavior_frontier.py measures counter_4/<lane> as gross uninterpreted pairs minus committed deferral rows against a b [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-charged-strike-retired/gates",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "The full R-01 matrix quoted in 0b8bded (pytest 8354 collected/passed, bench winners and residuals, pylint 9.61, black 658 files) is per-commit and not re-runnable read-only. At the tip: pytest 8534 passed / 0 failed / 0 errors; `golden_snapshot.py compare` on both baselines 'OK: snapshot identical'; tests/test_survival [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-1#1/unmentioned-1",
+     "finding": "charged-strike (0b8bded): the ChargedStrikeWalkInterpreter docstring it lands says 'the attack class is ``OTHER`` for every one of them because no site here pays a part amp' (src/calculator/interpreters/charged_strike.py:164 at that commit and still at HEAD), while the SAME commit adds AttackClass.BASIC_ATTACK declarat [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "retirements-cohort-1#1/unmentioned-2",
+     "finding": "charged-strike (0b8bded) and damage-routing (928332c): both edit scripts/behavior_frontier.py -- the COUNTER_4_DEFERRAL_FAMILIES tuple that IS the committed deferral-row set, plus its prose header -- and neither body names that file. Both bodies mention only the derived JSON receipts ('docs/behavior-frontier.json and t [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-damage-routing-retired",
+   "round": 97,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "d7a2f80",
+    "928332c",
+    "af14816",
+    "36a2772"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "36a2772"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a4f0ac7f1c8abd107"
+    ],
+    "journal_key": "v2:3fe4ac9b17c7291249e7f4d1929c1877d15ad00feacd21ffcdd14b78d76459aa",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-active-cast-retirement\", \"campaign-close-combat-state-retirement\", \"campaign-close-crit-profile-retirement\", \"campaign-close-secondary-target-retirement\", \"campaign-close-charged-strike-retired\", \"campaign-close-damage-routing-retired\"] -- under the criteria reference 'Receipt-walk deferral retirements, first cohort', and returned 36 criteria and 6 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 6,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a4f0ac7f1c8abd107": false
+    },
+    "where_a_finding_charging_this_slice_went": "The verifier stamped retirements-cohort-1#1/unmentioned-2, retirements-cohort-1#1/unmentioned-6 against this slice as well as the one it is filed under. It is recorded once, where the commit it leads with lives, because one returned finding is one row."
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-damage-routing-retired/commit-bodies",
+     "verdict": "DISCHARGED",
+     "what_was_found": "928332c's claims verify in the tree and by execution. INTERPRETERS holds (DAMAGE_ROUTING, RECEIPT_WALK) at that commit and HEAD; three catalog mechanics (deaths_dance.ignore_pain, the_collector.execute, serpents_fang.shield_bypass) each declared as RiderDelivery walk halves with COUPLED_AUTHORITATIVE authority and hold [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-damage-routing-retired/r20-pre-edit-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Order is right: d7a2f80 is docs-only and precedes the only src/ commit 928332c. Population reproduces exactly: population_size over immolate_active_bruiser_roster at d7a2f80 = 1790, the declared bound. The receipt's 'THE POPULATION SEES ONE OWNER OF THREE' is corroborated by the schedule's covering_coupled_scenarios fo [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-damage-routing-retired/receipt",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Receipt landed at d7a2f80 with population and 'what a declaration has to carry'; measurement appended at af14816 with 0 qualifying occurrences inside 1790, 0 outside, both baselines identical, and the rider values I reproduced exactly above (0.3/0.1, 3.0s, 3 ticks; 0.05; keep 0.5/0.65 over 3.0s). The standing named_del [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-damage-routing-retired/schedule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "receipt-walk-retirement-schedule.json at d7a2f80 lists damage_routing's three owners, its single covering scenario, class (c) with declared_subjects [target, target, undeclared] and a named walk_side_delivery_term ruled by Amendment P -- the precondition the slice cited for being startable. 928332c removes the row and [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-damage-routing-retired/counter-4",
+     "verdict": "DISCHARGED",
+     "what_was_found": "counter_4 receipt_walk rows: 9 at d7a2f80 -> 8 at 928332c with damage_routing gone, matching 'counter 4's deferral set is 8 and a 9th row would fail its own gate'. Same ratchet reasoning as the charged-strike row applies: the counter is measured net of the committed rows with a no-growth bound, so the constant edit in [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-damage-routing-retired/gates",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "928332c's per-commit matrix (pytest 8380 collected/passed, +10 node ids, bench residuals 79/19/12/98, term_census 29 sites) is not re-runnable read-only. At the tip: pytest 8534 passed; both golden compares 'snapshot identical'; tests/test_participant_timeline.py, test_interpreters_registry.py, test_pair_preview.py, te [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-1#1/unmentioned-3",
+     "finding": "damage-routing (928332c): the new execute-rider stamping writes into the CALLER's event mappings in place -- `original.pop(\"execute_threshold_ratio\", None)` / `original[\"execute_threshold_ratio\"] = execution.threshold` inside `_simulate_survival`'s `for original in events:` loop -- rather than into the local `event` co [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-resistance-shred-retired",
+   "round": 98,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "d1d3044",
+    "d44ba92",
+    "eab0f04",
+    "14f4b8e",
+    "b7a2109"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "09e8192"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 9,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    },
+    "a_criterion_charged_against_the_whole_brief": "None: every criterion this agent returned carries a slice tag."
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-resistance-shred-retired/R-20-population-enumerated-before-first-src-edit",
+     "verdict": "DISCHARGED",
+     "what_was_found": "d1d3044 (receipt only, +70 lines) precedes d44ba92 (the only src/ commit) in `git log --reverse`. Population: 3005 committed roster values across cleaver_bloodsong_roster 1828 + mandate_abyssal_curse_roster 876 + score_event_scan_holder 301 = 3005 (arithmetic checks), plus a declared pair-engine population of 0 justifi [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/interpreter-registered-in-the-declared-lane",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Live: `(RuleFamily.RESISTANCE_SHRED, EngineLane.RECEIPT_WALK)` is present in interpreters.INTERPRETERS at HEAD, and resistance_shred no longer appears in uninterpreted_pairs() for the receipt walk. behavior_frontier --check exit 0 with the row gone from counter 4's deferral set (d44ba92's frontier diff shows receipt_wa [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/emitter-reads-the-family-declaration",
+     "verdict": "DISCHARGED",
+     "what_was_found": "d44ba92's diff on src/calculator/item_support_effects.py replaces `carve.value(\"armor_reduction_max_stacks\"/\"armor_reduction_per_stack\")` and the vile_decay pair with `armor_shred.max_stacks/.per_stack` and `mr_shred.*` resolved through `interpreters.resistance_shred.walk_slot`. Live check: walk_slot('Black Cleaver', A [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/ally-packet-keeps-only-the-window-duration",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The commit body states \"The ally packet keeps the one number that is its own, the window duration, which is a property of the packet and not of the ramp.\" The tree says otherwise. src/calculator/item_behavior_catalog.py:4553-4556 still declares AllyProducer.CARVE with reads=(armor_reduction_max_stacks, armor_reduction_ [...]",
+     "answered_at": [
+      "09e8192"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by 09e8192 (campaign-close-sweep-findings). Reproduced at HEAD: both ally-packet declarations still read all three keys, both EntryShapes still require them, the registry still carries the two ramps, and _ally_packet_rule still builds a ValueRef per read. The delivery claim holds -- nothing under src/ reads the second spelling any more -- and the narrowing claim does not, so the receipt now says both. The narrowing is not performed: the slice's own per-owner equivalence fixture asks the ally packet for that number, so the narrowing and the proof of equivalence cannot both stand in this shape, and doing a src/ edit inside a correction commit to make a sentence true afterwards is what R-30 and R-20 refuse.",
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-resistance-shred-retired.json"
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/both-spellings-carry-the-same-numbers",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Run live and independently of the fixture: interpreters.resistance_shred.walk_slot gives Black Cleaver 0.06/5 and Bloodletter's Curse 0.075/4; ALLY_ITEM_EFFECTS gives armor_reduction_per_stack 0.06 / armor_reduction_max_stacks 5 and mr_reduction_per_stack 0.075 / mr_reduction_max_stacks 4. Identical on both owners. tes [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/preview-half-is-an-enumerated-emptiness",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_pair_preview.py::test_the_retired_shred_family_has_no_preview_to_double_count passes; it asserts neither mechanic is in pair_preview_mechanics() or walk_repriced_mechanics(), that each is Engine.PAIR / ViewTag.APPLIED / Authority.SPLIT with no `_preview` twin, and that each walk-side half names its shred thr [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/stack-ledger-does-not-move",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The item_support_effects diff is confined to the two `stacks = min(...)` bounds and the two `percent = stacks * ...` factors; `reduction_stacks`, `_stack_triggers`, `_target_by_id` and the packet construction are untouched. The interpreter supplies only per_stack and max_stacks, so no second producer of the count is in [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/no-authority-move-H1-untouched",
+     "verdict": "DISCHARGED",
+     "what_was_found": "d44ba92 touches no line of src/calculator/damage.py (confirmed from `git show --stat`), so _resolve_combat_state keeps the pair-local half. CAPABILITIES entries for black_cleaver.armor_reduction and bloodletters_curse.mr_reduction remain Engine.PAIR / Authority.SPLIT \u2014 asserted by the passing test_the_retired_shred_fam [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-resistance-shred-retired/expected-qualifying-occurrences-0",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Both golden compares read snapshot identical at HEAD, and the receipt records 0 inside the 3005 and 0 outside it, measured at d44ba92 (eab0f04 files the measurement beside the prediction). Bench row 8 winners/scores recorded unchanged; I re-ran the syndra_mandate_3champ bench and it completed cleanly.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-2#1/unmentioned-4",
+     "finding": "d44ba92 (campaign-close-resistance-shred-retired) hoists _shred_ramp out of the `for event in _stack_triggers(damage_events)` loop, so the new ValueError stop now fires when the build is resolved rather than on the first qualifying damage event. The body describes the stop ('A build holding the cross-participant produc [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "retirements-cohort-2#1/unmentioned-5",
+     "finding": "d44ba92 leaves the ally-packet declarations for CARVE and VILE_DECAY still declaring both ramp keys \u2014 item_behavior_catalog.py:4553 and :4570 `reads=(...max_stacks, ...per_stack, ...duration)`, EntryShape at :4269/:4275 \u2014 so _ally_packet_rule (:4823) still constructs two ValueRefs per producer that nothing under src/ r [...]",
+     "disposition": "fixed",
+     "note": "The same charge as this pass's resistance-shred ally-packet criterion, returned separately; answered by the same commit, 09e8192, which records what the ally packet actually kept and why the narrowing is corrected rather than performed.",
+     "answered_at": [
+      "09e8192"
+     ],
+     "artifact": "docs/receipts/expected-golden-diff-campaign-close-resistance-shred-retired.json"
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-authority-reclassification",
+   "round": 99,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "0a0c4bf",
+    "eabb028",
+    "fc658b8",
+    "7af43f8",
+    "f90d721",
+    "a119cc8",
+    "c4d7c5d",
+    "3d020dc"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "3d020dc"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 8,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-authority-reclassification/amendment-O-recorded-and-owed-row-answered",
+     "verdict": "DISCHARGED",
+     "what_was_found": "eabb028 adds Amendment O (Rulings 1 and 2) to docs/plans/2026-08-08-silent-failure-campaign.md inside the Success criteria section (line 1037), and moves whether_a_family_that_authors_no_pair_row_can_retire_off_the_pair_engine from open[] to answered[] in docs/receipts/rulings-owed.json in the same commit. tests/test_r [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/triage-derived-over-every-open-row",
+     "verdict": "DISCHARGED",
+     "what_was_found": "fc658b8 adds ~495 lines to scripts/receipt_walk_schedule.py implementing ablation over the covering population plus a per-owner ranged/melee probe, and commits triage_by_class to the schedule receipt. Independently re-run: `python scripts/receipt_walk_schedule.py --check` -> exit 0, and check() calls schedule() to re-d [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/priced-row-predicate-is-exact",
+     "verdict": "DISCHARGED",
+     "what_was_found": "scripts/receipt_walk_schedule.py:475 priced_rows() excludes rows carrying `informational` and rows with no `total_damage`; tests/test_receipt_walk_schedule.py::test_the_priced_row_predicate_reproduces_the_fights_own_total asserts the sum over those rows reproduces the fight's own total_damage. Passes.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/crit-profile-closed-as-not_a_gap-not-retired",
+     "verdict": "DISCHARGED",
+     "what_was_found": "At HEAD, closed_by_authority_reclassification = {crit_profile: {closed_as: not_a_gap, authored_pair_rows: [], declared_subjects: [holder, holder, holder], owners: [Infinity Edge, Navori Flickerblade, Sundered Sky]}}. Verified in the tree: `interpreters.lanes_for(RuleFamily.CRIT_PROFILE)` no longer holds RECEIPT_WALK, ` [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/not-the-D-40-move",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Two independent checks. Ordering: the measurement (fc658b8) lands before the lane-table edit (7af43f8) \u2014 confirmed by `git log --reverse`. Reach: `EngineLane.RECEIPT_WALK` is absent from item_coverage.ATTACKER_LANES ({pair_engine}), SCORING_LANES ({defense_resolver, pair_engine}) and TARGET_LANES ({defense_resolver}) \u2014 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/reopening-machine-check-has-a-red",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_receipt_walk_schedule.py::test_the_machine_check_reopens_a_closed_row_on_an_authored_row monkeypatches receipt_walk_schedule._probe_rows to inject an authored row and asserts check() returns a failure naming closed_by_authority_reclassification. Passes. Companion test_a_mechanism_leaving_the_kernel_re_stops_ [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/zero-qualifying-occurrences-against-13199",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-campaign-close-authority-reclassification.json declares population 13199 leaves over 13 covering rosters at 0a0c4bf (before the first src/ edit at 7af43f8) with expected_diff_paths golden=[] and coupled_golden=[]; c4d7c5d fills measured_after with 0/0. Re-verified at HEAD: both golden [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-authority-reclassification/criterion-11-line",
+     "verdict": "DISCHARGED",
+     "what_was_found": "3d020dc adds campaign-close-authority-reclassification to verify-ledger coverage.slice_groups_without_one and moves residue 102->103, residue_with_no_verdict_anywhere 91->92, and adds the 8-commit backlog row. Verified at HEAD: the tag is in slice_groups_without_one with commit_count 8 and cites=false in docs/receipts/ [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-2#1/unmentioned-1",
+     "finding": "eabb028 (campaign-close-authority-reclassification) silently reverts the encoding fix that 15a473b (campaign-close-receipt-walk-r35) landed ten commits earlier IN THIS SAME BATCH. Measured: docs/receipts/rulings-owed.json holds 8 \\uXXXX escapes / 0 non-ASCII at 36e146c, and 0 escapes / 9 non-ASCII at eabb028. The diff [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "retirements-cohort-2#1/unmentioned-3",
+     "finding": "3d020dc (campaign-close-authority-reclassification) re-sorts six unrelated entries of coverage.slice_groups_without_one (campaign-close-active-cast-retired, -cast-proc-retired, -charged-strike-retired, -crit-profile-retirement, -resistance-term, 'umbrella [H] table') into alphabetical position. Its declared population [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-receipt-walk-schedule",
+   "round": 100,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "a323202"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "a323202"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 0,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-receipt-walk-schedule/artifact-and-gate-exist",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/receipt-walk-retirement-schedule.json and tests/test_receipt_walk_schedule.py both present. `python -m pytest tests/test_receipt_walk_schedule.py ...` -> part of a 146-passed run; `python scripts/receipt_walk_schedule.py --check` -> exit 0, no output. Full suite `python -m pytest -q` -> 8534 passed, 0 fai [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/fourteen-rows-in-fourteen-slices-out",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read the artifact at its own landing commit: `git show a323202:docs/receipts/receipt-walk-retirement-schedule.json` -> scheduled_slices=14, families=14 (active_cast, cast_proc, charged_strike, combat_state, crit_profile, damage_routing, delta_amp, on_hit_strike, opening_defense, periodic, resistance_shred, secondary_ta [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/retires-nothing-registers-no-interpreter",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git diff a323202^..a323202 -- src/` is empty \u2014 the commit touches no src/ at all, so no interpreter can have been registered. what_this_is_not in the artifact states it in terms, and tests/test_receipt_walk_schedule.py::test_the_schedule_retires_nothing gates it.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/family-set-asserted-equal-to-the-frontier",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_receipt_walk_schedule.py::test_one_slice_per_deferral_row_and_not_one_more compares the artifact's family set against deferred_families() read from docs/behavior-frontier.json; passes. scripts/receipt_walk_schedule.py check() re-derives `fresh = schedule()` and diffs against the committed file rather than re [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/two-measured-findings-nine-blind-three-routed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "At a323202: families_with_no_covering_coupled_scenario = 9 (active_cast, charged_strike, crit_profile, damage_routing, on_hit_strike, opening_defense, periodic, secondary_target, threshold_defense); slices_routed_to_an_owed_ruling = [combat_state, opening_defense, threshold_defense]; slices_whose_retiring_act_is_amendm [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/R-20-population-before-first-src-edit",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Vacuously satisfied in the strongest form: the slice is one commit with zero src/ lines, and every per-family row carries population_by_scenario / population_total derived from the committed coupled baseline subtrees. Gated by test_every_slice_declares_a_population_before_anything_is_edited.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-schedule/expected-qualifying-occurrences-0",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`python scripts/golden_snapshot.py compare scripts/golden_baseline.json` -> OK: snapshot identical. Same for scripts/golden_coupled_baseline.json. No src/ diff in the commit, so the population is empty by construction.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": []
+  },
+  {
+   "slice_group": "campaign-close-receipt-walk-r35",
+   "round": 101,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "ed82c4a",
+    "15a473b",
+    "c6c82fa",
+    "ba1c14e",
+    "ff9a488",
+    "61f40a0",
+    "8e36c60",
+    "f13ed84"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "8f2a80b"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    },
+    "where_a_finding_charging_this_slice_went": "The verifier stamped retirements-cohort-2#1/unmentioned-1 against this slice as well as the one it is filed under. It is recorded once, where the commit it leads with lives, because one returned finding is one row."
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-receipt-walk-r35/settled-flag-replaced-by-a-falsifiable-fact",
+     "verdict": "DISCHARGED",
+     "what_was_found": "ed82c4a drops the always-True `settled` key and adds `already_performed` plus the gated list slices_whose_ruled_act_is_already_performed. tests/test_receipt_walk_schedule.py::test_whether_a_ruled_act_is_already_performed_is_read_from_the_registry re-derives the fact from interpreters.INTERPRETERS rather than from the w [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/rulings-ledger-encoding-restored",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Measured directly: at 15a473b^ docs/receipts/rulings-owed.json holds 0 \\uXXXX escapes and 8 non-ASCII characters; at 15a473b it holds 8 escapes and 0 non-ASCII \u2014 exactly the figures the body claims. The commit's own claim is discharged. (It did not survive: see unmentioned behaviour \u2014 eabb028, in the authority-reclassi [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/deferrals-dated-from-the-ruled-claim",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/campaign-stages.json now carries creditor_of on both stage records \u2014 stages[0] counter_4/compiled_score_walk, stages[1] counter_4/receipt_walk \u2014 read live. behavior_frontier.deferral_creditor_stage() resolves COUNTER_4_DEFERRALS from that claim, raising on zero or two claimants. `python scripts/behavior_f [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/retiring-stage-leaves-src",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`grep -rn retires_at src/ --include=*.py` returns nothing \u2014 all 6 declared occurrences are gone and the src/ population is 0, as the body's enumeration predicts. dataclasses.fields(interpreters.UnservedLane) -> ['reason', 'via'] exactly. tests/test_behavior_frontier.py::test_no_campaign_stage_is_declared_anywhere_under [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/ruled-artifact-read-once-per-process",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_behavior_frontier.py::test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process present (line 1097) and passing; it counts Path.read_text/subprocess.run rather than asserting a decorator is present. scripts/behavior_frontier.py --check exits 0.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/no-recorded-R-35-verdict-of-its-own",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Confirmed exactly as the brief states. docs/receipts/verify-ledger.json coverage: campaign-close-receipt-walk-r35 is in slice_groups_without_one (47 entries, residue 47) and is one of the 15 entries in slice_groups_citing_a_verdict_in_a_commit_body. The two R-35 answers its commits record (ba1c14e round 4, f13ed84 roun [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-receipt-walk-r35/criterion-11-line-is-true-of-the-committed-ledger",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "ff9a488's body states that a flag saying \"there is an answer about THIS group in a commit body\" \"would be false, and it is measured false on the tree\", and says the body is deliberately worded to keep the group out of that derived state. One commit later, 61f40a0 flipped it: `git show 61f40a0 -- docs/receipts/verify-le [...]",
+     "answered_at": [
+      "8f2a80b"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by 8f2a80b (campaign-close-sweep-findings). Reproduced: 61f40a0 added this group to slice_groups_citing_a_verdict_in_a_commit_body and moved residue_with_no_verdict_anywhere 78 -> 77 in this file, while its body mentions only verify-backlog.json and says 'no counter moves'. The derivation is correct and untouched -- what it cannot do is say whose answer a body carries, and the answer 61f40a0 cites is about campaign-close-receipt-walk-ruling. Recorded in the coverage block rather than repaired, because repairing it would widen a derived flag into an attribution no commit body supports.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-2#1/unmentioned-2",
+     "finding": "61f40a0 (campaign-close-receipt-walk-r35) edits docs/receipts/verify-ledger.json's coverage block \u2014 adding campaign-close-receipt-walk-r35 to slice_groups_citing_a_verdict_in_a_commit_body and moving residue_with_no_verdict_anywhere 78 -> 77 \u2014 and its body mentions only verify-backlog.json ('One line, commit_count 5 -> [...]",
+     "disposition": "fixed",
+     "note": "The same charge as this pass's receipt-walk-r35 criterion-11 criterion, returned separately; answered by the same commit, 8f2a80b, which records the flip in the coverage block whose counter moved.",
+     "answered_at": [
+      "8f2a80b"
+     ],
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-rung-receipts",
+   "round": 102,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "5c19b1f"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "5c19b1f"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 2,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-rung-receipts/reason-reaches-a-published-field",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Ran the harness live: `python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json --scenario syndra_mandate_3champ` publishes a rung_receipts block naming declarations \u2014 modifier_aura_arming=Abyssal Mask \u2014 Unmake, execute_threshold=The Collector, support_kind=movement, support_duration=1.75, and eleven mai [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-rung-receipts/total-is-the-fallback-count-not-the-evaluation-count",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Measured on the same live run: sum(rung_receipts.values()) = 8x14 + 1 = 113, and rungs['receipt_walk_candidate'] = 113 exactly (rungs['compiled'] = 662 contributes nothing). record_rung's `if receipt:` guard is what produces this. tests/test_bench_coupled_optimizer.py::test_a_compiled_rung_contributes_no_cause asserts [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-rung-receipts/a-label-alone-cannot-be-recorded",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_program_rung.py::test_the_histogram_key_is_never_recorded_directly now requires every record_rung call in participant_timeline.py to be `record_rung(sink, *counter_entry(...))` via AST \u2014 asserts len(call.args)==2, ast.Starred, and func.id == 'counter_entry'. All three call sites in src/calculator/participant [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-rung-receipts/no-pinned-value-moves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Both golden compares read snapshot identical. tests/test_bench_coupled_optimizer.py::test_as_dict_carries_the_four_families_the_rungs_and_their_causes pins WorkCounters.as_dict() by full dict equality including the new key, so the shape change is gated rather than free. tests/test_escalated_defects_p4_s10.py passes wit [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-2#1/unmentioned-6",
+     "finding": "5c19b1f (campaign-close-rung-receipts) publishes rung_receipts at TWO levels of the bench report \u2014 inside `counters` (via WorkCounters.as_dict) and again as a sibling top-level key in report_from_response, mirroring how `rungs` is duplicated. The body says 'publishes a rung_receipts block', singular. Only the as_dict c [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "retirements-cohort-2#1/unmentioned-7",
+     "finding": "5c19b1f gives record_rung's new `receipt` parameter a default of \"\", so a call site that passes a bare label still compiles and publishes a fallback with no declaration named. The body claims 'a recording that spelled the label alone and published no cause cannot be written'; that property holds only inside src/calcula [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "campaign-close-dispositions",
+   "round": 103,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "4b8779e"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "4b8779e"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice group that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's; where a row carries an answering commit it is this lane's fix, landed before this record and named on the row. `answered_by` lists those commits where the block has any and falls back to the slice's own last commit where it has none, which is the sweep shape -- see the ledger's `residue_sweep` block for what it claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a538450af2c126213"
+    ],
+    "journal_key": "v2:c196ef9a49f13d7f9d11162e7a0fb880b926442ead0d12ca81fdf3ff0dd6a7c6",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"campaign-close-resistance-shred-retired\", \"campaign-close-authority-reclassification\", \"campaign-close-receipt-walk-schedule\", \"campaign-close-receipt-walk-r35\", \"campaign-close-rung-receipts\", \"campaign-close-dispositions\"] -- under the criteria reference 'Receipt-walk deferral retirements, second cohort, plus the schedule that sizes them', and returned 40 criteria and 8 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier stamped onto every criterion id and every finding, because the ledger's unit is the slice group. The six rounds share an agent id, a key and a date for exactly that reason.",
+    "criteria_returned_for_this_slice": 5,
+    "findings_returned_for_this_slice": 1,
+    "all_discharged_as_returned": {
+     "a538450af2c126213": false
+    }
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-dispositions/refused-transitions-publish-STRUCTURAL_ZERO",
+     "verdict": "DISCHARGED",
+     "what_was_found": "survival.outcome_state.outcome_quantity returns StructuralZero(reason=...) when a skipped_reason is present and the value is falsy, Measured otherwise; program/views/receipt.py routes the four outcome fields (events.damage, events.overkill, healing_events.applied_amount, support_events.applied_amount) through it via _o [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-dispositions/no-published-number-moves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Derived independently from the committed baseline at the commit's parent: over scripts/golden_coupled_baseline.json at 4b8779e^, every one of the 38 refusal-zeroed leaves is 0.0 and there are ZERO refused rows carrying a non-zero value in any of the four fields \u2014 so the StructuralZero branch can only be reached where t [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-dispositions/population-of-24-rows-and-38-leaves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Recomputed from `git show 4b8779e^:scripts/golden_coupled_baseline.json`: 14 refused events rows + 10 refused healing_events rows + 0 support_events = 24, and 14x2 + 10x1 = 38 refusal-zeroed outcome leaves. Exactly the receipt's by_panel and arithmetic. The baseline at 4b8779e still shows all-MEASURED dispositions (456 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-dispositions/76-qualifying-occurrences",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-campaign-close-dispositions.json qualifying_occurrences has 76 entries, splitting exactly 38 '/disposition' + 38 '/reason'. Cross-checked described_leaves.leaves: the 38 `describes` paths are set-equal to my independently derived 38 zeroed leaves, and every value_both_sides matches th [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-dispositions/citation-guard-is-gated-not-asserted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "tests/test_coupled_golden_allowlist.py (+59 lines at 4b8779e) derives the payload leaf each claimed entry describes and fails if that leaf is itself in the difference set. Runs green (part of the 185-test targeted run). This is Amendment E's third guard moving from prose to machine.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "retirements-cohort-2#1/unmentioned-8",
+     "finding": "4b8779e (campaign-close-dispositions) routes the four outcome leaves through LeafBlock.put instead of LeafBlock.measured, which bypasses measured's documented `if not self._records` fast path \u2014 the branch whose docstring says it exists because 'three objects per leaf breached the phase's allocation ratchet by 19%, and [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
   }
  ],
  "coverage": {
@@ -13949,6 +15720,7 @@
    "C6",
    "D-04",
    "D-11",
+   "D-12",
    "D-49",
    "D-80/82",
    "D-85",
@@ -13957,12 +15729,15 @@
    "D-95",
    "D-98",
    "H5",
+   "P2a line",
    "P2b",
    "P2c",
    "P4-H2-ccscope",
    "P4-R18-amend",
+   "P4-S9-ledger-join",
    "P4-arbitrate",
    "P4-boundary",
+   "P4-integration-final",
    "P4C",
    "P4C-P4E-C2R",
    "P4C/P4F",
@@ -13970,7 +15745,9 @@
    "P5-e",
    "P5-f",
    "R-15/R-18",
+   "R-16",
    "R-17",
+   "R-19",
    "R-20",
    "R-28",
    "R-37",
@@ -13987,25 +15764,37 @@
    "c12",
    "campaign-close",
    "campaign-close-active-cast-retired",
+   "campaign-close-active-cast-retirement",
    "campaign-close-amp-armed-coverage",
    "campaign-close-amp-term-ruling",
+   "campaign-close-authority-reclassification",
    "campaign-close-cast-proc-retired",
    "campaign-close-charge-price-ledger",
    "campaign-close-charge-price-pin",
+   "campaign-close-charged-strike-retired",
+   "campaign-close-combat-state-retirement",
    "campaign-close-coverage-prose-ruling",
+   "campaign-close-crit-profile-retirement",
+   "campaign-close-damage-routing-retired",
    "campaign-close-declared-pricing",
    "campaign-close-deferral-coverage",
    "campaign-close-delta-amp-retirement",
+   "campaign-close-dispositions",
    "campaign-close-lane-declaration-correction",
    "campaign-close-minor-findings",
    "campaign-close-named-delivery-ruling",
    "campaign-close-on-hit-strike-retired",
    "campaign-close-periodic-retired",
+   "campaign-close-receipt-walk-r35",
    "campaign-close-receipt-walk-ruling",
+   "campaign-close-receipt-walk-schedule",
+   "campaign-close-resistance-shred-retired",
    "campaign-close-resistance-term",
    "campaign-close-resistance-term-ruling",
    "campaign-close-retirement-act",
+   "campaign-close-rung-receipts",
    "campaign-close-secondary-target-retired",
+   "campaign-close-secondary-target-retirement",
    "campaign-close-spellblade-retired",
    "campaign-close-swing-composition",
    "campaign-close-swing-term-coverage",
@@ -14013,25 +15802,12 @@
    "campaign-close-window-armed-coverage"
   ],
   "slice_groups_without_one": [
-   "D-12",
-   "P2a line",
-   "P4-S9-ledger-join",
-   "P4-integration-final",
-   "R-16",
-   "R-19",
-   "campaign-close-active-cast-retirement",
-   "campaign-close-authority-reclassification",
    "campaign-close-bench-exact",
    "campaign-close-boundary",
    "campaign-close-charge-price",
    "campaign-close-charge-price-oracle",
-   "campaign-close-charged-strike-retired",
-   "campaign-close-combat-state-retirement",
    "campaign-close-coverage-population",
    "campaign-close-coverage-prose-census",
-   "campaign-close-crit-profile-retirement",
-   "campaign-close-damage-routing-retired",
-   "campaign-close-dispositions",
    "campaign-close-dissent-docket",
    "campaign-close-dissent-readjudication",
    "campaign-close-gap-ledger",
@@ -14043,13 +15819,9 @@
    "campaign-close-minor-findings-r35",
    "campaign-close-minor-findings-r35-2",
    "campaign-close-ratchet",
-   "campaign-close-receipt-walk-r35",
-   "campaign-close-receipt-walk-schedule",
    "campaign-close-report",
-   "campaign-close-resistance-shred-retired",
-   "campaign-close-rung-receipts",
-   "campaign-close-secondary-target-retirement",
    "campaign-close-standing-dissents",
+   "campaign-close-sweep-findings",
    "campaign-close-verify-backfill",
    "campaign-close-verify-backlog",
    "campaign-close-verify-coverage",
@@ -14057,7 +15829,7 @@
    "umbrella [H] table"
   ],
   "untagged_commits": 159,
-  "residue": 42,
+  "residue": 25,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -14074,11 +15846,12 @@
    "campaign-close-minor-findings-r35-2",
    "campaign-close-receipt-walk-r35",
    "campaign-close-report",
+   "campaign-close-sweep-findings",
    "campaign-close-verify-backfill",
    "campaign-close-verify-coverage",
    "campaign-close-verify-p4-batch"
   ],
-  "residue_with_no_verdict_anywhere": 31,
+  "residue_with_no_verdict_anywhere": 16,
   "a_groups_own_next_commit_can_flip_its_citation_state": {
    "dated": "2026-08-17",
    "raised_by": "An R-35 residue-sweep pass over campaign-close-receipt-walk-r35, which returned that group's criterion-11 criterion NOT DISCHARGED against this file.",
