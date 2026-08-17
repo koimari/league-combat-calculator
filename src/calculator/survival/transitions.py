@@ -478,6 +478,14 @@ def apply_declared_price(
     family's number missing from a roster total, which is the failure this
     stage exists to make visible rather than to cause.
 
+    **A routed packet is receipted by its source and its route** (umbrella
+    Amendment R, Ruling 3).  ``rule`` is the mechanic that declared the
+    magnitude, which is what D-62 keys the applied contribution on, and the
+    ``routing`` block beside it names the family that re-delivered it and the
+    share it declared.  Provenance rather than a second number: without it a
+    reader would see a source mechanic's magnitude paid twice under one name
+    at two subjects and have nothing telling them the second was routed.
+
     Inert today.  No packet the tree produces carries a declaration, so this
     is reached only by a family whose retirement slice opted it in.
     """
@@ -523,6 +531,20 @@ def apply_declared_price(
                 None if price.resistance is None else round(price.resistance, 6)
             ),
             "amount": round(price.amount, 6),
+            # Absent on a packet that reached its subject directly, which is
+            # every packet a retired family authors today.  A key that were
+            # always present would publish "not routed" as a fact about every
+            # packet in the model, which is a claim nobody made.
+            **(
+                {}
+                if packet.routing is None
+                else {
+                    "routing": {
+                        "router": packet.routing.router_rule_id,
+                        "damage_share": float(packet.routing.damage_share),
+                    }
+                }
+            ),
         },
     )
     return price.amount

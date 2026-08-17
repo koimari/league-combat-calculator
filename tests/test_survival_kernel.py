@@ -55,6 +55,7 @@ from src.calculator.interpreters import (
     cast_proc,
     delta_amp,
     periodic,
+    secondary_target,
 )
 from src.calculator.interpreters.reactive import thorns_effects
 from src.calculator.interpreters.spellblade import (
@@ -89,8 +90,10 @@ from src.calculator.survival.pricing import (
     AuthoredDeclaration,
     BasicAttackSwing,
     DeclaredPacket,
+    RoutingProvenance,
     mitigate_declared,
     price_declared_packet,
+    route_declared_packet,
 )
 from src.calculator import damage as pair_engine
 from src.calculator.item_support_effects import (
@@ -3766,3 +3769,333 @@ class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
         assert price_declared_packet(
             packet, baseline_effective_armor=50.0, baseline_effective_mr=50.0
         ).amount == mitigate_declared(100.0, "physical", 50.0)
+
+
+# ---------------------------------------------------------------------------
+# The routing family — umbrella Amendment R, Ruling 3
+# ---------------------------------------------------------------------------
+#
+# `secondary_target` authors two priced pair rows and declares a magnitude for
+# neither.  Wind's Fury's bolt is a declared SHARE of the swing that fired it,
+# and the copied on-hit row is the attack's own on-hit packets re-delivered at
+# the bolt's target.  Ruling 3 rules that the family is a ROUTING family: it
+# re-delivers source families' declared magnitudes at a second subject and
+# declares no magnitude of its own, so the routed packet is priced from the
+# SOURCE family's declaration composed with the router's share, attributed
+# under D-62 at (source mechanic, secondary subject, event_id), with the
+# routing recorded in provenance.
+#
+# The seed is the same Caitlyn probe Ruling 1's fixtures run on, which is what
+# makes the two rulings' fixtures one measurement of one fight rather than two.
+
+#: The engine's own row for the copied on-hit packets, and the mechanic that
+#: routes them.  The router is read off the family's own slot rather than
+#: spelled, so a renamed mechanic fails here.
+COPIED_ROW = "on_hit_secondary_Runaan's Hurricane"
+
+
+@lru_cache(maxsize=None)
+def _routing_slot():
+    """The `secondary_target` slot the seed fight resolved, and its build state.
+
+    Captured from inside the engine step that authors both routed rows, so what
+    the fixtures read is the declaration the fight actually used rather than a
+    second resolution of it.  Its own run, with a capture-only wrapper: the
+    routing facts are the same in every target-side state, so there is nothing
+    for a stamped declaration to add here.
+    """
+    captured = {}
+
+    def capture(state):
+        bolts = state.secondary_target_bolts
+        if bolts is None:  # pragma: no cover - the seed always holds one
+            return
+        captured.setdefault(
+            "slot",
+            (
+                bolts,
+                float(state.champion_stats["attack_damage"]),
+                pair_engine._on_hit_effectiveness(state),
+                tuple(state.per_hit_strikes),
+                float(state.target_health),
+                state.level,
+                bool(state.is_melee),
+                dict(state.champion_stats),
+            ),
+        )
+
+    champion = gs.fetch_champion_data()[_ON_HIT_PROBE_CHAMPION]
+    by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
+    original = getattr(pair_engine, SWING_SEED_STEP)
+    setattr(pair_engine, SWING_SEED_STEP, _stamping(original, capture))
+    try:
+        run_fight(
+            champion,
+            18,
+            [by_name[name] for name in SWING_SEED_ITEMS],
+            FightParams(
+                target_health=gs.SNAPSHOT_TARGET_HEALTH,
+                target_bonus_health=0.0,
+                target_armor=gs.SNAPSHOT_TARGET_ARMOR,
+                target_magic_resistance=gs.SNAPSHOT_TARGET_MR,
+                fight_duration_seconds=gs.ONE_ROTATION_DURATION,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+                deterministic=True,
+                roster_target_index=1,
+                roster_target_count=2,
+            ),
+        )
+    finally:
+        setattr(pair_engine, SWING_SEED_STEP, original)
+    return captured["slot"]
+
+
+def _routing_provenance():
+    """The routing this family declares, built from its own compiled fields."""
+    slot = _routing_slot()[0]
+    return RoutingProvenance(
+        slot.rule.mechanic_id, slot.value(secondary_target.DAMAGE_SHARE_FIELD)
+    )
+
+
+class TestTheRouterDeclaresNoMagnitude:
+    """D-60's half of Ruling 3, asserted against the declaration itself."""
+
+    def test_the_declaration_compiles_exactly_the_two_routing_facts(self):
+        """`max_targets` and `damage_share`, and nothing that sizes a packet.
+
+        Read off the slot the seed fight resolved rather than off a list here,
+        so a third compiled field — a magnitude under any name — fails on the
+        commit that adds it.  That is the whole of what keeps this family from
+        becoming a second producer of a number a source family declares.
+        """
+        slot = _routing_slot()[0]
+        assert {field.name for field in slot.fields} == {
+            secondary_target.MAX_TARGETS_FIELD,
+            secondary_target.DAMAGE_SHARE_FIELD,
+        }
+
+    def test_neither_routing_fact_is_a_magnitude(self):
+        """A count and a fraction: one bounds subjects, one scales somebody else's.
+
+        Stated as the arithmetic property it is — the share is a fraction of a
+        packet and the cap is a whole number of subjects — because "not a
+        magnitude" is otherwise a claim about naming.
+        """
+        slot = _routing_slot()[0]
+        share = slot.value(secondary_target.DAMAGE_SHARE_FIELD)
+        cap = slot.value(secondary_target.MAX_TARGETS_FIELD)
+        assert 0.0 < share <= 1.0
+        assert cap == int(cap) >= 1
+
+    def test_the_family_still_has_no_receipt_walk_interpreter(self):
+        """Ruling 3 retires nothing; the row stands overdue and gated."""
+        assert (
+            RuleFamily.SECONDARY_TARGET,
+            EngineLane.RECEIPT_WALK,
+        ) not in INTERPRETERS
+
+
+class TestARoutedPacketIsTheSourceFamilysNumber:
+    """The composition, on the seed the amendment measured."""
+
+    def test_the_bolt_is_the_swings_magnitude_at_the_declared_share(self):
+        """Bit-exact against the raw the pair engine's own slot computed.
+
+        The source family's magnitude is the attacker's damage at the on-hit
+        effectiveness of the swing that fired the bolt; the router contributes
+        the share.  `route_declared_packet` composes them and reproduces
+        `SecondaryTargetSlot.bolt_damage`'s own number, which is the one the
+        engine mitigated.
+        """
+        slot, attack_damage, effectiveness, *_ = _routing_slot()
+        routing = _routing_provenance()
+        source = DeclaredPacket(
+            attack_damage * effectiveness, "physical", "fixture.swing"
+        )
+        routed = route_declared_packet(source, routing)
+        assert routed.raw_amount == slot.bolt_damage(attack_damage) * effectiveness
+        assert routed.raw_amount == 91.85000000000001
+
+    def test_the_routed_packet_keeps_the_source_mechanic_and_names_the_route(self):
+        """D-62's key and the provenance beside it, in one assertion each.
+
+        The magnitude belongs to the family that declared it, so `rule_id`
+        does not move; what the router contributes is recorded as the routing
+        it is.  A routed packet whose `rule_id` became the router's would
+        attribute a source family's damage to a family that declared none.
+        """
+        routing = _routing_provenance()
+        source = DeclaredPacket(100.0, "physical", "blade_of_the_ruined_king.on_hit")
+        routed = route_declared_packet(source, routing)
+        assert routed.rule_id == source.rule_id
+        assert routed.routing == routing
+        assert routed.routing.router_rule_id == "runaans_hurricane.secondary_target"
+        assert source.routing is None
+
+    def test_every_other_term_rides_across_untouched(self):
+        """A route is not a re-pricing: it changes the size and nothing else.
+
+        The resistance the source packet met, the holder's amps and the swing
+        composition are facts about the packet rather than about how it
+        travelled, so they cross unchanged — and the crit branch is scaled by
+        the same share as the non-crit one, because a share of a swing is a
+        share of both its branches.
+        """
+        routing = _routing_provenance()
+        share = routing.damage_share
+        source = DeclaredPacket(
+            100.0,
+            "physical",
+            "fixture.swing",
+            holder_amp=1.25,
+            effective_resistance=42.0,
+            swing=BasicAttackSwing(crit_chance=0.25, crit_raw_amount=200.0),
+        )
+        routed = route_declared_packet(source, routing)
+        assert routed.holder_amp == source.holder_amp
+        assert routed.effective_resistance == source.effective_resistance
+        assert routed.damage_type == source.damage_type
+        assert routed.swing.crit_chance == source.swing.crit_chance
+        assert routed.swing.crit_raw_amount == 200.0 * share
+        assert routed.raw_amount == 100.0 * share
+
+    def test_a_share_that_is_not_a_fraction_is_refused_by_name(self):
+        """R-05's red for the composition: a router cannot amplify what it routes.
+
+        Refused rather than clamped, because paying the smaller number would
+        be this function silently deciding a question its caller got wrong.
+        """
+        source = DeclaredPacket(100.0, "physical", "fixture.swing")
+        for share in (1.5, -0.1):
+            with pytest.raises(ValueError, match="fixture.rout"):
+                route_declared_packet(
+                    source, RoutingProvenance("fixture.router", share)
+                )
+
+
+class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
+    """Ruling 3's other half, measured on the row that opened the question."""
+
+    def test_the_first_copied_packet_is_an_on_hit_declaration_priced_at_the_subject(
+        self,
+    ):
+        """The magnitude is the source family's, and the router declares none.
+
+        At the first application the secondary subject is still at the fight's
+        own target health, so the source declaration is exactly what the
+        `on_hit_strike` family's own interpreter states there.  Routed whole —
+        the router re-delivers on-hit packets rather than sharing them — and
+        priced at the fight's armour, it reproduces the number the pair engine
+        put on the row's first event.
+        """
+        result, _ = _swing_seed_reading("inert")
+        row = result["breakdown"][COPIED_ROW]
+        _, _, effectiveness, strikes, target_health, level, is_melee, stats = (
+            _routing_slot()
+        )
+        declared = sum(
+            strike.source.raw_damage(
+                DamageInputs(
+                    champion_stats=stats,
+                    level=level,
+                    is_melee=is_melee,
+                    target_max_health=target_health,
+                    target_current_health=target_health,
+                )
+            )
+            * effectiveness
+            for strike in strikes
+            if strike.source.damage_type == "physical"
+        )
+        source = DeclaredPacket(declared, "physical", "blade_of_the_ruined_king.on_hit")
+        routed = route_declared_packet(
+            source, RoutingProvenance(_routing_provenance().router_rule_id, 1.0)
+        )
+        price = price_declared_packet(
+            routed,
+            baseline_effective_armor=float(result["effective_armor"]),
+            baseline_effective_mr=float(result["effective_mr"]),
+        )
+        # Non-vacuity first: an equality between two zeros proves nothing, and
+        # the source declaration is strictly larger than the priced packet
+        # because the packet met the fight's armour on the way in.
+        assert declared > price.amount > 0.0
+        assert price.amount == float(row["damage_events"][0]["damage"])
+        assert routed.rule_id == "blade_of_the_ruined_king.on_hit"
+
+    def test_the_source_family_has_retired_and_the_router_has_not(self):
+        """One producer each, which is what makes the two rows priceable at all.
+
+        The magnitudes the copied row carries belong to a family the walk
+        already prices from its own declarations; the family that re-delivered
+        them declares none and is still deferred.  A router that declared them
+        would be the second producer criterion 8 forbids.
+        """
+        assert (RuleFamily.ON_HIT_STRIKE, EngineLane.RECEIPT_WALK) in INTERPRETERS
+        assert (
+            RuleFamily.SECONDARY_TARGET,
+            EngineLane.RECEIPT_WALK,
+        ) not in INTERPRETERS
+        slot = _routing_slot()[0]
+        assert slot.applies_on_hit
+        assert all(
+            field.name
+            in (
+                secondary_target.MAX_TARGETS_FIELD,
+                secondary_target.DAMAGE_SHARE_FIELD,
+            )
+            for field in slot.fields
+        )
+
+
+class TestTheRoutingReachesTheReceipt:
+    """Provenance is published, because a fact nobody can read is not one."""
+
+    def test_a_routed_price_publishes_its_router_and_its_share(self):
+        """The `routing` block beside the source mechanic, on the walk's own row.
+
+        Driven through `run_survival_walk` rather than around it, so what is
+        asserted is the receipt the kernel writes.
+        """
+        routing = _routing_provenance()
+        packet = route_declared_packet(
+            DeclaredPacket(252.0, "magic", "wits_end.on_hit"), routing
+        )
+        row = _walk_one_declared_packet(packet)["declared_price"]
+        assert row["rule"] == "wits_end.on_hit"
+        assert row["raw"] == round(252.0 * routing.damage_share, 6)
+        assert row["routing"] == {
+            "router": routing.router_rule_id,
+            "damage_share": routing.damage_share,
+        }
+
+    def test_a_packet_that_reached_its_subject_directly_publishes_no_routing(self):
+        """Absent rather than false: nobody claimed anything about it.
+
+        Every packet a retired family authors today is this one, so a key that
+        were always present would publish "not routed" as a fact about the
+        whole model.
+        """
+        row = _walk_one_declared_packet(
+            DeclaredPacket(252.0, "magic", "wits_end.on_hit")
+        )["declared_price"]
+        assert "routing" not in row
+
+    def test_d62_keys_the_two_deliveries_apart_by_their_subject(self):
+        """The key that makes one producer at two subjects two contributions.
+
+        `(mechanic, subject, event_id)` is D-62's own, and the subject is what
+        keeps a routed packet clear of the same mechanic's primary delivery —
+        which is precisely why Ruling 3 could leave `rule_id` on the source.
+        """
+        routing = _routing_provenance()
+        source = DeclaredPacket(100.0, "physical", "blade_of_the_ruined_king.on_hit")
+        routed = route_declared_packet(source, routing)
+        assert routed.rule_id == source.rule_id
+        keys = {
+            (source.rule_id, 0, 7),
+            (routed.rule_id, 1, 7),
+        }
+        assert len(keys) == 2

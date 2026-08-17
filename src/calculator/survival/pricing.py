@@ -73,6 +73,22 @@ and not the term the fight settled at.  A declaration no swing delivered
 carries none and prices exactly as it prices today.  Umbrella Amendment R,
 Ruling 1 (2026-08-16).
 
+**A routing family declares no magnitude.**  A packet may also reach a subject
+because some *other* family's packet was re-delivered there: Wind's Fury's
+bolt carries a declared share of the swing that fired it, and the attack's
+on-hit effects are copied onto the bolt's target.  ``secondary_target`` is a
+**routing family** — it re-delivers source families' declared magnitudes at a
+second subject and declares no magnitude of its own, because the magnitude
+belongs to the family that declared it (D-60, one producer per number).  So a
+routed packet is built by :func:`route_declared_packet` from the **source**
+family's own declaration composed with the router's declared share; it keeps
+the source mechanic as its ``rule_id``, so D-62 attributes it at
+``(source mechanic, secondary subject, event_id)`` — the *subject* being what
+keeps that key clear of the same source mechanic's primary delivery — and the
+routing itself is recorded as :class:`RoutingProvenance`, which is where a
+fact about *how* a packet reached a subject belongs and is not a second
+number.  Umbrella Amendment R, Ruling 3 (2026-08-16).
+
 **Nothing declares a price yet.**  Every family still reaches the walk as the
 pair engine's timed rows, and this path stays inert until a family's
 retirement slice hands it a :class:`DeclaredPacket` — which is what keeps
@@ -155,6 +171,28 @@ class BasicAttackSwing(NamedTuple):
         """
         weight = min(1.0, max(0.0, float(self.crit_chance)))
         return weight * crit + (1.0 - weight) * non_crit
+
+
+class RoutingProvenance(NamedTuple):
+    """How a routed packet reached the subject it was paid at.
+
+    Umbrella Amendment R, Ruling 3.  A routing family re-delivers a source
+    family's declared magnitude at a second subject; what it contributes is
+    the routing, and this is that routing stated as the fact it is.  It is
+    **not a number the walk adds** — the number is the source family's, and
+    the share below is applied to the source family's own magnitude rather
+    than declared beside it.
+
+    ``router_rule_id`` is the mechanic that did the routing and is carried for
+    the receipt: a copied packet whose provenance named nobody would be a
+    magnitude arriving at a subject with no account of how, which is the
+    silence this campaign exists to remove.  ``damage_share`` is the share the
+    router declares, and it is the only number a routing family states about a
+    packet's size.
+    """
+
+    router_rule_id: str
+    damage_share: float
 
 
 class AuthoredDeclaration(NamedTuple):
@@ -271,6 +309,14 @@ class DeclaredPacket(NamedTuple):
     basic-attack swing delivered — every family retired so far — and it is
     priced by the resistance and the amps alone, exactly as it was before the
     term existed.
+
+    ``routing`` is the **routing provenance** umbrella Amendment R, Ruling 3
+    adds: present exactly on a packet some routing family re-delivered at a
+    second subject, and absent on one that reached its subject directly.  It
+    records *how* rather than *how much* — the share it names has already been
+    applied to ``raw_amount`` by :func:`route_declared_packet`, and
+    ``rule_id`` stays the **source** mechanic so D-62 attributes the packet to
+    the family that declared its magnitude.
     """
 
     raw_amount: float
@@ -279,6 +325,7 @@ class DeclaredPacket(NamedTuple):
     holder_amp: float = 1.0
     effective_resistance: float | None = None
     swing: BasicAttackSwing | None = None
+    routing: RoutingProvenance | None = None
 
     @property
     def amped_raw(self) -> float:
@@ -355,6 +402,52 @@ def mitigate_declared(raw_amount: float, damage_type: str, resistance: float) ->
     if damage_type == "true":
         return raw
     return apply_resistance(raw, resistance)
+
+
+def route_declared_packet(
+    source: DeclaredPacket, routing: RoutingProvenance
+) -> DeclaredPacket:
+    """One source family's declared packet, re-delivered at a second subject.
+
+    Umbrella Amendment R, Ruling 3's whole act, and it is deliberately small:
+    a routing family contributes a *share* and a *subject*, so this scales the
+    source family's own magnitude by the share and records the routing.  Every
+    other term rides across unchanged — the resistance the source packet met,
+    the holder's amps, the swing composition if the source was delivered as
+    one — because they are facts about the packet and not about how it
+    travelled.
+
+    **What this deliberately does not do** is give the router a magnitude.
+    ``rule_id`` stays the source mechanic's, so D-62 keys the routed
+    contribution at ``(source mechanic, secondary subject, event_id)`` and the
+    subject is what distinguishes it from that mechanic's primary delivery.  A
+    routing family that declared the magnitude it routes would be a second
+    producer of a number a source family already declares, which is exactly
+    what criterion 8 forbids.
+
+    A share outside ``[0, 1]`` is refused rather than clamped: a router that
+    re-delivered more than the packet it is routing has misread its own
+    declaration, and silently paying the smaller number would be this function
+    deciding a question its caller got wrong.
+    """
+    share = float(routing.damage_share)
+    if not 0.0 <= share <= 1.0:
+        raise ValueError(
+            f"{routing.router_rule_id!r} routes {share!r} of "
+            f"{source.rule_id!r}'s declared magnitude; a share is a fraction "
+            "of the packet being re-delivered and this one is not"
+        )
+    routed = source.raw_amount * share
+    swing = source.swing
+    return source._replace(
+        raw_amount=routed,
+        routing=routing,
+        swing=(
+            None
+            if swing is None
+            else swing._replace(crit_raw_amount=swing.crit_raw_amount * share)
+        ),
+    )
 
 
 def price_declared_packet(
@@ -449,6 +542,8 @@ __all__ = [
     "BasicAttackSwing",
     "DeclaredPacket",
     "DeclaredPrice",
+    "RoutingProvenance",
     "mitigate_declared",
     "price_declared_packet",
+    "route_declared_packet",
 ]
