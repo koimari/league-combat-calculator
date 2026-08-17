@@ -179,12 +179,30 @@ def test_a_row_that_drops_its_pointer_back_is_reported() -> None:
     field.  So the red is a row that is present, adjudicates the receipt the
     escalation names, and carries no ``carried_by``: exactly the state that
     stood in the tree from 2026-08-15 until ``08afece`` restored it.
+
+    The assertion **names** the breaks the injection causes instead of
+    counting them.  A count of one was coupled to there being exactly one
+    escalation pointer in the tree, and the companion test above advertises
+    the opposite as the point of deriving the pointers -- "a pointer written
+    into a new escalation joins the gate on the commit that writes it".  Under
+    that growth a second escalation naming this same oracle receipt breaks two
+    joins at once, and the fixed count fails on the arithmetic rather than on
+    the defect -- a red that reports the wrong thing.  So the expectation is
+    derived from the pointer set: every pointer AT THIS RECEIPT breaks, and
+    nothing else does.
     """
     pointers = _pointers_from_escalations()
     rows = {row["receipt"]: dict(row) for row in _block()["adjudications"]}
     _escalation, _entry_id, receipt = pointers[0]
+    standing = set(_one_way_joins(rows, pointers))
     rows[receipt].pop("carried_by", None)
-    assert len(_one_way_joins(rows, pointers)) == 1
+    broken_by_the_injection = {
+        f"{receipt} does not name {escalation}/{entry_id} back"
+        for escalation, entry_id, pointed_at in pointers
+        if pointed_at == receipt
+    }
+    assert broken_by_the_injection
+    assert set(_one_way_joins(rows, pointers)) == standing | broken_by_the_injection
 
 
 def test_a_capture_that_pins_over_a_dissent_is_reported(scan) -> None:
