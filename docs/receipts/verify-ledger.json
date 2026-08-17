@@ -17962,9 +17962,13 @@
    ],
    "dated": "2026-08-17",
    "answered_by": [
-    "04cdfbf"
+    "04cdfbf",
+    "bf5b808",
+    "bfbc33a",
+    "16ebb97",
+    "e5abdbe"
    ],
-   "what_this_round_is": "A live R-35 pass, and the campaign's first verdict on a group that existed only to answer another group's verdict. A fresh read-only Opus 5 verifier that had not read the plan was handed the same brief round 128's verifier was handed -- campaign-close-final-integration's four commits 'plus any subsequent fix commits up to current HEAD' -- at a tip where those subsequent commits were the eight this slice group landed, and it verified twelve commits in its own words. It returned all four criteria DISCHARGED, with five behaviours the twelve commit bodies do not mention. The verdict covers THIS tag by the join the backfill block already rules: a tag is covered when a verifier verified a commit that carries it, and eight of the twelve carry this one -- the verifier names six of them by sha in its own evidence. Transcribed from the orchestration journal line holding the returned report; the verdicts and the findings are the verifier's, and the dispositions below are the lane's. What this round does NOT do is close runbook criterion 11: it moves one tag out of the residue, the tag of the lane transcribing it takes a place beside campaign-close-certification's, and the owed ruling in rulings-owed.json is untouched by a verdict about one group.",
+   "what_this_round_is": "A live R-35 pass, and the campaign's first verdict on a group that existed only to answer another group's verdict. A fresh read-only Opus 5 verifier that had not read the plan was handed the same brief round 128's verifier was handed -- campaign-close-final-integration's four commits 'plus any subsequent fix commits up to current HEAD' -- at a tip where those subsequent commits were the eight this slice group landed, and it verified twelve commits in its own words. It returned all four criteria DISCHARGED, with five behaviours the twelve commit bodies do not mention. The verdict covers THIS tag by the join the backfill block already rules: a tag is covered when a verifier verified a commit that carries it, and eight of the twelve carry this one -- the verifier names six of them by sha in its own evidence. Transcribed from the orchestration journal line holding the returned report; the verdicts and the findings are the verifier's, and the dispositions below are the lane's. What this round does NOT do is close runbook criterion 11: it moves one tag out of the residue, the tag of the lane transcribing it takes a place beside campaign-close-certification's, and the owed ruling in rulings-owed.json is untouched by a verdict about one group. Dispositioned 2026-08-17, in this pass's own commits: four of the five findings are fixed and name the commit that fixed them, and the fifth is documented with the reason a fix would be a different fragility rather than none. No verdict is touched -- all four criteria came back DISCHARGED and stay so -- because a verdict is the verifier's artifact and a disposition is the lane's, which is the rule this ledger's own when_a_later_lane_answers_a_sweep_row states in those words.",
    "provenance": {
     "verifier_labels": [
      "Close-final-integration, re-verification"
@@ -18022,42 +18026,50 @@
     {
      "id": "campaign-close-final-integration-r35/unmentioned-1",
      "finding": "STALE JUSTIFICATION INSIDE THE FILE THE GROUP REWROTE. a431e34 drove `coverage.residue_with_no_verdict_anywhere` 16 -> 0 and `coverage.residue` 25 -> 3 in docs/receipts/verify-ledger.json, which falsifies a sibling field of the same block that no commit body mentions and nothing gates: `coverage.why_the_residue_cannot_ [...]",
-     "disposition": "documented_open",
-     "note": "R-35's second question, answered by the verifier and documented here. The prose it names is this file's own coverage block.",
+     "disposition": "fixed",
+     "note": "Fixed. The note's stale population is dated and superseded by the counters that own each figure -- residue, residue_with_no_verdict_anywhere and the backlog's prepared_passes -- with the sentences left written, and tests/test_verify_ledger.py gains the rule that would have caught it: a count in that note must sit inside a dated clause, with R-05's red on an undated one.",
      "artifact": "docs/receipts/verify-ledger.json",
-     "answered_at": []
+     "answered_at": [
+      "bf5b808"
+     ]
     },
     {
      "id": "campaign-close-final-integration-r35/unmentioned-2",
      "finding": "G14 IN campaign-gap-ledger.json FALSIFIED AND LEFT UNTOUCHED. a431e34 and 0be8f37 took the residue to 2 and the backwards branch's price to 2 passes. G14's `blocker` still says binding the clause backwards \"schedules some sixty fresh read-only passes\" and G14's `note` still says of the residue \"What it does not do is f [...]",
-     "disposition": "documented_open",
-     "note": "R-35's second question, answered by the verifier and documented here. The two falsified sentences are G14's blocker and note.",
+     "disposition": "fixed",
+     "note": "Fixed. G14's blocker names verify_backlog_prepared_passes instead of holding a value, its note carries a dated correction saying what fell and where the figure now lives, and tests/test_campaign_gap_ledger.py refuses a count in any open row's blocker, with its red and with the identifier case asserted in both directions.",
      "artifact": "docs/receipts/campaign-gap-ledger.json",
-     "answered_at": []
+     "answered_at": [
+      "bfbc33a"
+     ]
     },
     {
      "id": "campaign-close-final-integration-r35/unmentioned-3",
      "finding": "rulings-owed.json's `what_the_measurement_now_reads` WENT STALE INSIDE THE SAME LANE. b02e4ca added that field expressly so the owed row reads a live measurement instead of a frozen figure, and it states \"Measured on this tip: 125 slice tags derived from commit subjects, 123 with a verdict recorded in docs/receipts/ver [...]",
-     "disposition": "documented_open",
-     "note": "R-35's second question, answered by the verifier and documented here. The field it names is the owed row's own measurement restatement.",
+     "disposition": "fixed",
+     "note": "Fixed. The 'Measured on this tip' reading is anchored at b02e4ca and re-derived out of git, the tip's readings are named in live_figures rather than restated, and tests/test_rulings_owed.py re-derives all four figures with R-05's red beside each.",
      "artifact": "docs/receipts/rulings-owed.json",
-     "answered_at": []
+     "answered_at": [
+      "16ebb97"
+     ]
     },
     {
      "id": "campaign-close-final-integration-r35/unmentioned-4",
      "finding": "THE NEW GATE HARD-CODES EIGHT ABBREVIATED SHAS AND SHELLS OUT TO `git show`, SO R-01 ROW 1 NOW DEPENDS ON HISTORY SURVIVING. tests/test_campaign_close_report_figures.py pins TABLE_ANCHOR 832a91f, SEARCH_ANCHOR 86114ed, BATCH a431e34, BATCH_PARENT 1e7c342, UNREACHED_COMMIT 209da2f, MINOR_4_COMMIT 1bd837e plus six residu [...]",
      "disposition": "documented_open",
-     "note": "R-35's second question, answered by the verifier and documented here. The verifier rates it low severity itself; it is a fragility in the gate rather than a claim the tree contradicts.",
+     "note": "Documented, not fixed, and the reason is that the alternative is a different fragility rather than none. The anchors are abbreviated shas read with `git show`, so an amend or rebase of one turns R-01 row 1 red; resolving them by commit subject instead -- the route verify-backlog.json takes -- goes red on a reworded subject, which is the same failure with a different trigger. What makes the trade deliberate is that each anchor is a named constant with a comment saying what it anchors, so moving one is an act rather than an accident, and the verifier rates the finding low severity itself. It is carried in close-report section 17 with this reasoning, where a reader of the gate is.",
      "artifact": "tests/test_campaign_close_report_figures.py",
      "answered_at": []
     },
     {
      "id": "campaign-close-final-integration-r35/unmentioned-5",
      "finding": "THE GATE'S COVERAGE CLAIM IS AN ENUMERATION, NOT A PROPERTY IT HOLDS. c0c7f75's body reports \"0 figures in the section left ungated\" and section 15.6 says the file \"re-derives every figure this section states\". What the file actually asserts is 39 named figures plus the count of them and 6 claims; there is no completen [...]",
-     "disposition": "documented_open",
-     "note": "R-35's second question, answered by the verifier and documented here. A claim-scope gap: the file asserts named figures, the section claims every figure.",
+     "disposition": "fixed",
+     "note": "Fixed. Both sections are scanned rather than enumerated: every bold integer is matched by a figure pattern, by a check living outside the list, or is named as an identifier with its reason, with R-05's red appending a figure to a copy of each section. The one real figure the scan surfaced -- 15.6's count of its own non-numeric claims -- is now derived from the names of the six tests that make them.",
      "artifact": "tests/test_campaign_close_report_figures.py",
-     "answered_at": []
+     "answered_at": [
+      "e5abdbe"
+     ]
     }
    ]
   }

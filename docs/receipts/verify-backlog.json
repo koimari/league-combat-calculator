@@ -23,7 +23,7 @@
   },
   "campaign-close-certification-r2": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 6,
+   "commit_count": 7,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)",
@@ -31,7 +31,8 @@
     "docs(receipts): the residue note stops stating a population the tree contradicts (campaign-close-certification-r2)",
     "docs(receipts): G14 names the counter that owns its cost, and its note says what fell (campaign-close-certification-r2)",
     "test(gates): the report sections are scanned for an ungated figure, not enumerated (campaign-close-certification-r2)",
-    "docs(receipts): the commits outside the denominator are named to whoever rules the clause (campaign-close-certification-r2)"
+    "docs(receipts): the commits outside the denominator are named to whoever rules the clause (campaign-close-certification-r2)",
+    "docs(receipts): round 129's five findings, dispositioned where the ledger keeps them (campaign-close-certification-r2)"
    ]
   },
   "campaign-close-verify-p4-batch": {
