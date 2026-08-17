@@ -1552,9 +1552,73 @@ in §6, §12.5 and §15 stands exactly as written.*
   amendment the umbrella's owner wrote or a lane act performed under one.
 * **Runbook criterion 9's repo-wide reading — met.** G6 is closed; every
   campaign occurrence satisfying `qualifies_for_investigation` has its receipt,
-  and the blocking population is 7, all `citation`, 0 open debts.
+  and the blocking population is what §16.1 measures — every member a
+  `citation`, and no open debt standing.
 * **Runbook criterion 11 — NOT DISCHARGED, unchanged.** §12.5's sentence stands
   word for word: *the campaign is not certified against its own runbook while
   that clause is unread.* §16.3 measures what is left and adds a branch to the
   question; it answers none of it. What is outstanding is one decision with a
   cost and an owner, and it is the same one §12.4 named.
+
+### 16.6 What gates section 16
+
+Section 15 exists because section 14 was ungated and three of its figures were
+wrong. Section 16 closes two gap rows and states a criterion's re-grade, so its
+counts are the load-bearing ones in this report, and it ships with its gate
+rather than after one.
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states by running the instrument it was
+measured with: §16.1's four from `standing_dissent_scan.report()`, §16.2's five
+from the retirement schedule, the interpreter registry and a fresh `term_census`
+run, and §16.3's seven from the verify ledger's own pass rows and coverage block.
+**17** figures, the count itself among them, and R-05's red rides beside each —
+`test_the_section_16_gate_fails_when_a_stated_figure_drifts` doctors the value in
+a copy of the section and requires the same comparison to fail.
+
+Two things the same commit had to fix, and both are the shape section 15 was
+already in. `section_15()` read from its own heading to the end of the file,
+which was true until a section 16 existed and would have let one section's gate
+match another section's figure. It is bounded at `## 16.` now. And §15.5's five
+coverage figures were readings of *this tip* when `e4338b7` wrote them; this
+pass shipped a slice group and moved them, so they are anchored at that commit
+and read out of git, exactly as §15.1's six dated residues already are. The
+section's text is untouched and carries one dated clause beside it.
+
+Section 16's own figures are read **live**, because they are facts about this tip
+rather than dated readings. The next pass that moves one faces the same choice
+`e4338b7`'s did, and now has both answers written down: restate the figure, or
+anchor it the way `SECTION_15_5_ANCHOR` does.
+
+### 16.7 The R-01 matrix on this pass's tip
+
+| # | Verdict | What it read |
+|---|---|---|
+| 1 | **GREEN** | 8619 passed, 0 skipped, 0 xfailed |
+| 2 | **GREEN** | `snapshot identical` |
+| 3 | **GREEN** | `snapshot identical` |
+| 4 | **GREEN** | exit 0 |
+| 5 | **GREEN** | exit 0 |
+| 6 | **GREEN** | `black --check` clean |
+| 7 | **GREEN** | pylint `src/` 9.61; ratchet 197 files at or above |
+| 8 | **GREEN** | four scenarios, every pinned counter reproducing, none void |
+| 9 | **GREEN** | 18 non-legacy scenarios at the merge-base anchor |
+| 10 | **GREEN** | `test_survival_kernel` green |
+| 11 | **GREEN** | identical winner and score both ways on all four |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**No `src/` is touched in this pass and no baseline moves in it.** The one
+`src/` correction any of this rests on is `b299978`, which landed before the
+review that raised the finding, and the pin that followed it is `4f41e6e`. Both
+compared baselines read `snapshot identical` on every commit here, so there is
+nothing for a boundary re-capture to absorb and none is performed (R-17, R-32).
+
+**What is left, in one sentence.** Runbook criterion 11 is not discharged, its
+one open ruling belongs to the campaign's owner, and §16.3 states what the
+question now costs and the third branch nobody had written down. Everything else
+in both documents is discharged, or discharged under a named amendment, with its
+residue measured, gated and owned.

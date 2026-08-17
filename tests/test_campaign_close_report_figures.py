@@ -1,4 +1,4 @@
-"""Section 15 of the close report, gated: every figure it states is re-derived.
+"""Sections 15 and 16 of the close report, gated: every figure is re-derived.
 
 The R-35 pass over ``campaign-close-final-integration`` failed section 14 on
 three figures and closed its evidence with the reason all three survived to be
@@ -23,13 +23,36 @@ The negative half is permanent and rides beside the positive one (R-05):
 ``test_the_gate_fails_when_a_stated_figure_drifts`` doctors each figure in a copy
 of the section and requires the same comparison to fail.  A check that cannot
 fail is the shape this campaign exists to remove.
+
+Section 16 joins on the same terms and had to: it is the section that closes two
+gap rows and states a criterion's re-grade, so its counts are the load-bearing
+ones in this report.  Its figures are read *live* from the instruments they were
+measured with -- the standing-dissent scan, the retirement schedule, the
+interpreter registry, a fresh term census and the verify ledger -- because they
+are facts about this tip rather than dated readings.  A later pass that moves one
+faces the choice ``e4338b7`` faced and now has both answers written down: restate
+the figure, or anchor it at the commit that stated it the way
+``SECTION_15_5_ANCHOR`` does.
+
+Section 16 joins on the same terms, and it had to: it is the section that closes
+two gap rows and states a criterion's re-grade, so every count in it is load
+bearing in the strongest sense this report has.  Its figures are read live from
+the instruments they were measured with -- the standing-dissent scan, the
+behaviour frontier, the retirement schedule, the interpreter registry, the term
+census and the verify ledger -- because they are facts about this tip.  When a
+later pass moves one of them the choice is the one section 15.5 already had to
+make: restate the figure, or anchor it at the commit that stated it the way
+``SECTION_15_5_ANCHOR`` does.  The mechanism exists now, which is the whole of
+what 15.5's anchoring bought.
 """
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import subprocess
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Callable
@@ -68,10 +91,61 @@ SECTION_15_5_ANCHOR = "e4338b7"
 
 @lru_cache(maxsize=1)
 def section_15() -> str:
-    """The report from its section 15 heading to the end of the file."""
+    """The report's section 15, bounded at 16 rather than at the file's end.
+
+    It ran to the end of the file until section 16 existed, which was true and
+    stopped being so; an unbounded section lets a gate match a figure a later
+    section states and report it as this one's.
+    """
     text = REPORT.read_text(encoding="utf-8")
-    start = text.index("\n## 15.")
-    return text[start:]
+    return text[text.index("\n## 15.") : text.index("\n## 16.")]
+
+
+@lru_cache(maxsize=1)
+def section_16() -> str:
+    """The report from its section 16 heading to the end of the file."""
+    text = REPORT.read_text(encoding="utf-8")
+    return text[text.index("\n## 16.") :]
+
+
+@lru_cache(maxsize=1)
+def scan():
+    """The standing-dissent instrument, imported by path as its own suite does."""
+    spec = importlib.util.spec_from_file_location(
+        "standing_dissent_scan", ROOT / "scripts" / "standing_dissent_scan.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("standing_dissent_scan", module)
+    spec.loader.exec_module(module)
+    return module
+
+
+@lru_cache(maxsize=1)
+def term_census() -> dict:
+    """The term census, re-run rather than read off prose."""
+    spec = importlib.util.spec_from_file_location(
+        "term_census", ROOT / "scripts" / "term_census.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("term_census", module)
+    spec.loader.exec_module(module)
+    return module.report(module.census())
+
+
+def receipt(name: str) -> dict:
+    """One committed receipt at this tip."""
+    return json.loads((ROOT / "docs" / "receipts" / name).read_text(encoding="utf-8"))
+
+
+def receipt_walk_interpreter_keys() -> str:
+    """How many ``(family, RECEIPT_WALK)`` keys the interpreter registry holds."""
+    if str(ROOT / "src") not in sys.path:
+        sys.path.insert(0, str(ROOT / "src"))
+    from calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        INTERPRETERS,
+    )
+
+    return str(sum(1 for key in INTERPRETERS if "RECEIPT_WALK" in str(key)))
 
 
 @lru_cache(maxsize=None)
@@ -525,3 +599,122 @@ def test_every_phrase_15_quotes_from_section_14_is_really_there() -> None:
     for phrase in QUOTED_FROM_SECTION_14:
         assert phrase in fourteen, phrase
         assert phrase in fifteen, phrase
+
+
+#: Section 16's figures.  Read live from the instruments they were measured with,
+#: because they are facts about this tip rather than dated readings; a later pass
+#: that moves one either restates it or anchors it the way ``SECTION_15_5_ANCHOR``
+#: does.  Section 16 is the section that closes two gap rows and states a
+#: criterion's re-grade, so its counts are the load-bearing ones in this report.
+FIGURES_16: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "16.1 blocking",
+        r"\*\*(\d+)\*\* blocking",
+        lambda: str(scan().report()["blocking"]),
+    ),
+    (
+        "16.1 standing",
+        r"of \*\*(\d+)\*\* standing",
+        lambda: str(scan().report()["standing"]),
+    ),
+    (
+        "16.1 receipts",
+        r"standing across \*\*(\d+)\*\* receipts",
+        lambda: str(scan().report()["oracle_receipts"]),
+    ),
+    (
+        "16.1 open debts",
+        r"\*\*(\d+)\*\* open debts",
+        lambda: str(scan().report()["by_kind"].get("open_debt", 0)),
+    ),
+    (
+        "16.2 scheduled slices",
+        r"`scheduled_slices` is \*\*(\d+)\*\*",
+        lambda: str(
+            receipt("receipt-walk-retirement-schedule.json")["scheduled_slices"]
+        ),
+    ),
+    (
+        "16.2 interpreter keys",
+        r"holds exactly \*\*(\d+)\*\* `\(family, RECEIPT_WALK\)` keys",
+        receipt_walk_interpreter_keys,
+    ),
+    (
+        "16.2 packet mutation sites",
+        r"\*\*(\d+)\*\* post-authoring packet-mutation sites",
+        lambda: str(len(term_census()["sites"])),
+    ),
+    (
+        "16.2 mitigation terms",
+        r"\*\*(\d+)\*\* authoring-time mitigation terms",
+        lambda: str(len(term_census()["authoring_time_terms"])),
+    ),
+    (
+        "16.2 static holder amps",
+        r"\*\*(\d+)\*\* static\s+holder amps",
+        lambda: str(len(term_census()["static_holder_amps"])),
+    ),
+    (
+        "16.3 slice tags",
+        r"\*\*(\d+)\*\* slice tags derived from commit subjects",
+        lambda: slice_tag_total_at(ledger()["coverage"]),
+    ),
+    (
+        "16.3 recorded passes",
+        r"\*\*(\d+)\*\* recorded\s+passes",
+        lambda: str(len(here())),
+    ),
+    (
+        "16.3 residue",
+        r"a residue of \*\*(\d+)\*\*",
+        lambda: str(ledger()["coverage"]["residue"]),
+    ),
+    (
+        "16.3 not discharged",
+        r"\*\*(\d+)\*\* `NOT_DISCHARGED` rows",
+        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+    ),
+    (
+        "16.3 documented_open",
+        r"of which \*\*(\d+)\*\* stand",
+        lambda: disposition_count(here(), "documented_open"),
+    ),
+    (
+        "16.3 fixed",
+        r"`documented_open`, (\d+) `fixed`",
+        lambda: disposition_count(here(), "fixed"),
+    ),
+    (
+        "16.3 fixed_and_gated",
+        r"`fixed` and (\d+) `fixed_and_gated`",
+        lambda: disposition_count(here(), "fixed_and_gated"),
+    ),
+    (
+        "16.6 the gate's own size",
+        r"\*\*(\d+)\*\* figures, the count itself among them",
+        lambda: str(len(FIGURES_16)),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", FIGURES_16, ids=[case[0] for case in FIGURES_16])
+def test_every_figure_section_16_states_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """Section 16 closes two gap rows, so every count in it is re-derived."""
+    _label, pattern, measured = case
+    assert stated(section_16(), pattern) == measured()
+
+
+@pytest.mark.parametrize("case", FIGURES_16, ids=[case[0] for case in FIGURES_16])
+def test_the_section_16_gate_fails_when_a_stated_figure_drifts(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """R-05's permanent red for section 16, injected the same way as 15's."""
+    _label, pattern, measured = case
+    text = section_16()
+    match = re.search(pattern, text)
+    assert match is not None
+    drifted = str(int(match.group(1)) + 1)
+    doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
+    assert stated(doctored, pattern) != measured()
