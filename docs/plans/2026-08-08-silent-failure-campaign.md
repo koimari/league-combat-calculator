@@ -1312,6 +1312,168 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > moves to `answered[]` under that ledger's own closure rule, keeping its question beside it.
    > The ledger's one remaining open row is the first one it opened, whether criterion 11's first
    > clause binds the campaign backwards, and this ruling does not reach it.
+   >
+   > **Amendment R — 2026-08-16, the basic-attack swing terms, the census's reach, and a routed magnitude's owner.**
+   > *Answers the tenth row of `docs/receipts/rulings-owed.json`,
+   > `what_the_from_declaration_pricing_stage_owes_a_basic_attack_delivered_packet`, opened by the
+   > retirement lane that went to start `secondary_target/receipt_walk` and measured that the
+   > budgeted from-declaration pricing stage cannot price a packet delivered as a basic-attack
+   > swing.* Every family retired so far reaches its target through `_mitigate`
+   > (`damage.py:395`) and nothing else — a resistance and the holder's own amps, which is exactly
+   > what `survival.pricing.price_declared_packet` (`pricing.py:219`) carries. A Runaan's bolt is
+   > priced by `_mitigate_basic_attack_swing` (`damage.py:624`), which applies three further
+   > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
+   > onto a second subject by `_copied_on_hit_packet` (`damage.py:8773`), for which
+   > `runaans_hurricane.secondary_target` declares no magnitude at all. The lane refused four moves,
+   > each already forbidden in terms by the three amendments that built the stage, filed its
+   > measurement at
+   > `docs/receipts/expected-golden-diff-campaign-close-secondary-target-retirement.json` and opened
+   > the row. That was correct and it is answered here. Four rulings, none of them re-litigable by a
+   > lane.
+   >
+   > **Ruling 1 — the swing terms.** The pricing stage gains the **basic-attack swing
+   > composition**, in the order the pair engine applies it: the packet is mitigated at **its own**
+   > resistance (Amendment N, Ruling 1), composed with the holder's static amps pre-mitigation
+   > (Amendment M, Ruling 1, already carried), and then met by the target-side terms. Two of those
+   > three **fold**, because a pure factor on a linear mitigation composes into the declared
+   > magnitude and prices to the same real number — the target's critical-strike damage multiplier,
+   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:590`) applies —
+   > which is the argument the `on_hit_strike` retirement already used for on-hit effectiveness and
+   > is used here for the last time on these two terms. Warden's Mail's Rock Solid is **never
+   > folded**. `min(flat, per_hit × cap)` is a **capped flat subtraction**, not a factor on a
+   > magnitude; it is applied to the crit branch and the non-crit branch **separately, before the
+   > deterministic blend**, so the cap bites on one and not the other; and it is therefore carried
+   > as a term in its own right — the flat, its cap and its instance count transported on the
+   > declaration and subtracted per branch, floored at zero, before the branches are blended. **A
+   > subtraction is not a factor**, and no magnitude a declaration could state reproduces one. The
+   > term rides **on the declaration**, transported from the authored ledger rather than resolved
+   > again at the walk, for the reason Amendment N gave for the resistance: what the walk must
+   > reproduce is the term this packet met and not the term the fight settled at. A declaration no
+   > basic-attack swing delivered carries none and prices exactly as it prices today, so no retired
+   > family's number moves. The two ways out a lane might still reach for are the two already
+   > forbidden: dividing the pair engine's own mitigated figure back out is the ratio path this
+   > stage exists to replace (Amendment N, Ruling 1), and refusing the packet whenever a target-side
+   > term is armed is Amendment M, Ruling 1's second forbidden shape read from the defender's side —
+   > it deletes the number in the other direction. **Equivalence fixtures are seeded from the
+   > measured Caitlyn probe, both inert and armed**, and that conjunction is load-bearing on exactly
+   > the reasoning that made Amendment M's fixtures cover `amp != 1.0` and Amendment N's cover both
+   > windows: a fixture set in which every target-side term is inert proves the stage re-spells the
+   > case that cannot fail. The seed figures are in the Measured section below, by their predicate;
+   > what binds numerically is what the fixture's own instrument produces.
+   >
+   > **Ruling 2 — the census widening.** Amendment N, Ruling 2's term census ranges over
+   > **post-authoring** packet mutation and the holder-amp folds beside it, and no census in that
+   > shape can reach a term applied **while the packet is being authored**. Its green is therefore
+   > **truthful under the old predicate**, and is recorded here as truthful: what the stopped lane
+   > found is a fact about the census's reach, not a defect in it. The predicate **widens** to range
+   > over **authoring-time mitigation terms** as well — every term `_mitigate` and
+   > `_mitigate_basic_attack_swing` apply to a packet as they price it, target-side as well as
+   > holder-side — under the same gate it already carries: each enumerated term is covered by a
+   > pricing-stage term or by a ruled, dated exclusion recorded in this file, and **no further family
+   > retires while the census shows an uncovered term**. Derived from source and never hand-listed,
+   > for the reason it was derived in the first place, and it ships with its **R-05 negative
+   > updated**: an injected authoring-time mitigation term must turn the census red, exactly as an
+   > injected re-pricing site already does. Terms were not to be discovered one halt at a time, and
+   > a census that ranges over one half of a mitigation is a census that discovers the other half
+   > one halt at a time.
+   >
+   > **Ruling 3 — routing-family magnitude ownership.** `secondary_target` is a **routing family**:
+   > it re-delivers **source families'** declared magnitudes at a second subject and **declares no
+   > magnitude of its own** (D-60, one producer per number). The copied packet is therefore priced
+   > from the **source family's** declaration composed with the router's declared `damage_share`,
+   > and attributed under D-62 at **(source mechanic, secondary subject, event_id)** — the subject
+   > being what keeps that key clear of the same source mechanic's primary delivery — with the
+   > routing itself recorded in **provenance**, which is where a fact about how a packet reached a
+   > subject belongs and is not a second number. The router's own declaration carries **exactly the
+   > routing facts it carries today**, `max_targets` and `damage_share`, and gains no magnitude
+   > field: a routing family that declared the magnitude it routes would be a second producer of a
+   > number a source family already declares, which is what criterion 8 forbids and precisely why
+   > the stopped lane could not answer this itself. So the bolt row prices from the swinging
+   > family's declaration through Ruling 1's composition, and the copied on-hit row prices from the
+   > already-retired `on_hit_strike` family's declarations delivered at the secondary subject — one
+   > producer each, two subjects, no number declared twice.
+   >
+   > **Ruling 4 — coverage.** By **integration act** (R-12, R-32 — a baseline moves in the
+   > integration agent's own commit and never inside a semantic slice), the covering scenario set
+   > gains a scenario that **arms the enemy-held swing terms**: a defender holding **Warden's Mail**,
+   > with the plating multiplier and the crit-damage reduction in reach, met by an attacker whose
+   > delivery is a basic-attack swing. The coverage derivation **reads the term mapping**, the way
+   > `repricing_window_declarations` (`golden_snapshot.py:1375`) already reads the window mapping
+   > and `holder_amp_declarations` the amp-kind mapping, so a further target-side swing term that no
+   > scenario arms fails the capture on the commit that declares it rather than being discovered by
+   > whoever next prices a swing. **Armed means met**: a defender holding the item in a fight nobody
+   > swings at is the same emptiness with a scenario name on it, so the mapping is a **two-sided
+   > join** — the defender's declaration on one side and a basic-attack delivery on the other — in
+   > the shape Amendment N, Ruling 3's magic half already needed.
+   >
+   > **What this amendment does not do**, each available and refused. It **retires nothing**:
+   > `secondary_target/receipt_walk` stands `overdue` and gated with the row beside it, the machine
+   > still refuses a third, and being startable is not being started. It **budgets nothing** —
+   > naming a term is a fact about the shape of a slice, never a smaller amount of it. It **moves no
+   > triage class letter**: the class is measured from the pair rows a family authors and this
+   > family still authors two, so it stays (a). It touches no `src/`, moves no baseline, re-dates
+   > nothing, edits no lane table and registers no interpreter. And it does **not** rule the
+   > `secondary_target` stop a lane error: refusing to amend a stage three amendments say a lane may
+   > not amend is what Amendment N's closing sentence asked of the next lane, and what is removed
+   > here is the excuse that it would have had to invent the ruling too.
+   >
+   > **Measured on the commit that lands this**, because the ruling rests on four checkable claims
+   > and two of them come out differently from the way the receipt that opened it reads.
+   >
+   > *The seed figures reproduce exactly, all four of them.* Caitlyn at level 18 holding Runaan's
+   > Hurricane and Blade of the Ruined King, deterministic, one rotation at full auto uptime, a
+   > roster target count of two with the bolt allocated to the second, against the snapshot
+   > target's 50.0 effective armour — the receipt's own pinned probe. The bolt row prices at
+   > `76.54166666666666` per hit with the three target-side terms inert, at `68.88749999999999`
+   > with the plating multiplier of 0.9 armed, at `67.35666666666665` with the crit-damage
+   > multiplier of 0.7 armed, and at `63.60666666666666` with Warden's Mail's flat 15.0 capped at
+   > 0.2 of the instance — the last being the 20.3 percent a walk pricing this declaration at the
+   > published baseline would have paid over. The copied on-hit row's four one-rotation events are
+   > the first four of the seven the receipt reports and sum to its figure exactly.
+   >
+   > *Arming the swing terms moves the copied row in the OPPOSITE direction, and the coupling is
+   > worth a lane's time.* With Rock Solid armed the copied on-hit row rises from
+   > `198.85864000000004` to `205.468`, because a secondary target that takes less from the bolt
+   > carries more health into the current-health on-hit strikes that follow it. So the two rows are
+   > not independently priceable even though Ruling 3 gives them different producers: the copied
+   > row's magnitudes are the source family's, and what they are worth depends on a subject whose
+   > live state the walk has to carry. A fixture that arms a term and checks only the bolt would
+   > read green over the row that moved.
+   >
+   > *The census is green and blind, and its blindness is enumerable rather than argued.* Run on
+   > this commit: 29 sites in 29 functions, 0 uncovered, 0 unfolded amps.
+   > `_apply_target_basic_damage_reduction` appears in that enumeration **not at all**, and
+   > `_mitigate_basic_attack_swing` appears in it only for the two holder amps it folds. The census
+   > sees the swing function and not the swing's target-side terms, which is the reach fact stated
+   > as a measurement instead of as a reading of a predicate.
+   >
+   > *Two of the three terms are already armed in the committed coupled baseline, and the receipt
+   > that opened this says none of them is.* Measured by running every pair fight of every committed
+   > coupled scenario with the defender-state hand-off instrumented: exactly one,
+   > `immolate_active_bruiser_roster`, arms a non-unit target-side swing term — plating 0.9 and
+   > crit-damage 0.7, on its Darius main as **defender**, in two pair fights — because
+   > `target_overrides` (`roster_composition.py:187`) hands a defender's resolved
+   > state to every pair fight the walk runs, and that scenario is attacked as well as attacking.
+   > **Rock Solid is armed by no committed coupled scenario and by no bench roster at all.** The
+   > receipt's unqualified sentence is wrong and its own rulings-owed row's qualified one is right:
+   > what nothing arms is a swing term **on a defender a basic-attack router attacks**, which is the
+   > join Ruling 4 makes the derivation read. Recorded rather than smoothed over, because a lane
+   > that goes to add the physical half and finds the plating factor already observable will
+   > otherwise conclude the mapping is covered.
+   >
+   > *The term mapping has four declaring owners across two rule shapes, not three of one.* Derived
+   > over every owner in `rule_owners()`: `plated_steelcaps.plating`, `randuins_omen.resilience` and
+   > `wardens_mail.rock_solid` declare the three terms as `OpeningDefenseRule` writes, and
+   > `armored_advance.noxian_endurance` declares the same plating multiplier as a `ReactiveRule`
+   > write. A mapping keyed on the opening-defence shape alone would report the plating term covered
+   > by an incomplete set — the same shape as Amendment N's warning that a mapping keyed only on the
+   > holder's items reports the magic half covered by an empty one.
+   >
+   > **The rulings-owed row closes here** —
+   > `what_the_from_declaration_pricing_stage_owes_a_basic_attack_delivered_packet` moves to
+   > `answered[]` under that ledger's own closure rule, keeping its question beside it. The ledger's
+   > one remaining open row is still the first one it opened, whether criterion 11's first clause
+   > binds the campaign backwards, and this ruling does not reach it.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
