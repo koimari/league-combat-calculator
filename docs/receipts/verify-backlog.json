@@ -1305,13 +1305,14 @@
   },
   "campaign-close-swing-term-coverage": {
    "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
+   "commit_count": 5,
    "criteria_documents": [],
    "subjects": [
     "test(kernel): the pooled uniqueness key names the scenario it was measured in (campaign-close-swing-term-coverage)",
     "test(golden): a covering scenario for the enemy-held basic-attack swing terms, derived (campaign-close-swing-term-coverage)",
     "chore(baseline): capture the swing-term-armed roster, and the artifacts that move with it (campaign-close-swing-term-coverage)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-swing-term-coverage)"
+    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-swing-term-coverage)",
+    "docs(receipts): three verdicts on the swing-term capture, filed though none was owed (campaign-close-swing-term-coverage)"
    ]
   },
   "campaign-close-swing-term-ruling": {

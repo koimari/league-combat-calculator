@@ -1,0 +1,74 @@
+{
+  "receipt": "oracle-RW-swing-scenarios-leaf1",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "date": "2026-08-17",
+  "investigator": "fresh independent oracle subagent (no knowledge of the change under test)",
+
+  "scenario": "metadata (all scenarios)",
+  "leaf_path": "/metadata/fingerprint/leaves",
+  "old_value": 54683,
+  "new_value": 65077,
+  "delta": 10394,
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-tree",
+    "contents": [
+      "data/ (champions.json, items.json, runes.json, atoms/, item-atoms/, wiki/, wiki-atoms/, champion-audit/, worklists/, practice-corpus/, economics-sourced.json, onhit-matrix.json, staleness.json, README.md)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history"]
+  },
+
+  "leaf_classification": {
+    "kind": "structural self-describing snapshot metadata",
+    "not_a_game_quantity": true,
+    "explanation": "'/metadata/fingerprint/leaves' is the count of numeric leaves in the golden snapshot's own scenario tree. It is a property of the snapshot artifact, not a League of Legends quantity. No champion stat, item value, rune value, or damage/mitigation identity can produce or constrain it."
+  },
+
+  "independent_computation": {
+    "attempted": true,
+    "method": [
+      "1. Searched docs/math-foundations.md for any formula, identity, or convention defining a fingerprint/leaf count: grep for 'fingerprint|leaves|leaf|golden|snapshot' returned only line 428 (a prose reference to the golden snapshot as a validation corpus) and line 477 (a rounding-convention row saying a convention is 'pinned by golden'). No formula for a leaf count exists anywhere in the document — the only counting formulas present are the auto-attack renewal count N(T)=floor(AS*u*T) (Sec. 1) and the conformal quantile rank ceil((1-alpha)(n+1)) (Sec. 4), neither of which is about snapshot structure.",
+      "2. Searched the entire cached data tree for the quantity: `grep -rl fingerprint data/` returned zero files; `grep -rl '\"leaves\"' data/` returned zero files. The cached wiki text contains no leaf-count, no scenario inventory, and no golden-snapshot manifest. data/README.md documents the cache's scope: champions/items/runes wiki data plus item-source fields — nothing about snapshot structure.",
+      "3. Checked whether any cached corpus could stand in as a scenario inventory from which a leaf count could be reconstructed: data/practice-corpus/scenarios.json is a separate practice/verification corpus (keys: schema_version, purpose, verified_tiers, scenarios, receipts), not the golden scenario set, and carries no leaf accounting. data/champion-audit/*.json are audit batches. Neither maps onto the golden tree.",
+      "4. Arithmetic sanity check on the two candidates, in case either factored into an obvious per-scenario block size: 54683 = 149 x 367 (both prime); 65077 - 54683 = 10394 = 2 x 5197 (5197 prime). Neither value nor the delta decomposes into a clean 'k scenarios x m leaves' structure, so no structural reconstruction is available from the numbers alone either.",
+      "5. Magnitude plausibility: a golden corpus spanning all scenarios with ~5-6.5 x 10^4 numeric leaves is order-consistent with a build/DPS optimizer snapshot; the change is a +19.0% growth, not an anomalous order-of-magnitude jump (e.g. a 10x duplication) that would independently indicate a structural bug."
+    ],
+    "result": "No wiki-derived or formula-derived value can be produced for this leaf. It is non-oracle-able from the permitted evidence tree by construction.",
+    "reasoning_to_a_verdict": [
+      "A leaf count is descriptive of the snapshot it is embedded in: its correct value is, definitionally, the number of leaves the current snapshot tree actually has. It cannot be 'wrong about the game', only stale relative to the tree it labels.",
+      "The count changed, which means the snapshot's leaf set changed cardinality (leaves added). Any such structural change makes the previous count stale by definition: 54683 cannot describe a tree that now has a different number of leaves.",
+      "The direction (increase) is the expected signature of scenarios/leaves being added rather than removed, and the magnitude is unremarkable.",
+      "Therefore the only self-consistent value for the current tree is the regenerated one, 65077 — while noting that this oracle cannot verify the count against the tree itself (scripts/golden_baseline.json is outside the permitted evidence tree), and that a leaf-count increase would look identical whether the added leaves are intended new scenarios or accidental duplication. That distinction must be discharged by the per-scenario oracle leaves, not by this metadata leaf."
+    ]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Section 4 (Variance and confidence), line 428",
+      "quote": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "relevance": "The only mention of the golden snapshot in the math foundations; it describes the snapshot's purpose, and defines no leaf-count formula."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (Formula-audit table), line 477",
+      "quote": "Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit — corpus-wide convention, pinned by golden",
+      "relevance": "The only other 'golden' reference; concerns a rounding convention, not snapshot structure."
+    },
+    {
+      "source": "data/README.md",
+      "quote": "The calculator's champion/item data cache — the single source the app reads. `champions.json`, `items.json`, `runes.json` — patch-stamped wiki data",
+      "relevance": "Establishes the scope of the cached wiki evidence: champion/item/rune game data only. It contains no snapshot manifest, so no leaf count can be derived from it."
+    },
+    {
+      "source": "negative search results over the evidence tree",
+      "quote": "grep -rl \"fingerprint\" data/ -> (no matches); grep -rl '\"leaves\"' data/ -> (no matches)",
+      "relevance": "Direct evidence that the quantity has no cached source."
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_confidence": "structural, not numeric",
+  "verdict_caveat": "This leaf is not independently computable from cached wiki text or any formula in docs/math-foundations.md; it is snapshot metadata that is correct-by-construction relative to the tree it labels. The verdict says only that the regenerated count is the self-consistent one for a tree whose leaf set changed, and that the superseded count cannot be. It is NOT evidence that the added leaves are correct — that is entirely the job of the per-scenario oracle leaves.",
+  "committed": false
+}

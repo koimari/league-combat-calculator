@@ -171,13 +171,29 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     sentence, so it is a recurring event rather than an anomaly --- and it is
     counted apart from the carve-out on purpose, because a coincidence says
     the integer is not the figure.
+
+    And it rose to four, across four sources, the same day, when the
+    RW-swing-scenarios oracle pass filed verdicts on two of the counters that
+    capture moved.  This is the third run of the pattern, and the first time
+    the rise has been *smaller* than the fall it answers --- which is the case
+    worth writing down, because a short rise is also what a pass that quietly
+    skipped a counter would produce.  It is not that: the pass filed three
+    verdicts, one per qualifying occurrence the capture's own allowlist
+    declared, and only two of the three adjudicate a leaf that IS a shape
+    counter.  The third, on
+    ``/coupled_scenarios/swing_term_armed_carry_roster``, is a scenario
+    membership rather than a count, so it states no figure for the scan to
+    see and could not have been a row.  The two that are rows meet Amendment
+    H's three conditions against the figure this capture made live, and the
+    *coincidence* stands at one where the same capture put it, its event
+    ordinal still colliding with ``coupled_golden.entries``.
     """
     block = scan.report()
-    assert block["forced_restatements"] == 2
+    assert block["forced_restatements"] == 4
     assert block["coincidences"] == 1
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 2
+    assert len({row.source for row in forced}) == 4
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

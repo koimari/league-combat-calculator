@@ -1,0 +1,66 @@
+{
+  "receipt": "oracle-RW-swing-scenarios-leaf0",
+  "runbook": "R-18/R-19 (independent oracle investigator, with recorded amendments)",
+  "investigator": "fresh subagent; evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>`; src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were NOT read",
+  "evidence_tree": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_rw_leaf0",
+  "scenario": "swing_term_armed_carry_roster",
+  "leaf_path": "/coupled_scenarios/swing_term_armed_carry_roster",
+
+  "old_value": "<absent> (leaf did not exist in the prior golden baseline)",
+  "new_value": "<the captured roster entry> — the orchestrator passed this placeholder, not the literal value. The concrete entry was NOT disclosed to this investigator, and scripts/golden_baseline.json is outside the permitted evidence tree, so the entry could not be inspected element-wise.",
+
+  "independent_computation": {
+    "classification_of_the_leaf": "The leaf is a ROSTER record: the captured participant composition of a coupled fight scenario. It is a scenario INPUT (who is in the fight), not a quantity derived from a wiki stat or a formula. Nothing in the League Wiki cache or in docs/math-foundations.md determines which champions a corpus scenario should contain; those files determine what each participant's numbers are ONCE the roster is chosen.",
+    "search_performed": [
+      "grep -ril 'swing_term|swing term|armed_carry|armed carry' over the whole evidence tree -> ZERO hits. The scenario name appears nowhere in data/ or docs/math-foundations.md.",
+      "grep -ril 'coupled' -> only data/atoms/autoresearch-review.md, data/worklists/issues-c-task.md, data/worklists/p2-math-task.md, docs/math-foundations.md; none carries a coupled-scenario corpus manifest.",
+      "grep -ril 'roster' -> narrative mentions only (worklists f0/f1/e8d, issues-c/d, p2, p5-ux, atoms/autoresearch-review.md); no roster definitions.",
+      "data/practice-corpus/scenarios.json enumerates 22 scenario ids (cp21-ziggs-outer-blast, cp21-bis-utility-ahri, e0-vladimir-sanguine-pool-heal, vladimir-hemoplague-multitarget, e9-e1-aatrox-umbral-dash-heal, e9-e2-malzahar-malefic-visions, e9-e3-varus-blight-detonation, e9-e3-nasus-siphoning-stacks, e9-e4-zyra-plant-attacks, e9-e4-yorick-mist-walkers, e9-e5-zed-death-mark, e9-e5-veigar-primordial-burst, e9-e5-sion-decimating-smash, e9-e8-rengar-battle-roar-grey, e9-e8-annie-molten-shield, e9-e8-anivia-rebirth, e9-e8-morellonomicon-grievous, e9-e8-serpents-fang-shield-cut, e9-item-serpents-fang-venom, e9-item-fimbulwinter-everlasting, e9-item-steraks-lifeline, e9-item-bloodthirster-lifesteal). 'swing_term_armed_carry' is NOT among them; the golden coupled-scenario corpus is defined in code, outside the permitted tree.",
+      "data/staleness.json, data/economics-sourced.json, data/onhit-matrix.json top-level keys inspected — no scenario/roster registry."
+    ],
+    "what_the_permitted_sources_DO_establish": [
+      "A multi-participant roster is a first-class, documented object of the model, not an ad-hoc addition: docs/math-foundations.md line 353 defines the optimizer objective as 'f(S) = the **coupled participant-timeline score**: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak'.",
+      "Roster-sized allocation is explicitly part of the priced model: docs/math-foundations.md line 218, 'the single-target fight prices one allocation across the roster (`statikk_chain_target_count`)'.",
+      "An 'armed carry' participant (a carry champion holding items) is fully expressible from the cache: data/champions.json holds 173 champions (Aatrox, Ahri, Akali, Akshan, Alistar, ...) and data/items.json holds 324 items, which is exactly the input alphabet a roster entry draws from.",
+      "The swing machinery the scenario name gestures at is documented and exact: docs/math-foundations.md lines 44-49, 'swings land at `0, Δ, 2Δ, …` with `Δ = 1/(AS · u)` ... `N(T) = ⌊AS · u · T⌋`', and the audit table's crit row, '`E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw)' — **EXACT**. None of this constrains a roster's membership."
+    ],
+    "derivation_of_the_verdict": [
+      "Step 1. The leaf is not a derived quantity, so there is no arithmetic to reproduce. The only oracle-answerable question is a structural one: given that a coupled scenario 'swing_term_armed_carry' is being snapshotted, is the presence of a captured roster leaf correct, and is absence correct?",
+      "Step 2. Absence cannot be correct for a scenario that runs. The roster is the composition that every other number in a coupled scenario is conditioned on (the score in line 353 is defined over the participant timeline; the allocation in line 218 is defined 'across the roster'). A golden snapshot that pins the scenario's numbers while omitting the roster would pin outputs without pinning the input they depend on — a silent-coverage-loss failure of exactly the kind the golden gate exists to prevent (CLAUDE.md: 'a pure refactor must show zero diffs, while a behavior fix re-captures the baseline with every diff explained').",
+      "Step 3. Nothing in the permitted evidence contradicts the new leaf. A roster of a carry plus items is legal and representable from the cache (173 champions, 324 items), and the coupled participant-timeline model explicitly contemplates multi-participant rosters. There is no source in data/ or docs/math-foundations.md that would render such an entry wrong.",
+      "Step 4. 'both_wrong' would assert a positive error; no evidence in the permitted tree supports that assertion. 'old_value_correct' would assert the leaf should stay absent, which Step 2 rules out."
+    ],
+    "scope_limit_stated_plainly": "This verdict is STRUCTURAL ONLY. Because the concrete captured entry was never disclosed to this investigator, its individual members (champion names, levels, item lists, SR-legality per CLAUDE.md rule 6, named-module coverage per rule 7) were NOT verified element-wise. A follow-up oracle pass that is given the literal entry can discharge that: each champion name must key into data/champions.json and each item name must match the exact name in data/items.json. Do not read this receipt as certifying the entry's contents."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md line 353",
+      "quote": "`f(S)` = the **coupled participant-timeline score**: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak"
+    },
+    {
+      "source": "docs/math-foundations.md line 218",
+      "quote": "the single-target fight prices one allocation across the roster (`statikk_chain_target_count`)"
+    },
+    {
+      "source": "docs/math-foundations.md lines 44-49",
+      "quote": "swings land at `0, Δ, 2Δ, …` with `Δ = 1/(AS · u)` where `AS` is total attack speed and `u` is the auto-attack uptime fraction. The engine computes the swing count as N(T) = ⌊AS · u · T⌋"
+    },
+    {
+      "source": "docs/math-foundations.md line 464 (formula-audit table, crit row)",
+      "quote": "`E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw) | **EXACT**"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "quote": "22 scenario ids enumerated; 'swing_term_armed_carry' absent — the golden coupled-scenario corpus is not represented anywhere in the permitted evidence tree"
+    },
+    {
+      "source": "data/champions.json, data/items.json",
+      "quote": "173 champion entries and 324 item entries — the alphabet from which any roster entry is drawn"
+    }
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_confidence": "structural / bounded — the leaf's existence and shape are correct and absence was not; the entry's contents were not disclosed and therefore not element-wise verified",
+  "committed": false
+}
