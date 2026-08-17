@@ -3031,22 +3031,30 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
     so the moment a family authored one packet per swing.  Keying on the row
     would then have read a fight's fourteen honest applications as a double
     count, which is the opposite of what D-62 says.
+
+    The **scenario** is part of the key for the same reason, one level up.
+    D-62's uniqueness is a property of one walk: two independent scenarios
+    that equip the same item against the same enemy roster price the same
+    ``(mechanic, subject, event_id)`` in each of their own fights, and that is
+    two honest pricings rather than one double count.  A key that pooled the
+    scenarios was accidentally unique only while exactly one committed
+    scenario covered each family.
     """
     scenarios = _covering_scenarios_of(family)
     assert scenarios, f"no committed coupled scenario equips {family.value}"
     repriced = walk_repriced_mechanics()
 
     priced = [
-        record
+        (scenario.name, *record)
         for scenario in scenarios
         for record in _priced_declarations(scenario.name)
         if record[1] is not None and record[1].rule_id in repriced
     ]
     assert priced, f"the walk priced no declaration of {family.value}"
-    keys = [(identity, packet.rule_id) for identity, packet, _, _ in priced]
+    keys = [(name, identity, packet.rule_id) for name, identity, packet, _, _ in priced]
     assert len(keys) == len(set(keys))
 
-    for source_key, packet, amount, resistances in priced:
+    for _scenario, source_key, packet, amount, resistances in priced:
         assert amount is not None, source_key
         # The paid number, re-computed from the declaration and the
         # resistances that packet met.  Equality is what says the roster total
