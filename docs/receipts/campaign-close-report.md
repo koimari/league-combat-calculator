@@ -1139,3 +1139,36 @@ citation of rounds 110 and 111 is correct, reads on the group those rounds actua
 verify, and is untouched.
 
 This is the third and last of the three figures the pass returned NOT DISCHARGED.
+
+### 15.4 Nine is this closeout's count; the tree's is sixty-two
+
+Section 14.5 records "**nine stand `documented_open`**", and nine is exact for the
+population that sentence is about: the 23 pass blocks `a431e34` transcribed carry 14
+`NOT_DISCHARGED` rows, of which 5 are `fixed` and 9 `documented_open`. Runbook
+criterion 11's second clause — "no barrier is crossed with an open NOT DISCHARGED"
+— is not quantified over that population. It is quantified over the ledger, and a
+section whose whole job is recording what stayed open is where that number belongs.
+
+Counted over all 127 passes in [`verify-ledger.json`](verify-ledger.json) at this
+tip:
+
+| verdict / disposition | rows |
+|---|---|
+| `DISCHARGED` | 808 |
+| `PHASE_TIP_ONLY` | 115 |
+| `NOT_DISCHARGED` | 89 |
+| ... of which `fixed` | 20 |
+| ... of which `fixed_and_gated` | 7 |
+| ... of which `documented_open` | 62 |
+
+The 62 stand across 24 slice groups and 27 rounds: 43 of them in backfilled blocks,
+9 in residue-sweep blocks and 10 in live passes. `R-28` alone holds 12,
+`campaign-close` 8, and `R-37`, `S9` and `S10` five each. Nine of the 62 are this
+closeout's; the other 53 were open before it began and none is answered by it.
+
+**This re-grades nothing.** Section 6's criterion 11 and
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) are the authority on the
+grade and neither moves here, exactly as sections 14.3 and 14.4 leave G4 and G6
+where the ledger has them. What changes is that the clause's own denominator is
+written down: 62 open rows is a number that can be re-derived, argued with and
+driven down, and "nine" was a true figure about the wrong set.
