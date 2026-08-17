@@ -1283,3 +1283,38 @@ the stems say, and it is unchanged. What was wrong is where the stem starts.
 sentence and the check now say the same thing. Round 128's note in
 [`verify-ledger.json`](verify-ledger.json) carries the same phrasing and gains the
 same dated clause; both stand written, with the measurement beside them.
+
+### 15.8 The R-01 matrix on this lane's tip
+
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**What each row read is in this lane's commit bodies, not here.** Sections 11.4,
+12.6 and 14.6 tabulate their readings; this one deliberately does not, for the
+reason 15.6 gives: a figure in this section is one this section's gate re-derives,
+and a gate reading cannot be re-derived without re-running the gate it came from.
+Putting a suite count and a pylint score in a table here would add the first
+ungated figures to the one section of this report that has none, which is the
+property the corrections above are for. The verdicts are what this section can
+carry and check by reading; the numbers live where R-01 puts them, one commit at a
+time.
+
+No baseline moves in this lane, no `src/` is touched, and both compared baselines
+read `snapshot identical`, so there is nothing for a boundary re-capture to absorb
+and none is performed.
