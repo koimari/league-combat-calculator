@@ -836,3 +836,185 @@ bound against.
   rewritten to fit the runbook.
 * **Stale justification strings in gated receipts** — swept, with the sweep's own
   commit naming each string it moved and the measurement that made it stale.
+
+---
+
+## 14. The closeout, dispositioned
+
+*Appended 2026-08-17 on `a431e34..HEAD`, after a third sign-off review withheld
+certification with five findings — the criterion-11 backfill and the ruling behind
+it, the fourteen receipt-walk retirements, the standing-dissent docket, and the two
+minors section 13.2 left as one-line records. Everything above this line stays as
+written, for the reason section 9 gives. **Nothing here re-grades a gap or a
+criterion.** Section 12.4's table and
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) are the authority on state
+and this section moves no row in either; what it records is what each finding is
+answered by, measured on this tip by running the instrument rather than by reading
+a body.*
+
+### 14.1 The five, one by one
+
+| Finding | State | Where it stands |
+|---|---|---|
+| **1 — criterion 11's first clause: the backfill, and the ruling behind it** | **The backfill is complete; the ruling is untouched and still owed** | The clause's residue is 2 of 125 slice tags, down from 118 on 2026-08-14. Both remaining tags cite a verdict a reader can open, so `residue_with_no_verdict_anywhere` is **0**. The ruling is `rulings-owed.json`'s one open row and no lane may write it. See 14.2. |
+| **2 — the fourteen receipt-walk retirements** | **All fourteen have left; the re-grade is the owner's** | `behavior-frontier.json`'s `counters.counter_4.deferrals.rows` is `{}` and `receipt-walk-retirement-schedule.json`'s `families` is `{}`. Ten retired by Amendment L's ruled act, one by Amendment O's authority reclassification, three by Amendment Q's lane-declaration correction. See 14.3. |
+| **3 — the standing-dissent docket** | **Three of four clusters cleared; one open, and it is a `src/` slice rather than an investigation** | `standing_dissent_scan.py --check` exit 0: 34 standing of 83 adverse across 597 receipts, 11 blocking — 7 adjudicated by citation, 4 open debts. The docket holds one cluster. See 14.4. |
+| **4 — minor: the `tests.collected` re-pin outside R-32's carve-out** | **CLOSED** | Ruled, not re-recorded: R-32's amendment of 2026-08-17 in the runbook grants `tests{collected}` to the owning lane on the receipt-only commit shape `86aa1d2` already used, with `skipped` and `xfailed` left to the integration agent. Landed at `1bd837e`. A fresh verifier re-measured every clause of the answering group and returned it DISCHARGED — ledger round 110. |
+| **5 — minor: stale justification strings in gated receipts** | **CLOSED** | Two answering groups, both verified. `campaign-close-minor-findings-r35` swept the first cohort (`8aa1ee1`, `ecc6497`, `51ccdce`, `264aeb9`) and `campaign-close-minor-findings-r35-2` the strings the first sweep left or wrote (`f87e4c2`, `df631c8`, `0c46d26`, `9d5b276`). Fresh verifiers over both ranges returned every criterion DISCHARGED — ledger rounds 110 and 111, each re-measuring the contradicted clause against the tree rather than against a body. |
+
+### 14.2 Finding 1 — the clause has a denominator, and 2 of 125 left in it
+
+The clause is "every slice has a recorded `verify-<slice>` verdict", and until
+2026-08-14 it quantified over nothing a machine could read. It has a denominator
+now — the campaign's own slice tags, derived from commit subjects — and this
+closeout finished filling it from the only admissible source the ledger names: the
+orchestration journals, one JSON line per rendered verifier report, written by
+readers who had not read the plan and before the commits that answered them.
+
+Measured on this tip, and every figure read from
+[`verify-ledger.json`](verify-ledger.json)'s coverage block rather than restated
+from a body:
+
+| | 2026-08-14 | this tip |
+|---|---|---|
+| slice tags derived from commit subjects | 68 | **125** |
+| with a verdict recorded in the ledger | 1 | **123** |
+| residue | 67 | **2** |
+| residue citing no verdict anywhere | 61 | **0** |
+
+Three routes closed it and each is a different claim. The **backfill** (`a455839`)
+transcribed the verdicts rendered *during* the campaign, at the tip each slice was
+verified against. The **residue sweep** re-ran R-35 today over ranges that landed
+long ago, in three tranches — `209da2f`, `1e7c342`, and this closeout's `a431e34`,
+which took the four verifiers of the 2026-08-17 batch nobody had transcribed and
+turned them into 23 pass blocks. `0be8f37` recorded the verdict on
+`campaign-close-sweep-findings`, which is the campaign's first recorded verdict on
+a lane whose whole job was answering somebody else's.
+
+What is left is two tags: `campaign-close-verify-p4-batch`, whose verdict lives in
+a commit body and whose range no verifier's brief ever reached, and this closeout
+lane's own tag, which cannot verify itself. Both are listed, both are prepared as
+startable rows in [`verify-backlog.json`](verify-backlog.json), and neither is
+counted as covered.
+
+**The ruling is not answered and this section does not read on it.** Whether the
+clause binds the campaign's past is `rulings-owed.json`'s one open row, and how a
+row closes is unchanged: an amendment in the umbrella, written by its owner, with
+the row moved to `answered[]` naming it. `b02e4ca` refreshed the row's *measurement*
+— the question quoted a population frozen on 2026-08-14, which a verifier filed as
+a standing aside — and refreshed nothing else: both branches stand verbatim, no
+amendment is cited because none exists, and the row stays in `owed[]`. What the
+transcription changed is the price of the backwards branch, from 61 fresh passes to
+2. A price is not a ruling.
+
+### 14.3 Finding 2 — the fourteen have left, and the ledger row that says so
+
+Amendment B deferred fourteen `(family, RECEIPT_WALK)` rows to a stage that then
+shipped without retiring them; Amendment F established that the retiring act is a
+per-family interpreter and said in terms that restating the debt is not ruling it
+acceptable. Measured on this tip, by running the instruments rather than reading
+the amendments:
+
+* `behavior_frontier.py --check` exit 0, `counter_4` at 16 declared pairs with
+  `deferrals.rows == {}` — deferred 0, gap 0, met true on both the `PAIR_ENGINE`
+  and `RECEIPT_WALK` targets.
+* `receipt_walk_schedule.py --check` exit 0, `families == {}`, `scheduled_slices`
+  0, `families_with_no_covering_coupled_scenario` `[]`,
+  `slices_whose_retiring_lane_amendment_k_corrects` `[]`.
+* `interpreters.INTERPRETERS` holds **13** `(family, RECEIPT_WALK)` keys, read from
+  the tree.
+* The fourteen leave by three different acts, and the receipt names which:
+  **ten** by the ruled per-family retirement slice, **one** (`crit_profile`) by
+  Amendment O's Ruling 1 authority reclassification, and **three**
+  (`combat_state`, `opening_defense`, `threshold_defense`) by Amendment Q's
+  lane-declaration correction. Ten plus one plus three is the fourteen.
+* `term_census.py --check` exit 0 — 29 post-authoring packet-mutation sites, 0
+  uncovered; 9 authoring-time mitigation terms, 0 uncovered; 3 static holder amps,
+  0 unfolded. That gate is the one Amendment N ruled must be clean before any
+  family may retire, and it is clean over both halves of a mitigation.
+
+**G4's state is not moved here.** Its own row says what stands in its way is no
+longer an interpreter but the re-grade itself, which re-reads umbrella criterion 7
+and section 12.4's table with it, and is the owner's rather than a lane's. This
+section records the measurement and leaves the grade exactly where the ledger has
+it.
+
+### 14.4 Finding 3 — nineteen debts cleared, four standing, one cluster
+
+The docket named 22 open debts in four clusters, each with the defect in its prior
+brief measured from the committed pre-change captures. Three clusters have since
+cleared and are in `cleared[]` rather than deleted, because a closed row says which
+question was re-posed and which receipts answered it:
+
+* **`syndra_rotation_receipt_rederivation`** (17 receipts) — cleared 2026-08-15 by
+  clause 1: one fresh investigator per scenario record, the whole rotation computed
+  from cached ability rows and `docs/math-foundations.md`, one receipt per leaf,
+  each naming the defect and the receipt it supersedes.
+* **`abyssal_unmake_support_multiplier_field`** (1) — cleared 2026-08-15 by clause
+  1, briefed on the record rather than on the field; verdict `new_value_correct`.
+* **`item_coverage_reason_prose`** (1) — cleared by the only route it had. Its
+  brief had no defect to name, so clause 3 made a re-run unwritable; umbrella
+  **Amendment J** adjudicates a campaign-authored justification string by source
+  assertion, and the row closed on the ruling rather than on an investigation.
+
+One cluster stands: **`syndra_cast_timeline_ordinal`**. Clause 1 is spent — the
+whole-series re-adjudication ran, well posed, and filed three receipts (two
+`both_wrong`, one `new_value_correct`) — so what it owes is clause 2, the producing
+correction re-opening as its own ruled `src/` slice. Its four open debts are the two
+original C6 receipts and the two `both_wrong` receipts the re-adjudication itself
+filed, which are standing dissents on the addresses they answer.
+
+The instrument, not the prose, is the authority:
+`standing_dissent_scan.py --check` exit 0 — **34 standing of 83 adverse across 597
+receipts; 11 blocking, 7 by citation and 4 open debts.** Every capture that would
+pin over a standing verdict fails a gate, which is the half of R-19 the campaign
+lacked until `9c6adee`. **G6's state is not moved here** for the same reason G4's
+is not.
+
+### 14.5 What this closeout did not close
+
+Recorded rather than rounded up, in the shape section 9 set:
+
+* **The owed ruling.** One row, `rulings-owed.json`, unchanged and unchangeable by
+  a lane.
+* **Fourteen NOT_DISCHARGED sweep rows, recorded and not answered.** The 23 blocks
+  `a431e34` transcribed carry 14 `NOT_DISCHARGED` verdicts. Three name the commit
+  that closed the red they found and this lane resolved that commit; two ask for
+  exactly the transcription that records them; **nine stand `documented_open`**.
+  Recording a verdict is not answering it, the ledger's `residue_sweep` block says
+  so in its own words, and a lane that graded its way out of nine findings would be
+  doing the thing this campaign exists to stop.
+* **`tests.collected` is 406 behind its pin.** `campaign-fingerprints.json` pins
+  8128; `pytest` reports 8534 on this tip. The suite is green and nothing is
+  skipped, so no gate is red — what is unavailable is R-01 row 1's *second* half,
+  "collected = the pinned count + declared new", read from the receipt alone. The
+  delta belongs to the declaring lanes' slices and not to this one, which declares
+  none; it is recorded here and in ledger round 104's findings rather than absorbed
+  by a lane re-pinning over other lanes' arithmetic.
+
+### 14.6 The R-01 matrix on this closeout's tip
+
+| # | Verdict | What it read |
+|---|---|---|
+| 1 | **GREEN** | 8534 passed, 0 skipped, 0 xfailed |
+| 2 | **GREEN** | `snapshot identical` |
+| 3 | **GREEN** | `snapshot identical` |
+| 4 | **GREEN** | exit 0, `passed: true`, 10 scenarios, 0 failures |
+| 5 | **GREEN** | exit 0, 173 registered / 173 exercised, `passed: true` |
+| 6 | **GREEN** | 658 files unchanged |
+| 7 | **GREEN** | rated 9.61/10; ratchet reports 197 files at or above their recorded score |
+| 8 | **GREEN** | all four scenarios; every counter, residual, winner and score pinned in `campaign-fingerprints.json` reproduces exactly, zero mismatches; none voided, none truncated |
+| 9 | **GREEN** | 18 non-legacy scenarios at the merge-base anchor `494eb06` |
+| 10 | **GREEN** | 161 passed |
+| 11 | **GREEN** | `routing_divergences` empty on all four scenarios |
+
+`plan_audit.py` (R-37): **exit 0 — 8 plan documents clean.**
+`sole_home_scan.py --check` (6 sites, 0 unexplained), `standing_dissent_scan.py
+--check`, `behavior_frontier.py --check`, `migration_frontier.py --check`,
+`receipt_walk_schedule.py --check`, `term_census.py --check` and
+`verify_backlog.py --check`: all exit 0.
+
+Both compared baselines read `snapshot identical` at this tip and no closeout slice
+left a declared diff standing, so this closeout performs **no** boundary re-capture:
+there is nothing for one to absorb, and a capture with nothing to absorb is a
+baseline move for its own sake.
