@@ -13227,6 +13227,699 @@
      "answered_at": []
     }
    ]
+  },
+  {
+   "slice_group": "P4C",
+   "round": 80,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "3989dea"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "3989dea"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 9,
+    "findings_returned_for_this_slice": 0
+   },
+   "criteria": [
+    {
+     "id": "P4C-1-receipt-only-no-src",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --name-only 3989dea` = 17 files under docs/receipts/ + tests/test_escalated_defects_p4_boundary.py + tests/test_escalated_defects_s6s7_oracle.py. No src/, no scripts/, no scripts/golden_*baseline*.json, no campaign-fingerprints.json. The tests/ ride-along is disclosed in the body with its reason.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-2-fifteen-receipts-three-clusters",
+     "verdict": "DISCHARGED",
+     "what_was_found": "15 new oracle-P4C-*.json files: 11 with cluster_id P4C-C1-carve-rearm-series-cleaver-bloodsong, 2 with P4C-C2, 2 with P4C-C3-s6s7-events-82-ordinal-reindexed-record.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-3-verdict-tally-11-4-0",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read `verdict` from each of the 15 at 3989dea: Counter({'new_value_correct': 11, 'old_value_correct': 4}); zero both_wrong. C1 all new, C2 both old, C3 both old \u2014 exactly the body's per-cluster split.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-4-leaf-mapping-matches-body",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Each receipt's `leaf` field read at 3989dea and compared to the body's bullet list: C1 leaf1..leaf11 = events[23]/srr[1],[2]; events[35]/srr[2],[3],[4],[5]; events[46]/srr[1],[4],[6],[7]; events[46]/raw_damage. C2 leaf1=healing_events[39]/overheal, leaf2=/applied_amount. C3 leaf1=events[82]/damage_type, leaf2=events[82 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-5-clause-3-defect-named-priors-untouched",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Every one of the 15 carries a supersession object (prior_brief_defect_superseded / supersedes_prior_briefs / supersedes_prior_brief_defect) with a non-empty `defect`. No oracle-P4B-*.json or oracle-S6S7-*.json appears in the commit's tree diff. `pytest tests/test_escalated_defects_p4_boundary.py::TestTheDissentsAreReAd [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-6-C1-factual-claims-true-of-the-pre-change-baseline",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read scripts/golden_coupled_baseline.json at 3989dea: events[23] has 3 support_resistance_reduction rows, events[35] has 6, events[46] has 8 \u2014 the body's '3 / 6 / 8'. Every row's `source` is 'Black Cleaver \u2014 Carve', including index [0]. events[46] holds the terminal fraction 0.30 at three separate indices, breaching th [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-7-no-baseline-moves-entry-stays-open-at-thirteen",
+     "verdict": "DISCHARGED",
+     "what_was_found": "No baseline path in the diff. At 3989dea escalated-defects-P4-boundary.json defects[0].id == thirteen_of_the_sixty_boundary_verdicts_certify_the_old_value with dissenting_population length 13 and re_adjudicated_under_the_amendment.net_effect_on_the_thirteen == {resolved: 11, sustained: 2, prior_receipts_edited_or_delet [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-8-declared-new-test-nodes-6",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 3989dea -- tests/` adds exactly six `def test_`: five in the new class TestTheDissentsAreReAdjudicatedUnderTheAmendment and one (test_the_re_adjudication_confirms_the_substitution) in the S6/S7 gate.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-9-R01-eleven-rows-at-that-tip",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "The declared readings (pytest 7857, coupled compare FAIL 145, black 632 files) are per-tip measurements that cannot be reproduced from HEAD \u2014 scripts/golden_coupled_baseline.json was re-captured eight times after 92f309f (c2b3d88, 1db568c, 09956f8, 4f41e6e, 39fab33, d1d3c28, eb68690, f5d6c65). Ran the whole matrix at H [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": []
+  },
+  {
+   "slice_group": "P4C-P4E-C2R",
+   "round": 81,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "4c40c9d"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "4c40c9d"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 9,
+    "findings_returned_for_this_slice": 2
+   },
+   "criteria": [
+    {
+     "id": "P4C-P4E-C2R-1-two-files-receipt-only",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --name-only 4c40c9d` = exactly the two oracle-P4C-P4E-C2R-*.json files under docs/receipts/. No src/, scripts/, tests/, or baseline.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-2-both-new-value-correct-clause-2-not-reached",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Both receipts carry verdict 'new_value_correct' (leaf1 applied_amount 271.4 -> 211.0, leaf2 overheal 88.0 -> 148.4). No old_value_correct, no both_wrong, so clause 2 is not triggered.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-3-crossed-per-leaf-supersession",
+     "verdict": "DISCHARGED",
+     "what_was_found": "leaf1 (applied_amount) carries supersedes_this_leafs_prior_receipt = oracle-P4C-C2-...-leaf2.json; leaf2 (overheal) carries oracle-P4C-C2-...-leaf1.json. The crossing is exactly as the body spells it, and it is correct: the C2 pass numbered overheal as leaf1.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-4-prior-receipts-unedited-undeleted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Neither oracle-P4C-C2-...-leaf1.json nor -leaf2.json appears in the commit's tree diff; both still resolve at HEAD with their original old_value_correct verdicts.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-5-certified-fact-chain-resolves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Every cited certified fact opened and checked against the committed file: oracle-P4B-leaf26 healing_events[25]/overheal 37.4->22.2 new_value_correct; leaf22 [31]/overheal 32.6->46.7; leaf28 [55]/overheal 97.6->71.5; leaf19 events[46]/damage 128.9->53.4; oracle-S6S7-leaf64 events[48]/damage and -leaf67 events[50]/damage [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-6-arithmetic",
+     "verdict": "DISCHARGED",
+     "what_was_found": "delta(window damage) = -75.5 + 7.6 + 7.6 = -60.3 reconstructs exactly from the three certified moves above. 271.4 - 60.3 = 211.1 against the claimed 211.0, inside the stated +/-0.15. The unmoved amount: 0.10 x 3001 = 300.1, x 100/167 = 179.7006, x2 = 359.4012 = the baseline's `amount` 359.4 on all seven Deathbringer ro [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-7-writes-no-ledger-row",
+     "verdict": "DISCHARGED",
+     "what_was_found": "escalated-defects-P4-boundary.json not in the diff; at 4c40c9d the P4C-C2 cluster row still reads old_value_correct and net_effect_on_the_thirteen still counts 2 sustained, entry open \u2014 exactly as the body says it must.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-8-test-neutral-zero-new-nodes",
+     "verdict": "DISCHARGED",
+     "what_was_found": "No tests/ file in the diff, so zero declared new nodes is structurally true. The absolute figure 7891 is a per-tip measurement (see the PHASE_TIP_ONLY row).",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4E-C2R-9-R01-eleven-rows-at-that-tip",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "Coupled 'FAIL 124, qualifying 106' is unreproducible from HEAD (baseline re-captured downstream). HEAD readings substituted as above; nothing in the current tree contradicts a receipt-only, behaviour-neutral commit.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "P4-batch#1/unmentioned-4",
+     "finding": "[P4C-P4E-C2R] Neither delivered receipt carries a `date`/`dated` field \u2014 unlike essentially every other pass in docs/receipts/. Consequence, measured: under the repo's own clearing rule (an adverse verdict clears when a same-leaf new_value_correct receipt is not dated earlier), these two undated receipts do NOT clear o [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-5",
+     "finding": "[P4C-P4E-C2R] oracle-S6S7-leaf40 (healing_events[39]/overheal, 88.0 -> 72.9, verdict new_value_correct, dated 2026-08-13) is a committed new_value_correct receipt certifying a DIFFERENT new value on the very leaf this pass certifies as 148.4. The body notes the receipts 'refused' it as stale, but does not note that the [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P4C/P4F",
+   "round": 82,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "92f309f"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "92f309f"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 8,
+    "findings_returned_for_this_slice": 3
+   },
+   "criteria": [
+    {
+     "id": "P4C-P4F-1-twentyfive-files-receipt-only-no-ledger-row",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --name-only 92f309f` = 25 files, all docs/receipts/oracle-P4C-*.json. escalated-defects-P4-boundary.json is absent from the diff, as the body claims.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-2-tally-25-of-25-new-value-correct",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read `verdict` from all 25 at 92f309f: Counter({'new_value_correct': 25}). No old_value_correct, no both_wrong.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-3-cluster-composition-17-2-6",
+     "verdict": "DISCHARGED",
+     "what_was_found": "17 carry disposition 'RESOLVED - NO ACTION. Re-adjudication is neither owed nor permissible on this leaf.'; 2 are P4C-P4F-C1 applied-half leaves (healing_events[25]/[31] applied_amount); 6 are P4C-P4F-C2 rollups (participants[2]/survival healing_received, overhealing, effective_health; breakdown[2] healing_received, ef [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-4-the-eight-P4F-leaves-are-first-adjudications",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Parsed every docs/receipts/oracle-*.json in the tree at 92f309f^ and matched leaf addresses under all three committed schemas: zero prior receipts on any of the eight paths. The receipts' 'clause 3 has no prior brief to cite' is a true statement about the tree.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-5-old-values-and-forced-new-values",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Baseline at 92f309f: healing_events[25] applied 322.0 / overheal 37.4, [31] applied 326.8 / overheal 32.6, amount 359.4 on both. amount - certified overheal: 359.4-22.2 = 337.2 (leaf1's new value), 359.4-46.7 = 312.7 (leaf2's). Rollups: 4074.9 / 1714.1 / 6662.9 in the baseline; the claimed moves are -33.0 / +33.1 / -33 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-6-one-key-added-and-the-clause-3-gate-reads-it",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All 25 carry a supersession block with a non-empty `defect`. tests/test_escalated_defects_p4_boundary.py::test_every_superseding_receipt_names_the_defect_in_the_brief globs oracle-P4C-* and asserts body[field]['defect'] \u2014 green at HEAD, so the stated reason for the added key is the real one.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4C-P4F-7-no-qualifying-leaf-carries-a-standing-dissent",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "The measurement of record (124 differing / 106 qualifying, cross-joined against 512 receipts) cannot be reproduced from HEAD \u2014 the coupled baseline was re-captured eight times downstream. Corroborated at HEAD instead by the repo-wide gate the campaign later built: tests/test_standing_oracle_dissents.standing_dissents() [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    },
+    {
+     "id": "P4C-P4F-8-R01-eleven-rows-at-that-tip",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "As for P4C: per-tip compare and collection figures unreproducible from HEAD; the HEAD matrix (8534 passed, both compares identical, black clean, pylint 9.61, repin at anchor, plan_audit clean) was run and is green.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "P4-batch#1/unmentioned-1",
+     "finding": "[P4C/P4F] The 17 `RESOLVED - NO ACTION` receipts are described as pure enumeration that 're-adjudicates nothing', but each carries a top-level `verdict: new_value_correct` dated 2026-08-14, and those verdict strings are what the repo-wide R-19 gate reads. Measured by ablation at HEAD (tests/test_standing_oracle_dissent [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-2",
+     "finding": "[P4C/P4F] All 17 RESOLVED receipts assert `evidence_tree: '... docs/receipts/ ... were NOT read'` while their own `measurement_of_record` in the same file reports 'Cross-join of the 124 diff paths against all 512 docs/receipts/oracle-*.json' and their `defect` keys quote committed classification receipts verbatim. The  [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-3",
+     "finding": "[P4C/P4F] Three of the 17 (leaf14 events[82]/damage_type, leaf15 events[82]/sequence, leaf16 support_events[17]/owner) file R-19's value-question `verdict` enum on leaves that R-15's 2026-08-14 amendment says are adjudicated by citation and on which 'one may not be filed as though the question were a value question'. T [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P4-arbitrate",
+   "round": 83,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "f8ca700"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "f8ca700"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 8,
+    "findings_returned_for_this_slice": 2
+   },
+   "criteria": [
+    {
+     "id": "P4-arbitrate-1-three-files-receipt-only",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --name-only f8ca700` = docs/receipts/oracle-P4-arbitrate-leaf0/1/2.json only.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-2-all-three-new-value-correct",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All three files carry verdict 'new_value_correct'; none is old_value_correct or both_wrong, so no dissent joins the blocking population.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-3-exactly-the-NOT_OWED_RULED_MEMBERSHIP-set-and-it-is-untouched",
+     "verdict": "DISCHARGED",
+     "what_was_found": "expected-golden-diff-P4D-identity-keyed-report.json at f8ca700 carries oracle_receipts.status == NOT_OWED_RULED_MEMBERSHIP over exactly three leaves \u2014 events[82] (identity main:enemy:Aatrox:33), support_events[17] (enemy:Aatrox:support:17), support_events[18]/owner (enemy:Aatrox:support:2), each transition 'value_to_ab [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-4-old-values-byte-equal-to-the-committed-baseline",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read scripts/golden_coupled_baseline.json at f8ca700: events[82] is byte-identical to leaf0's quoted old_value key for key (damage 0.0, pair_damage 98.6, sequence 34, skipped_reason attacker_dead, source expose_weakness_Bloodsong, time 7.5). support_events[17] matches leaf1's quoted keys key for key (the receipt's _not [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-5-zero-overlap-with-the-blocking-population",
+     "verdict": "DISCHARGED",
+     "what_was_found": "String count of each of the three paths in escalated-defects-P4-boundary.json at f8ca700 = 0, 0, 0. The claim 'no receipt filed here shares a leaf path with either population' holds.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-6-leaf1-numeric-demonstration",
+     "verdict": "DISCHARGED",
+     "what_was_found": "m(119.6) = 100/219.6 = 0.45537; 30% shred -> armor 83.72, m = 100/183.72 = 0.54431; ratio 1.1953 = +19.5%, not +30%. The body's figures reproduce exactly.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-7-test-neutral-by-prefix",
+     "verdict": "DISCHARGED",
+     "what_was_found": "At f8ca700 the only gate globbing oracle-*.json is tests/test_escalated_defects_p4_boundary.py, whose selectors are the owed leaf-path set and the prefixes PASS_PREFIX (oracle-P4B-) / SUPERSEDING_PREFIX (oracle-P4C-). 'oracle-P4-arbitrate-' matches neither. The absolute 7891 collection figure is per-tip.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-arbitrate-8-R01-eleven-rows-at-that-tip",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "Per-tip compare/collection figures unreproducible from HEAD; HEAD matrix run and green.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "P4-batch#1/unmentioned-9",
+     "finding": "[P4-arbitrate] leaf2's own text concedes that 'under the alternate provenance reading of owner the correct value would be the item holder's id, which in this roster is not main, so the old value is wrong under either reading' \u2014 i.e. it decides a value question about the field, on a leaf the commit simultaneously insist [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-10",
+     "finding": "[P4-arbitrate / P4-R18-amend] Both commits create a second adjudication of record on paths that a committed allowlist had already closed as NOT_OWED. Nothing marks the receipts as non-binding, so any later scan that reads oracle-*.json by existence (which is exactly what tests/test_standing_oracle_dissents.py was later [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
+  },
+  {
+   "slice_group": "P4-R18-amend",
+   "round": 84,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "0302897"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "0302897"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 7,
+    "findings_returned_for_this_slice": 0
+   },
+   "criteria": [
+    {
+     "id": "P4-R18-amend-1-three-files-receipt-only-no-baseline",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --name-only 0302897` = docs/receipts/oracle-P4-R18-amend-leaf0/1/2.json only. No src/, scripts/, tests/, baseline or ledger.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-2-all-three-new-value-correct-on-the-three-dispositions-leaves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "leaf0 /coupled_scenarios/score_event_scan_holder/combat/dispositions, leaf1 score_event_view_holder, leaf2 score_plain_tuple \u2014 all verdict new_value_correct, matching the body's naming of the three leaves.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-3-these-are-the-allowlist-declared-not-owed-leaves",
+     "verdict": "DISCHARGED",
+     "what_was_found": "expected-golden-diff-P4-S9-score-map.json at 0302897 carries oracle_pass.status == NOT_OWED_NO_OLD_VALUE with qualifying_population.members == [score_plain_tuple, score_event_view_holder, score_event_scan_holder] and expected_qualifying_occurrences 3, transition 'absent_to_value on every one'. Same three.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-4-boundary-arithmetic-does-not-move",
+     "verdict": "DISCHARGED",
+     "what_was_found": "escalated-defects-P4-boundary.json is not in the diff, and at 0302897 it still reads differing_leaves 145 / qualifying_leaves 127 / declared_not_owed_by_a_committed_allowlist 3 / owed 60, with why_the_population_is_not_shrunk intact.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-5-the-stated-limits-are-in-the-files",
+     "verdict": "DISCHARGED",
+     "what_was_found": "leaf1 carries oracle_computable: false and verdict_confidence: low, as the body says. All three are consistency judgements rather than recomputations, per their own text.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-6-no-gate-reads-these-files",
+     "verdict": "DISCHARGED",
+     "what_was_found": "True at 0302897 by the same prefix argument as P4-arbitrate. Noted for completeness: at HEAD tests/test_standing_oracle_dissents.py globs every oracle-*.json, so these three are now read; they are non-adverse, so the pinned standing set is unaffected (verified by ablation).",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-R18-amend-7-R01-eleven-rows-at-that-tip",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "pytest 7851 / coupled FAIL 145 are per-tip; HEAD matrix run and green.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    }
+   ],
+   "unmentioned_behaviour": [],
+   "findings_recorded_under_another_slice": "The verifier's tenth finding is stamped '[P4-arbitrate / P4-R18-amend]' and charges both slices with one statement. It is recorded once, as P4-batch#1/unmentioned-10 under P4-arbitrate, rather than copied here -- one returned finding is one row, and duplicating it would make the campaign's finding count disagree with the verifier's."
+  },
+  {
+   "slice_group": "P4-H2-ccscope",
+   "round": 85,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "067c94c"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "067c94c"
+   ],
+   "what_this_round_is": "A residue-sweep pass: R-35 re-run on 2026-08-17 over a slice that landed earlier in the campaign, by a fresh read-only Opus 5 verifier that had not read the plan, and transcribed from the orchestration journal line that holds its returned report. The verdicts are the verifier's, rendered after this slice's commit landed, so nothing in the tree answers them -- see the ledger's `residue_sweep` block for what the shape claims and refuses.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a5389eb9ae5c88ea2"
+    ],
+    "journal_key": "v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "one_agent_six_slices": "This agent was handed six slices in one brief -- [\"P4C\",\"P4C-P4E-C2R\",\"P4C/P4F\",\"P4-arbitrate\",\"P4-R18-amend\",\"P4-H2-ccscope\"], one commit each -- and returned 51 criteria and 10 unmentioned-behaviour findings across all six. The report is split into one pass block per slice group, by the slice tag the verifier prefixed onto every criterion id and every finding, because the ledger's unit is the slice group. The rounds share an agent id, a key and a date for exactly that reason.",
+    "all_discharged_as_returned": {
+     "a5389eb9ae5c88ea2": false
+    },
+    "criteria_returned_for_this_slice": 10,
+    "findings_returned_for_this_slice": 3
+   },
+   "criteria": [
+    {
+     "id": "P4-H2-ccscope-crit9a-resolve_route-total-and-fail-closed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "src/calculator/program/route.py:225-267 dispatches all ten policies and ends in `raise TypeError(... the union is closed ...)`; PairDefender raises UnroutableEvent when the context names no pair defender and TriggerTarget raises when trigger_subjects is empty. Item packets now enter through this same function (item_sup [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-crit9b-first-defender-scan-zero-occurrences",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep _first_pair_defender_id 067c94c -- src/` and the same at HEAD both return nothing. Grep for first_pair_defender|first_defender over src/ finds only the new caller-supplied `first_defender` local in participant_timeline.py:3216-3303 and one comment. tests/test_escalated_defects_p4_s10.py::test_the_first_defend [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-crit9c-command-mark-routes-to-TriggerTarget",
+     "verdict": "DISCHARGED",
+     "what_was_found": "item_support_effects._cc_mark_subjects resolves scope_policy(scope) to get `reached`, then calls resolve_route(program_route.TriggerTarget(), replace(context, trigger_subjects=reached), ...) and returns the marked actors; derive_item_support_effects loops over that result for the IMMOBILIZE + Command branch. tests/test [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-crit9d-unreviewed-resolves-to-SingleTarget-with-a-disclosure-naming-the-ability",
+     "verdict": "DISCHARGED",
+     "what_was_found": "src/calculator/program/scope.py: CcScope = Union[SingleTarget, MultiTarget, Unreviewed]; reviewed_scope(Unreviewed) returns (SingleTarget(), RouteAnnotation(label='cc_scope_unreviewed', reason=<names the ability>)); scope_policy(SingleTarget) -> route.PairDefender() and raises UnscopedCrowdControl on Unreviewed; Unrevi [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-crit9-licence-the-second-exit-was-unavailable",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The umbrella's H2 row (2026-08-13) reads verbatim: 'Recorded ruling ... deferred, default shipped ... CcScope.Unreviewed resolves to SingleTarget on the pair defender with a disclosure naming the ability ... Command stays SPLIT and its authority does not move in Phase 4'. The shipped default is criterion 9's clause, so [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-R20-population-enumerated-and-measured",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/receipts/expected-golden-diff-P4-H2-ccscope.json carries enumerated_before_the_src_edit: true, enumerated_from the committed coupled baseline, the rule (any node whose source is 'Imperial Mandate - Command' across all thirteen scenarios), one member (mandate_abyssal_curse_roster support_events[2]) gaining cc_scope [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-entry-retires-with-gates-inverted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "escalated-defects-P4-S10.json: 'the_first_defender_scan_survives_because_ccscope_was_never_authored' is in retired[] and not in defects[]. tests/test_escalated_defects_p4_s10.py holds the three inverted reproducers plus the fourth routing assertion. tests/test_program_deletion_frontier.py moves 'the hardcoded first-def [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-plan-locator-refreshed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "docs/plans/phase-2-trigger-bus.md:123 moves item_support_effects.py:645 -> :715, fragment text unchanged. `python scripts/plan_audit.py` at HEAD: '8 plan documents clean'.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "P4-H2-ccscope-behaviour-neutrality-and-R01",
+     "verdict": "PHASE_TIP_ONLY",
+     "what_was_found": "The '3 diffs, every one allowlisted' and 'pytest 7977 / 84 declared nodes' readings are per-tip and unreproducible from HEAD (baseline re-captured downstream). What was reproduced: tests/test_program_scope.py collects exactly 13 nodes as declared; at HEAD both `compare golden_baseline.json` and `compare golden_coupled_ [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Settled only against HEAD, not against the tip the criterion was stated over; carried open as the verifier wrote it."
+    },
+    {
+     "id": "P4-H2-ccscope-support-effect-templates-call-sites",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The body states '_support_effect_templates now takes pair_defender_id as a REQUIRED keyword with no default, so all five call sites name the pair'. The keyword-only, defaultless signature is correct (participant_timeline.py:939-947). The count is not: there are SIX call sites at 067c94c (lines 1014, 2774, 2901, 3097, 3 [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Documented from the verifier's report; no lane answer is asserted. The miscount is reproducible at HEAD -- `grep -rn _support_effect_templates src/` returns the definition at participant_timeline.py:939 and six call sites (1091, 2937, 3065, 3262, 3297, 3996) -- and the same 'all five call sites' sentence is live in docs/receipts/escalated-defects-P4-S10.json, which is a correction of its own and not this recording lane's."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "P4-batch#1/unmentioned-6",
+     "finding": "[P4-H2-ccscope] The composition's fallback pass changes the ids it emits. `_attach_support_effects` now passes `pair_defender_id=None`, and the body frames this as 'None stays the honest answer'. The deleted `_first_pair_defender_id` did not return None there: it returned 'main' for an enemy attacker and the first enem [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-7",
+     "finding": "[P4-H2-ccscope] The Command mark site gains a new fail-closed branch and a new cardinality. `_cc_mark_subjects` returns an empty tuple \u2014 emitting NO Command packet \u2014 when the packet holder's participant_id is absent from `all_actors`; the old code emitted the packet whenever the cc target resolved via `_target_by_id`.  [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    },
+    {
+     "id": "P4-batch#1/unmentioned-8",
+     "finding": "[P4-H2-ccscope] Two instrument gates were weakened in the same commit: tests/test_escalated_defects_p4_boundary.py and tests/test_escalated_defects_s6s7_oracle.py stop asserting 'the coupled compare is clean' and now assert only 'every standing diff is claimed by a committed allowlist'. The body discloses this at lengt [...]",
+     "disposition": "documented_open",
+     "note": "R-35's load-bearing question, answered by the verifier and documented here; no lane answer is asserted.",
+     "answered_at": []
+    }
+   ]
   }
  ],
  "coverage": {
@@ -13263,7 +13956,13 @@
    "H5",
    "P2b",
    "P2c",
+   "P4-H2-ccscope",
+   "P4-R18-amend",
+   "P4-arbitrate",
    "P4-boundary",
+   "P4C",
+   "P4C-P4E-C2R",
+   "P4C/P4F",
    "P4D",
    "P5-e",
    "P5-f",
@@ -13313,14 +14012,8 @@
   "slice_groups_without_one": [
    "D-12",
    "P2a line",
-   "P4-H2-ccscope",
-   "P4-R18-amend",
    "P4-S9-ledger-join",
-   "P4-arbitrate",
    "P4-integration-final",
-   "P4C",
-   "P4C-P4E-C2R",
-   "P4C/P4F",
    "R-16",
    "R-19",
    "campaign-close-active-cast-retirement",
@@ -13357,10 +14050,11 @@
    "campaign-close-verify-backfill",
    "campaign-close-verify-backlog",
    "campaign-close-verify-coverage",
+   "campaign-close-verify-p4-batch",
    "umbrella [H] table"
   ],
   "untagged_commits": 159,
-  "residue": 47,
+  "residue": 42,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -13378,9 +14072,10 @@
    "campaign-close-receipt-walk-r35",
    "campaign-close-report",
    "campaign-close-verify-backfill",
-   "campaign-close-verify-coverage"
+   "campaign-close-verify-coverage",
+   "campaign-close-verify-p4-batch"
   ],
-  "residue_with_no_verdict_anywhere": 36,
+  "residue_with_no_verdict_anywhere": 31,
   "prepared_work": {
    "artifact": "docs/receipts/verify-backlog.json",
    "gate": "tests/test_verify_backlog.py",
@@ -13410,5 +14105,20 @@
   "what_it_does_not_claim": "That anything answered the row. A backfilled block's `answered_by` names the slice group's own closing commit and its criterion rows carry an empty `answered_at`, because a verdict recorded after the fact has no answering commit -- the ledger's schema requires the field and this is what it honestly holds. Nor does it claim a NOT_DISCHARGED row is closed: those rows are documented, which is the disposition the third clause names, and no lane action is asserted.",
   "why_this_is_not_the_reconstruction_the_ledger_refuses": "`what_this_ledger_does_not_hold` refuses verdicts rebuilt out of the commit bodies that answer them -- a record derived from the thing it is supposed to check independently. Nothing here is derived from a commit body. The verdicts are the verifiers' returned reports, held outside the repository, written before the commits that answered them, by readers who had not read the plan.",
   "what_the_residue_still_holds": "Slice tags no verifier's commit range reached. They are enumerated in slice_groups_without_one and prepared, one startable row each, in verify-backlog.json."
+ },
+ "residue_sweep": {
+  "dated": "2026-08-17",
+  "what_it_is": "The residue of criterion 11's first clause, closed forwards instead of backwards: R-35 re-run today over slice groups that landed earlier in the campaign and never had a verdict, each pass handed the slice's own commit range and R-35's brief read from the runbook. This is the route the ledger's own `why_the_residue_cannot_be_closed_retroactively` names as the only one that closes a residue row -- 're-running R-35 over the historical ranges as its own scheduled work with its own briefs' -- and it is what verify-backlog.json prepares.",
+  "how_it_differs_from_the_backfill": "The backfill transcribed verdicts rendered DURING the campaign, at the tip each slice was verified against. A sweep pass is rendered NOW, against HEAD, over a commit that landed long ago. That is why its PHASE_TIP_ONLY rows read the way they do: the criterion's declared per-tip readings are unreproducible once later commits re-captured a baseline, and the verifier says so rather than substituting a number it could not measure.",
+  "what_a_sweep_row_claims": "That this verdict was rendered on this commit by that agent, and is transcribed rather than reconstructed. Evidence strings are clipped to 320 characters; the journal holds them whole.",
+  "what_it_does_not_claim": "That anything answered the row. A sweep block's `answered_by` names the slice's own commit and its rows carry an empty `answered_at`, because a verdict rendered after that commit landed has no answering commit -- the schema requires the field and this is what it honestly holds. Nor is a NOT_DISCHARGED row closed by being recorded: it is documented, which is the disposition the third clause names, and no lane action is asserted.",
+  "source": {
+   "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+   "journals": [
+    "wf_ceb627ed-8c0/journal.jsonl"
+   ],
+   "shape": "One JSON line per agent result, carrying all_discharged, criteria[] (id, status, evidence) and unmentioned_behaviour[]. The brief the agent was handed -- R-35's, including 'Do not read the implementation plan' -- is the first line of the agent's own transcript file beside the journal, and it is what names the commit range each slice was verified over.",
+   "why_the_journal_and_not_the_handoff": "The lane that records a batch is handed the verdicts in its own task text, which is truncated to fit. The journal line is the verifier's artifact, complete, and it is what was transcribed -- the recording lane may not be the reason a verdict goes missing."
+  }
  }
 }
