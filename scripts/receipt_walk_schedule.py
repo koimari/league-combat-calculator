@@ -1504,9 +1504,13 @@ def schedule() -> dict[str, Any]:
     # sentence must not depend on: once those rows close the list empties and
     # the sentence renders "Three --  -- declare the defence resolver instead",
     # a justification whose subject a retirement round took away.  The closed
-    # rows keep their own record, so the narration reads both and stays true of
-    # a debt that has been paid.
-    lane_corrected_ever = sorted(set(lane_corrected) | set(corrected_rows()))
+    # rows are LANE_CORRECTED, the one declaration of which families Amendment Q
+    # closed -- the same names ``corrected_rows()`` iterates to build its
+    # evidence block, and gated in both directions by
+    # ``_lane_correction_failures``, so reading the declaration is reading the
+    # closed rows and not a second list.  The narration reads both and stays
+    # true of a debt that has been paid.
+    lane_corrected_ever = sorted(set(lane_corrected) | set(LANE_CORRECTED))
     performed = sorted(
         family
         for family, entry in slices.items()
