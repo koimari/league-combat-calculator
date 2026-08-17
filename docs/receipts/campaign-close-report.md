@@ -1657,6 +1657,26 @@ finding, and the pin that followed it is `4f41e6e`. Both compared baselines read
 `snapshot identical` on every commit here, so there is nothing for a boundary
 re-capture to absorb and none is performed (R-17, R-32).
 
+*Corrected and anchored 2026-08-17. The sentence above was a reading of
+`3799bef`, the tip that wrote it, and it is false of this one: `927964c` moved
+`campaign-fingerprints.json` — one of the five — inside `04cdfbf..HEAD`. The
+move is legal and disclosed, Amendment R-32's fourth carve-out putting a
+`tests{collected}` re-pin with the owning lane, and that commit's body and the
+receipt's `tests` block carry the three facts the carve-out asks for; what was
+wrong was the sentence claiming the range empty, left standing by the commit
+that falsified it. It stays written for the reason this section gives about its
+own wrong table, and what holds on this tip sits beside it as a property rather
+than as a second reading: the `src/` half is still empty over the whole range,
+no commit in the range touches both `src/` and one of the five (R-17, D-97,
+criterion 10), and every commit that moved one of the five moved only
+`campaign-fingerprints.json` and touched no `src/`, no gate script and neither
+compared baseline. Measured over the fixed range `04cdfbf..927964c`, that commit
+is the only mover — a range that ends where it ends, so this clause cannot go
+stale the way the sentence above it did.
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+runs all four over both ranges, so the next legal re-pin keeps them green and a
+move outside the carve-out turns them red.*
+
 **What is left, in one sentence.** Runbook criterion 11 is not discharged, its
 one open ruling belongs to the campaign's owner, and §16.3 states what the
 question now costs and the third branch nobody had written down. Everything else
@@ -1704,6 +1724,16 @@ a verifier's artifact and `campaign-close-certification-r2`, this pass's own
 tag, took a place beside `campaign-close-certification`'s. That is the mechanism
 §16.3 measured, holding exactly: recording a verdict is itself a commit, a
 commit carries a tag, and a tag with no verdict is residue.
+
+*Anchored 2026-08-17. The three coverage readings above were facts about this
+tip when `407428f` wrote them, and the mechanism this paragraph describes is
+exactly what moved them: the pass that appended §18 shipped a slice group of its
+own, so the tag total and the residue both went up. They stay written and are
+read at the commit that stated them, `git show 407428f:docs/receipts/verify-ledger.json`,
+which is the branch §16.6 wrote down and §17's own preamble applies to every
+section above it. §17.3's six readings of the same artifact are anchored with
+them rather than one at a time, for the reason §16.3's seven were. The live
+readings are in that file's coverage block, which is where §12.4 says they live.*
 
 ### 17.2 What the verifier found, and what happened to each
 
@@ -1778,6 +1808,15 @@ by name: manufacture a verdict, reconstruct one from the bodies of the lanes
 being checked, or shrink the denominator. So the campaign is not certified
 against its own runbook, the reason is one decision with an owner, and every
 input that decision needs is now in one artifact a reader can open.
+
+*Anchored 2026-08-17, with §17.1's three and for the same reason. The six ledger
+readings in this subsection were facts about `407428f`; the pass that appended
+§18 shipped a slice group, which moved the residue and the prepared-pass count
+and left the other four where they were. All six stay written and are read at
+`git show 407428f:` their artifact — `verify-ledger.json` for five and
+`verify-backlog.json` for the sixth. What the anchoring does not touch is either
+clause's grade: criterion 11 is not discharged, by the same two clauses, on this
+tip as on that one, and §18.2 says so again without restating a figure.*
 
 ### 17.4 The two minors
 
@@ -1882,6 +1921,27 @@ ungated number is the one place it carries none.
 `git diff --name-only 3799bef..HEAD -- src/` and the same over R-32's five
 baselines are both empty over the whole range, and both compared baselines read
 `snapshot identical` on every commit here.
+
+*Corrected and anchored 2026-08-17, and the finding is a certification
+reviewer's. The sentence above was a reading of `407428f`, the tip that wrote
+it, and the very next commit falsified it without touching it: `927964c` moved
+`campaign-fingerprints.json`, one of the five, inside `3799bef..HEAD`. The move
+is legal and fully disclosed under Amendment R-32's fourth carve-out — the
+paragraph above records it in this section's own words — and what was wrong is
+the sentence, which is this report's prose-outruns-tree shape arriving inside
+the section that records four fixes of it. So it stays written, and what holds
+on this tip sits beside it as a property rather than as a second reading: the
+`src/` half is empty over the whole range, no commit in it touches both `src/`
+and one of the five (R-17, D-97, criterion 10), every commit that moved one of
+the five moved only `campaign-fingerprints.json` and touched no `src/`, no gate
+script and neither compared baseline, and both compared baselines still read
+`snapshot identical`. Measured over the fixed range `3799bef..927964c`, that
+commit is the only mover — a range that ends where it ends, so this clause
+cannot go stale the way the sentence above it did. §16.7 carried the identical
+sentence over a wider range and was falsified by the same commit, which the
+review did not name and this pass's population enumeration did;
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+gates both.*
 
 **What is left, in one sentence.** Runbook criterion 11 is not discharged, the
 one decision that could discharge it is the owner's and now has all three of its

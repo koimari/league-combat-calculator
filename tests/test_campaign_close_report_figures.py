@@ -117,6 +117,17 @@ SECTION_16_3_ANCHOR = "3799bef"
 #: named rather than inferred, so moving it is a deliberate act.
 SECTION_15_5_ANCHOR = "e4338b7"
 
+#: The commit that wrote section 17.  Its nine readings of the verify ledger --
+#: three in 17.1 and six in 17.3 -- were facts about that tip, stated live
+#: because they were.  The pass that appended section 18 shipped a slice group
+#: of its own, which moved four of them, so all nine take the branch 16.6 wrote
+#: down and 17's own preamble already applies to the sections above it: they
+#: stay exactly as written and are read at the commit that stated them.  They
+#: are anchored as a group and not one at a time, the way 16.3's seven were,
+#: because a section whose readings come half from a tip and half from git is a
+#: section no reader can date.
+SECTION_17_LEDGER_ANCHOR = "407428f"
+
 
 @lru_cache(maxsize=1)
 def section_15() -> str:
@@ -978,6 +989,11 @@ def collected_node_ids() -> str:
     return match.group(1)
 
 
+def anchored_17() -> list[dict]:
+    """The passes section 17's verdict counts were measured over."""
+    return ledger_at(SECTION_17_LEDGER_ANCHOR)["passes"]
+
+
 def round_129() -> dict:
     """The pass section 17 is about."""
     return next(block for block in here() if block["round"] == 129)
@@ -1001,18 +1017,22 @@ FIGURES_17: list[tuple[str, str, Callable[[], str]]] = [
         "17.1 covered tags",
         r"Coverage moves to \*\*(\d+)\*\* tags",
         lambda: str(
-            len(ledger()["coverage"]["slice_groups_with_a_verdict_in_this_ledger"])
+            len(
+                coverage_at(SECTION_17_LEDGER_ANCHOR)[
+                    "slice_groups_with_a_verdict_in_this_ledger"
+                ]
+            )
         ),
     ),
     (
         "17.1 derived tags",
         r"tags with a verdict\s+of \*\*(\d+)\*\*",
-        lambda: slice_tag_total_at(ledger()["coverage"]),
+        lambda: slice_tag_total_at(coverage_at(SECTION_17_LEDGER_ANCHOR)),
     ),
     (
         "17.1 residue",
         r"and the residue is \*\*(\d+)\*\*",
-        lambda: str(ledger()["coverage"]["residue"]),
+        lambda: residue_at(SECTION_17_LEDGER_ANCHOR),
     ),
     (
         "17.2 findings fixed",
@@ -1027,32 +1047,32 @@ FIGURES_17: list[tuple[str, str, Callable[[], str]]] = [
     (
         "17.3 residue",
         r"The residue is \*\*(\d+)\*\*:",
-        lambda: str(ledger()["coverage"]["residue"]),
+        lambda: residue_at(SECTION_17_LEDGER_ANCHOR),
     ),
     (
         "17.3 prepared passes",
         r"prepares \*\*(\d+)\*\* startable",
-        lambda: str(json.loads(BACKLOG.read_text(encoding="utf-8"))["prepared_passes"]),
+        lambda: prepared_passes_at(SECTION_17_LEDGER_ANCHOR),
     ),
     (
         "17.3 not discharged",
         r"\*\*(\d+)\*\*\s+`NOT_DISCHARGED` rows stand",
-        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+        lambda: verdict_count(anchored_17(), "NOT_DISCHARGED"),
     ),
     (
         "17.3 recorded passes",
         r"the ledger's \*\*(\d+)\*\* passes",
-        lambda: str(len(here())),
+        lambda: pass_count(SECTION_17_LEDGER_ANCHOR),
     ),
     (
         "17.3 documented_open",
         r"of which \*\*(\d+)\*\*\s+are `documented_open`",
-        lambda: disposition_count(here(), "documented_open"),
+        lambda: disposition_count(anchored_17(), "documented_open"),
     ),
     (
         "17.3 untagged commits",
         r"the \*\*(\d+)\*\* commits in the range",
-        lambda: str(ledger()["coverage"]["untagged_commits"]),
+        lambda: str(coverage_at(SECTION_17_LEDGER_ANCHOR)["untagged_commits"]),
     ),
     (
         "17.4 parseable declarations",
@@ -1110,3 +1130,223 @@ def test_the_r01_verdict_table_section_17_states_carries_no_figure() -> None:
     table = section_17()[section_17().index("### 17.7") :]
     assert "GREEN" in table
     assert re.search(r"\*\*(\d+)\*\*", table) is None
+
+
+# --------------------------------------------------------------------------
+# The "no baseline moves in this pass" claim, in both sections that make it.
+#
+# Sections 16.7 and 17.7 each close with a sentence asserting that a range
+# ending at ``HEAD`` is empty over R-32's five baselines.  A range ending at
+# HEAD is a reading of the tip that wrote it, and both readings stopped being
+# true at ``927964c`` -- the ``tests{collected}`` re-pin, legal under Amendment
+# R-32's fourth carve-out, disclosed in its own body and on the receipt, and
+# which left both sentences standing.  A certification reviewer found 17.7's
+# copy; enumerating the population before the edit found that 16.7 carried the
+# same sentence over a wider range.
+#
+# The dated clauses beside those sentences do not restate a reading.  They name
+# a range that ends where it ends and otherwise assert *properties* -- the ones
+# R-17, D-97 and the carve-out actually promise -- so a later legal re-pin keeps
+# this green and a move outside the carve-out turns it red.  That is the whole
+# difference between the clause and the sentence it corrects.
+# --------------------------------------------------------------------------
+
+#: R-32's five baselines, spelled as the runbook lists them.
+R32_BASELINES = frozenset(
+    {
+        "scripts/golden_baseline.json",
+        "scripts/golden_coupled_baseline.json",
+        "scripts/golden_coupled_exact.json",
+        "docs/receipts/campaign-fingerprints.json",
+        "docs/receipts/item-coverage-classification.json",
+    }
+)
+
+#: The two baselines R-01 rows 2 and 3 compare against.  The carve-out excludes
+#: them by name, which is what keeps a lane's re-pin off the golden path.
+COMPARED_BASELINES = frozenset(
+    {"scripts/golden_baseline.json", "scripts/golden_coupled_baseline.json"}
+)
+
+#: The one baseline a lane may move, per Amendment R-32's carve-outs.
+CARVE_OUT_BASELINE = "docs/receipts/campaign-fingerprints.json"
+
+#: ``(section, where its range starts, the tip whose reading its sentence was)``.
+BASELINE_CLAIMS = (("16.7", "04cdfbf", "3799bef"), ("17.7", "3799bef", "407428f"))
+
+#: The commit both dated clauses name, and the end of the fixed range each
+#: measures it in.
+DATED_MOVER = "927964c"
+
+
+@lru_cache(maxsize=None)
+def files_by_commit(rev_range: str) -> tuple[tuple[str, frozenset[str]], ...]:
+    """``(sha, the files it touched)`` for every commit in a range."""
+    out = subprocess.run(
+        ["git", "log", "--name-only", "--format=%x1e%h", rev_range],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    commits = []
+    for chunk in out.split("\x1e"):
+        lines = [line for line in chunk.splitlines() if line.strip()]
+        if lines:
+            commits.append((lines[0], frozenset(lines[1:])))
+    return tuple(commits)
+
+
+def touches_src(files: frozenset[str]) -> bool:
+    """Whether a commit's file list holds a ``src/`` path."""
+    return any(name.startswith("src/") for name in files)
+
+
+def touches_gate_script(files: frozenset[str]) -> bool:
+    """Whether it holds a gate script -- a ``scripts/`` module, in the carve-out."""
+    return any(name.startswith("scripts/") and name.endswith(".py") for name in files)
+
+
+def baseline_movers(commits: tuple[tuple[str, frozenset[str]], ...]) -> tuple[str, ...]:
+    """Every commit in a range that moved one of R-32's five."""
+    return tuple(sha for sha, files in commits if files & R32_BASELINES)
+
+
+def commits_touching_both(
+    commits: tuple[tuple[str, frozenset[str]], ...],
+) -> tuple[str, ...]:
+    """Criterion 10's population: a commit touching ``src/`` *and* a baseline."""
+    return tuple(
+        sha for sha, files in commits if files & R32_BASELINES and touches_src(files)
+    )
+
+
+def src_touchers(commits: tuple[tuple[str, frozenset[str]], ...]) -> tuple[str, ...]:
+    """The half of both sentences that is still true, as a population."""
+    return tuple(sha for sha, files in commits if touches_src(files))
+
+
+def movers_outside_the_carve_out(
+    commits: tuple[tuple[str, frozenset[str]], ...],
+) -> tuple[str, ...]:
+    """Every baseline move a lane was not entitled to make.
+
+    Amendment R-32's fourth carve-out is four conditions, not one: the move is
+    ``campaign-fingerprints.json`` and nothing else of the five, in a commit
+    touching no ``src/``, no gate script and neither compared baseline.
+    """
+    outside = []
+    for sha, files in commits:
+        moved = files & R32_BASELINES
+        if not moved:
+            continue
+        if (
+            moved != {CARVE_OUT_BASELINE}
+            or files & COMPARED_BASELINES
+            or touches_src(files)
+            or touches_gate_script(files)
+        ):
+            outside.append(sha)
+    return tuple(outside)
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_the_baseline_sentence_was_true_of_the_tip_that_wrote_it(
+    claim: tuple[str, str, str],
+) -> None:
+    """A correction that misdates the sentence it corrects is one nobody can check."""
+    _section, start, stating_tip = claim
+    assert baseline_movers(files_by_commit(f"{start}..{stating_tip}")) == ()
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_the_baseline_sentence_is_false_of_this_tip(
+    claim: tuple[str, str, str],
+) -> None:
+    """R-05's red for the check above, and it is the reviewer's finding itself."""
+    _section, start, _stating_tip = claim
+    assert baseline_movers(files_by_commit(f"{start}..HEAD")) != ()
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_the_dated_clause_names_the_only_mover_in_the_range_it_measures(
+    claim: tuple[str, str, str],
+) -> None:
+    """The clause's one reading, over a range that ends where it ends."""
+    _section, start, _stating_tip = claim
+    assert baseline_movers(files_by_commit(f"{start}..{DATED_MOVER}")) == (DATED_MOVER,)
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_no_src_moves_in_either_claimed_range(claim: tuple[str, str, str]) -> None:
+    """The half of both sentences that is still true, read live."""
+    _section, start, _stating_tip = claim
+    assert src_touchers(files_by_commit(f"{start}..HEAD")) == ()
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_no_commit_in_a_claimed_range_touches_both_src_and_a_baseline(
+    claim: tuple[str, str, str],
+) -> None:
+    """Criterion 10 over the same ranges -- the rule the sentence stood in for."""
+    _section, start, _stating_tip = claim
+    assert commits_touching_both(files_by_commit(f"{start}..HEAD")) == ()
+
+
+@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
+def test_every_baseline_move_in_a_claimed_range_is_inside_the_carve_out(
+    claim: tuple[str, str, str],
+) -> None:
+    """The property that replaces the reading: a legal re-pin stays green."""
+    _section, start, _stating_tip = claim
+    assert movers_outside_the_carve_out(files_by_commit(f"{start}..HEAD")) == ()
+
+
+#: Four commits that are not in the tree, each breaking one of the carve-out's
+#: four conditions, plus one touching both.  R-05's seam for the property
+#: checks: a check whose red cannot be produced on demand is indistinguishable
+#: from one that passes.
+DOCTORED_MOVERS = (
+    (
+        "a second baseline",
+        (
+            "deadbe1",
+            frozenset({CARVE_OUT_BASELINE, "scripts/golden_coupled_exact.json"}),
+        ),
+    ),
+    ("a compared baseline", ("deadbe2", frozenset({"scripts/golden_baseline.json"}))),
+    (
+        "src/ beside it",
+        ("deadbe3", frozenset({CARVE_OUT_BASELINE, "src/calculator/pipeline.py"})),
+    ),
+    (
+        "a gate script",
+        ("deadbe4", frozenset({CARVE_OUT_BASELINE, "scripts/golden_snapshot.py"})),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "case", DOCTORED_MOVERS, ids=[label for label, _commit in DOCTORED_MOVERS]
+)
+def test_the_carve_out_check_has_a_red_it_can_reproduce(
+    case: tuple[str, tuple[str, frozenset[str]]],
+) -> None:
+    """Each of the carve-out's four conditions, broken one at a time."""
+    _label, commit = case
+    assert movers_outside_the_carve_out((commit,)) == (commit[0],)
+
+
+def test_the_criterion_10_check_has_a_red_it_can_reproduce() -> None:
+    """A commit touching both, which no commit in either range does."""
+    doctored = (
+        "deadbe5",
+        frozenset({CARVE_OUT_BASELINE, "src/calculator/pipeline.py"}),
+    )
+    assert commits_touching_both((doctored,)) == ("deadbe5",)
+
+
+def test_the_src_check_has_a_red_it_can_reproduce() -> None:
+    """The other half of both sentences, failed on demand."""
+    doctored = ("deadbe6", frozenset({"src/calculator/pipeline.py"}))
+    assert src_touchers((doctored,)) == ("deadbe6",)
