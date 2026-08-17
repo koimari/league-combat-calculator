@@ -1,0 +1,85 @@
+{
+ "slice": "campaign-close-spellblade-retired",
+ "decisions": [
+  "R-15",
+  "R-17",
+  "R-19",
+  "R-20",
+  "R-30",
+  "R-32",
+  "R-36",
+  "D-40",
+  "D-60",
+  "D-62",
+  "D-66",
+  "D-97",
+  "umbrella Amendment F",
+  "umbrella Amendment K",
+  "umbrella Amendment L, Ruling 1",
+  "umbrella Amendment M, Ruling 1",
+  "umbrella Amendment M, Ruling 3",
+  "umbrella Amendment N, Ruling 1",
+  "umbrella Amendment N, Ruling 2",
+  "umbrella Amendment O, Ruling 2",
+  "umbrella Amendment R, Ruling 2"
+ ],
+ "what_this_is": "The R-20 population of spellblade/receipt_walk, the ninth of the fourteen to retire, enumerated from committed artifacts BEFORE this slice's first src/ edit, together with what a declaration of this family has to carry and what its retirement may NOT touch -- written down in advance so a moved number is a stop rather than a discovery.",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17/R-32/D-97: the code lands against the committed baselines plus this allowlist, and no baseline moves inside the semantic commit."
+ },
+ "expected_qualifying_occurrences": 0,
+ "expected_diff_paths": {
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": []
+ },
+ "qualifying_population": {
+  "enumerated_before_first_edit": true,
+  "rule": "R-20's second half. What can move is a property of which participants hold a declaring owner of the spellblade family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json at 98f74b2, whose own fields are derived from the behaviour catalog and from scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
+  "predicate": "Every committed coupled scenario that puts a declaring owner of the spellblade family on a participant. The seven owners are read live from the behaviour catalog over rule_owners() -- Bloodsong, Dusk and Dawn, Essence Reaver, Iceborn Gauntlet, Lich Bane, Sheen and Trinity Force -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard, so the population and the guard cannot disagree about which rosters can see the family.",
+  "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the whole scenario subtree, because a slice that moves a family's numbers onto its own declaration can move any aggregate downstream of it inside that scenario.",
+  "population_by_scenario": {
+   "cleaver_bloodsong_roster": 1828
+  },
+  "population_total": 1828,
+  "pair_engine_population": {
+   "total": 0,
+   "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface and it records breakdown TOTALS and breakdown key sets, never the keys a row carries beside its number. This slice adds two keys to the rows damage._add_spellblade_damage authors -- pair_preview_of and declared, plus a declaration on each authored proc event -- and changes no arithmetic in that function or in any other. Zero pair-engine golden diffs is therefore a declared population of zero, and a single diff there stops the slice."
+  },
+  "which_owners_the_population_can_actually_see": "ONE of the seven. cleaver_bloodsong_roster puts Bloodsong on its Jax and no committed coupled scenario holds any of the other six, so the covering population reaches bloodsong.spellblade and nothing else. That is the shape umbrella Amendment N was written about and umbrella Amendment P's answer for it is EQUIVALENCE FIXTURES PER OWNER: a fixture set arming one owner proves nothing about the six that can still fail, and two of the six declare MAGIC -- dusk_and_dawn.spellblade and lich_bane.spellblade -- so the holder's own magic amp is a live term for a third of this family and is armed in the fixture rather than left at 1.0.",
+  "predicted": "0 occurrences inside a population of 1828. The walk's price for a spellblade proc is the declared raw magnitude composed with the holder's static amps and mitigated once at the resistance the packet met, which is exactly the three multiplications damage._mitigate performs on the same raw value inside the pair engine -- the same declaration, the same registry numbers, the same resistance. The slice replaces which engine performs the mitigation, not the number it mitigates, so no leaf can move and a leaf that did would qualify under R-15 rather than being absorbed.",
+  "occurrences_outside_the_population": 0,
+  "enumerated_at": "PENDING -- this commit"
+ },
+ "what_a_declaration_of_this_family_has_to_carry": {
+  "rule": "Enumerated in advance, in the idiom the charged_strike, on_hit_strike, periodic and resistance_shred slices used: writing down what the walk will have to read is what makes a wrong number a stop instead of a discovery.",
+  "the_magnitude_is_per_proc": "damage._add_spellblade_damage prices one raw value per fight -- raw_sb = source.raw_damage(inputs) * the on-hit effectiveness of the attack that consumes the charge -- and multiplies its mitigated figure by the proc count. Every proc of one fight therefore shares a magnitude, unlike on_hit_strike's Blade of the Ruined King, and each authored proc event carries that one magnitude rather than a share of a row total.",
+  "the_effectiveness_folds": "The on-hit effectiveness of the consuming attack is folded into the declared magnitude, on the same reasoning the on_hit_strike retirement used: it allocates one application rather than amplifying it, the engine applies it pre-mitigation, and mitigation is linear, so folding it into the magnitude is the same real number priced once.",
+  "the_attack_class_is_OTHER": "Measured rather than defaulted. A spellblade proc reaches the target through damage._mitigate and through nothing else -- not through _mitigate_basic_attack_swing, so it earns neither the holder's basic amp nor any target-side swing term -- and no part amp applies to it, so a declaration claiming AttackClass.BASIC_ATTACK or ABILITY would hand the walk an amplifier the pair engine never paid. The MAGIC amp needs no class: _mitigate applies it to magic damage whatever delivered it and StaticHolderAmps.factor_for delivers it off the damage type alone, which is live for two of the seven.",
+  "no_per_packet_resistance_term": "A measurement rather than an omission. umbrella Amendment N, Ruling 2's census enumerates every site that re-prices an already-authored packet; a spellblade proc event is a physical or magic packet on the ordinary ledger, so a temporary-lethality window CAN re-price one -- and where it does, damage._apply_temporary_lethality_windows already restates the declaration riding the event at the armour that packet actually met (_restate_declaration). The declaration therefore carries no resistance of its own at authoring time and the walk prices it at the fight's published baseline, which is the reading Ruling 1 says is correct for a packet no window re-priced.",
+  "the_true_conversion_row_is_not_this_family_s_to_declare": "Camille Q2's spellblade_true_ratio converts part of a proc into unmitigated true damage and damage._add_spellblade_damage authors a SEPARATE row for it, spellblade_<item>_true, whose per-proc figure is a blend of a true share and a mitigated share. That row is not stamped: a single declaration cannot state two damage classes, the conversion ratio is a champion ability's declaration rather than this family's, and stamping it would file a champion's number under an item mechanic. The plain row keeps the un-converted procs and is stamped; the converted procs stay priced by the pair engine and are named here rather than discovered."
+ },
+ "what_this_slice_may_NOT_do": {
+  "no_authority_move": "The seven mechanics are undeclared today -- none of the seven has an entry in trigger_stream.CAPABILITIES, checked before the edit -- so this slice AUTHORS their declarations rather than moving anybody's authority. Each arrives as the two halves umbrella Amendment L, Ruling 1 requires and _retired_family_halves generates from one row: a ViewTag.THEORETICAL pair half named <mechanic>_preview, and an APPLIED HolderPacket walk half priced at survival.transitions.apply_declared_price, both COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW and joined by pair_of.",
+  "no_cross_participant_producer_moves": "umbrella Amendment M, Ruling 3: a retired family's walk half prices ITS OWN HOLDER's damage, so it is not a cross-participant producer and D-07's ruled six stand unedited. tests/test_trigger_stream.py::test_the_cross_participant_producers_are_the_ruled_six stays green without the six being touched, which is the whole test of whether this slice was honest about the claim.",
+  "no_sibling_of_the_spellblade_is_touched": "The mana refund, the self-heal and the attack-speed burst are resource and sustain outputs authored beside the damage row from the same accepted proc event. They are not damage, no DeclaredPacket describes them, and this slice moves none of them: what retires is the DAMAGE the family declares, and a slice that also moved a heal would be two corrections in one commit (R-30).",
+  "no_row_the_family_does_not_author_is_stamped": "The committed triage lists expose_weakness_Bloodsong under this family because it measures a family's rows by removing the ITEM, which is conservative by construction and lists every mechanic that item holds. That row belongs to bloodsong.expose_weakness, family ally_packet, which is already a declared THEORETICAL preview under Phase 4 S7's authority move. double_on_hit_<item> is Dusk and Dawn's re-application of the on_hit_strike family's magnitudes and belongs to that family's numbers, not to this one's declaration. Stamping either would retire somebody else's row inside this slice."
+ },
+ "why_the_family_is_startable_now": {
+  "the_class": "Class (a), authors-own-rows, in the committed triage (umbrella Amendment O, Ruling 2): the family's declarations author eight priced pair-engine rows, so Amendment L, Ruling 1's shape has something to stamp and the row retires by the ruled act. Ruling 2's stop clause does not reach a class-(a) row.",
+  "the_standing_precondition": "umbrella Amendment R, Ruling 2's widened term census is green -- python scripts/term_census.py --check reports 29 post-authoring packet-mutation sites, 0 uncovered, 9 authoring-time mitigation terms, 0 uncovered, 3 static holder amps, 0 unfolded -- which is the standing precondition on any further family retiring. It binds this family through the two resistances and the three holder-amp reads, all of which the pricing stage already carries.",
+  "the_covering_scenario": "umbrella Amendment L, Ruling 2's prerequisite is met without an integration act. cleaver_bloodsong_roster already puts a declaring owner on a participant, so this slice's R-20 population is non-empty before its first src/ edit and no scenario has to be landed for it."
+ },
+ "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain.",
+ "measured_after": {
+  "dated": "PENDING",
+  "commit": "PENDING",
+  "qualifying_occurrences": "PENDING",
+  "occurrences_outside_the_population": "PENDING",
+  "golden": "PENDING",
+  "coupled_golden": "PENDING",
+  "oracle_receipts_owed": "PENDING"
+ }
+}
