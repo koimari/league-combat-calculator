@@ -8,15 +8,18 @@ a filename prefix — so every dissent from Phase 0B, Phase 3 and Phase 5 was
 invisible to every gate.
 
 ``scripts/standing_dissent_scan.py`` is the repo-wide join and this is what
-runs it.  The load-bearing test is the last one: a fabricated capture that
-pins over a standing verdict is reported, so "no gate would move" stops being
-true of the campaign's own strongest rule.
+runs it.  The load-bearing test is
+``test_a_capture_that_pins_over_a_dissent_is_reported`` -- named rather than
+placed, because "the last one" stopped being true the moment a test landed
+after it: a fabricated capture that pins over a standing verdict is reported,
+so "no gate would move" stops being true of the campaign's own strongest rule.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -73,6 +76,12 @@ def test_every_row_is_one_of_the_two_kinds_and_says_something(scan) -> None:
             assert row["cited_ruling"].strip()
             assert row["the_declared_change"].strip()
             assert row["why_no_oracle_could_answer_it"].strip()
+            # Clause 3 of the R-15/R-18 amendment forbids editing or deleting a
+            # filed receipt, and a citation is the one kind that adjudicates a
+            # receipt without superseding it.  Saying so is what stops the row
+            # from being read as a supersession, so it is required of the kind
+            # rather than left to whichever row happens to carry it.
+            assert row["the_receipt_is_not_deleted"].strip()
         else:
             assert row["what_is_owed"].strip()
             assert row["why_it_is_a_debt_and_not_a_citation"].strip()
@@ -94,6 +103,88 @@ def test_an_open_debt_names_an_artifact_that_exists(scan) -> None:
             continue
         path, _, _rest = row["carried_by"].partition(",")
         assert (ROOT / path.strip()).exists(), row["receipt"]
+
+
+#: The oracle receipt an escalation's ``adjudication_row`` pointer names.
+POINTED_RECEIPT = re.compile(r"oracle-[A-Za-z0-9._\-/]*\.json")
+
+
+def _pointers_from_escalations() -> list[tuple[str, str, str]]:
+    """Every ``(escalation path, entry id, oracle receipt)`` an escalation spells.
+
+    Derived by walking each ``escalated-defects-*.json``'s open entries for the
+    key rather than by naming the entries that carry one, so a pointer written
+    into a new escalation joins this gate on the commit that writes it.
+    """
+
+    def walk(node: object) -> list[str]:
+        found: list[str] = []
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "adjudication_row" and isinstance(value, str):
+                    if RECEIPT.name in value:
+                        found.extend(POINTED_RECEIPT.findall(value))
+                else:
+                    found.extend(walk(value))
+        elif isinstance(node, list):
+            for item in node:
+                found.extend(walk(item))
+        return found
+
+    out: list[tuple[str, str, str]] = []
+    for path in sorted((ROOT / "docs" / "receipts").glob("escalated-defects-*.json")):
+        block = json.loads(path.read_text(encoding="utf-8"))
+        for entry in block.get("defects", ()):
+            for receipt in walk(entry):
+                out.append((path.relative_to(ROOT).as_posix(), entry["id"], receipt))
+    return out
+
+
+def _one_way_joins(rows: dict, pointers: list[tuple[str, str, str]]) -> tuple[str, ...]:
+    """Pointers an escalation spells that the row it names does not spell back."""
+    broken: list[str] = []
+    for escalation, entry_id, receipt in pointers:
+        row = rows.get(receipt)
+        if row is None:
+            broken.append(f"{escalation}/{entry_id} names no row: {receipt}")
+            continue
+        carried = row.get("carried_by", "")
+        if escalation not in carried or entry_id not in carried:
+            broken.append(f"{receipt} does not name {escalation}/{entry_id} back")
+    return tuple(broken)
+
+
+def test_a_row_an_open_escalation_names_names_it_back(scan) -> None:
+    """The join runs both ways, or the reader who arrives first is stranded.
+
+    An open escalation entry that points at a row here by name is the half
+    that already held.  The other half is ``carried_by`` on the row it points
+    at, and it went missing at ``ac4bb2c`` when that row turned from an
+    ``open_debt`` into a ``citation`` -- a kind whose fields nothing required
+    it of -- leaving a reader who arrived at the still-open escalation able to
+    reach the row and a reader who arrived at the row unable to reach the
+    escalation carrying it.  This is what makes that one-way state red instead
+    of invisible.
+    """
+    pointers = _pointers_from_escalations()
+    assert pointers, "no escalation names an adjudication row; the join is unread"
+    rows = {row["receipt"]: row for row in _block()["adjudications"]}
+    assert _one_way_joins(rows, pointers) == ()
+
+
+def test_a_row_that_drops_its_pointer_back_is_reported() -> None:
+    """R-05's red for the join, injected the way the field was actually lost.
+
+    ``ac4bb2c`` did not delete a row -- it re-kinded one and dropped the
+    field.  So the red is a row that is present, adjudicates the receipt the
+    escalation names, and carries no ``carried_by``: exactly the state that
+    stood in the tree from 2026-08-15 until ``08afece`` restored it.
+    """
+    pointers = _pointers_from_escalations()
+    rows = {row["receipt"]: dict(row) for row in _block()["adjudications"]}
+    _escalation, _entry_id, receipt = pointers[0]
+    rows[receipt].pop("carried_by", None)
+    assert len(_one_way_joins(rows, pointers)) == 1
 
 
 def test_a_capture_that_pins_over_a_dissent_is_reported(scan) -> None:
