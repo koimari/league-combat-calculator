@@ -1225,3 +1225,41 @@ flag into an attribution changes what the counter claims and that is a runbook m
 disposition is the lane's — the ledger's `when_a_later_lane_answers_a_sweep_row` says
 it in those words — so the NOT_DISCHARGED stands as returned, with `answered_at`
 naming the three commits that answered it.
+
+### 15.6 What gates section 15
+
+The pass's evidence closes with the reason all three errors survived to be found by
+a reader: "Section 14 is also ungated: `plan_audit.py` runs over `docs/plans/*.md`
+only, so nothing in the tree would catch any of these three." That is true of
+section 14 and stays true — no closeout rewrites section 14 — but it stops being
+true of the section that carries the corrections.
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states from the artifact it was read out of:
+15.1's six dated residue readings from the ledger's own history, one
+`git show <sha>:docs/receipts/verify-ledger.json` each; 15.4's table from the ledger
+as `832a91f` left it; the moved pair and 15.5's coverage figures from the ledger and
+[`verify-backlog.json`](verify-backlog.json) at this tip. It re-measures the
+section's non-numeric claims too — that no pass's `verified_commits` holds
+`209da2f`, that the backlog really flags that group as citing a body, that round
+110's criteria read on round 6's row, that `1bd837e` is verified by rounds 6 and 7
+and by nothing else, that the three groups 15.4 spells as “five each” really hold
+five, and that every phrase 15 quotes out of section 14 is in section 14 word for
+word. **39** figures and **6** claims, the count itself among the figures, and the
+file rides R-01 row 1 like every other gate.
+
+A figure that is a reading of a moving artifact — 15.1's six, 15.3's search, 15.4's
+table — is anchored at the commit that stated it and read out of git there; a
+figure about this tip is read from the tree. Both are re-derived. What section 15
+quotes out of section 14 is gated as a quotation instead, because a correction that
+misquotes the sentence it corrects is one no reader can check.
+
+R-05's red ships with it and is permanent.
+`test_the_gate_fails_when_a_stated_figure_drifts` doctors each figure in a copy of
+the section — the value alone, in the one place the pattern finds it — and requires
+the same comparison to fail. A check that cannot fail is indistinguishable from a
+check that passes, which is the sentence this whole campaign is an answer to.
+
+What it does not do is gate section 14, or anything above it. Those sections stay
+exactly as the passes that wrote them left them, and this is the first section of
+the report a reader does not have to take on trust.
