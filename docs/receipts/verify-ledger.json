@@ -648,6 +648,87 @@
      "note": "Re-measured over the group's six commits with the test's own two patterns, MECHANISM_NAMES and VERDICT_WORDS, at tests/test_verify_ledger.py:153-154. Mechanism: 1bd837e, 0f56650, 03a5533 and 08afece yes, bd3489e no, e2183a0 yes. Answer word: none of the six. So the denominators were the right ones and the subject was wrong -- the measurement is over the FIVE subjects that existed before e2183a0 was written, where it is 4 of 5 and 0 of 5; over all six it is 5 of 6 and 0 of 6. Either way the flag e2183a0 recorded was correct, which is why this is graded a wrong sentence about a right number rather than a wrong flag. Recorded here because a filed commit body cannot be amended and the sentence is the one a reader would check the ledger entry against."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-minor-findings",
+   "round": 7,
+   "verified_commits": [
+    "1bd837e",
+    "0f56650",
+    "03a5533",
+    "bd3489e",
+    "08afece",
+    "e2183a0"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "f87e4c2",
+    "df631c8",
+    "0c46d26",
+    "9d5b276"
+   ],
+   "what_this_round_is": "A second independent read-only R-35 pass over the same six commits of campaign-close-minor-findings, run after the answering group campaign-close-minor-findings-r35 had landed and reading the tree as that group left it. It returned the SAME criterion NOT_DISCHARGED as round 6 -- one contradiction round 6's sweep missed and one round 6's own answering commits wrote -- plus five behaviours no commit body mentions, four of them against the answering group and one against the group under it. It is answered by the slice group campaign-close-minor-findings-r35-2, whose commits are named per row. As in round 6, the pass's other criteria came back DISCHARGED and their per-criterion evidence was not handed to the answering lane, so none is transcribed here: writing them in from this lane's account of a report it did not receive is the reconstruction what_this_ledger_does_not_hold refuses, and the honest record is the half that exists. Two passes over one slice group is what the round numbering exists for, and this is the first group in the campaign to have two.",
+   "criteria": [
+    {
+     "id": "no_gated_receipt_carries_a_justification_string_the_tree_contradicts",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Two live contradictions -- one missed by round 6's sweep, one landed by round 6's own answering commits. (a) docs/receipts/campaign-gap-ledger.json, row G4 (state OPEN), field scheduled_work: the same file, the same row, the same gate (tests/test_campaign_gap_ledger.py) and the same defect class as the blocker 8aa1ee1 fixed, with no dated field anywhere on the gap rows. Five undated present-tense clauses the tree contradicts: 'the fourteen rows sized as the fourteen slices Amendment F says they are', against a receipt whose families is {} and whose scheduled_slices is 0; 'The rows still standing are behaviour-changing slices nobody has budgeted', against no row standing; 'Nine of the fourteen additionally have no committed coupled scenario covering them', against families_with_no_covering_coupled_scenario being []; 'every remaining row is now behind one gate that does not exist yet', against scripts/term_census.py existing and reporting 0 uncovered; and 'secondary_target/receipt_walk becomes startable by budget like the row beside it', against G4's own note recording that row retired 2026-08-17. 8aa1ee1's exclusion argument does not reach it: it names only verify-ledger's umbrella-1 and umbrella-7 notes and rulings-owed's one owed row, and all three sit under an explicit dated field, which scheduled_work does not. 03a5533 named two leftovers as asides and this was not one of them; no commit of either group mentions it. (b) docs/receipts/verify-ledger.json (gate: tests/test_verify_ledger.py), passes[5].unmentioned_behaviour[0].note, landed by 3b0a030: 'The arithmetic is corrected in a dated paragraph appended under the sentence rather than written over it, which is section 9's rule for this report.' git show ecc6497 -- docs/receipts/campaign-close-report.md is -6/+20: the six lines of the original sentence are deleted and a rewritten sentence carrying a new substantive clause put in their place, and only then is the dated paragraph appended. A gated receipt states a justification this tree contradicts, written by the group that answered round 6.",
+     "disposition": "fixed",
+     "answered_at": [
+      "f87e4c2",
+      "df631c8"
+     ],
+     "artifact": "docs/receipts/campaign-gap-ledger.json",
+     "note": "Both halves are fixed and neither by weakening a receipt, and the two are fixed in opposite directions because the two records disagree with the tree in opposite directions. (a) at f87e4c2, in 8aa1ee1's shape and for its reason: every sentence of scheduled_work stays written and unedited, because each was true on the day the amendment it narrates was performed and a justification that is only deleted is one no reader can check was ever real. The field gains a dated re-measurement naming the artifact behind each of the five clauses, then the state as it now is -- the schedule receipt holds no open row and publishes its closed ones as evidence rather than as work, and the census gate that stood in front of the queue is green over an empty queue -- and then the record that no earlier commit named this field. The row is not re-graded: state reads OPEN before the edit and OPEN after it. (b) at df631c8, the other way round and in docs/receipts/campaign-close-report.md: the gated receipt is left alone and the tree is made to say what it says, because ecc6497's own body, section 13's preamble, section 9's rule and the appended paragraph's own opening quotation all assert the append-only shape and only the tree dissented from them. Section 13.1's sentence is restored byte-for-byte to ecc6497^ and the dated paragraph ecc6497 appended is untouched, so the report's diff against that pre-image is now a pure append. No error is restored to the report: what a reader gets is the appended paragraph, which quotes the wrong count, names the dropped commit and measures its src/ edit -- section 9.1's own 'What it says' beside 'What is true now', rather than a silent repair."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "finding": "ecc6497 rewrote section 13.1's 'What the acceptance does not say' sentence IN PLACE while its own body denies doing so: 'The correction is appended as a dated paragraph rather than written over the sentence ... the sentence stays as it was written.' The diff is -6/+20 on docs/receipts/campaign-close-report.md -- the original six lines are deleted and replaced with a rewritten sentence carrying a new substantive clause ('one is a test-subject commit whose only src/ edit is a docstring'), and the dated paragraph is appended after it. Section 13's own preamble invokes the same append-only convention: 'Everything above this line stays as written, for the reason section 9 gives.'",
+     "disposition": "fixed",
+     "answered_at": [
+      "df631c8"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "The same fix as the criterion's half (b), recorded separately because the two halves are about different records: the criterion is about the gated receipt 3b0a030 wrote, this is about the report and the commit body. The sentence is restored to the six lines ecc6497 replaced, byte-for-byte against ecc6497^, and the dated paragraph is untouched. What that also settles is the appended paragraph's opening quotation, 'The breakdown above read \"Five of them are docs-subject commits ...\"', which was a false quotation of the four lines directly above it -- a correction paragraph misquoting the sentence it corrects, inside the section written to close a finding about claims a reader cannot recover. ecc6497's body cannot be amended, so the record is here."
+    },
+    {
+     "finding": "The same in-place rewrite falsifies the paragraph ecc6497 itself appended. It reads '... it is the only one of the eight whose src/ edit was never described here at all' -- present tense, in a document where 581fd19's src/ edit was by then described one sentence above it by ecc6497's own edit. No body mentions the self-contradiction.",
+     "disposition": "fixed",
+     "answered_at": [
+      "df631c8"
+     ],
+     "artifact": "docs/receipts/campaign-close-report.md",
+     "note": "Settled by the same restore and without a second edit, which is why the paragraph is not touched: with the rewrite undone the breakdown above the paragraph describes the docs commits' edits as prose and the refactor/fix commits as Phase 3 coverage work and describes 581fd19's in no clause, so the sentence is true of it again and the correction paragraph is the only place the report describes that edit -- which is what it claims. Editing an appended dated paragraph to fix a claim the append-only rule was broken to create would have been the same defect a second time."
+    },
+    {
+     "finding": "03a5533's sweep is narrower than the finding it claims to answer, and its aside list does not say so. Its subject is a sweep 'for justification strings inside gated receipts that no longer match the tree'; it names exactly two leftovers it did not fix -- the generated schedule narration and G4's blocker. campaign-gap-ledger.json's G4 scheduled_work -- same OPEN row, same gate, five clauses contradicted, no date attached -- is not named as fixed, deferred or excluded by 03a5533, by 8aa1ee1 whose exclusion list covers only verify-ledger's umbrella-1/7 notes and rulings-owed's owed row, or by any other commit of either group.",
+     "disposition": "fixed",
+     "answered_at": [
+      "f87e4c2"
+     ],
+     "artifact": "docs/receipts/campaign-gap-ledger.json",
+     "note": "Recorded in the field itself rather than only in a commit body, because a sweep's blind spot that lives only in the body of the commit that found it is the same shape as the finding: the re-measurement f87e4c2 appends to scheduled_work names 03a5533's two leftovers, names 8aa1ee1's three boundary cases, and states what separated them from this one -- all three sit under an explicit dated field and this one sat under nothing dated, in the same row and behind the same gate as the blocker that was fixed. Neither filed body can be amended, so the record is where a reader of the row meets it."
+    },
+    {
+     "finding": "bd3489e, and 51ccdce after it, made the mismatch narration's SUBJECT derived and left its COUNT WORD typed, and neither body mentions the asymmetry. scripts/receipt_walk_schedule.py:1575 still read the literal 'Eleven declare that route in their own via field. Three -- ' with only the name list interpolated from sorted(set(lane_corrected) | set(LANE_CORRECTED)). The stated purpose of the fix is that the sentence must not depend on the live row set; if lane_corrected ever picks up a family outside LANE_CORRECTED the sentence renders 'Three -- a, b, c, d --', which is the same defect class one field along.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "0c46d26"
+     ],
+     "artifact": "scripts/receipt_walk_schedule.py",
+     "note": "Every count in the sentence is now derived from the same list its names are, through AMENDMENT_F_ROWS -- the amendment's own figure, quoted rather than derived because every row it names has since left the tree -- and spelled(), which fails by name on a count the words are not sized for instead of rendering a digit into prose. The sentence became mismatch_narration(), taking the families rather than reading them, because the property that matters (counts and names describe one set) was unreachable by a test while it was assembled inline against a tree that has held three names since Amendment Q closed them. Gated both ways: the committed field is asserted equal to what the function returns for LANE_CORRECTED, and a fourth name renders 'Four -- ... --', 'Ten declare that route' and 'reading fourteen as ten'. Receipt byte-for-byte unchanged and --check exit 0 at 1.44 s best-of-3, unmoved from the figure 51ccdce recorded."
+    },
+    {
+     "finding": "264aeb9's R-05 red is coupled to there being exactly one escalation pointer, and its body does not say so. test_a_row_that_drops_its_pointer_back_is_reported takes pointers[0], strips that row's carried_by, and asserts len(_one_way_joins(...)) == 1. If a second open escalated-defects entry ever spells an adjudication_row naming the same oracle receipt -- precisely the growth the companion test advertises, 'a pointer written into a new escalation joins the gate on the commit that writes it' -- the injected red goes red for the wrong reason. Latent, not currently failing.",
+     "disposition": "fixed_and_gated",
+     "answered_at": [
+      "9d5b276"
+     ],
+     "artifact": "tests/test_standing_dissent_scan.py",
+     "note": "Reproduced before it was fixed: driven with a second pointer at the same oracle receipt, the injection breaks two joins and the old assertion fails on 2 != 1 -- the red still goes red, on the arithmetic rather than on the defect. The expectation is now derived from the same pointer list the injection is measured over -- every pointer AT THIS RECEIPT breaks, nothing else does, and the pre-injection breaks are carried through the comparison so the assertion is about what the injection caused rather than about the tree being otherwise perfect -- with a non-emptiness assertion so the case cannot pass vacuously if the pointer set ever empties. The predicate under test is untouched: this strengthens what the red says without moving what the gate checks, and no adjudication, receipt or scan count moves (34 standing of 83 adverse across 597 receipts, 11 blocking, 7 citations, 4 open debts, before and after)."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -776,10 +857,11 @@
    "campaign-close-swing-composition",
    "campaign-close-spellblade-retired",
    "campaign-close-secondary-target-retired",
-   "campaign-close-minor-findings-r35"
+   "campaign-close-minor-findings-r35",
+   "campaign-close-minor-findings-r35-2"
   ],
   "untagged_commits": 159,
-  "residue": 117,
+  "residue": 118,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -793,6 +875,7 @@
    "campaign-close-boundary",
    "campaign-close-dissent-docket",
    "campaign-close-minor-findings-r35",
+   "campaign-close-minor-findings-r35-2",
    "campaign-close-receipt-walk-r35",
    "campaign-close-report",
    "campaign-close-verify-coverage"
