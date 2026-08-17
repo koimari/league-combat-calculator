@@ -1018,3 +1018,63 @@ Both compared baselines read `snapshot identical` at this tip and no closeout sl
 left a declared diff standing, so this closeout performs **no** boundary re-capture:
 there is nothing for one to absorb, and a capture with nothing to absorb is a
 baseline move for its own sake.
+
+---
+
+## 15. Section 14, re-measured
+
+*Appended 2026-08-17, after an independent read-only R-35 pass over slice group
+`campaign-close-final-integration` (`a431e34`, `0be8f37`, `b02e4ca`, `9ee7505`)
+returned the criterion `close-reports-closeout-section-accurate` **NOT DISCHARGED**
+on three figures and named six behaviours those four commit bodies do not mention.
+The pass reproduced the rest of section 14 by re-running every instrument it cites.
+Section 14 stays exactly as written, for the reason section 9 gives, and each
+correction below lands beside the sentence it corrects rather than over it.
+**Nothing here re-grades a gap or a criterion.** Section 12.4's table and
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) remain the authority on state
+and this section moves no row in either. Every figure below is read by running the
+instrument named beside it, and — unlike section 14's — every one of them is gated,
+by [`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py);
+see 15.6.*
+
+### 15.1 The residue's fall is dated to the wrong day, and it rose first
+
+Section 14.1's finding-1 row says the clause's residue is 2 of 125 slice tags, "down
+from 118 on 2026-08-14". Section 14.2's own table twenty lines below it reads
+`residue | 67 | 2` for that date, so the two disagree inside one section, and the
+ledger's history says neither the figure nor the direction belongs to that day.
+
+Measured by reading `coverage.residue` out of every blob of
+[`verify-ledger.json`](verify-ledger.json) in its own history —
+`git log --format='%H %ad' --date=short -- docs/receipts/verify-ledger.json`, then
+`git show <sha>:docs/receipts/verify-ledger.json` for each:
+
+* `c029024` (2026-08-14) — residue **62**, the first commit that gave the clause a
+  denominator at all.
+* `0f3adca` (2026-08-14) — residue **67**, which is the figure 14.2's table carries.
+* `a323202` (2026-08-14) — residue **76**, the last of that day's seventeen
+  ledger-touching commits.
+* `9961bf2` (2026-08-17) — residue **118**, the highest reading anywhere in the
+  file's history, and the commit immediately before the backfill.
+* `a455839` (2026-08-17) — residue **47**, the backfill.
+* `0be8f37` (2026-08-17) — residue **2**, this closeout's second commit and this
+  tip.
+
+So over the three days the residue **rose** and then fell, and the whole of the fall
+is inside 2026-08-17: the denominator grew with every slice group that shipped while
+the ledger held almost no verdicts, and what closed it — the backfill and the two
+sweeps — all landed on the last day. 118 is a 2026-08-17 figure, not a 2026-08-14
+one, and 2026-08-14's own reading is the 67 the table already carries.
+
+What the row should say is what 14.2's table already supports: 2 of 125, down from
+118 at `9961bf2` earlier the same day, and *up* from 67 on 2026-08-14, before the
+denominator grew. The clause "down from 118 on 2026-08-14" misstates the figure's
+date and reverses the trajectory it names.
+
+The same figure was written into a second home the same day and carries the same
+error there: `b02e4ca` appended "It fell -- 118 to 2 over three days" to
+[`rulings-owed.json`](rulings-owed.json)'s open row, in the field
+`consequence_of_leaving_it_open`. It is corrected there by a further dated line
+beside it rather than by deletion, which is this campaign's rule for a justification
+the tree contradicts: a sentence that is only deleted is one no reader can check was
+ever real.
