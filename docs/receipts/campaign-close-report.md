@@ -1410,6 +1410,105 @@ committed baseline holding 60.0, the only value any filed computation reached.
 
 **G6 → CLOSED**, named to `b299978` and `4f41e6e`.
 
+### 16.2 G4 — all fourteen have left, and the act left standing was the re-grade
+
+G4's row said so itself before this review ran: *"What stands in this row's way
+is therefore no longer an interpreter: it is the re-grade itself."* Its blocker
+was fourteen `(family, RECEIPT_WALK)` deferral rows, and the row's own note
+records each of the fourteen leaving, by name and by date. This section
+re-measured all of it rather than reading it:
+
+* [`docs/behavior-frontier.json`](../behavior-frontier.json) —
+  `counters.counter_4.deferrals.rows` is `{}`, and both counter-4 targets read
+  `deferred 0`, `gap 0`, `met true`. `behavior_frontier.py --check` exits 0.
+* [`receipt-walk-retirement-schedule.json`](receipt-walk-retirement-schedule.json)
+  — `families` is `{}` and `scheduled_slices` is **0**;
+  `receipt_walk_schedule.py --check` exits 0.
+* `interpreters.INTERPRETERS` holds exactly **13** `(family, RECEIPT_WALK)` keys.
+* `term_census.py --check`: **29** post-authoring packet-mutation sites, 0
+  uncovered; **9** authoring-time mitigation terms, 0 uncovered; **3** static
+  holder amps, 0 unfolded. That is the gate Amendment N put in front of any
+  further retirement, and it is clean.
+
+The fourteen are accounted for as **10 + 1 + 3**, and each third has a different
+authority, which is why the sum matters more than the total. Ten left by the
+ruled retiring act — `d48d042`, `0cd6a9f`, `0b8bded`, `928332c`, `c9d4ac8`,
+`6462085`, `d44ba92`, `4e340f3`, `b7f64cb` and the amp-term delivery at
+`38f4702` — under Amendments F, K, L, M, N and R. One left by **Amendment O**,
+Ruling 1: `crit_profile` authors no pair row anywhere in its covering
+population, so its deferral row was a schedule category error rather than a
+debt, and it closes by authority reclassification with a machine check that
+**reopens** the row if a future mechanic of the family ever authors one
+(`7af43f8`). Three left by **Amendment Q**: `combat_state`, `opening_defense`
+and `threshold_defense` are served through their declared `DEFENSE_RESOLVER`
+lane, so a receipt-walk interpreter there would be the second producer of one
+number that D-60 and criterion 8 forbid in terms, and the correction is that the
+table stops declaring a lane it must not (`be85720`), again with a check in both
+directions and a reopening condition.
+
+Amendment F's one prohibition is the thing to check against, and it is
+satisfied: *"no phase document may read this amendment as permission to stop
+counting them."* Nobody stopped counting. All fourteen were counted, each
+retired or reclassified by a named act with its own `Expected qualifying
+occurrences` line, and the row that records them is the count.
+
+**G4 → CLOSED**, named to the ten retiring commits and to `7af43f8` and
+`be85720`, unblocked by **Amendment O**.
+
+### 16.3 Criterion 11 — measured, and not closed
+
+Runbook criterion 11 stands **NOT DISCHARGED as written**, exactly as §12.5
+grades it, and nothing in this section supersedes that sentence. What this
+section adds is measurement and one fact about the mechanism that whoever rules
+G14 does not currently have written down anywhere.
+
+**Clause 1 — every slice has a recorded `verify-<slice>` verdict.** Measured on
+this tip: **127** slice tags derived from commit subjects, **128** recorded
+passes, and a residue of **3** — `campaign-close-verify-p4-batch`,
+`campaign-close-final-integration-r35`, and `campaign-close-certification`, the
+tag of this pass. All three are prepared as startable rows in
+[`verify-backlog.json`](verify-backlog.json) and none has been run. This lane
+did not run them and could not: R-35's verifier is *a fresh read-only Opus 5
+that has not read the plan*, and a lane that has read the plan writing one would
+be the unverifiable claim about the past Phase 1 outlaws.
+
+**Clause 2 — no barrier is crossed with an open `NOT DISCHARGED`.** Over the
+ledger's 128 passes: **90** `NOT_DISCHARGED` rows, of which **62** stand
+`documented_open`, 21 `fixed` and 7 `fixed_and_gated`. Re-dispositioning any of
+those 62 is a judgement about a verifier's finding, and a lane making it about
+the lanes being checked is the reconstruction
+`what_this_ledger_does_not_hold` refuses. They stay as filed.
+
+**The fact that is new.** The owed ruling —
+[`rulings-owed.json`](rulings-owed.json)'s
+`whether_criterion_11s_first_clause_binds_the_campaign_backwards`, still the one
+open row of nine answered — offers two branches: bind the clause backwards and
+schedule the residue's passes, or read it forwards and let the gate hold the
+next slice group. **Neither branch reaches zero, and the reason is structural
+rather than a matter of anybody working harder.** Recording a verdict is itself
+a commit; every commit carries a slice tag; a tag with no verdict is residue. So
+the act of closing the residue creates residue. The ledger's own history is the
+measurement: rounds 123–127 were recorded by lanes whose tags then needed
+verdicts and got them from later rounds, round 128's recording lane
+(`campaign-close-final-integration-r35`) is the live end of that chain today,
+and this pass adds a second live end by existing.
+
+There is a third branch, and it is the only one that terminates: **a group's
+verdict may be recorded by a commit carrying that same group's tag.** Round 128
+had it available and declined it in terms — *"the answering group's own tag takes
+its place there, because a lane cannot verify itself and the residue says so
+rather than closing on a lane's word"* — which is a convention, honestly chosen,
+and not an impossibility. Whether the clause's unit is the slice group (in which
+case a group with a recorded verdict is covered, and the recording commit inside
+it is not a second slice) or the commit (in which case the residue has no zero at
+all) is precisely the reading the owed ruling exists to settle.
+
+Naming a branch is not choosing one. `rulings-owed.json`'s own
+`what_a_lane_may_do_and_has_done` draws exactly this line — *"price the branch it
+may not choose"* — and a branch nobody has priced because nobody has written it
+down is the cheapest thing a lane can hand whoever rules. **G14 stays OPEN**,
+its blocker unchanged, and this pass closes nothing about it.
+
 ### 16.4 The gaps, as they finally stand
 
 *The report's final table, derived-checked against
@@ -1423,7 +1522,7 @@ reads each at run time, so no count in this table has a second home.*
 | **G1** | **CLOSED** | umbrella criterion 5 | `09956f8`, the campaign's second and last closing re-capture. |
 | **G2** | **CLOSED** | umbrella criterion 1's emission clause | `4b8779e`, unblocked by **Amendment E**. |
 | **G3** | **CLOSED** | umbrella criterion 8 | `69e7323`. 290 applied contributions claimed, 0 unidentified. |
-| **G4** | **OPEN** | umbrella criterion 7, and Amendment B's exit clause behind it | Fourteen `RECEIPT_WALK` deferral rows. |
+| **G4** | **CLOSED** | umbrella criterion 7, and Amendment B's exit clause behind it | All fourteen `RECEIPT_WALK` deferral rows have left — ten by the ruled retiring act, one by **Amendment O**'s authority reclassification, three by **Amendment Q**'s lane-declaration correction; §16.2. `counter_4.deferrals.rows` is `{}`. |
 | **G5** | **CLOSED** | umbrella criterion 4's non-plan half | **Amendment H**, mechanised at `1e209e2`. |
 | **G6** | **CLOSED** | runbook criterion 9's repo-wide reading | `b299978` is clause 2's ruled `src/` slice and `4f41e6e` is the pin that followed it; §16.1. 0 open debts, and 7 blocking members all `citation`. |
 | **G7** | **CLOSED** | Phase 4's criterion 14, and criterion 16's fallback-cause clause | `5c19b1f` and `0f3adca`. |
@@ -1434,3 +1533,28 @@ reads each at run time, so no count in this table has a second home.*
 | **G12** | **CLOSED** | nothing — a live operational risk, not an unmet criterion | `19b03d7`, unblocked by **Amendment G**. |
 | **G13** | **CLOSED** | runbook criterion 12 | `6549e32`. |
 | **G14** | **OPEN** | runbook criterion 11's first clause | The campaign's one certification blocker, and an owed ruling. Not a lane's; §16.3 measures what it now costs and closes nothing. |
+
+### 16.5 The re-grade
+
+*Two gap rows move and one umbrella criterion moves with them. Everything else
+in §6, §12.5 and §15 stands exactly as written.*
+
+* **Umbrella criterion 7 — DISCHARGED, under Amendments F, K, L, M, N, O, Q and
+  R.** Its named blocker was G4 and G4 is closed. §6 graded it PARTIALLY
+  DISCHARGED on one sentence — *"the rows are still present and still `owed_to`
+  that stage"* — and the rows are not present: `counter_4.deferrals.rows` is
+  `{}`. §12.5 carried the grade forward on the same blocker and was right to,
+  because on its own tip the debt was live. This line re-reads nothing. It is
+  §12.5's own rule applied where §12.5 said it applies: *"a criterion graded
+  short of what its own blockers say is the same defect as one graded past
+  them"*, and *"both closures are recorded in the umbrella by its owner, and
+  this line states their consequence."* Every act that closed G4 is an
+  amendment the umbrella's owner wrote or a lane act performed under one.
+* **Runbook criterion 9's repo-wide reading — met.** G6 is closed; every
+  campaign occurrence satisfying `qualifies_for_investigation` has its receipt,
+  and the blocking population is 7, all `citation`, 0 open debts.
+* **Runbook criterion 11 — NOT DISCHARGED, unchanged.** §12.5's sentence stands
+  word for word: *the campaign is not certified against its own runbook while
+  that clause is unread.* §16.3 measures what is left and adds a branch to the
+  question; it answers none of it. What is outstanding is one decision with a
+  cost and an owner, and it is the same one §12.4 named.
