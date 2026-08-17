@@ -13892,9 +13892,12 @@
      "id": "P4-H2-ccscope-support-effect-templates-call-sites",
      "verdict": "NOT_DISCHARGED",
      "what_was_found": "The body states '_support_effect_templates now takes pair_defender_id as a REQUIRED keyword with no default, so all five call sites name the pair'. The keyword-only, defaultless signature is correct (participant_timeline.py:939-947). The count is not: there are SIX call sites at 067c94c (lines 1014, 2774, 2901, 3097, 3 [...]",
-     "answered_at": [],
-     "disposition": "documented_open",
-     "note": "Documented from the verifier's report; no lane answer is asserted. The miscount is reproducible at HEAD -- `grep -rn _support_effect_templates src/` returns the definition at participant_timeline.py:939 and six call sites (1091, 2937, 3065, 3262, 3297, 3996) -- and the same 'all five call sites' sentence is live in docs/receipts/escalated-defects-P4-S10.json, which is a correction of its own and not this recording lane's."
+     "answered_at": [
+      "c7cdd75"
+     ],
+     "disposition": "fixed",
+     "note": "Answered 2026-08-17 by c7cdd75 (campaign-close-sweep-findings), the first sweep row in this ledger a later lane closed. The miscount reproduces exactly as recorded: `git grep -n _support_effect_templates 067c94c -- src/` returns the definition at participant_timeline.py:862 and six calls (1014, 2774, 2901, 3097, 3132, 3837), and the same grep at HEAD returns the definition at 939 and six calls (1091, 2937, 3065, 3262, 3297, 3996), all six passing the keyword. The commit body cannot be edited, so the recount landed on the live copy of the sentence -- what_the_lane_measured.the_scan in docs/receipts/escalated-defects-P4-S10.json -- which is the file this row named for the next lane, and the recount names the sixth site (the breakdown pass) as the one a reader counting to five never opens. The verdict is not re-graded: it stands NOT_DISCHARGED as the verifier rendered it, and what moved is the disposition.",
+     "artifact": "docs/receipts/escalated-defects-P4-S10.json"
     }
    ],
    "unmentioned_behaviour": [
@@ -14127,6 +14130,7 @@
    ],
    "shape": "One JSON line per agent result, carrying all_discharged, criteria[] (id, status, evidence) and unmentioned_behaviour[]. The brief the agent was handed -- R-35's, including 'Do not read the implementation plan' -- is the first line of the agent's own transcript file beside the journal, and it is what names the commit range each slice was verified over.",
    "why_the_journal_and_not_the_handoff": "The lane that records a batch is handed the verdicts in its own task text, which is truncated to fit. The journal line is the verifier's artifact, complete, and it is what was transcribed -- the recording lane may not be the reason a verdict goes missing."
-  }
+  },
+  "when_a_later_lane_answers_a_sweep_row": "Added 2026-08-17. `what_it_does_not_claim` says a NOT_DISCHARGED sweep row is documented and that no lane action is asserted. That is what a RECORDING lane may claim; it is not a rule that the row can never be answered. When a later lane does act, the row records what acted -- `answered_at` names the commit, `disposition` moves off documented_open, and `note` says what was measured. The verdict itself is never re-graded, because a verdict is the verifier's artifact and a disposition is the lane's. Without this sentence the two halves read as a contradiction, and the ledger would be teaching that a sweep row is unanswerable by construction, which the block never meant."
  }
 }
