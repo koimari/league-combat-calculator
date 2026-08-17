@@ -38,7 +38,9 @@ Usage:
 """
 
 import argparse
+import ast
 import copy
+import inspect
 import json
 import math
 import subprocess
@@ -56,6 +58,7 @@ from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
+from src.calculator import damage
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_behavior import (
@@ -893,14 +896,19 @@ def _syndra_pin_scenarios():
     return tuple(scenarios)
 
 
-def _roster_request(champion, items, *, enemies, allies, enemy_items=None, **extra):
+def _roster_request(champion, items, *, enemies, allies, enemy_cards=None, **extra):
     """A time-based roster request with the fields every scenario shares.
 
-    ``enemy_items`` equips a *defender*, which one covering scenario needs:
-    the max-health reprice joins an attacker's declaration to a defender's,
-    so its lifeline rides the enemy card rather than the holder's item list.
+    ``enemy_cards`` equips a *defender*, keyed by champion name and carrying
+    that card's own loadout fields — ``items``, ``boots``.  Two covering
+    scenarios need one: the max-health reprice joins an attacker's
+    declaration to a defender's lifeline, and the swing terms are declared
+    entirely on the defender's side, one of them by a pair of *boots*.  One
+    card mapping rather than one mapping per slot, because a defender's
+    loadout is one thing and a request that could equip its items but not its
+    boots could not arm the plating multiplier at all.
     """
-    equipped = dict(enemy_items or {})
+    cards = dict(enemy_cards or {})
     request = {
         "champion": champion,
         "level": 18,
@@ -908,7 +916,15 @@ def _roster_request(champion, items, *, enemies, allies, enemy_items=None, **ext
         "fight_mode": "time_based",
         "fight_duration": 8,
         "enemies": [
-            {"champion": name, "level": 18, "items": list(equipped.get(name, ()))}
+            {
+                "champion": name,
+                "level": 18,
+                "items": [],
+                **{
+                    field: (list(value) if field == "items" else value)
+                    for field, value in cards.get(name, {}).items()
+                },
+            }
             for name in enemies
         ],
         "allies": [
@@ -1157,8 +1173,60 @@ COUPLED_SCENARIOS = (
             ("Liandry's Torment", "Rabadon's Deathcap", "Void Staff"),
             enemies=("Malphite",),
             allies=("Pantheon",),
-            enemy_items={"Malphite": ("Protoplasm Harness",)},
+            enemy_cards={"Malphite": {"items": ("Protoplasm Harness",)}},
             fight_duration=5,
+        ),
+    ),
+    # The three target-side terms a basic-attack swing meets on its way into
+    # a defender (umbrella Amendment R, Ruling 4).  `_mitigate` carries a
+    # resistance and the holder's own amps and nothing else, so a family
+    # whose packets are delivered as swings and re-priced from their
+    # declarations would lose the plating multiplier, the crit-damage
+    # reduction and Warden's Mail's capped flat subtraction — and the last of
+    # those is not a factor on a magnitude at all, so no declaration could
+    # reproduce it.
+    #
+    # *Armed means met*: the term has to be on a defender this roster
+    # actually swings at, which is the join Ruling 4 makes the derivation
+    # read.  Two of the three were already observable on a defender —
+    # `immolate_active_bruiser_roster`'s Darius holds Randuin's Omen and
+    # Plated Steelcaps and is attacked as well as attacking — and Rock Solid
+    # was armed by no committed scenario and no bench roster at all.
+    #
+    # A crit carry into two enemy cards, because the two ordinary builds that
+    # carry these terms cannot be one card: Warden's Mail is the *component*
+    # Randuin's Omen is built out of, so a defender holding both is not a
+    # build anybody plays.  Aatrox takes the finished-tank half, whose
+    # Randuin's Omen meets the primary swings of an Infinity Edge holder with
+    # the crit-damage reduction; Malphite takes the mid-game half — Warden's
+    # Mail with Plated Steelcaps, arming Rock Solid and the plating
+    # multiplier on one card.
+    #
+    # Malphite is second on purpose.  Runaan's Hurricane allocates its bolt
+    # to the second roster target, and the measurement that opened this
+    # amendment is a *bolt*: the copied packet a basic-attack router delivers
+    # at a second subject is priced by the same swing composition, and a
+    # second subject that takes less from the bolt carries more health into
+    # the current-health on-hit strikes that follow it — so the bolt row and
+    # the copied on-hit row move in OPPOSITE directions, and a roster that
+    # armed the terms anywhere but under the bolt would read green over the
+    # row that moved.
+    CoupledScenario(
+        "swing_term_armed_carry_roster",
+        _roster_request(
+            "Caitlyn",
+            ("Infinity Edge", "Runaan's Hurricane", "Blade of the Ruined King"),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            enemy_cards={
+                "Aatrox": {"items": ("Randuin's Omen",)},
+                "Malphite": {
+                    "items": ("Warden's Mail",),
+                    "boots": "Plated Steelcaps",
+                },
+            },
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
         ),
     ),
     *_syndra_pin_scenarios(),
@@ -1448,6 +1516,189 @@ def _unarmed_repricing_windows(scenarios, windows):
     return tuple(sorted(kind for kind, names in covering.items() if not names))
 
 
+# The pair engine's one basic-attack swing pricing entry point, named rather
+# than described: `_mitigate_basic_attack_swing` resolves one primary
+# basic-attack damage instance against the target, and every target-side term
+# a swing meets is applied inside it or inside a helper it calls.  A rename
+# arrives here as an AttributeError on the commit that renames it, which is
+# the same guarantee the window kinds get from reading their own declaration
+# fields rather than from a label typed into this module.
+SWING_PRICING_ENTRY = "_mitigate_basic_attack_swing"
+
+
+def _swing_pricing_functions():
+    """The swing pricing entry point and every module function it reaches.
+
+    Read from ``damage``'s own source, not listed: the terms a swing meets
+    are spread across the entry point and the helpers it calls, and a term
+    added to a fourth helper has to arrive at the guard on the commit that
+    adds it rather than on the commit somebody notices.
+    """
+    getattr(damage, SWING_PRICING_ENTRY)  # a rename is an error, not a silence
+    module = ast.parse(inspect.getsource(damage))
+    defined = {
+        node.name: node
+        for node in module.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    reached, pending = {}, [SWING_PRICING_ENTRY]
+    while pending:
+        name = pending.pop()
+        if name in reached or name not in defined:
+            continue
+        reached[name] = defined[name]
+        pending.extend(
+            node.func.id
+            for node in ast.walk(defined[name])
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        )
+    return reached
+
+
+def swing_target_terms():
+    """Every defensive field the basic-attack swing pricing reads off its target.
+
+    The pair engine holds a target's resolved defence as ``target_``-prefixed
+    fight state, so the join back to the declaration vocabulary is the
+    :class:`~.item_behavior.DefenseField` whose value is the rest of the
+    attribute name.  Reading it that way is what makes the set *the terms a
+    swing meets* rather than *the terms somebody remembered*: a fifth
+    target-side field read by the swing pricing is a new member the moment
+    the read is written, and a fight-state attribute that is not a declared
+    defensive field is not a term any item can arm.
+    """
+    values = {field.value: field for field in DefenseField}
+    return frozenset(
+        values[node.attr[len("target_") :]]
+        for function in _swing_pricing_functions().values()
+        for node in ast.walk(function)
+        if isinstance(node, ast.Attribute)
+        and node.attr.startswith("target_")
+        and node.attr[len("target_") :] in values
+    )
+
+
+def swing_term_declarations():
+    """Each target-side swing term, mapped to the items that declare it.
+
+    R-12's coverage is derived and never typed, and this is its fifth
+    reading.  :func:`cross_participant_producers` answers *can the baseline
+    see every cross-participant packet source*, :func:`receipt_walk_families`
+    *can it see every family whose numbers the walk still defers*,
+    :func:`holder_amp_declarations` *can it see every amplifier the holder's
+    own build brings to those numbers*, :func:`repricing_window_declarations`
+    *can it see every window in which the pair engine re-prices a packet it
+    already authored*; this answers *can it see every term the defender
+    brings to a packet delivered as a basic-attack swing*.
+
+    The umbrella's Amendment R, Ruling 4 makes that a covering scenario's
+    job.  ``survival.pricing.price_declared_packet`` carries what ``_mitigate``
+    carries — a resistance and the holder's own amps — while a swing is
+    priced by ``damage._mitigate_basic_attack_swing``, which meets three
+    further terms on the target's side.  Two of them fold into a declared
+    magnitude because a pure factor on a linear mitigation prices to the same
+    real number; Warden's Mail's Rock Solid never does, because
+    ``min(flat, per_hit × cap)`` is a capped flat *subtraction* applied to the
+    crit and non-crit branches separately, and no magnitude a declaration
+    could state reproduces one.
+
+    Keyed per field rather than per mechanic, because the field is the
+    tree's own vocabulary and the mechanic's name is not: Rock Solid's flat
+    and its cap are two fields of one subtraction and are declared by one
+    owner, so keying per field costs nothing and keeps a renamed or added
+    field arriving as a renamed or added term.
+
+    Read live from the catalog over every owner in ``rule_owners()`` and over
+    **every** defence shape that declares a ``writes``, which is the
+    amendment's own load-bearing correction: the three terms are declared by
+    four owners across two rule shapes — ``OpeningDefenseRule`` for the
+    plating multiplier, the crit-damage reduction and Rock Solid, and
+    ``ReactiveRule`` for a second declaration of the same plating multiplier —
+    so a mapping keyed on the opening-defence shape alone would report the
+    plating term covered by an incomplete set.
+    """
+    terms: dict[str, set[str]] = {}
+    swing_fields = swing_target_terms()
+    for owner in sorted(rule_owners()):
+        for rule in behavior_rules(owner):
+            for written in getattr(rule.payload, "writes", ()):
+                if written in swing_fields:
+                    terms.setdefault(written.value, set()).add(owner)
+    return {term: frozenset(owners) for term, owners in sorted(terms.items())}
+
+
+def swing_delivering_scenarios(scenarios):
+    """Which scenarios deliver a basic-attack swing at all.
+
+    Read through ``FightParams.from_request``, which is the tree's own answer
+    to the question and not the request's literal: ``include_auto_attacks``,
+    ``auto_attacks_only`` and the uptime mode together decide whether a
+    request's uptime survives into the fight, and a scenario that names an
+    uptime the fight mode discards swings exactly as often as one that names
+    none.
+    """
+    return frozenset(
+        scenario.name
+        for scenario in scenarios
+        if FightParams.from_request(
+            dict(scenario.request), deterministic=True
+        ).auto_attack_uptime
+        > 0
+    )
+
+
+def swing_term_covering_scenarios(scenarios, terms):
+    """Which scenarios arm a swing term *and* swing at the card that holds it.
+
+    Ruling 4's *armed means met*: a defender holding the item in a fight
+    nobody swings at is the same emptiness with a scenario name on it.  So
+    this is a two-sided join like a re-pricing window's — but its second side
+    is a *delivery* rather than a second declaring item, which is why it
+    composes :func:`covering_scenarios` with a scenario predicate instead of
+    reusing :func:`window_covering_scenarios`.  The declaration side stays the
+    one "covering" predicate the four readings before it share.
+    """
+    delivering = swing_delivering_scenarios(scenarios)
+    return {
+        term: tuple(sorted(set(names) & delivering))
+        for term, names in covering_scenarios(scenarios, terms).items()
+    }
+
+
+def _unarmed_swing_terms(scenarios, terms):
+    """Target-side swing terms no scenario arms against a swing (R-12)."""
+    covering = swing_term_covering_scenarios(scenarios, terms)
+    return tuple(sorted(term for term, names in covering.items() if not names))
+
+
+def _refuse_unarmed_swing_terms(scenarios, terms):
+    """Refuse a capture whose scenario set swings at no holder of some term.
+
+    Its own function rather than a fifth block inside :func:`capture_coupled`,
+    because the refusal has to name *both* sides of the join it failed — the
+    item to equip and the delivery to make — and a guard that only told a
+    reader which item to add would send them to write the emptiness Ruling 4
+    describes.
+    """
+    unarmed = _unarmed_swing_terms(scenarios, terms)
+    if not unarmed:
+        return
+    raise ValueError(
+        "no coupled scenario swings at a defender arming "
+        + ", ".join(unarmed)
+        + " — a basic-attack swing meets target-side terms the walk's "
+        "from-declaration price does not carry, and one of them is a capped "
+        "flat subtraction no declared magnitude can reproduce, so a family "
+        "delivered as a swing and retired while no scenario arms them would "
+        "delete them from every packet that met them, unseen (umbrella "
+        "Amendment R, Ruling 4); add a covering scenario that both equips "
+        "one of "
+        + ", ".join(sorted({item for term in unarmed for item in terms[term]}))
+        + " on a participant and delivers a basic attack, before capturing "
+        "the baseline"
+    )
+
+
 def _coupled_receipt(parsed, resolved, *, score_mode):
     """The coupled participant receipt, mirroring calculate's own composition."""
     params = resolved.fight_params
@@ -1561,7 +1812,14 @@ def cross_participant_producers():
 
 
 def capture_coupled(
-    scenarios, *, producers, families=None, amps=None, windows=None, exact=False
+    scenarios,
+    *,
+    producers,
+    families=None,
+    amps=None,
+    windows=None,
+    swing_terms=None,
+    exact=False,
 ):
     """Roster snapshots through the coupled path, covering every producer.
 
@@ -1573,11 +1831,12 @@ def capture_coupled(
     than passing silently.  ``families`` is R-12's second reading and is read
     the same way, defaulting to :func:`receipt_walk_families`; passing it is
     the seam a negative test drives the guard through (R-05).  ``amps`` is
-    R-12's third reading, defaulting to :func:`holder_amp_declarations`, and
+    R-12's third reading, defaulting to :func:`holder_amp_declarations`,
     ``windows`` its fourth, defaulting to
-    :func:`repricing_window_declarations`; both carry the same seam.
-    ``exact`` writes ``repr(float)`` per-attacker totals instead of the
-    2-decimal snapshot.
+    :func:`repricing_window_declarations`, and ``swing_terms`` its fifth,
+    defaulting to :func:`swing_term_declarations`; all three carry the same
+    seam.  ``exact`` writes ``repr(float)`` per-attacker totals instead of
+    the 2-decimal snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
@@ -1637,6 +1896,9 @@ def capture_coupled(
             )
             + " before capturing the baseline"
         )
+    _refuse_unarmed_swing_terms(
+        scenarios, swing_term_declarations() if swing_terms is None else swing_terms
+    )
     entries = {}
     for scenario in scenarios:
         raw = coupled_entry(scenario)

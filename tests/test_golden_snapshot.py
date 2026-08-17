@@ -6,8 +6,10 @@ scenario set reaches, and whether each new gate can be made to fail on demand
 (runbook R-05).
 """
 
+import ast
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -26,6 +28,7 @@ from src.calculator.item_behavior import (  # noqa: E402
     Basis,
     DefenseField,
     EmpoweredHitRule,
+    OpeningDefenseRule,
     PartAmpRule,
     PeriodicRule,
     ThresholdDefenseRule,
@@ -39,6 +42,16 @@ from src.calculator.item_effects import (  # noqa: E402
     resolve_damage_effects,
 )
 from src.calculator.item_support_effects import producer_item  # noqa: E402
+from src.calculator.pipeline import run_fight  # noqa: E402
+from src.calculator.roster_composition import (  # noqa: E402
+    from_loadout,
+    target_overrides,
+    target_params,
+)
+from src.calculator.scenario import (  # noqa: E402
+    parse_scenario_request,
+    resolve_scenario,
+)
 
 COUPLED_BASELINE = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
 COUPLED_EXACT = REPO_ROOT / "scripts" / "golden_coupled_exact.json"
@@ -1028,6 +1041,280 @@ class TestRepricingWindowCoverage:
         shared["fight_duration"] = 8
         with pytest.raises(ThresholdExpiryWithheld):
             gs.coupled_entry(gs.CoupledScenario("shared_duration", shared))
+
+
+SWING_TERM_ROSTER = "swing_term_armed_carry_roster"
+
+
+def _swing_term_roster():
+    """The swing-term roster, parsed and resolved once per asking test."""
+    scenario = next(
+        candidate
+        for candidate in gs.COUPLED_SCENARIOS
+        if candidate.name == SWING_TERM_ROSTER
+    )
+    parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
+    return parsed, resolve_scenario(parsed)
+
+
+def _swing_term_pair_fight(index, **overrides):
+    """One pair fight of the swing-term roster, composed the way the walk does.
+
+    ``roster_composition.target_params`` is the walk's own hand-off of a
+    defender's resolved state to a pair fight, so a fight built through it is
+    the fight the coupled capture holds.  ``overrides`` then replaces
+    individual target-side fields, which is what makes a term isolable
+    *without* disturbing the armour the same item also grants — a control
+    that simply removed Warden's Mail would confound its 45 armour with its
+    Rock Solid.
+    """
+    parsed, resolved = _swing_term_roster()
+    params = replace(
+        target_params(
+            resolved.fight_params,
+            from_loadout(str(index), "enemy", resolved.enemies[index]),
+        ),
+        roster_target_index=index,
+        roster_target_count=len(resolved.enemies),
+        **overrides,
+    )
+    return run_fight(resolved.champion_data, parsed.level, list(resolved.items), params)
+
+
+def _declared_swing_value(owner, term):
+    """The sourced number an owner's declaration names for one swing term."""
+    return required_effect_value(
+        owner,
+        next(
+            reference.key
+            for rule in behavior_rules(owner)
+            for reference in getattr(rule.payload, "values", ())
+            if getattr(reference, "key", None) == term
+        ),
+    )
+
+
+class TestSwingTermCoverage:
+    """R-12's fifth reading: no target-side swing term goes unarmed.
+
+    The umbrella's Amendment R, Ruling 4 makes arming them a covering
+    scenario's job.  ``survival.pricing.price_declared_packet`` carries what
+    ``_mitigate`` carries — a resistance and the holder's own amps — while a
+    packet delivered as a basic-attack swing is priced by
+    ``damage._mitigate_basic_attack_swing`` and meets three further terms on
+    the *target's* side.  One of them is a capped flat subtraction no declared
+    magnitude can reproduce, so a family delivered as a swing and retired
+    while no scenario arms it would delete the term behind a green zero.
+    """
+
+    def test_the_scenario_set_arms_every_swing_term(self):
+        assert (
+            gs._unarmed_swing_terms(gs.COUPLED_SCENARIOS, gs.swing_term_declarations())
+            == ()
+        )
+
+    def test_the_term_set_is_read_from_the_swing_pricing_and_not_typed(self):
+        """Every term is a field the swing pricing itself reads off the target.
+
+        The set is derived from ``damage``'s own source, so this checks the
+        derivation both ways: each member is read by a function the swing
+        pricing reaches, and a defensive field the swing pricing never reads
+        is not a member.  A hand list would pass the first half and fail the
+        second the moment somebody added a field they liked the sound of.
+        """
+        terms = gs.swing_target_terms()
+        reached = gs._swing_pricing_functions()
+        assert gs.SWING_PRICING_ENTRY in reached
+        read = {
+            node.attr
+            for function in reached.values()
+            for node in ast.walk(function)
+            if isinstance(node, ast.Attribute)
+        }
+        for field in terms:
+            assert f"target_{field.value}" in read
+        assert DefenseField.THRESHOLD_HEALTH_BONUS not in terms
+        assert DefenseField.MAGIC_SHIELD not in terms
+
+    def test_the_term_mapping_spans_every_defence_shape_that_declares_one(self):
+        """The mapping reads ``writes``, not one payload class.
+
+        Ruling 4's own measured correction: the terms are declared across two
+        rule shapes, and a mapping keyed on the opening-defence shape alone
+        would report the plating multiplier covered by an incomplete set.
+        This asserts the incompleteness is real — that some owner declares a
+        swing term through a payload that is *not* an ``OpeningDefenseRule``
+        — so the guard cannot be narrowed back without going red.
+        """
+        terms = gs.swing_term_declarations()
+        assert terms
+        swing_fields = gs.swing_target_terms()
+        opening_only = {
+            term: {
+                owner
+                for owner in owners
+                for rule in behavior_rules(owner)
+                if isinstance(rule.payload, OpeningDefenseRule)
+                and set(rule.payload.writes) & swing_fields
+            }
+            for term, owners in terms.items()
+        }
+        assert any(opening_only[term] < set(owners) for term, owners in terms.items())
+        for term, owners in terms.items():
+            for owner in owners:
+                written = {
+                    field.value
+                    for rule in behavior_rules(owner)
+                    for field in getattr(rule.payload, "writes", ())
+                }
+                assert term in written
+
+    def test_a_swing_term_no_scenario_arms_fails_the_capture(self):
+        """The permanent negative (R-05), driven through the ``swing_terms`` seam."""
+        terms = dict(gs.swing_term_declarations())
+        terms["fourth_swing_term"] = frozenset({"Unarmed Relic — Ninth Wonder"})
+        with pytest.raises(ValueError, match="fourth_swing_term"):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                swing_terms=terms,
+            )
+
+    def test_a_term_armed_where_nothing_swings_fails_the_capture(self):
+        """The two-sided join's own negative — *armed means met*.
+
+        ``liandry_reprice_mage_roster`` equips Protoplasm Harness and swings
+        at nobody, so a declaration-only reading would call a term it holds
+        covered.  The guard must refuse it, which is what proves the delivery
+        side is intersected with the declaration side rather than unioned.
+        """
+        held_but_never_swung_at = "Protoplasm Harness"
+        assert held_but_never_swung_at in frozenset().union(
+            *(scenario.equipped() for scenario in gs.COUPLED_SCENARIOS)
+        )
+        terms = dict(gs.swing_term_declarations())
+        terms["never_swung_at_term"] = frozenset({held_but_never_swung_at})
+        with pytest.raises(ValueError, match="never_swung_at_term"):
+            gs.capture_coupled(
+                gs.COUPLED_SCENARIOS,
+                producers=gs.cross_participant_producers(),
+                swing_terms=terms,
+            )
+
+    def test_the_roster_hands_every_declared_term_to_a_pair_fight(self):
+        """Armed means *met*: the walk's own hand-off carries each term.
+
+        Each defender card's resolved state is read through
+        ``roster_composition.target_overrides`` — the function that hands a
+        defender to every pair fight the walk runs — and compared with the
+        sourced number the declaring item's own ``ValueRef`` names, so a
+        registry that stopped producing the value fails here rather than
+        arming an inert term.
+        """
+        _, resolved = _swing_term_roster()
+        carried = {}
+        for index, enemy in enumerate(resolved.enemies):
+            overrides = target_overrides(from_loadout(str(index), "enemy", enemy))
+            for term, owners in gs.swing_term_declarations().items():
+                equipped = {item["name"] for item in enemy.item_data} & set(owners)
+                if equipped:
+                    (owner,) = equipped
+                    assert overrides[f"target_{term}"] == _declared_swing_value(
+                        owner, term
+                    )
+                    carried[term] = owner
+        assert set(carried) == set(gs.swing_term_declarations())
+
+    def test_the_plating_multiplier_is_a_pure_factor_on_the_swing(self):
+        """A factor on a linear mitigation, which is why Ruling 1 folds it.
+
+        Measured with Rock Solid held inert, because a flat subtraction
+        applied after the factor would stop the ratio being the factor — the
+        exact asymmetry that makes the third term un-foldable.
+        """
+        term = DefenseField.BASIC_DAMAGE_MULTIPLIER.value
+        declared = _declared_swing_value("Plated Steelcaps", term)
+        flat = {
+            "target_basic_damage_flat_reduction": 0.0,
+            "target_basic_damage_flat_reduction_cap": 0.0,
+        }
+        armed = _swing_term_pair_fight(1, **flat)
+        inert = _swing_term_pair_fight(1, **flat, target_basic_damage_multiplier=1.0)
+        assert armed["breakdown"]["auto_attacks"]["damage_per_hit"] == pytest.approx(
+            inert["breakdown"]["auto_attacks"]["damage_per_hit"] * declared
+        )
+
+    def test_rock_solid_is_a_capped_flat_subtraction_and_not_a_factor(self):
+        """The term Ruling 1 says never folds, measured as what it is.
+
+        The step between an armed swing and the same swing with only the
+        flat pair inert is ``min(flat, per_hit × cap)`` — an absolute amount
+        that depends on the per-hit figure only through its own cap, which is
+        precisely why no declared magnitude reproduces it.
+        """
+        flat = _declared_swing_value(
+            "Warden's Mail", DefenseField.BASIC_DAMAGE_FLAT_REDUCTION.value
+        )
+        cap = _declared_swing_value(
+            "Warden's Mail", DefenseField.BASIC_DAMAGE_FLAT_REDUCTION_CAP.value
+        )
+        armed = _swing_term_pair_fight(1)["breakdown"]["auto_attacks"]
+        inert = _swing_term_pair_fight(
+            1,
+            target_basic_damage_flat_reduction=0.0,
+            target_basic_damage_flat_reduction_cap=0.0,
+        )["breakdown"]["auto_attacks"]
+        before = inert["damage_per_hit"]
+        assert armed["damage_per_hit"] == pytest.approx(
+            before - min(flat, before * cap)
+        )
+
+    def test_the_crit_damage_reduction_meets_the_crit_branch_alone(self):
+        """A factor on one branch of the deterministic blend, not on the swing.
+
+        The blend is affine in the multiplier, so the armed swing must sit at
+        exactly the declared fraction of the way between the swing with the
+        crit branch deleted and the swing with the reduction inert.  That
+        identity needs no crit chance and no crit multiplier restated here,
+        which is what keeps this a measurement of the engine rather than a
+        second copy of it.
+        """
+        declared = _declared_swing_value(
+            "Randuin's Omen", DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER.value
+        )
+
+        def per_hit(multiplier):
+            fight = _swing_term_pair_fight(
+                0, target_critical_strike_damage_multiplier=multiplier
+            )
+            return fight["breakdown"]["auto_attacks"]["damage_per_hit"]
+
+        deleted, inert = per_hit(0.0), per_hit(1.0)
+        assert deleted < inert
+        assert per_hit(declared) == pytest.approx(
+            deleted + declared * (inert - deleted)
+        )
+
+    def test_the_bolt_and_the_copied_on_hit_row_move_in_opposite_directions(self):
+        """Why the terms are armed under the bolt, and why one row is not enough.
+
+        Ruling 3 gives the two rows different producers, but they are not
+        independently priceable: the copied on-hit strikes read the secondary
+        subject's *current* health, so a subject that takes less from the
+        bolt carries more health into them.  A fixture that armed a term and
+        checked only the bolt would read green over the row that moved.
+        """
+        armed = _swing_term_pair_fight(1)["breakdown"]
+        inert = _swing_term_pair_fight(
+            1,
+            target_basic_damage_multiplier=1.0,
+            target_basic_damage_flat_reduction=0.0,
+            target_basic_damage_flat_reduction_cap=0.0,
+        )["breakdown"]
+        bolt = "secondary_Runaan's Hurricane"
+        copied = f"on_hit_{bolt}"
+        assert armed[bolt]["total_damage"] < inert[bolt]["total_damage"]
+        assert armed[copied]["total_damage"] > inert[copied]["total_damage"]
 
 
 def _q2_row_was_absent_before_c6(scenario):
