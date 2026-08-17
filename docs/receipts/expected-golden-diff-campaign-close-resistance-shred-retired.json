@@ -1,0 +1,70 @@
+{
+  "slice": "campaign-close-resistance-shred-retired",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-66",
+    "D-97",
+    "H1",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 3",
+    "umbrella Amendment N, Ruling 2",
+    "umbrella Amendment O, Ruling 2",
+    "umbrella Amendment P"
+  ],
+  "what_this_is": "The R-20 population of resistance_shred/receipt_walk, the eighth of the fourteen to retire, enumerated from committed artifacts BEFORE this slice's first src/ edit, together with what a declaration of this family has to carry and what its retirement may NOT touch -- written down in advance so a moved number is a stop rather than a discovery.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97: the code lands against the committed baselines plus this allowlist, and no baseline moves inside the semantic commit."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. What can move is a property of which participants hold a declaring owner of the resistance_shred family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json at 41244aa, whose own fields are derived from the behaviour catalog and from scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit. Any occurrence outside it is an unexpected one and stops the slice exactly as an over-count would.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the resistance_shred family on a participant. The two owners are read live from the behaviour catalog over rule_owners() -- Black Cleaver and Bloodletter's Curse -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard, so the population and the guard cannot disagree about which rosters can see the family.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline -- the whole scenario subtree, because a slice that moves a family's numbers onto its own declaration can move any aggregate downstream of it inside that scenario.",
+    "population_by_scenario": {
+      "cleaver_bloodsong_roster": 1828,
+      "mandate_abyssal_curse_roster": 876,
+      "score_event_scan_holder": 301
+    },
+    "population_total": 3005,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "scripts/golden_baseline.json is the one-attacker pair-engine surface, and this slice adds and removes no pair-engine arithmetic at all: it touches src/calculator/damage.py in no line. The pair engine goes on resolving this family's shred into its own combat state through damage._resolve_combat_state, which is the pair-local half of a SPLIT the campaign's authority table leaves standing under H1. Zero pair-engine golden diffs is therefore a declared population of zero rather than an observation, and a single diff there stops the slice."
+    },
+    "which_owners_the_population_can_actually_see": "BOTH of the two, which is the first retirement in this campaign whose covering set reaches every declaring owner. cleaver_bloodsong_roster puts Black Cleaver on the Jax and score_event_scan_holder puts it on the Annie -- black_cleaver.armor_reduction, the CESARO_APPROX ramp -- and mandate_abyssal_curse_roster puts Bloodletter's Curse on the Ahri -- bloodletters_curse.mr_reduction, the EXACT ramp. So both declared summation models and both resistances are inside the enumerated population, and umbrella Amendment P's per-owner equivalence fixture is owed for coverage the population cannot reach rather than for owners it cannot reach.",
+    "predicted": "0 occurrences inside a population of 3005. The two numbers the walk's staging of this family reads -- the per-stack fraction and the stack cap -- are the same registry values under both spellings, measured before the edit: Black Cleaver ITEM_EFFECTS reduction_per_stack 0.06 and max_stacks 5 against ALLY_ITEM_EFFECTS armor_reduction_per_stack 0.06 and armor_reduction_max_stacks 5; Bloodletter's Curse ITEM_EFFECTS mr_reduction_per_stack 0.075 and max_stacks 4 against ALLY_ITEM_EFFECTS mr_reduction_per_stack 0.075 and mr_reduction_max_stacks 4. The slice replaces the read, not the number, so no leaf can move and a leaf that did would qualify under R-15 rather than being absorbed."
+  },
+  "what_a_declaration_of_this_family_has_to_carry": {
+    "rule": "Enumerated in advance, in the idiom the charged_strike, on_hit_strike and periodic slices used: writing down what the walk will have to read is what makes a wrong number a stop instead of a discovery.",
+    "no_price_at_all": "This is the second retirement after damage_routing whose interpreter hands the walk no price, and for a different reason from that one. A shred is not damage: it moves the TARGET's resistance before penetration is applied, and every number it changes belongs to some other family's packet. survival.pricing gains no term, no DeclaredPacket is touched, and survival.transitions.apply_declared_price is not this family's delivery site.",
+    "the_named_walk_side_delivery": "umbrella Amendment O, Ruling 2 classes this family (c) -- roster-relevant fold, both declarations naming Subject.TARGET -- and requires a NAMED walk-side delivery term before it may retire. The committed triage resolves that term and it is not an amendment's invention: every declaring owner carries a cross-participant half the walk already stages, black_cleaver.carve and bloodletters_curse.vile_decay, whose damage_modifier packets item_support_effects.derive_item_support_effects emits and survival/transitions stages as an ActionKind.DAMAGE_MODIFIER against every roster participant the holder hit. So the walk-side delivery stands in the tree and what this slice moves is WHICH DECLARATION IT READS.",
+    "the_two_reads_that_become_one": "The delivery reads a second spelling of this family's own numbers today. black_cleaver.carve is an ALLY_PACKET rule and its declared values include armor_reduction_per_stack and armor_reduction_max_stacks; black_cleaver.armor_reduction is the RESISTANCE_SHRED rule and its ramp declares per_stack and max_stacks. Two declarations of one ramp is how a score and a receipt come to disagree about it -- the same shape Serpent's Fang's venom had before damage_routing retired, where the walk read item_effects.serpents_fang_venom instead of the family's own rule. From this slice the emitter reads the shred through the RESISTANCE_SHRED receipt-walk interpreter and the ally packet keeps only its own number, the window duration, which is a property of the packet and not of the ramp.",
+    "the_stack_ledger_stays_where_it_is": "The walk counts the stacks, not the interpreter. Which authored events apply a stack, to which target, and in what order is a roster fact the emitter already walks, and moving it inside the interpreter would be a second producer of the count (D-60). What the interpreter supplies is the two sourced numbers the count is multiplied and capped by.",
+    "no_context_a_shred_declaration_does_not_read": "The BuildContext's three fight facts are keyword-only and defaultless so a caller cannot flatten a ramp by forgetting one. Neither declaration of this family reads a fight duration or a target's bonus health -- a shred is a per-stack fraction and a stack cap, and both are plain registry references -- so the emitter states that as a fact about the family rather than passing a defaulted zero it never looked at, the way participant_timeline._routing_build already states it for damage_routing."
+  },
+  "what_this_slice_may_NOT_do": {
+    "no_authority_move": "H1 is unanswered and is human-owned: whether black_cleaver.carve and bloodletters_curse.vile_decay move from SPLIT to COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW is the umbrella's authority table's question, and re-tuning the pair engine's Cesaro approximation is a documented balance change (docs/math-foundations.md 2.3). Both halves stay SPLIT, the pair engine keeps its own approximation, and the walk keeps skipping the holder. Retiring a receipt-walk deferral is not an authority move and this slice makes none.",
+    "no_preview_stamp_because_there_is_nothing_to_stamp": "The committed triage measures this family's authored pair rows as none -- authored_pair_rows: [] over the covering population and over a per-owner probe -- so there is nothing to stamp pair_preview_of on and nothing for ViewTag.THEORETICAL to describe. That half of umbrella Amendment L, Ruling 1 is discharged as an enumerated EMPTINESS, exactly as delta_amp's and damage_routing's were, and never as a step skipped.",
+    "no_second_declaration_of_a_declared_mechanic": "Both mechanics of this family are already declared in trigger_stream.CAPABILITIES -- black_cleaver.armor_reduction and bloodletters_curse.mr_reduction, engine=PAIR, authority=SPLIT, impl=damage._resolve_combat_state -- and CAPABILITIES is keyed by mechanic id, so a walk-side row under either id is unrepresentable rather than merely undesirable. Amendment L, Ruling 1's declarations half is therefore already met for this family, which is measured here before the edit rather than argued after it: the walk-side capability of each of these two rules is its SPLIT partner, and that partner is declared, PAIRED, and names the rule through pair_of."
+  },
+  "why_the_family_is_startable_now": {
+    "the_class": "Class (c), roster-relevant fold, in the committed triage (umbrella Amendment O, Ruling 2): both declarations name Subject.TARGET, so the family's numbers reach participants through rows it does not author and it may not be reclassified PAIR_ONLY. Ruling 2's stop clause does not fire on it -- walk_side_delivery_term.named is true, resolved rather than recorded, and a row WITH a named term does not stop the retirement round.",
+    "the_standing_precondition": "umbrella Amendment N, Ruling 2's source-derived term census is green -- python scripts/term_census.py --check reports 29 post-authoring packet-mutation sites, 0 uncovered, 3 static holder amps, 0 unfolded -- which is the standing precondition on any further family retiring. It binds this family trivially rather than vacuously: the census enumerates sites that re-price an authored packet, and this family authors none.",
+    "the_covering_scenarios": "umbrella Amendment L, Ruling 2's prerequisite is met without an integration act. Three committed coupled scenarios already put a declaring owner on a participant and between them they reach both owners, both resistances and both summation models, so this slice's R-20 population is non-empty before its first src/ edit and no scenario has to be landed for it."
+  },
+  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice. docs/behavior-frontier.json and docs/receipts/receipt-walk-retirement-schedule.json are machine-derived receipts whose counters this slice moves, so they move with it (R-36); holding them back would make the slice red against a gate it is forbidden to contain."
+}
