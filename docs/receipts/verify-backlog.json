@@ -39,10 +39,11 @@
   },
   "campaign-close-certification-r3": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
+   "commit_count": 2,
    "criteria_documents": [],
    "subjects": [
-    "docs(receipts): the range-to-HEAD baseline claim is anchored, and both copies of it (campaign-close-certification-r3)"
+    "docs(receipts): the range-to-HEAD baseline claim is anchored, and both copies of it (campaign-close-certification-r3)",
+    "docs(receipts): the third review's pass is recorded where the report keeps its passes (campaign-close-certification-r3)"
    ]
   },
   "campaign-close-verify-p4-batch": {

@@ -155,9 +155,21 @@ def section_16() -> str:
 
 @lru_cache(maxsize=1)
 def section_17() -> str:
-    """The report from its section 17 heading to the end of the file."""
+    """The report's section 17, bounded at 18 for section 15's own reason.
+
+    It ran to the end of the file until section 18 existed, which was true and
+    stopped being so; an unbounded section lets a gate match a figure a later
+    section states and report it as this one's.
+    """
     text = REPORT.read_text(encoding="utf-8")
-    return text[text.index("\n## 17.") :]
+    return text[text.index("\n## 17.") : text.index("\n## 18.")]
+
+
+@lru_cache(maxsize=1)
+def section_18() -> str:
+    """The report from its section 18 heading to the end of the file."""
+    text = REPORT.read_text(encoding="utf-8")
+    return text[text.index("\n## 18.") :]
 
 
 @lru_cache(maxsize=1)
@@ -1178,6 +1190,14 @@ BASELINE_CLAIMS = (("16.7", "04cdfbf", "3799bef"), ("17.7", "3799bef", "407428f"
 #: measures it in.
 DATED_MOVER = "927964c"
 
+#: Every range this report states the properties over: the two claimed ones and
+#: section 18.5's, which is this pass's own.  18.5 is not in ``BASELINE_CLAIMS``
+#: because it never claims its range empty -- it is the paragraph written the
+#: way 18.1 corrected the two before it, and it is gated as what it says.
+PROPERTY_RANGES = tuple(start for _section, start, _tip in BASELINE_CLAIMS) + (
+    "407428f",
+)
+
 
 @lru_cache(maxsize=None)
 def files_by_commit(rev_range: str) -> tuple[tuple[str, frozenset[str]], ...]:
@@ -1277,28 +1297,25 @@ def test_the_dated_clause_names_the_only_mover_in_the_range_it_measures(
     assert baseline_movers(files_by_commit(f"{start}..{DATED_MOVER}")) == (DATED_MOVER,)
 
 
-@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
-def test_no_src_moves_in_either_claimed_range(claim: tuple[str, str, str]) -> None:
+@pytest.mark.parametrize("start", PROPERTY_RANGES)
+def test_no_src_moves_in_a_stated_range(start: str) -> None:
     """The half of both sentences that is still true, read live."""
-    _section, start, _stating_tip = claim
     assert src_touchers(files_by_commit(f"{start}..HEAD")) == ()
 
 
-@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
-def test_no_commit_in_a_claimed_range_touches_both_src_and_a_baseline(
-    claim: tuple[str, str, str],
+@pytest.mark.parametrize("start", PROPERTY_RANGES)
+def test_no_commit_in_a_stated_range_touches_both_src_and_a_baseline(
+    start: str,
 ) -> None:
     """Criterion 10 over the same ranges -- the rule the sentence stood in for."""
-    _section, start, _stating_tip = claim
     assert commits_touching_both(files_by_commit(f"{start}..HEAD")) == ()
 
 
-@pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
-def test_every_baseline_move_in_a_claimed_range_is_inside_the_carve_out(
-    claim: tuple[str, str, str],
+@pytest.mark.parametrize("start", PROPERTY_RANGES)
+def test_every_baseline_move_in_a_stated_range_is_inside_the_carve_out(
+    start: str,
 ) -> None:
     """The property that replaces the reading: a legal re-pin stays green."""
-    _section, start, _stating_tip = claim
     assert movers_outside_the_carve_out(files_by_commit(f"{start}..HEAD")) == ()
 
 
@@ -1350,3 +1367,103 @@ def test_the_src_check_has_a_red_it_can_reproduce() -> None:
     """The other half of both sentences, failed on demand."""
     doctored = ("deadbe6", frozenset({"src/calculator/pipeline.py"}))
     assert src_touchers((doctored,)) == ("deadbe6",)
+
+
+# --------------------------------------------------------------------------
+# Section 18: the third certification review.
+#
+# Its figures are read live, from the report's own text for the enumerated
+# population and from this module for the rest.  The population is a *scan* and
+# not a list, which is round 129's fifth finding applied one level up: a sixth
+# sentence claiming a range free of baseline moves turns this red on the commit
+# that writes it, rather than sitting outside an enumeration somebody wrote.
+# --------------------------------------------------------------------------
+
+#: How this report spells a claim that a commit or a range is free of moves over
+#: R-32's five baselines.  Both spellings the report actually uses -- the five
+#: are named directly in four places and once by the sentence that scopes itself
+#: to a lane instead of a range.
+BASELINE_CLAIM_SITE = re.compile(r"R-32's five|No baseline moves in this lane")
+
+#: How this module spells a check parametrised over one of the two populations.
+PARAMETRISED_CHECK = re.compile(
+    r"@pytest\.mark\.parametrize\(\s*\n?\s*\"(?:claim|start)\","
+    r"\s*(?:BASELINE_CLAIMS|PROPERTY_RANGES)"
+)
+
+
+def baseline_claim_sites() -> str:
+    """How many sentences in the report make the claim 18.1 enumerates."""
+    return str(len(BASELINE_CLAIM_SITE.findall(REPORT.read_text(encoding="utf-8"))))
+
+
+def parametrised_checks() -> str:
+    """How many checks carry 18.1's correction, counted from this file."""
+    source = Path(__file__).read_text(encoding="utf-8")
+    return str(len(PARAMETRISED_CHECK.findall(source)))
+
+
+#: Section 18's figures.
+FIGURES_18: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "18.1 claim sites",
+        r"\*\*(\d+)\*\* sentences in this report assert",
+        baseline_claim_sites,
+    ),
+    (
+        "18.1 qualifying",
+        r"\*\*(\d+)\*\* of them\s+qualify",
+        lambda: str(len(BASELINE_CLAIMS)),
+    ),
+    (
+        "18.4 parametrised checks",
+        r"\*\*(\d+)\*\* parametrised checks",
+        parametrised_checks,
+    ),
+    (
+        "18.4 the gate's own size",
+        r"\*\*(\d+)\*\* figures, the count itself among them",
+        lambda: str(len(FIGURES_18)),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", FIGURES_18, ids=[case[0] for case in FIGURES_18])
+def test_every_figure_section_18_states_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """Section 18 states what a third review found, so every count in it is read."""
+    _label, pattern, measured = case
+    assert stated(section_18(), pattern) == measured()
+
+
+@pytest.mark.parametrize("case", FIGURES_18, ids=[case[0] for case in FIGURES_18])
+def test_the_section_18_gate_fails_when_a_stated_figure_drifts(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """R-05's permanent red for section 18, injected as 15's, 16's and 17's are."""
+    _label, pattern, measured = case
+    text = section_18()
+    match = re.search(pattern, text)
+    assert match is not None
+    drifted = str(int(match.group(1)) + 1)
+    doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
+    assert stated(doctored, pattern) != measured()
+
+
+def test_section_18_states_no_figure_this_file_does_not_read() -> None:
+    """The completeness scan, over the section that ships it."""
+    assert ungated_figures(section_18(), FIGURES_18, [], []) == []
+
+
+def test_the_completeness_scan_reds_on_section_18() -> None:
+    """R-05 for the scan on this section, as the 15/16 parametrisation does."""
+    doctored = section_18() + "\n\nA later pass measured **4321** of them.\n"
+    assert ungated_figures(doctored, FIGURES_18, [], [])
+
+
+def test_the_r01_verdict_table_section_18_states_carries_no_figure() -> None:
+    """15.8's ruling, held one section further on."""
+    table = section_18()[section_18().index("### 18.5") :]
+    assert "GREEN" in table
+    assert re.search(r"\*\*(\d+)\*\*", table) is None

@@ -1948,3 +1948,155 @@ one decision that could discharge it is the owner's and now has all three of its
 branches, its population hole and its exact cost written in the row that asks
 it — and every defect a fresh verifier found in the artifacts that say so has
 been fixed and gated.
+
+## 18. The third certification review — one minor fixed in both its copies, one decision still the owner's
+
+*Appended 2026-08-17. Section 9's rule applies here as everywhere above: nothing
+before this line is rewritten, and where this pass corrected a sentence an
+earlier section states, the sentence stays written and carries a dated clause
+beside it. §16.7 and §17.7 each gained one.*
+
+A third certification review withheld sign-off with one blocker and one minor.
+The blocker is that runbook criterion 11 is not discharged; §17.3 says so
+already and in the same terms, so what this review adds to it is a confirmation
+from a reader who had not seen that section, not a fact. The minor is a real
+defect, and it is fixed in both of the places it lives rather than the one that
+was named.
+
+### 18.1 The minor, and the copy the review did not name
+
+The review found §17.7's closing sentence — that `3799bef..HEAD` is empty over
+the five baselines R-32 lists — contradicted by the tip, because `927964c` moved
+`campaign-fingerprints.json` inside that range. It is right, and right about the
+shape as well as the fact: the move is legal under Amendment R-32's fourth
+carve-out and disclosed in that commit's body and on the receipt, so what was
+wrong is the sentence, left standing by the very commit that falsified it.
+
+R-20's second half asks for the population before the edit, and the population
+is what turned one finding into two. **5** sentences in this report assert that
+a commit or a range is free of moves over those five baselines: the header's
+doc-only line for `067c94c`, §4's *both*-claim over `584071e..067c94c`, §15.8's
+lane-scoped one, and §16.7's and §17.7's range-to-`HEAD` pair. **2** of them
+qualify — both name a range ending at `HEAD`, and `927964c` sits inside both —
+and the review named one of the two. §16.7 makes the identical claim over the
+wider range and was falsified by the same commit. Enumerating before editing is
+what found it; the other three are re-measured here and none qualifies.
+
+Neither sentence is edited. Each gains the dated clause §16.6 named in advance
+as the choice a later pass would face, and the clause is deliberately not a
+second reading. It anchors one range that ends where it ends —
+`04cdfbf..927964c` and `3799bef..927964c`, in which that commit is the only
+mover — and states everything else as a property, which is what a `..HEAD`
+sentence should have been in the first place: the `src/` half is empty over the
+live range; no commit in it touches both `src/` and one of those five, which is
+criterion 10 and the rule the sentence was standing in for; and every commit
+that moved one of them moved only `campaign-fingerprints.json`, touching no
+`src/`, no gate script and neither compared baseline. A property survives what a
+reading does not — this pass's own re-pin is a legal move inside that carve-out
+and the checks stay green across it, where a restated reading would have gone
+stale on the commit after the one that wrote it, exactly as the sentence above
+each clause did.
+
+### 18.2 The blocker, restated and not moved
+
+Runbook criterion 11 stands **NOT DISCHARGED**. §12.5 grades it, §16.3 restates
+it at its own anchor and §17.3 states both clauses live; no figure of it is
+restated here, because those sections and the two artifacts they read own them.
+
+The review's own list of what would close it names four acts, and every one of
+them is outside a lane by a rule this campaign wrote down before the question
+arose. Reading the clause forwards re-reads "every slice", which umbrella
+criterion 11 forbids a phase document from doing. Reading it backwards schedules
+the residue's prepared passes, which is a scheduling decision with a cost and an
+owner. Ruling that a group's verdict may be recorded by a commit carrying that
+group's own tag is the same act on the third branch §16.3 measured. And
+re-dispositioning clause 2's `documented_open` rows is a judgement about a
+verifier's finding, made by a lane the finding is about — the reconstruction
+`what_this_ledger_does_not_hold` refuses and §15.5 already ruled stays as filed.
+
+What is left that a lane may do is *run* the residue's prepared passes, and
+running one chooses nothing: it pays a cost either branch of the ruling can
+spend. This lane could not. R-35's verifier is *a fresh read-only Opus 5 that
+has not read the plan*, this lane has read them, and it has no way to put the
+brief in front of one; §17.3 recorded the same limit one pass earlier and
+nothing about it has changed. So this section ends where §17.5 and the report's
+closing sentence already end: the campaign is not certified against its own
+runbook, the reason is one decision with an owner, and every input that decision
+needs sits in one artifact a reader can open.
+
+### 18.3 The gaps
+
+**No gap row changes state in this pass.** G14 stays `OPEN` on the ruling it has
+always named, G11 stays `OPEN` on the two cached-data defects outside this
+campaign's scope, and every closed row stays closed. §16.4 therefore remains the
+report's final gap table and this section states none, for the gap ledger's own
+reason: one place holds the state, and a second table restating it is a second
+home.
+
+### 18.4 What gates section 18
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states from the thing it was measured with
+— the report's own text for the enumerated population, and the gate module's
+`BASELINE_CLAIMS`, `PROPERTY_RANGES` and its parametrised checks for the rest.
+**4** figures, the count itself among them, each with R-05's red beside it, and
+the completeness scan §17.2's fifth finding bought runs over this section too.
+
+**6** parametrised checks carry §18.1's correction. Three read the claim's own
+history over `BASELINE_CLAIMS` — that each sentence was true of the tip that
+wrote it, that it is false of this one, and that the range each dated clause
+names holds exactly the mover it names. Three assert the properties over
+`PROPERTY_RANGES`, which is the two claimed ranges plus this pass's own. Their
+reds are a seam and not a fixture: six commits that are not in the tree break
+the carve-out's four conditions one at a time, break criterion 10, and touch
+`src/`.
+
+The population figure is a scan rather than a list, which is §17.2's fifth
+finding applied one level up: a sixth sentence in this report claiming a range
+free of baseline moves turns this red on the commit that writes it, instead of
+sitting silently outside an enumeration somebody remembered.
+
+And this section forced what sections 16 and 17 each forced when they arrived:
+`section_17()` read from its heading to the end of the file, which was right
+until a section 18 existed. It is bounded at `## 18.` now.
+
+### 18.5 The R-01 matrix on this pass's tip
+
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**What each row read is in this pass's commit bodies, not here**, for the reason
+§15.8 ruled and §16.7 and §17.7 restate: a gate reading cannot be re-derived
+without re-running the gate it came from.
+
+**What this pass did to `src/` and to the baselines, as a property.** This
+paragraph is written the way §18.1 corrected the two before it, rather than
+claiming a `..HEAD` range empty a third time. Over `407428f..HEAD`: the `src/`
+half is empty; no commit touches both `src/` and one of those five; and every
+commit that moved one of them moved only `campaign-fingerprints.json`, touching
+no `src/`, no gate script and neither compared baseline — this pass's
+`tests{collected}` re-pin for the node ids it declared, inside Amendment R-32's
+fourth carve-out and disclosed in its own body. The three checks §18.4 names run
+over this range as over the two before it, and both compared baselines read
+`snapshot identical` on every commit here.
+
+**What is left, in one sentence.** Unchanged from §17.7's: runbook criterion 11
+is not discharged, the one decision that could discharge it is the owner's, and
+every defect two fresh readers found in the artifacts that say so has been fixed
+and gated.
