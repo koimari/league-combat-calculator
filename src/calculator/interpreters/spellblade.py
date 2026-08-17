@@ -68,27 +68,108 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
     return NO_SIBLING if reference is None else resolve(reference, level)
 
 
+def _spellblade_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """One spellblade's compiled numbers for *lane*.
+
+    The cooldown, plus the proof that this spellblade's bases resolve.
+    Compiling here is what makes a formula's *build-time* failures — a
+    missing registry key, a basis with no reading — surface when the build
+    is made rather than on whichever proc first asks for the number.
+
+    The lane is the only thing that varies between the two interpreters
+    below.  Sharing the body rather than spelling it twice is what makes
+    "the walk reads the same declaration the pair engine reads" a property
+    of the tree instead of a claim two functions could drift out of.
+    """
+    payload = _payload(rule)
+    damage_formula.compile_formula(payload.formula, ctx)
+    return (
+        KernelField(
+            name=SPELLBLADE_COOLDOWN_FIELD,
+            value=resolve(payload.cooldown, ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        ),
+    )
+
+
 class SpellbladePairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``spellblade`` family."""
+    """The pair engine's answer for the ``spellblade`` family.
+
+    Its number is a **preview** since this family retired: every spellblade
+    declares ``ViewTag.THEORETICAL`` on its pair lane and
+    ``damage._add_spellblade_damage`` stamps ``pair_preview_of`` on the row
+    it authors, so the honest one-attacker figure stays in the pair fight's
+    own receipt and leaves every total the roster composes.
+    """
 
     FAMILY = RuleFamily.SPELLBLADE
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The cooldown this spellblade compiles to, plus its bases' proof."""
-        payload = _payload(rule)
-        damage_formula.compile_formula(payload.formula, ctx)
-        return (
-            KernelField(
-                name=SPELLBLADE_COOLDOWN_FIELD,
-                value=resolve(payload.cooldown, ctx.level),
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            ),
-        )
+        """This spellblade's numbers, resolved for the one-attacker engine."""
+        return _spellblade_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+
+
+class SpellbladeWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the ``spellblade`` family.
+
+    The half that retires ``spellblade/receipt_walk`` (umbrella Amendment F's
+    act, in the lane Amendment K rules and with the whole shape Amendment L,
+    Ruling 1 requires).  Before it, the coupled walk consumed this family as
+    ``participant_timeline._pair_run_fight``'s already-priced rows, which is
+    what the deferral row said in its own words.  Now each proc's pair event
+    is a declaration and no price: the walk mitigates the declared magnitude
+    itself, through ``survival.pricing.price_declared_packet``.
+
+    What the declaration carries is enumerated at the authoring site rather
+    than assumed here.  The magnitude is **per proc** and every proc of one
+    fight shares it, because ``damage._add_spellblade_damage`` prices one raw
+    value per fight and multiplies its mitigated figure by the proc count.
+    The on-hit effectiveness of the attack that consumed the charge is folded
+    in, because the engine applies it pre-mitigation and mitigation is
+    linear.  And the attack class is ``OTHER`` for every one of the seven,
+    measured rather than defaulted: a spellblade proc is priced by
+    ``damage._mitigate`` and by nothing else, so a declaration claiming a
+    part amp would hand the walk an amplifier the pair engine never paid.
+    """
+
+    FAMILY = RuleFamily.SPELLBLADE
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """This spellblade's numbers, resolved for the coupled roster walk."""
+        return _spellblade_fields(rule, ctx, EngineLane.RECEIPT_WALK)
 
 
 PAIR_INTERPRETER = SpellbladePairInterpreter()
+WALK_INTERPRETER = SpellbladeWalkInterpreter()
+
+
+def spellblade_mechanic_id(owner: str) -> str:
+    """*owner*'s spellblade mechanic id, or a stop.
+
+    What the pair engine needs to stamp the row it authors with the mechanic
+    that row previews: ``damage._add_spellblade_damage`` walks a
+    :class:`~..item_effects.SpellbladeEffect`, which carries an item name and
+    no rule id, and reading the id back off the declaration here is what keeps
+    the stamp from being a second spelling of the mechanic slug inside the
+    engine.
+
+    A stop rather than a default: an unstamped spellblade row would keep the
+    pair engine's number in every roster total *and* leave the walk pricing
+    the declaration, which is the double count this family's retirement exists
+    to make unrepresentable.
+    """
+    rules = spellblade_rules([owner])
+    if not rules:
+        raise SpellbladeInterpretationError(
+            f"{owner} authors a spellblade row and declares no spellblade "
+            "rule, so its pair row has no mechanic to be a preview of"
+        )
+    return rules[0].mechanic_id
 
 
 def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
@@ -181,8 +262,11 @@ __all__ = [
     "SPELLBLADE_SUFFIX",
     "SpellbladeInterpretationError",
     "SpellbladePairInterpreter",
+    "SpellbladeWalkInterpreter",
+    "WALK_INTERPRETER",
     "declares_self_heal",
     "resolve_slot",
     "spellblade_effect",
+    "spellblade_mechanic_id",
     "spellblade_rules",
 ]

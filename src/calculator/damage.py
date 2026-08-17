@@ -151,7 +151,10 @@ from .interpreters import (
 # than as a module: ``spellblade`` is already this file's name for the armed
 # effect in five functions, and a module shadowed by a local is a bug waiting
 # for somebody to add a read above the assignment.
-from .interpreters.spellblade import resolve_slot as resolve_spellblade_slot
+from .interpreters.spellblade import (
+    resolve_slot as resolve_spellblade_slot,
+    spellblade_mechanic_id,
+)
 from .interpreters.sustain import declared_sustain, saturating_stat_percent
 from .item_behavior import (
     ActiveWindowCastEconomyRule,
@@ -6963,6 +6966,47 @@ def _add_spellblade_true_rider(
     state.total_damage += rider_total
 
 
+def _spellblade_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+    """One spellblade packet's declaration, as the retired family states it.
+
+    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
+    rule that authored the packet, its pre-mitigation magnitude, and the
+    attack class that decides which of the holder's own amplifiers it earns.
+
+    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
+    is measured rather than defaulted: a spellblade proc reaches the target
+    through :func:`_mitigate` and through nothing else — never through
+    :func:`_mitigate_basic_attack_swing`, so it earns neither the holder's
+    basic amp nor any target-side swing term — and no part amp applies to it,
+    so a declaration claiming one would hand the walk an amplifier the pair
+    engine never paid.  The magic amp needs no class at all: ``_mitigate``
+    applies it to magic damage whatever delivered it and
+    ``StaticHolderAmps.factor_for`` delivers it off the damage type, which is
+    live for the two of the seven that declare magic.
+
+    *raw_amount* is what the caller has already folded the on-hit
+    effectiveness of the consuming attack into.  That factor allocates one
+    application rather than amplifying it, the engine applies it before
+    mitigation, and mitigation is linear — so folding it into the magnitude
+    is the same real number priced once.
+
+    The resistance is deliberately absent, which is the correct reading for a
+    packet that met the fight's published figure: a proc event is an ordinary
+    ledger packet, so :func:`_apply_temporary_lethality_windows` can re-price
+    one, and where it does it restates the declaration riding that event at
+    the armour the packet actually met (:func:`_restate_declaration`, umbrella
+    Amendment N, Ruling 1) rather than leaving this site to guess a window it
+    cannot see yet.
+    """
+    return tuple(
+        AuthoredDeclaration(
+            spellblade_mechanic_id(item_name),
+            raw_amount,
+            AttackClass.OTHER.value,
+        )
+    )
+
+
 def _add_spellblade_damage(
     state: FightState,
     rotation: RotationResult,
@@ -7062,7 +7106,7 @@ def _add_spellblade_damage(
         proc_times = _spellblade_proc_times(rotation, effect, result.procs)
 
         if plain > 0 or converted == 0:  # unconverted builds keep the row as-is
-            state.breakdown[source.breakdown_key] = {
+            plain_row: dict[str, Any] = {
                 "name": source.display_name,
                 "count": plain,
                 "damage_per_hit": result.damage_per_proc,
@@ -7070,12 +7114,40 @@ def _add_spellblade_damage(
                 "total_damage": result.damage_per_proc * plain,
                 "damage_type": source.damage_type,
             }
+            if plain > 0:
+                # This row is the pair engine's preview of a number the
+                # coupled walk owns since ``spellblade`` retired: the roster
+                # composition reads the stamp and takes the figure above out
+                # of every total it composes, while the pair fight's own
+                # receipt publishes it unchanged.  The row-level declaration
+                # is what a *coarse* row hands the walk — one whose procs
+                # landed on no certifiable weave schedule, so it authors no
+                # event of its own and the reconstruction synthesizes one
+                # (``_row_declaration_share``).
+                plain_row["pair_preview_of"] = spellblade_mechanic_id(source.item_name)
+                plain_row["declared"] = _spellblade_declaration(
+                    source.item_name, raw_sb * plain
+                )
+            state.breakdown[source.breakdown_key] = plain_row
             if converted == 0 and proc_times:
-                state.breakdown[source.breakdown_key]["damage_events"] = [
+                # Every proc of one fight shares a magnitude: the engine
+                # prices one raw value and multiplies its mitigated figure by
+                # the proc count, so each authored event carries that value
+                # rather than a share of the row's total.
+                plain_row["damage_events"] = [
                     {
                         "time": proc_time,
                         "damage": result.damage_per_proc,
                         "damage_type": source.damage_type,
+                        **(
+                            {
+                                "declared": _spellblade_declaration(
+                                    source.item_name, raw_sb
+                                )
+                            }
+                            if plain > 0
+                            else {}
+                        ),
                     }
                     for proc_time in proc_times
                 ]

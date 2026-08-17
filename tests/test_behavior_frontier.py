@@ -941,7 +941,7 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = "spellblade/receipt_walk"
+    key = _some_deferral_key(committed)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"

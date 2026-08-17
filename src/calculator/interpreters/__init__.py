@@ -388,6 +388,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): spellblade.PAIR_INTERPRETER,
     (
+        RuleFamily.SPELLBLADE,
+        EngineLane.RECEIPT_WALK,
+    ): spellblade.WALK_INTERPRETER,
+    (
         RuleFamily.SUSTAIN,
         EngineLane.DEFENSE_RESOLVER,
     ): sustain.RESOLVER_INTERPRETER,
@@ -524,14 +528,6 @@ _COMPILED_PAIR_PRICED_OR_PACKET_FED = (
 _AMP_LANE = UnservedLane(_COMPILED_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
-    **{
-        (family, lane): UnservedLane(
-            reason=_PACKET_FED,
-            via=(EngineLane.PAIR_ENGINE,),
-        )
-        for family in (RuleFamily.SPELLBLADE,)
-        for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
-    },
     # The crit profile's receipt-walk twin is gone and it did not retire: the
     # lane table above no longer declares that lane at all, because umbrella
     # Amendment O, Ruling 1 reclassified this family PAIR_ONLY on its measured
@@ -541,24 +537,24 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
-    # Seven families' receipt-walk twins are gone — the walk reads each item
+    # Eight families' receipt-walk twins are gone — the walk reads each item
     # active, each cast-triggered proc, each charged strike, every routing
-    # rule, every on-hit strike, every periodic cadence and every stacking
-    # resistance shred from its own declaration, through
+    # rule, every on-hit strike, every periodic cadence, every stacking
+    # resistance shred and every spellblade from its own declaration, through
     # ``ActiveCastWalkInterpreter``, ``CastProcWalkInterpreter``,
     # ``ChargedStrikeWalkInterpreter``, ``DamageRoutingWalkInterpreter``,
-    # ``OnHitStrikeWalkInterpreter``, ``PeriodicWalkInterpreter`` and
-    # ``ResistanceShredWalkInterpreter``, which is Amendment F's act in the
-    # lane Amendment K rules — so only the compiled lane defers for them, and
-    # it says so in its own words rather than inheriting a sentence about both
-    # walks.  Two of the seven hand the walk no price and for two different
-    # reasons.  ``damage_routing``'s delivery is the rider and kernel-state
-    # paths umbrella Amendment P names, already in the tree.
-    # ``resistance_shred``'s is the cross-participant packet its owners'
-    # ``SPLIT`` partners already emit: a shred is not damage — it moves the
-    # target's resistance before penetration — so what retires that row is the
-    # walk reading the family's own ramp instead of the ally-packet
-    # declaration's second copy of it.
+    # ``OnHitStrikeWalkInterpreter``, ``PeriodicWalkInterpreter``,
+    # ``ResistanceShredWalkInterpreter`` and ``SpellbladeWalkInterpreter``,
+    # which is Amendment F's act in the lane Amendment K rules — so only the
+    # compiled lane defers for them, and it says so in its own words rather
+    # than inheriting a sentence about both walks.  Two of the eight hand the
+    # walk no price and for two different reasons.  ``damage_routing``'s
+    # delivery is the rider and kernel-state paths umbrella Amendment P names,
+    # already in the tree.  ``resistance_shred``'s is the cross-participant
+    # packet its owners' ``SPLIT`` partners already emit: a shred is not
+    # damage — it moves the target's resistance before penetration — so what
+    # retires that row is the walk reading the family's own ramp instead of
+    # the ally-packet declaration's second copy of it.
     **{
         (family, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
             _COMPILED_PACKET_FED, (EngineLane.PAIR_ENGINE,)
@@ -571,6 +567,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.PERIODIC,
             RuleFamily.RESISTANCE_SHRED,
+            RuleFamily.SPELLBLADE,
         )
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(

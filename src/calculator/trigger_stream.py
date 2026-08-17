@@ -1081,6 +1081,37 @@ _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# The seven spellblades, retired off the pair engine 2026-08-17.  One row per
+# declared rule in ``item_behavior_catalog``'s ``spellblade`` family, and one
+# authoring site for all of them: ``damage._add_spellblade_damage`` prices the
+# one spellblade a build arms — the mechanics are mutually exclusive in game
+# and the engine arms the first the build carries — and lays its procs onto
+# the weave schedule the fight's casts resolved.
+#
+# Two rows the committed triage lists for this family are deliberately absent,
+# because no declaration of this family authors them.  ``expose_weakness_Bloodsong``
+# is ``bloodsong.expose_weakness``, family ``ally_packet``, already a declared
+# ``THEORETICAL`` preview under Phase 4 S7's authority move; the triage lists it
+# because it measures a family's rows by removing the ITEM, which is
+# conservative by construction and lists every mechanic that item holds.  And
+# ``spellblade_<item>_true`` is the Camille Q2 conversion row, whose per-proc
+# figure blends a true share against a mitigated one under a ratio a CHAMPION
+# ability declares: one declaration cannot state two damage classes, and
+# stamping it would file a champion's number under an item mechanic.
+_SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(f"{slug}.spellblade", item, "damage._add_spellblade_damage")
+    for slug, item in (
+        ("bloodsong", "Bloodsong"),
+        ("dusk_and_dawn", "Dusk and Dawn"),
+        ("essence_reaver", "Essence Reaver"),
+        ("iceborn_gauntlet", "Iceborn Gauntlet"),
+        ("lich_bane", "Lich Bane"),
+        ("sheen", "Sheen"),
+        ("trinity_force", "Trinity Force"),
+    )
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1384,6 +1415,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
     *_retired_family_halves(_ON_HIT_STRIKE_RETIREMENT),
     *_retired_family_halves(_PERIODIC_RETIREMENT),
+    *_retired_family_halves(_SPELLBLADE_RETIREMENT),
     # -- the retired ``damage_routing`` family: three riders, no packet -----
     #
     # The fifth family to retire off the pair engine (2026-08-16) and the

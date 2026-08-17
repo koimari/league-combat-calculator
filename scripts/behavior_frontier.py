@@ -728,10 +728,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # record that declares itself their creditor, so re-dating them takes an edit
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
-COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "secondary_target",
-    "spellblade",
-)
+COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ("secondary_target",)
 
 # ── the stages the campaign has shipped, and what a passed stage owes ──────
 #

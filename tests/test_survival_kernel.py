@@ -1893,6 +1893,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
             RuleFamily.CHARGED_STRIKE,
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.PERIODIC,
+            RuleFamily.SPELLBLADE,
         )
         for family in families:
             assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
@@ -1991,39 +1992,40 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 # The family is `spellblade`, priced through Bloodsong's proc: one declared
 # magnitude per proc, physical, over a proc count the pair engine publishes on
 # its own row.  It is chosen because everything the comparison needs is
-# committed and readable — the family still routes through the pair engine,
-# the covering coupled scenario is the one the retirement schedule records for
-# it, and the pair engine publishes both the number and the effective
-# resistance it priced at.
+# committed and readable — the covering coupled scenario is derived from the
+# committed scenario set by the owner it equips, and the pair engine publishes
+# both the number and the effective resistance it priced at.
 #
-# It was `periodic`, through Sunfire Aegis's immolate, until that family
-# retired on 2026-08-16.  The fixture MOVES rather than being pinned or
-# dropped, and that is the whole discipline of Ruling 3's clause: a comparison
-# run on a family whose numbers the walk now prices from its own declaration
-# would be the stage checking itself, so the fixture migrates to a family
-# still fed by the pair engine every time the one it stood on retires.  A
-# retirement that left it behind would turn the re-spelling claim into a
-# tautology with a green tick on it.
+# THE CLAUSE'S OWN SELECTION CLASS IS EMPTYING, and that is recorded here
+# rather than worked around.  The fixture stood on `periodic` until that
+# family retired on 2026-08-16 and then MOVED to `spellblade`, which was the
+# right discipline while there were families left to move to.  There are not:
+# `spellblade` retired on 2026-08-17 and `secondary_target` is the last row of
+# umbrella Amendment F's fourteen, so a migration would be a fixture rewritten
+# twice in two commits for a family the next one retires.
+#
+# What the comparison asserts does not change, and this is why the case
+# survives its clause: it prices a declaration through the walk's own pricer
+# and compares it to THE PAIR ENGINE'S OWN PUBLISHED ROW.  The pair engine is
+# an independent producer of that number whether or not the family has opted
+# in, so the equality is not the stage checking itself — the un-opted-in
+# requirement was about the stage being INERT, which is a property Ruling 3
+# retired itself the moment the first family opted in.  What replaces the
+# opt-in assertion is its successor: the family HAS opted in, and the walk
+# therefore prices the same declaration this case prices by hand.
 #
 # Nothing about the fixture is typed: the scenario, the owner and the rule id
-# are all read, so a schedule that re-covers the family under a different
+# are all read, so a scenario set that re-covers the family under a different
 # roster fails here instead of quietly comparing the old one.
-
-SCHEDULE_RECEIPT = (
-    Path(__file__).parents[1]
-    / "docs"
-    / "receipts"
-    / "receipt-walk-retirement-schedule.json"
-)
 
 
 @dataclass(frozen=True)
 class DeclaredPricingEquivalence:
-    """One not-yet-opted-in family, and where its two prices can be compared.
+    """One family, and where its two prices can be compared.
 
     `owner` and `breakdown_key` name the declaring item and the pair engine's
     row for it; `family` is the deferral row this fixture stands in for, and
-    the scenario is read from that row rather than named here.
+    the scenario is derived from the owner rather than named here.
 
     `resistance_field` is the fight figure this family's packet is mitigated
     against, and it is stated rather than inferred because the negative case
@@ -2051,20 +2053,23 @@ PRICING_EQUIVALENCE = DeclaredPricingEquivalence(
 
 
 def _covering_scenario(fixture):
-    """The committed coupled scenario the retirement schedule covers *fixture* with.
+    """The committed coupled scenario that equips *fixture*'s owner.
 
-    Read from `receipt-walk-retirement-schedule.json` and resolved against
-    `golden_snapshot.COUPLED_SCENARIOS`, so the two cannot disagree about
-    which roster the family is visible in.
+    Derived from `golden_snapshot.COUPLED_SCENARIOS` by the item the family
+    declares, which is the same join the retirement schedule made while this
+    family still had a row there — read rather than named, so a scenario set
+    that stops covering the owner fails here instead of quietly comparing a
+    roster that no longer holds it.
     """
-    row = json.loads(SCHEDULE_RECEIPT.read_text(encoding="utf-8"))["families"][
-        fixture.deferral_family_key
-    ]
-    assert fixture.owner in row["owners"], "the schedule no longer joins this owner"
-    names = row["covering_coupled_scenarios"]
-    assert names, f"{fixture.deferral_family_key} has no covering scenario"
+    assert fixture.owner in {
+        rule.owner
+        for rule in behavior_rules(fixture.owner)
+        if rule.family is fixture.family
+    }, "the catalog no longer joins this owner to this family"
     return next(
-        scenario for scenario in gs.COUPLED_SCENARIOS if scenario.name == names[0]
+        scenario
+        for scenario in gs.COUPLED_SCENARIOS
+        if fixture.owner in scenario.equipped() and not scenario.score_mode
     )
 
 
@@ -2143,15 +2148,23 @@ def result_row(fixture, parsed, resolved, params):
 class TestTheFromDeclarationPriceReproducesThePairEngines:
     """The stage is a re-spelling before it is ever a re-pricing."""
 
-    def test_the_fixture_family_has_not_opted_in(self):
-        """The comparison is only worth something on a family still deferred.
+    def test_the_fixture_family_has_opted_in_and_the_walk_prices_this_owner(self):
+        """The successor to the clause's own selection, and its two halves.
 
-        Two halves, because either alone can be true of an opted-in family:
-        no receipt-walk interpreter is registered for it, and no packet in the
-        tree carries a declaration at all.
+        Ruling 3's fixture selected a family that had **not** opted in, so
+        that the stage was provably a re-spelling before it was ever a
+        re-pricing.  The stage is landed and eight families have opted in
+        since; what is left to assert is not that this family is deferred —
+        it is not — but that the declaration this case prices by hand is the
+        one the walk prices too, which is what makes the equality below a
+        statement about the tree rather than about a fixture.
+
+        Two halves, because either alone can be true without the other: the
+        receipt-walk interpreter is registered for the family, and the walk
+        re-prices this owner's packets rather than dropping them.
         """
-        assert (PRICING_EQUIVALENCE.family, EngineLane.RECEIPT_WALK) not in INTERPRETERS
-        assert not _repriced_owners() & {PRICING_EQUIVALENCE.owner}
+        assert (PRICING_EQUIVALENCE.family, EngineLane.RECEIPT_WALK) in INTERPRETERS
+        assert _repriced_owners() & {PRICING_EQUIVALENCE.owner}
 
     def test_the_declaration_prices_to_the_pair_engines_own_number(self):
         """Bit-exact, on identical inputs — the fixture this stage owes.
@@ -3337,6 +3350,158 @@ def _periodic_mechanics() -> frozenset[str]:
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.PERIODIC
     )
+
+
+# ---------------------------------------------------------------------------
+# spellblade: an equivalence fixture per declaring owner
+# ---------------------------------------------------------------------------
+#
+# :func:`_on_hit_probe`'s reason again, for the family that reaches the least
+# of its own coverage of any retired so far.  ONE of this family's seven
+# owners is on a committed coupled scenario — Bloodsong on
+# `cleaver_bloodsong_roster` — so six are outside every population, and two of
+# those six declare MAGIC: `dusk_and_dawn.spellblade` and
+# `lich_bane.spellblade`.  A fixture set that armed only the covered owner
+# would price a third of this family at an amp of 1.0 and never once exercise
+# the term.  Umbrella Amendment P's answer for that shape is equivalence
+# fixtures PER OWNER, and this is it.
+#
+# The probe holds an Abyssal Mask beside the owner under test for the reason
+# the on-hit probe does: it is the tree's one declaration of the holder's
+# static magic amp, so without it the two magic spellblades would be priced at
+# an amp of 1.0 — Amendment M, Ruling 1's own reasoning that a fixture set in
+# which every amp is 1.0 proves the stage re-spells the case that cannot fail.
+
+#: A ranged caster, because a spellblade charge is armed by an ability cast
+#: and spent by a basic attack, so the probe needs a rotation with both.
+_SPELLBLADE_PROBE_CHAMPION = "Ezreal"
+
+
+def _spellblade_owners() -> tuple[str, ...]:
+    """Every item declaring a ``spellblade`` rule, read from the catalog."""
+    return tuple(
+        sorted(
+            {
+                rule.owner
+                for owner in rule_owners()
+                for rule in behavior_rules(owner)
+                if rule.family is RuleFamily.SPELLBLADE
+            }
+        )
+    )
+
+
+@lru_cache(maxsize=None)
+def _spellblade_probe(owner: str):
+    """One pair fight holding *owner* and the amp owner, with its walk inputs.
+
+    ``_on_hit_probe``'s shape: the fight, the holder's resolved stats and the
+    holder's own static amps, read from the same instruments the coupled
+    composition reads them from, so what this compares is the walk's
+    arithmetic rather than a restatement of it.
+
+    The owner under test is bought FIRST because the engine arms the first
+    spellblade a build carries and ignores the rest — a probe that let the
+    build order decide would silently test one item seven times.
+    """
+    champion = gs.fetch_champion_data()[_SPELLBLADE_PROBE_CHAMPION]
+    by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
+    items = [by_name[owner], by_name[_ON_HIT_AMP_OWNER]]
+    params = FightParams(
+        target_health=gs.SNAPSHOT_TARGET_HEALTH,
+        target_bonus_health=0.0,
+        target_armor=gs.SNAPSHOT_TARGET_ARMOR,
+        target_magic_resistance=gs.SNAPSHOT_TARGET_MR,
+        fight_duration_seconds=gs.ONE_ROTATION_DURATION,
+        auto_attack_uptime=1.0,
+        one_rotation=False,
+        deterministic=True,
+    )
+    level = 18
+    result = run_fight(champion, level, list(items), params)
+    stats = calculate_total_stats(champion, level, list(items))
+    amps = delta_amp.resolve_static_holder_amps(
+        list(items),
+        holder_stats=stats,
+        ability_amp_armed=False,
+        level=level,
+        fight_duration_seconds=float(params.fight_duration_seconds),
+        target_bonus_health=0.0,
+        holder_is_melee=bool(stats.get("is_melee")),
+    )
+    return result, amps
+
+
+@pytest.mark.parametrize("owner", _spellblade_owners())
+def test_every_spellblade_owner_prices_from_its_declaration_to_the_pair_engines_number(
+    owner,
+):
+    """One owner, every proc: the walk's price is the pair engine's.
+
+    The equivalence this family's retirement rests on, stated per owner
+    because the committed coupled set reaches one of the seven.  For every
+    proc event the pair engine authored under this owner's row, the
+    declaration riding it, composed with the holder's own amps and mitigated
+    once, equals the number the pair engine put on that event.
+
+    Every proc of one fight shares a magnitude here, and that is asserted
+    rather than assumed: the engine prices one raw value per fight and
+    multiplies its mitigated figure by the proc count, so a declaration that
+    varied across events would mean this site had started splitting a total
+    it does not split.
+    """
+    result, amps = _spellblade_probe(owner)
+    row = result["breakdown"][f"spellblade_{owner}"]
+    assert row["pair_preview_of"] in walk_repriced_mechanics()
+    events = row["damage_events"]
+    assert events, owner
+
+    magnitudes = set()
+    for event in events:
+        packet = declared_packet_of(
+            event["declared"],
+            str(event["damage_type"]),
+            f"spellblade_{owner}",
+            amps,
+        )
+        price = price_declared_packet(
+            packet,
+            baseline_effective_armor=float(result["effective_armor"]),
+            baseline_effective_mr=float(result["effective_mr"]),
+        )
+        assert price.amount == pytest.approx(float(event["damage"]), rel=1e-12)
+        # Non-vacuity: a declaration is a pre-mitigation magnitude, so it is
+        # strictly larger than what the target was actually paid.
+        assert packet.raw_amount > price.amount > 0.0
+        magnitudes.add(packet.raw_amount)
+        # The amp term is delivered rather than defaulted, and the two magic
+        # spellblades are where that is visible: the probe holds the one item
+        # in the tree that declares the holder's static magic amp.
+        expected_amp = amps.magic if packet.damage_type == "magic" else 1.0
+        assert packet.holder_amp == expected_amp
+        if packet.damage_type == "magic":
+            assert packet.holder_amp > 1.0
+
+    assert len(magnitudes) == 1, owner
+    # The row is the procs: a family whose events summed to something else
+    # would be one the walk under- or over-pays by exactly the remainder.
+    paid = sum(float(event["damage"]) for event in events)
+    assert paid == pytest.approx(float(row["total_damage"]), rel=1e-12)
+
+
+def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
+    """The fixture set covers the term the covering population cannot see.
+
+    Five of the seven declare physical and two declare magic.  A per-owner
+    fixture set that happened to reach only one class would leave the
+    holder's magic amp unexercised for this family, which is the state the
+    covering scenario is in on its own.
+    """
+    classes = {
+        _spellblade_probe(owner)[0]["breakdown"][f"spellblade_{owner}"]["damage_type"]
+        for owner in _spellblade_owners()
+    }
+    assert classes == {"physical", "magic"}
 
 
 # ---------------------------------------------------------------------------

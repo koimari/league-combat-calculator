@@ -579,27 +579,33 @@ def test_every_dated_gap_row_routes_to_a_lane_the_registry_serves() -> None:
 
 
 @pytest.mark.parametrize(
-    ("via", "complaint"),
+    ("via", "unregister", "complaint"),
     [
-        ((), "names no route"),
-        ((EngineLane.RECEIPT_WALK,), "which no interpreter serves"),
-        ((EngineLane.STAT_RESOLVER,), "does not declare"),
-        ((EngineLane.COMPILED_SCORE_WALK,), "routes the lane to itself"),
+        ((), False, "names no route"),
+        ((EngineLane.RECEIPT_WALK,), True, "which no interpreter serves"),
+        ((EngineLane.STAT_RESOLVER,), False, "does not declare"),
+        ((EngineLane.COMPILED_SCORE_WALK,), False, "routes the lane to itself"),
     ],
     ids=("empty", "unserved", "undeclared", "circular"),
 )
 def test_a_route_the_registry_does_not_serve_is_refused(
-    via, complaint: str, monkeypatch: pytest.MonkeyPatch
+    via, unregister: bool, complaint: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """R-05's red for the route clause, one shape per way a route can lie.
 
     ``spellblade``'s compiled lane is the subject because its real route —
     the pair engine — is the one every packet-fed row stands on, so each
     substitution below is that row with its one true sentence replaced by a
-    plausible false one.  It is spellblade rather than ``on_hit_strike``
-    because the ``unserved`` case needs a receipt walk no interpreter serves,
-    and a family whose retirement slice then serves it turns that red green
-    for a reason with nothing to do with the clause it tests.
+    plausible false one.
+
+    ``unserved`` needs a route lane the family declares and no interpreter
+    serves, and that is the one shape a *retiring* campaign runs out of: the
+    case used to be driven through whichever family still deferred its
+    receipt walk, and each retirement turned it green for a reason with
+    nothing to do with the clause it tests.  So the case now removes the
+    route's own interpreter along with the route — the registry is a
+    monkeypatched mapping either way, and unregistering is a smaller
+    fabrication than keeping a family deferred to be tested against.
     """
     pair = (RuleFamily.SPELLBLADE, EngineLane.COMPILED_SCORE_WALK)
     monkeypatch.setattr(
@@ -613,6 +619,16 @@ def test_a_route_the_registry_does_not_serve_is_refused(
             )
         },
     )
+    if unregister:
+        monkeypatch.setattr(
+            interpreters,
+            "INTERPRETERS",
+            {
+                key: value
+                for key, value in interpreters.INTERPRETERS.items()
+                if key != (pair[0], via[0])
+            },
+        )
     with pytest.raises(interpreters.InterpreterRegistryError, match=complaint):
         interpreters.validate_registrations()
 
