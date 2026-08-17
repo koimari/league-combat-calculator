@@ -135,10 +135,10 @@
   "G14": {
    "state": "OPEN",
    "blocks": "runbook criterion 11's first clause -- every slice has a recorded verify-<slice> verdict",
-   "blocker": "An owed ruling, and the campaign's one certification blocker. `docs/receipts/rulings-owed.json`, row `whether_criterion_11s_first_clause_binds_the_campaign_backwards`. Binding the clause backwards schedules some sixty fresh read-only passes, which is a cost with an owner; reading it forwards re-reads 'every slice', which umbrella criterion 11's own words forbid a phase document from doing. A lane may take neither, and the three shortcuts -- manufacturing a record, reconstructing one from the commit bodies being checked, or shrinking the denominator -- are each named and refused in that row.",
+   "blocker": "An owed ruling, and the campaign's one certification blocker. `docs/receipts/rulings-owed.json`, row `whether_criterion_11s_first_clause_binds_the_campaign_backwards`. Binding the clause backwards schedules the fresh read-only passes `verify_backlog_prepared_passes` counts, which is a cost with an owner; reading it forwards re-reads 'every slice', which umbrella criterion 11's own words forbid a phase document from doing. A lane may take neither, and the three shortcuts -- manufacturing a record, reconstructing one from the commit bodies being checked, or shrinking the denominator -- are each named and refused in that row. A third branch was measured on 2026-08-16 and is named in close-report section 16.3: the residue is structurally non-terminating while a group's verdict may not be recorded by a commit carrying that group's own tag, because recording a verdict is itself a commit and a commit carries a tag. Naming it is not choosing it.",
    "artifact": "docs/receipts/verify-ledger.json, coverage block",
    "gate": "tests/test_verify_ledger.py",
-   "note": "Mechanically the residue is in good order: the denominator is machine-derived from commit subjects, the forward gate refuses a new slice group that ships with neither a record nor an explicit line, and the number cannot grow in silence. What it does not do is fall. What it now also does is hand the backwards branch over as work: the residue's passes are prepared one row each, so the ruling is a scheduling decision over a known list rather than over an estimate.",
+   "note": "Mechanically the residue is in good order: the denominator is machine-derived from commit subjects, the forward gate refuses a new slice group that ships with neither a record nor an explicit line, and the number cannot grow in silence. What it does not do is fall. What it now also does is hand the backwards branch over as work: the residue's passes are prepared one row each, so the ruling is a scheduling decision over a known list rather than over an estimate. Corrected 2026-08-17, and both halves of the correction were found by an R-35 verifier rather than by a reader (round 129, campaign-close-final-integration-r35/unmentioned-2). First: the clause 'What it does not do is fall' was true when it was written and is false of this tree -- the backfill and the residue sweep took the residue down, and the figure it would have to state now lives in `live_figures` under `verify_ledger_residue`, read at run time. The sentence stays written because a justification that is only deleted is one no reader can check was ever real; the identical clause in rulings-owed.json's `consequence_of_leaving_it_open` was corrected at b02e4ca and this second home was not, which is the whole of the finding. Second: the blocker stated 'some sixty fresh read-only passes', a value in a file whose own rule is that a value here would be the second home criterion 4 exists to forbid. It now names `verify_backlog_prepared_passes`, which the gate resolves in docs/receipts/verify-backlog.json. What did NOT change is the grade: G14 is OPEN, the ruling is the owner's, and a cost that is measured rather than estimated is still not an answer.",
    "prepared_work": "docs/receipts/verify-backlog.json, gated by tests/test_verify_backlog.py: one startable row per residue slice group. The gap is unchanged -- a prepared pass is not a run pass -- but the branch of the owed ruling that binds the clause backwards is now priced row by row instead of estimated."
   }
  },
@@ -163,6 +163,11 @@
    "artifact": "docs/behavior-frontier.json",
    "path": "targets.targets.counter_4/receipt_walk.deferred",
    "grades": "G4"
+  },
+  "verify_backlog_prepared_passes": {
+   "artifact": "docs/receipts/verify-backlog.json",
+   "path": "prepared_passes",
+   "grades": "G14"
   }
  }
 }

@@ -146,6 +146,81 @@ def test_an_open_row_names_its_blocker_and_where_it_is_carried(gap: str) -> None
     assert row["artifact"].strip()
 
 
+#: An integer written into prose -- not the 35 of "R-35" and not a path
+#: fragment, which the pattern's own boundaries drop.
+_INTEGER = re.compile(r"(?<![\w.\-/])(\w+ )?(\d+)(?![\w.\-/])")
+
+#: The words that make a following number a NAME rather than a count: criterion
+#: 11 is an identifier, sixty passes is a value.  A gap row is expected to name
+#: the criteria and clauses it blocks; that is what it is for.
+_NAMES_A_THING = frozenset(
+    {
+        "amendment",
+        "clause",
+        "criteria",
+        "criterion",
+        "phase",
+        "round",
+        "row",
+        "rule",
+        "section",
+        "slice",
+    }
+)
+
+
+def counts_in(text: str) -> list[str]:
+    """Every integer in ``text`` that is a count rather than an identifier."""
+    found: list[str] = []
+    for match in _INTEGER.finditer(text):
+        preceding = (match.group(1) or "").strip().lower()
+        if preceding in _NAMES_A_THING:
+            continue
+        found.append(match.group(2))
+    return found
+
+
+@pytest.mark.parametrize(
+    "gap", sorted(g for g, row in gaps().items() if row["state"] == "OPEN")
+)
+def test_an_open_rows_blocker_states_no_count_of_its_own(gap: str) -> None:
+    """A blocker describes what stands in the way; it does not hold a value.
+
+    The file's own rule says it in one line -- *"Nothing here is a value; a
+    value here would be the second home criterion 4 exists to forbid"* -- and
+    G14's blocker held one anyway: "schedules some sixty fresh read-only
+    passes", written when the residue was sixty-odd and left standing through
+    the backfill that took it to three.  An R-35 verifier found it, and nothing
+    in the tree would have.
+
+    So an open row's blocker names ``live_figures`` keys instead of counting,
+    and a count arriving in one turns this red on the commit that writes it.
+    """
+    blocker = gaps()[gap]["blocker"]
+    assert counts_in(blocker) == [], blocker
+
+
+def test_the_no_count_rule_has_a_red_it_can_reproduce() -> None:
+    """R-05, on the finding's own words."""
+    doctored = "Binding the clause backwards schedules some 60 fresh passes."
+    assert counts_in(doctored) == ["60"]
+    assert counts_in("umbrella criterion 11's own words, and section 16.3") == []
+
+
+@pytest.mark.parametrize(
+    "gap", sorted(g for g, row in gaps().items() if row["state"] == "OPEN")
+)
+def test_every_live_figure_an_open_row_names_is_a_figure_this_file_owns(
+    gap: str,
+) -> None:
+    """A blocker that names a counter names one this ledger actually keeps."""
+    row = gaps()[gap]
+    live = ledger()["live_figures"]
+    named = [key for key in live if key != "rule" and key in row["blocker"]]
+    for key in named:
+        assert live[key]["grades"] == gap, key
+
+
 def test_the_reports_final_table_states_the_same_state_as_the_ledger() -> None:
     """The finding itself: the last table is the ledger, row for row."""
     assert final_table_rows(report_text()) == {
