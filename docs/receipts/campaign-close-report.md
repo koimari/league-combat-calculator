@@ -1263,3 +1263,23 @@ check that passes, which is the sentence this whole campaign is an answer to.
 What it does not do is gate section 14, or anything above it. Those sections stay
 exactly as the passes that wrote them left them, and this is the first section of
 the report a reader does not have to take on trust.
+
+### 15.7 One sentence of 15.3, corrected by the gate that reads it
+
+Building 15.6's gate found a sentence of this section imprecise before the gate had
+run once, which is what a gate is for and is the shortest possible demonstration
+that section 15 was not checkable until it had one.
+
+15.3 says every one of round 110's "seven criterion ids begins `round6-`". They do
+not begin there. The ledger stamps each criterion id with the slice group it belongs
+to, so the seven read
+`campaign-close-minor-findings-r35/round6-row-exists-and-is-shaped-as-claimed` and
+six more of that shape: the tag, a slash, then the stem. What 15.3 rests on — that
+all seven read on round 6's row and none on the `tests.collected` re-pin — is what
+the stems say, and it is unchanged. What was wrong is where the stem starts.
+
+`test_round_110_reads_on_round_6s_row_and_not_on_the_re_pin` asserts the stem
+(`row_id.split("/")[-1]`), so the corrected shape is the one the gate holds, and the
+sentence and the check now say the same thing. Round 128's note in
+[`verify-ledger.json`](verify-ledger.json) carries the same phrasing and gains the
+same dated clause; both stand written, with the measurement beside them.

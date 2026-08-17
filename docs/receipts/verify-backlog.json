@@ -10,7 +10,7 @@
  "groups": {
   "campaign-close-final-integration-r35": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 6,
+   "commit_count": 7,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the residue's dated figure is read from the ledger's own history (campaign-close-final-integration-r35)",
@@ -18,7 +18,8 @@
     "docs(receipts): no ledger round measures the act that closed the tests.collected minor (campaign-close-final-integration-r35)",
     "docs(receipts): the open NOT DISCHARGED rows are counted over the ledger, not over one batch (campaign-close-final-integration-r35)",
     "docs(receipts): the verdict on the closeout that answered the sweep, recorded (campaign-close-final-integration-r35)",
-    "test(gates): section 15's figures are re-derived from the artifacts they were read from (campaign-close-final-integration-r35)"
+    "test(gates): section 15's figures are re-derived from the artifacts they were read from (campaign-close-final-integration-r35)",
+    "docs(receipts): round 110's criterion ids are quoted with the prefix the ledger stamps on them (campaign-close-final-integration-r35)"
    ]
   },
   "campaign-close-verify-p4-batch": {
