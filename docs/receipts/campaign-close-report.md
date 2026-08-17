@@ -1473,11 +1473,23 @@ that has not read the plan*, and a lane that has read the plan writing one would
 be the unverifiable claim about the past Phase 1 outlaws.
 
 **Clause 2 — no barrier is crossed with an open `NOT DISCHARGED`.** Over the
-ledger's 128 passes: **90** `NOT_DISCHARGED` rows, of which **62** stand
-`documented_open`, 21 `fixed` and 7 `fixed_and_gated`. Re-dispositioning any of
-those 62 is a judgement about a verifier's finding, and a lane making it about
-the lanes being checked is the reconstruction
-`what_this_ledger_does_not_hold` refuses. They stay as filed.
+ledger's 128 passes: **90** `NOT_DISCHARGED` rows, of which **60** stand
+`documented_open`, 23 `fixed` and 7 `fixed_and_gated`.
+
+Two of them moved in this pass and neither moved by judgement. Round 1's
+`umbrella-7` reads *"fourteen deferral rows still retire at a stage that shipped
+without retiring them"* and round 3's `runbook-9` reads *"22 standing oracle
+dissents remain open debts"* — those are the findings §16.2 and §16.1 measure to
+zero, so each row now names the commits that answered it and its disposition is
+`fixed`. The verdicts are untouched: a verdict is the verifier's artifact and a
+disposition is the lane's, which is what the ledger's own
+`when_a_later_lane_answers_a_sweep_row` rules in those words.
+
+The other 60 stay exactly as filed. Re-dispositioning one is a judgement about a
+verifier's finding, and a lane making it about the lanes being checked is the
+reconstruction `what_this_ledger_does_not_hold` refuses. The clause is unmet, and
+it is unmet by 60 rather than by 62 because two of them were answered rather than
+re-read.
 
 **The fact that is new.** The owed ruling —
 [`rulings-owed.json`](rulings-owed.json)'s

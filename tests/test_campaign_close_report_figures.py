@@ -80,6 +80,13 @@ SEARCH_ANCHOR = "86114ed"
 BATCH = "a431e34"
 BATCH_PARENT = "1e7c342"
 
+#: The commit that wrote section 15.4's closing paragraph and section 15.5.
+#: Both read "this tip", which they were, and stopped being so the moment
+#: another slice group shipped.  A dated reading is anchored at the commit
+#: that stated it and read out of git; only a fact about the live tree is
+#: read from the tree.
+SECTION_15_4_TIP_ANCHOR = "e4338b7"
+
 #: The commit that wrote section 15.5.  Its coverage figures were "about this
 #: tip" when they were written and stopped being so the moment another slice
 #: group shipped -- which is a thing the campaign expects to happen, not a
@@ -394,17 +401,23 @@ FIGURES: list[tuple[str, str, Callable[[], str]]] = [
     (
         "15.4 NOT_DISCHARGED at this tip",
         r"moves `NOT_DISCHARGED` 89 [^\n]*?\*\*(\d+)\*\*",
-        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+        lambda: verdict_count(
+            ledger_at(SECTION_15_4_TIP_ANCHOR)["passes"], "NOT_DISCHARGED"
+        ),
     ),
     (
         "15.4 fixed at this tip",
         r"\n20 [^\n]*?\*\*(\d+)\*\*",
-        lambda: disposition_count(here(), "fixed"),
+        lambda: disposition_count(
+            ledger_at(SECTION_15_4_TIP_ANCHOR)["passes"], "fixed"
+        ),
     ),
     (
         "15.4 documented_open at this tip",
         r"unchanged at \*\*(\d+)\*\*",
-        lambda: disposition_count(here(), "documented_open"),
+        lambda: disposition_count(
+            ledger_at(SECTION_15_4_TIP_ANCHOR)["passes"], "documented_open"
+        ),
     ),
     (
         "15.5 the round recorded",

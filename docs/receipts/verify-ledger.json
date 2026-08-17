@@ -74,12 +74,25 @@
      "id": "umbrella-7",
      "verdict": "NOT_DISCHARGED",
      "what_was_found": "Amendment B's exit clause: fourteen deferral rows still retire at a stage that shipped without retiring them.",
-     "disposition": "documented_open",
+     "disposition": "fixed",
      "answered_at": [
-      "7d2975d"
+      "7d2975d",
+      "d48d042",
+      "0cd6a9f",
+      "0b8bded",
+      "928332c",
+      "c9d4ac8",
+      "6462085",
+      "d44ba92",
+      "4e340f3",
+      "b7f64cb",
+      "38f4702",
+      "7af43f8",
+      "be85720",
+      "41c8faf"
      ],
      "artifact": "docs/behavior-frontier.json",
-     "note": "The rows cannot retire while umbrella-1's emission half is open, and re-dating them is Amendment B's ruling rather than a lane's. A deferral whose stage has shipped is now declared overdue with a blocker, and the gate refuses an undeclared one."
+     "note": "The rows cannot retire while umbrella-1's emission half is open, and re-dating them is Amendment B's ruling rather than a lane's. A deferral whose stage has shipped is now declared overdue with a blocker, and the gate refuses an undeclared one. Answered 2026-08-17, and by the act this row's finding names. The fourteen deferral rows have left: ten by the ruled retiring act, crit_profile by umbrella Amendment O's authority reclassification, and combat_state / opening_defense / threshold_defense by Amendment Q's lane-declaration correction. Re-measured rather than asserted: docs/behavior-frontier.json's counters.counter_4.deferrals.rows is {}, both counter-4 targets read deferred 0 / gap 0 / met true, and receipt-walk-retirement-schedule.json's families is {} with scheduled_slices 0. 41c8faf closes gap G4 and states umbrella criterion 7's re-grade. The verdict is untouched -- a verdict is the verifier's artifact and a disposition is the lane's, which is what when_a_later_lane_answers_a_sweep_row rules."
     },
     {
      "id": "umbrella-8",
@@ -393,12 +406,16 @@
      "id": "runbook-9",
      "verdict": "NOT_DISCHARGED",
      "what_was_found": "22 standing oracle dissents remain open debts: leaves where an independent investigator's committed verdict certifies the old value and the committed coupled baseline pins the disputed number anyway. Each names what is owed, but under the R-18 amendment's adjudication rule a sustained dissent re-opens the producing correction as a ruled src/ fix, and none of the 22 re-opened slices exist.",
-     "disposition": "documented_open",
+     "disposition": "fixed",
      "answered_at": [
-      "1414576"
+      "1414576",
+      "b299978",
+      "4f41e6e",
+      "b3429be",
+      "2cf46c3"
      ],
      "artifact": "docs/receipts/standing-dissent-docket.json",
-     "note": "Scheduled rather than closed, which is the most a lane may do: clause 1 reserves clearing to a fresh investigator and clause 2 fires only on a sustained verdict, which none of the 22 has yet received. The docket names the defect in each prior brief -- measured from the committed pre-change baselines -- and carries the well-posed brief clause 1 needs, so three of the four clusters are startable and the fourth is routed to an owed ruling. The counts do not move."
+     "note": "Scheduled rather than closed, which is the most a lane may do: clause 1 reserves clearing to a fresh investigator and clause 2 fires only on a sustained verdict, which none of the 22 has yet received. The docket names the defect in each prior brief -- measured from the committed pre-change baselines -- and carries the well-posed brief clause 1 needs, so three of the four clusters are startable and the fourth is routed to an owed ruling. The counts do not move. Answered 2026-08-17. The 22 open debts this row counted are 0. Nineteen cleared by supersession at the 2026-08-15 re-adjudication, one by umbrella Amendment J, and the last four by clause 2's ruled src/ correction: b299978 prices a stocked Dark Sphere charge at Dark Sphere's own mana and 4f41e6e pinned the leaf at the value the whole-series computation certified. b3429be taught the scan to read a filed receipt at what it certified and at what superseded it, and 2cf46c3 closes gap G6. standing_dissent_scan.py --check reads 7 blocking of 34 standing across 597 receipts, all seven citation, 0 open debts. The verdict is untouched."
     }
    ],
    "unmentioned_behaviour": [
