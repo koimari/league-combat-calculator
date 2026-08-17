@@ -8,287 +8,6 @@
  },
  "gate": "tests/test_verify_backlog.py",
  "groups": {
-  "3.2": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 8,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): the amp kernel, and Hypershot through it (3.2)",
-    "feat(behavior): the whole-total amp slot, declared (3.2)",
-    "feat(behavior): First Strike's opening window, declared (3.2)",
-    "feat(behavior): Press the Attack's lasting amp, declared (3.2)",
-    "feat(behavior): Command declared once, for both engines (3.2)",
-    "feat(behavior): Bloodsong's divergence, frozen behind a receipt (3.2)",
-    "refactor(damage): the Liandry reprice gets its own home (3.2)",
-    "feat(behavior): Shadowflame's Cinderbloom, declared last (3.2)"
-   ]
-  },
-  "3.3": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): the two resistance shreds, declared (3.3)"
-   ]
-  },
-  "3.4": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 6,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): on-hit strikes and the bolts, declared (3.4)",
-    "feat(behavior): the item actives, declared (3.4)",
-    "feat(behavior): the three periodic cadences, declared (3.4)",
-    "feat(behavior): the spellblades, and the schema that keeps them honest (3.4)",
-    "feat(behavior): the cast-triggered procs, declared (3.4)",
-    "feat(behavior): the charged strikes, and the last of the seven (3.4)"
-   ]
-  },
-  "3.5": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): the defence vocabulary, and every defence declared (3.5)",
-    "feat(behavior): the defensive resolver reads its declarations (3.5)"
-   ]
-  },
-  "3.6": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): the ally packet vocabulary, and the heals and shields (3.6)",
-    "feat(behavior): the stat buffs and the six modifiers, declared (3.6)",
-    "feat(behavior): the utility and quest outcomes, declared (3.6)",
-    "feat(behavior): the explicit actives, and the last name site (3.6)"
-   ]
-  },
-  "3.7": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 9,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "feat(behavior): every data-derived memo says which cache it read (3.7)",
-    "feat(behavior): one declared zero policy for the champion tree (3.7)",
-    "test(behavior): one refresh proof per family, and the family that cannot pass (3.7)",
-    "feat(behavior): the crit profile, declared (3.7)",
-    "feat(behavior): damage routing, and the last defence resolved by name (3.7)",
-    "feat(behavior): sustain, and the empty unmigrated-defence table (3.7)",
-    "refactor(behavior): the swing schedule stops being read by item name (3.7)",
-    "refactor(behavior): the Riftmaker window stops naming its item (3.7)",
-    "refactor(behavior): the bonus-armour-pen channel stops being a name list (3.7)"
-   ]
-  },
-  "3.7 residual": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(behavior): stat derivation stops being a stub (3.7 residual)"
-   ]
-  },
-  "3.7-r2": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(behavior): the last two delta_amp entries stop being undeclared (3.7-r2)"
-   ]
-  },
-  "3.8": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 24,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-1-coverage-evidence.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "test(coverage): the three collapsed registries, asserted empty first (3.8)",
-    "refactor(coverage): the three empty registries, deleted (3.8)",
-    "feat(behavior): the utility vocabulary gets one home, beside the two it has (3.8)",
-    "refactor(coverage): the utility vocabulary flips onto its one home (3.8)",
-    "feat(behavior): the compiled-walk derivation, landed beside the hand set (3.8)",
-    "feat(coverage): the classifier reads declarations, not registries (3.8)",
-    "chore(receipts): Phase 1's classification receipt, re-captured (3.8)",
-    "fix(coverage): the defence rung stops swallowing the gate that arms it (3.8)",
-    "feat(coverage): the target lane's certification, declared by mechanic (3.8)",
-    "fix(coverage): the two unmigrated target mechanics keep their names (3.8)",
-    "feat(coverage): the target ladder reads declarations, not three tables (3.8)",
-    "refactor(coverage): the three target registries, deleted (3.8)",
-    "fix(behavior): NO_RUNTIME_BEHAVIOR asserts only the absence it reviewed (3.8)",
-    "docs(behavior): the frontier's invariant sentence, corrected (3.8)",
-    "refactor(coverage): the outcome declaration moves to a home of its own (3.8)",
-    "test(coverage): the lane divergence is latent, and now checked (3.8)",
-    "docs(coverage): the tombstones stop naming what they buried (3.8)",
-    "fix(coverage): the retired-registry scan matches identifiers again (3.8)",
-    "refactor(coverage): the import the registry collapse orphaned (3.8)",
-    "fix(coverage): both eligibility gates fail closed again (3.8)",
-    "fix(receipts): the classifier names come off the functions again (3.8)",
-    "chore(receipts): 3.8's second half, re-captured (3.8)",
-    "test(receipts): the umbrella audit receipt, held to a fresh run (3.8)",
-    "docs(behavior): the Class B argument stops describing work that landed (3.8)"
-   ]
-  },
-  "3.9": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 25,
-   "criteria_documents": [
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "fix(behavior): the amp refusal says SCOPED, because the umbrella does (3.9)",
-    "test(behavior): one deletion negative per family, and what it withholds (3.9)",
-    "test(behavior): the both-engine property, on items that are only declarations (3.9)",
-    "feat(behavior): every unserved lane is a dated receipt, or the import stops (3.9)",
-    "chore(behavior): counter 4 carries its content, not only its count (3.9)",
-    "feat(behavior): the compiled kernel's three refusals stop being one (3.9)",
-    "feat(behavior): six of the hand set's seven per-item notes become shapes (3.9)",
-    "refactor(behavior): three sustain shapes stop being read by item name (3.9)",
-    "refactor(behavior): the threshold regeneration stops being read by name (3.9)",
-    "refactor(behavior): the attack-speed aura stops being read by name (3.9)",
-    "refactor(behavior): the ally stat buff stops being read by item name (3.9)",
-    "refactor(behavior): the temporary-health refusal stops naming its item (3.9)",
-    "refactor(behavior): the regeneration window stops being read by item name (3.9)",
-    "refactor(behavior): the restore row's producer stops being a spelled name (3.9)",
-    "refactor(behavior): the below-half received-healing state stops being read by item name (3.9)",
-    "test(behavior): the derivation and the hand set, asserted equal on the symbols (3.9)",
-    "refactor(behavior): the compiled walk's per-item hand set becomes the fold (3.9)",
-    "refactor(behavior): the control-armed holder shield stops naming its item (3.9)",
-    "feat(behavior): the active window's casting trade becomes a declaration (3.9)",
-    "feat(behavior): the strike-back the walk compiles itself gets its lane (3.9)",
-    "refactor(coverage): the ref-carrying lane stops being spelled per item (3.9)",
-    "feat(behavior): the frontier gate compares a counter to its target (3.9)",
-    "feat(behavior): the BIS certification, derived beside the table it answers (3.9)",
-    "refactor(behavior): the BIS certification stops being a table of item names (3.9)",
-    "feat(behavior): a gap's route becomes a declaration, not a sentence (3.9)"
-   ]
-  },
-  "Amendment D": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md"
-   ],
-   "subjects": [
-    "docs(plans): Bloodsong's authority table entry is refreshed to the member that builds (Amendment D)"
-   ]
-  },
-  "C1": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "fix(pipeline): one predicate answers the tuple question (C1)"
-   ]
-  },
-  "C2": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "fix(support): Authority keys the cross-participant check, and Unmake owns (C2)"
-   ]
-  },
-  "C3": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "fix(survival): a curse that says magic applies to magic (C3)"
-   ]
-  },
-  "C4": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "fix(survival): an aura already in force prices the first exchange (C4)"
-   ]
-  },
-  "C5": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md"
-   ],
-   "subjects": [
-    "fix(survival): one predicate decides what an immobilize is (C5)"
-   ]
-  },
-  "C6": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-5-cast-dependency.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "fix(pipeline): a requested cast order stops deleting the recast it never named (C6)",
-    "fix(pipeline): the cast-slot surface stops answering the raise's own question (C6)",
-    "fix(pipeline): the post-parse call site asks only the cast-order question (C6)",
-    "test(pipeline): the six C6 behaviours its commit bodies did not name (C6)"
-   ]
-  },
-  "D-04": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md"
-   ],
-   "subjects": [
-    "test(sentinels): the delivery gate is narrower than five declarations (D-04)"
-   ]
-  },
-  "D-11": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "refactor(rotation): recast parentage stops being a hand table (D-11)"
-   ]
-  },
   "D-12": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
@@ -301,143 +20,12 @@
     "test(sentinels): the five deferred semantics that had no fixture yet (D-12, D-13, H2, D-66, D-14)"
    ]
   },
-  "D-49": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "fix(rotation): the two rotation memos key on the data version (D-49)",
-    "perf(behavior): the catalog's per-owner compile, memoized per generation (D-49)"
-   ]
-  },
-  "D-80/82": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(rotation): declarations merge over inference with a receipt (D-80/82)"
-   ]
-  },
-  "D-85": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "feat(rotation): the derivation orders against declarations too (D-85)"
-   ]
-  },
-  "D-86": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "feat(pipeline): a custom cast order may not invert a declaration (D-86)"
-   ]
-  },
-  "D-89": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "feat(rotation): Syndra's hand seed retires against her declaration (D-89)",
-    "feat(rotation): Aatrox's redundant seed retires (D-89)",
-    "feat(rotation): Jhin's redundant seed retires (D-89)",
-    "feat(rotation): Aphelios' redundant seed retires and the frontier closes (D-89)"
-   ]
-  },
-  "D-95": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-1-coverage-evidence.md",
-    "docs/plans/phase-3-behavior-rules.md"
-   ],
-   "subjects": [
-    "refactor(architecture): the hand front-door tuple is deleted (D-95)"
-   ]
-  },
-  "D-98": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 2,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-1-coverage-evidence.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "feat(amps): the compiled answer lands beside the refusal, unflipped (D-98)",
-    "feat(amps): every delta_amp rule becomes Compilable \u2014 the H5 flip (D-98)"
-   ]
-  },
-  "H5": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(kernel): the compiled score kernel learns a timed, typed damage modifier (H5)"
-   ]
-  },
   "P2a line": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
     "fix(trigger-bus): sequence zero is a sequence, not an absent one (P2a line)"
-   ]
-  },
-  "P2b": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 13,
-   "criteria_documents": [
-    "docs/plans/phase-2-trigger-bus.md"
-   ],
-   "subjects": [
-    "refactor(trigger-bus): the bus builds only the kinds asked for (P2b)",
-    "refactor(support): the two hidden holder guards become literal ones (P2b)",
-    "refactor(support): the item scan reads the bus, not raw rows (P2b)",
-    "refactor(timeline): the enrichment gate reads the declared projection (P2b)",
-    "refactor(pipeline): the tuple gate reads the derived set (P2b, D-01)",
-    "refactor(damage): the certification gate reads the bus (P2b, D-34)",
-    "refactor(survival): the walk asks the bus what an immobilize is (P2b)",
-    "refactor(damage): the shield-outcome gate reads pair_outcome_items() (P2b)",
-    "fix(trigger-bus): a reviewed cc_kind is evidence, not an override (P2b)",
-    "test(trigger-bus): every consumer edge P2b moved gets a permanent pin (P2b)",
-    "fix(trigger-bus): a control trigger is not judged by the damage type contract (P2b)",
-    "test(trigger-bus): the last four verify-P2b findings get a pin or a refutation (P2b)",
-    "test(golden): every standing coupled diff is claimed by a committed receipt (P2b)"
-   ]
-  },
-  "P2c": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md"
-   ],
-   "subjects": [
-    "refactor(trigger-bus): the legacy sets die and CAPABILITIES is the only table (P2c)"
    ]
   },
   "P4-H2-ccscope": {
@@ -474,17 +62,6 @@
     "docs(receipts): the three citation-adjudicated leaves get verdicts anyway (P4-arbitrate)"
    ]
   },
-  "P4-boundary": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the boundary re-capture names the 60 verdicts it is owed (P4-boundary)",
-    "docs(receipts): the boundary refreshes every block the re-capture does not gate (P4-boundary)",
-    "docs(receipts): the boundary's 60 verdicts land, and 13 say do not pin it (P4-boundary)",
-    "docs(receipts): the boundary's third owner decision is ruled, and the entry stays open (P4-boundary)"
-   ]
-  },
   "P4-integration-final": {
    "cites_an_r35_answer_in_a_commit_body": true,
    "commit_count": 3,
@@ -519,48 +96,6 @@
     "docs(receipts): the boundary's last uncovered leaves and the dissent chain, enumerated (P4C/P4F)"
    ]
   },
-  "P4D": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(runbook): two rules a dissent cluster needed and the protocol did not have (P4D)",
-    "fix(instrument): a golden list member is matched by identity, not by ordinal (P4D)",
-    "docs(receipts): C3 and C4 are category errors, not adverse verdicts (P4D)",
-    "docs(receipts): C2 is re-posed with the siblings its brief called unmoved (P4D)"
-   ]
-  },
-  "P5-e": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "test(syndra): both cast-order pins land while the seed is still live (P5-e)"
-   ]
-  },
-  "P5-f": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-5-cast-dependency.md"
-   ],
-   "subjects": [
-    "refactor(rotation): COMBO_TABLE becomes CAST_ORDER_OVERRIDES (P5-f)"
-   ]
-  },
-  "R-15/R-18": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "docs(runbook): a leaf that cannot be judged alone gets a well-posed brief (R-15/R-18)"
-   ]
-  },
   "R-16": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 2,
@@ -570,23 +105,6 @@
    "subjects": [
     "docs(receipts): S9's remaining gap is an artifact, not a commit body (R-16)",
     "docs(receipts): S9's escalation loses its view-tag half (R-16)"
-   ]
-  },
-  "R-17": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-1-coverage-evidence.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/phase-5-cast-dependency.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "docs(baseline): the pair half of Phase 0's one re-capture (R-17)",
-    "docs(baseline): the coupled half of Phase 0's one re-capture (R-17)",
-    "docs(baseline): the coupled half of Phase 3's boundary re-capture (R-17)"
    ]
   },
   "R-19": {
@@ -603,258 +121,6 @@
     "docs(receipts): S9's oracle verdicts land as their own unit (R-19)"
    ]
   },
-  "R-20": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/phase-5-cast-dependency.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "docs(receipts): S7's last two slices enumerate their populations first (R-20)"
-   ]
-  },
-  "R-28": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 11,
-   "criteria_documents": [
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "docs(receipts): Phase 4 S1 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S2 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S3 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S4 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S5 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S6 declares its wall baseline and its population (R-28, R-20)",
-    "docs(receipts): Phase 4 S7 declares its wall baseline and its four populations (R-28, R-20)",
-    "docs(receipts): the H5 stage declares its wall baseline and its population (R-28, R-20)",
-    "docs(receipts): Phase 4 S8 declares its wall baseline and its populations (R-28, R-20)",
-    "docs(receipts): Phase 4 S9 declares its own wall baseline (R-28)",
-    "docs(receipts): Phase 4 S10 declares its own wall baseline (R-28)"
-   ]
-  },
-  "R-37": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 10,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "feat(gates): gate the plan documents like source (R-37, slice 0A.10)",
-    "docs(plans): three Liandry-extraction locators, refreshed (R-37)",
-    "docs(plans): the three Liandry-extraction locators, refreshed again (R-37)",
-    "docs(plans): the citation criterion 13's flip retired (R-37)",
-    "docs(plans): the three Liandry-extraction locators, refreshed again (R-37)",
-    "docs(plans): the Liandry fold locator, refreshed again (R-37)",
-    "docs(plans): the three Liandry-extraction locators, refreshed again (R-37)",
-    "docs(plans): one runbook locator, refreshed after S10 moved the line (R-37)",
-    "docs(plans): criterion 16 read under H5, criterion 14's two scenario sets (R-37)",
-    "docs(plans): the two criteria S10 moved say so in their own text (R-37)"
-   ]
-  },
-  "S1": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(program): event identity gets a grammar instead of four f-strings (S1)",
-    "refactor(survival): the modifier's owner becomes the holder's roster slot (S1)",
-    "refactor(survival): the walk's four event references become integer slots (S1)"
-   ]
-  },
-  "S10": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 17,
-   "criteria_documents": [
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "refactor(timeline): a packet stops carrying a map keyed on its own addresses (S10)",
-    "refactor(caches): the last three address-keyed caches key on values (S10)",
-    "test(program): one walk per pass becomes a number, not a call-site count (S10)",
-    "test(survival): the score ledger gets the front door its refusals needed (S10)",
-    "fix(bis): a withheld component stops folding into a score as zero (S10)",
-    "test(program): criterion 1's two ungated clauses become gates (S10)",
-    "refactor(compile): the compiler's two row readers become one loop (S10)",
-    "feat(precision): SumPlan, the type D-65 ruled and nothing implemented (S10)",
-    "refactor(caches): one vocabulary for what stales a cache (S10)",
-    "refactor(rung): the four-state ladder gets a production path (S10)",
-    "docs+fix: the behaviour S10's bodies did not mention, said out loud (S10)",
-    "fix(rung): the fourth state gets a production path, the gate one spelling (S10)",
-    "fix(compile): a light ledger that declares a self-heal is refused (S10)",
-    "fix(receipt_state): the prototype stops reading a stat its key cannot see (S10)",
-    "fix(registry): the memo population stops being closed over a spelling (S10)",
-    "fix(caches,stats,receipt): four claims S10 left behind its own tree (S10)",
-    "docs(receipts): R-01 row 1's pinned half becomes an artifact, not a body line (S10)"
-   ]
-  },
-  "S2": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "refactor(survival): the walk sorts on the rank, not on a float (S2)"
-   ]
-  },
-  "S3": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(gates): Phase 4's three migration counters get an instrument (S3)",
-    "feat(program): rounding gets a registry instead of 118 opinions (S3)",
-    "feat(survival): the third ledger answers once, or says why it changed (S3)",
-    "feat(ability_spec): the four dispositions become an algebra (S3)",
-    "refactor(program): the survival rows project at end of walk (S3)"
-   ]
-  },
-  "S4": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 7,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "feat(program): the logical layer gets its vocabulary (S4)",
-    "refactor(program): nine action constructors become one (S4)",
-    "fix(program): the compiled-action key reads the program it stands for (S4)",
-    "fix(program): one trigger-time tolerance, on the side that reads it (S4)",
-    "refactor(program): the program entry point stops rebuilding the sort key (S4)",
-    "fix(program): a rider the entry point cannot stage raises, never vanishes (S4)",
-    "fix(program): the program cache's key covers every input its producer took (S4)"
-   ]
-  },
-  "S5": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [
-    "docs/plans/phase-2-trigger-bus.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(ledger): the two narrowed fight results get declared readers (S5)",
-    "refactor(ledger): the two gates stop holding clauses and read the projection (S5)",
-    "refactor(ledger): the projection's inputs stop carrying a name nobody reads (S5)"
-   ]
-  },
-  "S6": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "fix(survival): a debuff, a heal and a utility stop resolving as one (S6)"
-   ]
-  },
-  "S7": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 6,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(bus): every mechanic declares what its numbers mean and how holders stack (S7)",
-    "fix(amp): two holders of one aura curse an enemy once, and it says so (S7)",
-    "fix(amp): Bloodsong gets one authority, and the pair reading becomes a preview (S7)",
-    "feat(bus): a paired walk half may deliver a rider, not only a packet (S7, Amendment C)",
-    "fix(program): the score path drops the pair previews the receipt path drops (S7)",
-    "fix(amp): Shadowflame's Cinderbloom moves to the walk as a rider (S7)"
-   ]
-  },
-  "S8": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [
-    "docs/plans/phase-4-program-engine.md"
-   ],
-   "subjects": [
-    "feat(program): a second pricing becomes a bounded loop, not a stack (S8)",
-    "refactor(timeline): the pair cache key carries the ledger that priced it (S8)",
-    "fix(timeline): Catalyst's second pricing becomes a pass, not a recursion (S8)"
-   ]
-  },
-  "S9": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 22,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md",
-    "docs/plans/phase-0-gates-and-corrections.md",
-    "docs/plans/phase-3-behavior-rules.md",
-    "docs/plans/phase-4-program-engine.md",
-    "docs/plans/silent-failure-runbook.md"
-   ],
-   "subjects": [
-    "feat(views): one function serializes a leaf and the entry that names it (S9)",
-    "refactor(program): one walk, and the survival view reads what it produced (S9)",
-    "refactor(views): the bespoke score assembly is deleted, not mirrored (S9)",
-    "refactor(views): the receipt and TDD projections leave the return literal (S9)",
-    "feat(views): every published number says whether a rule produced it (S9)",
-    "perf(views): the map is built where it is published, and nowhere else (S9)",
-    "fix(views): the survival row's three sums move onto the walk (S9)",
-    "fix(views): a published receipt field stops having two producers (S9)",
-    "test(program): view purity is an assertion, not a docstring (S9)",
-    "refactor(views): a view's two inputs are typed, not asserted in prose (S9)",
-    "test(views): every number a view emits is a leaf of the walk it projects (S9)",
-    "fix(views): a dispositions key is the path its leaf lives at (S9)",
-    "fix(views): who reads a score payload is the caller's answer (S9)",
-    "fix(bis,optimizer): the two ranking surfaces name every number they serve (S9)",
-    "feat(ui): the withheld marker is what renders a refused leaf (S9)",
-    "feat(program): a view tag is declared, and a mixed fold cannot be built (S9)",
-    "fix(views): a number inside a list is a leaf like any other (S9)",
-    "fix(calculate): every number the endpoint serves names itself (S9)",
-    "refactor(views): one function names a finished payload's numbers (S9)",
-    "feat(views,bis,optimizer): a previewed number cannot be ranked (S9)",
-    "refactor(ui): which row is an enemy is answered in one place (S9)",
-    "test(views): a tag enters a payload through one door, asserted (S9)"
-   ]
-  },
-  "c12": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "test(rotation): every declaration is load-bearing on a named surface (c12)"
-   ]
-  },
-  "campaign-close-active-cast-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-active-cast-retired)",
-    "feat(walk): the walk prices every item active from its own declaration (campaign-close-active-cast-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-active-cast-retired)",
-    "docs(receipts): the gap ledger's G4 row records the second of the fourteen retiring (campaign-close-active-cast-retired)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-active-cast-retired)"
-   ]
-  },
   "campaign-close-active-cast-retirement": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 4,
@@ -864,27 +130,6 @@
     "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-active-cast-retirement)",
     "docs(receipts): what the retirement measured, and why it was reverted rather than shipped (campaign-close-active-cast-retirement)",
     "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-active-cast-retirement)"
-   ]
-  },
-  "campaign-close-amp-armed-coverage": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "test(golden): a covering scenario for every static holder amp, derived (campaign-close-amp-armed-coverage)",
-    "chore(baseline): capture the two amp-armed rosters, and the artifacts that move with them (campaign-close-amp-armed-coverage)",
-    "docs(receipts): the gap ledger's G4 row records the prerequisite that landed (campaign-close-amp-armed-coverage)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-amp-armed-coverage)"
-   ]
-  },
-  "campaign-close-amp-term-ruling": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): the static holder-amp term, its ordering, and the producer semantic (campaign-close-amp-term-ruling)",
-    "docs(receipts): the gap ledger's G4 row reads the ruling that ordered it (campaign-close-amp-term-ruling)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-amp-term-ruling)"
    ]
   },
   "campaign-close-authority-reclassification": {
@@ -918,18 +163,6 @@
     "chore(baseline): the campaign's second and last closing re-capture (campaign-close-boundary)"
    ]
   },
-  "campaign-close-cast-proc-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-cast-proc-retired)",
-    "feat(walk): the walk prices every cast-triggered proc from its own declaration (campaign-close-cast-proc-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-cast-proc-retired)",
-    "docs(receipts): the gap ledger's G4 row records the third of the fourteen retiring (campaign-close-cast-proc-retired)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-cast-proc-retired)"
-   ]
-  },
   "campaign-close-charge-price": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
@@ -938,28 +171,12 @@
     "fix(champions): a stocked Dark Sphere charge pays Dark Sphere's mana (campaign-close-charge-price)"
    ]
   },
-  "campaign-close-charge-price-ledger": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the tag that shipped with no ledger line, and the one that fixes it (campaign-close-charge-price-ledger)"
-   ]
-  },
   "campaign-close-charge-price-oracle": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the charge-price slice's eight owed verdicts land, none dissenting (campaign-close-charge-price-oracle)"
-   ]
-  },
-  "campaign-close-charge-price-pin": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 1,
-   "criteria_documents": [],
-   "subjects": [
-    "chore(baseline): the pin catches up to the value the dissent computes (campaign-close-charge-price-pin)"
    ]
   },
   "campaign-close-charged-strike-retired": {
@@ -1001,16 +218,6 @@
     "docs(receipts): the coverage-prose row gains the census clause 2 turns on (campaign-close-coverage-prose-census)"
    ]
   },
-  "campaign-close-coverage-prose-ruling": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): a campaign-authored justification string is adjudicated by source assertion (campaign-close-coverage-prose-ruling)",
-    "test(gates): the all-defence coverage sentence is bound to the branch that emits it (campaign-close-coverage-prose-ruling)",
-    "docs(receipts): the coverage-prose debt closes on the ruling that answers it (campaign-close-coverage-prose-ruling)"
-   ]
-  },
   "campaign-close-crit-profile-retirement": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 4,
@@ -1031,42 +238,6 @@
     "feat(walk): the walk stages every routing rule from its own declaration (campaign-close-damage-routing-retired)",
     "docs(receipts): what the retirement measured, against the population it declared (campaign-close-damage-routing-retired)",
     "docs(receipts): the gap ledger's G4 row records the fifth of the fourteen retiring (campaign-close-damage-routing-retired)"
-   ]
-  },
-  "campaign-close-declared-pricing": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 6,
-   "criteria_documents": [],
-   "subjects": [
-    "chore(receipts): the from-declaration pricing stage's wall baseline, before its first edit (campaign-close-declared-pricing)",
-    "feat(survival): raw declared damage becomes a mitigated number in one place (campaign-close-declared-pricing)",
-    "feat(survival): the walk prices a declared packet itself, instead of ratioing the pair engine's (campaign-close-declared-pricing)",
-    "test(survival): the from-declaration price reproduces the pair engine's, on a family that has not opted in (campaign-close-declared-pricing)",
-    "docs(receipts): the gap ledger's G4 row records the prerequisite that landed (campaign-close-declared-pricing)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-declared-pricing)"
-   ]
-  },
-  "campaign-close-deferral-coverage": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [],
-   "subjects": [
-    "test(golden): a covering scenario for every blind deferral family, derived (campaign-close-deferral-coverage)",
-    "chore(baseline): capture the two covering rosters, and the artifacts that move with them (campaign-close-deferral-coverage)",
-    "docs(receipts): six verdicts on the coverage capture, filed though none was owed (campaign-close-deferral-coverage)"
-   ]
-  },
-  "campaign-close-delta-amp-retirement": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 6,
-   "criteria_documents": [],
-   "subjects": [
-    "feat(bus): a packet-delivered walk half may be scoped to its own holder (campaign-close-delta-amp-retirement)",
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-delta-amp-retirement)",
-    "feat(survival): the walk delivers the holder's static amps from their declarations (campaign-close-delta-amp-retirement)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-delta-amp-retirement)",
-    "docs(receipts): the gap ledger's G4 row records the first of the fourteen retiring (campaign-close-delta-amp-retirement)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-delta-amp-retirement)"
    ]
   },
   "campaign-close-dispositions": {
@@ -1125,21 +296,6 @@
     "feat(instruments): a docketed dissent's re-adjudication brief is one command away (campaign-close-investigator-brief)"
    ]
   },
-  "campaign-close-lane-declaration-correction": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 8,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice group's R-20 population, enumerated before its first src/ edit (campaign-close-lane-declaration-correction)",
-    "docs(plans): the ruling the three stopped retirements owed, recorded where the campaign keeps them (campaign-close-lane-declaration-correction)",
-    "feat(gates): the ground a lane-declaration correction stands on, measured in both directions before the table moves (campaign-close-lane-declaration-correction)",
-    "fix(interpreters): the family served through its declared lane stops declaring a receipt-walk lane (campaign-close-lane-declaration-correction)",
-    "docs(receipts): the stopped retirements' receipt records the ruling that closed their rows (campaign-close-lane-declaration-correction)",
-    "docs(receipts): the gap ledger's G4 row records the three resolver-fed rows closing, and on which ground (campaign-close-lane-declaration-correction)",
-    "docs(receipts): what this slice group measured, filled in beside what it predicted (campaign-close-lane-declaration-correction)",
-    "docs(receipts): this group's criterion-11 line, and the rows that prepare it (campaign-close-lane-declaration-correction)"
-   ]
-  },
   "campaign-close-lane-ownership": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
@@ -1178,40 +334,6 @@
     "fix(receipts): the mismatch narration spells its counts off the list it names (campaign-close-minor-findings-r35-2)",
     "test(receipts): the join's red names the break it injects instead of counting to one (campaign-close-minor-findings-r35-2)",
     "docs(receipts): the second R-35 pass over this group, recorded with its criterion-11 line (campaign-close-minor-findings-r35-2)"
-   ]
-  },
-  "campaign-close-named-delivery-ruling": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): the named walk-side delivery for the family the triage stopped (campaign-close-named-delivery-ruling)",
-    "feat(gates): the delivery a dated amendment names is resolved against the kernel, not recorded (campaign-close-named-delivery-ruling)",
-    "docs(receipts): the gap ledger's G4 row records the published stop being lifted by name (campaign-close-named-delivery-ruling)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-named-delivery-ruling)"
-   ]
-  },
-  "campaign-close-on-hit-strike-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-on-hit-strike-retired)",
-    "feat(walk): the walk prices every on-hit strike from its own declaration (campaign-close-on-hit-strike-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-on-hit-strike-retired)",
-    "docs(receipts): the gap ledger's G4 row records the sixth of the fourteen retiring (campaign-close-on-hit-strike-retired)",
-    "docs(receipts): this group's criterion-11 line, and the rows that prepare it (campaign-close-on-hit-strike-retired, campaign-close-periodic-retired)"
-   ]
-  },
-  "campaign-close-periodic-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-periodic-retired)",
-    "feat(walk): the walk prices every periodic cadence from its own declaration (campaign-close-periodic-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-periodic-retired)",
-    "docs(receipts): the gap ledger's G4 row records the seventh of the fourteen retiring (campaign-close-periodic-retired)"
    ]
   },
   "campaign-close-ratchet": {
@@ -1266,58 +388,12 @@
     "docs(receipts): this group's criterion-11 line, and the rows that prepare it (campaign-close-resistance-shred-retired, campaign-close-secondary-target-retirement)"
    ]
   },
-  "campaign-close-resistance-term": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 6,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-resistance-term)",
-    "feat(survival): a declaration is priced at the resistance its own packet met (campaign-close-resistance-term)",
-    "feat(gates): every post-authoring packet mutation is enumerated, not tripped over (campaign-close-resistance-term)",
-    "docs(receipts): what this slice measured, filled in beside what it predicted (campaign-close-resistance-term)",
-    "docs(receipts): the gap ledger's G4 row records the two rulings it now holds performed (campaign-close-resistance-term)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-resistance-term)"
-   ]
-  },
-  "campaign-close-resistance-term-ruling": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "fix(receipts): the backlog row of the group before this one names the commit that wrote it (campaign-close-resistance-term-ruling)",
-    "docs(plans): the per-packet resistance term, the term census, and window-armed coverage (campaign-close-resistance-term-ruling)",
-    "docs(receipts): the stopped retirement's receipt records the ruling that settled it (campaign-close-resistance-term-ruling)",
-    "docs(receipts): the gap ledger's G4 row reads the ruling that settled it (campaign-close-resistance-term-ruling)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-resistance-term-ruling)"
-   ]
-  },
-  "campaign-close-retirement-act": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 3,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): the retiring act's full shape, and the three prerequisites it needs (campaign-close-retirement-act)",
-    "docs(receipts): the gap ledger's G4 row reads the ruling that shaped it (campaign-close-retirement-act)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-retirement-act)"
-   ]
-  },
   "campaign-close-rung-receipts": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
     "feat(counters): a fallback publishes which declaration refused (campaign-close-rung-receipts)"
-   ]
-  },
-  "campaign-close-secondary-target-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-secondary-target-retired)",
-    "feat(walk): the walk prices Wind's Fury and every packet it re-delivers (campaign-close-secondary-target-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-secondary-target-retired)",
-    "docs(receipts): the gap ledger's G4 row records the last of the fourteen retiring (campaign-close-secondary-target-retired)"
    ]
   },
   "campaign-close-secondary-target-retirement": {
@@ -1330,18 +406,6 @@
     "docs(receipts): the gap ledger's G4 row records the row that is not startable by the ruled act, and why (campaign-close-secondary-target-retirement)"
    ]
   },
-  "campaign-close-spellblade-retired": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this slice's R-20 population, enumerated before its first src/ edit (campaign-close-spellblade-retired)",
-    "feat(walk): the walk prices every spellblade from its own declaration (campaign-close-spellblade-retired)",
-    "docs(receipts): what the retirement measured, against the population it declared (campaign-close-spellblade-retired)",
-    "docs(receipts): the gap ledger's G4 row records the ninth of the fourteen retiring (campaign-close-spellblade-retired)",
-    "docs(receipts): this group's criterion-11 line, and the rows that prepare it (campaign-close-spellblade-retired, campaign-close-secondary-target-retired)"
-   ]
-  },
   "campaign-close-standing-dissents": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
@@ -1350,41 +414,12 @@
     "feat(gates): a capture that pins over a standing dissent fails a gate (campaign-close-standing-dissents)"
    ]
   },
-  "campaign-close-swing-composition": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 7,
+  "campaign-close-verify-backfill": {
+   "cites_an_r35_answer_in_a_commit_body": true,
+   "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
-    "docs(receipts): this slice group's R-20 population, enumerated before its first src/ edit (campaign-close-swing-composition)",
-    "feat(survival): a packet delivered as a basic-attack swing is priced as one (campaign-close-swing-composition)",
-    "feat(gates): every authoring-time mitigation term is enumerated, not tripped over (campaign-close-swing-composition)",
-    "feat(survival): a routing family re-delivers a source family's number and declares none (campaign-close-swing-composition)",
-    "docs(receipts): what this slice group measured, filled in beside what it predicted (campaign-close-swing-composition)",
-    "docs(receipts): the gap ledger's G4 row records the three rulings it now holds performed (campaign-close-swing-composition)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-swing-composition)"
-   ]
-  },
-  "campaign-close-swing-term-coverage": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 5,
-   "criteria_documents": [],
-   "subjects": [
-    "test(kernel): the pooled uniqueness key names the scenario it was measured in (campaign-close-swing-term-coverage)",
-    "test(golden): a covering scenario for the enemy-held basic-attack swing terms, derived (campaign-close-swing-term-coverage)",
-    "chore(baseline): capture the swing-term-armed roster, and the artifacts that move with it (campaign-close-swing-term-coverage)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-swing-term-coverage)",
-    "docs(receipts): three verdicts on the swing-term capture, filed though none was owed (campaign-close-swing-term-coverage)"
-   ]
-  },
-  "campaign-close-swing-term-ruling": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(plans): the ruling the stopped retirement owed, recorded where the campaign keeps them (campaign-close-swing-term-ruling)",
-    "docs(receipts): the stopped retirement's receipt records the ruling that settled it (campaign-close-swing-term-ruling)",
-    "docs(receipts): the gap ledger's G4 row records the ruling that makes the tenth row startable (campaign-close-swing-term-ruling)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-swing-term-ruling)"
+    "docs(receipts): the campaign's rendered R-35 verdicts, transcribed into the ledger (campaign-close-verify-backfill)"
    ]
   },
   "campaign-close-verify-backlog": {
@@ -1403,17 +438,6 @@
     "docs(receipts): the verification residue is graded, and its ruling is owed (campaign-close-verify-coverage)"
    ]
   },
-  "campaign-close-window-armed-coverage": {
-   "cites_an_r35_answer_in_a_commit_body": false,
-   "commit_count": 4,
-   "criteria_documents": [],
-   "subjects": [
-    "test(golden): a covering scenario for every re-pricing window, derived (campaign-close-window-armed-coverage)",
-    "chore(baseline): capture the two window-armed rosters, and the artifacts that move with them (campaign-close-window-armed-coverage)",
-    "docs(receipts): this group's criterion-11 line, and the row that prepares it (campaign-close-window-armed-coverage)",
-    "docs(receipts): six verdicts on the window-armed capture, filed though none was owed (campaign-close-window-armed-coverage)"
-   ]
-  },
   "umbrella [H] table": {
    "cites_an_r35_answer_in_a_commit_body": false,
    "commit_count": 1,
@@ -1425,8 +449,8 @@
  },
  "how_a_row_is_discharged": "A fresh read-only agent that has not read the implementation plan is handed R-35's brief with this row's commit range and the criteria quoted out of its criteria_documents. What it returns is recorded as a pass in verify-ledger.json, and this row goes away because the ledger's residue list no longer holds the tag.",
  "how_to_enumerate_a_range": "git log --reverse --format='%h %s' 584071e..HEAD, keeping the commits whose subject's trailing parenthetical begins with the group's tag. The rows carry subjects rather than shas on purpose: this file is committed inside the commit a sha would point at, so a sha goes stale on the first amend or rebase, and a gate that goes red on a rebase is a gate lanes learn to regenerate without reading. The subjects are exact and git log --grep takes them.",
- "of_which_cite_an_r35_answer_in_a_commit_body": 13,
- "prepared_passes": 118,
+ "of_which_cite_an_r35_answer_in_a_commit_body": 11,
+ "prepared_passes": 47,
  "rule": "The residue of runbook criterion 11's first clause, prepared as work somebody can start. One row per slice group with no recorded R-35 answer in docs/receipts/verify-ledger.json: the commits it spans, the plan documents that carry its stated completion criteria, and whether its own commit bodies cite an R-35 answer. The brief is not here -- it is read from R-35 in the runbook, which stays its one home.",
  "what_this_is_not": "It is not an answer to the owed ruling whether_criterion_11s_first_clause_binds_the_campaign_backwards, and no row reads on whether the clause binds backwards. It is not a recorded R-35 answer: every row is a pass that has NOT run, and reading it as coverage would be the unverifiable claim about the past this campaign outlaws. And it does not shrink the denominator -- the row set is asserted equal to the ledger's own residue list, so preparing the work cannot become a way of redefining it.",
  "why_a_lane_may_write_this": "Every field is read from the commit tree, from the committed ledger, or from R-35 itself. Naming the commits a slice spans and the documents its criteria live in is a statement about the QUESTION a verifier would be handed, never about the answer -- the same line the standing-dissent docket draws for an investigator's brief."
