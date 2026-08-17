@@ -1586,7 +1586,10 @@ from the retirement schedule, the interpreter registry and a fresh `term_census`
 run, and §16.3's seven from the verify ledger's own pass rows and coverage block.
 **17** figures, the count itself among them, and R-05's red rides beside each —
 `test_the_section_16_gate_fails_when_a_stated_figure_drifts` doctors the value in
-a copy of the section and requires the same comparison to fail.
+a copy of the section and requires the same comparison to fail. §16.7 states no
+figure at all, and §16.7 says why: a gate reading cannot be re-derived without
+re-running the gate it came from, so the one place this section could carry an
+ungated number is the one place it carries none.
 
 Two things the same commit had to fix, and both are the shape section 15 was
 already in. `section_15()` read from its own heading to the end of the file,
@@ -1604,30 +1607,42 @@ anchor it the way `SECTION_15_5_ANCHOR` does.
 
 ### 16.7 The R-01 matrix on this pass's tip
 
-| # | Verdict | What it read |
-|---|---|---|
-| 1 | **GREEN** | 8619 passed, 0 skipped, 0 xfailed |
-| 2 | **GREEN** | `snapshot identical` |
-| 3 | **GREEN** | `snapshot identical` |
-| 4 | **GREEN** | exit 0 |
-| 5 | **GREEN** | exit 0 |
-| 6 | **GREEN** | `black --check` clean |
-| 7 | **GREEN** | pylint `src/` 9.61; ratchet 197 files at or above |
-| 8 | **GREEN** | four scenarios, every pinned counter reproducing, none void |
-| 9 | **GREEN** | 18 non-legacy scenarios at the merge-base anchor |
-| 10 | **GREEN** | `test_survival_kernel` green |
-| 11 | **GREEN** | identical winner and score both ways on all four |
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
 
 `plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
 `standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
 `migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
 `term_census.py --check` and `verify_backlog.py --check` all exit 0.
 
-**No `src/` is touched in this pass and no baseline moves in it.** The one
-`src/` correction any of this rests on is `b299978`, which landed before the
-review that raised the finding, and the pin that followed it is `4f41e6e`. Both
-compared baselines read `snapshot identical` on every commit here, so there is
-nothing for a boundary re-capture to absorb and none is performed (R-17, R-32).
+**What each row read is in this pass's commit bodies, not here**, for the reason
+§15.8 gives and this section proved by getting it wrong first: a figure in this
+section is one §16.6's gate re-derives, and a gate reading cannot be re-derived
+without re-running the gate it came from. This table carried a suite count for
+one commit; the count was already stale when it was written, because the commit
+that wrote it declared 34 node ids of its own. That is the ungated-figure failure
+section 15 exists about, reproduced inside the section that gates itself, and the
+fix is the one §15.8 already ruled: verdicts here, numbers where R-01 puts them,
+one commit at a time.
+
+**No `src/` is touched in this pass and no baseline moves in it** —
+`git diff --name-only 04cdfbf..HEAD -- src/` and the same over R-32's five
+baselines are both empty, over the whole range. The one `src/` correction any of
+this rests on is `b299978`, which landed before the review that raised the
+finding, and the pin that followed it is `4f41e6e`. Both compared baselines read
+`snapshot identical` on every commit here, so there is nothing for a boundary
+re-capture to absorb and none is performed (R-17, R-32).
 
 **What is left, in one sentence.** Runbook criterion 11 is not discharged, its
 one open ruling belongs to the campaign's owner, and §16.3 states what the
