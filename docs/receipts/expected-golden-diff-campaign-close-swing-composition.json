@@ -64,11 +64,21 @@
     "predicted": "0 occurrences on both compared baselines, bounded by the 88 declarations above. Every one of them is priced through the same two terms it was priced through before this group, because the third term is reached only by a declaration that carries a swing composition and no authoring site stamps one; and the routing path is reached only by a packet a router built, and no interpreter builds one. Any occurrence at all is therefore outside the population and stops the slice."
   },
   "measured_after": {
-    "dated": "",
-    "golden": "",
-    "coupled_golden": "",
-    "qualifying_occurrences_inside_the_population": null,
-    "occurrences_outside_the_population": ""
+    "dated": "2026-08-17",
+    "commits": [
+      "b68365d docs(receipts): this slice group's R-20 population, enumerated before its first src/ edit",
+      "a7e08e7 feat(survival): a packet delivered as a basic-attack swing is priced as one (Ruling 1)",
+      "c4f66ba feat(gates): every authoring-time mitigation term is enumerated, not tripped over (Ruling 2)",
+      "38b5d9b feat(survival): a routing family re-delivers a source family's number and declares none (Ruling 3)"
+    ],
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical, on every commit of the group. The declared pair-engine population of 0 held.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical, on every commit of the group. Zero leaves moved, which is what the prediction said and is what the baseline COULD see: swing_term_armed_carry_roster arms all three target-side swing terms against a defender a basic-attack router attacks, and crit_onhit_carry_roster and swing_term_armed_carry_roster each publish the routing family's two rows.",
+    "qualifying_occurrences_inside_the_population": 0,
+    "occurrences_outside_the_population": "None. R-01 row 8 returns the pinned winner and score in all four bench scenarios -- cassiopeia_3champ 4003.1, cassiopeia_5champ 5010.8, mundo_3champ 3305.0, syndra_mandate_3champ 4642.3 -- with residuals 79 / 19 / 12 / 98, unmoved. Row 11 (--no-compiled) returns the identical winner and score in all four, so no routing divergence.",
+    "what_moved_that_is_not_a_number": "The declaration's WIDTH, on every packet the tree authors. AuthoredDeclaration gained a fifth position for Ruling 1's swing composition, so the 88 four-wide declarations the population enumerated are five-wide after a7e08e7 with None in the fifth. Nothing serializes that field -- it is absent from both committed baselines, checked before the edit -- and swing_composition() returns None for every one of them, so price_declared_packet takes the branch it took before the position existed. Two pinned event dicts in tests/test_eclipse_timeline.py spell the tuple literally and were updated in the same commit; that is the whole of the visible change and it is a width rather than a value. Recorded here rather than left to a reader, because a shape change on every packet in the model is exactly the kind of thing a green gate can carry in silence.",
+    "the_census_widened_and_found_nothing_uncovered": "Nine authoring-time mitigation terms, zero uncovered, on the instrument's first clean run over this tree -- which is a DIFFERENT result from Amendment N's widening, where _resolve_starting_shield_outcome came back UNCOVERED, and it is reported as the result it is rather than as a target that was aimed at. The two resistances are covered by DeclaredPacket.effective_resistance, the three holder-amp reads by DeclaredPacket.holder_amp, the plating multiplier and the target's crit-damage multiplier fold into the declared magnitude, and Warden's Mail's flat and its cap are transported by the two BasicAttackSwing fields named after them. No exclusion was written by this group and none was needed; a ruled, dated exclusion is the umbrella's to record and not a lane's.",
+    "the_seed_reproduces": "All four of Amendment R's published figures for this seed, exactly, at the pinned Caitlyn probe: 76.54166666666666 with the three target-side terms inert, 68.88749999999999 with the plating multiplier armed, 67.35666666666665 with the crit-damage multiplier armed, 63.60666666666666 with Rock Solid armed -- the last being the 20.3 percent a walk pricing this declaration at the published baseline would have paid over, asserted as the ratio. Ruling 3's half reproduces too: attack damage 167, secondary_damage_share 0.55, secondary_max_targets 2.0, and a routed bolt raw of 91.85000000000001 bit-exact against SecondaryTargetSlot.bolt_damage's own number.",
+    "nothing_retired": "secondary_target/receipt_walk stands overdue and gated with its row beside it. This group performs three rulings and registers no interpreter; being startable is not being started."
   },
   "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice group."
 }
