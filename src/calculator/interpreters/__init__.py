@@ -384,6 +384,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): secondary_target.PAIR_INTERPRETER,
     (
+        RuleFamily.SECONDARY_TARGET,
+        EngineLane.RECEIPT_WALK,
+    ): secondary_target.WALK_INTERPRETER,
+    (
         RuleFamily.SPELLBLADE,
         EngineLane.PAIR_ENGINE,
     ): spellblade.PAIR_INTERPRETER,
@@ -570,9 +574,13 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.SPELLBLADE,
         )
     },
-    (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
-        _PACKET_FED, (EngineLane.PAIR_ENGINE,)
-    ),
+    # ``secondary_target`` has no row at all now, on either lane.  Its
+    # receipt-walk twin retired with the family — the last of umbrella
+    # Amendment F's fourteen — and it never declared a compiled-score-walk
+    # lane, because a second target only exists where there is a roster to hit
+    # and the compiled kernel prices one pair.  A family with no unserved lane
+    # is what the end of this table's growth looks like.
+    #
     # Sustain's receipt half is no longer a gap — the walk reads its two
     # walk-paid shapes through the registered walk interpreter — so only the
     # compiled lane has a row, packet-fed like the strikes.

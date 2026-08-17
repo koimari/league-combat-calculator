@@ -2870,7 +2870,7 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
 
 
 def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
-    """The fifty-three, by name, with the value each one declares.
+    """The fifty-four, by name, with the value each one declares.
 
     Pinned rather than derived: D-66's whole point is that the answer is a
     per-mechanic fact, so a test that recomputed it from some property of the
@@ -2889,7 +2889,8 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     charged strikes, the eight on-hit strikes and the seven periodic cadences
     joined on 2026-08-16, when ``active_cast``, ``cast_proc``,
     ``charged_strike``, ``on_hit_strike`` and ``periodic`` retired off the pair
-    engine, and the seven spellblades on 2026-08-17 with ``spellblade``.  Their answer is per-holder for the same reason and one step more
+    engine, and on 2026-08-17 the seven spellblades with ``spellblade`` and
+    Wind's Fury with ``secondary_target``, the last of the fourteen.  Their answer is per-holder for the same reason and one step more
     plainly: each one's walk half prices *its own holder's* packet, so two
     roster members holding one item pay two packets and an aura key would
     silently drop the second — which is the incident's own shape mandated by
@@ -2936,6 +2937,7 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
         "rapid_firecannon.empowered_hit": "per_holder",
         "ravenous_hydra.active": "per_holder",
         "recurve_bow.on_hit": "per_holder",
+        "runaans_hurricane.secondary_target": "per_holder",
         "scouts_slingshot.proc": "per_holder",
         "shadowflame.cinderbloom": "per_holder",
         "sheen.spellblade": "per_holder",

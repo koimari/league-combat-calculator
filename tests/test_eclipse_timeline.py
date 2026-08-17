@@ -77,7 +77,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             # Five positions since umbrella Amendment R, Ruling 1: the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
-            "declared": ("eclipse.proc", 80.0, "other", None, None),
+            "declared": ("eclipse.proc", 80.0, "other", None, None, None),
         }
     ]
     assert row["pair_preview_of"] == "eclipse.proc"
@@ -104,7 +104,7 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             # Five positions since umbrella Amendment R, Ruling 1: the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
-            "declared": ("eclipse.proc", 80.0, "other", None, None),
+            "declared": ("eclipse.proc", 80.0, "other", None, None, None),
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

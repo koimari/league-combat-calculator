@@ -651,6 +651,43 @@ def test_the_triage_says_it_pays_nothing() -> None:
     assert "measured" in block["triage_rule"]
 
 
+#: The family a fabricated deferral row is written for when the tree defers
+#: none.  A real family with real owners and a real covering scenario, so the
+#: derivation under the red still has something true to derive.
+_FABRICATED_FAMILY = "spellblade"
+
+
+def _derived_with_a_row(monkeypatch: pytest.MonkeyPatch) -> dict:
+    """The derivation with one deferral row under it, fabricated if need be.
+
+    Every mutation below perturbs a family row and reads the failure the gate
+    reports for it.  Since 2026-08-17 the tree defers NO row -- umbrella
+    Amendment F's fourteenth retired -- so every one of those reds would go
+    green by having no subject, which is a gate that stops being tested on the
+    commit it stops mattering.  So a row is fabricated at the derivation's own
+    input, ``deferral_rows``, and the schedule is derived from it exactly as
+    it would be from a real one.  Nothing about which family it is is what any
+    of these cases tests.
+    """
+    if deferred_families():
+        return copy.deepcopy(schedule())
+    monkeypatch.setattr(
+        receipt_walk_schedule,
+        "deferral_rows",
+        lambda: {
+            _FABRICATED_FAMILY: {
+                "recorded_stage": "a stage this fixture fabricated",
+                "reason": "a deferral this fixture fabricated",
+                "overdue": True,
+                "overdue_because": "fabricated",
+                "blocked_on": "fabricated",
+                "via": [receipt_walk_schedule.PAIR_ENGINE],
+            }
+        },
+    )
+    return copy.deepcopy(receipt_walk_schedule.schedule())
+
+
 @pytest.mark.parametrize(
     "mutation,expected",
     [
@@ -664,9 +701,11 @@ def test_the_triage_says_it_pays_nothing() -> None:
         ("respell_the_lane_correction_rule", "committed value differs from derived"),
     ],
 )
-def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> None:
+def test_the_gate_has_a_red_it_can_reproduce(
+    mutation: str, expected: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """R-05: the check fails on command, through its own seam."""
-    mutated = copy.deepcopy(schedule())
+    mutated = _derived_with_a_row(monkeypatch)
     if mutation == "drop_a_family":
         mutated["families"].pop(sorted(mutated["families"])[0])
     elif mutation == "shrink_a_population":
@@ -677,8 +716,13 @@ def test_the_gate_has_a_red_it_can_reproduce(mutation: str, expected: str) -> No
         )
         mutated["families"][family]["population_total"] = 0
     elif mutation == "claim_an_unperformed_act":
+        # Symmetric difference, for the reason the two lists below use one: a
+        # family whose retiring act HAS been performed is already on the
+        # derived list, so writing the family set over it would be a mutation
+        # that mutates nothing on exactly the trees where it matters (D-92).
+        performed = set(mutated["slices_whose_ruled_act_is_already_performed"])
         mutated["slices_whose_ruled_act_is_already_performed"] = sorted(
-            mutated["families"]
+            performed ^ {sorted(mutated["families"])[0]}
         )
     elif mutation == "respell_a_triage_class":
         # Flipped against the row's own class rather than set to a letter: "a"

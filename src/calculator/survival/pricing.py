@@ -198,17 +198,18 @@ class RoutingProvenance(NamedTuple):
 class AuthoredDeclaration(NamedTuple):
     """One packet's declaration as the pair engine's authored ledger carries it.
 
-    Five facts and no price: which rule authored the packet, the
+    Six facts and no price: which rule authored the packet, the
     pre-mitigation magnitude that rule's own interpreter compiled, the attack
     class the rule declares — which decides *which* of the holder's
     amplifiers the packet earns — the effective resistance the packet itself
-    met, and the basic-attack swing composition it was delivered through.
+    met, the basic-attack swing composition it was delivered through, and the
+    route a routing family re-delivered it by.
 
     It rides the engine's own event, which is why it is a plain tuple on the
     wire and a named shape here: the ledger has two row spellings (a dict row
     and a positional light row) and one declaration, and a reader that
     unpacked the tuple by index in each of them would be two readers of one
-    declaration.  This is the one home of what those five positions mean;
+    declaration.  This is the one home of what those six positions mean;
     ``program.compile.declared_packet_of`` composes the remaining term, the
     holder's own amps, on the walk's side.
 
@@ -229,6 +230,15 @@ class AuthoredDeclaration(NamedTuple):
     other four because the ledger's positional row spelling carries the whole
     declaration as one tuple; :meth:`swing_composition` is the one reader of
     what that position means.
+
+    ``routing`` is the fact umbrella Amendment R, Ruling 3 adds: present
+    exactly on a packet a **routing family** re-delivered at a second
+    subject, and absent on one that reached its subject directly.  It rides
+    the declaration rather than being resolved at the walk for the reason the
+    resistance and the swing do — what the walk must reproduce is how *this*
+    packet travelled — and it is a fact rather than a magnitude: the
+    ``rule_id`` above stays the **source** mechanic's, and
+    :func:`route_declared_packet` is still the one place a share is applied.
     """
 
     rule_id: str
@@ -236,6 +246,7 @@ class AuthoredDeclaration(NamedTuple):
     attack_class: str
     effective_resistance: float | None = None
     swing: tuple | None = None
+    routing: tuple | None = None
 
     def swing_composition(self) -> "BasicAttackSwing | None":
         """This declaration's swing composition, or ``None`` if none rode it.
@@ -244,6 +255,25 @@ class AuthoredDeclaration(NamedTuple):
         that unpacked it by index would be a second reader of one term.
         """
         return None if self.swing is None else BasicAttackSwing(*self.swing)
+
+    def routing_provenance(self) -> "RoutingProvenance | None":
+        """This declaration's routing, or ``None`` if it reached its subject directly.
+
+        :meth:`swing_composition`'s reason one position over: the ledger
+        carries the whole declaration as one tuple, and a reader that
+        unpacked this position by index would be a second reader of one fact.
+        """
+        return None if self.routing is None else RoutingProvenance(*self.routing)
+
+    def routed_by(self, routing: "RoutingProvenance") -> "AuthoredDeclaration":
+        """The same declaration, re-delivered at a second subject.
+
+        What a routing family stamps on the events it authors: the source
+        family's magnitude and mitigation are unchanged — they are facts
+        about the packet, not about how it travelled — and the route is now
+        transported with it rather than left for the walk to guess at.
+        """
+        return self._replace(routing=tuple(routing))
 
     def delivered_as_a_swing(self, swing: BasicAttackSwing) -> "AuthoredDeclaration":
         """The same declaration, carrying the swing composition it met.

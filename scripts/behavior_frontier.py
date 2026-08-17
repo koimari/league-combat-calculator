@@ -728,7 +728,14 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # record that declares itself their creditor, so re-dating them takes an edit
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
-COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ("secondary_target",)
+# Empty since 2026-08-17: every one of umbrella Amendment F's fourteen rows has
+# left, ten by the ruled retiring act, one by Amendment O, Ruling 1's authority
+# reclassification and three by Amendment Q's lane-declaration correction.  The
+# tuple stays rather than the mechanism being deleted with the debt it measured:
+# a declared ``(family, RECEIPT_WALK)`` gap Phase 3 cannot close still has to be
+# deferrable in writing, and a gate that could only be exercised while a debt
+# stood would go untested on the commit it stopped mattering.
+COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ()
 
 # ── the stages the campaign has shipped, and what a passed stage owes ──────
 #

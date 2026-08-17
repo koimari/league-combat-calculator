@@ -1112,6 +1112,31 @@ _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# Wind's Fury, retired off the pair engine 2026-08-17 — the last of umbrella
+# Amendment F's fourteen.  One row, because one declared rule in
+# ``item_behavior_catalog``'s ``secondary_target`` family is the whole family,
+# and one authoring site: ``damage._add_single_proc_on_hits`` authors both the
+# bolt and the copied on-hit row inside one block.
+#
+# ONE STAMP, TWO ROWS, TWO PRODUCERS.  The pair half this generates previews
+# both rows, because both are rows this family authors and neither survives
+# into a roster total.  What differs is who declares the MAGNITUDE under each:
+# the bolt is the router's own packet, so its declaration names the mechanic
+# below, while the copied on-hit row re-delivers the source families' packets
+# and each of its declarations names the mechanic that declared it, with the
+# routing recorded as provenance (umbrella Amendment R, Ruling 3).  The walk
+# half's ``HolderPacket`` names this mechanic either way: it is the delivery
+# reference for the packets this family hands the walk, not a claim about who
+# declared their sizes.
+_SECONDARY_TARGET_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = (
+    RetiredFamilyMechanic(
+        "runaans_hurricane.secondary_target",
+        "Runaan's Hurricane",
+        "damage._add_single_proc_on_hits",
+    ),
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1415,6 +1440,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
     *_retired_family_halves(_ON_HIT_STRIKE_RETIREMENT),
     *_retired_family_halves(_PERIODIC_RETIREMENT),
+    *_retired_family_halves(_SECONDARY_TARGET_RETIREMENT),
     *_retired_family_halves(_SPELLBLADE_RETIREMENT),
     # -- the retired ``damage_routing`` family: three riders, no packet -----
     #

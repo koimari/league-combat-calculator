@@ -625,18 +625,46 @@ def test_every_gap_row_carries_its_route_into_the_committed_artifact() -> None:
         assert recorded["via"], f"{family.value}/{lane.value} records no route"
 
 
-def _some_deferral_key(receipt) -> str:
-    """One committed deferral row, read rather than named.
+#: The gap a fabricated deferral row is written against when the tree has no
+#: real one left.  Any ``(family, lane)`` the tree defers would do; what the
+#: reds below need is a row the gate will read, and none of them is about
+#: which row it is.
+_FABRICATED_DEFERRAL = "sustain/compiled_score_walk"
+
+
+def _some_deferral_key(*receipts) -> str:
+    """One deferral row to drive a red through, read where the tree has one.
 
     Several reds below drive the gate through *a* row, and which row is not
     the thing any of them tests.  Naming one made them break on the commit
     that retired it — which is a true report about a fixture and not about the
-    gate — so the row is read, and the reads stay correct for as long as
-    there is a deferral to defer.
+    gate — so the row was read instead.
+
+    THE DEBT IS DISCHARGED and the read now finds nothing: umbrella
+    Amendment F's fourteenth row retired on 2026-08-17, so the reds would
+    every one of them go green by having no subject.  A gate that can only be
+    exercised while a debt stands is a gate that stops being tested on the
+    commit it stops mattering, so a row is FABRICATED instead — written into
+    the receipt the red is about to perturb, against a gap the tree really
+    defers, so the derivation still has something true underneath it.
     """
-    rows = receipt["counters"]["counter_4"]["deferrals"]["rows"]
-    assert rows, "the frontier records no deferral rows to drive the gate through"
-    return sorted(rows)[0]
+    first = receipts[0]["counters"]["counter_4"]["deferrals"]["rows"]
+    if first:
+        return sorted(first)[0]
+    key = _FABRICATED_DEFERRAL
+    for receipt in receipts:
+        counter = receipt["counters"]["counter_4"]
+        assert key in counter["pairs"], key
+        counter["deferrals"]["rows"][key] = {
+            "recorded_stage": behavior_frontier.deferral_creditor_stage(),
+            "reason": counter["receipts"]["dated"][key]["reason"],
+            "overdue": True,
+            "overdue_because": "fabricated for a red the discharged debt cannot drive",
+            "blocked_on": (
+                "docs/receipts/receipt-walk-retirement-schedule.json: fabricated"
+            ),
+        }
+    return key
 
 
 def _some_dated_key(receipt) -> str:
@@ -719,8 +747,11 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
         assert row["recorded_stage"] == creditor, key
         assert "retires_at" not in row, key
     # Every deferral is on the receipt walk; the pair engine defers nothing,
-    # which is why criterion 4's pair-engine half is discharged outright.
-    assert set(block["by_lane"]) == {"receipt_walk"}
+    # which is why criterion 4's pair-engine half is discharged outright.  A
+    # SUBSET rather than an equality since 2026-08-17: umbrella Amendment F's
+    # fourteenth row retired, so the set is empty and the clause is that no
+    # lane other than the receipt walk may ever appear in it.
+    assert set(block["by_lane"]) <= {"receipt_walk"}
 
 
 def test_counter_four_targets_are_measured_net_of_the_deferrals() -> None:
@@ -766,10 +797,10 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    row = committed["counters"]["counter_4"]["deferrals"]["rows"][
-        _some_deferral_key(committed)
-    ]
-    row["recorded_stage"] = "Phase 4 S3 — one kernel, five views"
+    key = _some_deferral_key(committed, fresh)
+    committed["counters"]["counter_4"]["deferrals"]["rows"][key][
+        "recorded_stage"
+    ] = "Phase 4 S3 — one kernel, five views"
 
     failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
 
@@ -778,10 +809,20 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
 
 def test_a_moved_or_missing_deferral_set_fails_the_gate() -> None:
     """D-40: the rows are diff-gated exactly like the exclusions are."""
+    # A committed-only row rather than a popped one, because the tree's own
+    # deferral set is empty since the last row retired and popping from an
+    # empty set is not a perturbation.  Either direction drives the same
+    # clause: the committed rows and the declared ones must be one set.
     receipt = _receipt()
-    receipt["counters"]["counter_4"]["deferrals"]["rows"].pop(
-        _some_deferral_key(receipt)
-    )
+    receipt["counters"]["counter_4"]["deferrals"]["rows"][
+        "no_such_family/receipt_walk"
+    ] = {
+        "recorded_stage": behavior_frontier.deferral_creditor_stage(),
+        "reason": "a row the tree does not declare",
+        "overdue": True,
+        "overdue_because": "fabricated",
+        "blocked_on": "docs/receipts/receipt-walk-retirement-schedule.json: fabricated",
+    }
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
     assert any("committed deferral set differs" in failure for failure in failures)
 
@@ -822,17 +863,28 @@ def test_an_outstanding_target_names_what_the_ruled_records_say_retires_it() -> 
     which is what the pair engine's entry says and why it says it.
     """
     targets = _receipt()["targets"]["targets"]
-    open_receipt_walk = {
-        (family, lane)
-        for (family, lane) in interpreters.UNSERVED_LANE_RECEIPTS
-        if lane.value == "receipt_walk"
-        and (family, lane) not in interpreters.INTERPRETERS
+    for lane in ("receipt_walk", "pair_engine"):
+        open_gaps = {
+            (family, pair_lane)
+            for (family, pair_lane) in interpreters.UNSERVED_LANE_RECEIPTS
+            if pair_lane.value == lane
+            and (family, pair_lane) not in interpreters.INTERPRETERS
+        }
+        # The join is the assertion, in both directions: a lane with an open
+        # gap names the record claiming its debt, and a lane with none names
+        # nothing.  Both halves are live now — the receipt walk moved from the
+        # first to the second on 2026-08-17, when umbrella Amendment F's
+        # fourteenth row retired, and reading only the first would have made
+        # this case one nobody could tell from a stale name.
+        expected = (
+            behavior_frontier.creditor_stage(f"counter_4/{lane}") if open_gaps else ""
+        )
+        assert targets[f"counter_4/{lane}"]["owed_to"] == expected, lane
+    assert not {
+        (family, pair_lane)
+        for (family, pair_lane) in interpreters.UNSERVED_LANE_RECEIPTS
+        if pair_lane.value == "pair_engine"
     }
-    assert open_receipt_walk
-    assert targets["counter_4/receipt_walk"][
-        "owed_to"
-    ] == behavior_frontier.creditor_stage("counter_4/receipt_walk")
-    assert targets["counter_4/pair_engine"]["owed_to"] == ""
 
 
 def test_a_counter_drifting_away_from_its_target_fails_the_gate() -> None:
@@ -885,7 +937,16 @@ def test_every_deferral_to_a_shipped_stage_is_declared_overdue() -> None:
     """
     rows = _receipt()["counters"]["counter_4"]["deferrals"]["rows"]
     overdue = {key: row for key, row in rows.items() if row["overdue"]}
-    assert overdue, "no row is overdue, so this clause is asserting nothing"
+    # The rows are gone: every one of umbrella Amendment F's fourteen left by
+    # 2026-08-17, so what stands in for "this clause is asserting nothing" is
+    # the tree's own reason for the emptiness — no receipt-walk lane is
+    # unserved — rather than a row count nobody can produce any more.
+    assert overdue or not [
+        (family, lane)
+        for (family, lane) in interpreters.UNSERVED_LANE_RECEIPTS
+        if lane.value == "receipt_walk"
+        and (family, lane) not in interpreters.INTERPRETERS
+    ]
     for key, row in overdue.items():
         assert row["recorded_stage"] in behavior_frontier.completed_stages(), key
         assert row["blocked_on"].startswith("docs/receipts/"), key
@@ -902,7 +963,7 @@ def test_a_row_whose_stage_shipped_without_saying_so_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = _some_deferral_key(committed)
+    key = _some_deferral_key(committed, fresh)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["overdue"] = False
@@ -918,7 +979,7 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = _some_deferral_key(committed)
+    key = _some_deferral_key(committed, fresh)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "a stage that has not shipped"
@@ -941,7 +1002,7 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = _some_deferral_key(committed)
+    key = _some_deferral_key(committed, fresh)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"
@@ -1074,7 +1135,10 @@ def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> Non
     with mock.patch.object(Path, "read_text", counted_read), mock.patch.object(
         subprocess, "run", counted_run
     ):
-        for _ in range(len(behavior_frontier.COUNTER_4_DEFERRALS)):
+        # A fixed number of repeats rather than one per deferral row: what is
+        # asserted is the cache, and a row count that reached zero would make
+        # the loop assert it by never running.
+        for _ in range(3):
             behavior_frontier.completed_stages()
             behavior_frontier.deferral_creditor_stage()
 

@@ -669,13 +669,29 @@ class TestDeferralFamilyCoverage:
         A hand list in the harness, or a schedule receipt that stopped
         matching the declarations, both fail here — which is what makes a
         fifteenth family arrive on the commit that declares it.
+
+        The mapping is EMPTY since 2026-08-17, when umbrella Amendment F's
+        fourteenth row retired, and that is asserted as the derived fact it is
+        rather than papered over: it is empty because the schedule receipt it
+        joins has no family rows left, and it would stop being empty on the
+        commit that defers a new one.  The per-family clause below still binds
+        over whatever the join returns, so the day a row comes back the
+        equality is checked and not the emptiness.
         """
         declared = {}
         for owner in rule_owners():
             for rule in behavior_rules(owner):
                 declared.setdefault(rule.family.value, set()).add(owner)
         families = gs.receipt_walk_families()
-        assert families
+        schedule = json.loads(
+            (
+                Path(gs.__file__).parents[1]
+                / "docs"
+                / "receipts"
+                / "receipt-walk-retirement-schedule.json"
+            ).read_text(encoding="utf-8")
+        )
+        assert set(families) == set(schedule["families"])
         for family, items in families.items():
             assert set(items) == declared[family]
 

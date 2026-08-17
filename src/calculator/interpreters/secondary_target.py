@@ -41,35 +41,92 @@ class SecondaryTargetInterpretationError(ValueError):
     """A rule reached this interpreter that is not a secondary-target rule."""
 
 
+def _routing_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """This rule's two routing facts, compiled for *lane*.
+
+    A cardinality and a share, and **no magnitude**: umbrella Amendment R,
+    Ruling 3 rules this a *routing* family, so the packets it re-delivers are
+    priced from the declarations of the families that own them and this
+    interpreter states only how far the routing reaches and what share of the
+    swing rides it.  A third field here would be a second producer of a
+    number a source family already declares.
+
+    The lane is the only thing that varies between the two interpreters
+    below.  Sharing the body rather than spelling it twice is what makes "the
+    walk reads the same declaration the pair engine reads" a property of the
+    tree instead of a claim two functions could drift out of.
+    """
+    payload = rule.payload
+    if not isinstance(payload, SecondaryTargetRule):
+        raise SecondaryTargetInterpretationError(
+            f"{rule.mechanic_id} is not a secondary-target rule"
+        )
+
+    def field(name: str, value: float) -> KernelField:
+        return KernelField(
+            name=name,
+            value=value,
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        )
+
+    return (
+        field(MAX_TARGETS_FIELD, resolve(payload.max_targets, ctx.level)),
+        field(DAMAGE_SHARE_FIELD, resolve(payload.damage_share, ctx.level)),
+    )
+
+
 class SecondaryTargetPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``secondary_target`` family."""
+    """The pair engine's answer for the ``secondary_target`` family.
+
+    Its numbers are a **preview** since this family retired: the mechanic
+    declares ``ViewTag.THEORETICAL`` on its pair lane and
+    ``damage._add_single_proc_on_hits`` stamps ``pair_preview_of`` on the two
+    rows it authors, so the honest one-attacker figures stay in the pair
+    fight's own receipt and leave every total the roster composes.
+    """
 
     FAMILY = RuleFamily.SECONDARY_TARGET
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
         """The bolt count and the bolt's share, read live from the registry."""
-        payload = rule.payload
-        if not isinstance(payload, SecondaryTargetRule):
-            raise SecondaryTargetInterpretationError(
-                f"{rule.mechanic_id} is not a secondary-target rule"
-            )
+        return _routing_fields(rule, ctx, EngineLane.PAIR_ENGINE)
 
-        def field(name: str, value: float) -> KernelField:
-            return KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
 
-        return (
-            field(MAX_TARGETS_FIELD, resolve(payload.max_targets, ctx.level)),
-            field(DAMAGE_SHARE_FIELD, resolve(payload.damage_share, ctx.level)),
-        )
+class SecondaryTargetWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the ``secondary_target`` family.
+
+    The half that retires ``secondary_target/receipt_walk`` — the last of
+    umbrella Amendment F's fourteen — in the lane Amendment K rules and with
+    the shape Amendment L, Ruling 1 requires.  Before it, the coupled walk
+    consumed this family as ``participant_timeline._pair_run_fight``'s
+    already-priced rows.  Now the two rows the family authors are
+    declarations and no price.
+
+    **The two rows have two different producers**, which is what makes this
+    family unlike the eight before it and is umbrella Amendment R, Ruling 3's
+    whole subject.  The bolt is the router's own packet — a declared share of
+    the attacker's damage, delivered as a basic-attack swing and priced
+    through the composition Ruling 1 added.  The copied on-hit row is the
+    attack's own on-hit packets re-delivered at the bolt's target, so its
+    magnitudes belong to the families that declared them and each one is
+    routed rather than re-declared: ``rule_id`` stays the source mechanic's
+    and the routing rides as provenance beside it.
+    """
+
+    FAMILY = RuleFamily.SECONDARY_TARGET
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """The bolt count and the bolt's share, resolved for the coupled walk."""
+        return _routing_fields(rule, ctx, EngineLane.RECEIPT_WALK)
 
 
 PAIR_INTERPRETER = SecondaryTargetPairInterpreter()
+WALK_INTERPRETER = SecondaryTargetWalkInterpreter()
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +174,17 @@ class SecondaryTargetSlot:
     def owner(self) -> str:
         """The holder the bolts are filed under."""
         return self.rule.owner
+
+    @property
+    def mechanic_id(self) -> str:
+        """The rule the pair engine stamps its two rows as a preview of.
+
+        Read back off the declaration rather than spelled in the engine: the
+        stamp and the walk half's delivery reference are the same string, and
+        a second spelling of a mechanic slug inside ``damage.py`` is the join
+        failing silently.
+        """
+        return self.rule.mechanic_id
 
 
 def resolve_slot(
@@ -169,5 +237,7 @@ __all__ = [
     "SecondaryTargetInterpretationError",
     "SecondaryTargetPairInterpreter",
     "SecondaryTargetSlot",
+    "SecondaryTargetWalkInterpreter",
+    "WALK_INTERPRETER",
     "resolve_slot",
 ]

@@ -184,7 +184,11 @@ from .resistance import (
     apply_armor_penetration,
     reduce_resistance,
 )
-from .survival.pricing import AuthoredDeclaration
+from .survival.pricing import (
+    AuthoredDeclaration,
+    BasicAttackSwing,
+    RoutingProvenance,
+)
 
 # Critical strikes deal 200% base damage (this changed once before, from
 # 175%). Items add on top via crit_damage_bonus; anything recovering the
@@ -6144,6 +6148,18 @@ class OnHitResult:
     # Same per-hit damage keyed by damage type (physical/magic/true) —
     # types the spellblade double-on-hit breakdown row exactly.
     static_on_hit_by_type: dict[str, float] = field(default_factory=dict)
+    # The same per-hit damage kept per DECLARING ITEM rather than pooled by
+    # type, for the one consumer that needs a producer per number: a copied
+    # on-hit packet is re-delivered at a second subject, and a routed
+    # declaration names the family that declared its magnitude (umbrella
+    # Amendment R, Ruling 3).  The pooled dict above stays, because every
+    # other consumer wants the pool; what this adds is the attribution the
+    # pool threw away.  A champion's ability-carried on-hit lands in the pool
+    # and NOT here, which is deliberate and is how a copied row learns it
+    # holds a magnitude no item rule declares.
+    static_on_hit_items: list[tuple[str, str, float, float]] = field(
+        default_factory=list
+    )
     current_health_on_hit_avg: float = 0.0
     current_health_damage_type: str = "physical"
     has_current_health_on_hit: bool = False
@@ -6355,6 +6371,9 @@ def _layer_on_hit_effects(
         result.static_on_hit_per_hit += per_hit
         result.static_on_hit_by_type[source.damage_type] = (
             result.static_on_hit_by_type.get(source.damage_type, 0.0) + per_hit
+        )
+        result.static_on_hit_items.append(
+            (source.item_name, source.damage_type, per_hit, raw_per_hit)
         )
 
         declaration = _on_hit_declaration(source.item_name, raw_per_hit)
@@ -8842,18 +8861,155 @@ def _target_health_before_timestamp(state: FightState, timestamp: float) -> floa
     return max(0.0, float(state.target_health) - dealt)
 
 
-def _copied_on_hit_packet(
+def _bolt_declaration(
+    state: FightState, slot: "secondary_target.SecondaryTargetSlot", raw_bolt: float
+) -> tuple[Any, ...]:
+    """One Wind's Fury bolt's declaration, as the retired family states it.
+
+    The bolt is the **router's own packet** and this is the one place that is
+    said in code: its magnitude is the declared share of the attacker's
+    damage that ``SecondaryTargetSlot.bolt_damage`` compiles, so no other
+    family declares it and the declaration carries no routing (umbrella
+    Amendment R, Ruling 3).  Its sibling row is the opposite shape and is
+    declared by :func:`_copied_on_hit_declaration`.
+
+    ``AttackClass.BASIC_ATTACK`` is measured rather than defaulted: a bolt is
+    priced by :func:`_mitigate_basic_attack_swing`, which multiplies by the
+    holder's **basic** amp, so this is the first retired family whose packets
+    earn that term and a declaration claiming ``OTHER`` would drop it.
+
+    The two target-side FACTORS fold into the magnitudes and the other two
+    terms cannot (umbrella Amendment R, Ruling 1).  The plating multiplier
+    multiplies both branches and the target's critical-strike damage
+    multiplier multiplies the crit branch, and a pure factor on a linear
+    mitigation composes into the declared magnitude and prices to the same
+    real number.  What rides as a :class:`~.survival.pricing.BasicAttackSwing`
+    is what no magnitude reproduces: the blend of two branches, and Warden's
+    Mail's capped flat SUBTRACTION with its cap and its one instance.
+
+    **The blend is authored only where the fight is deterministic.**  A
+    non-deterministic fight prices the non-crit branch alone, so a declaration
+    claiming a blend there would price a fight the engine did not run; the
+    weight is zero and the crit branch is the non-crit one, which is a
+    measured answer rather than a default.
+
+    The resistance is the armour **this** packet met, transported because a
+    bolt is a physical event on the ordinary ledger and
+    :func:`_apply_temporary_lethality_windows` can re-price one (umbrella
+    Amendment N, Ruling 1).
+    """
+    plating = float(state.target_basic_damage_multiplier)
+    deterministic = bool(state.deterministic)
+    crit_raw = (
+        raw_bolt
+        * state.crit_multiplier
+        * state.target_critical_strike_damage_multiplier
+        * plating
+        if deterministic
+        else raw_bolt * plating
+    )
+    swing = BasicAttackSwing(
+        crit_chance=float(state.crit_chance) if deterministic else 0.0,
+        crit_raw_amount=crit_raw,
+        basic_damage_flat_reduction=float(state.target_basic_damage_flat_reduction),
+        basic_damage_flat_reduction_cap=float(
+            state.target_basic_damage_flat_reduction_cap
+        ),
+    )
+    return tuple(
+        AuthoredDeclaration(
+            slot.mechanic_id,
+            raw_bolt * plating,
+            AttackClass.BASIC_ATTACK.value,
+            float(state.resists.effective_armor),
+        ).delivered_as_a_swing(swing)
+    )
+
+
+def _copied_on_hit_declaration(
+    share: "CopiedOnHitShare", router_mechanic_id: str
+) -> tuple[Any, ...] | None:
+    """One copied on-hit packet's declaration, routed at the second subject.
+
+    umbrella Amendment R, Ruling 3's whole shape in one function.  The
+    magnitude belongs to the family that declared it, so ``rule_id`` is the
+    **source** mechanic and D-62 attributes the contribution at
+    ``(source mechanic, secondary subject, event_id)``; what the router
+    contributes is the route, recorded as provenance beside it.  The share is
+    ``1.0`` because Wind's Fury re-delivers the attack's on-hit packets whole
+    rather than taking a fraction of them — the fraction it declares is the
+    bolt's, and the bolt is a different packet.
+
+    ``None`` for a contributor no item rule declares — a champion's
+    ability-carried on-hit — which is what makes the copied row's stamp
+    all-or-nothing rather than a row whose walk price is missing a producer.
+    """
+    if share.mechanic_id is None:
+        return None
+    return tuple(
+        AuthoredDeclaration(
+            share.mechanic_id,
+            share.raw,
+            AttackClass.OTHER.value,
+        ).routed_by(RoutingProvenance(router_mechanic_id, 1.0))
+    )
+
+
+class CopiedOnHitShare(NamedTuple):
+    """One contributor's share of a copied on-hit application.
+
+    A copied packet is the attack's own on-hit effects re-delivered at a
+    second subject, and it is a *sum* over every contributor of one damage
+    type — which is exactly the shape a declaration cannot carry, because a
+    declaration is one producer's magnitude (D-60).  So the contributors are
+    kept apart here, each with the mechanic that declared it.
+
+    ``mechanic_id`` is ``None`` for a contributor no item rule declares — a
+    champion's ability-carried on-hit — which is the case the copied row's
+    stamp fails closed on rather than the case it guesses at.  ``raw`` is the
+    pre-mitigation magnitude the declaration would state, and is ``0.0``
+    exactly when the mechanic is unknown.
+    """
+
+    mechanic_id: str | None
+    damage_type: str
+    mitigated: float
+    raw: float
+
+
+def _copied_on_hit_shares(
     state: FightState,
     on_hits: OnHitResult,
     effectiveness: float,
     target_current_health: float,
-) -> dict[str, float]:
-    """Resolve one copied on-hit packet, including current-health effects."""
-    packets = {
-        damage_type: float(amount)
-        for damage_type, amount in on_hits.static_on_hit_by_type.items()
-        if amount > 0.0
-    }
+) -> list[CopiedOnHitShare]:
+    """One copied on-hit application, split by the mechanic that declared it.
+
+    :func:`_copied_on_hit_packet`'s own arithmetic, kept per contributor.
+    The item strikes come from the record the on-hit layering already keeps
+    per declaring item, and the residue — the pool minus those items — is a
+    champion's ability-carried on-hit, which no item rule declares and which
+    therefore lands here with no mechanic rather than being attributed to
+    whichever item happened to share its damage type.
+    """
+    shares: list[CopiedOnHitShare] = []
+    attributed: dict[str, float] = {}
+    for item_name, damage_type, per_hit, raw_per_hit in on_hits.static_on_hit_items:
+        if per_hit <= 0.0:
+            continue
+        shares.append(
+            CopiedOnHitShare(
+                on_hit_strike.strike_mechanic_id(item_name),
+                damage_type,
+                float(per_hit),
+                float(raw_per_hit),
+            )
+        )
+        attributed[damage_type] = attributed.get(damage_type, 0.0) + per_hit
+    for damage_type, pooled in on_hits.static_on_hit_by_type.items():
+        residue = float(pooled) - attributed.get(damage_type, 0.0)
+        if residue > 1e-9:
+            shares.append(CopiedOnHitShare(None, damage_type, residue, 0.0))
     for effect in state.per_hit_strikes:
         if not effect.tracks_current_health:
             continue
@@ -8865,16 +9021,51 @@ def _copied_on_hit_packet(
         )
         if raw <= 0.0:
             continue
-        mitigated = _mitigate(
-            raw,
-            effect.source.damage_type,
-            state.resists,
-            state.magic_amp,
+        shares.append(
+            CopiedOnHitShare(
+                on_hit_strike.strike_mechanic_id(effect.source.item_name),
+                effect.source.damage_type,
+                _mitigate(
+                    raw,
+                    effect.source.damage_type,
+                    state.resists,
+                    state.magic_amp,
+                ),
+                float(raw),
+            )
         )
-        packets[effect.source.damage_type] = (
-            packets.get(effect.source.damage_type, 0.0) + mitigated
+    return shares
+
+
+def _copied_packets_by_type(shares: Sequence[CopiedOnHitShare]) -> dict[str, float]:
+    """The pooled per-type packet the two copied-row builders consume."""
+    packets: dict[str, float] = {}
+    for share in shares:
+        if share.mitigated <= 0.0:
+            continue
+        packets[share.damage_type] = (
+            packets.get(share.damage_type, 0.0) + share.mitigated
         )
     return packets
+
+
+def _copied_on_hit_packet(
+    state: FightState,
+    on_hits: OnHitResult,
+    effectiveness: float,
+    target_current_health: float,
+) -> dict[str, float]:
+    """Resolve one copied on-hit packet, including current-health effects.
+
+    The pooled reading of :func:`_copied_on_hit_shares`, which is the one
+    home of what a copied application is worth: the callers that build a row
+    out of typed totals ask this, and the caller that has to hand the walk a
+    declaration per producer asks for the shares.  Two readings, one
+    arithmetic.
+    """
+    return _copied_packets_by_type(
+        _copied_on_hit_shares(state, on_hits, effectiveness, target_current_health)
+    )
 
 
 def _add_copied_stacking_on_hit_packets(
@@ -9068,6 +9259,8 @@ def _add_single_proc_on_hits(
                         bolt_damage = _mitigate_basic_attack_swing(state, raw_bolt)
                     bolt_total = bolt_damage * num_auto_attacks
                     bolt_key = "secondary_Runaan's Hurricane"
+                    router = bolts.mechanic_id
+                    bolt_declaration = _bolt_declaration(state, bolts, raw_bolt)
                     bolt_row: dict[str, Any] = {
                         "name": "Runaan's Hurricane (Wind's Fury bolt)",
                         "count": num_auto_attacks,
@@ -9075,6 +9268,18 @@ def _add_single_proc_on_hits(
                         "unit": "bolts",
                         "total_damage": bolt_total,
                         "damage_type": "physical",
+                        # This row is the pair engine's preview of a number the
+                        # coupled walk owns since ``secondary_target`` retired:
+                        # the roster composition reads the stamp and takes the
+                        # figure above out of every total it composes, while the
+                        # pair fight's own receipt publishes it unchanged.  The
+                        # row-level declaration is what a *coarse* row hands the
+                        # walk — one whose bolts landed on no resolvable swing
+                        # schedule (``_row_declaration_share``).
+                        "pair_preview_of": router,
+                        "declared": _bolt_declaration(
+                            state, bolts, raw_bolt * num_auto_attacks
+                        ),
                         "targeting": {
                             "kind": "runaan_bolt",
                             "secondary_target_count": secondary_target_count,
@@ -9090,6 +9295,7 @@ def _add_single_proc_on_hits(
                                 "time": swing_times[index],
                                 "damage": bolt_damage,
                                 "damage_type": "physical",
+                                "declared": bolt_declaration,
                             }
                             for index in range(num_auto_attacks)
                         ]
@@ -9104,13 +9310,17 @@ def _add_single_proc_on_hits(
                         copied_events.append(
                             {
                                 "time": event_time,
-                                "packets": _copied_on_hit_packet(
+                                "shares": _copied_on_hit_shares(
                                     state,
                                     on_hits,
                                     effectiveness,
                                     _target_health_before_timestamp(state, event_time),
                                 ),
                             }
+                        )
+                    for copied_event in copied_events:
+                        copied_event["packets"] = _copied_packets_by_type(
+                            copied_event["shares"]
                         )
                     copied_by_type: dict[str, float] = {}
                     for copied_event in copied_events:
@@ -9121,6 +9331,31 @@ def _add_single_proc_on_hits(
                     copied_total = sum(copied_by_type.values())
                     if copied_total > 0.0:
                         copied_key = "on_hit_secondary_Runaan's Hurricane"
+                        # Every contributor of every application declares, or
+                        # the row is not stamped at all.  A champion's
+                        # ability-carried on-hit is copied here and no item rule
+                        # states its magnitude, so a partially declared row
+                        # would hand the walk a price missing a producer while
+                        # the stamp took the pair engine's whole figure out of
+                        # the roster total — the half-performed retirement
+                        # umbrella Amendment L, Ruling 1 calls worse than
+                        # neither half.  Unstamped, the pair engine goes on
+                        # pricing it exactly as it did.
+                        # A COARSE copied row is not stamped either, and for a
+                        # reason the bolt row does not share: a row-level
+                        # declaration is one magnitude, and this row's is a sum
+                        # over several producers, so a row with no authored
+                        # events has nothing one declaration could state.
+                        declarable = (
+                            len(swing_times) == num_auto_attacks
+                            and num_auto_attacks > 0
+                            and all(
+                                share.mechanic_id is not None
+                                for copied_event in copied_events
+                                for share in copied_event["shares"]
+                                if share.mitigated > 0.0
+                            )
+                        )
                         copied_row: dict[str, Any] = {
                             "name": "Runaan's Hurricane copied on-hit (secondary)",
                             "count": num_auto_attacks,
@@ -9136,18 +9371,35 @@ def _add_single_proc_on_hits(
                                 "copied_on_hit_scope": "per_hit_source_packets",
                             },
                         }
+                        if declarable:
+                            copied_row["pair_preview_of"] = router
                         if swing_times and len(swing_times) == num_auto_attacks:
                             copied_row["event_phase"] = "auto"
+                            # One event per CONTRIBUTING SOURCE rather than per
+                            # damage type: a summed event cannot carry one
+                            # producer's declaration, and a declaration is one
+                            # producer's magnitude (D-60).  Every amount, every
+                            # type total and the row total are unchanged.
                             copied_row["damage_events"] = [
                                 {
                                     "time": copied_event["time"],
-                                    "damage": amount,
-                                    "damage_type": damage_type,
+                                    "damage": share.mitigated,
+                                    "damage_type": share.damage_type,
+                                    **(
+                                        {"declared": declaration}
+                                        if declarable
+                                        and (
+                                            declaration := _copied_on_hit_declaration(
+                                                share, router
+                                            )
+                                        )
+                                        is not None
+                                        else {}
+                                    ),
                                 }
                                 for copied_event in copied_events
-                                for damage_type, amount in copied_event[
-                                    "packets"
-                                ].items()
+                                for share in copied_event["shares"]
+                                if share.mitigated > 0.0
                             ]
                         breakdown[copied_key] = copied_row
                         state.total_damage += copied_total

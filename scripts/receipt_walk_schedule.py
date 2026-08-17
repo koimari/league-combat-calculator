@@ -304,9 +304,28 @@ def deferral_rows() -> dict[str, Mapping[str, Any]]:
     frontier -- the row carries the overdue flag and the blocker, the receipt
     carries ``via``, the declared route the number arrives by -- so they are
     joined here rather than one being read without the other.
+
+    **An empty result is the DISCHARGED state, not a failed read**, and the
+    two are told apart structurally rather than by a flag.  This refused an
+    empty set while a debt stood, on the reasoning that a schedule for a debt
+    the tree no longer carries is a plan for nothing -- and umbrella
+    Amendment F's fourteenth row retired on 2026-08-17, which turned that
+    refusal into an instrument that stops working on the commit its own debt
+    reaches zero.  What the refusal was ever worth is catching a read that
+    found no rows *because it read the wrong thing*, so that is what it
+    checks now: the frontier's deferral block has to be present and
+    well-formed, and an empty ``rows`` inside a present block is the tree
+    saying the debt is paid.
     """
     counter = _frontier()["counters"]["counter_4"]
-    rows = counter["deferrals"]["rows"]
+    deferrals = counter.get("deferrals")
+    if not isinstance(deferrals, Mapping) or "rows" not in deferrals:
+        raise ScheduleError(
+            "the frontier records no receipt-walk deferral BLOCK; a schedule "
+            "built off a counter that publishes no deferrals is reading the "
+            "wrong artifact rather than reading a paid debt"
+        )
+    rows = deferrals["rows"]
     dated = counter["receipts"]["dated"]
     out: dict[str, Mapping[str, Any]] = {}
     for key, row in rows.items():
@@ -321,11 +340,6 @@ def deferral_rows() -> dict[str, Mapping[str, Any]]:
                 "which engine a family's number arrives by"
             )
         out[family] = {**row, "via": list(receipt["via"])}
-    if not out:
-        raise ScheduleError(
-            "the frontier records no receipt-walk deferral rows; a schedule "
-            "for a debt the tree no longer carries would be a plan for nothing"
-        )
     return out
 
 

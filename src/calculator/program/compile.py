@@ -80,7 +80,11 @@ from ..survival.compile import (
     unrepresentable_template_receipt,
     trigger_time_key,
 )
-from ..survival.pricing import AuthoredDeclaration, DeclaredPacket
+from ..survival.pricing import (
+    AuthoredDeclaration,
+    DeclaredPacket,
+    route_declared_packet,
+)
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -145,7 +149,7 @@ def declared_packet_of(
             "pair engine's number has already left the roster total"
         )
     authored = AuthoredDeclaration(*declaration)
-    return DeclaredPacket(
+    packet = DeclaredPacket(
         raw_amount=float(authored.raw_amount),
         damage_type=damage_type,
         rule_id=str(authored.rule_id),
@@ -155,6 +159,15 @@ def declared_packet_of(
         effective_resistance=authored.effective_resistance,
         swing=authored.swing_composition(),
     )
+    routing = authored.routing_provenance()
+    if routing is None:
+        return packet
+    # A routing family re-delivered this packet at a second subject, and what
+    # a route does to a packet has exactly one home (umbrella Amendment R,
+    # Ruling 3): the share is applied there and the provenance recorded
+    # there, so a site that scaled the magnitude itself would be a second
+    # reader of one rule.
+    return route_declared_packet(packet, routing)
 
 
 def action_from_event(

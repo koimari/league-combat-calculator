@@ -1893,6 +1893,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
             RuleFamily.CHARGED_STRIKE,
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.PERIODIC,
+            RuleFamily.SECONDARY_TARGET,
             RuleFamily.SPELLBLADE,
         )
         for family in families:
@@ -2814,17 +2815,27 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         number.
 
         The carried declaration comes back at the declaration's *full* width,
-        which is five positions since umbrella Amendment R, Ruling 1: a burn
-        no basic-attack swing delivered carries `None` in the fifth, and
-        `declared_packet_of` reads that as no swing composition and prices the
-        tick exactly as it priced it before the position existed.
+        which is six positions since umbrella Amendment R: a burn no
+        basic-attack swing delivered and no routing family re-delivered
+        carries `None` in the fifth and the sixth, and `declared_packet_of`
+        reads those as no swing composition and no route and prices the tick
+        exactly as it priced it before the positions existed.
         """
         authored = [{"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)}]
         repriced = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
         assert "declared" not in repriced[0]
         pair_engine._carry_declarations_onto_repriced_ticks(authored, repriced)
-        assert repriced[0]["declared"] == ("fixture.burn", 24.0, "other", 30.0, None)
-        assert AuthoredDeclaration(*repriced[0]["declared"]).swing_composition() is None
+        assert repriced[0]["declared"] == (
+            "fixture.burn",
+            24.0,
+            "other",
+            30.0,
+            None,
+            None,
+        )
+        carried = AuthoredDeclaration(*repriced[0]["declared"])
+        assert carried.swing_composition() is None
+        assert carried.routing_provenance() is None
 
     def test_a_replacement_the_carry_cannot_join_is_refused(self):
         """R-05's second red: a positional carry that cannot say which tick.
@@ -3001,37 +3012,55 @@ def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(
     repriced = walk_repriced_mechanics()
 
     rows = 0
+    family_rows = 0
+    mechanics = frozenset(
+        rule.mechanic_id
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if rule.family is family
+    )
     for scenario in scenarios:
         parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
         resolved = resolve_scenario(parsed)
-        # A roster scenario prices one pair per enemy; a manual-target one has
-        # no enemies and prices the request's own params.  Both are committed
-        # coupled scenarios and both can cover a family.
-        result = run_fight(
-            resolved.champion_data,
-            parsed.level,
-            list(resolved.items),
-            (
-                resolved.target_fight_params[0]
-                if resolved.target_fight_params
-                else resolved.fight_params
-            ),
-        )
-        for key, entry in result["breakdown"].items():
-            stamp = entry.get("pair_preview_of") if isinstance(entry, Mapping) else None
-            if stamp not in repriced:
-                continue
-            rows += 1
-            assert stamp in previews, key
-            events = entry.get("damage_events")
-            assert isinstance(events, list) and events, key
-            for event in events:
-                declaration = event.get("declared")
-                assert declaration is not None, key
-                authored = AuthoredDeclaration(*declaration)
-                assert authored.rule_id == stamp, key
-                assert authored.raw_amount > 0.0, key
+        # EVERY pair of a roster scenario, not the first: a family whose rows
+        # exist only at a SECONDARY roster target authors none in pair 0, so a
+        # case that priced the first pair alone would report green over a
+        # family it never reached.  A manual-target scenario has no enemies and
+        # prices the request's own params.
+        for params in resolved.target_fight_params or (resolved.fight_params,):
+            result = run_fight(
+                resolved.champion_data, parsed.level, list(resolved.items), params
+            )
+            for key, entry in result["breakdown"].items():
+                stamp = (
+                    entry.get("pair_preview_of") if isinstance(entry, Mapping) else None
+                )
+                if stamp not in repriced:
+                    continue
+                rows += 1
+                if stamp in mechanics:
+                    family_rows += 1
+                assert stamp in previews, key
+                events = entry.get("damage_events")
+                assert isinstance(events, list) and events, key
+                for event in events:
+                    declaration = event.get("declared")
+                    assert declaration is not None, key
+                    authored = AuthoredDeclaration(*declaration)
+                    routing = authored.routing_provenance()
+                    if routing is None:
+                        assert authored.rule_id == stamp, key
+                    else:
+                        # A ROUTING family's row re-delivers other families'
+                        # packets, so the row previews the ROUTER and each
+                        # declaration under it names the mechanic that owns
+                        # its magnitude (umbrella Amendment R, Ruling 3).
+                        assert routing.router_rule_id == stamp, key
+                        assert authored.rule_id != stamp, key
+                        assert 0.0 < routing.damage_share <= 1.0, key
+                    assert authored.raw_amount > 0.0, key
     assert rows, f"no pair row previewed {family.value}"
+    assert family_rows, f"no pair row previewed a mechanic of {family.value}"
 
 
 @pytest.mark.parametrize(
@@ -3756,24 +3785,30 @@ class TestTheSwingCompositionReproducesThePairEngines:
     def test_the_declaration_carries_the_composition_and_the_family_is_deferred(
         self, case
     ):
-        """The fixture is only worth something on a family still deferred.
+        """The declaration the fixture stamps is the one the tree stamps.
 
-        Two halves, because either alone can be true of an opted-in family: no
-        receipt-walk interpreter serves `secondary_target`, and the bolt row is
-        not one the pair engine has stamped as a re-priced preview.  What the
-        fixture stamps is a declaration a retirement slice would stamp, and it
-        carries the fifth position the tree authors on nothing.
+        This asserted that `secondary_target` was still deferred and that the
+        bolt row carried no stamp, which was the honest reading while the
+        fixture stood in for a retirement nobody had performed.  The
+        retirement landed on 2026-08-17, so the clause is now its successor
+        and is a stronger one: the row the fixture stamps is stamped by the
+        ENGINE, as a preview of the mechanic the walk re-prices, and the
+        declaration the fixture builds carries the same composition and the
+        same rule the engine's own does.  A fixture that went on asserting the
+        family was deferred would be a case testing its own scaffolding.
         """
-        assert (
-            RuleFamily.SECONDARY_TARGET,
-            EngineLane.RECEIPT_WALK,
-        ) not in INTERPRETERS
+        assert (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK) in INTERPRETERS
         _, row, packets = _swing_seed_packets(case)
-        assert "pair_preview_of" not in row
+        assert row["pair_preview_of"] == SWING_SEED_RULE
+        assert SWING_SEED_RULE in walk_repriced_mechanics()
         assert packets
         for _, packet in packets:
             assert packet.swing is not None
             assert packet.rule_id == SWING_SEED_RULE
+            # The bolt is the ROUTER'S OWN packet: it re-delivers nobody's
+            # magnitude, so no routing rides it (umbrella Amendment R,
+            # Ruling 3).  Its sibling row is the opposite shape.
+            assert packet.routing is None
 
     def test_the_declaration_prices_to_the_pair_engines_own_number(self, case):
         """Bit-exact, on identical inputs — the whole of what Ruling 1 claims.
@@ -4054,12 +4089,21 @@ class TestTheRouterDeclaresNoMagnitude:
         assert 0.0 < share <= 1.0
         assert cap == int(cap) >= 1
 
-    def test_the_family_still_has_no_receipt_walk_interpreter(self):
-        """Ruling 3 retires nothing; the row stands overdue and gated."""
-        assert (
-            RuleFamily.SECONDARY_TARGET,
-            EngineLane.RECEIPT_WALK,
-        ) not in INTERPRETERS
+    def test_the_family_is_served_by_its_own_lane_and_still_declares_no_magnitude(self):
+        """Ruling 3 retired nothing; the retirement that followed it did.
+
+        What survives the row's retirement is the clause this class is about,
+        and the reason it outlives the row: the family's interpreter answers
+        for the lane it declares, AND its declaration is still exactly two
+        routing facts.  A retirement that had given the router a magnitude
+        would pass a registry check and fail this one.
+        """
+        assert (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK) in INTERPRETERS
+        slot = _routing_slot()[0]
+        assert {field.name for field in slot.fields} == {
+            secondary_target.MAX_TARGETS_FIELD,
+            secondary_target.DAMAGE_SHARE_FIELD,
+        }
 
 
 class TestARoutedPacketIsTheSourceFamilysNumber:
@@ -4190,19 +4234,21 @@ class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
         assert price.amount == float(row["damage_events"][0]["damage"])
         assert routed.rule_id == "blade_of_the_ruined_king.on_hit"
 
-    def test_the_source_family_has_retired_and_the_router_has_not(self):
+    def test_the_source_family_declares_the_magnitude_and_the_router_declares_none(
+        self,
+    ):
         """One producer each, which is what makes the two rows priceable at all.
 
         The magnitudes the copied row carries belong to a family the walk
-        already prices from its own declarations; the family that re-delivered
-        them declares none and is still deferred.  A router that declared them
-        would be the second producer criterion 8 forbids.
+        prices from its own declarations, and the family that re-delivered
+        them declares none — which is the property, and it is unchanged by
+        `secondary_target` retiring on 2026-08-17.  What moved is that both
+        families are served by their own lane now; what did not is which of
+        them owns a number.  A router that declared one would be the second
+        producer criterion 8 forbids.
         """
         assert (RuleFamily.ON_HIT_STRIKE, EngineLane.RECEIPT_WALK) in INTERPRETERS
-        assert (
-            RuleFamily.SECONDARY_TARGET,
-            EngineLane.RECEIPT_WALK,
-        ) not in INTERPRETERS
+        assert (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK) in INTERPRETERS
         slot = _routing_slot()[0]
         assert slot.applies_on_hit
         assert all(
@@ -4213,6 +4259,75 @@ class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
             )
             for field in slot.fields
         )
+
+
+class TestTheCopiedRowPricesFromItsRoutedDeclarations:
+    """The retirement's own equivalence for the routed half.
+
+    The class above measures Ruling 3's arithmetic on one hand-built packet.
+    This measures the ENGINE's: every event the pair engine authored under the
+    copied row carries a routed declaration, and pricing that declaration the
+    way the walk prices it returns the number the pair engine put on that
+    event.  Both halves of the family are then equivalences rather than one
+    equivalence and one description — the bolt's is the five-state swing
+    fixture above, and this is the copied row's.
+    """
+
+    def test_every_copied_event_prices_to_the_pair_engines_own_number(self):
+        """Bit-exact per event, over the seed's own five target-side states.
+
+        The copied packets are priced by `damage._mitigate` and not by the
+        swing composition — a copied on-hit effect is not itself a swing — so
+        what varies across the five states is the SUBJECT's health rather than
+        the packet's terms, and the equality has to hold in each of them
+        because a secondary target that took less from the bolt carries more
+        health into the current-health strikes that follow it.
+        """
+        for case in sorted(_swing_seed_states()):
+            result, amps = _swing_seed_reading(case)
+            row = result["breakdown"][COPIED_ROW]
+            assert row["pair_preview_of"] == SWING_SEED_RULE
+            events = row["damage_events"]
+            assert events, case
+            for event in events:
+                packet = declared_packet_of(
+                    event["declared"], str(event["damage_type"]), COPIED_ROW, amps
+                )
+                price = price_declared_packet(
+                    packet,
+                    baseline_effective_armor=float(result["effective_armor"]),
+                    baseline_effective_mr=float(result["effective_mr"]),
+                )
+                assert price.amount == pytest.approx(
+                    float(event["damage"]), rel=1e-12
+                ), case
+                # Non-vacuity, and the routing beside it: a pre-mitigation
+                # magnitude is strictly larger than what the subject was paid,
+                # and the packet says who re-delivered it.
+                assert packet.raw_amount > price.amount > 0.0, case
+                assert packet.routing.router_rule_id == SWING_SEED_RULE, case
+
+    def test_the_two_rows_are_declared_by_two_different_producers(self):
+        """D-60's half of the retirement, read off the engine's own rows.
+
+        The bolt names the router and the copied packets name the families
+        that declared their magnitudes — one producer each, two subjects, no
+        number declared twice.  Stated over the engine's rows rather than over
+        a hand-built pair, because what could go wrong is a stamping site
+        naming the wrong one.
+        """
+        result, _ = _swing_seed_reading("inert")
+        bolt = {
+            AuthoredDeclaration(*event["declared"]).rule_id
+            for event in result["breakdown"][SWING_SEED_ROW]["damage_events"]
+        }
+        copied = {
+            AuthoredDeclaration(*event["declared"]).rule_id
+            for event in result["breakdown"][COPIED_ROW]["damage_events"]
+        }
+        assert bolt == {SWING_SEED_RULE}
+        assert copied and SWING_SEED_RULE not in copied
+        assert copied <= walk_repriced_mechanics()
 
 
 class TestTheRoutingReachesTheReceipt:

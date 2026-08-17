@@ -94,17 +94,17 @@ def _holder_packet_delivered() -> tuple[tuple[str, HolderStacking], ...]:
 def test_every_dual_sided_mechanic_is_covered_here():
     """A vacuous parametrisation would make the tests below pass by emptiness.
 
-    Fifty-three dual-sided mechanics in three delivery shapes: five arm
-    packets on another participant, one delivers a rider, and forty-seven
+    Fifty-four dual-sided mechanics in three delivery shapes: five arm
+    packets on another participant, one delivers a rider, and forty-eight
     re-price their own holder's packet since ``active_cast``, ``cast_proc``,
-    ``charged_strike``, ``on_hit_strike``, ``periodic`` and ``spellblade``
-    retired off the pair engine.  The three counts are asserted separately so
+    ``charged_strike``, ``on_hit_strike``, ``periodic``, ``spellblade`` and
+    ``secondary_target`` retired off the pair engine.  The three counts are asserted separately so
     a mechanic silently changing which kind it is shows up here rather than as
     a test that stopped running.
     """
     assert len(_arming()) == 5
     assert len(_rider_delivered()) == 1
-    assert len(_holder_packet_delivered()) == 47
+    assert len(_holder_packet_delivered()) == 48
     assert (
         len(_arming()) + len(_rider_delivered()) + len(_holder_packet_delivered())
     ) == len([cap for cap in CAPABILITIES.values() if cap.holder_stacking is not None])

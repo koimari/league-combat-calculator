@@ -146,7 +146,7 @@
   },
   "receipt_walk_deferrals": {
    "artifact": "docs/behavior-frontier.json",
-   "path": "counters.counter_4.deferrals.by_lane.receipt_walk",
+   "path": "targets.targets.counter_4/receipt_walk.deferred",
    "grades": "G4"
   }
  }
