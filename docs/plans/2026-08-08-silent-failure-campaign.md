@@ -816,7 +816,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8413`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
    > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:7903`);
-   > `survival.pricing.price_declared_packet` (`pricing.py:219`) has neither. So
+   > `survival.pricing.price_declared_packet` (`pricing.py:453`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
    > holds it. The same lane measured a second thing: a retired family's `PAIRED` walk half, declared
@@ -909,7 +909,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > window-armed coverage.** Amendment M added the first term the budgeted from-declaration
    > pricing stage was missing. A retirement lane that went to start `active_cast` measured the
    > second and refused half a retirement rather than shipping it:
-   > `survival.pricing.price_declared_packet` (`pricing.py:219`) prices a declaration at the **one**
+   > `survival.pricing.price_declared_packet` (`pricing.py:453`) prices a declaration at the **one**
    > effective resistance a fight publishes, while the pair engine re-prices already-authored
    > packets once the complete ledger exists — `_apply_temporary_lethality_windows`
    > (`damage.py:9894`) for physical packets, `_apply_liandry_reprice` (`damage.py:9875`) for magic
@@ -1320,7 +1320,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > budgeted from-declaration pricing stage cannot price a packet delivered as a basic-attack
    > swing.* Every family retired so far reaches its target through `_mitigate`
    > (`damage.py:395`) and nothing else — a resistance and the holder's own amps, which is exactly
-   > what `survival.pricing.price_declared_packet` (`pricing.py:219`) carries. A Runaan's bolt is
+   > what `survival.pricing.price_declared_packet` (`pricing.py:453`) carries. A Runaan's bolt is
    > priced by `_mitigate_basic_attack_swing` (`damage.py:624`), which applies three further
    > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
    > onto a second subject by `_copied_on_hit_packet` (`damage.py:8773`), for which

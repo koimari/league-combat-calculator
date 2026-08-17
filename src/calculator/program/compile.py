@@ -113,17 +113,18 @@ def declared_packet_of(
 ) -> DeclaredPacket:
     """One re-priced packet's declaration, composed for the walk to price.
 
-    The engine ledger carries a retired family's packet as the four facts of
+    The engine ledger carries a retired family's packet as the five facts of
     an :class:`~..survival.pricing.AuthoredDeclaration` and no price: which
     rule authored it, the pre-mitigation magnitude that rule's own
     interpreter compiled, the attack class the rule declares — which is what
-    decides *which* of the holder's amplifiers this packet earns — and the
+    decides *which* of the holder's amplifiers this packet earns — the
     effective resistance the packet itself met, which the pair engine's own
-    re-pricing windows keep in step (umbrella Amendment N, Ruling 1).  The
-    fifth term, the amplifier itself, is resolved on this side from the
-    declarations that produce it (umbrella Amendment M, Ruling 1): a walk
-    that took a pre-multiplied number would be reading the pair engine's
-    price again under another name.
+    re-pricing windows keep in step (umbrella Amendment N, Ruling 1), and the
+    basic-attack swing composition it was delivered through, if it was
+    (umbrella Amendment R, Ruling 1).  The remaining term, the amplifier
+    itself, is resolved on this side from the declarations that produce it
+    (umbrella Amendment M, Ruling 1): a walk that took a pre-multiplied
+    number would be reading the pair engine's price again under another name.
 
     One home for both compositions, because a roster composes a pair fight in
     two places and the score path is the one that picks the optimizer's
@@ -135,7 +136,9 @@ def declared_packet_of(
     damage — the half-performed retirement umbrella Amendment L, Ruling 1
     calls worse than neither half.
     """
-    if not isinstance(declaration, tuple) or not 3 <= len(declaration) <= 4:
+    if not isinstance(declaration, tuple) or not 3 <= len(declaration) <= len(
+        AuthoredDeclaration._fields
+    ):
         raise ValueError(
             f"pair row {source_key!r} is stamped as a re-priced preview and "
             "carries no declaration; the walk has nothing to price and the "
@@ -150,6 +153,7 @@ def declared_packet_of(
             damage_type, AttackClass(authored.attack_class)
         ),
         effective_resistance=authored.effective_resistance,
+        swing=authored.swing_composition(),
     )
 
 

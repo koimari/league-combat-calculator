@@ -60,13 +60,13 @@ from src.calculator.interpreters.reactive import thorns_effects
 from src.calculator.interpreters.spellblade import (
     resolve_slot as resolve_spellblade_slot,
 )
-from src.calculator.item_behavior import EngineLane, RuleFamily
+from src.calculator.item_behavior import DefenseField, EngineLane, RuleFamily
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.program.build import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
-from src.calculator.item_effects import DamageInputs
+from src.calculator.item_effects import DamageInputs, required_effect_value
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event, declared_packet_of
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
@@ -87,6 +87,7 @@ from src.calculator.survival.pricing import (
     NO_RESISTANCE_PUBLISHED,
     UNPRICEABLE_DAMAGE_TYPE,
     AuthoredDeclaration,
+    BasicAttackSwing,
     DeclaredPacket,
     mitigate_declared,
     price_declared_packet,
@@ -2795,12 +2796,19 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         declaration at all — which is the failure mode this half of the ruling
         exists to stop, and it is a different one from pricing at a stale
         number.
+
+        The carried declaration comes back at the declaration's *full* width,
+        which is five positions since umbrella Amendment R, Ruling 1: a burn
+        no basic-attack swing delivered carries `None` in the fifth, and
+        `declared_packet_of` reads that as no swing composition and prices the
+        tick exactly as it priced it before the position existed.
         """
         authored = [{"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)}]
         repriced = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
         assert "declared" not in repriced[0]
         pair_engine._carry_declarations_onto_repriced_ticks(authored, repriced)
-        assert repriced[0]["declared"] == ("fixture.burn", 24.0, "other", 30.0)
+        assert repriced[0]["declared"] == ("fixture.burn", 24.0, "other", 30.0, None)
+        assert AuthoredDeclaration(*repriced[0]["declared"]).swing_composition() is None
 
     def test_a_replacement_the_carry_cannot_join_is_refused(self):
         """R-05's second red: a positional carry that cannot say which tick.
@@ -3326,3 +3334,435 @@ def _periodic_mechanics() -> frozenset[str]:
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.PERIODIC
     )
+
+
+# ---------------------------------------------------------------------------
+# The basic-attack swing composition — the equivalence fixtures, inert and armed
+# ---------------------------------------------------------------------------
+#
+# Umbrella Amendment R, Ruling 1.  Every family retired before this one reaches
+# its target through `damage._mitigate` and nothing else — a resistance and the
+# holder's own amps, which is exactly what `price_declared_packet` carried.  A
+# packet delivered as a BASIC-ATTACK SWING is priced by
+# `damage._mitigate_basic_attack_swing` instead: it meets the target's plating
+# multiplier, its critical-strike damage multiplier and Warden's Mail's Rock
+# Solid, and the deterministic reading blends a crit branch against a non-crit
+# one with each branch having met the flat subtraction on its own.
+#
+# THE FIXTURES MUST BE INERT AND ARMED, and the conjunction is load-bearing on
+# exactly the reasoning that made Amendment M's fixtures cover `amp != 1.0` and
+# Amendment N's cover both re-pricing windows: a fixture set in which every
+# target-side term is inert proves the stage re-spells the case that cannot
+# fail — a pricer that dropped the whole composition would reproduce the pair
+# engine exactly.  So the seed is run in five target-side states and the
+# no-composition reading is priced beside the ruled one in every armed state.
+#
+# THE SEED is the probe Amendment R measured: Caitlyn at level 18 holding
+# Runaan's Hurricane and Blade of the Ruined King, deterministic, one rotation
+# at full auto uptime, a roster target count of two with the bolt allocated to
+# the second, against the snapshot target.  The armed values are read from the
+# declaring items' own `ValueRef`s rather than typed, so a registry that stopped
+# producing one fails here instead of quietly measuring a different fight.
+#
+# HOW THE DECLARATION GETS ONTO THE PACKET.  `secondary_target` has not retired,
+# so no authoring site in `src/` stamps one; these fixtures stamp one the way its
+# retirement slice would — inside the engine step that AUTHORS the bolt row,
+# from the same `state` the engine prices with, taking the magnitude from the
+# family's own interpreter and the target-side terms from the fight state that
+# resolved them.  The rest of `run_fight` then runs untouched.
+
+#: The pair engine's own step for the bolt row, and the row it authors.  Named
+#: rather than searched for: the stamp has to land where the family's own
+#: retirement slice would put it.
+SWING_SEED_STEP = "_add_single_proc_on_hits"
+SWING_SEED_ROW = "secondary_Runaan's Hurricane"
+SWING_SEED_RULE = "runaans_hurricane.secondary_target"
+SWING_SEED_ITEMS = ("Runaan's Hurricane", "Blade of the Ruined King")
+
+
+def _declared_target_term(owner, term):
+    """The sourced number an owner's declaration names for one swing term."""
+    return required_effect_value(
+        owner,
+        next(
+            reference.key
+            for rule in behavior_rules(owner)
+            for reference in getattr(rule.payload, "values", ())
+            if getattr(reference, "key", None) == term
+        ),
+    )
+
+
+@lru_cache(maxsize=None)
+def _swing_seed_states():
+    """The five target-side states the seed is measured in.
+
+    One inert, then each of the three terms armed alone at the value its own
+    item declares, then all three at once — because the terms interact: the
+    plating factor scales the number Rock Solid's cap is a share of, and a
+    fixture that only ever armed one at a time would never price that.
+    """
+    plating = _declared_target_term(
+        "Plated Steelcaps", DefenseField.BASIC_DAMAGE_MULTIPLIER.value
+    )
+    crit = _declared_target_term(
+        "Randuin's Omen", DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER.value
+    )
+    flat = {
+        "target_basic_damage_flat_reduction": _declared_target_term(
+            "Warden's Mail", DefenseField.BASIC_DAMAGE_FLAT_REDUCTION.value
+        ),
+        "target_basic_damage_flat_reduction_cap": _declared_target_term(
+            "Warden's Mail", DefenseField.BASIC_DAMAGE_FLAT_REDUCTION_CAP.value
+        ),
+    }
+    return {
+        "all_three": {
+            "target_basic_damage_multiplier": plating,
+            "target_critical_strike_damage_multiplier": crit,
+            **flat,
+        },
+        "crit_damage": {"target_critical_strike_damage_multiplier": crit},
+        "inert": {},
+        "plating": {"target_basic_damage_multiplier": plating},
+        "rock_solid": dict(flat),
+    }
+
+
+def _declare_swing_row(state):
+    """Stamp the bolt row with the declaration its retirement slice would hand over.
+
+    Every number comes off the engine's own `state`.  The magnitude is the
+    family's own interpreter's — the declared share of the attacker's damage at
+    the on-hit effectiveness of the swing that fired it — and the two target-side
+    FACTORS are folded into it, which is what Ruling 1 rules they are: a pure
+    factor on a linear mitigation composes into the declared magnitude and
+    prices to the same real number.  What is not folded is the blend (two
+    magnitudes, not one) and the capped flat subtraction, and those ride on the
+    declaration as the swing composition.
+    """
+    row = state.breakdown.get(SWING_SEED_ROW)
+    bolts = state.secondary_target_bolts
+    if not isinstance(row, dict) or bolts is None:
+        return
+    raw = bolts.bolt_damage(
+        state.champion_stats["attack_damage"]
+    ) * pair_engine._on_hit_effectiveness(state)
+    plating = float(state.target_basic_damage_multiplier)
+    swing = BasicAttackSwing(
+        crit_chance=float(state.crit_chance),
+        crit_raw_amount=(
+            raw
+            * state.crit_multiplier
+            * state.target_critical_strike_damage_multiplier
+            * plating
+        ),
+        basic_damage_flat_reduction=float(state.target_basic_damage_flat_reduction),
+        basic_damage_flat_reduction_cap=float(
+            state.target_basic_damage_flat_reduction_cap
+        ),
+    )
+    declaration = AuthoredDeclaration(
+        SWING_SEED_RULE,
+        raw * plating,
+        AttackClass.BASIC_ATTACK.value,
+        float(state.resists.effective_armor),
+    ).delivered_as_a_swing(swing)
+    for event in row.get("damage_events") or ():
+        event["declared"] = tuple(declaration)
+
+
+@lru_cache(maxsize=None)
+def _swing_seed_reading(case):
+    """The seed fight in one target-side state, with its bolt row declared.
+
+    Returns the finished pair-engine result and the holder's own static amps,
+    read through the same composition the walk reads them through, so what the
+    comparison isolates is the pricing rather than a restatement of it.
+    """
+    champion = gs.fetch_champion_data()[_ON_HIT_PROBE_CHAMPION]
+    by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
+    items = [by_name[name] for name in SWING_SEED_ITEMS]
+    level = 18
+    params = FightParams(
+        target_health=gs.SNAPSHOT_TARGET_HEALTH,
+        target_bonus_health=0.0,
+        target_armor=gs.SNAPSHOT_TARGET_ARMOR,
+        target_magic_resistance=gs.SNAPSHOT_TARGET_MR,
+        fight_duration_seconds=gs.ONE_ROTATION_DURATION,
+        auto_attack_uptime=1.0,
+        one_rotation=True,
+        deterministic=True,
+        roster_target_index=1,
+        roster_target_count=2,
+        **_swing_seed_states()[case],
+    )
+    original = getattr(pair_engine, SWING_SEED_STEP)
+    setattr(pair_engine, SWING_SEED_STEP, _stamping(original, _declare_swing_row))
+    try:
+        result = run_fight(champion, level, list(items), params)
+    finally:
+        setattr(pair_engine, SWING_SEED_STEP, original)
+    stats = calculate_total_stats(champion, level, list(items))
+    amps = delta_amp.resolve_static_holder_amps(
+        list(items),
+        holder_stats=stats,
+        ability_amp_armed=False,
+        level=level,
+        fight_duration_seconds=float(params.fight_duration_seconds),
+        target_bonus_health=0.0,
+        holder_is_melee=bool(stats.get("is_melee")),
+    )
+    return result, amps
+
+
+def _swing_seed_packets(case):
+    """Every declared bolt packet of one state, as the walk composes it."""
+    result, amps = _swing_seed_reading(case)
+    row = result["breakdown"][SWING_SEED_ROW]
+    return (
+        result,
+        row,
+        tuple(
+            (
+                float(event["damage"]),
+                declared_packet_of(event["declared"], "physical", SWING_SEED_ROW, amps),
+            )
+            for event in row["damage_events"]
+        ),
+    )
+
+
+def _swing_seed_price(result, packet, *, composed=True):
+    """The walk's price for one declared bolt packet, with or without the term."""
+    return price_declared_packet(
+        packet if composed else packet._replace(swing=None),
+        baseline_effective_armor=float(result["effective_armor"]),
+        baseline_effective_mr=float(result["effective_mr"]),
+    )
+
+
+#: Amendment R's own measured reading of this seed, per target-side state.  Not
+#: a restatement of the engine: these are the four figures the amendment
+#: published, pinned here so a seed that stopped being the seed the ruling was
+#: measured on fails rather than quietly measuring a different fight.
+SWING_SEED_PER_HIT = {
+    "inert": 76.54166666666666,
+    "plating": 68.88749999999999,
+    "crit_damage": 67.35666666666665,
+    "rock_solid": 63.60666666666666,
+}
+
+
+class TestTheSeedIsTheOneTheRulingWasMeasuredOn:
+    """Before the equivalence is worth anything, the fight has to be that fight."""
+
+    @pytest.mark.parametrize("case", sorted(SWING_SEED_PER_HIT))
+    def test_the_amendments_published_figure_reproduces(self, case):
+        """All four, exactly, including the 50.0 armour they were priced at."""
+        result, row, _ = _swing_seed_packets(case)
+        assert float(result["effective_armor"]) == 50.0
+        assert row["damage_per_hit"] == SWING_SEED_PER_HIT[case]
+
+    def test_every_armed_state_moves_the_row_and_rock_solid_moves_it_most(self):
+        """The armed states are not four spellings of the inert one.
+
+        Stated as an ordering rather than as four more numbers: each term
+        takes something off the swing, and Warden's Mail takes the most on
+        this seed — which is the 20.3 percent the stopped retirement measured
+        a walk would have paid over.
+        """
+        inert = SWING_SEED_PER_HIT["inert"]
+        for case, figure in SWING_SEED_PER_HIT.items():
+            if case != "inert":
+                assert figure < inert
+        assert SWING_SEED_PER_HIT["rock_solid"] == min(SWING_SEED_PER_HIT.values())
+        overpayment = inert / SWING_SEED_PER_HIT["rock_solid"] - 1.0
+        assert round(100 * overpayment, 1) == 20.3
+
+
+@pytest.mark.parametrize("case", sorted(_swing_seed_states()))
+class TestTheSwingCompositionReproducesThePairEngines:
+    """Ruling 1's fixture, in every target-side state the seed is run in."""
+
+    def test_the_declaration_carries_the_composition_and_the_family_is_deferred(
+        self, case
+    ):
+        """The fixture is only worth something on a family still deferred.
+
+        Two halves, because either alone can be true of an opted-in family: no
+        receipt-walk interpreter serves `secondary_target`, and the bolt row is
+        not one the pair engine has stamped as a re-priced preview.  What the
+        fixture stamps is a declaration a retirement slice would stamp, and it
+        carries the fifth position the tree authors on nothing.
+        """
+        assert (
+            RuleFamily.SECONDARY_TARGET,
+            EngineLane.RECEIPT_WALK,
+        ) not in INTERPRETERS
+        _, row, packets = _swing_seed_packets(case)
+        assert "pair_preview_of" not in row
+        assert packets
+        for _, packet in packets:
+            assert packet.swing is not None
+            assert packet.rule_id == SWING_SEED_RULE
+
+    def test_the_declaration_prices_to_the_pair_engines_own_number(self, case):
+        """Bit-exact, on identical inputs — the whole of what Ruling 1 claims.
+
+        The pair engine mitigates each branch once at the fight's armour, takes
+        the capped flat subtraction off each, and blends them; the walk's own
+        pricer, given the same magnitudes and the same resistance, returns the
+        same float.  Bit-for-bit is available because both sides perform the
+        same multiplications: the two folded factors compose into the magnitude
+        before the one mitigation, and `apply_resistance` is a single multiply
+        by a factor the fight resolved once.
+        """
+        result, _, packets = _swing_seed_packets(case)
+        for damage, packet in packets:
+            assert _swing_seed_price(result, packet).amount == damage
+
+    def test_the_row_total_is_the_sum_of_the_priced_packets(self, case):
+        """The row, not only its events: a per-packet equality can still miss one."""
+        result, row, packets = _swing_seed_packets(case)
+        priced = sum(_swing_seed_price(result, packet).amount for _, packet in packets)
+        assert priced == pytest.approx(float(row["total_damage"]), rel=1e-12)
+
+    def test_dropping_the_transported_term_is_visible_where_it_is_armed(self, case):
+        """R-05's red for the term, and the reason an inert fixture is not enough.
+
+        The transported half of the composition is Rock Solid, and this prices
+        the same declaration with it zeroed.  Where the defender does not hold
+        Warden's Mail the two readings agree — which is exactly why a fixture
+        set in which every target-side term is inert proves the case that
+        cannot fail — and where the defender does, the reading without the term
+        pays strictly more, by a margin every committed gate can see.
+        """
+        result, _, packets = _swing_seed_packets(case)
+        armed = "target_basic_damage_flat_reduction" in _swing_seed_states()[case]
+        for damage, packet in packets:
+            unreduced = packet._replace(
+                swing=packet.swing._replace(
+                    basic_damage_flat_reduction=0.0,
+                    basic_damage_flat_reduction_cap=0.0,
+                )
+            )
+            without = _swing_seed_price(result, unreduced).amount
+            if not armed:
+                assert without == damage
+            else:
+                assert without > damage
+                assert round(without - damage, GOLDEN_DECIMALS) > 0.0
+
+    def test_dropping_the_whole_composition_moves_the_number_either_way(self, case):
+        """The blend's own red, and the sign is measured rather than assumed.
+
+        A pricer that ignored the composition entirely would pay the non-crit
+        branch alone — the reading a declaration carrying no swing gets, which
+        is right for every family retired so far and wrong for this one.  It is
+        never the same number, and which way it is wrong depends on the state:
+        with the target inert it is too SMALL, because the crit branch it
+        deleted is the larger of the two, and with all three terms armed it is
+        too LARGE, because the subtraction it also deleted takes more off the
+        blend than the missing crit branch put on.  Recorded as the pair it is,
+        because a red asserted in one direction would have gone green on the
+        state where the number is most wrong.
+        """
+        result, _, packets = _swing_seed_packets(case)
+        for damage, packet in packets:
+            without = _swing_seed_price(result, packet, composed=False).amount
+            assert round(abs(without - damage), GOLDEN_DECIMALS) > 0.0
+            if case == "inert":
+                assert without < damage
+            elif case == "all_three":
+                assert without > damage
+
+
+class TestRockSolidIsCarriedAsASubtractionAndNeverFolded:
+    """The term Ruling 1 says never folds, and why no magnitude reproduces it."""
+
+    def test_the_cap_bites_on_one_branch_and_not_the_other(self):
+        """The measured fact that makes the term un-foldable.
+
+        Both branches meet `min(flat, per_hit × cap)`, and on this seed the
+        crit branch is large enough to pay the flat in full while the non-crit
+        branch is capped at a share of itself.  A factor on the blended number
+        cannot produce that, because the two branches lose different fractions
+        of themselves.
+        """
+        result, _, packets = _swing_seed_packets("rock_solid")
+        _, packet = packets[0]
+        swing = packet.swing
+        armour = float(result["effective_armor"])
+        non_crit = mitigate_declared(packet.amped_raw, "physical", armour)
+        crit = mitigate_declared(packet.amped_crit_raw, "physical", armour)
+        flat = swing.basic_damage_flat_reduction
+        assert non_crit * swing.basic_damage_flat_reduction_cap < flat
+        assert crit * swing.basic_damage_flat_reduction_cap > flat
+        assert crit - swing.less_flat_reduction(crit) == flat
+        assert non_crit - swing.less_flat_reduction(non_crit) == pytest.approx(
+            non_crit * swing.basic_damage_flat_reduction_cap
+        )
+
+    def test_no_single_factor_on_the_blend_reproduces_both_branches(self):
+        """Stated as the impossibility it is, not as a preference.
+
+        If the subtraction were a factor there would be one number `f` with
+        `priced == f × unreduced` for the blend *and* for each branch.  There
+        is not: the two branches' own ratios differ, so a declaration that
+        folded any single factor would be wrong on at least one of them.
+        """
+        result, _, packets = _swing_seed_packets("rock_solid")
+        _, packet = packets[0]
+        swing = packet.swing
+        armour = float(result["effective_armor"])
+        branches = (
+            mitigate_declared(packet.amped_raw, "physical", armour),
+            mitigate_declared(packet.amped_crit_raw, "physical", armour),
+        )
+        ratios = {swing.less_flat_reduction(branch) / branch for branch in branches}
+        assert len(ratios) == 2
+
+    def test_a_subtraction_can_never_drive_a_branch_below_zero(self):
+        """The floor the pair engine applies, applied here for the same reason."""
+        swing = BasicAttackSwing(
+            crit_chance=0.0,
+            crit_raw_amount=0.0,
+            basic_damage_flat_reduction=1000.0,
+            basic_damage_flat_reduction_cap=1.0,
+        )
+        assert swing.less_flat_reduction(10.0) == 0.0
+        # A negative branch is an algebraic modifier to a swing, not an
+        # incoming event, and a flat defensive proc cannot be consumed by one.
+        assert swing.less_flat_reduction(-10.0) == -10.0
+
+
+class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
+    """The other half of what a declared magnitude cannot carry."""
+
+    def test_the_weight_is_the_holders_crit_chance(self):
+        """Read off the seed rather than restated: the blend is affine in it."""
+        _, _, packets = _swing_seed_packets("inert")
+        _, packet = packets[0]
+        swing = packet.swing
+        assert 0.0 < swing.crit_chance < 1.0
+        assert swing.blended(0.0, 1.0) == swing.crit_chance
+        assert swing.blended(100.0, 100.0) == 100.0
+
+    def test_a_declaration_no_swing_delivered_carries_no_composition(self):
+        """The inertness this slice rests on, at the type rather than the tree.
+
+        A three- or four-wide declaration — every one the tree authors — resolves
+        to no composition, and the packet built from it is priced by the
+        resistance and the amps alone.
+        """
+        for width in (3, 4):
+            declaration = AuthoredDeclaration(
+                "fixture.rule", 100.0, AttackClass.OTHER.value, 50.0
+            )[:width]
+            assert AuthoredDeclaration(*declaration).swing_composition() is None
+        packet = DeclaredPacket(100.0, "physical", "fixture.rule")
+        assert packet.swing is None
+        assert price_declared_packet(
+            packet, baseline_effective_armor=50.0, baseline_effective_mr=50.0
+        ).amount == mitigate_declared(100.0, "physical", 50.0)

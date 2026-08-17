@@ -74,7 +74,10 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             # the rule, the pre-mitigation magnitude, the attack class that
             # decides which of the holder's amps it earns, and no resistance,
             # because this packet met the fight's published figure.
-            "declared": ("eclipse.proc", 80.0, "other", None),
+            # Five positions since umbrella Amendment R, Ruling 1: the fifth
+            # is the basic-attack swing composition, and an item proc no swing
+            # delivered carries None there and is priced exactly as before.
+            "declared": ("eclipse.proc", 80.0, "other", None, None),
         }
     ]
     assert row["pair_preview_of"] == "eclipse.proc"
@@ -98,7 +101,10 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             "damage": 80.0,
             "damage_type": "physical",
             "event_precision": "hit",
-            "declared": ("eclipse.proc", 80.0, "other", None),
+            # Five positions since umbrella Amendment R, Ruling 1: the fifth
+            # is the basic-attack swing composition, and an item proc no swing
+            # delivered carries None there and is priced exactly as before.
+            "declared": ("eclipse.proc", 80.0, "other", None, None),
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

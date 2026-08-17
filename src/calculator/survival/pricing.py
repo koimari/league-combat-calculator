@@ -52,10 +52,31 @@ transported on the declaration from the authored ledger rather than resolved
 again at the walk, and kept in step by every site that re-prices an authored
 event.  Umbrella Amendment N, Ruling 1 (2026-08-16).
 
+**The basic-attack swing composition.**  Every family retired so far reaches
+its target through ``damage._mitigate`` and nothing else — a resistance and
+the holder's own amps, which is exactly what the two terms above carry.  A
+packet delivered as a *basic-attack swing* is priced by
+``damage._mitigate_basic_attack_swing`` instead, which meets three further
+terms on the target's side and then blends a crit branch against a non-crit
+one.  Two of the three **fold**: the target's critical-strike damage
+multiplier and the plating multiplier are pure factors on a linear
+mitigation, so they compose into the declared magnitude and price to the
+same real number.  Warden's Mail's Rock Solid never folds —
+``min(flat, per_hit × cap)`` is a capped flat **subtraction**, applied to
+each branch separately so the cap bites on one and not the other, and no
+magnitude a declaration could state reproduces one.  So a
+:class:`DeclaredPacket` may carry a :class:`BasicAttackSwing`: the blend and
+the subtraction, transported on the declaration from the authored ledger
+rather than resolved again at the walk, for the reason Amendment N gave for
+the resistance — what the walk must reproduce is the term *this packet* met
+and not the term the fight settled at.  A declaration no swing delivered
+carries none and prices exactly as it prices today.  Umbrella Amendment R,
+Ruling 1 (2026-08-16).
+
 **Nothing declares a price yet.**  Every family still reaches the walk as the
 pair engine's timed rows, and this path stays inert until a family's
 retirement slice hands it a :class:`DeclaredPacket` — which is what keeps
-this stage a re-spelling rather than a re-pricing.  Both terms are armed on
+this stage a re-spelling rather than a re-pricing.  Every term is armed on
 the same terms: they reach whatever the first retiring family hands them,
 and nothing before that.
 """
@@ -67,21 +88,90 @@ from typing import NamedTuple
 from ..resistance import apply_resistance
 
 
+class BasicAttackSwing(NamedTuple):
+    """The composition a packet delivered as a basic-attack swing is priced by.
+
+    Umbrella Amendment R, Ruling 1.  The pair engine prices a swing as two
+    branches blended by the holder's crit chance, and meets three target-side
+    terms on the way; this carries the half of that a declared magnitude
+    cannot.
+
+    **What is here is what does not fold.**  The target's critical-strike
+    damage multiplier and the plating multiplier are pure factors on a linear
+    mitigation, so the declaring site folds them into the two branch
+    magnitudes and the walk prices the same real number without knowing they
+    exist.  What it cannot fold is the **blend** — two magnitudes, not one —
+    and Warden's Mail's **capped flat subtraction**, which is not a factor at
+    all and is applied to each branch *before* the blend, so its cap bites on
+    the crit branch and not on the non-crit one.
+
+    ``crit_chance`` is the blend weight and ``crit_raw_amount`` the crit
+    branch's own pre-mitigation magnitude, factors already folded; the packet's
+    ``raw_amount`` is the non-crit branch's.  The three reduction fields are
+    named for the fight-state fields the pair engine reads them from, so the
+    term census's join between an engine field and the term that carries it is
+    a name match rather than a table: ``basic_damage_flat_reduction`` and
+    ``basic_damage_flat_reduction_cap`` are the two halves of
+    ``min(flat, per_hit × cap)``, and ``instances`` is how many of them this
+    declaration's packet consumed — one, for one swing.
+
+    A holder with no crit chance and a target with no Rock Solid still gets a
+    faithful blend: the weight is zero and the subtraction is inert, which is
+    a measured answer rather than a default nobody asked for.
+    """
+
+    crit_chance: float
+    crit_raw_amount: float
+    basic_damage_flat_reduction: float = 0.0
+    basic_damage_flat_reduction_cap: float = 0.0
+    instances: int = 1
+
+    def less_flat_reduction(self, branch: float) -> float:
+        """One mitigated branch, less the target's capped flat subtraction.
+
+        ``damage._apply_target_basic_damage_reduction``'s own arithmetic, on
+        one branch: the flat, capped at a share of what one instance of the
+        branch is worth, taken once per instance and floored at zero.  A
+        non-positive branch is returned untouched, because a flat defensive
+        proc cannot be consumed by a negative algebraic modifier — the pair
+        engine's reading, and the reason this is not a plain ``max``.
+        """
+        flat = float(self.basic_damage_flat_reduction)
+        cap = float(self.basic_damage_flat_reduction_cap)
+        instances = int(self.instances)
+        if branch <= 0.0 or flat <= 0.0 or cap <= 0.0 or instances <= 0:
+            return branch
+        per_instance = branch / instances
+        return max(0.0, branch - min(flat, per_instance * cap) * instances)
+
+    def blended(self, non_crit: float, crit: float) -> float:
+        """The deterministic blend of the two priced branches.
+
+        The weight is the holder's crit chance, clamped to the unit interval
+        it is a probability over: a declaration outside it would turn one
+        branch into a negative contribution, which is a malformed declaration
+        rather than a fight.  Clamping a value already inside the interval is
+        the identity, so the blend stays bit-for-bit the pair engine's.
+        """
+        weight = min(1.0, max(0.0, float(self.crit_chance)))
+        return weight * crit + (1.0 - weight) * non_crit
+
+
 class AuthoredDeclaration(NamedTuple):
     """One packet's declaration as the pair engine's authored ledger carries it.
 
-    Four facts and no price: which rule authored the packet, the
+    Five facts and no price: which rule authored the packet, the
     pre-mitigation magnitude that rule's own interpreter compiled, the attack
     class the rule declares — which decides *which* of the holder's
-    amplifiers the packet earns — and the effective resistance the packet
-    itself met.
+    amplifiers the packet earns — the effective resistance the packet itself
+    met, and the basic-attack swing composition it was delivered through.
 
     It rides the engine's own event, which is why it is a plain tuple on the
     wire and a named shape here: the ledger has two row spellings (a dict row
     and a positional light row) and one declaration, and a reader that
     unpacked the tuple by index in each of them would be two readers of one
-    declaration.  This is the one home of what those four positions mean;
-    ``program.compile.declared_packet_of`` composes the fifth term, the
+    declaration.  This is the one home of what those five positions mean;
+    ``program.compile.declared_packet_of`` composes the remaining term, the
     holder's own amps, on the walk's side.
 
     ``effective_resistance`` is the term umbrella Amendment N, Ruling 1 adds,
@@ -91,12 +181,41 @@ class AuthoredDeclaration(NamedTuple):
     walk would then price the packet at.  ``None`` is a packet whose ledger
     published no resistance for its class, which is a refusal at the pricing
     stage and never a zero.
+
+    ``swing`` is the term umbrella Amendment R, Ruling 1 adds: the branch
+    blend and the capped flat subtraction a packet delivered as a
+    basic-attack swing met, transported the same way and for the same reason.
+    ``None`` is a declaration no swing delivered, which is every declaration
+    priced through ``damage._mitigate`` alone, and it prices exactly as it
+    priced before the term existed.  It rides as a plain tuple beside the
+    other four because the ledger's positional row spelling carries the whole
+    declaration as one tuple; :meth:`swing_composition` is the one reader of
+    what that position means.
     """
 
     rule_id: str
     raw_amount: float
     attack_class: str
     effective_resistance: float | None = None
+    swing: tuple | None = None
+
+    def swing_composition(self) -> "BasicAttackSwing | None":
+        """This declaration's swing composition, or ``None`` if none rode it.
+
+        The one place the wire tuple becomes the named shape, so a reader
+        that unpacked it by index would be a second reader of one term.
+        """
+        return None if self.swing is None else BasicAttackSwing(*self.swing)
+
+    def delivered_as_a_swing(self, swing: BasicAttackSwing) -> "AuthoredDeclaration":
+        """The same declaration, carrying the swing composition it met.
+
+        What a family whose packet is delivered as a basic-attack swing
+        stamps on its own authored event: the magnitude and the mitigation
+        are unchanged, and the target-side terms the swing met are now
+        transported with it rather than left behind for the walk to guess at.
+        """
+        return self._replace(swing=tuple(swing))
 
     def repriced_at(self, effective_resistance: float) -> "AuthoredDeclaration":
         """The same declaration, met by a different resistance.
@@ -145,6 +264,13 @@ class DeclaredPacket(NamedTuple):
     correct for a packet no window re-priced and forbidden for one that a
     window did, which is why the transport stamps the term rather than
     leaving it to be inferred.
+
+    ``swing`` is the **basic-attack swing composition** umbrella Amendment R,
+    Ruling 1 adds: the crit blend and the target's capped flat subtraction the
+    packet met on its way into the defender.  ``None`` is a declaration no
+    basic-attack swing delivered — every family retired so far — and it is
+    priced by the resistance and the amps alone, exactly as it was before the
+    term existed.
     """
 
     raw_amount: float
@@ -152,6 +278,7 @@ class DeclaredPacket(NamedTuple):
     rule_id: str
     holder_amp: float = 1.0
     effective_resistance: float | None = None
+    swing: BasicAttackSwing | None = None
 
     @property
     def amped_raw(self) -> float:
@@ -164,6 +291,20 @@ class DeclaredPacket(NamedTuple):
         an amplifier the way a ratio path would have to do it.
         """
         return float(self.raw_amount) * float(self.holder_amp)
+
+    @property
+    def amped_crit_raw(self) -> float:
+        """The crit branch's magnitude, composed with the same holder amps.
+
+        The holder's amps are the holder's, so both branches earn them; what
+        differs between the branches is the crit multiplier and the target's
+        crit-damage reduction, and both of those are already folded into
+        ``swing.crit_raw_amount`` by the site that declared it.
+        """
+        swing = self.swing
+        if swing is None:  # pragma: no cover - guarded by the caller
+            return self.amped_raw
+        return float(swing.crit_raw_amount) * float(self.holder_amp)
 
 
 #: The damage classes a resistance answers for.  ``true`` is deliberately
@@ -243,15 +384,22 @@ def price_declared_packet(
     that transported no such term is priced at, which is the same number for
     every packet no window touched.
 
+    **A packet delivered as a basic-attack swing meets more than a
+    resistance** (umbrella Amendment R, Ruling 1).  Where the declaration
+    carries a :class:`BasicAttackSwing`, both branch magnitudes are mitigated
+    at that one resistance, each branch then meets the target's capped flat
+    subtraction on its own — which is why the term cannot be a factor on the
+    blended number — and the two are blended by the holder's crit chance.
+    The two target-side factors are not here because the declaring site
+    folded them into the magnitudes, which prices to the same real number.
+
     A refusal is returned rather than raised, because an unpriceable packet
     is a fact about the fight the walk receipts and goes on from, not a
     programming error.
     """
     damage_type = packet.damage_type
     if damage_type == "true":
-        return DeclaredPrice(
-            mitigate_declared(packet.amped_raw, damage_type, 0.0), None
-        )
+        return DeclaredPrice(_priced_at(packet, 0.0), None)
     if damage_type not in MITIGATED_DAMAGE_TYPES:
         return DeclaredPrice(None, None, UNPRICEABLE_DAMAGE_TYPE)
     if damage_type == "physical":
@@ -263,8 +411,33 @@ def price_declared_packet(
     if baseline is None:
         return DeclaredPrice(None, None, NO_RESISTANCE_PUBLISHED)
     resistance = float(baseline) + max(0.0, float(delta or 0.0))
-    return DeclaredPrice(
-        mitigate_declared(packet.amped_raw, damage_type, resistance), resistance
+    return DeclaredPrice(_priced_at(packet, resistance), resistance)
+
+
+def _priced_at(packet: DeclaredPacket, resistance: float) -> float:
+    """One declared packet's amount at one resistance, swing terms and all.
+
+    The whole of what the pricing stage does to a magnitude, in the order
+    umbrella Amendment R, Ruling 1 states it: the holder's amps compose
+    pre-mitigation (Amendment M), the composed value is mitigated once at the
+    resistance the packet met (Amendment N), and a packet delivered as a
+    basic-attack swing then meets its target-side terms per branch before the
+    branches are blended.
+
+    A declaration carrying no swing composition is the whole of the tree
+    today and takes the first line and no other, which is why adding the term
+    moves no retired family's number.
+    """
+    swing = packet.swing
+    if swing is None:
+        return mitigate_declared(packet.amped_raw, packet.damage_type, resistance)
+    return swing.blended(
+        swing.less_flat_reduction(
+            mitigate_declared(packet.amped_raw, packet.damage_type, resistance)
+        ),
+        swing.less_flat_reduction(
+            mitigate_declared(packet.amped_crit_raw, packet.damage_type, resistance)
+        ),
     )
 
 
@@ -273,6 +446,7 @@ __all__ = [
     "NO_RESISTANCE_PUBLISHED",
     "UNPRICEABLE_DAMAGE_TYPE",
     "AuthoredDeclaration",
+    "BasicAttackSwing",
     "DeclaredPacket",
     "DeclaredPrice",
     "mitigate_declared",
