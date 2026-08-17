@@ -7203,6 +7203,68 @@ def _periodic_damage_events(
     return events
 
 
+def _periodic_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+    """One periodic packet's declaration, as the retired family states it.
+
+    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
+    rule that authored the packet, its pre-mitigation magnitude, and the
+    attack class that decides which of the holder's own amplifiers it earns.
+
+    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
+    is measured rather than defaulted: all three cadences reach the target
+    through :func:`_mitigate` and through nothing else, so none of them earns
+    a part amp.  All seven declared strikes are magic, which makes the
+    holder's static magic amp a live term for the whole family;
+    ``StaticHolderAmps.factor_for`` delivers it off the damage type, so no
+    class is needed for it and a declaration that pre-multiplied it would be
+    the undeclared second producer D-60 forbids.
+
+    *raw_amount* is the cadence's whole pre-mitigation aggregate -- the burn's
+    refreshed window, the aura's fight duration and the interval strike's proc
+    count are already folded into it.  All three allocate the cadence rather
+    than amplifying it, the engine applies them before mitigation, and
+    mitigation is linear, so one folded magnitude is the same real number
+    priced once.
+
+    The resistance is deliberately absent, which is the correct reading for a
+    packet that met the fight's published figure.  One site re-prices a packet
+    of this family after authoring it -- :func:`_apply_liandry_reprice` folds a
+    raised maximum health back onto Liandry's own ticks -- and it moves the
+    packet's *magnitude* rather than its mitigation, so what it restates is a
+    rescale (:func:`_restate_declaration`, umbrella Amendment N, Ruling 1).
+    """
+    return tuple(
+        AuthoredDeclaration(
+            periodic.periodic_mechanic_id(item_name),
+            raw_amount,
+            AttackClass.OTHER.value,
+        )
+    )
+
+
+def _declared_periodic_ticks(
+    events: list[dict[str, float | str]],
+    declaration: tuple[Any, ...],
+    total_damage: float,
+) -> list[dict[str, float | str]]:
+    """Stamp each tick with its share of the row's one declaration.
+
+    :func:`_periodic_damage_events` splits one mitigated aggregate into
+    timestamped ticks, so the declaration splits the same way and by the same
+    ratio -- the share of the row's damage that tick received, through the one
+    method on the declaration that :func:`_row_declaration_share` and
+    :func:`_restate_declaration` also use.  Mitigation is linear, so a tick's
+    share of the mitigated total is its share of the raw magnitude.
+    """
+    for event in events:
+        share = _row_declaration_share(
+            declaration, float(event["damage"]), total_damage
+        )
+        if share is not None:
+            event["declared"] = share  # type: ignore[assignment]
+    return events
+
+
 def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
     """Add burn/DoT item damage: burns, Immolate, and Unending Despair.
 
@@ -7265,15 +7327,27 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             raw_burn *= burn_multiplier
         burn_mitigated = _mitigate(raw_burn, "magic", resists, state.magic_amp)
 
+        declaration = _periodic_declaration(source.item_name, raw_burn)
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "total_damage": burn_mitigated,
             "damage_type": source.damage_type,
-            "damage_events": _periodic_damage_events(
+            # This row is the pair engine's preview of a number the coupled
+            # walk owns since ``periodic`` retired: the roster composition
+            # reads the stamp and takes the figure above out of every total it
+            # composes, while the pair fight's own receipt publishes it
+            # unchanged.
+            "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+            "declared": declaration,
+            "damage_events": _declared_periodic_ticks(
+                _periodic_damage_events(
+                    burn_mitigated,
+                    source.damage_type,
+                    effective_burn_time,
+                    effect.tick_interval,
+                ),
+                declaration,
                 burn_mitigated,
-                source.damage_type,
-                effective_burn_time,
-                effect.tick_interval,
             ),
             "event_phase": "effect",
         }
@@ -7286,18 +7360,30 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             raw_immolate, source.damage_type, resists, state.magic_amp
         )
 
+        declaration = _periodic_declaration(source.item_name, raw_immolate)
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "total_damage": immolate_mitigated,
             "damage_type": source.damage_type,
+            # A preview like the burns above author.  The row-level
+            # declaration is also what a *coarse* aura hands the walk -- one
+            # whose rule publishes no event interval authors no ticks of its
+            # own, and the reconstruction synthesizes one
+            # (``_row_declaration_share``).
+            "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+            "declared": declaration,
         }
         if source.event_interval is not None:
             state.breakdown[source.breakdown_key]["damage_events"] = (
-                _periodic_damage_events(
+                _declared_periodic_ticks(
+                    _periodic_damage_events(
+                        immolate_mitigated,
+                        source.damage_type,
+                        state.fight_duration_seconds,
+                        source.event_interval,
+                    ),
+                    declaration,
                     immolate_mitigated,
-                    source.damage_type,
-                    state.fight_duration_seconds,
-                    source.event_interval,
                 )
             )
             state.breakdown[source.breakdown_key]["event_phase"] = "effect"
@@ -7323,6 +7409,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                 default=0.0,
             )
             damage_per_proc = periodic_mitigated / procs if procs else 0.0
+            declaration = _periodic_declaration(source.item_name, raw_periodic)
             damage_events = [
                 {
                     "time": combat_start + (index + 1) * effect.interval,
@@ -7333,6 +7420,9 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                         source.breakdown_key
                     ],
                     "target_scope": "enemy_champions_within_range",
+                    "declared": _row_declaration_share(
+                        declaration, damage_per_proc, periodic_mitigated
+                    ),
                 }
                 for index in range(procs)
             ]
@@ -7340,6 +7430,11 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                 "name": source.display_name,
                 "total_damage": periodic_mitigated,
                 "damage_type": source.damage_type,
+                # A preview like the other two cadences author: one packet per
+                # completed interval, each carrying its share of the row's own
+                # declaration.
+                "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+                "declared": declaration,
                 "damage_events": damage_events,
                 "event_phase": "effect",
             }

@@ -57,6 +57,9 @@ from src.calculator.interpreters import (
     periodic,
 )
 from src.calculator.interpreters.reactive import thorns_effects
+from src.calculator.interpreters.spellblade import (
+    resolve_slot as resolve_spellblade_slot,
+)
 from src.calculator.item_behavior import EngineLane, RuleFamily
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.program.build import (
@@ -1885,6 +1888,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
             RuleFamily.CAST_PROC,
             RuleFamily.CHARGED_STRIKE,
             RuleFamily.ON_HIT_STRIKE,
+            RuleFamily.PERIODIC,
         )
         for family in families:
             assert (family, EngineLane.RECEIPT_WALK) in INTERPRETERS
@@ -1962,12 +1966,12 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         """R-05: a second composition site is a finding, on demand."""
         injected = {
             PRICING_MODULE: "class DeclaredPacket(NamedTuple):\n",
-            "src/calculator/interpreters/periodic.py": (
-                "DeclaredPacket(31.5, 'magic', 'sunfire_aegis.continuous_aura')\n"
+            "src/calculator/interpreters/spellblade.py": (
+                "DeclaredPacket(140.0, 'physical', 'bloodsong.spellblade')\n"
             ),
         }
         assert declared_packet_construction_sites(injected) == (
-            "src/calculator/interpreters/periodic.py",
+            "src/calculator/interpreters/spellblade.py",
         )
 
 
@@ -1980,12 +1984,22 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 # stage is provably a re-spelling before it is ever a re-pricing".  This is
 # that fixture.
 #
-# The family is `periodic`, priced through Sunfire Aegis's immolate: a flat
-# declared rate per second, magic, over the fight's own window.  It is chosen
-# because everything the comparison needs is committed and readable — the
-# family still routes through the pair engine, the covering coupled scenario
-# is the one the retirement schedule records for it, and the pair engine
-# publishes both the number and the effective resistance it priced at.
+# The family is `spellblade`, priced through Bloodsong's proc: one declared
+# magnitude per proc, physical, over a proc count the pair engine publishes on
+# its own row.  It is chosen because everything the comparison needs is
+# committed and readable — the family still routes through the pair engine,
+# the covering coupled scenario is the one the retirement schedule records for
+# it, and the pair engine publishes both the number and the effective
+# resistance it priced at.
+#
+# It was `periodic`, through Sunfire Aegis's immolate, until that family
+# retired on 2026-08-16.  The fixture MOVES rather than being pinned or
+# dropped, and that is the whole discipline of Ruling 3's clause: a comparison
+# run on a family whose numbers the walk now prices from its own declaration
+# would be the stage checking itself, so the fixture migrates to a family
+# still fed by the pair engine every time the one it stood on retires.  A
+# retirement that left it behind would turn the re-spelling claim into a
+# tautology with a green tick on it.
 #
 # Nothing about the fixture is typed: the scenario, the owner and the rule id
 # are all read, so a schedule that re-covers the family under a different
@@ -2006,6 +2020,12 @@ class DeclaredPricingEquivalence:
     `owner` and `breakdown_key` name the declaring item and the pair engine's
     row for it; `family` is the deferral row this fixture stands in for, and
     the scenario is read from that row rather than named here.
+
+    `resistance_field` is the fight figure this family's packet is mitigated
+    against, and it is stated rather than inferred because the negative case
+    below has to perturb the right one: perturbing the resistance a physical
+    packet never meets would leave the price unchanged and the red would pass
+    by testing nothing.
     """
 
     name: str
@@ -2013,14 +2033,16 @@ class DeclaredPricingEquivalence:
     deferral_family_key: str
     owner: str
     breakdown_key: str
+    resistance_field: str
 
 
 PRICING_EQUIVALENCE = DeclaredPricingEquivalence(
-    name="periodic_immolate",
-    family=RuleFamily.PERIODIC,
-    deferral_family_key="periodic",
-    owner="Sunfire Aegis",
-    breakdown_key="immolate_Sunfire Aegis",
+    name="spellblade_bloodsong",
+    family=RuleFamily.SPELLBLADE,
+    deferral_family_key="spellblade",
+    owner="Bloodsong",
+    breakdown_key="spellblade_Bloodsong",
+    resistance_field="effective_armor",
 )
 
 
@@ -2073,23 +2095,26 @@ def _declared_packet(fixture, parsed, resolved, params):
     is_melee = bool(stats.get("is_melee", True))
     duration = float(params.fight_duration_seconds)
     owners = [str(item["name"]) for item in resolved.items]
-    slots = periodic.resolve_slots(
+    slot = resolve_spellblade_slot(
         owners,
         level=parsed.level,
         fight_duration_seconds=duration,
         target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
         holder_is_melee=is_melee,
     )
-    row = next(
-        aura for aura in slots.auras if aura.breakdown_key == fixture.breakdown_key
-    )
+    assert slot is not None and slot.source.breakdown_key == fixture.breakdown_key
     rule = next(
         declared
-        for declared in periodic.periodic_rules(owners)
-        if declared.owner == fixture.owner
+        for declared in behavior_rules(fixture.owner)
+        if declared.family is fixture.family
     )
+    # The proc COUNT is the pair engine's own, read off the row it published:
+    # how often a spellblade charge is spent is a fact about the fight's casts
+    # and swings, not about the declaration, and the half this fixture
+    # isolates is the mitigation.
+    procs = int(result_row(fixture, parsed, resolved, params)["count"])
     raw = (
-        row.raw_damage(
+        slot.source.raw_damage(
             DamageInputs(
                 champion_stats=stats,
                 level=parsed.level,
@@ -2098,9 +2123,17 @@ def _declared_packet(fixture, parsed, resolved, params):
                 target_current_health=float(params.target_health),
             )
         )
-        * duration
+        * procs
     )
-    return DeclaredPacket(raw, row.damage_type, rule.mechanic_id)
+    return DeclaredPacket(raw, slot.source.damage_type, rule.mechanic_id)
+
+
+def result_row(fixture, parsed, resolved, params):
+    """The pair engine's own row for this fixture's family."""
+    result = run_fight(
+        resolved.champion_data, parsed.level, list(resolved.items), params
+    )
+    return result["breakdown"][fixture.breakdown_key]
 
 
 class TestTheFromDeclarationPriceReproducesThePairEngines:
@@ -2136,7 +2169,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
             baseline_effective_mr=float(result["effective_mr"]),
         )
         assert price.amount == pair
-        assert price.resistance == float(result["effective_mr"])
+        assert price.resistance == float(result[PRICING_EQUIVALENCE.resistance_field])
 
     def test_the_comparison_is_not_vacuous_and_can_fail(self):
         """R-05's permanent negative for the fixture, in two directions.
@@ -2151,15 +2184,18 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
         parsed, resolved, params, result = _pair_priced(PRICING_EQUIVALENCE)
         pair = result["breakdown"][PRICING_EQUIVALENCE.breakdown_key]["total_damage"]
         packet = _declared_packet(PRICING_EQUIVALENCE, parsed, resolved, params)
-        resistance = float(result["effective_mr"])
+        baselines = {
+            "baseline_effective_armor": float(result["effective_armor"]),
+            "baseline_effective_mr": float(result["effective_mr"]),
+        }
+        field = f"baseline_{PRICING_EQUIVALENCE.resistance_field}"
+        resistance = baselines[field]
 
         assert packet.raw_amount > pair > 0.0
         assert resistance > 0.0
         assert (
             price_declared_packet(
-                packet,
-                baseline_effective_armor=float(result["effective_armor"]),
-                baseline_effective_mr=resistance + 1.0,
+                packet, **{**baselines, field: resistance + 1.0}
             ).amount
             != pair
         )
@@ -3153,3 +3189,132 @@ def test_every_on_hit_owner_prices_from_its_declaration_to_the_pair_engines_numb
     # would have priced its packets at a number no application had.
     tracks_health = row["pair_preview_of"] == "blade_of_the_ruined_king.on_hit"
     assert (len(magnitudes) > 1) is tracks_health
+
+
+# ---------------------------------------------------------------------------
+# periodic: an equivalence fixture per declaring owner
+# ---------------------------------------------------------------------------
+#
+# :func:`_on_hit_probe`'s reason, for the other family that retired the same
+# day and reaches even less of its own coverage.  Two of this family's seven
+# owners are on a committed coupled scenario -- Sunfire Aegis on
+# `immolate_active_bruiser_roster` and Liandry's Torment on
+# `liandry_reprice_mage_roster` -- so five are outside every population, and
+# with them a whole declared cadence: FIXED_INTERVAL is declared by Unending
+# Despair alone.  Umbrella Amendment P's answer for that shape is equivalence
+# fixtures PER OWNER, and this is it.
+#
+# The probe holds an Abyssal Mask beside the owner under test for the reason
+# the on-hit probe does, and here it covers the whole family rather than half
+# of it: all seven periodic strikes declare magic, so an amp of 1.0 anywhere
+# in this fixture set would mean the amp term was never exercised at all.
+
+#: A melee holder, so an aura and an interval strike both have a fight to run
+#: in, and casts to stretch a burn's refresh window.
+_PERIODIC_PROBE_CHAMPION = "Darius"
+
+
+def _periodic_owners() -> tuple[str, ...]:
+    """Every item declaring a ``periodic`` rule, read from the catalog."""
+    return tuple(
+        sorted(
+            {
+                rule.owner
+                for owner in rule_owners()
+                for rule in behavior_rules(owner)
+                if rule.family is RuleFamily.PERIODIC
+            }
+        )
+    )
+
+
+@lru_cache(maxsize=None)
+def _periodic_probe(owner: str):
+    """One pair fight holding *owner* and the amp owner, with its walk inputs."""
+    champion = gs.fetch_champion_data()[_PERIODIC_PROBE_CHAMPION]
+    by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
+    items = [by_name[owner], by_name[_ON_HIT_AMP_OWNER]]
+    params = FightParams(
+        target_health=gs.SNAPSHOT_TARGET_HEALTH,
+        target_bonus_health=0.0,
+        target_armor=gs.SNAPSHOT_TARGET_ARMOR,
+        target_magic_resistance=gs.SNAPSHOT_TARGET_MR,
+        fight_duration_seconds=gs.ONE_ROTATION_DURATION,
+        auto_attack_uptime=1.0,
+        one_rotation=False,
+        deterministic=True,
+    )
+    level = 18
+    result = run_fight(champion, level, list(items), params)
+    stats = calculate_total_stats(champion, level, list(items))
+    amps = delta_amp.resolve_static_holder_amps(
+        list(items),
+        holder_stats=stats,
+        ability_amp_armed=False,
+        level=level,
+        fight_duration_seconds=float(params.fight_duration_seconds),
+        target_bonus_health=0.0,
+        holder_is_melee=bool(stats.get("is_melee")),
+    )
+    return result, amps
+
+
+@pytest.mark.parametrize("owner", _periodic_owners())
+def test_every_periodic_owner_prices_from_its_declaration_to_the_pair_engines_number(
+    owner,
+):
+    """One owner, every tick: the walk's price is the pair engine's.
+
+    The equivalence this family's retirement rests on, stated per owner
+    because the committed coupled set reaches two of the seven and misses a
+    whole cadence.  For every tick the pair engine authored under this owner's
+    row, the declaration riding it, composed with the holder's own amps and
+    mitigated once, equals the number the pair engine put on that tick -- which
+    is what makes the retirement a re-spelling before it is a re-pricing
+    (umbrella Amendment L, Ruling 3).
+    """
+    result, amps = _periodic_probe(owner)
+    row = next(
+        entry
+        for key, entry in result["breakdown"].items()
+        if isinstance(entry, Mapping)
+        and entry.get("pair_preview_of") in _periodic_mechanics()
+        and key.endswith(owner)
+    )
+    assert row["pair_preview_of"] in walk_repriced_mechanics()
+    events = row["damage_events"]
+    assert events, owner
+
+    paid = 0.0
+    for event in events:
+        packet = declared_packet_of(
+            event["declared"],
+            str(event["damage_type"]),
+            row["pair_preview_of"],
+            amps,
+        )
+        price = price_declared_packet(
+            packet,
+            baseline_effective_armor=float(result["effective_armor"]),
+            baseline_effective_mr=float(result["effective_mr"]),
+        )
+        assert price.amount == pytest.approx(float(event["damage"]), rel=1e-12)
+        # All seven declare magic, so the holder's static magic amp is live
+        # for the whole family and the probe arms it.
+        assert packet.damage_type == "magic"
+        assert packet.holder_amp == amps.magic > 1.0
+        paid += price.amount
+
+    # The ticks are the row: a cadence whose ticks summed to something else
+    # would be a family the walk under- or over-pays by exactly the remainder.
+    assert paid == pytest.approx(float(row["total_damage"]), rel=1e-12)
+
+
+def _periodic_mechanics() -> frozenset[str]:
+    """Every declared ``periodic`` mechanic id, read from the catalog."""
+    return frozenset(
+        rule.mechanic_id
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.PERIODIC
+    )

@@ -1054,6 +1054,33 @@ _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+# The seven periodic strikes, retired off the pair engine 2026-08-16.  One row
+# per declared rule in ``item_behavior_catalog``'s ``periodic`` family, and
+# one authoring site for all three of its cadences: ``damage._add_burn_damage``
+# prices a refreshed burn over the window the fight's casts stretched it to,
+# an aura as a rate times the fight, and a fixed-interval strike as one packet
+# per completed interval, and splits each aggregate into the ticks that carry
+# the declaration's share.
+#
+# ``damage_amp_Liandry's Torment`` is deliberately not previewed here: the
+# triage lists it because it ablates the ITEM, and the row belongs to
+# ``liandrys_torment.whole_total_amp``, family ``delta_amp``, which retired on
+# its own terms.  Liandry's Torment declares two rules in two families and
+# only the burn is this one's.
+_PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
+    RetiredFamilyMechanic(mechanic, item, "damage._add_burn_damage")
+    for mechanic, item in (
+        ("bamis_cinder.continuous_aura", "Bami's Cinder"),
+        ("blackfire_torch.refreshed_burn", "Blackfire Torch"),
+        ("fated_ashes.refreshed_burn", "Fated Ashes"),
+        ("hollow_radiance.continuous_aura", "Hollow Radiance"),
+        ("liandrys_torment.refreshed_burn", "Liandry's Torment"),
+        ("sunfire_aegis.continuous_aura", "Sunfire Aegis"),
+        ("unending_despair.fixed_interval", "Unending Despair"),
+    )
+)
+
+
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
     _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
@@ -1356,6 +1383,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_CAST_PROC_RETIREMENT),
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
     *_retired_family_halves(_ON_HIT_STRIKE_RETIREMENT),
+    *_retired_family_halves(_PERIODIC_RETIREMENT),
     # -- the retired ``damage_routing`` family: three riders, no packet -----
     #
     # The fifth family to retire off the pair engine (2026-08-16) and the

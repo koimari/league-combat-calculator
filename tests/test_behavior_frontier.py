@@ -918,7 +918,7 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
-    key = "periodic/receipt_walk"
+    key = _some_deferral_key(committed)
     for block in (committed, fresh):
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "a stage that has not shipped"

@@ -612,7 +612,7 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
 #
-# Eight now, and the rows that left are why the count is written as a derived
+# Seven now, and the rows that left are why the count is written as a derived
 # length rather than restated in prose anywhere below.  ``delta_amp`` retired
 # on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
 # fourteen and rules its retiring act to be the walk-side delivery of the
@@ -641,7 +641,13 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # stamps each row it authors as a preview and hands the walk a declaration per
 # application, which Blade of the Ruined King needs one of because its
 # magnitude is re-read against the target's falling health and no two of its
-# applications share a number.  In each case the receipt
+# applications share a number.  ``periodic`` retired on 2026-08-16 too, over
+# the same one authoring site and its seven mechanics: ``damage._add_burn_damage``
+# prices all three of its cadences and now stamps each row as a preview and
+# splits the row's one declaration across the ticks it authors under it, which
+# is also the first family whose packets an existing re-pricing site moves --
+# ``damage._apply_liandry_reprice`` rescales the declaration on every tick it
+# re-prices.  In each case the receipt
 # walk reads that family's declaration
 # through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
 # deferring a gap the tree no longer holds would fail the gate below rather
@@ -714,7 +720,6 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # to the ruled artifact rather than an edit to this dict — see
 # ``deferral_creditor_stage`` below.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = (
-    "periodic",
     "resistance_shred",
     "secondary_target",
     "spellblade",
