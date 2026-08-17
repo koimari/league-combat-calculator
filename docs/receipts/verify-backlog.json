@@ -10,11 +10,12 @@
  "groups": {
   "campaign-close-final-integration": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the sweep batch's remaining four verifiers, transcribed into the ledger (campaign-close-final-integration)",
-    "docs(receipts): the verdict on the lane that answered the sweep, recorded (campaign-close-final-integration)"
+    "docs(receipts): the verdict on the lane that answered the sweep, recorded (campaign-close-final-integration)",
+    "docs(receipts): the owed row's population is read from its own measurement artifact (campaign-close-final-integration)"
    ]
   },
   "campaign-close-verify-p4-batch": {
