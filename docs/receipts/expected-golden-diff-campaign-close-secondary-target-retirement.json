@@ -1,0 +1,73 @@
+{
+  "slice": "campaign-close-secondary-target-retirement",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1 and Ruling 3",
+    "umbrella Amendment M, Ruling 1",
+    "umbrella Amendment N, Ruling 1 and Ruling 2",
+    "umbrella Amendment O, Ruling 2",
+    "umbrella Amendment P"
+  ],
+  "what_this_is": "The R-20 population of secondary_target/receipt_walk, the ninth of the fourteen attempted, enumerated from committed artifacts BEFORE this slice's first src/ edit -- and the measurement that stopped it before it ever made one. The slice is filed at its stop rather than at its landing, which is what R-20's measure-then-mutate order is for.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97: no baseline moved and no src/ edit landed, so the allowlist is empty by construction rather than by measurement."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. What can move is a property of which participants hold a declaring owner of the secondary_target family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json, whose own fields are derived from the behaviour catalog and from scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the secondary_target family on a participant. The one owner is read live from the behaviour catalog over rule_owners() -- Runaan's Hurricane -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard.",
+    "method": "scripts.receipt_walk_schedule.population_size over the selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "crit_onhit_carry_roster": 3498
+    },
+    "population_total": 3498,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "No src/ edit landed, so no leaf of either baseline could move. The zero is a fact about the diff rather than a prediction about one."
+    },
+    "occurrences_outside_the_population": 0
+  },
+  "the_stop": {
+    "verdict": "STOPPED. No src/ edit landed. This family is class (a) -- it authors two priced pair rows -- so umbrella Amendment L, Ruling 1's shape has something to stamp, and the slice was startable by the ruled act. It is the from-declaration PRICING STAGE that cannot carry it, in two independent ways, and amending that stage is an amendment's act and never a lane's: Amendment L, Ruling 3 budgeted the stage, Amendment M, Ruling 1 added its first missing term and Amendment N, Ruling 1 its second, each ruling in terms that it is not re-litigable by a lane. Amendment M, Ruling 1's own words name the two forbidden ways out and this slice took neither.",
+    "why_the_census_did_not_catch_it": "umbrella Amendment N, Ruling 2's term census is green -- 29 post-authoring packet-mutation sites, 0 uncovered, 3 static holder amps, 0 unfolded -- and it is green truthfully. Its predicate is a site that changes an ALREADY-AUTHORED packet's amount or its mitigation. Both terms below are applied while the packet is being authored, by the mitigation function the row is priced through, so no census in that shape can see them. That is recorded as a fact about the census's reach and not as a defect in it: Ruling 2 was written so terms would not be discovered one halt at a time, and this is a term of a kind its predicate does not range over.",
+    "blocker_1_the_basic_attack_delivery_terms": {
+      "what": "This is the FIRST family to retire whose packet is delivered as a BASIC ATTACK SWING. Every family retired so far is priced by damage._mitigate and by nothing else, which is a resistance and the holder's own magic amp -- exactly the two terms survival.pricing.price_declared_packet carries. The bolt row is priced by damage._mitigate_basic_attack_swing, which applies three further terms after the resistance: the holder's basic amp (which the stage DOES carry, through StaticHolderAmps.factor_for at AttackClass.BASIC_ATTACK), the target's critical-strike damage multiplier, and damage._apply_target_basic_damage_reduction's plating multiplier and capped flat reduction.",
+      "which_of_them_are_foldable_and_which_is_not": "Two of the three are pure multipliers on a linear mitigation, so folding them into the declared pre-mitigation magnitude prices to the same real number -- the same argument the on_hit_strike retirement used for on-hit effectiveness. The third is not a multiplier at all. damage._apply_target_basic_damage_reduction subtracts min(flat, per_hit * cap) from the MITIGATED value, which is a capped flat subtraction and not a factor, and in the deterministic reading it is applied to the crit branch and the non-crit branch separately before they are blended, so the cap bites on one and not the other. There is no magnitude a declaration could state that reproduces it, and deriving one by dividing the pair engine's own price back out is the ratio path this stage exists to replace.",
+      "measured": "Caitlyn at level 18 holding Runaan's Hurricane and Blade of the Ruined King, deterministic, one rotation at full auto uptime, roster_target_count 2 and roster_target_index 1, against the snapshot target. The pair engine's own state reads crit_chance 0.25, crit_multiplier 2.0, basic_amp 1.0, attack_damage 167, and the declaration's own compiled fields read secondary_damage_share 0.55 and secondary_max_targets 2.0, so the bolt's raw is 91.85000000000001 and the pre-mitigation blend is 114.8125. Priced at the fight's published effective armour of 50.0 that is 76.54166666666666, which is exactly the number the pair engine put on every one of the row's seven events -- so the from-declaration price reproduces the row EXACTLY while the three target-side terms are inert.",
+      "measured_with_the_terms_armed": "Plated Steelcaps' declared plating multiplier of 0.9 moves the pair engine's per-hit figure to 68.88749999999999, which is 76.54166666666666 * 0.9 -- a pure factor. Randuin's Omen's declared critical-strike damage multiplier of 0.7 moves it to 67.35666666666665, which is the same blend with the crit branch scaled -- also foldable. Warden's Mail's declared Rock Solid, flat 15.0 capped at 0.2 of the instance, moves it to 63.60666666666666: the crit branch mitigates to 122.46666666666667 and loses the full 15.0, the non-crit branch mitigates to 61.233333333333334 and loses the capped 12.246666666666668, and 0.25 * 107.46666666666667 + 0.75 * 48.98666666666667 is 63.60666666666666. A walk pricing this family's declaration would have paid 76.54166666666666 against the pair engine's 63.60666666666666 -- 20.3 percent high on a leaf, which qualifies under R-15's first test.",
+      "reachability": "All three are ordinary Summoner's Rift items an ENEMY may hold, and scenario.py:638-647 arms each of them on every pair fight against that enemy from the defender's own resolved defences. No committed coupled scenario arms any of them, which is precisely the shape umbrella Amendment N was written about: the R-20 line would have read a green zero over a population that could not contain the defect."
+    },
+    "blocker_2_the_copied_on_hit_row_declares_no_magnitude": {
+      "what": "The triage lists two authored pair rows for this family and only one of them is a packet this family's declaration states a magnitude for. secondary_Runaan's Hurricane is the bolt: a declared share of the attacker's damage, which is blocker 1's subject. on_hit_secondary_Runaan's Hurricane is the attack's on-hit effects COPIED onto the bolt's target, and damage._copied_on_hit_packet builds it out of on_hits.static_on_hit_by_type -- an already-MITIGATED aggregate -- plus a per-application _mitigate of every current-health strike against the secondary target's own falling health.",
+      "why_that_is_a_ruling_and_not_an_arithmetic_problem": "The runaans_hurricane.secondary_target rule declares exactly two numbers, max_targets and damage_share, and neither is a magnitude for that row. The magnitudes are the on_hit_strike family's own declarations, delivered at a second subject: measured on the probe above, the copied row's seven events read 80.0, 56.55166666666666, 39.507333333333335, 22.799639999999997, 11.981787733333329, 3.333333333333333 and 3.333333333333333, against Blade of the Ruined King's own row carrying declarations of 120.0, 106.85, 94.22599999999998, 82.10695999999997, 70.47268159999997, 59.30377433599999 and 48.58162336255999 for the same seven applications. Declaring those magnitudes under runaans_hurricane.secondary_target would make the walk price a retired family's declarations a second time under another family's mechanic, and D-62's key is (mechanic, subject, event_id) -- which is exactly the question of which family owns the number, a D-60 question a lane may not answer.",
+      "the_previous_lane_already_deferred_it": "The on_hit_strike retirement measured this same row and refused to stamp it, recording that it 'carries a different packet to a second target and belongs to the secondary_target family, whose deferral still stands'. That refusal was correct and it is not an answer: it says which family's slice owns the row, not what that slice may declare for it."
+    },
+    "what_this_slice_refused": {
+      "fold_the_price_back_out": "Declaring a magnitude derived by dividing the pair engine's own mitigated figure by its mitigation is the ratio path the from-declaration stage exists to replace, and umbrella Amendment N, Ruling 1 forbids the same move for the resistance term in terms.",
+      "refuse_the_packet_when_a_term_is_armed": "Amendment M, Ruling 1's second forbidden shape: refusing a packet whose holder has an amp armed deletes the number in the other direction, which is worse than the ratio path it replaces because that path at least refuses by name. The same reading applies to a target-side term.",
+      "retire_half_the_family": "Stamping the bolt row and leaving the copied row unstamped would leave one of the family's two authored rows priced by the pair engine and the other by the walk, which is neither half of Amendment L, Ruling 1 and is not a smaller version of it.",
+      "add_the_term_to_the_pricing_stage": "Amendment L, Ruling 3 budgets that stage and Amendments M and N amend it, each ruling that it is not re-litigable by a lane. A basic-attack delivery term is a fourth amendment to it, and inventing one here is what Amendment N's closing sentence removes the excuse for."
+    }
+  },
+  "what_stands_after_the_stop": {
+    "the_row": "secondary_target/receipt_walk stands, OPEN and overdue, its blocker unchanged, its population enumerated at 3498 and its triage class (a) untouched -- a class is measured from the pair rows a family authors and this family still authors two.",
+    "the_debt": "Two rows stand where two stood. This slice retires nothing and reads the debt as no smaller.",
+    "the_ruling_it_owes": "Recorded in docs/receipts/rulings-owed.json rather than left inside the receipt that found it, because the question -- what the from-declaration pricing stage owes a packet delivered as a basic-attack swing, and which family declares a copied on-hit packet's magnitude -- is one no lane may answer."
+  },
+  "no_baseline_moves": "R-32's five baselines are untouched by every commit of this slice, and so is src/. The only artifacts that move are this receipt, the rulings ledger and the gap ledger."
+}
