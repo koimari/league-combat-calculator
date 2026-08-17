@@ -13,6 +13,13 @@ instrument makes is driven through its own seam and shown to fail on demand:
 an injected re-pricing site with no restatement, an injected one that restates,
 an authoring site that must stay out, and a fourth static holder amp the walk's
 composition would not deliver.
+
+Umbrella Amendment R, Ruling 2 widens the predicate to the terms a mitigation
+applies WHILE it prices a packet, and the negatives widen with it: an injected
+authoring-time subtraction is uncovered, the same term multiplied instead is
+covered by the fold, a share of the priced value is not a carrier, a term a
+helper applies is still reached, and a fight-state field no declaration writes
+is not a term at all.
 """
 
 from __future__ import annotations
@@ -29,6 +36,8 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import term_census  # noqa: E402  (path is set above)
 
 from src.calculator.interpreters.delta_amp import StaticHolderAmps  # noqa: E402
+from src.calculator.item_behavior import DefenseField  # noqa: E402
+from src.calculator.survival.pricing import BasicAttackSwing  # noqa: E402
 
 #: The four sites the umbrella's Amendment N enumerated by hand, as the shape
 #: each of them is.  Named here as the *question* the instrument is asked, not
@@ -266,3 +275,250 @@ def test_every_declared_restatement_home_exists_in_the_engine(home):
     """A coverage predicate keyed on a name nothing defines is always red."""
     source = (REPO_ROOT / term_census.PAIR_ENGINE).read_text(encoding="utf-8")
     assert f"def {home}(" in source
+
+
+# ---------------------------------------------------------------------------
+# The widened predicate — umbrella Amendment R, Ruling 2
+# ---------------------------------------------------------------------------
+#
+# Everything above ranges over what happens to a packet AFTER it is authored,
+# and a third family was stopped by a term applied WHILE it is authored: a
+# packet delivered as a basic-attack swing meets the target's own defences
+# inside the mitigation function that prices it.  The green above was truthful
+# under the old predicate; what was missing was reach.  So the census also
+# enumerates every term `_mitigate` and `_mitigate_basic_attack_swing` apply to
+# a packet as they price it, and asserts each is carried by a pricing-stage
+# term.
+
+#: What the widened census finds on this tree, as the shape each term is.  The
+#: question the instrument is asked, not its answer: a tenth term is a failure
+#: and a missing ninth is a failure too, and each one's application is what
+#: decides whether the walk needs a term for it at all.
+AMENDMENT_R_TERMS = {
+    ("_mitigate", "effective_armor"): ("resistance", "transported"),
+    ("_mitigate", "effective_mr"): ("resistance", "transported"),
+    ("_mitigate", "magic_amp"): ("holder_amp", "factor"),
+    ("_mitigate_basic_attack_swing", "basic_amp"): ("holder_amp", "factor"),
+    ("_mitigate_basic_attack_swing", "magic_amp"): ("holder_amp", "transported"),
+    ("_mitigate_basic_attack_swing", "critical_strike_damage_multiplier"): (
+        "target_term",
+        "factor",
+    ),
+    ("_apply_target_basic_damage_reduction", "basic_damage_multiplier"): (
+        "target_term",
+        "factor",
+    ),
+    ("_apply_target_basic_damage_reduction", "basic_damage_flat_reduction"): (
+        "target_term",
+        "transported",
+    ),
+    ("_apply_target_basic_damage_reduction", "basic_damage_flat_reduction_cap"): (
+        "target_term",
+        "transported",
+    ),
+}
+
+
+def _by_name(terms):
+    """One authoring-time census, keyed by the function and term it names."""
+    return {(term.function, term.name): term for term in terms}
+
+
+class TestTheWidenedPredicateReachesAuthoringTime:
+    """What the ruling described, the instrument finds from source."""
+
+    def test_the_terms_are_exactly_the_ones_the_amendment_enumerated(self):
+        """No tenth, and no missing ninth."""
+        assert set(_by_name(term_census.authoring_time_terms())) == set(
+            AMENDMENT_R_TERMS
+        )
+
+    def test_each_term_is_classified_the_way_the_ruling_described_it(self):
+        """Kind and application together, because coverage reads both.
+
+        The distinction is the widening's whole content: a term that reaches
+        the priced number by multiplication alone folds into the declared
+        magnitude and the walk needs no term for it, and a term that reaches it
+        any other way has to be transported.
+        """
+        found = _by_name(term_census.authoring_time_terms())
+        assert {
+            key: (term.kind, term.application) for key, term in found.items()
+        } == AMENDMENT_R_TERMS
+
+    def test_every_enumerated_term_is_covered(self):
+        """Ruling 2's gate, in its widened form: no family retires while one is not."""
+        terms = term_census.authoring_time_terms()
+        assert term_census.uncovered_terms(terms) == ()
+        assert term_census.main(["--check"]) == 0
+
+    def test_the_two_folding_terms_are_covered_by_folding_and_not_by_a_field(self):
+        """And the two that do not fold are covered by the fields that carry them.
+
+        Asserted as the join it is rather than as four coverage strings: the
+        plating multiplier and the crit-damage multiplier are folded into the
+        declared magnitude by the site that declares it, and Rock Solid's flat
+        and cap are named by `BasicAttackSwing`'s own fields — so renaming a
+        field without renaming the engine's turns this red.
+        """
+        found = _by_name(term_census.authoring_time_terms())
+        folded = {key for key, term in found.items() if term.application == "factor"}
+        for key in folded:
+            if found[key].kind == "target_term":
+                assert (
+                    found[key].coverage() == "term:folded_into_the_declared_magnitude"
+                )
+                assert found[key].name not in BasicAttackSwing._fields
+        for name in ("basic_damage_flat_reduction", "basic_damage_flat_reduction_cap"):
+            term = found[("_apply_target_basic_damage_reduction", name)]
+            assert term.coverage() == f"term:BasicAttackSwing.{name}"
+            assert name in BasicAttackSwing._fields
+
+    def test_the_target_vocabulary_is_the_declaration_vocabulary(self):
+        """A fight-state attribute that no item can declare is not a term.
+
+        The join is `DefenseField`, which is what a declaration writes, so a
+        term the census names is one some item could arm and a term no item
+        could arm is not named.
+        """
+        found = term_census.authoring_time_terms()
+        declared = {field.value for field in DefenseField}
+        for term in found:
+            if term.kind == "target_term":
+                assert term.name in declared
+        assert DefenseField.THRESHOLD_HEALTH_BONUS.value not in {
+            term.name for term in found
+        }
+
+
+class TestTheWidenedCensusCanBeMadeToFail:
+    """R-05, updated: an injected authoring-time term turns the census red."""
+
+    #: A defensive field no mitigation reads today, so an injection using it is
+    #: unambiguously the injected term and not a term the tree already has.
+    UNARMED_FIELD = DefenseField.HEALING_RECEIVED_MULTIPLIER.value
+
+    def test_an_injected_authoring_time_subtraction_is_uncovered(self):
+        """The finding Ruling 2's widening exists to produce, on demand.
+
+        A term the mitigation subtracts from the number it is pricing is not a
+        factor and no declared magnitude reproduces it; with no field on the
+        pricing stage's swing composition to transport it, the census reports
+        it and stops.
+        """
+        injected = (
+            "def _mitigate_basic_attack_swing(state, raw_damage):\n"
+            "    mitigated = raw_damage * 0.5\n"
+            f"    return mitigated - state.target_{self.UNARMED_FIELD}\n"
+        )
+        found = _by_name(term_census.authoring_time_terms(injected))
+        key = ("_mitigate_basic_attack_swing", self.UNARMED_FIELD)
+        assert found[key].application == "transported"
+        assert found[key].coverage() == "UNCOVERED"
+        assert [term.name for term in term_census.uncovered_terms(found.values())] == [
+            self.UNARMED_FIELD
+        ]
+
+    def test_the_same_term_applied_as_a_factor_is_covered_by_folding(self):
+        """The seam is not a switch that only ever says no.
+
+        The same injected field, multiplied into the value being priced
+        instead of subtracted from it, comes back a factor and is covered by
+        the fold — which is what makes the red above a finding rather than the
+        instrument's default answer.
+        """
+        injected = (
+            "def _mitigate_basic_attack_swing(state, raw_damage):\n"
+            "    mitigated = raw_damage * 0.5\n"
+            f"    return mitigated * state.target_{self.UNARMED_FIELD}\n"
+        )
+        found = _by_name(term_census.authoring_time_terms(injected))
+        term = found[("_mitigate_basic_attack_swing", self.UNARMED_FIELD)]
+        assert term.application == "factor"
+        assert term.coverage() == "term:folded_into_the_declared_magnitude"
+
+    def test_a_share_of_the_priced_value_is_not_a_carrier(self):
+        """The predicate's sharp edge, driven directly.
+
+        Warden's Mail's cap is used in a PRODUCT — `per_hit * cap` — and is
+        still not a factor, because `per_hit` is a share of the priced value
+        rather than the priced value and the product is subtracted rather than
+        carried.  A census that closed carriers under division would call the
+        cap foldable and hand the walk a term it cannot state.
+        """
+        injected = (
+            "def _mitigate_basic_attack_swing(state, raw_damage, hits):\n"
+            "    mitigated = raw_damage * 0.5\n"
+            "    per_hit = mitigated / hits\n"
+            f"    return mitigated - per_hit * state.target_{self.UNARMED_FIELD}\n"
+        )
+        found = _by_name(term_census.authoring_time_terms(injected))
+        term = found[("_mitigate_basic_attack_swing", self.UNARMED_FIELD)]
+        assert term.application == "transported"
+        assert term.coverage() == "UNCOVERED"
+
+    def test_a_term_a_helper_applies_is_reached_through_the_call(self):
+        """The reach is transitive, which is where the third family's term hid.
+
+        The plating multiplier and Rock Solid are not applied in the swing
+        pricing itself — they are applied in a helper it calls — so a census
+        that read only the two named entry points would enumerate the terms
+        somebody already knew about.
+        """
+        injected = (
+            "def _mitigate_basic_attack_swing(state, raw_damage):\n"
+            "    return _some_helper(state, raw_damage * 0.5)\n"
+            "def _some_helper(state, mitigated):\n"
+            f"    return mitigated - state.target_{self.UNARMED_FIELD}\n"
+        )
+        found = _by_name(term_census.authoring_time_terms(injected))
+        assert ("_some_helper", self.UNARMED_FIELD) in found
+        assert found[("_some_helper", self.UNARMED_FIELD)].coverage() == "UNCOVERED"
+
+    def test_a_fight_state_field_no_declaration_writes_is_not_a_term(self):
+        """The other half of the predicate, driven the same way.
+
+        A census that named every `target_`-prefixed attribute would name
+        fields no item can arm, and a term nobody can arm is a term nobody can
+        cover — which would make the gate permanently red for no defect.
+        """
+        injected = (
+            "def _mitigate_basic_attack_swing(state, raw_damage):\n"
+            "    return raw_damage * 0.5 - state.target_not_a_defensive_field\n"
+        )
+        assert term_census.authoring_time_terms(injected) == ()
+
+    def test_an_uncovered_term_turns_the_gate_red(self, monkeypatch):
+        """`--check` is the gate, and it fails on this half as well as the other."""
+        monkeypatch.setattr(
+            term_census,
+            "authoring_time_terms",
+            lambda source=None: (
+                term_census.Term(
+                    function="_mitigate_basic_attack_swing",
+                    line=1,
+                    kind="target_term",
+                    name=self.UNARMED_FIELD,
+                    application="transported",
+                ),
+            ),
+        )
+        assert term_census.main([]) == 0
+        assert term_census.main(["--check"]) == 1
+
+
+def test_the_report_names_every_authoring_time_term_and_its_coverage():
+    """`--json` publishes both halves, so a reader is not left with a count."""
+    report = term_census.report(term_census.census())
+    assert report["uncovered_terms"] == []
+    assert {
+        (row["function"], row["name"]) for row in report["authoring_time_terms"]
+    } == set(AMENDMENT_R_TERMS)
+    assert all(row["coverage"] != "UNCOVERED" for row in report["authoring_time_terms"])
+
+
+@pytest.mark.parametrize("entry", term_census.MITIGATION_ENTRY_POINTS)
+def test_every_named_mitigation_entry_point_exists_in_the_engine(entry):
+    """A predicate keyed on a name nothing defines enumerates nothing, silently."""
+    source = (REPO_ROOT / term_census.PAIR_ENGINE).read_text(encoding="utf-8")
+    assert f"def {entry}(" in source

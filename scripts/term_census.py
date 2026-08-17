@@ -50,6 +50,32 @@ Anything else is **UNCOVERED**, and an uncovered site is a red gate: no further
 family retires while the census shows one (Ruling 2).  Adding an exclusion is
 not a lane's to do — Ruling 2 says a ruled, dated one recorded in the umbrella —
 so the instrument reports the site and stops rather than growing a list.
+
+**The predicate widens to authoring time** (umbrella Amendment R, Ruling 2,
+2026-08-16).  Everything above ranges over what happens to a packet *after* it
+is authored, and a third family was stopped by a term that is applied *while*
+it is authored: a packet delivered as a basic-attack swing meets the target's
+own defences inside the mitigation function that prices it, and no census in
+the shape above can see one.  The green above was therefore truthful under the
+old predicate and is recorded as truthful; what was missing was reach, not
+honesty.  So the census additionally enumerates every term ``_mitigate`` and
+``_mitigate_basic_attack_swing`` apply to a packet as they price it — target
+side as well as holder side — derived from the same syntax tree, and asserts
+each is carried by a pricing-stage term.
+
+**A factor folds and a subtraction does not, and that is derived rather than
+asserted.**  The fold is legitimate exactly when the term reaches the priced
+number by multiplication alone: a pure factor on a linear mitigation composes
+into the declared magnitude and prices to the same real number, so the walk
+needs no term for it.  Anything else has to be *transported*, and is covered
+only where ``survival.pricing.BasicAttackSwing`` declares a field of that
+term's own name.  So the scan follows the value the mitigation carries,
+closing it under multiplication only — ``reduced = damage * plating`` keeps
+carrying it and ``per_hit = reduced / hits`` does not — and asks whether every
+use of the term multiplies a carrier into another carrier.  Warden's Mail's
+cap is the case that makes the distinction load-bearing: it is used in a
+product, and the product is subtracted rather than carried, so it comes back
+transported and its coverage is the field that transports it.
 """
 
 from __future__ import annotations
@@ -67,6 +93,10 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.calculator.interpreters.delta_amp import (  # noqa: E402  (path set above)
     StaticHolderAmps,
+)
+from src.calculator.item_behavior import DefenseField  # noqa: E402  (path set above)
+from src.calculator.survival.pricing import (  # noqa: E402  (path set above)
+    BasicAttackSwing,
 )
 
 #: The pair engine, which is the jurisdiction Ruling 2 names.  One module,
@@ -91,6 +121,26 @@ RESTATEMENT_HOME = ("_restate_declaration", "_carry_declarations_onto_repriced_t
 #: holds under the same name with this suffix, and the census asserts the join
 #: rather than trusting it.
 AMP_FIELD_SUFFIX = "_amp"
+
+#: The pair engine's two mitigation entry points — the functions that turn a
+#: raw magnitude into what a packet is worth.  Named because Amendment R,
+#: Ruling 2 names them, and checked for existence rather than assumed, so a
+#: rename arrives here as a stop instead of as an empty enumeration.
+MITIGATION_ENTRY_POINTS = ("_mitigate", "_mitigate_basic_attack_swing")
+
+#: How the fight state spells a term the *target* brings to a packet.  The
+#: suffix is joined against ``DefenseField``'s own vocabulary, so an attribute
+#: that is not a declared defensive field is not a term any item can arm.
+TARGET_FIELD_PREFIX = "target_"
+
+#: The resolved-resistance object the mitigation reads a resistance off.  A
+#: term census keyed on attribute names alone would have to list the two
+#: resistances; keyed on the container, it reaches whatever third resistance
+#: that object ever grows.
+RESISTS_CONTAINER = "resists"
+
+#: How an authoring-time term reaches the number being priced.
+APPLICATIONS = ("factor", "transported")
 
 
 def static_holder_amp_fields() -> tuple[str, ...]:
@@ -202,6 +252,40 @@ class Site:
             ],
             "amps": list(self.amps),
             "restates": list(self.restates),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class Term:
+    """One authoring-time mitigation term, and how it reaches the price."""
+
+    function: str
+    line: int
+    kind: str
+    name: str
+    application: str
+
+    def coverage(self) -> str:
+        """Which pricing-stage term carries this one to the walk."""
+        if self.kind == "resistance":
+            return "term:DeclaredPacket.effective_resistance"
+        if self.kind == "holder_amp":
+            return "term:DeclaredPacket.holder_amp"
+        if self.application == "factor":
+            return "term:folded_into_the_declared_magnitude"
+        if self.name in BasicAttackSwing._fields:
+            return f"term:BasicAttackSwing.{self.name}"
+        return "UNCOVERED"
+
+    def as_row(self) -> dict[str, Any]:
+        """This term as the JSON report states it."""
+        return {
+            "function": self.function,
+            "line": self.line,
+            "kind": self.kind,
+            "name": self.name,
+            "application": self.application,
+            "coverage": self.coverage(),
         }
 
 
@@ -451,6 +535,203 @@ def census(source: str | None = None) -> tuple[Site, ...]:
     return tuple(sorted(sites, key=lambda site: site.line))
 
 
+def _reached_from(tree: ast.AST, entry_points: Sequence[str]) -> dict[str, ast.AST]:
+    """Each named entry point and every module function it calls, transitively.
+
+    The terms a mitigation applies are spread across the entry point and the
+    helpers it calls, so a term added to a fourth helper has to arrive here on
+    the commit that adds it rather than on the commit somebody notices.
+    """
+    defined = {
+        node.name: node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    reached: dict[str, ast.AST] = {}
+    pending = [name for name in entry_points if name in defined]
+    while pending:
+        name = pending.pop()
+        if name in reached:
+            continue
+        reached[name] = defined[name]
+        pending.extend(
+            node.func.id
+            for node in ast.walk(defined[name])
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in defined
+        )
+    return reached
+
+
+def _term_of(node: ast.AST, amp_fields: frozenset[str]) -> tuple[str, str, str] | None:
+    """The ``(kind, name, spelling)`` of the term a node reads, or ``None``.
+
+    Three kinds and no fourth: the resistance the packet is mitigated at, one
+    of the holder's own static amps, and a defensive field the *target*
+    brings.  Each is recognised by the tree's own vocabulary rather than by a
+    name typed here — the resists container, ``StaticHolderAmps``' declared
+    amps, and ``DefenseField``'s values behind the fight state's prefix.
+
+    ``spelling`` is how the term's *uses* read, which is not always how its
+    declaration does: an amp arrives at ``_mitigate`` as a parameter and is
+    applied as a bare name, so classifying the parameter by its own text
+    would find no use of it at all.
+    """
+    defence_fields = {field.value for field in DefenseField}
+    if isinstance(node, ast.arg):
+        return ("holder_amp", node.arg, node.arg) if node.arg in amp_fields else None
+    if not isinstance(node, ast.Attribute):
+        return None
+    if ast.unparse(node.value).split(".")[-1] == RESISTS_CONTAINER:
+        return "resistance", node.attr, ast.unparse(node)
+    if node.attr in amp_fields:
+        return "holder_amp", node.attr, ast.unparse(node)
+    if node.attr.startswith(TARGET_FIELD_PREFIX):
+        field = node.attr[len(TARGET_FIELD_PREFIX) :]
+        if field in defence_fields:
+            return "target_term", field, ast.unparse(node)
+    return None
+
+
+def _carriers(function: ast.AST) -> frozenset[str]:
+    """Every local name that still carries the value being mitigated.
+
+    Seeded at the function's own arguments — the raw or already-mitigated
+    magnitude arrives as one — and closed under **multiplication only**, plus
+    the calls the magnitude passes through.  Multiplication only is the whole
+    content: a name bound to ``carrier * factor`` is still the priced number
+    scaled, and a name bound to ``carrier / hits`` is a share of it that the
+    engine then subtracts, so the two must not be one class.
+    """
+    carriers = {
+        argument.arg
+        for argument in getattr(function, "args", ast.arguments()).args
+        if argument.arg not in ("self", "state")
+    }
+    for _ in range(len(list(ast.walk(function)))):
+        grown = False
+        for node in ast.walk(function):
+            if isinstance(node, ast.AugAssign):
+                if not isinstance(node.op, ast.Mult):
+                    continue
+                names = {ast.unparse(node.target)}
+            elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+                if not _carries(node.value, carriers):
+                    continue
+                names = {ast.unparse(target) for target in _targets(node)}
+            else:
+                continue
+            if not names <= carriers:
+                carriers |= names
+                grown = True
+        if not grown:
+            break
+    return frozenset(carriers)
+
+
+def _carries(value: ast.AST | None, carriers: frozenset[str] | set[str]) -> bool:
+    """Whether one expression still carries the value being mitigated.
+
+    A carrier name, a product one of whose operands carries it, or a call one
+    of whose arguments does — the mitigation formula and the two clamps the
+    engine wraps a priced number in are all calls, and a value that passes
+    through one is the same value.
+    """
+    if value is None:
+        return False
+    if isinstance(value, ast.Name):
+        return value.id in carriers
+    if isinstance(value, ast.BinOp) and isinstance(value.op, ast.Mult):
+        return _carries(value.left, carriers) or _carries(value.right, carriers)
+    if isinstance(value, ast.Call):
+        return any(_carries(argument, carriers) for argument in value.args)
+    return False
+
+
+def _application_of(function: ast.AST, spelling: str, carriers: frozenset[str]) -> str:
+    """Whether one term's every use multiplies a carrier into another carrier.
+
+    ``factor`` is the folding case Ruling 1 rules composes into the declared
+    magnitude; anything else has to be transported on the declaration.  Asked
+    over *every* use of the term rather than over one, because a value used
+    once as a factor and once as a threshold is not a factor.
+
+    Deliberately conservative, and the conservatism runs the safe way: binding
+    a term to a local name is a use that is not a multiplication, so a term
+    read into a variable before it is applied comes back ``transported`` and
+    is red unless the pricing stage transports it.  A foldable term written
+    that way is a stop asking for a ruling, which is what Ruling 2 asks the
+    instrument to do; the reverse mistake would be a term called foldable
+    because one of its uses happened to be a product.
+    """
+    uses = folds = 0
+    for node in ast.walk(function):
+        if isinstance(node, ast.AugAssign) and isinstance(node.op, ast.Mult):
+            if ast.unparse(node.value) == spelling:
+                uses += 1
+                folds += ast.unparse(node.target) in carriers
+            continue
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
+            sides = (ast.unparse(node.left), ast.unparse(node.right))
+            if spelling in sides:
+                uses += 1
+                folds += _carries(node.left, carriers) or _carries(node.right, carriers)
+                continue
+        for child in ast.iter_child_nodes(node):
+            if ast.unparse(child) == spelling and not isinstance(
+                node, (ast.BinOp, ast.AugAssign)
+            ):
+                uses += 1
+    return "factor" if uses and uses == folds else "transported"
+
+
+def authoring_time_terms(source: str | None = None) -> tuple[Term, ...]:
+    """Every term the pair engine's mitigation applies to a packet it prices.
+
+    Umbrella Amendment R, Ruling 2's widened predicate: the terms applied
+    *while* the packet is being authored, which no census over post-authoring
+    mutation can reach.  Same ``source`` seam as :func:`census`, for the same
+    reason — a scan that cannot be made to report something is
+    indistinguishable from a scan that found nothing.
+    """
+    text = (
+        (REPO_ROOT / PAIR_ENGINE).read_text(encoding="utf-8")
+        if source is None
+        else source
+    )
+    tree = ast.parse(text)
+    amp_fields = frozenset(static_holder_amp_fields())
+    terms: dict[tuple[str, str, str], Term] = {}
+    for name, function in _reached_from(tree, MITIGATION_ENTRY_POINTS).items():
+        carriers = _carriers(function)
+        for node in ast.walk(function):
+            found = _term_of(node, amp_fields)
+            if found is None:
+                continue
+            kind, term_name, spelling = found
+            key = (name, kind, term_name)
+            if key in terms:
+                continue
+            terms[key] = Term(
+                function=name,
+                line=getattr(node, "lineno", function.lineno),
+                kind=kind,
+                name=term_name,
+                application=(
+                    "transported"
+                    if kind == "resistance"
+                    else _application_of(function, spelling, carriers)
+                ),
+            )
+    return tuple(sorted(terms.values(), key=lambda term: (term.function, term.name)))
+
+
+def uncovered_terms(terms: Sequence[Term]) -> tuple[Term, ...]:
+    """Every authoring-time term no pricing-stage term carries to the walk."""
+    return tuple(term for term in terms if term.coverage() == "UNCOVERED")
+
+
 def unfolded_amps() -> tuple[str, ...]:
     """Static holder amps the walk's own composition does not deliver."""
     return tuple(
@@ -463,8 +744,11 @@ def uncovered(sites: Sequence[Site]) -> tuple[Site, ...]:
     return tuple(site for site in sites if site.coverage() == "UNCOVERED")
 
 
-def report(sites: Sequence[Site]) -> dict[str, Any]:
-    """The census as one JSON object."""
+def report(
+    sites: Sequence[Site], terms: Sequence[Term] | None = None
+) -> dict[str, Any]:
+    """The census as one JSON object, both predicates in it."""
+    terms = authoring_time_terms() if terms is None else terms
     return {
         "jurisdiction": PAIR_ENGINE,
         "static_holder_amps": list(static_holder_amp_fields()),
@@ -472,6 +756,10 @@ def report(sites: Sequence[Site]) -> dict[str, Any]:
         "unfolded_amps": list(unfolded_amps()),
         "sites": [site.as_row() for site in sites],
         "uncovered": [site.function for site in uncovered(sites)],
+        "authoring_time_terms": [term.as_row() for term in terms],
+        "uncovered_terms": [
+            f"{term.function}:{term.name}" for term in uncovered_terms(terms)
+        ],
     }
 
 
@@ -484,14 +772,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     sites = census()
+    terms = authoring_time_terms()
     if args.json:
-        print(json.dumps(report(sites), indent=1, sort_keys=True))
+        print(json.dumps(report(sites, terms), indent=1, sort_keys=True))
         return 0
     open_sites = uncovered(sites)
+    open_terms = uncovered_terms(terms)
     unfolded = unfolded_amps()
     print(
         f"term census over {PAIR_ENGINE}: {len(sites)} post-authoring "
         f"packet-mutation site(s), {len(open_sites)} uncovered, "
+        f"{len(terms)} authoring-time mitigation term(s), "
+        f"{len(open_terms)} uncovered, "
         f"{len(static_holder_amp_fields())} static holder amp(s), "
         f"{len(unfolded)} unfolded"
     )
@@ -501,11 +793,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{', '.join(write.target for write in site.writes)} and keeps no "
             "declaration in step"
         )
+    for term in open_terms:
+        print(
+            f"  UNCOVERED TERM {term.name} in {term.function} (line {term.line}): "
+            f"applied {term.application} while the packet is priced, and no "
+            "pricing-stage term transports it"
+        )
     for amp in unfolded:
         print(
             f"  UNFOLDED {amp}: declared by StaticHolderAmps, not folded by factor_for"
         )
-    if args.check and (open_sites or unfolded):
+    if args.check and (open_sites or open_terms or unfolded):
         return 1
     return 0
 
