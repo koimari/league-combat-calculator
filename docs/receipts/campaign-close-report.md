@@ -1491,6 +1491,19 @@ reconstruction `what_this_ledger_does_not_hold` refuses. The clause is unmet, an
 it is unmet by 60 rather than by 62 because two of them were answered rather than
 re-read.
 
+*Anchored 2026-08-17. The seven ledger readings in the two clauses above were
+readings of this section's own tip when `3799bef` wrote them, and §16.6 wrote
+down in advance what the next pass that moved one had to choose between —
+restate the figure, or anchor it the way `SECTION_15_5_ANCHOR` does. Round 129
+moved two of them, by transcribing an R-35 verdict that had been rendered on
+this campaign and never recorded, so they stay exactly as written and
+`tests/test_campaign_close_report_figures.py` reads them at
+`git show 3799bef:docs/receipts/verify-ledger.json`. The live readings are in
+that file's coverage block, which is where §12.4 says they live, and §17 states
+them as of its own tip. What the anchoring does not touch is either clause's
+grade: criterion 11 is not discharged, by the same two clauses, on this tip as
+on that one.*
+
 **The fact that is new.** The owed ruling —
 [`rulings-owed.json`](rulings-owed.json)'s
 `whether_criterion_11s_first_clause_binds_the_campaign_backwards`, still the one

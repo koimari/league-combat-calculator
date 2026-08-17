@@ -17940,6 +17940,126 @@
      "note": "Confirmed by diff: across a431e34 the citation list goes 17 -> 18 and the tag it gains is the group's own. The counter is derived, not authored, so nothing in it is wrong and there is nothing to repair -- what is missing is a sentence in a body that cannot be amended, so the row is documented. It is the second measured instance of the state a_groups_own_next_commit_can_flip_its_citation_state records, and that block already says why the shape is recorded rather than repaired: widening the flag into an attribution is a change to what a derived counter claims, which is a runbook matter and not a lane's. This answering group's own commits name the counter each time they move it, which is the half a lane does control."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-final-integration-r35",
+   "round": 129,
+   "backfilled": false,
+   "residue_sweep": false,
+   "verified_commits": [
+    "a431e34",
+    "0be8f37",
+    "b02e4ca",
+    "9ee7505",
+    "6a357b4",
+    "0a2bee2",
+    "86114ed",
+    "832a91f",
+    "e4338b7",
+    "c0c7f75",
+    "dd552ca",
+    "04cdfbf"
+   ],
+   "dated": "2026-08-17",
+   "answered_by": [
+    "04cdfbf"
+   ],
+   "what_this_round_is": "A live R-35 pass, and the campaign's first verdict on a group that existed only to answer another group's verdict. A fresh read-only Opus 5 verifier that had not read the plan was handed the same brief round 128's verifier was handed -- campaign-close-final-integration's four commits 'plus any subsequent fix commits up to current HEAD' -- at a tip where those subsequent commits were the eight this slice group landed, and it verified twelve commits in its own words. It returned all four criteria DISCHARGED, with five behaviours the twelve commit bodies do not mention. The verdict covers THIS tag by the join the backfill block already rules: a tag is covered when a verifier verified a commit that carries it, and eight of the twelve carry this one -- the verifier names six of them by sha in its own evidence. Transcribed from the orchestration journal line holding the returned report; the verdicts and the findings are the verifier's, and the dispositions below are the lane's. What this round does NOT do is close runbook criterion 11: it moves one tag out of the residue, the tag of the lane transcribing it takes a place beside campaign-close-certification's, and the owed ruling in rulings-owed.json is untouched by a verdict about one group.",
+   "provenance": {
+    "verifier_labels": [
+     "Close-final-integration, re-verification"
+    ],
+    "agent_ids": [
+     "afaed148557c0333b"
+    ],
+    "journal_key": "v2:55e362a5ef684133a38e617eaba26b892f646622a8ea6b92186e1196658b7a31",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 5,
+    "all_discharged_as_returned": {
+     "afaed148557c0333b": true
+    },
+    "why_this_is_not_round_128_again": "Round 128 is the FIRST verifier over that brief, run at 9ee7505 before this group existed, and it returned one criterion NOT DISCHARGED. This is the SECOND, run at 04cdfbf after all eight of this group's commits had landed, and it re-derived the corrections rather than trusting them -- its evidence names 6a357b4, 0a2bee2, 86114ed, 832a91f, c0c7f75 and 04cdfbf and reproduces the six dated residue readings out of git itself. Two passes, two agents, two journal keys, one brief."
+   },
+   "criteria": [
+    {
+     "id": "ledger-covers-every-slice-tag",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Derived the population independently rather than reading the ledger's own number: `git log --format=%s 584071e..HEAD`, first element of each subject's trailing parenthetical, yields 126 distinct slice tags and 159 untagged commits. The ledger's `coverage.slice_groups_with_a_verdict_in_this_ledger` (124) union `coverage [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "runbook-criteria-9-10-11-discharged-on-the-tip-with-the-instrument",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Criterion 9: both `golden_snapshot.py compare` runs report `snapshot identical`, so zero occurrences satisfy `qualifies_for_investigation` on this tip and the group performed no baseline re-capture (no commit of the twelve touches any of R-32's five baselines). `standing_dissent_scan.py --check` exit 0 reproducing sect [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "close-reports-closeout-section-accurate",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Re-ran every instrument section 14 cites and matched: behavior-frontier counter_4 = 16 with `deferrals.rows == {}`; receipt_walk_schedule --check exit 0 with `families == {}` and `scheduled_slices` 0; `closed_by_authority_reclassification` = {crit_profile} and `closed_by_lane_declaration_correction` = {combat_state, op [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "r01-matrix-and-plan-audit-green",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All eleven R-01 rows run by me on HEAD 04cdfbf, clean tree: row 1 `pytest` 8618 passed, 0 skipped, 0 xfailed; rows 2 and 3 both `OK: snapshot identical`; row 4 acceptance_matrix --json exit 0, passed true, 10 scenarios; row 5 champion_optimizer_matrix --json exit 0, 173 registered / 173 exercised, passed true; row 6 `b [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "campaign-close-final-integration-r35/unmentioned-1",
+     "finding": "STALE JUSTIFICATION INSIDE THE FILE THE GROUP REWROTE. a431e34 drove `coverage.residue_with_no_verdict_anywhere` 16 -> 0 and `coverage.residue` 25 -> 3 in docs/receipts/verify-ledger.json, which falsifies a sibling field of the same block that no commit body mentions and nothing gates: `coverage.why_the_residue_cannot_ [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here. The prose it names is this file's own coverage block.",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-final-integration-r35/unmentioned-2",
+     "finding": "G14 IN campaign-gap-ledger.json FALSIFIED AND LEFT UNTOUCHED. a431e34 and 0be8f37 took the residue to 2 and the backwards branch's price to 2 passes. G14's `blocker` still says binding the clause backwards \"schedules some sixty fresh read-only passes\" and G14's `note` still says of the residue \"What it does not do is f [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here. The two falsified sentences are G14's blocker and note.",
+     "artifact": "docs/receipts/campaign-gap-ledger.json",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-final-integration-r35/unmentioned-3",
+     "finding": "rulings-owed.json's `what_the_measurement_now_reads` WENT STALE INSIDE THE SAME LANE. b02e4ca added that field expressly so the owed row reads a live measurement instead of a frozen figure, and it states \"Measured on this tip: 125 slice tags derived from commit subjects, 123 with a verdict recorded in docs/receipts/ver [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here. The field it names is the owed row's own measurement restatement.",
+     "artifact": "docs/receipts/rulings-owed.json",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-final-integration-r35/unmentioned-4",
+     "finding": "THE NEW GATE HARD-CODES EIGHT ABBREVIATED SHAS AND SHELLS OUT TO `git show`, SO R-01 ROW 1 NOW DEPENDS ON HISTORY SURVIVING. tests/test_campaign_close_report_figures.py pins TABLE_ANCHOR 832a91f, SEARCH_ANCHOR 86114ed, BATCH a431e34, BATCH_PARENT 1e7c342, UNREACHED_COMMIT 209da2f, MINOR_4_COMMIT 1bd837e plus six residu [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here. The verifier rates it low severity itself; it is a fragility in the gate rather than a claim the tree contradicts.",
+     "artifact": "tests/test_campaign_close_report_figures.py",
+     "answered_at": []
+    },
+    {
+     "id": "campaign-close-final-integration-r35/unmentioned-5",
+     "finding": "THE GATE'S COVERAGE CLAIM IS AN ENUMERATION, NOT A PROPERTY IT HOLDS. c0c7f75's body reports \"0 figures in the section left ungated\" and section 15.6 says the file \"re-derives every figure this section states\". What the file actually asserts is 39 named figures plus the count of them and 6 claims; there is no completen [...]",
+     "disposition": "documented_open",
+     "note": "R-35's second question, answered by the verifier and documented here. A claim-scope gap: the file asserts named figures, the section claims every figure.",
+     "artifact": "tests/test_campaign_close_report_figures.py",
+     "answered_at": []
+    }
+   ]
   }
  ],
  "coverage": {
@@ -18035,6 +18155,7 @@
    "campaign-close-dissent-docket",
    "campaign-close-dissent-readjudication",
    "campaign-close-final-integration",
+   "campaign-close-final-integration-r35",
    "campaign-close-gap-ledger",
    "campaign-close-gate-quality",
    "campaign-close-identity-pairing",
@@ -18074,7 +18195,7 @@
   ],
   "slice_groups_without_one": [
    "campaign-close-certification",
-   "campaign-close-final-integration-r35",
+   "campaign-close-certification-r2",
    "campaign-close-verify-p4-batch"
   ],
   "untagged_commits": 159,
@@ -18091,6 +18212,7 @@
    "campaign-close",
    "campaign-close-boundary",
    "campaign-close-certification",
+   "campaign-close-certification-r2",
    "campaign-close-dissent-docket",
    "campaign-close-final-integration",
    "campaign-close-final-integration-r35",
@@ -18124,7 +18246,8 @@
    "dated": "2026-08-17",
    "what_happened": "The slice group campaign-close-certification -- the pass answering a certification review's blocker and two majors -- is a tag no verifier has read, so it takes the explicit line the forward gate requires rather than a verdict a lane may not write for itself. residue 2 -> 3, in the commit that introduced the tag rather than in the one after it.",
    "why_it_is_recorded_here_and_not_only_in_a_body": "It is the mechanism the owed ruling has to price, and it is a property of the clause rather than of any lane: every act that records a verdict is itself a commit, every commit carries a slice tag, and a tag with no verdict is residue. So the residue cannot reach zero by anybody working; it reaches zero only if the act that records the last verdict carries a tag that already has one. Measured over this ledger's own history: rounds 123-127 were recorded by lanes whose own tags then needed verdicts, and got them from later rounds, and round 128's recording lane -- campaign-close-final-integration-r35 -- is the live end of that chain today. Round 128's note states the convention that keeps the chain alive, in its own words: the answering group's own tag takes the residue's place 'because a lane cannot verify itself and the residue says so rather than closing on a lane's word'. That is a choice and not an impossibility, and naming it is a statement about the QUESTION the owed ruling asks -- the same line verify-backlog.json draws when it prices a branch it may not choose. Nothing here chooses one.",
-   "and_its_citation_flag_is_true_without_anybody_having_answered_it": "residue_with_no_verdict_anywhere stays 0, and that is the derivation's known limit rather than a fact about this group. The flag is computed from a commit body naming the mechanism and carrying a verdict word, and this pass's bodies do both -- they discuss verifiers and verdicts at length because the corrections are about how a verdict is read. No R-35 answer about campaign-close-certification exists anywhere. This is exactly what a_groups_own_next_commit_can_flip_its_citation_state records: 'what the derivation cannot do is tell WHOSE answer a body carries'. The flag is left derived and the limitation is restated on the row it now applies to, rather than the bodies being worded around the predicate -- which is what ff9a488 did and what the same block records as the shape to avoid."
+   "and_its_citation_flag_is_true_without_anybody_having_answered_it": "residue_with_no_verdict_anywhere stays 0, and that is the derivation's known limit rather than a fact about this group. The flag is computed from a commit body naming the mechanism and carrying a verdict word, and this pass's bodies do both -- they discuss verifiers and verdicts at length because the corrections are about how a verdict is read. No R-35 answer about campaign-close-certification exists anywhere. This is exactly what a_groups_own_next_commit_can_flip_its_citation_state records: 'what the derivation cannot do is tell WHOSE answer a body carries'. The flag is left derived and the limitation is restated on the row it now applies to, rather than the bodies being worded around the predicate -- which is what ff9a488 did and what the same block records as the shape to avoid.",
+   "and_again_2026_08_17": "The second instance, and it moves in both directions at once. campaign-close-final-integration-r35 LEFT slice_groups_without_one on a verifier's artifact rather than on a lane's word -- round 129, an R-35 pass that was rendered on 2026-08-17 and had never been transcribed -- and campaign-close-certification-r2, the tag of the lane transcribing it, took a place beside campaign-close-certification's. So the residue is 3 before and 3 after, over a membership that is one group younger. That is the mechanism this block already states, measured once more: the act of recording a verdict is itself a commit, and the tag it carries is residue until somebody verifies it. Nothing here chooses a branch of the owed ruling, and the residue's arithmetic is what it was."
   }
  },
  "vocabulary_notes": {

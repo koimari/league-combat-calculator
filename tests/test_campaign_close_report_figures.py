@@ -87,6 +87,15 @@ BATCH_PARENT = "1e7c342"
 #: read from the tree.
 SECTION_15_4_TIP_ANCHOR = "e4338b7"
 
+#: The commit that wrote section 16.3.  Its seven ledger readings were facts
+#: about that tip, and section 16.6 wrote down in advance what the next pass
+#: that moved one had to do: "restate the figure, or anchor it the way
+#: ``SECTION_15_5_ANCHOR`` does".  Round 129 moved two of them -- a verdict that
+#: had been rendered and never transcribed -- so they are anchored, which is the
+#: branch that leaves the section's text as written.  Section 17 states the live
+#: readings and is gated against the tree.
+SECTION_16_3_ANCHOR = "3799bef"
+
 #: The commit that wrote section 15.5.  Its coverage figures were "about this
 #: tip" when they were written and stopped being so the moment another slice
 #: group shipped -- which is a thing the campaign expects to happen, not a
@@ -253,6 +262,11 @@ def anchored() -> list[dict]:
 def here() -> list[dict]:
     """The passes at this tip."""
     return ledger()["passes"]
+
+
+def anchored_16_3() -> list[dict]:
+    """The passes section 16.3's verdict counts were measured over."""
+    return ledger_at(SECTION_16_3_ANCHOR)["passes"]
 
 
 def slice_tag_total_at(block: dict) -> str:
@@ -670,37 +684,37 @@ FIGURES_16: list[tuple[str, str, Callable[[], str]]] = [
     (
         "16.3 slice tags",
         r"\*\*(\d+)\*\* slice tags derived from commit subjects",
-        lambda: slice_tag_total_at(ledger()["coverage"]),
+        lambda: slice_tag_total_at(coverage_at(SECTION_16_3_ANCHOR)),
     ),
     (
         "16.3 recorded passes",
         r"\*\*(\d+)\*\* recorded\s+passes",
-        lambda: str(len(here())),
+        lambda: pass_count(SECTION_16_3_ANCHOR),
     ),
     (
         "16.3 residue",
         r"a residue of \*\*(\d+)\*\*",
-        lambda: str(ledger()["coverage"]["residue"]),
+        lambda: residue_at(SECTION_16_3_ANCHOR),
     ),
     (
         "16.3 not discharged",
         r"\*\*(\d+)\*\* `NOT_DISCHARGED` rows",
-        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+        lambda: verdict_count(anchored_16_3(), "NOT_DISCHARGED"),
     ),
     (
         "16.3 documented_open",
         r"of which \*\*(\d+)\*\* stand",
-        lambda: disposition_count(here(), "documented_open"),
+        lambda: disposition_count(anchored_16_3(), "documented_open"),
     ),
     (
         "16.3 fixed",
         r"`documented_open`, (\d+) `fixed`",
-        lambda: disposition_count(here(), "fixed"),
+        lambda: disposition_count(anchored_16_3(), "fixed"),
     ),
     (
         "16.3 fixed_and_gated",
         r"`fixed` and (\d+) `fixed_and_gated`",
-        lambda: disposition_count(here(), "fixed_and_gated"),
+        lambda: disposition_count(anchored_16_3(), "fixed_and_gated"),
     ),
     (
         "16.6 the gate's own size",

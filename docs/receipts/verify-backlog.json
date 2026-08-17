@@ -21,19 +21,12 @@
     "docs(receipts): section 16.7 carries verdicts, because a gate reading is not re-derivable (campaign-close-certification)"
    ]
   },
-  "campaign-close-final-integration-r35": {
+  "campaign-close-certification-r2": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 8,
+   "commit_count": 1,
    "criteria_documents": [],
    "subjects": [
-    "docs(receipts): the residue's dated figure is read from the ledger's own history (campaign-close-final-integration-r35)",
-    "docs(receipts): the citation flag is stated as what it derives, not whose answer it found (campaign-close-final-integration-r35)",
-    "docs(receipts): no ledger round measures the act that closed the tests.collected minor (campaign-close-final-integration-r35)",
-    "docs(receipts): the open NOT DISCHARGED rows are counted over the ledger, not over one batch (campaign-close-final-integration-r35)",
-    "docs(receipts): the verdict on the closeout that answered the sweep, recorded (campaign-close-final-integration-r35)",
-    "test(gates): section 15's figures are re-derived from the artifacts they were read from (campaign-close-final-integration-r35)",
-    "docs(receipts): round 110's criterion ids are quoted with the prefix the ledger stamps on them (campaign-close-final-integration-r35)",
-    "docs(receipts): this lane's gate matrix is recorded as verdicts, where its own gate can read it (campaign-close-final-integration-r35)"
+    "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)"
    ]
   },
   "campaign-close-verify-p4-batch": {
