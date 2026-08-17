@@ -804,12 +804,12 @@ missing. So the finding is a fact about the campaign's first three days and
 about nothing since, and the count that would make it a live gap is zero.
 
 **What the acceptance does not say.** It does not say the eight moved no
-numbers. Four of them are `docs`-subject commits whose `src/` edits are prose,
-one is a `test`-subject commit whose only `src/` edit is a docstring, and three
-are `refactor`/`fix` commits in the Phase 3 coverage work; what any of them
-moved is knowable only from their own bodies and from the baselines of their
-day, and no reconstruction is attempted here. What is recorded is that they
-declared no count in advance and that nothing can now make them have done so.
+numbers. Five of them are `docs`-subject commits whose `src/` edits are prose,
+and three are `refactor`/`fix` commits in the Phase 3 coverage work; what any of
+them moved is knowable only from their own bodies and from the baselines of
+their day, and no reconstruction is attempted here. What is recorded is that
+they declared no count in advance and that nothing can now make them have done
+so.
 
 *Corrected 2026-08-17.* The breakdown above read "Five of them are
 `docs`-subject commits whose `src/` edits are prose, and three are
