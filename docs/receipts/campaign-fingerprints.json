@@ -627,16 +627,23 @@
   }
  },
  "tests": {
-  "collected": 8716,
+  "collected": 8748,
   "skipped": 0,
   "xfailed": 0,
   "re_pinned": {
    "dated": "2026-08-17",
-   "from": 8128,
-   "to": 8716,
-   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 407428f: 8653 at 3799bef, the tip this pass opened on, and 8716 at its close, so this pass's eight slices declare +63 node ids between them -- 16 for the owed row's anchored measurement and its live figures, 2 for the residue note's dated-count rule, 6 for the gap ledger's no-count rule, 6 for the report sections' completeness scan, 1 for the population hole, and 32 for section 17's own figures and their R-05 reds. The 525 between the old pin and 3799bef belong to the passes between: they declared their counts in their own bodies and never re-pinned, and close-report section 17.4 measures why a walk over those bodies cannot decompose them -- 60 declarations a parser can read, 37 mentions it cannot, and prose that quotes other commits' declarations. This pass does not claim those 525 as its own and does not attribute them; what it does is stop the pin being a number that describes no tip at all. One under-declaration of its own is disclosed rather than absorbed: bfbc33a's body declares 4 node ids and enumerates 5, while 6 landed, the sixth being the parametrised live-figure check gaining a case when that commit added a counter to the gap ledger's live_figures. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+   "from": 8716,
+   "to": 8748,
+   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 0aab30e: 8716 at 927964c, the tip this pass opened on, and 8748 at its close, so this pass's two slices declare +32 node ids between them and nothing else does -- 18 at eee282f for the range-to-HEAD baseline claim's checks (2 each for the three that read the claim's own history, 2 each for the three that assert the properties over both claimed ranges, 4 for the carve-out's doctored conditions, 1 for criterion 10's red and 1 for the src/ red) and 14 at 0aab30e for section 18 (8 for its four figures and their reds, 1 for its completeness scan, 1 for that scan's own red, 1 for its R-01 verdict-table check, and 3 for the third range the property checks now run over). The two declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for and the first pass in this campaign's closing sequence able to state without a residue: the 525 the previous re-pin could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
    "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary.",
    "earlier_moves": [
+    {
+     "dated": "2026-08-17",
+     "from": 8128,
+     "to": 8716,
+     "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 407428f: 8653 at 3799bef, the tip this pass opened on, and 8716 at its close, so this pass's eight slices declare +63 node ids between them -- 16 for the owed row's anchored measurement and its live figures, 2 for the residue note's dated-count rule, 6 for the gap ledger's no-count rule, 6 for the report sections' completeness scan, 1 for the population hole, and 32 for section 17's own figures and their R-05 reds. The 525 between the old pin and 3799bef belong to the passes between: they declared their counts in their own bodies and never re-pinned, and close-report section 17.4 measures why a walk over those bodies cannot decompose them -- 60 declarations a parser can read, 37 mentions it cannot, and prose that quotes other commits' declarations. This pass does not claim those 525 as its own and does not attribute them; what it does is stop the pin being a number that describes no tip at all. One under-declaration of its own is disclosed rather than absorbed: bfbc33a's body declares 4 node ids and enumerates 5, while 6 landed, the sixth being the parametrised live-figure check gaining a case when that commit added a counter to the gap ledger's live_figures. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+     "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary."
+    },
     {
      "dated": "2026-08-14",
      "from": 7838,
