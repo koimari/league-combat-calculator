@@ -525,23 +525,29 @@ def _declared_gates(receipt: str) -> list[str]:
 
 
 def _grade_the_residue() -> dict[str, dict]:
-    """Per residue tag: the behaviour paths it touched, and its gate cover."""
+    """Per residue tag: the two findings, and deliberately no evidence list.
+
+    A pinned list of every path a tag has touched goes stale on that tag's
+    very next commit, and a residue tag is the one population that goes on
+    committing.  So what is derived -- and what the receipt pins -- is the
+    grade: the behaviour-directory paths, and the ``tests/`` files no receipt
+    of the tag declares as its gate.  Both are empty for a receipt-only pass
+    and neither can be for one that touches ``src/``.
+    """
     graded: dict[str, dict] = {}
     for tag in ledger()["coverage"]["slice_groups_without_one"]:
         paths = sorted(set(_paths_by_tag()[tag]))
         receipts = [path for path in paths if path.startswith("docs/receipts/")]
         graded[tag] = {
-            "paths_touched": paths,
             "in_a_behaviour_directory": [
                 path for path in paths if path.startswith(BEHAVIOUR_DIRS)
             ],
-            "tests_named_by_a_receipt_the_same_tag_wrote": {
-                test: [
-                    receipt for receipt in receipts if test in _declared_gates(receipt)
-                ]
+            "tests_without_a_declaring_receipt": [
+                test
                 for test in paths
                 if test.startswith("tests/")
-            },
+                and not any(test in _declared_gates(receipt) for receipt in receipts)
+            ],
         }
     return graded
 
@@ -565,8 +571,8 @@ def test_no_tag_in_the_residue_is_an_implementation_slice() -> None:
     assert block["residue_that_is_an_implementation_slice"] == 0
     for tag, row in graded.items():
         assert not row["in_a_behaviour_directory"], tag
-        for test, holders in row["tests_named_by_a_receipt_the_same_tag_wrote"].items():
-            assert holders, (tag, test)
+        assert not row["tests_without_a_declaring_receipt"], tag
+    assert block["what_per_tag_holds"].strip()
 
 
 def test_the_residue_grade_changes_no_list_and_enumerates_nobody() -> None:
@@ -604,6 +610,12 @@ def test_the_residue_grade_has_a_red_it_can_reproduce() -> None:
         "tests/test_verify_ledger.py"
     ]
     assert "tests/test_rulings_owed.py" in LEDGER.read_text(encoding="utf-8")
+    # The staleness red, which is the one this block was rebuilt for: a grade
+    # that pinned the paths a tag had touched would differ from the tree the
+    # moment that tag committed again, and every residue tag does.
+    assert set(_paths_by_tag()[a_tag]) - set(
+        ledger()["coverage"]["residue_is_not_an_implementation_slice"]["per_tag"][a_tag]
+    )
 
 
 # --------------------------------------------------------------------------

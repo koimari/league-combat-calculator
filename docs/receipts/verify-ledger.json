@@ -18636,50 +18636,19 @@
    "residue_that_is_an_implementation_slice": 0,
    "per_tag": {
     "campaign-close-owner-ruling-criterion-11": {
-     "paths_touched": [
-      "docs/plans/2026-08-08-silent-failure-campaign.md",
-      "docs/receipts/campaign-close-report.md",
-      "docs/receipts/campaign-fingerprints.json",
-      "docs/receipts/campaign-gap-ledger.json",
-      "docs/receipts/rulings-owed.json",
-      "docs/receipts/verify-backlog.json",
-      "docs/receipts/verify-ledger.json",
-      "tests/test_campaign_close_report_figures.py",
-      "tests/test_rulings_owed.py",
-      "tests/test_verify_ledger.py"
-     ],
      "in_a_behaviour_directory": [],
-     "tests_named_by_a_receipt_the_same_tag_wrote": {
-      "tests/test_campaign_close_report_figures.py": [
-       "docs/receipts/campaign-close-report.md"
-      ],
-      "tests/test_rulings_owed.py": [
-       "docs/receipts/rulings-owed.json"
-      ],
-      "tests/test_verify_ledger.py": [
-       "docs/receipts/campaign-close-report.md",
-       "docs/receipts/verify-ledger.json"
-      ]
-     }
+     "tests_without_a_declaring_receipt": []
     },
     "campaign-close-ruling-residue": {
-     "paths_touched": [
-      "docs/receipts/verify-backlog.json",
-      "docs/receipts/verify-ledger.json",
-      "tests/test_verify_ledger.py"
-     ],
      "in_a_behaviour_directory": [],
-     "tests_named_by_a_receipt_the_same_tag_wrote": {
-      "tests/test_verify_ledger.py": [
-       "docs/receipts/verify-ledger.json"
-      ]
-     }
+     "tests_without_a_declaring_receipt": []
     }
    },
    "what_this_settles": "Criterion 11's first clause, for the units Ruling 1 binds it over. Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothing that changed behaviour in any of the four directories the ruling names. That is the fixed point the ruling was reaching for, stated as a number a gate re-derives rather than as a reading.",
    "what_this_is_not": "An exclusion, an enumeration, or a shrunk denominator. Nothing leaves any list: the residue is still what it was, both tags are still in slice_groups_without_one, and instrument_pass_tags gains nobody. In particular this does NOT enumerate the two remaining tags as instruments -- the lane that recorded the ruling refused to enumerate itself, a gate pins that refusal, and this lane will not do for it what it would not do for itself. What is added is a grade on the residue, which is strictly conservative: it holds the denominator at its largest and answers the clause anyway.",
    "what_it_does_not_claim": "That either remaining tag is an instrument, or that either has a verdict. Neither does. It claims the weaker and checkable thing: whatever they are, they are not units that changed behaviour in the directories Ruling 1's sentence quantifies over, so the clause as the owner ruled it does not reach them. Whether they ever leave the residue is still a verifier's to say, exactly as why_the_lane_recording_the_ruling_did_not_enumerate_itself says.",
-   "gate": "tests/test_verify_ledger.py"
+   "gate": "tests/test_verify_ledger.py",
+   "what_per_tag_holds": "Two findings per tag and no evidence list, and the omission is the point. An earlier shape of this block pinned every path each residue tag had touched, which made it stale on the tag's very next commit -- this pass's baseline re-pin added one path and the gate went red on a receipt that had recorded a true thing about a tree one commit older. A receipt derived from the commit list has to be written in the commit that changes the commit list, and a residue tag is the one population that goes on changing it. So what is pinned is the grade rather than the evidence: the behaviour-directory paths the tag touched, and the tests/ files no receipt of the tag declares as its gate. Both are empty, both are re-derived by the gate against the tree, and a receipt-only commit by a residue tag leaves both empty while an src/ commit cannot."
   }
  },
  "vocabulary_notes": {
