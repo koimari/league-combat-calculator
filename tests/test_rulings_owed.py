@@ -145,7 +145,7 @@ def test_no_owed_row_claims_to_be_recorded_in_the_umbrella_already() -> None:
 
 
 # --------------------------------------------------------------------------
-# The open row's measurement, gated.
+# The measured row's measurement, gated.
 #
 # ``what_the_measurement_now_reads`` was added so the owed ruling's population
 # would be read from the artifact that owns it instead of frozen in a question
@@ -160,14 +160,27 @@ def test_no_owed_row_claims_to_be_recorded_in_the_umbrella_already() -> None:
 # rather than restated** -- ``live_figures`` gives each an artifact and a path,
 # the gap ledger's own rule, so this row cannot state a number its measurement
 # artifact contradicts.
+#
+# The row closed on 2026-08-18 and every check below still runs, because it is
+# found by the measurement it carries rather than by the list it sits in.  A
+# gate keyed on "the one open row" would have gone quietly empty on the commit
+# that answered the question -- which is R-01 row 1's skip, and is the shape
+# ``_every_row`` already refuses one function up.
 # --------------------------------------------------------------------------
 
 
-def _open_row() -> dict:
-    """The one open row -- the only one carrying a measurement to gate."""
-    owed = _owed()
-    assert len(owed) == 1, [row["id"] for row in owed]
-    return owed[0]
+def _the_measured_row() -> dict:
+    """The one row carrying an anchored measurement, owed or answered.
+
+    Keyed on ``measurement_anchor`` and not on which list holds the row.  This
+    row's whole history is a measurement going stale beside a question, so the
+    checks over that measurement have to outlive the question closing; keying
+    them on ``owed`` would have retired them at the exact moment the row became
+    a permanent record rather than a live debt.
+    """
+    measured = [row for row in _every_row() if "measurement_anchor" in row]
+    assert len(measured) == 1, [row["id"] for row in measured]
+    return measured[0]
 
 
 def _ledger_at(sha: str) -> dict:
@@ -183,7 +196,7 @@ def _ledger_at(sha: str) -> dict:
 
 
 def _anchored_coverage() -> dict:
-    return _ledger_at(_open_row()["measurement_anchor"]["commit"])["coverage"]
+    return _ledger_at(_the_measured_row()["measurement_anchor"]["commit"])["coverage"]
 
 
 def _stated(text: str, pattern: str) -> str:
@@ -231,7 +244,10 @@ def test_the_dated_measurement_is_true_at_the_commit_it_is_anchored_at(
 ) -> None:
     """A reading of "this tip" is checked against the tip it was read at."""
     _label, pattern, measured = case
-    assert _stated(_open_row()["what_the_measurement_now_reads"], pattern) == measured()
+    assert (
+        _stated(_the_measured_row()["what_the_measurement_now_reads"], pattern)
+        == measured()
+    )
 
 
 @pytest.mark.parametrize(
@@ -242,7 +258,7 @@ def test_the_measurement_gate_fails_when_a_stated_figure_drifts(
 ) -> None:
     """R-05's permanent red: doctor the figure and require the same red."""
     _label, pattern, measured = case
-    text = _open_row()["what_the_measurement_now_reads"]
+    text = _the_measured_row()["what_the_measurement_now_reads"]
     match = re.search(pattern, text)
     assert match is not None
     drifted = str(int(match.group(1)) + 1)
@@ -252,7 +268,7 @@ def test_the_measurement_gate_fails_when_a_stated_figure_drifts(
 
 def test_the_anchor_names_a_commit_that_exists() -> None:
     """An anchor nobody can open is a date with better grammar."""
-    sha = _open_row()["measurement_anchor"]["commit"]
+    sha = _the_measured_row()["measurement_anchor"]["commit"]
     resolved = subprocess.run(
         ["git", "cat-file", "-t", sha],
         capture_output=True,
@@ -264,7 +280,7 @@ def test_the_anchor_names_a_commit_that_exists() -> None:
 
 
 def _live_figures() -> list[tuple[str, dict]]:
-    live = _open_row()["live_figures"]
+    live = _the_measured_row()["live_figures"]
     return [(name, spec) for name, spec in live.items() if name != "rule"]
 
 
@@ -300,7 +316,7 @@ def test_the_population_hole_is_named_and_carries_no_count_of_its_own() -> None:
     The field carries no count: the number moves with every commit, so it is
     read through ``live_figures`` like every other reading this row makes.
     """
-    row = _open_row()
+    row = _the_measured_row()
     field = row["what_else_the_same_ruling_must_settle"]
     assert "commits_outside_the_denominator" in field
     assert "commits_outside_the_denominator" in row["live_figures"]
@@ -346,7 +362,7 @@ def test_the_cost_of_deciding_late_is_named_and_states_no_count_of_its_own() -> 
     each branch, which is what keeps an argument about timing from becoming an
     answer.
     """
-    row = _open_row()
+    row = _the_measured_row()
     field = row["the_cost_of_deciding_late"]
     assert "residue" in row["live_figures"]
     assert "live_figures' residue" in field
@@ -376,8 +392,79 @@ def test_the_row_states_no_live_figure_it_could_instead_read() -> None:
     named in ``live_figures`` and read at run time.  What this refuses is a
     third undated number arriving in the same field.
     """
-    text = _open_row()["what_the_measurement_now_reads"]
+    text = _the_measured_row()["what_the_measurement_now_reads"]
     for _label, pattern, _measured in ANCHORED_FIGURES:
         assert re.search(pattern, text), pattern
     assert "live_figures" in text
-    assert _open_row()["measurement_anchor"]["gate"] == "tests/test_rulings_owed.py"
+    assert (
+        _the_measured_row()["measurement_anchor"]["gate"]
+        == "tests/test_rulings_owed.py"
+    )
+
+
+# --------------------------------------------------------------------------
+# An owner's ruling is not an amendment, and the tree says which is which.
+#
+# Nine rows closed by an amendment: the orchestration re-reading its own
+# contract on a ground it had measured.  The tenth could not, and said so from
+# the day it opened -- every branch it offered was a lane deciding what a
+# criterion means.  So the umbrella carries a section of its own, and these
+# checks are what keep the distinction a fact about the tree rather than a
+# claim in a receipt.
+# --------------------------------------------------------------------------
+
+OWNER_RULING_HEADING = "## Owner's rulings"
+
+#: The prefix an owner's ruling's ``amendment`` field carries.  A row using it
+#: is claiming the ruling came from outside the orchestration, which is exactly
+#: the claim that has to be checkable.
+OWNER_RULING_PREFIX = "Owner's ruling"
+
+
+def _owner_ruling_section() -> str:
+    """The umbrella text below the owner's-rulings heading."""
+    umbrella = UMBRELLA.read_text(encoding="utf-8")
+    _before, marker, section = umbrella.partition(OWNER_RULING_HEADING)
+    assert marker, OWNER_RULING_HEADING
+    return section
+
+
+def _owner_rulings() -> list[dict]:
+    return [
+        row for row in _answered() if row["amendment"].startswith(OWNER_RULING_PREFIX)
+    ]
+
+
+def test_the_umbrella_carries_a_section_for_rulings_no_lane_could_write() -> None:
+    """The home, and the sentence that says what it is for.
+
+    A section whose own text does not distinguish it from the amendments
+    above it is a heading, and a heading is not a distinction.
+    """
+    section = _owner_ruling_section()
+    assert "not an amendment" in section
+    assert "rulings-owed.json" in section
+
+
+@pytest.mark.parametrize(
+    "row", _owner_rulings(), ids=[row["id"] for row in _owner_rulings()]
+)
+def test_an_owners_ruling_is_recorded_where_owners_rulings_live(row) -> None:
+    """Recorded *there*, not merely somewhere in the umbrella.
+
+    The amendments are findable anywhere in the file, which is right for
+    them.  A ruling claiming to be the owner's is claiming a provenance no
+    lane may claim for itself, so it is checked against the one section that
+    carries that meaning.
+    """
+    section = _owner_ruling_section()
+    assert row["amendment"] in section, row["id"]
+    assert row["id"] in section, row["id"]
+    assert row["answered_on"] in row["amendment"], row["id"]
+
+
+def test_the_owners_ruling_check_has_a_red_it_can_reproduce() -> None:
+    """R-05: a ruling recorded nowhere must not read as recorded."""
+    section = _owner_ruling_section()
+    for row in _owner_rulings():
+        assert row["amendment"].replace("ruling", "rulling") not in section

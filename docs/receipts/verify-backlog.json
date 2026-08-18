@@ -64,16 +64,21 @@
   },
   "campaign-close-owner-ruling-criterion-11": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 1,
-   "criteria_documents": [],
+   "commit_count": 2,
+   "criteria_documents": [
+    "docs/plans/2026-08-08-silent-failure-campaign.md"
+   ],
    "subjects": [
-    "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-owner-ruling-criterion-11)"
+    "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-owner-ruling-criterion-11)",
+    "docs(receipts): section 19's ledger readings are anchored at the commit that stated them (campaign-close-owner-ruling-criterion-11)"
    ]
   },
   "campaign-close-verify-p4-batch": {
    "cites_an_r35_answer_in_a_commit_body": true,
    "commit_count": 1,
-   "criteria_documents": [],
+   "criteria_documents": [
+    "docs/plans/2026-08-08-silent-failure-campaign.md"
+   ],
    "subjects": [
     "docs(receipts): six residue slices' R-35 verdicts, transcribed from the pass that rendered them (campaign-close-verify-p4-batch)"
    ]

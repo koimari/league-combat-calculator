@@ -1498,3 +1498,97 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
     dependent slice is explicitly descoped **in this file** with its criterion restated — a phase document
     may not write its own descope. H5 in particular no default can settle; H2 ships its fail-closed default
     and is recorded here as *deferred, default shipped*; H6 ships as Phase 5's dated acknowledged gap.
+
+## Owner's rulings
+
+A ruling recorded here is the campaign **owner's**, relayed and transcribed by a
+lane. It is not an amendment: an amendment above is the orchestration re-reading
+its own contract on a measured ground, and every one of them is a decision a lane
+could in principle have reached. A ruling in this section is one no lane could —
+the questions `docs/receipts/rulings-owed.json` collects and refuses to let a lane
+answer. The two are kept apart so a reader can tell, without asking anybody, which
+of the campaign's own conclusions the campaign was entitled to draw. A ruling
+transcribed here names its date, its question by that ledger's row id, and the
+machine check that makes it more than prose; the owed row then moves to
+`answered[]` naming it, so the question and its answer stay joined.
+
+> **Owner's ruling — 2026-08-17, criterion 11's first clause: the fixed-point reading.**
+> *Answers `whether_criterion_11s_first_clause_binds_the_campaign_backwards` in
+> `docs/receipts/rulings-owed.json` — the first row that ledger opened, the last
+> one it held open, and the campaign's one certification blocker. Relayed through
+> the orchestration and transcribed on 2026-08-18 by the slice group
+> `campaign-close-owner-ruling-criterion-11`.*
+>
+> The question offered two branches — bind the clause backwards and schedule a
+> fresh R-35 pass over every uncovered range, or read it forwards and let the
+> gate hold the next slice group — and the closeout measured a third, that a
+> group's verdict may be recorded by a commit carrying that same group's tag.
+> Close-report §16.3 measured why the first two do not terminate: recording a
+> verdict is itself a commit, every commit carries a slice tag, and a tag with no
+> verdict is residue, so the act of closing the residue creates residue. That
+> measurement is accepted and none of the three branches is taken. What is ruled
+> is the reading that has a fixed point.
+>
+> **Ruling 1 — the clause binds backwards, for implementation slices.** "Every
+> slice" means every unit of work that changes behaviour in `src/`, `tests/`,
+> `scripts/` or `data/`, and for those units the clause binds the campaign's own
+> past exactly as written. It is **discharged** for them by the verdicts recorded
+> in `docs/receipts/verify-ledger.json` — the fresh R-35 passes, and equally the
+> verdicts the campaign rendered and never filed, transcribed through that
+> ledger's own `backfill` and `residue_sweep` route. Both are recorded verdicts:
+> a transcription of a verifier's rendered answer is the verifier's artifact
+> reaching the ledger late, which is a different act from a lane reconstructing
+> an answer out of the commit bodies of the lanes being checked. That second act
+> stays forbidden, and the ledger's `what_this_block_does_not_do` stays exactly as
+> written.
+>
+> **Ruling 2 — verification, certification, transcription and receipt-only passes
+> are instruments, not subjects.** They do not enter the clause's coverage
+> denominator. Their record is their own: a verifier's or transcriber's pass row
+> in the ledger, or — for the terminal pass — the certifier's signed verdict in
+> the close report. This is what closes the self-referential regress §16.3
+> measured, and it closes it at the reading rather than at the counter: an
+> instrument that grades the campaign is not a slice of the campaign, so the
+> process convened to grade the clause stops adding to what it grades. **The
+> denominator derivation is corrected to implementation-slice tags**, and every
+> tag taken out of it is **enumerated by name beside the self-record that stands
+> in place of its verdict**, under a machine check with a red it can reproduce:
+> the self-record must resolve in the artifact it names, and an instrument tag
+> whose commits touch `src/` fails — production behaviour makes a pass a subject
+> whatever it calls itself. **This is not a D-40 exclusion.** D-40 forbids editing
+> what a counter counts in order to move it; what is ruled here is what the
+> counter's unit always was, recorded with its check, by the one party entitled to
+> say. The three shortcuts the owed row refuses stay refused, and the second of
+> them — shrinking the denominator by a lane's declaration that some tags are not
+> really slices — stays refused in exactly those terms.
+>
+> **Ruling 3 — the one unreached range is verified, not reclassified.**
+> `campaign-close-verify-p4-batch` is a transcription pass and could have been
+> read out of the denominator by Ruling 2. It is not. Its prepared row in
+> `docs/receipts/verify-backlog.json` is handed to a fresh R-35 pass and its
+> verdict is recorded like any other, because a range no verifier ever reached is
+> better answered than excused, and a ruling whose first use is to excuse the one
+> thing it could excuse is a ruling nobody should trust.
+>
+> **Ruling 4 — every `NOT_DISCHARGED` row carries a disposition.** One of `fixed`,
+> citing the commit that fixed it; superseded by later work, citing that work; or
+> `documented_open` carrying the artifact that holds the open debt. A verdict is
+> the verifier's and is never re-graded by a lane — the ledger's own
+> `when_a_later_lane_answers_a_sweep_row` rules that and is unchanged. What this
+> ruling adds is that a disposition is owed on every one of them, so an
+> unanswered finding is visible as one rather than as a row nobody reached.
+>
+> **Ruling 5 — untagged commits.** A commit whose subject carries no trailing tag
+> is outside "every slice" when it touches no behaviour. The untagged commits that
+> **do** touch `src/` are enumerated, derived rather than authored, and each is
+> covered by a batch verdict naming its range or by a dated acceptance note. No
+> commit subject is rewritten to reach this: retro-tagging rewrites the history the
+> denominator is derived from, which the owed row refuses and this ruling does not
+> unrefuse.
+>
+> **What this ruling does not do.** It does not discharge criterion 11 — the
+> residue is what the ledger's coverage block says it is, on the tip a reader
+> measures it at, and Ruling 3's pass and Ruling 5's enumeration are work that has
+> to land. It does not re-read "every slice" more weakly for anything that changes
+> behaviour: the backwards branch is taken, not avoided. And it does not reach the
+> clause's other two halves, which stand as written and as graded.
