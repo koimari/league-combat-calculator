@@ -26,12 +26,13 @@
   },
   "campaign-close-ruling-residue": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 3,
+   "commit_count": 4,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): Ruling 3's pass on the one unreached range, transcribed whole from the journal (campaign-close-ruling-residue)",
     "docs(receipts): every NOT_DISCHARGED row carries the disposition Ruling 4 owes it (campaign-close-ruling-residue)",
-    "docs(receipts): the untagged src-touching rows gain the coverage a pass really gives them (campaign-close-ruling-residue)"
+    "docs(receipts): the untagged src-touching rows gain the coverage a pass really gives them (campaign-close-ruling-residue)",
+    "docs(receipts): the residue holds no implementation slice, and a counter re-derives it (campaign-close-ruling-residue)"
    ]
   }
  },

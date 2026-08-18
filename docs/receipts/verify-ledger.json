@@ -18627,6 +18627,59 @@
    "and_again_2026_08_17": "The second instance, and it moves in both directions at once. campaign-close-final-integration-r35 LEFT slice_groups_without_one on a verifier's artifact rather than on a lane's word -- round 129, an R-35 pass that was rendered on 2026-08-17 and had never been transcribed -- and campaign-close-certification-r2, the tag of the lane transcribing it, took a place beside campaign-close-certification's. So the residue is 3 before and 3 after, over a membership that is one group younger. That is the mechanism this block already states, measured once more: the act of recording a verdict is itself a commit, and the tag it carries is residue until somebody verifies it. Nothing here chooses a branch of the owed ruling, and the residue's arithmetic is what it was.",
    "and_a_third_2026_08_17": "The third and fourth instances, recorded together because the third was not recorded when it happened. campaign-close-certification-r3 took its line here and added no note; campaign-close-certification-r4 -- the pass answering a fourth certification review -- takes its line and writes this one. Both are the same act as the two above and neither is anything more: a tag no verifier has read takes the explicit line the forward gate requires, rather than a verdict a lane may not write for itself. What is new is not the act but what four instances of it measure. Every group that has entered this list since round 129 is a certification pass, and every one of them entered it for the same structural reason the block already states -- recording a verdict is a commit, a commit carries a tag, a tag with no verdict is residue -- so the certification process is now the only thing adding to the residue it was convened to grade. That is an argument about WHEN the owed ruling is worth deciding rather than about HOW, and it is carried to whoever rules in rulings-owed.json's own row (the_cost_of_deciding_late), because a mechanism recorded only here is a mechanism the ruler does not read. Nothing about it chooses a branch: the residue's arithmetic is the derivation's, the counters that own the figures are residue and residue_with_no_verdict_anywhere in this block and prepared_passes in verify-backlog.json, and no figure of them is restated in this sentence. This group's citation flag is true for the reason the row above it gives and with the same limitation: its bodies name the mechanism and carry a verdict word because its corrections are about how a verdict is read, and the derivation cannot tell whose answer a body carries. No R-35 answer about campaign-close-certification-r4 exists anywhere.",
    "and_a_fifth_2026_08_18": "The fifth instance, and it is the first that is not a certification pass. campaign-close-owner-ruling-criterion-11 -- the lane recording the campaign owner's ruling on criterion 11's first clause, relayed on 2026-08-17 -- takes the explicit line the forward gate requires, in the commit that introduces the tag rather than in the one after it. The act is the four above it, unchanged and claiming nothing more: a tag no verifier has read takes a line rather than a verdict a lane may not write for itself. What is worth recording is the one thing this instance is NOT. The ruling this lane goes on to record removes instrument passes from the clause's denominator, and this lane could have written its own tag into that enumeration in the same breath -- the lane that defines a class placing itself inside it, on its own word, in the commit that defines it. It does not. It takes the residue line like every lane before it, and whether its tag ever leaves is a verifier's to say. Nothing in the recording of a ruling is a discharge of one."
+  },
+  "residue_is_not_an_implementation_slice": {
+   "dated": "2026-08-18",
+   "rule": "Ruling 1 of the campaign owner's ruling of 2026-08-17 binds criterion 11's first clause backwards FOR IMPLEMENTATION SLICES, and reads 'every slice' as every unit of work that changes behaviour in src/, tests/, scripts/ or data/. The residue is the tags with no recorded verdict here. So the question the clause actually turns on is not how big the residue is -- it is whether anything in it is one of those units. This block is that question, measured.",
+   "how_it_is_derived": "Per residue tag, the paths its own commits touch, read off the tree. Three of Ruling 1's four directories are checked by emptiness: no commit of a residue tag touches src/, scripts/ or data/. The fourth is checked by containment rather than emptiness, because an instrument that repairs its own gate touches tests/ and Ruling 2's check permits exactly that -- an enumerated instrument tag, campaign-close-certification-r4, ships a tests/ commit of its own. So every tests/ file a residue tag touched must be DECLARED AS THE GATE of a docs/receipts/ artifact that same tag wrote: a JSON receipt's own `gate` field, or a prose artifact naming it. Declared and not merely mentioned, and the difference is not fussiness -- the first draft of this check searched each receipt's text, and this block's own per_tag listing then satisfied it for every test path it listed, so the check passed by having been written. A `gate` field cannot do that. Both arms are re-derived by the gate and neither is a list anybody typed.",
+   "residue": 2,
+   "residue_that_is_an_implementation_slice": 0,
+   "per_tag": {
+    "campaign-close-owner-ruling-criterion-11": {
+     "paths_touched": [
+      "docs/plans/2026-08-08-silent-failure-campaign.md",
+      "docs/receipts/campaign-close-report.md",
+      "docs/receipts/campaign-fingerprints.json",
+      "docs/receipts/campaign-gap-ledger.json",
+      "docs/receipts/rulings-owed.json",
+      "docs/receipts/verify-backlog.json",
+      "docs/receipts/verify-ledger.json",
+      "tests/test_campaign_close_report_figures.py",
+      "tests/test_rulings_owed.py",
+      "tests/test_verify_ledger.py"
+     ],
+     "in_a_behaviour_directory": [],
+     "tests_named_by_a_receipt_the_same_tag_wrote": {
+      "tests/test_campaign_close_report_figures.py": [
+       "docs/receipts/campaign-close-report.md"
+      ],
+      "tests/test_rulings_owed.py": [
+       "docs/receipts/rulings-owed.json"
+      ],
+      "tests/test_verify_ledger.py": [
+       "docs/receipts/campaign-close-report.md",
+       "docs/receipts/verify-ledger.json"
+      ]
+     }
+    },
+    "campaign-close-ruling-residue": {
+     "paths_touched": [
+      "docs/receipts/verify-backlog.json",
+      "docs/receipts/verify-ledger.json",
+      "tests/test_verify_ledger.py"
+     ],
+     "in_a_behaviour_directory": [],
+     "tests_named_by_a_receipt_the_same_tag_wrote": {
+      "tests/test_verify_ledger.py": [
+       "docs/receipts/verify-ledger.json"
+      ]
+     }
+    }
+   },
+   "what_this_settles": "Criterion 11's first clause, for the units Ruling 1 binds it over. Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothing that changed behaviour in any of the four directories the ruling names. That is the fixed point the ruling was reaching for, stated as a number a gate re-derives rather than as a reading.",
+   "what_this_is_not": "An exclusion, an enumeration, or a shrunk denominator. Nothing leaves any list: the residue is still what it was, both tags are still in slice_groups_without_one, and instrument_pass_tags gains nobody. In particular this does NOT enumerate the two remaining tags as instruments -- the lane that recorded the ruling refused to enumerate itself, a gate pins that refusal, and this lane will not do for it what it would not do for itself. What is added is a grade on the residue, which is strictly conservative: it holds the denominator at its largest and answers the clause anyway.",
+   "what_it_does_not_claim": "That either remaining tag is an instrument, or that either has a verdict. Neither does. It claims the weaker and checkable thing: whatever they are, they are not units that changed behaviour in the directories Ruling 1's sentence quantifies over, so the clause as the owner ruled it does not reach them. Whether they ever leave the residue is still a verifier's to say, exactly as why_the_lane_recording_the_ruling_did_not_enumerate_itself says.",
+   "gate": "tests/test_verify_ledger.py"
   }
  },
  "vocabulary_notes": {

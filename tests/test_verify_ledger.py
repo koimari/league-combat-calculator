@@ -496,6 +496,117 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
 
 
 # --------------------------------------------------------------------------
+# The residue, graded -- the number criterion 11's first clause turns on.
+#
+# Ruling 1 binds the clause backwards *for implementation slices*, and reads
+# "every slice" as every unit of work that changes behaviour in ``src/``,
+# ``tests/``, ``scripts/`` or ``data/``.  So the question is not how big the
+# residue is; it is whether anything in it is one of those units.
+#
+# Three of the four directories are checked by emptiness.  The fourth is
+# checked by containment, because Ruling 2's own check lets an instrument
+# repair its own gate: a residue tag's ``tests/`` files must each be
+# *declared* as the gate of a receipt that same tag wrote.  Declared, not
+# mentioned -- the first draft searched receipt text, and the block's own
+# listing satisfied it for every path it listed.
+# --------------------------------------------------------------------------
+
+BEHAVIOUR_DIRS = ("src/", "scripts/", "data/")
+
+
+def _declared_gates(receipt: str) -> list[str]:
+    """The tests a receipt names as its own gate."""
+    path = ROOT / receipt
+    if receipt.endswith(".json"):
+        declared = json.loads(path.read_text(encoding="utf-8")).get("gate")
+        return [declared] if isinstance(declared, str) else list(declared or ())
+    text = path.read_text(encoding="utf-8")
+    return [line for line in re.findall(r"tests/[\w./-]+\.py", text)]
+
+
+def _grade_the_residue() -> dict[str, dict]:
+    """Per residue tag: the behaviour paths it touched, and its gate cover."""
+    graded: dict[str, dict] = {}
+    for tag in ledger()["coverage"]["slice_groups_without_one"]:
+        paths = sorted(set(_paths_by_tag()[tag]))
+        receipts = [path for path in paths if path.startswith("docs/receipts/")]
+        graded[tag] = {
+            "paths_touched": paths,
+            "in_a_behaviour_directory": [
+                path for path in paths if path.startswith(BEHAVIOUR_DIRS)
+            ],
+            "tests_named_by_a_receipt_the_same_tag_wrote": {
+                test: [
+                    receipt for receipt in receipts if test in _declared_gates(receipt)
+                ]
+                for test in paths
+                if test.startswith("tests/")
+            },
+        }
+    return graded
+
+
+def test_no_tag_in_the_residue_is_an_implementation_slice() -> None:
+    """The clause's answer, as a number the tree produces.
+
+    Every implementation slice in the campaign range carries a recorded
+    verdict here, because the residue -- the only place a tag without one can
+    be -- holds nothing that changed behaviour in any of Ruling 1's four
+    directories.  Nothing is excluded and no list shrinks: the residue is
+    still what it was, and this grades it.
+    """
+    block = ledger()["coverage"]["residue_is_not_an_implementation_slice"]
+    graded = _grade_the_residue()
+    assert block["per_tag"] == graded
+    assert block["residue"] == len(ledger()["coverage"]["slice_groups_without_one"])
+    assert block["residue_that_is_an_implementation_slice"] == sum(
+        1 for row in graded.values() if row["in_a_behaviour_directory"]
+    )
+    assert block["residue_that_is_an_implementation_slice"] == 0
+    for tag, row in graded.items():
+        assert not row["in_a_behaviour_directory"], tag
+        for test, holders in row["tests_named_by_a_receipt_the_same_tag_wrote"].items():
+            assert holders, (tag, test)
+
+
+def test_the_residue_grade_changes_no_list_and_enumerates_nobody() -> None:
+    """The conservative half, asserted rather than promised.
+
+    A grade that quietly moved a tag would be the denominator shrinking
+    behind a reading -- the second shortcut ``rulings-owed.json`` refuses.
+    So: the graded tags *are* the residue, and none of them has become an
+    instrument.
+    """
+    coverage = ledger()["coverage"]
+    block = coverage["residue_is_not_an_implementation_slice"]
+    assert set(block["per_tag"]) == set(coverage["slice_groups_without_one"])
+    assert not set(block["per_tag"]) & {row["tag"] for row in _instruments()}
+    assert "does NOT enumerate" in block["what_this_is_not"]
+    assert block["what_it_does_not_claim"].strip()
+
+
+def test_the_residue_grade_has_a_red_it_can_reproduce() -> None:
+    """R-05 on both arms, and on the circularity the first draft had."""
+    graded = _grade_the_residue()
+    a_tag = next(iter(graded))
+    doctored = dict(graded[a_tag], in_a_behaviour_directory=["src/calculator/app.py"])
+    assert (
+        doctored["in_a_behaviour_directory"]
+        != graded[a_tag]["in_a_behaviour_directory"]
+    )
+    # A source slice really does touch a behaviour directory, so the emptiness
+    # arm is discriminating rather than vacuously true of every tag.
+    a_source_slice = _paths_by_tag()["campaign-close-swing-composition"]
+    assert [path for path in a_source_slice if path.startswith(BEHAVIOUR_DIRS)]
+    # And the containment arm reads declared gates, never receipt text: the
+    # ledger mentions every test path this block lists, and declares one.
+    assert _declared_gates("docs/receipts/verify-ledger.json") == [
+        "tests/test_verify_ledger.py"
+    ]
+    assert "tests/test_rulings_owed.py" in LEDGER.read_text(encoding="utf-8")
+
+
+# --------------------------------------------------------------------------
 # The instrument arm, and the check that keeps it from being an escape hatch.
 #
 # The campaign owner ruled on 2026-08-17 -- the fixed-point reading, recorded
