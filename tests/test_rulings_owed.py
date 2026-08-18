@@ -308,6 +308,64 @@ def test_the_population_hole_is_named_and_carries_no_count_of_its_own() -> None:
     assert re.search(r"(?<![\w.\-/])\d+", undated) is None, undated
 
 
+#: The words that make a following number a NAME rather than a count, spelled
+#: as ``tests/test_campaign_gap_ledger.py`` spells them: section 16.3 is an
+#: identifier, a residue of three is a value.  The distinction is the campaign's
+#: own and is reused rather than re-invented.
+_NAMES_A_THING = frozenset(
+    {"amendment", "clause", "criteria", "criterion", "round", "row", "rule", "section"}
+)
+
+_INTEGER = re.compile(r"(?<![\w.\-/])(\w+ )?(\d+)(?![\w.\-/])")
+
+
+def _counts_in(text: str) -> list[str]:
+    """Every integer in ``text`` that is a count rather than an identifier."""
+    undated = re.sub(r"\d{4}-\d{2}-\d{2}", "", text)
+    return [
+        match.group(2)
+        for match in _INTEGER.finditer(undated)
+        if (match.group(1) or "").strip().lower() not in _NAMES_A_THING
+    ]
+
+
+def test_the_cost_of_deciding_late_is_named_and_states_no_count_of_its_own() -> None:
+    """The argument for deciding soon, carried to the reader who decides.
+
+    A certification reviewer measured that the residue's only remaining source
+    of growth is the certification process itself, and asked that it be stated
+    to whoever rules.  It lives here rather than only in a report section for
+    the same reason the population hole does: an input the ruler has to go
+    find is an input the ruler does not have.
+
+    Two things it must do and one it must not.  It must name the third branch
+    -- the one the close report measured is the only terminating one -- and it
+    must read the residue through ``live_figures`` instead of stating it,
+    because this row has twice been broken by a restated number.  And it must
+    not choose: the field says in its own words what a lane may not do about
+    each branch, which is what keeps an argument about timing from becoming an
+    answer.
+    """
+    row = _open_row()
+    field = row["the_cost_of_deciding_late"]
+    assert "residue" in row["live_figures"]
+    assert "live_figures' residue" in field
+    assert "third" in field and "terminat" in field.lower()
+    assert "What a lane may not do" in field
+    assert _counts_in(field) == [], _counts_in(field)
+
+
+def test_the_no_count_rule_over_that_field_has_a_red_it_can_reproduce() -> None:
+    """R-05, on the shape this row has twice failed in."""
+    assert _counts_in("the residue is 5 and the backlog prepares 5 passes") == [
+        "5",
+        "5",
+    ]
+    assert (
+        _counts_in("close report section 16.3, and criterion 11's first clause") == []
+    )
+
+
 def test_the_row_states_no_live_figure_it_could_instead_read() -> None:
     """The mechanism, asserted rather than promised.
 
