@@ -26,7 +26,7 @@
   },
   "campaign-close-ruling-residue": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 7,
+   "commit_count": 8,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): Ruling 3's pass on the one unreached range, transcribed whole from the journal (campaign-close-ruling-residue)",
@@ -35,7 +35,8 @@
     "docs(receipts): the residue holds no implementation slice, and a counter re-derives it (campaign-close-ruling-residue)",
     "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-ruling-residue)",
     "docs(receipts): section 15.2's two readings are anchored, and the pass that moved them is named (campaign-close-ruling-residue)",
-    "docs(receipts): the residue grade pins the grade, not the path list that goes stale (campaign-close-ruling-residue)"
+    "docs(receipts): the residue grade pins the grade, not the path list that goes stale (campaign-close-ruling-residue)",
+    "chore(baseline): the pin moves a second time, for the slice this pass had not shipped yet (campaign-close-ruling-residue)"
    ]
   }
  },

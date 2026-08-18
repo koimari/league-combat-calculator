@@ -627,16 +627,23 @@
   }
  },
  "tests": {
-  "collected": 8813,
+  "collected": 8814,
   "skipped": 0,
   "xfailed": 0,
   "re_pinned": {
    "dated": "2026-08-18",
-   "from": 8804,
-   "to": 8813,
-   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on d324db0: 8804 at 7936a51, the tip this pass opened on, and 8813 at its close, so this pass's three test-declaring slices account for +9 between them and nothing else does -- 5 at acf1df9 for Ruling 4's dispositions (the vocabulary-covering mapping, the per-row promise check, the open-row counters, the reds those reproduce and the block's refusal clause); 1 at ba83fe4 for the untagged rows' era split, its other two checks being extensions of ones that already existed; and 3 at d324db0 for the residue grade, its conservative half and the reds both arms reproduce. The three declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for. This pass's first commit, 9721cab, declares none and says so in its own body: it transcribes a verdict and touches no test. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+   "from": 8813,
+   "to": 8814,
+   "cause": "The second move of this key by one pass, and it is disclosed as that rather than folded into the first. 8afc3ce pinned 8813 and was right on the tip it measured; two commits later the same pass shipped a slice it had not foreseen when it re-pinned. 1d34fd9 anchors close-report section 15.2's two readings, which this pass's own first commit moved by running Ruling 3's pass, and it declares 1 node id: the live counterpart asserting that exactly one pass now verifies 209da2f and that the backlog no longer prepares it. bb654bd declares none -- it narrows what the residue grade pins and runs the same three checks over it. Measured on bb654bd: 8813 at 8afc3ce and 8814 here. R-32's fourth carve-out puts no limit on how many times a lane's own slices move this key; what it asks is that each move be the owning lane's, in a receipt-only commit, disclosed. Re-pinning once and letting the second slice ship under a stale pin would have been the quiet option and would have left R-01 row 1's arithmetic unsatisfiable for anybody checking it. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them.",
    "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary.",
    "earlier_moves": [
+    {
+     "dated": "2026-08-18",
+     "from": 8804,
+     "to": 8813,
+     "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on d324db0: 8804 at 7936a51, the tip this pass opened on, and 8813 at its close, so this pass's three test-declaring slices account for +9 between them and nothing else does -- 5 at acf1df9 for Ruling 4's dispositions (the vocabulary-covering mapping, the per-row promise check, the open-row counters, the reds those reproduce and the block's refusal clause); 1 at ba83fe4 for the untagged rows' era split, its other two checks being extensions of ones that already existed; and 3 at d324db0 for the residue grade, its conservative half and the reds both arms reproduce. The three declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for. This pass's first commit, 9721cab, declares none and says so in its own body: it transcribes a verdict and touches no test. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+     "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary."
+    },
     {
      "dated": "2026-08-18",
      "from": 8779,
