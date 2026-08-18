@@ -122,6 +122,136 @@ def test_nothing_is_recorded_as_reverted_without_saying_what() -> None:
             assert row["answered_at"], row
 
 
+# --------------------------------------------------------------------------
+# Ruling 4 -- the disposition every NOT_DISCHARGED row owes.
+#
+# The schema gate above has always required a disposition *word*.  The campaign
+# owner's ruling of 2026-08-17 asks for the thing behind the word: a ``fixed``
+# row names the commit that fixed it, a superseded one names the work that
+# superseded it, and a ``documented_open`` one names the artifact holding the
+# open debt.  Fifty-five of the ninety carried the word and nothing behind it.
+#
+# These checks are the difference between a disposition and a label.
+# --------------------------------------------------------------------------
+
+
+def _dispositions() -> dict:
+    return ledger()["dispositions"]
+
+
+def _not_discharged() -> list[dict]:
+    return [
+        row
+        for block in ledger()["passes"]
+        for row in block["criteria"]
+        if row["verdict"] == "NOT_DISCHARGED"
+    ]
+
+
+def _ruling_4_term(disposition: str) -> str:
+    """Which of Ruling 4's three a ledger disposition word spells."""
+    mapping = _dispositions()["how_ruling_4s_three_map_onto_this_ledgers_five"]
+    for term, spellings in mapping.items():
+        if disposition in spellings:
+            return term
+    raise AssertionError(f"{disposition!r} maps onto none of Ruling 4's dispositions")
+
+
+def test_the_disposition_mapping_covers_the_whole_vocabulary() -> None:
+    """Five words, three dispositions, and no word left unplaced.
+
+    A mapping that omitted a term would let a row wear a disposition the
+    ruling never named while every other check went on passing.
+    """
+    mapping = _dispositions()["how_ruling_4s_three_map_onto_this_ledgers_five"]
+    placed = [word for spellings in mapping.values() for word in spellings]
+    assert sorted(placed) == sorted(ledger()["disposition_vocabulary"])
+    assert len(placed) == len(set(placed))
+    assert mapping["superseded_by_later_work"] == []
+    assert _dispositions()["why_superseded_has_no_term"].strip()
+
+
+def test_every_not_discharged_row_carries_what_its_disposition_promises() -> None:
+    """Ruling 4, checked rather than recited.
+
+    ``fixed`` in any of its spellings names a commit **and** an artifact that
+    is really there; ``documented_open`` names an artifact holding the debt.
+    ``no_action_required`` is the DISCHARGED row's disposition and a
+    NOT_DISCHARGED row may not wear it -- that is the mapping's floor, and
+    without it the cheapest way to discharge this whole check would be to
+    relabel a row as needing nothing.
+    """
+    for row in _not_discharged():
+        term = _ruling_4_term(row["disposition"])
+        assert term != "not_reachable_by_a_not_discharged_row", row["id"]
+        artifact = row.get("artifact")
+        assert artifact, row["id"]
+        assert (ROOT / artifact).exists(), row["id"]
+        if term == "fixed":
+            assert row["answered_at"], row["id"]
+
+
+def test_the_open_row_counters_are_the_measured_ones() -> None:
+    """Round 130's first finding, given a home that cannot go stale.
+
+    A receipt-only commit added eighteen open rows and its body accounted for
+    eleven; nothing in the tree would have caught the difference.  These are
+    derived from the passes on every run, so the open debt is a number and
+    not a paragraph.
+    """
+    criteria = [row for block in ledger()["passes"] for row in block["criteria"]]
+    findings = [
+        row for block in ledger()["passes"] for row in block["unmentioned_behaviour"]
+    ]
+    counters = _dispositions()["open_rows"]
+    assert counters["criterion_rows_documented_open"] == sum(
+        1 for row in criteria if row["disposition"] == "documented_open"
+    )
+    assert counters["of_which_not_discharged"] == sum(
+        1
+        for row in criteria
+        if row["disposition"] == "documented_open"
+        and row["verdict"] == "NOT_DISCHARGED"
+    )
+    assert counters["of_which_phase_tip_only"] == sum(
+        1
+        for row in criteria
+        if row["disposition"] == "documented_open"
+        and row["verdict"] == "PHASE_TIP_ONLY"
+    )
+    assert counters["finding_rows_documented_open"] == sum(
+        1 for row in findings if row["disposition"] == "documented_open"
+    )
+    assert counters["not_discharged_criterion_rows"] == len(_not_discharged())
+    assert (
+        counters["of_which_not_discharged"] + counters["of_which_phase_tip_only"]
+        == counters["criterion_rows_documented_open"]
+    )
+
+
+def test_the_disposition_checks_have_reds_they_can_reproduce() -> None:
+    """R-05 over each way a disposition can go back to being a label."""
+    with pytest.raises(AssertionError):
+        _ruling_4_term("a word no ruling names")
+    assert _ruling_4_term("no_action_required") == (
+        "not_reachable_by_a_not_discharged_row"
+    )
+    counters = _dispositions()["open_rows"]
+    assert counters["criterion_rows_documented_open"] != 0
+    stripped = [dict(row, artifact=None) for row in _not_discharged()]
+    assert not all(row["artifact"] for row in stripped)
+
+
+def test_the_disposition_block_says_what_it_refuses_to_claim() -> None:
+    """The sweep made the dispositions citable; it closed nothing."""
+    block = _dispositions()
+    assert "2026-08-17" in block["rule"]
+    assert "never manufacturing one" in block["why_superseded_has_no_term"]
+    assert block["what_this_does_not_claim"].strip()
+    assert block["why_the_artifact_of_a_transcribed_row_is_this_file"].strip()
+    assert block["gate"] == "tests/test_verify_ledger.py"
+
+
 @pytest.mark.parametrize(
     "criterion",
     [
