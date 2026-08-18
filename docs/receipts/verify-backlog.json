@@ -10,7 +10,7 @@
  "groups": {
   "campaign-close-criterion-11-closeout": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 10,
+   "commit_count": 11,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the rendered verdict on the lane that recorded the ruling, transcribed (campaign-close-criterion-11-closeout)",
@@ -22,7 +22,8 @@
     "docs(receipts): section 20 records the ruling pass, the residue pass and this one (campaign-close-criterion-11-closeout)",
     "docs(receipts): G14 closes on the clause its blocker named (campaign-close-criterion-11-closeout)",
     "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-criterion-11-closeout)",
-    "docs(receipts): section 20.8 states the baseline property it can check, and a gate checks it (campaign-close-criterion-11-closeout)"
+    "docs(receipts): section 20.8 states the baseline property it can check, and a gate checks it (campaign-close-criterion-11-closeout)",
+    "chore(baseline): the pin moves once more, for the node id the last correction declared (campaign-close-criterion-11-closeout)"
    ]
   }
  },
