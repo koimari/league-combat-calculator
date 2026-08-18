@@ -128,6 +128,18 @@ SECTION_15_5_ANCHOR = "e4338b7"
 #: section no reader can date.
 SECTION_17_LEDGER_ANCHOR = "407428f"
 
+#: The commit that wrote section 19.  Its five readings of the verify ledger,
+#: all in 19.1, were facts about that tip and were stated live because they
+#: were.  The lane recording the owner's ruling on criterion 11 shipped a slice
+#: group of its own and its first commit moved two of them -- the residue and
+#: the prepared-pass count -- exactly as the two passes before it moved section
+#: 17's and section 16.3's.  So they take the branch 16.6 wrote down, as a group
+#: rather than one at a time: the section stays exactly as written and is read
+#: at the commit that stated it.  The three that did not move are anchored with
+#: them for the reason 17's note gives -- a section read half from a tip and
+#: half from git is a section no reader can date.
+SECTION_19_LEDGER_ANCHOR = "53b792c"
+
 
 @lru_cache(maxsize=1)
 def section_15() -> str:
@@ -1557,37 +1569,39 @@ def movements_naming_their_cause() -> str:
     return str(len(counter_movements_since_the_report()) - len(unexplained))
 
 
-def prepared_passes_here() -> str:
-    """How many startable passes the backlog holds at this tip."""
-    return str(json.loads(BACKLOG.read_text(encoding="utf-8"))["prepared_passes"])
+def anchored_19() -> list[dict]:
+    """The passes section 19's verdict counts were measured over."""
+    return ledger_at(SECTION_19_LEDGER_ANCHOR)["passes"]
 
 
-#: Section 19's figures.
+#: Section 19's figures.  The five ledger readings of 19.1 are anchored at the
+#: commit that stated them; 19.2's and 19.5's are read live, because the frontier
+#: counters and the gate's own size are properties of the tip by construction.
 FIGURES_19: list[tuple[str, str, Callable[[], str]]] = [
     (
         "19.1 residue",
         r"The residue is \*\*(\d+)\*\*",
-        lambda: str(ledger()["coverage"]["residue"]),
+        lambda: residue_at(SECTION_19_LEDGER_ANCHOR),
     ),
     (
         "19.1 prepared passes",
         r"prepares \*\*(\d+)\*\* startable passes",
-        prepared_passes_here,
+        lambda: prepared_passes_at(SECTION_19_LEDGER_ANCHOR),
     ),
     (
         "19.1 not discharged",
         r"\*\*(\d+)\*\* `NOT_DISCHARGED` rows",
-        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+        lambda: verdict_count(anchored_19(), "NOT_DISCHARGED"),
     ),
     (
         "19.1 passes",
         r"the ledger's \*\*(\d+)\*\*\s+passes",
-        lambda: str(len(here())),
+        lambda: str(len(anchored_19())),
     ),
     (
         "19.1 documented_open",
         r"of which \*\*(\d+)\*\* are `documented_open`",
-        lambda: disposition_count(here(), "documented_open"),
+        lambda: disposition_count(anchored_19(), "documented_open"),
     ),
     (
         "19.2 the reading section 5 states",

@@ -2137,6 +2137,23 @@ passes, of which **60** are `documented_open`. None moved and none could:
 re-dispositioning a verifier's finding about the lanes being checked is the
 reconstruction `what_this_ledger_does_not_hold` refuses.
 
+*Anchored 2026-08-18. The five ledger readings in the two clauses above were
+readings of this section's own tip when `53b792c` wrote them, and §16.6 wrote
+down in advance what the next pass that moved one had to choose between —
+restate the figure, or anchor it the way `SECTION_15_5_ANCHOR` does. The lane
+recording the owner's ruling on criterion 11 moved two of them, by taking the
+residue line its own tag owes, so they stay exactly as written and
+`tests/test_campaign_close_report_figures.py` reads all five at
+`git show 53b792c:docs/receipts/verify-ledger.json` through
+`SECTION_19_LEDGER_ANCHOR`. The three that did not move are anchored with them
+rather than left live, for the reason §17's anchor gives: a section read half
+from a tip and half from git is a section no reader can date. Clause 1's
+membership sentence dates the same way — "the three previous certification
+passes' tags; and this pass's own" was that tip's residue, and the live list is
+the ledger's own `slice_groups_without_one`. What the anchoring does not touch
+is the grade: criterion 11 is not discharged, by the same two clauses, on this
+tip as on that one.*
+
 **What this pass added, and it is an input rather than an act.** The review's
 first minor is a measurement about the mechanism rather than about the clause:
 since round 129 every slice group to enter the residue has been a
