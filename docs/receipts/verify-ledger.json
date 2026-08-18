@@ -18396,10 +18396,12 @@
     {
      "id": "owner-ruling-verify#1/unmentioned-2",
      "what_was_found": "The instrument arm's floor is narrower than the ruling's own unit, and the gap is not named anywhere. `how_the_denominator_is_split` and the umbrella both define an implementation slice as \"a unit of work that changes behaviour in `src/`, `tests/`, `scripts/` or `data/`\", but the third prong (`test_no_instrument_pass_c [...]",
-     "answered_at": [],
-     "disposition": "documented_open",
+     "answered_at": [
+      "df873bc"
+     ],
+     "disposition": "fixed_and_gated",
      "artifact": "docs/receipts/verify-ledger.json",
-     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+     "note": "Fixed at df873bc, and this is the same defect round 132's verifier reached independently. The finding's complaint is disclosure -- 'no commit body, and no field of the ledger, discloses that the enumerated tags touched tests/ or scripts/ at all' -- and that is what the commit repairs: what_this_does_not_reach.the_instrument_arm names every instrument tag beside the directories of Ruling 1's four that its own commits touched, re-derived from the tree by the gate. The floor itself is unchanged and unchangeable by a lane, for the reason recorded on the row beside this one."
     },
     {
      "id": "owner-ruling-verify#1/unmentioned-3",
@@ -18528,18 +18530,22 @@
     {
      "id": "ruling-residue-verify#1/unmentioned-1",
      "what_was_found": "bb654bd's replacement 'staleness red' cannot fail. tests/test_verify_ledger.py::test_the_residue_grade_has_a_red_it_can_reproduce ends with `assert set(_paths_by_tag()[a_tag]) - set(ledger()[...]['per_tag'][a_tag])`. per_tag[a_tag] is a DICT, so set() yields its two key strings ('in_a_behaviour_directory', 'tests_witho [...]",
-     "answered_at": [],
-     "disposition": "documented_open",
-     "artifact": "docs/receipts/verify-ledger.json",
-     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+     "answered_at": [
+      "c2dabf6"
+     ],
+     "disposition": "fixed_and_gated",
+     "artifact": "tests/test_verify_ledger.py",
+     "note": "Fixed at c2dabf6. The finding is right and was measured: the R-05 red in test_the_residue_grade_has_a_red_it_can_reproduce subtracted a path set from a dict, so it compared the tag's paths against two key strings and was non-empty by construction. The line now asserts what the block actually promises -- that a per-tag row carries the two findings and no evidence list -- and the red was demonstrated in-process against a doctored grade before the commit landed. The verdict is not re-graded; what moves is this disposition."
     },
     {
      "id": "ruling-residue-verify#1/unmentioned-2",
      "what_was_found": "d324db0's settlement sentence quantifies over more than it measures, and the body names only the harmless half of the overlap. The block asserts 'Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothi [...]",
-     "answered_at": [],
-     "disposition": "documented_open",
+     "answered_at": [
+      "df873bc"
+     ],
+     "disposition": "fixed_and_gated",
      "artifact": "docs/receipts/verify-ledger.json",
-     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+     "note": "Fixed at df873bc. The settlement sentence quantified over every implementation slice in the campaign range while its justifying clause was scoped to the residue, and the finding names the overlap that breaks the quantifier: two instrument tags touched scripts/. The sentence is bounded to the clause's denominator, the original stays written under its date, and what_this_does_not_reach carries both populations the bound leaves outside with a per-tag directory grade the gate re-derives. What is NOT fixed, and the row says so rather than implying otherwise: Ruling 2's check is still src/-only against a unit that names four directories, because narrowing it would eject tags the campaign owner ruled out of the denominator."
     },
     {
      "id": "ruling-residue-verify#1/unmentioned-3",
@@ -19018,7 +19024,7 @@
    "criterion_rows_documented_open": 175,
    "of_which_not_discharged": 60,
    "of_which_phase_tip_only": 115,
-   "finding_rows_documented_open": 664,
+   "finding_rows_documented_open": 661,
    "not_discharged_criterion_rows": 90
   },
   "gate": "tests/test_verify_ledger.py"

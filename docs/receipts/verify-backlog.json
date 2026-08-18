@@ -10,13 +10,14 @@
  "groups": {
   "campaign-close-criterion-11-closeout": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 4,
+   "commit_count": 5,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the rendered verdict on the lane that recorded the ruling, transcribed (campaign-close-criterion-11-closeout)",
     "docs(receipts): the rendered verdict on the lane that ran the ruling's work, transcribed (campaign-close-criterion-11-closeout)",
     "fix(gates): the residue grade's staleness red can fail again (campaign-close-criterion-11-closeout)",
-    "docs(receipts): the settlement sentence is bounded to the population it measures (campaign-close-criterion-11-closeout)"
+    "docs(receipts): the settlement sentence is bounded to the population it measures (campaign-close-criterion-11-closeout)",
+    "docs(receipts): the three findings this pass answered get the dispositions Ruling 4 owes them (campaign-close-criterion-11-closeout)"
    ]
   }
  },
