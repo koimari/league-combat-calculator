@@ -1111,6 +1111,26 @@ neither does the copy `b02e4ca` wrote into [`rulings-owed.json`](rulings-owed.js
 commit's body advertised the change as reading a measurement artifact instead of
 restating a figure. Both sentences stay written; the measurement lands beside each.
 
+*Anchored 2026-08-18. The two readings above — no `verified_commits` list holds
+`209da2f`, and the backlog row for that group carries the citation flag — were
+readings of this section's own tip when `0a2bee2` wrote them, and §16.6 wrote down
+in advance what the next pass that moved one had to choose between: restate the
+figure, or anchor it the way `SECTION_15_5_ANCHOR` does. This takes the anchor, so
+the section stays exactly as written and
+`tests/test_campaign_close_report_figures.py` reads both at
+`git show 0a2bee2:...` through `SECTION_15_2_ANCHOR`. What moved them is worth
+naming, because it is the one anchoring in this file where a sentence came true
+rather than going stale: Ruling 3 of the campaign owner's ruling of 2026-08-17
+declined to reclassify this range and scheduled a fresh R-35 pass over it instead,
+and that pass is recorded as round 130 of
+[`verify-ledger.json`](verify-ledger.json) — verifying `209da2f`, which is what
+retires the first reading, and taking the group out of the backlog, which is what
+retires the second. Both live states are asserted beside their anchored readings,
+so a reader meets the change here rather than deducing it. The section's own
+finding is untouched by either: a citation flag still says a body carries an
+answer and never whose, and 14.2's stronger sentence is still false of the day it
+was written.*
+
 ### 15.3 No ledger round measures the act that closed minor 4
 
 Section 14.1's finding-4 row closes the `tests.collected` minor and adds: "A fresh

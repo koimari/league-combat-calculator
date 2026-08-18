@@ -83,6 +83,17 @@ TABLE_ANCHOR = "832a91f"
 #: The group whose range section 15.2 says no verifier's brief has reached.
 UNREACHED_COMMIT = "209da2f"
 
+#: The commit that wrote section 15.2.  Its two readings -- no pass verifies
+#: ``209da2f``, and the backlog row for that group carries the citation flag --
+#: were facts about that tip.  Ruling 3 of the campaign owner's ruling of
+#: 2026-08-17 scheduled the pass that reached the range, so both moved on the
+#: commit that recorded round 130.  They take the branch 16.6 wrote down: the
+#: section stays exactly as written and is read at the commit that stated it.
+#: This one is a sentence coming true rather than going stale -- 15.2 named a
+#: range no brief had reached and a brief reached it -- so what now holds is
+#: asserted live beside each anchored reading rather than only implied.
+SECTION_15_2_ANCHOR = "0a2bee2"
+
 #: Where R-32's ``tests.collected`` amendment landed, per section 15.3.
 MINOR_4_COMMIT = "1bd837e"
 
@@ -630,20 +641,56 @@ def test_the_gate_fails_when_a_stated_figure_drifts(
 
 
 def test_no_verifier_has_reached_the_p4_batch_range() -> None:
-    """15.2's surviving clause: the range no brief reached, re-measured."""
+    """15.2's surviving clause, at the commit that stated it.
+
+    It was a fact about that tip and it stopped being one the day Ruling 3's
+    pass ran: round 130 verifies ``209da2f``.  That is the section's sentence
+    coming true rather than going wrong -- it named a range no brief had
+    reached, and a brief reached it -- so it takes the branch 16.6 wrote down
+    for exactly this, and the live half is asserted beside it below.
+    """
     reached = [
         block["round"]
-        for block in here()
+        for block in ledger_at(SECTION_15_2_ANCHOR)["passes"]
         if UNREACHED_COMMIT in block["verified_commits"]
     ]
     assert not reached
 
 
+def test_the_range_15_2_called_unreached_has_since_been_verified() -> None:
+    """The live half, so anchoring records a change instead of hiding one.
+
+    An anchored reading with nothing asserted about now is a reading a later
+    reader cannot place.  What moved it is named: a fresh R-35 pass, recorded
+    like any other, whose verdict rows are the verifier's.
+    """
+    reached = [
+        block for block in here() if UNREACHED_COMMIT in block["verified_commits"]
+    ]
+    assert [block["round"] for block in reached] == [130]
+    assert reached[0]["slice_group"] == "campaign-close-verify-p4-batch"
+    assert reached[0]["criteria"]
+
+
 def test_the_p4_batch_row_is_flagged_only_as_citing_a_body() -> None:
-    """And the flag 15.2 says is the true part of the sentence is really set."""
-    groups = json.loads(BACKLOG.read_text(encoding="utf-8"))["groups"]
-    row = groups["campaign-close-verify-p4-batch"]
+    """And the flag 15.2 says is the true part of the sentence, where it was.
+
+    Read at the same anchor and for the same reason: a backlog row is a
+    prepared pass, the pass ran, and a row whose pass has run is not in the
+    backlog at all.  Its absence at this tip is asserted rather than left to
+    be discovered.
+    """
+    blob = subprocess.run(
+        ["git", "show", f"{SECTION_15_2_ANCHOR}:docs/receipts/verify-backlog.json"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    row = json.loads(blob)["groups"]["campaign-close-verify-p4-batch"]
     assert row["cites_an_r35_answer_in_a_commit_body"] is True
+    live = json.loads(BACKLOG.read_text(encoding="utf-8"))["groups"]
+    assert "campaign-close-verify-p4-batch" not in live
 
 
 def test_round_110_reads_on_round_6s_row_and_not_on_the_re_pin() -> None:
