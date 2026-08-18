@@ -1961,6 +1961,32 @@ def test_the_completeness_scan_reds_on_section_20() -> None:
     assert ungated_figures(doctored, FIGURES_20, [], [])
 
 
+def test_no_data_moves_in_the_range_section_20_8_reasons_over() -> None:
+    """The half of §20.8's reasoning that ``src/`` alone does not cover.
+
+    §20.8 says both compared baselines read ``snapshot identical`` at every
+    commit of this pass's range, and it says so as a property rather than as a
+    reading taken once: a golden snapshot is a function of ``src/`` and
+    ``data/``, and no commit here touches either.  The ``src/`` half is
+    asserted over every stated range one section up.  This is the ``data/``
+    half, without which the sentence would rest on an inference nothing checks.
+    """
+    touched = [
+        sha
+        for sha, files in files_by_commit("5b663cb..HEAD")
+        if any(name.startswith("data/") for name in files)
+    ]
+    assert touched == []
+    # R-05: the predicate discriminates.  The campaign range as a whole does
+    # hold commits that moved cached data, so an empty answer here is a fact
+    # about this range rather than about the check.
+    assert [
+        sha
+        for sha, files in files_by_commit("584071e..HEAD")
+        if any(name.startswith("data/") for name in files)
+    ]
+
+
 def test_the_r01_verdict_table_section_20_states_carries_no_figure() -> None:
     """15.8's ruling, held one section further on again."""
     table = section_20()[section_20().index("### 20.8") :]

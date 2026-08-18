@@ -2531,4 +2531,9 @@ those five; and every commit that moved one of them moved only
 `campaign-fingerprints.json`, touching no `src/`, no gate script and neither
 compared baseline — this pass's `tests{collected}` re-pin for the node ids it
 declared, inside Amendment R-32's fourth carve-out and disclosed in its own body.
-Both compared baselines read `snapshot identical` on every commit here.
+Both compared baselines read `snapshot identical` at this tip, and read it at every
+commit of the range by the property above rather than by a claim: a golden snapshot
+is a function of `src/` and `data/`, no commit here touches either, and the three
+checks §18.4 names assert that over this range as over the two before it. Stated
+this way because the alternative — asserting a reading on nine commits after
+running it on one — is the shape §18.1 corrected two sections of this report for.
