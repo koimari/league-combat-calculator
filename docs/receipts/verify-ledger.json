@@ -18442,6 +18442,146 @@
      "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-ruling-residue",
+   "round": 132,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "9721cab",
+    "acf1df9",
+    "ba83fe4",
+    "d324db0",
+    "8afc3ce",
+    "1d34fd9",
+    "bb654bd",
+    "5b663cb"
+   ],
+   "dated": "2026-08-18",
+   "answered_by": [
+    "5b663cb"
+   ],
+   "what_this_round_is": "The verdict on the lane that ran Ruling 3's pass and dispositioned Ruling 4's rows, rendered on 2026-08-18 by a fresh read-only Opus 5 that had not read the plan, and never filed. Five criteria, all DISCHARGED, and seven behaviours the commit bodies do not mention -- including that this ledger's own settlement sentence quantifies over more than it measures, and that one R-05 red in its gate cannot fail. Both are carried as rows here and answered by the two commits that follow this one, which is what `when_a_later_lane_answers_a_sweep_row` says a later lane may do: the disposition moves, the verdict never.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "af867f96bd9300ec2"
+    ],
+    "journal_key": "v2:e0da54259b6cdde9345d97369d9c64efe1b709412726fcf9342e406036b0c7e2",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "what_the_agent_was_handed": "R-35's brief with the slice group's eight commits and its stated completion criteria, plus the standing read-only and do-not-read-the-implementation-plan clauses. The row this group prepared for itself carried no criteria document -- the group's own fifth finding is about exactly that -- so the criteria are the verifier's five spellings of what the group set out to do.",
+    "all_discharged_as_returned": {
+     "af867f96bd9300ec2": true
+    },
+    "criteria_returned_for_this_slice": 5,
+    "findings_returned_for_this_slice": 7,
+    "why_the_journal_and_not_the_handoff": "The rule the residue_sweep block already carries. The recording lane was handed nothing about this verdict at all -- it was rendered after the lane it grades and never filed -- so the journal line is not merely the fuller copy here, it is the only copy."
+   },
+   "criteria": [
+    {
+     "id": "1-batch-verdict-recorded",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Round 130 exists in docs/receipts/verify-ledger.json as slice_group 'campaign-close-verify-p4-batch', verified_commits ['209da2f'], residue_sweep=true, backfilled=false, 13 criteria / 5 findings. I did not take the ledger's word: I opened the named journal myself (~/.claude/projects/C--Users-skywa-Desktop-claude-code-m [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "2-every-not-discharged-row-dispositioned",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Counted every criterion row across all 130 passes myself: 1030 rows = 825 DISCHARGED / 90 NOT_DISCHARGED / 115 PHASE_TIP_ONLY; 0 rows missing a `disposition` key. Split: NOT_DISCHARGED -> documented_open 60, fixed 23, fixed_and_gated 7; DISCHARGED -> no_action_required 825 (no NOT_DISCHARGED row wears it). Checked the  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "3-untagged-src-touching-commits-enumerated-and-covered",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Enumeration re-derived from scratch over 584071e..HEAD (677 commits, 0 merges): 518 carry a trailing parenthetical, 159 do not (ledger: untagged_commits 159), and of those 159 exactly 61 touch src/ -- and my 61 subjects are set-equal to the ledger's `subjects` list, zero in either direction. Era split re-derived agains [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "4-coverage-residue-0-for-implementation-slices",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Re-derived the whole denominator from the tree: 132 distinct slice tags in 584071e..HEAD = 126 with a verdict + 2 residue + 4 instrument_pass_tags, union equal to the tree's tag set and pairwise disjoint (0 tags in tree-not-ledger, 0 ledger-not-tree). Then graded the 2 residue tags by walking their own commits' file li [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "5-R-01-matrix-and-plan-audit-green",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Run by me at HEAD 5b663cb with `git status --porcelain` empty before and after. Row 1 `pytest -q` -> 8814 passed in 370.85s, 0 failed/skipped/xfailed; campaign-fingerprints tests.collected pin is 8814, and the declared-node-id arithmetic checks out: `git show <c> -- tests/ | grep -c '^+def test_'` gives 0/5/1/3/0/1/0/0 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "ruling-residue-verify#1/unmentioned-1",
+     "what_was_found": "bb654bd's replacement 'staleness red' cannot fail. tests/test_verify_ledger.py::test_the_residue_grade_has_a_red_it_can_reproduce ends with `assert set(_paths_by_tag()[a_tag]) - set(ledger()[...]['per_tag'][a_tag])`. per_tag[a_tag] is a DICT, so set() yields its two key strings ('in_a_behaviour_directory', 'tests_witho [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-2",
+     "what_was_found": "d324db0's settlement sentence quantifies over more than it measures, and the body names only the harmless half of the overlap. The block asserts 'Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothi [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-3",
+     "what_was_found": "9721cab's claim that its own tag 'takes the explicit residue line the forward gate requires' names a gate that does not exist and a line that was not written. Every one of the five previous tags that entered the residue got a dated instance note in coverage.a_lane_that_works_adds_a_row_to_this_list (\u2026and_again_2026_08_ [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-4",
+     "what_was_found": "residue_with_no_verdict_anywhere stays 0 for this group on a predicate the ledger elsewhere admits is unreliable, and the admission was not restated for the new tag. campaign-close-ruling-residue is in slice_groups_citing_a_verdict_in_a_commit_body purely because its bodies contain a mechanism word and a verdict word \u2014 [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-5",
+     "what_was_found": "The backlog row this group generated for itself carries criteria_documents: [] \u2014 its predecessor row for campaign-close-verify-p4-batch named docs/plans/2026-08-08-silent-failure-campaign.md. verify_backlog.py derives the field as documents_mentioning(tag), and I confirmed by import that no plan document names 'campaig [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-6",
+     "what_was_found": "1d34fd9 converted two gate nodes from live reads to historical ones, and the body describes the anchoring without saying that coverage was lost. test_no_verifier_has_reached_the_p4_batch_range now reads ledger_at('0a2bee2') instead of the working tree, and test_the_p4_batch_row_is_flagged_only_as_citing_a_body now `git [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "ruling-residue-verify#1/unmentioned-7",
+     "what_was_found": "Aside, not a defect today: ba83fe4's era-split test addresses commits by subject text (`positions = [ordered.index(subject) for subject in subjects]`), taking the first textual match. The campaign range already contains a duplicated subject ('docs(plans): the three Liandry-extraction locators, refreshed again (R-37)',  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that ran the ruling's scheduled work. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -18561,6 +18701,7 @@
    "campaign-close-resistance-term",
    "campaign-close-resistance-term-ruling",
    "campaign-close-retirement-act",
+   "campaign-close-ruling-residue",
    "campaign-close-rung-receipts",
    "campaign-close-secondary-target-retired",
    "campaign-close-secondary-target-retirement",
@@ -18578,8 +18719,7 @@
    "umbrella [H] table"
   ],
   "slice_groups_without_one": [
-   "campaign-close-criterion-11-closeout",
-   "campaign-close-ruling-residue"
+   "campaign-close-criterion-11-closeout"
   ],
   "instrument_pass_tags": [
    {
@@ -18704,7 +18844,7 @@
     "what_the_split_does_not_do": "Assign either group to a slice. A post-convention untagged commit sitting between two commits of one lane is evidence about a neighbourhood, not a verdict, and reading it as one would be reconstructing coverage out of the history being checked -- the reconstruction this ledger refuses in its first paragraph. The split says what kind of debt each row is; what closes a row is unchanged and is still what `what_closes_a_row` says."
    }
   },
-  "residue": 2,
+  "residue": 1,
   "what_the_residue_buys": "Two things the criterion never had. The gap is a number that cannot grow in silence, the way the sole-home scan made criterion 4's residue a number. And the gate asserts the derived tag set equals these two lists -- so the NEXT slice group cannot ship without either a verdict row or an explicit line in slice_groups_without_one. Going forward the clause holds by machine; backwards it is measured and open, which is the honest pair. The forward half fired for real on 2026-08-15: the tag campaign-close-charge-price-oracle shipped with no line here, R-01 row 1 went red on the commit that shipped it, and the two rows were added by the next lane rather than discovered by a reader. That is the clause working, and it is recorded here because a gate whose one firing goes unrecorded is indistinguishable from a gate that has never fired. Corrected 2026-08-18: 'the gate asserts the derived tag set equals these two lists' is now three lists, the third being instrument_pass_tags. The property the sentence is about is untouched and is the reason the third arm is enumerated rather than dropped: the union is still asserted total and the arms still asserted disjoint, so the NEXT slice group still cannot ship without a verdict row, an explicit line, or an enumerated self-record that resolves. A tag can leave the residue three ways now and can leave the population none.",
   "why_the_residue_cannot_be_closed_retroactively": "A verify verdict is a fresh read-only agent's report on a tree at a commit. The trees are still there and the agents are not, and a verdict written now by anyone who has read the plan is not an R-35 verdict at all -- the brief's whole content is that the reader has not read the plan. So the residue closes by the campaign ending, or by re-running R-35 over the historical ranges as its own scheduled work with its own briefs. It does not close by anybody filling in this file. Restated 2026-08-14 with the number: 10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere. Closing those is 60-odd fresh R-35 passes by verifiers that have not read the plan -- not a lane's to run, not reconstructible from the commit bodies of the lanes being checked, and not closeable by shrinking the denominator. It is recorded as an owed ruling in docs/receipts/rulings-owed.json rather than as a gap in a report. Prepared 2026-08-14: the branch that binds the clause backwards is now priced and startable row by row in docs/receipts/verify-backlog.json -- which changes what the ruling costs to schedule and changes nothing about the ruling, because preparing a pass is not running one. Corrected 2026-08-17, and the correction is to the counts rather than to the reasoning. The clause dated 2026-08-14 states a population -- '10 of the groups without a verdict here cite one in a commit body, and the other rows cite nothing anywhere', 'Closing those is 60-odd fresh R-35 passes' -- and every figure in it was true on its date and is false of this tree. The backfill and the residue sweep took the residue to a number those sentences cannot describe, and round 129 took it to a different membership again. The sentences stay written, because a justification that is only deleted is one no reader can check was ever real, and what replaces them is not a re-wording but the counters in this same block: `residue` is how many groups have no verdict here, `residue_with_no_verdict_anywhere` is how many of those cite none in a commit body either, and `prepared_passes` in docs/receipts/verify-backlog.json is what the backwards branch now buys. Each is derived and gated; none is prose. What the paragraph above says and goes on saying is the part with no number in it: a verdict is a fresh read-only agent's report on a tree at a commit, a lane that has read the plan cannot write one, and the residue closes by re-running R-35 with its own briefs rather than by anybody filling in this file. That is unchanged and is the half the owed ruling turns on. Found by an R-35 verifier rather than by a reader: round 129, campaign-close-final-integration-r35/unmentioned-1.",
   "slice_groups_citing_a_verdict_in_a_commit_body": [
@@ -18765,14 +18905,10 @@
    "dated": "2026-08-18",
    "rule": "Ruling 1 of the campaign owner's ruling of 2026-08-17 binds criterion 11's first clause backwards FOR IMPLEMENTATION SLICES, and reads 'every slice' as every unit of work that changes behaviour in src/, tests/, scripts/ or data/. The residue is the tags with no recorded verdict here. So the question the clause actually turns on is not how big the residue is -- it is whether anything in it is one of those units. This block is that question, measured.",
    "how_it_is_derived": "Per residue tag, the paths its own commits touch, read off the tree. Three of Ruling 1's four directories are checked by emptiness: no commit of a residue tag touches src/, scripts/ or data/. The fourth is checked by containment rather than emptiness, because an instrument that repairs its own gate touches tests/ and Ruling 2's check permits exactly that -- an enumerated instrument tag, campaign-close-certification-r4, ships a tests/ commit of its own. So every tests/ file a residue tag touched must be DECLARED AS THE GATE of a docs/receipts/ artifact that same tag wrote: a JSON receipt's own `gate` field, or a prose artifact naming it. Declared and not merely mentioned, and the difference is not fussiness -- the first draft of this check searched each receipt's text, and this block's own per_tag listing then satisfied it for every test path it listed, so the check passed by having been written. A `gate` field cannot do that. Both arms are re-derived by the gate and neither is a list anybody typed.",
-   "residue": 2,
+   "residue": 1,
    "residue_that_is_an_implementation_slice": 0,
    "per_tag": {
     "campaign-close-criterion-11-closeout": {
-     "in_a_behaviour_directory": [],
-     "tests_without_a_declaring_receipt": []
-    },
-    "campaign-close-ruling-residue": {
      "in_a_behaviour_directory": [],
      "tests_without_a_declaring_receipt": []
     }
@@ -18849,7 +18985,7 @@
    "criterion_rows_documented_open": 175,
    "of_which_not_discharged": 60,
    "of_which_phase_tip_only": 115,
-   "finding_rows_documented_open": 657,
+   "finding_rows_documented_open": 664,
    "not_discharged_criterion_rows": 90
   },
   "gate": "tests/test_verify_ledger.py"
