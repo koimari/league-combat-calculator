@@ -691,12 +691,115 @@ def test_the_untagged_src_enumeration_is_the_measured_one() -> None:
     assert block["count"] == len(measured)
 
 
+def _untagged_src_shas() -> dict[str, str]:
+    """The sha behind each untagged src-touching subject."""
+    unit, record = chr(31), chr(30)
+    out = subprocess.run(
+        [
+            "git",
+            "log",
+            "--reverse",
+            f"--format={record}%H{unit}%s",
+            "--name-only",
+            "584071e..HEAD",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    tag_pattern = re.compile(TRAILING_TAG)
+    found: dict[str, str] = {}
+    for chunk in out.split(record):
+        lines = [line for line in chunk.splitlines() if line.strip()]
+        if not lines:
+            continue
+        sha, subject = lines[0].split(unit, 1)
+        if tag_pattern.search(subject):
+            continue
+        if any(path.startswith("src/") for path in lines[1:]):
+            found[subject] = sha
+    return found
+
+
+def _covered_by_a_recorded_pass() -> dict[str, str]:
+    """Untagged src commits a recorded pass names in ``verified_commits``.
+
+    The join is by sha and the only source is ``verified_commits``.  No pass
+    block carries a range, so "the brief spanned it" has exactly one
+    machine-readable spelling; a sha that merely appears inside a verifier's
+    evidence prose is a boundary it read past or a parent tree it exported,
+    and calling that coverage would invent verdicts nobody rendered.
+    """
+    verified = set()
+    for block in ledger()["passes"]:
+        for sha in block["verified_commits"]:
+            resolved = subprocess.run(
+                ["git", "rev-parse", f"{sha}^{{commit}}"],
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+                check=True,
+            )
+            verified.add(resolved.stdout.strip())
+    return {
+        subject: sha for subject, sha in _untagged_src_shas().items() if sha in verified
+    }
+
+
 def test_the_untagged_src_rows_carry_their_coverage_honestly() -> None:
-    """The counter that stops the list from reading as closed."""
+    """The counter that stops the list from reading as closed.
+
+    Derived, not authored: the map is re-computed from the ledger's own
+    ``verified_commits`` against the tree, so a row cannot be typed into
+    coverage and a row whose pass is later removed loses it.
+    """
     block = _untagged_src()
     covered = block["covered"]
     assert set(covered) <= set(block["subjects"])
+    assert covered == _covered_by_a_recorded_pass()
     assert block["uncovered"] == block["count"] - len(covered)
+    assert block["how_coverage_is_derived"].strip()
+    assert block["what_a_mention_is_not"].strip()
+
+
+def test_the_untagged_src_rows_are_split_by_the_era_they_landed_in() -> None:
+    """Two different debts wearing one word, told apart by the tree.
+
+    Everything before the trailing-tag convention began is untagged because
+    the convention did not exist; everything after it is a lane that had the
+    convention and shipped ``src/`` without one.  Only the second kind has a
+    lane whose other commits say where it belongs, which is the whole of why
+    a scheduler needs the split.
+    """
+    era = _untagged_src()["by_era"]
+    subjects = _untagged_src_subjects()
+    unit, record = chr(31), chr(30)
+    out = subprocess.run(
+        ["git", "log", "--reverse", f"--format=%s{record}", "584071e..HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    ordered = [line.strip() for line in out.split(record) if line.strip()]
+    tag_pattern = re.compile(TRAILING_TAG)
+    first_tagged = next(
+        index for index, subject in enumerate(ordered) if tag_pattern.search(subject)
+    )
+    assert era["the_tag_convention_begins_at"] == ordered[first_tagged]
+    positions = [ordered.index(subject) for subject in subjects]
+    assert era["before_the_convention"] == sum(
+        1 for at in positions if at < first_tagged
+    )
+    assert era["after_the_convention"] == sum(
+        1 for at in positions if at > first_tagged
+    )
+    assert (
+        era["before_the_convention"] + era["after_the_convention"]
+        == _untagged_src()["count"]
+    )
+    assert era["what_the_split_does_not_do"].strip()
 
 
 def test_the_untagged_src_enumeration_says_what_a_lane_may_not_do() -> None:
@@ -721,6 +824,11 @@ def test_the_untagged_src_gate_has_a_red_it_can_reproduce() -> None:
     assert measured + ["a subject no commit carries"] != measured
     doctored = dict(block, covered={"a subject no commit carries": {}})
     assert not set(doctored["covered"]) <= set(block["subjects"])
+    # And the one the derivation added: a real row claimed as covered by a
+    # pass that never named it.  This is the shape a lane would reach for,
+    # and it is now the difference between a typed map and a derived one.
+    claimed = {block["subjects"][0]: _untagged_src_shas()[block["subjects"][0]]}
+    assert claimed != _covered_by_a_recorded_pass()
 
 
 def test_the_lane_that_recorded_the_ruling_is_not_in_the_arm_it_recorded() -> None:
