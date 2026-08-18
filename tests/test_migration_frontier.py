@@ -15,6 +15,7 @@ one is a test rather than a reading of the script:
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -132,3 +133,161 @@ def test_the_gate_reports_a_missing_receipt() -> None:
     assert migration_frontier.check(migration_frontier.scan(), {}) == (
         "migration-frontier.json is missing; run --write",
     )
+
+
+# --------------------------------------------------------------------------
+# A counter that moves names its cause in the commit that moved it.
+#
+# R-36 puts the regenerated receipt in the commit whose counters it records,
+# which makes every movement a diff.  What it does not do is make the movement
+# *explained*: a certification reviewer read the close report's section 5,
+# which states counter 6's kernel value as of the tip that wrote it, measured
+# the tip at a higher value, and found the difference carried no cause anywhere
+# a reader of the closing artifacts would look.  The cause existed — it is in
+# the body of the commit that moved it, in that commit's own words — and
+# nothing asserted that it had to.
+#
+# So the property is asserted instead of relied on.  Every commit after the
+# report's tip that moved a migration-frontier counter states the move in its
+# own body: the counter, and the value it moved from to the value it moved to.
+# A future move that arrives unremarked is red on the commit that lands it,
+# which is the difference between a cause the campaign happened to write and a
+# cause it cannot omit.
+# --------------------------------------------------------------------------
+
+#: The tip the close report's section 5 states these counters at.  Its readings
+#: are dated by the report's own header and stay true of that commit; what this
+#: range covers is every movement since, which is the population the reviewer
+#: measured and the only one where "unremarked" is a live risk.
+REPORT_TIP = "067c94c"
+
+#: The receipt path, as ``git show`` spells it.
+RECEIPT_IN_TREE = "docs/migration-frontier.json"
+
+#: ``(counter, the key holding its value)`` — every scalar a movement can be
+#: measured over.  Read from the receipt rather than from the script's
+#: constants, because the receipt is what a commit carries.
+COUNTER_VALUES = (
+    ("counter_5", "value"),
+    ("counter_6", "kernel_value"),
+    ("counter_6", "program_value"),
+    ("counter_7", "value"),
+)
+
+#: How a body names a counter.  The campaign's commits write "counter 6", the
+#: receipt keys it ``counter_6``; both spellings are accepted so a body is not
+#: required to quote a JSON key at a reader.
+_COUNTER_SPELLINGS = {
+    "counter_5": ("counter 5", "counter_5"),
+    "counter_6": ("counter 6", "counter_6"),
+    "counter_7": ("counter 7", "counter_7"),
+}
+
+#: How a body spells a move.  Both arrows the repository uses, plus the English.
+_ARROWS = ("->", "→", "to")
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args], capture_output=True, text=True, cwd=ROOT, check=True
+    ).stdout
+
+
+def _receipt_at(sha: str) -> dict:
+    """The committed receipt as one commit left it, or ``{}`` when absent."""
+    out = subprocess.run(
+        ["git", "show", f"{sha}:{RECEIPT_IN_TREE}"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+    if out.returncode != 0:
+        return {}
+    return json.loads(out.stdout)
+
+
+def _values(receipt: dict) -> dict[tuple[str, str], int]:
+    counters = receipt.get("counters", {})
+    return {
+        (counter, key): counters[counter][key]
+        for counter, key in COUNTER_VALUES
+        if counter in counters and key in counters[counter]
+    }
+
+
+def counter_movements(rev_range: str) -> list[tuple[str, str, str, int, int]]:
+    """``(sha, counter, key, old, new)`` for every counter move in a range.
+
+    Derived from the receipts two adjacent commits carry rather than from any
+    list: a movement is exactly a value this file records differently from the
+    commit before it, which is what R-36 makes visible in the first place.
+    """
+    moved: list[tuple[str, str, str, int, int]] = []
+    shas = _git(
+        "log", "--reverse", "--format=%h", rev_range, "--", RECEIPT_IN_TREE
+    ).split()
+    for sha in shas:
+        before = _values(_receipt_at(f"{sha}~1"))
+        after = _values(_receipt_at(sha))
+        for key in sorted(set(before) | set(after)):
+            old, new = before.get(key), after.get(key)
+            if old is not None and new is not None and old != new:
+                moved.append((sha, key[0], key[1], old, new))
+    return moved
+
+
+def states_the_move(body: str, counter: str, old: int, new: int) -> bool:
+    """Whether a commit body names this counter and the move it made.
+
+    The pure predicate, so the red below is a seam rather than a commit
+    somebody has to remember making (R-05).
+    """
+    spoken = body.lower()
+    if not any(name in spoken for name in _COUNTER_SPELLINGS[counter]):
+        return False
+    return any(f"{old} {arrow} {new}" in spoken for arrow in _ARROWS)
+
+
+def test_every_counter_movement_since_the_report_names_its_cause() -> None:
+    """The property the reviewer's minor asks for, as a check and not a habit."""
+    unexplained = [
+        (sha, counter, key, old, new)
+        for sha, counter, key, old, new in counter_movements(f"{REPORT_TIP}..HEAD")
+        if not states_the_move(
+            _git("show", "-s", "--format=%B", sha), counter, old, new
+        )
+    ]
+    assert unexplained == []
+
+
+def test_the_named_cause_check_has_a_red_it_can_reproduce() -> None:
+    """R-05, through the predicate's own seam.
+
+    Three bodies: one that names neither, one that names the counter and not
+    the move — the shape a body takes when a receipt is regenerated as
+    housekeeping — and one that names both, which is what the tree carries.
+    """
+    assert not states_the_move("regenerated the receipt", "counter_6", 75, 78)
+    assert not states_the_move("counter 6 is unchanged here", "counter_6", 75, 78)
+    assert states_the_move(
+        "`docs/migration-frontier.json` counter 6 moves 75 -> 78: the three "
+        "`round(..., 6)` calls in the new receipt",
+        "counter_6",
+        75,
+        78,
+    )
+
+
+def test_the_movement_derivation_reads_the_receipt_and_not_a_list() -> None:
+    """A movement is a diff between two commits' receipts, measured as one.
+
+    The derivation is the load-bearing half: a check that ranged over an
+    authored list of movements would be green about the movements somebody
+    remembered.  This asserts it reads the tree — the range before the report's
+    tip holds movements too, and they are found the same way.
+    """
+    assert counter_movements(f"{REPORT_TIP}..{REPORT_TIP}") == []
+    every = counter_movements(f"584071e..{REPORT_TIP}")
+    assert every, "the campaign moved these counters and the derivation sees none"
+    assert all(old != new for _sha, _counter, _key, old, new in every)
