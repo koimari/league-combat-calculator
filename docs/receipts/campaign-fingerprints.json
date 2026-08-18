@@ -627,16 +627,23 @@
   }
  },
  "tests": {
-  "collected": 8748,
+  "collected": 8779,
   "skipped": 0,
   "xfailed": 0,
   "re_pinned": {
    "dated": "2026-08-17",
-   "from": 8716,
-   "to": 8748,
-   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 0aab30e: 8716 at 927964c, the tip this pass opened on, and 8748 at its close, so this pass's two slices declare +32 node ids between them and nothing else does -- 18 at eee282f for the range-to-HEAD baseline claim's checks (2 each for the three that read the claim's own history, 2 each for the three that assert the properties over both claimed ranges, 4 for the carve-out's doctored conditions, 1 for criterion 10's red and 1 for the src/ red) and 14 at 0aab30e for section 18 (8 for its four figures and their reds, 1 for its completeness scan, 1 for that scan's own red, 1 for its R-01 verdict-table check, and 3 for the third range the property checks now run over). The two declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for and the first pass in this campaign's closing sequence able to state without a residue: the 525 the previous re-pin could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+   "from": 8748,
+   "to": 8779,
+   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 53b792c: 8748 at efdafe2, the tip this pass opened on, and 8779 at its close, so this pass's four test-declaring slices account for +31 between them and nothing else does -- 3 at f32be22 for the migration-frontier movement-cause property, its R-05 red and the assertion that the movement population is derived rather than authored; 3 at 85eca48 for the cached-data defects' scheduled home, the source assertion that the named route really reads the artifact, and the red on an entry whose home vanished; 2 at fe6a4d5 for the owed row's cost-of-deciding-late field and its no-count red; and 23 at 53b792c for section 19 (20 for its ten figures and their reds, 1 for its completeness scan, 1 for that scan's own red and 1 for its R-01 verdict-table check). The four declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for. The pass's first commit declares none and says so: it moves two receipts and no test. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
    "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary.",
    "earlier_moves": [
+    {
+     "dated": "2026-08-17",
+     "from": 8716,
+     "to": 8748,
+     "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 0aab30e: 8716 at 927964c, the tip this pass opened on, and 8748 at its close, so this pass's two slices declare +32 node ids between them and nothing else does -- 18 at eee282f for the range-to-HEAD baseline claim's checks (2 each for the three that read the claim's own history, 2 each for the three that assert the properties over both claimed ranges, 4 for the carve-out's doctored conditions, 1 for criterion 10's red and 1 for the src/ red) and 14 at 0aab30e for section 18 (8 for its four figures and their reds, 1 for its completeness scan, 1 for that scan's own red, 1 for its R-01 verdict-table check, and 3 for the third range the property checks now run over). The two declarations sum to the move exactly, which is the arithmetic R-01 row 1's second half asks for and the first pass in this campaign's closing sequence able to state without a residue: the 525 the previous re-pin could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
+     "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary."
+    },
     {
      "dated": "2026-08-17",
      "from": 8128,
