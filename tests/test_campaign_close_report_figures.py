@@ -1545,17 +1545,16 @@ def counter_movements_since_the_report() -> list[tuple[str, str, str, int, int]]
 
 
 def movements_naming_their_cause() -> str:
-    """How many of those movements the moving commit's own body states."""
-    gate = frontier_gate()
-    return str(
-        sum(
-            1
-            for sha, counter, _key, old, new in counter_movements_since_the_report()
-            if gate.states_the_move(
-                gate._git("show", "-s", "--format=%B", sha), counter, old, new
-            )
-        )
+    """How many of those movements the moving commit's own body states.
+
+    Counted against the frontier gate's own unexplained list rather than by
+    re-applying its predicate here: what counts as a named cause has one home,
+    and a second application of it is a second thing that can drift.
+    """
+    unexplained = frontier_gate().movements_without_a_named_cause(
+        f"{SECTION_5_TIP}..HEAD"
     )
+    return str(len(counter_movements_since_the_report()) - len(unexplained))
 
 
 def prepared_passes_here() -> str:

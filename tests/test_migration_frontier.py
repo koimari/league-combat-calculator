@@ -193,6 +193,11 @@ def _git(*args: str) -> str:
     ).stdout
 
 
+def commit_body(sha: str) -> str:
+    """One commit's message body — where a movement's cause is written."""
+    return _git("show", "-s", "--format=%B", sha)
+
+
 def _receipt_at(sha: str) -> dict:
     """The committed receipt as one commit left it, or ``{}`` when absent."""
     out = subprocess.run(
@@ -249,16 +254,25 @@ def states_the_move(body: str, counter: str, old: int, new: int) -> bool:
     return any(f"{old} {arrow} {new}" in spoken for arrow in _ARROWS)
 
 
+def movements_without_a_named_cause(
+    rev_range: str,
+) -> list[tuple[str, str, str, int, int]]:
+    """Every movement in a range whose own commit body does not state it.
+
+    The one home of "which movements are unexplained": this file's own check
+    asserts it empty and the close report's gate counts against it, so the
+    two cannot disagree about what a named cause is.
+    """
+    return [
+        (sha, counter, key, old, new)
+        for sha, counter, key, old, new in counter_movements(rev_range)
+        if not states_the_move(commit_body(sha), counter, old, new)
+    ]
+
+
 def test_every_counter_movement_since_the_report_names_its_cause() -> None:
     """The property the reviewer's minor asks for, as a check and not a habit."""
-    unexplained = [
-        (sha, counter, key, old, new)
-        for sha, counter, key, old, new in counter_movements(f"{REPORT_TIP}..HEAD")
-        if not states_the_move(
-            _git("show", "-s", "--format=%B", sha), counter, old, new
-        )
-    ]
-    assert unexplained == []
+    assert movements_without_a_named_cause(f"{REPORT_TIP}..HEAD") == []
 
 
 def test_the_named_cause_check_has_a_red_it_can_reproduce() -> None:
