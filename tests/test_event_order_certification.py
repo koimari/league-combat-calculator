@@ -102,10 +102,14 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
 
 
 @pytest.mark.parametrize("champion,source", (("Shen", "Q"),))
-def test_unsupported_empowered_or_state_packets_remain_withheld(champion, source):
+def test_empowered_attack_packets_certify_their_authored_swing_ledger(champion, source):
+    """Wave 1B: Shen Q's bonus hits carry authored swing timing."""
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert source in result["timeline_coverage"]["coarse_sources"]
+    assert result["timeline_coverage"]["complete"] is True
+    assert source in result["timeline_coverage"]["exact_sources"]
+    events = result["breakdown"][source]["damage_events"]
+    assert events
+    assert {event["event_precision"] for event in events} == {"exact"}
 
 
 def test_belveth_ability_carried_ramping_on_hit_has_authored_carrier_times():
@@ -137,9 +141,8 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
     "champion,source",
     (("Shen", "Q"),),
 )
-def test_calculate_api_surfaces_partial_timeline_without_claiming_exact_order(
-    champion, source
-):
+def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
+    """Wave 1B: the public API no longer reports Shen Q as coarse."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -155,10 +158,10 @@ def test_calculate_api_surfaces_partial_timeline_without_claiming_exact_order(
         )
     assert response.status_code == 200
     coverage = response.get_json()["timeline_coverage"]
-    assert coverage["complete"] is False
-    assert coverage["certification"] == "partial_event_order"
-    assert source in coverage["coarse_sources"]
-    assert coverage["coarse_sources"] == sorted(coverage["coarse_sources"])
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
+    assert source in coverage["exact_sources"]
 
 
 def test_calculate_api_soraka_exposes_exact_delayed_equinox_receipt():

@@ -2,12 +2,15 @@
 
 Twilight Assault is not cast damage: it modifies up to three subsequent
 basic attacks with level-, rank-, AP-, and target-max-health-scaled magic
-damage. The module therefore emits the bonus as a three-hit typed part and
-declares the consumed basic attacks through ``empowers_next_auto``. In a
-one-rotation calculation, those attacks are forced and timestamped exactly.
-When a timed ambient auto stream is present, the damage remains included but
-the result is explicitly partial until the shared auto schedule can couple the
-same physical and magic instances.
+damage. The module emits the bonus as a three-hit typed part carrying the
+authored swing schedule (the selected first-attack delay, then the
+enhanced-attack-speed cadence), and declares the consumed basic attacks
+through ``empowers_next_auto``. In a one-rotation calculation those attacks
+are forced on the same schedule and the row's ledger sums exactly. In a
+timed fight the engine caps Q casts at the ambient swings that consume them
+and shows those swings on the Q row at the auto row's per-hit value; the
+authored events remain the magic bonus hits, so the row certifies by its
+cast schedule while the ledger prices each bonus instance at its swing.
 
 Shadow Dash is authored at the selected travel distance. Its cooldown begins
 after the dash, so travel time is added to the data's post-effect cooldown.
@@ -120,18 +123,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         per_hit * hits,
         "magic",
     )
-    entry["parts"] = (
-        (
-            DamagePart(
-                "magic",
-                per_hit,
-                count=hits,
-                hp_scaled_damage=target_health_damage,
-            ),
-        )
-        if hits
-        else ()
-    )
+    entry["parts"] = ()
     entry["target_max_health_sensitive"] = True
     entry["resource_restore"] = _energy_restore(ctx.level) * hits
     entry["detail"] = (
@@ -146,6 +138,22 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         first_delay = float(ctx.option("q_first_attack_delay"))
         interval = 1.0 / attack_speed if attack_speed > 0 else 0.0
+        # The bonus part carries the authored swing schedule, so every
+        # bonus instance prices an exact event at its consuming swing
+        # (first hit after the selected delay, then the enhanced cadence)
+        # instead of an uncertified cast-boundary lump.  The engine caps
+        # timed casts at the ambient swings that consume them and forces
+        # the swings itself when no stream exists.
+        entry["parts"] = (
+            DamagePart(
+                "magic",
+                per_hit,
+                count=hits,
+                hp_scaled_damage=target_health_damage,
+                time_offset=first_delay,
+                hit_interval=interval if hits > 1 else None,
+            ),
+        )
         entry["empowers_next_auto"] = {
             "hits": hits,
             "authored_timing": {
@@ -153,7 +161,6 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
                 "attack_interval": interval,
             },
         }
-        entry["requires_auto_timeline_coupling"] = True
     return entry
 
 
@@ -224,8 +231,11 @@ ASSUMPTIONS = [
     "Q uses its sourced 50% bonus attack speed for spacing.",
     "Each landed Q attack and E champion hit restores the sourced level-based "
     "energy amount.",
-    "Timed fights with ambient autos include Q damage but remain partial until "
-    "the physical and magic instances share one coupled auto timeline.",
+    "Timed fights cap Q casts at the ambient swings that consume them; each "
+    "bonus instance is an authored event on the module's swing schedule "
+    "(selected first-attack delay, then the enhanced cadence), and the "
+    "consumed swings themselves are shown on the Q row at the auto stream's "
+    "per-hit damage.",
     "Ki Barrier, Spirit's Refuge, and Stand United deal no damage and are "
     "excluded from outgoing TDD.",
 ]

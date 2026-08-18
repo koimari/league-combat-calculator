@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -78,7 +79,12 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
         active + passive_per_tick * _W_PASSIVE_TICKS,
         "magic",
     )
+    # Every part carries authored timing, so the engine attaches the row's
+    # exact event ledger (active hit at the cast instant, then the sourced
+    # 0.5s ticks) and the coverage classifier certifies the DoT row by its
+    # sum-reconciled events instead of downgrading it at the cast boundary.
     entry["parts"] = (
+        DamagePart("magic", active, time_offset=0.0),
         DamagePart(
             "magic",
             passive_per_tick,
@@ -86,16 +92,26 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
             time_offset=_W_PASSIVE_TICK_INTERVAL,
             hit_interval=_W_PASSIVE_TICK_INTERVAL,
         ),
-        DamagePart("magic", active),
     )
-    # Dict form with authored timing: the forced swing and the active
-    # bonus land at the cast instant, and the engine then attaches the
-    # per-tick passive events to the row instead of collapsing it to a
-    # single cast-boundary hit (the bool form leaves no row timing).
-    entry["empowers_next_auto"] = {
-        "hits": 1,
-        "authored_timing": {"first_attack_delay": 0.0, "attack_interval": 0.0},
-    }
+    # With an ambient auto stream, the empowered attack IS one of that
+    # stream's swings — the swing stays priced (and evented) on the auto
+    # row, keeping this row's ledger sum-exact (the engine's swing
+    # reattribution would otherwise add un-evented swing damage here).
+    # Without a stream (one-rotation, zero uptime, or a window shorter
+    # than one swing) the cast must force its own attack: declare the
+    # empower so the engine appends the swing with this authored timing.
+    # The ambient count mirrors the engine's floor(AS x duration x uptime)
+    # (Diana P cleave precedent).
+    ambient_autos = math.floor(
+        ctx.stat("attack_speed")
+        * float(ctx.option("fight_duration_seconds"))
+        * float(ctx.option("auto_attack_uptime"))
+    )
+    if ambient_autos < 1:
+        entry["empowers_next_auto"] = {
+            "hits": 1,
+            "authored_timing": {"first_attack_delay": 0.0, "attack_interval": 0.0},
+        }
     entry["dot_duration"] = _W_PASSIVE_DURATION
     entry["detail"] = (
         "Active trident damage rides the next basic attack; the sourced "
@@ -183,6 +199,13 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Urchin Strike carries both its magic packet and one 100% AD on-hit attack component.",
     "Seastone Trident's active empower is attached to one basic attack; its bleed and monster-only riders are not silently applied to champions.",
+    "Seastone Trident's empowered attack is one of the ambient stream's swings "
+    "when the timed window contains at least one; with no stream the cast "
+    "forces its own swing. W therefore casts on cooldown in timed fights even "
+    "when the stream is sparse (the sourced 4s empower window is not walked).",
+    "The W burn is applied once per W cast (its 6 sourced 0.5s ticks trail the "
+    "empowered hit); ordinary basic attacks between casts refresh the same "
+    "bleed in game but are not priced as extra applications.",
     "Chum the Waters exposes all three sourced distance branches rather than treating the largest shark as a default.",
 ]
 

@@ -138,7 +138,16 @@ def test_public_pipeline_splits_q_swing_from_magic_rider(shen_data):
     )
 
 
-def test_timed_auto_stream_is_explicitly_partial(shen_data):
+def test_timed_auto_stream_certifies_q_with_an_authored_swing_ledger(shen_data):
+    """Q's bonus hits carry authored swing timing; the timeline certifies.
+
+    Five ambient swings cap Q at one cast (three empowered attacks). The
+    Q row's authored events are the three magic bonus hits at the module's
+    swing schedule (0.5s first-attack delay, then the enhanced 1/1.5s
+    cadence); the engine additionally shows the three consumed swings on
+    the Q row, so the ledger reconciles as bonus events plus the swings
+    priced at the auto row's per-hit value.
+    """
     stats, abilities = _parse(shen_data)
     result = calculate_fight_damage(
         stats,
@@ -157,10 +166,47 @@ def test_timed_auto_stream_is_explicitly_partial(shen_data):
     )
 
     coverage = result["timeline_coverage"]
-    assert coverage["complete"] is False
-    assert coverage["certification"] == "partial_event_order"
-    assert "Q" in coverage["coarse_sources"]
-    assert "ambient auto stream" in coverage["note"]
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
+    assert "Q" in coverage["exact_sources"]
+
+    q_row = result["breakdown"]["Q"]
+    q_events = q_row["damage_events"]
+    assert len(q_events) == 3 * q_row["casts"]
+    assert {event["event_precision"] for event in q_events} == {"exact"}
+    assert sorted(event["time"] for event in q_events) == pytest.approx(
+        [0.5, 0.5 + 2.0 / 3.0, 0.5 + 4.0 / 3.0]
+    )
+    # Authored events are the magic bonus; the row total additionally
+    # carries the consumed swings at the auto row's per-hit damage.
+    auto_row = result["breakdown"]["auto_attacks"]
+    swings = 3 * q_row["casts"]
+    assert sum(event["damage"] for event in q_events) == pytest.approx(
+        q_row["total_damage"] - swings * auto_row["damage_per_hit"]
+    )
+    assert sum(event["damage"] for event in q_events) == pytest.approx(
+        q_row["casts"] * abilities["Q"]["total_raw"]
+    )
+
+
+def test_timed_payload_probe_certifies_full_timeline():
+    """The campaign probe: bare-kit timed Shen has no coarse sources."""
+    from src.calculator.calculate import calculate_payload
+
+    result = calculate_payload(
+        {
+            "champion": "Shen",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )
+    coverage = result["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
+    assert "Q" in coverage["exact_sources"]
 
 
 def test_target_max_health_change_is_repriced(shen_data):

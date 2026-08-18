@@ -171,10 +171,17 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = proc_damage(_drakehounds_step_damage, "physical")(ctx)
     if entry is None:
         return None
-    # Medarda Maxim is consumed by empowered basic attacks; its proc count
+    # Medarda's Maxim is consumed by empowered basic attacks; its proc count
     # must be coupled to the authored auto timeline rather than treated as a
-    # free fixed-count damage package.
+    # free fixed-count damage package.  The coupling flag is what clamps
+    # procs to real swings in one-rotation mode; the ``auto_stack_proc``
+    # certification (each proc consumed by exactly one attack) additionally
+    # places each timed proc event on the fight's real swing schedule
+    # instead of a synthetic cadence, so no item or config combination can
+    # surface the row coarse.
     entry["requires_auto_timeline_coupling"] = True
+    entry["event_order_certified"] = "auto_stack_proc"
+    entry["auto_stack_every"] = 1
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
     description = " ".join(

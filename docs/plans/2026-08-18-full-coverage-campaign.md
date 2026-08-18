@@ -45,8 +45,13 @@ endpoint — no withhold, refusal, or fail-closed path fires for any reachable s
    facts, same as its timing. The Fimbulwinter/Everlasting control token clears wherever
    every damaging ability event carries a reviewed kind (or the module declares its kit
    cc-free).
-7. **Eclipse/Muramana/Bastionbreaker close by certifying the 17 champions' cast rows**
-   (`single_hit` / `auto_stack_proc` / authored events), not by widening exclusions.
+7. **Eclipse/Muramana close engine-side, not by module certification.** Runtime tracing
+   (Wave 1C) showed the 16 champions' failures are one defect: cast times rounded to 3
+   decimals (damage.py:4253) versus raw authored event times break both proc walkers'
+   cursor matching (damage.py:7748, 8674); a rounding-aware comparison plus a
+   positive-total gate in `_muramana_proc_events` (mirroring Eclipse's, damage.py:7714)
+   closes 32/32 probes with zero module edits. Stamping certifications there would be
+   certification theater and is banned.
 8. **Protoplasm's target-side heal authors its sourced 5 s tick cadence**; Lifeline
    expiry becomes a modeled event (`ThresholdExpiryWithheld` retired), so certified items
    survive fights of any duration.
