@@ -379,7 +379,7 @@ def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch
         if "Unending Despair" in row["items"]
     )
     assert all(
-        row["reason"] == "partial_event_order"
+        row["reason"] == "candidate_withheld_partial_event_order"
         for row in withheld
         if "Unending Despair" in row["items"]
     )
@@ -433,6 +433,45 @@ def test_coupled_optimizer_excludes_audited_item_timing_before_ranking(monkeypat
         row["reason"] == "candidate_excluded_unresolved_timing"
         and row["exclusion_type"] == "applicability"
         for row in excluded
+    )
+
+
+def test_uncoupled_optimizer_drops_partial_candidates_with_disclosed_rows(monkeypatch):
+    """A pair-fight candidate dropped for a partial timeline names the drop."""
+
+    def fake_run_fight(_champion_data, _level, items, _params):
+        partial = any(item.get("name") == "Unending Despair" for item in items)
+        return {
+            "total_damage": 500.0,
+            "breakdown": {},
+            "timeline_coverage": {
+                "complete": not partial,
+                "exact_sources": [] if partial else ["Q"],
+                "coarse_sources": ["periodic_Unending Despair"] if partial else [],
+            },
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.run_fight", fake_run_fight)
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        max_legendary_slots=1,
+        locked_boots="Sorcerer's Shoes",
+        require_complete_timeline=True,
+    )
+
+    assert "Unending Despair" not in result["items"]
+    withheld = [
+        row
+        for row in result["timeline_withheld_candidates"]
+        if "Unending Despair" in row["items"]
+    ]
+    assert withheld
+    assert all(
+        row["reason"] == "candidate_withheld_partial_event_order"
+        and row["timeline_coverage"]["complete"] is False
+        for row in withheld
     )
 
 
@@ -513,6 +552,76 @@ def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
     )
 
     assert score == float("-inf")
+
+
+def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
+    """The purchase baseline's memo entry must not silence the candidate audit.
+
+    ``optimize_purchase`` scores the current loadout first, deliberately
+    outside the candidate audit (``timeline_audit=None``).  When the search
+    later proposes keeping that exact loadout, the audited evaluation must
+    still disclose the require_complete_timeline drop instead of replaying
+    the audit-less memo entry as a silent ``-inf``.
+    """
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline",
+        lambda *_args, **_kwargs: {
+            "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
+            "participants": [],
+            "events": [],
+            "timeline_coverage": {
+                "complete": False,
+                "exact_sources": [],
+                "coarse_sources": ["periodic_Unending Despair"],
+            },
+        },
+    )
+    params = FightParams.from_request({}, deterministic=True)
+    combat_context = {
+        "enemies": [object()],
+        "allies": [],
+        "pair_result_cache": {},
+        "score_memo": {},
+    }
+    owned = [get_item_by_name("Unending Despair")]
+    baseline = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        owned,
+        params,
+        "total_damage",
+        timeline_audit=None,
+        require_complete_timeline=True,
+        combat_context=combat_context,
+    )
+    assert baseline == float("-inf")
+
+    audit = {
+        "evaluations": 0,
+        "partial_evaluations": 0,
+        "excluded_evaluations": 0,
+        "exact_sources": set(),
+        "coarse_sources": set(),
+        "excluded_sources": set(),
+        "build_coverages": {},
+        "withheld_builds": {},
+    }
+    score = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        owned,
+        params,
+        "total_damage",
+        timeline_audit=audit,
+        require_complete_timeline=True,
+        combat_context=combat_context,
+    )
+
+    assert score == float("-inf")
+    assert audit["evaluations"] == 1
+    assert audit["partial_evaluations"] == 1
+    (row,) = audit["withheld_builds"].values()
+    assert row["reason"] == "candidate_withheld_partial_event_order"
 
 
 def test_optimizer_respects_gold_budget():

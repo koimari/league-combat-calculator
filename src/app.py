@@ -93,6 +93,9 @@ from src.calculator.optimizer import (
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
 from src.calculator.bis import bis_objective_contract, bis_payload
+from src.calculator.program.views import (  # pylint: disable=wrong-import-position
+    UnrankableNumber,
+)
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
     https_icon as _https_icon,
@@ -547,6 +550,18 @@ def _spend_rate_limit(scope: str):
 def _request_too_large(_error):
     """Return the same JSON error shape as every other API rejection."""
     return jsonify({"error": "Request body exceeds 32 KiB"}), 413
+
+
+@app.errorhandler(UnrankableNumber)
+def _unrankable_number(error):
+    """A ranking surface refused a number it may not fold into a score.
+
+    ``UnrankableNumber`` is deliberately a ``TypeError`` so it bypasses the
+    candidate loops' ``except (KeyError, ValueError)`` instead of being
+    swallowed into a withheld row; the route clauses therefore never see it,
+    and this one handler turns it into the caller's 400 for every endpoint.
+    """
+    return jsonify({"error": str(error)}), 400
 
 
 @app.errorhandler(500)

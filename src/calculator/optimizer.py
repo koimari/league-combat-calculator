@@ -169,6 +169,13 @@ def _evaluate_build(
         )
     memo_key = tuple(item["name"] for item in items)
     hit = score_memo.get(memo_key)
+    # An entry recorded without an audit (the purchase baseline scores the
+    # current loadout outside the candidate audit) carries no delta and no
+    # withheld-build row; serving it to an audited caller would drop the
+    # candidate from the receipts silently.  Re-evaluate instead — line
+    # below overwrites the entry with a real delta.
+    if hit is not None and timeline_audit is not None and hit[1] is None:
+        hit = None
     if hit is not None:
         score, audit_delta = hit
         if timeline_audit is not None and audit_delta is not None:
@@ -365,9 +372,21 @@ def _evaluate_build_uncached(
                 )
             if not coverage.get("complete", False) and not excluded_sources:
                 timeline_audit["partial_evaluations"] += 1
+                # The reason names the disposition: under a complete-timeline
+                # requirement this candidate is dropped from ranking just
+                # below, while otherwise it stays ranked with a partial
+                # receipt.  One code per disposition, like its siblings.
                 timeline_audit.setdefault("withheld_builds", {})[
                     _build_receipt_key(items)
-                ] = _public_build_receipt(items, coverage, "partial_event_order")
+                ] = _public_build_receipt(
+                    items,
+                    coverage,
+                    (
+                        "candidate_withheld_partial_event_order"
+                        if require_complete_timeline
+                        else "partial_event_order"
+                    ),
+                )
         if require_complete_timeline and not coverage.get("complete", False):
             # A coupled optimizer must never rank a candidate whose own
             # timeline is only phase-ordered.  Exclude it from the search and
@@ -486,9 +505,20 @@ def _evaluate_build_uncached(
             timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
         if not coverage["complete"] and not excluded_sources:
             timeline_audit["partial_evaluations"] += 1
+            # Same disposition split as the coupled path above: dropped from
+            # ranking under a complete-timeline requirement, kept with a
+            # partial receipt otherwise.
             timeline_audit.setdefault("withheld_builds", {})[
                 _build_receipt_key(items)
-            ] = _public_build_receipt(items, coverage, "partial_event_order")
+            ] = _public_build_receipt(
+                items,
+                coverage,
+                (
+                    "candidate_withheld_partial_event_order"
+                    if require_complete_timeline
+                    else "partial_event_order"
+                ),
+            )
     if require_complete_timeline and not coverage["complete"]:
         return float("-inf")
 

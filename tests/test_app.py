@@ -2488,6 +2488,30 @@ def test_bis_rejects_level_impossible_ranks_and_unknown_champion_options():
     )
 
 
+def test_bis_unrankable_number_is_a_400_with_its_message(monkeypatch):
+    """An ``UnrankableNumber`` refusal is the caller's 400, never a 500.
+
+    It is deliberately a ``TypeError`` so it bypasses the candidate loops'
+    ``except (KeyError, ValueError)``; the route clauses therefore never see
+    it and the app boundary must translate it itself.
+    """
+    from src.calculator.program.views import UnrankableNumber
+
+    def _refuse(_data):
+        raise UnrankableNumber("bis", "a previewed number", ["candidates[0].score"])
+
+    monkeypatch.setattr(app_module, "bis_payload", _refuse)
+    response = app_module.app.test_client().post(
+        "/api/bis", json={"champion": "Ahri", "level": 18}
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json()["error"]
+        == "bis may not rank a previewed number: ['candidates[0].score']"
+    )
+
+
 class TestBreakdownProcRowShape:
     """Proc-style breakdown rows reach the UI in ONE shape:
     count / damage_per_hit / unit="procs" — the shape app.js's detail
