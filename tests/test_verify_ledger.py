@@ -265,12 +265,24 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
     def coverage(self) -> dict:
         return ledger()["coverage"]
 
-    def test_the_two_lists_partition_the_derived_population(self) -> None:
+    def test_the_three_lists_partition_the_derived_population(self) -> None:
+        """Total and disjoint -- the property that survived the correction.
+
+        It was two lists until the owner's ruling of 2026-08-17 gave the
+        clause an instrument arm.  What did *not* change is the assertion:
+        the union is still the whole derived population and the arms are
+        still pairwise disjoint, so a tag can leave the residue three ways
+        and can leave the population none.  A correction that dropped this
+        would be the denominator shrinking behind a reading.
+        """
         tags, _untagged = _slice_group_tags()
-        recorded = self.coverage["slice_groups_with_a_verdict_in_this_ledger"]
-        missing = self.coverage["slice_groups_without_one"]
-        assert set(recorded) | set(missing) == set(tags)
-        assert not set(recorded) & set(missing)
+        recorded = set(self.coverage["slice_groups_with_a_verdict_in_this_ledger"])
+        missing = set(self.coverage["slice_groups_without_one"])
+        instruments = {row["tag"] for row in self.coverage["instrument_pass_tags"]}
+        assert recorded | missing | instruments == set(tags)
+        assert not recorded & missing
+        assert not recorded & instruments
+        assert not missing & instruments
 
     def test_a_group_listed_as_covered_really_has_a_pass(self) -> None:
         passes = {block["slice_group"] for block in ledger()["passes"]}
@@ -307,7 +319,7 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
         # so a citation never counts as a verdict and never double-counts one.
         assert set(cited) <= set(self.coverage["slice_groups_without_one"]) | set(
             self.coverage["slice_groups_with_a_verdict_in_this_ledger"]
-        )
+        ) | {row["tag"] for row in self.coverage["instrument_pass_tags"]}
         assert self.coverage["residue_with_no_verdict_anywhere"] == len(
             set(self.coverage["slice_groups_without_one"]) - set(cited)
         )
@@ -351,6 +363,150 @@ class TestTheCoverageBlockIsTheClauseSDenominator:
         note = self.coverage["why_the_residue_cannot_be_closed_retroactively"]
         doctored = "Closing those is 60-odd fresh R-35 passes. " + note
         assert _undated_counts(doctored)
+
+
+# --------------------------------------------------------------------------
+# The instrument arm, and the check that keeps it from being an escape hatch.
+#
+# The campaign owner ruled on 2026-08-17 -- the fixed-point reading, recorded
+# in the umbrella's Owner's rulings section -- that verification, certification,
+# transcription and receipt-only passes are *instruments* of the clause rather
+# than subjects of it: their own record stands where a verdict would, and they
+# do not enter the denominator.  That closes a regress the close report
+# measured, in which every pass convened to grade the clause added its own
+# unverifiable tag to what it was grading.
+#
+# It also opens the obvious door, and these checks are the lock.  Enumeration
+# alone would be a lane declaring which tags are not really slices, which is
+# the second of the three shortcuts ``rulings-owed.json`` refuses by name.  So
+# every enumerated tag carries three derived prongs: the self-record's locator
+# resolves verbatim in the artifact it names; the tag's *own* commits touch
+# that artifact, because a pass that did not write its record does not have
+# one; and no commit of the tag touches ``src/``, because production behaviour
+# makes a pass a subject whatever it calls itself.
+# --------------------------------------------------------------------------
+
+REPORT_PATH = "docs/receipts/campaign-close-report.md"
+
+
+def _paths_by_tag() -> dict[str, list[str]]:
+    """Every campaign commit's touched paths, grouped by its slice tag."""
+    unit, record = chr(31), chr(30)
+    out = subprocess.run(
+        ["git", "log", f"--format={record}%h{unit}%s", "--name-only", "584071e..HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    tag_pattern = re.compile(TRAILING_TAG)
+    grouped: dict[str, list[str]] = {}
+    for chunk in out.split(record):
+        lines = [line for line in chunk.splitlines() if line.strip()]
+        if not lines:
+            continue
+        _sha, subject = lines[0].split(unit, 1)
+        match = tag_pattern.search(subject)
+        if match is None:
+            continue
+        tag = match.group(1).split(",")[0].strip()
+        grouped.setdefault(tag, []).extend(lines[1:])
+    return grouped
+
+
+def _instruments() -> list[dict]:
+    return ledger()["coverage"]["instrument_pass_tags"]
+
+
+@pytest.mark.parametrize(
+    "row", _instruments(), ids=[row["tag"] for row in _instruments()]
+)
+def test_every_instrument_tag_names_a_self_record_that_resolves(row: dict) -> None:
+    """A record nobody can open is an exemption with a filename."""
+    record = row["self_record"]
+    artifact = ROOT / record["artifact"]
+    assert artifact.exists(), row["tag"]
+    assert record["locator"] in artifact.read_text(encoding="utf-8"), row["tag"]
+    assert row["kind"] and row["what_the_pass_was"], row["tag"]
+
+
+@pytest.mark.parametrize(
+    "row", _instruments(), ids=[row["tag"] for row in _instruments()]
+)
+def test_every_instrument_pass_wrote_the_record_it_points_at(row: dict) -> None:
+    """*Its own* record -- the word the ruling uses, checked against the tree.
+
+    A pass pointing at a section somebody else wrote is pointing at evidence
+    about somebody else.  What makes the record self-standing is that the
+    pass's own commits produced it.
+    """
+    touched = _paths_by_tag().get(row["tag"], [])
+    assert touched, row["tag"]
+    assert row["self_record"]["artifact"] in touched, row["tag"]
+
+
+@pytest.mark.parametrize(
+    "row", _instruments(), ids=[row["tag"] for row in _instruments()]
+)
+def test_no_instrument_pass_changed_production_behaviour(row: dict) -> None:
+    """The floor under the whole arm.
+
+    An instrument may repair the instruments it reads -- a gate, a receipt,
+    its own test.  The moment it changes ``src/`` it is a subject of the
+    clause whatever it calls itself, and the enumeration must not hold it.
+    """
+    touched = _paths_by_tag().get(row["tag"], [])
+    assert touched, row["tag"]
+    assert not [path for path in touched if path.startswith("src/")], row["tag"]
+
+
+def test_the_instrument_checks_have_reds_they_can_reproduce() -> None:
+    """R-05 over all three prongs, measured on the tree.
+
+    The negatives are real tags and a real absent heading rather than
+    injected fixtures, so a prong that stopped discriminating would show up
+    here as a green that should be red.
+    """
+    grouped = _paths_by_tag()
+    report = (ROOT / REPORT_PATH).read_text(encoding="utf-8")
+    assert "## 20. The section no pass has written" not in report
+    a_source_slice = "campaign-close-swing-composition"
+    assert a_source_slice in grouped, a_source_slice
+    assert REPORT_PATH not in grouped[a_source_slice]
+    assert [path for path in grouped[a_source_slice] if path.startswith("src/")]
+
+
+def test_the_block_says_the_split_is_the_owners_ruling_and_not_an_exclusion() -> None:
+    """The reading is recorded where the counter is, with its refusal.
+
+    A counter that changed unit without saying whose reading changed it is
+    indistinguishable from a counter somebody edited, which is what D-40
+    exists to forbid.  The block carries the ruling, its date, and the
+    sentence that says which of the two this is.
+    """
+    coverage = ledger()["coverage"]
+    split = coverage["how_the_denominator_is_split"]
+    assert "2026-08-17" in split
+    assert "D-40" in split
+    assert "IMPLEMENTATION SLICE" in split
+    assert coverage[
+        "why_only_the_instruments_that_would_otherwise_be_residue_are_enumerated"
+    ]
+    assert coverage["why_the_lane_recording_the_ruling_did_not_enumerate_itself"]
+
+
+def test_the_lane_that_recorded_the_ruling_is_not_in_the_arm_it_recorded() -> None:
+    """The one check nobody else could have written for this pass.
+
+    The lane transcribing the owner's ruling had every opportunity to place
+    its own tag in the enumeration it was adding, on its own word, in the
+    commit that added it.  It is residue instead, and this asserts that
+    rather than trusting the prose which says so.
+    """
+    coverage = ledger()["coverage"]
+    recording_lane = "campaign-close-owner-ruling-criterion-11"
+    assert recording_lane not in {row["tag"] for row in _instruments()}
+    assert recording_lane in coverage["slice_groups_without_one"]
 
 
 def _pass(round_number: int) -> dict:

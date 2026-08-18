@@ -8,69 +8,16 @@
  },
  "gate": "tests/test_verify_backlog.py",
  "groups": {
-  "campaign-close-certification": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 6,
-   "criteria_documents": [],
-   "subjects": [
-    "fix(gates): a dissent is measured against the current filed reading of its leaf (campaign-close-certification)",
-    "docs(receipts): G6 closes on the ruled correction its own blocker named (campaign-close-certification)",
-    "docs(receipts): G4 closes and criterion 7 says what its blockers did (campaign-close-certification)",
-    "test(gates): section 16's figures are re-derived from the artifacts they were read from (campaign-close-certification)",
-    "docs(receipts): the two open rows that G4's and G6's closures answered, recorded (campaign-close-certification)",
-    "docs(receipts): section 16.7 carries verdicts, because a gate reading is not re-derivable (campaign-close-certification)"
-   ]
-  },
-  "campaign-close-certification-r2": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 9,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the R-35 verdict on the group that answered round 128, transcribed (campaign-close-certification-r2)",
-    "docs(receipts): the owed row's measurement is anchored, and its live figures are named (campaign-close-certification-r2)",
-    "docs(receipts): the residue note stops stating a population the tree contradicts (campaign-close-certification-r2)",
-    "docs(receipts): G14 names the counter that owns its cost, and its note says what fell (campaign-close-certification-r2)",
-    "test(gates): the report sections are scanned for an ungated figure, not enumerated (campaign-close-certification-r2)",
-    "docs(receipts): the commits outside the denominator are named to whoever rules the clause (campaign-close-certification-r2)",
-    "docs(receipts): round 129's five findings, dispositioned where the ledger keeps them (campaign-close-certification-r2)",
-    "docs(receipts): the certification re-review, dispositioned where the report keeps its passes (campaign-close-certification-r2)",
-    "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-certification-r2)"
-   ]
-  },
-  "campaign-close-certification-r3": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 3,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): the range-to-HEAD baseline claim is anchored, and both copies of it (campaign-close-certification-r3)",
-    "docs(receipts): the third review's pass is recorded where the report keeps its passes (campaign-close-certification-r3)",
-    "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-certification-r3)"
-   ]
-  },
-  "campaign-close-certification-r4": {
-   "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 8,
-   "criteria_documents": [],
-   "subjects": [
-    "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-certification-r4)",
-    "test(gates): a migration-frontier counter that moves names its cause in the commit that moved it (campaign-close-certification-r4)",
-    "docs(receipts): the two cached-data defects gain the patch-day route that can close them (campaign-close-certification-r4)",
-    "docs(receipts): the owed row carries the third branch and what deciding late costs (campaign-close-certification-r4)",
-    "docs(receipts): the fourth review's pass is recorded where the report keeps its passes (campaign-close-certification-r4)",
-    "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-certification-r4)",
-    "refactor(gates): what counts as a named cause has one home, and the report's gate reads it (campaign-close-certification-r4)",
-    "docs(receipts): this pass's clause is appended where the block appends, after the instance before it (campaign-close-certification-r4)"
-   ]
-  },
   "campaign-close-owner-ruling-criterion-11": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [
     "docs/plans/2026-08-08-silent-failure-campaign.md"
    ],
    "subjects": [
     "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-owner-ruling-criterion-11)",
-    "docs(receipts): section 19's ledger readings are anchored at the commit that stated them (campaign-close-owner-ruling-criterion-11)"
+    "docs(receipts): section 19's ledger readings are anchored at the commit that stated them (campaign-close-owner-ruling-criterion-11)",
+    "docs(plans): the campaign owner's ruling on criterion 11's first clause, recorded (campaign-close-owner-ruling-criterion-11)"
    ]
   },
   "campaign-close-verify-p4-batch": {
@@ -86,8 +33,8 @@
  },
  "how_a_row_is_discharged": "A fresh read-only agent that has not read the implementation plan is handed R-35's brief with this row's commit range and the criteria quoted out of its criteria_documents. What it returns is recorded as a pass in verify-ledger.json, and this row goes away because the ledger's residue list no longer holds the tag.",
  "how_to_enumerate_a_range": "git log --reverse --format='%h %s' 584071e..HEAD, keeping the commits whose subject's trailing parenthetical begins with the group's tag. The rows carry subjects rather than shas on purpose: this file is committed inside the commit a sha would point at, so a sha goes stale on the first amend or rebase, and a gate that goes red on a rebase is a gate lanes learn to regenerate without reading. The subjects are exact and git log --grep takes them.",
- "of_which_cite_an_r35_answer_in_a_commit_body": 6,
- "prepared_passes": 6,
+ "of_which_cite_an_r35_answer_in_a_commit_body": 2,
+ "prepared_passes": 2,
  "rule": "The residue of runbook criterion 11's first clause, prepared as work somebody can start. One row per slice group with no recorded R-35 answer in docs/receipts/verify-ledger.json: the commits it spans, the plan documents that carry its stated completion criteria, and whether its own commit bodies cite an R-35 answer. The brief is not here -- it is read from R-35 in the runbook, which stays its one home.",
  "what_this_is_not": "It is not an answer to the owed ruling whether_criterion_11s_first_clause_binds_the_campaign_backwards, and no row reads on whether the clause binds backwards. It is not a recorded R-35 answer: every row is a pass that has NOT run, and reading it as coverage would be the unverifiable claim about the past this campaign outlaws. And it does not shrink the denominator -- the row set is asserted equal to the ledger's own residue list, so preparing the work cannot become a way of redefining it.",
  "why_a_lane_may_write_this": "Every field is read from the commit tree, from the committed ledger, or from R-35 itself. Naming the commits a slice spans and the documents its criteria live in is a statement about the QUESTION a verifier would be handed, never about the answer -- the same line the standing-dissent docket draws for an investigator's brief."
