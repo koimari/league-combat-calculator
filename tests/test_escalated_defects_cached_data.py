@@ -102,6 +102,61 @@ def test_the_item_s_real_flat_haste_is_not_that_number() -> None:
     assert declared["values"] == [flat]
 
 
+def test_every_open_defect_names_a_scheduled_home() -> None:
+    """A gap with a blocker and no home is where filed work goes to rot.
+
+    Both entries were correctly outside the campaign's scope, which is what
+    left them unowned: gated, reproducible, and waiting for nobody.  Each now
+    names the route that can actually close it, and the route is one that
+    exists rather than a promise — the check below is the other half.
+    """
+    for defect in receipt()["defects"]:
+        home = defect["scheduled_home"]
+        assert (ROOT / home["route"]).exists(), defect["id"]
+        assert home["as_a_command"].strip()
+        assert home["what_fires_it"].strip()
+        assert home["how_it_closes_from_there"].strip()
+    assert receipt()["how_an_entry_is_scheduled"].strip()
+
+
+def test_the_named_route_really_reads_this_artifact() -> None:
+    """A home nothing consumes is a declaration, which is what this campaign
+    spent its length removing.  So the route is asserted to read the receipt
+    and to emit a line per open entry, rather than to have been mentioned."""
+    routes = {defect["scheduled_home"]["route"] for defect in receipt()["defects"]}
+    assert routes == {"scripts/patch_update.py"}
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import patch_update  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+
+    assert patch_update.ESCALATED_CACHED_DATA == RECEIPT
+    printed = "\n".join(patch_update.escalated_cached_data_lines())
+    for defect in receipt()["defects"]:
+        assert defect["id"] in printed
+        assert defect["scheduled_home"]["what_fires_it"] in printed
+
+
+def test_the_scheduled_home_check_has_a_red_it_can_reproduce() -> None:
+    """R-05, through the section builder's own seam.
+
+    A receipt whose entry names no home prints the absence instead of
+    printing nothing, so a home that quietly disappears is visible on the one
+    day somebody is reading the audit.
+    """
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import patch_update  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+
+    homeless = json.loads(RECEIPT.read_text(encoding="utf-8"))
+    for defect in homeless["defects"]:
+        defect.pop("scheduled_home", None)
+    scratch = ROOT / "docs" / "receipts" / ".homeless-for-the-red.json"
+    scratch.write_text(json.dumps(homeless), encoding="utf-8")
+    try:
+        printed = "\n".join(patch_update.escalated_cached_data_lines(scratch))
+    finally:
+        scratch.unlink()
+    assert "(no home named)" in printed
+
+
 def test_no_runtime_module_reads_the_item_atoms() -> None:
     """The second entry's same clause: the overstatement is available, not taken."""
     hits = [

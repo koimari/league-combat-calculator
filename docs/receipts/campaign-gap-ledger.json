@@ -113,7 +113,7 @@
    "blocker": "Two defects in cached wiki text, not in src/: Imperial Mandate's `simpleDescription` describes a different item, and one ability-haste phrase is atomized three ways. Fixing either is a vendor-parser or data-refresh slice outside this campaign's scope.",
    "artifact": "docs/receipts/escalated-defects-cached-data.json",
    "closed_by": [],
-   "note": "Filed at 98351d1 with a gate that asserts neither defect reaches a damage number rather than saying so."
+   "note": "Filed at 98351d1 with a gate that asserts neither defect reaches a damage number rather than saying so. Scheduled 2026-08-17, and the finding is a certification reviewer's: correctly out of scope for this campaign is exactly what left it unowned, so the row named a blocker and no home. Both entries now name one in the artifact that owns them -- see its how_an_entry_is_scheduled and each entry's scheduled_home -- and the home is a route that runs rather than a promise: patch day is the only writer of the cached text, its rebuild step regenerates both consumers the entries name, and its audit prints the open entries so the operator is told on the day the lever is in their hand. The gate asserts it in both directions, a home per open entry and a route that really reads the artifact. Nothing about the row's state moves: scheduling work is not doing it, and G11 stays OPEN on the same two defects."
   },
   "G12": {
    "state": "CLOSED",

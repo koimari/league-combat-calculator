@@ -58,6 +58,11 @@ from src.calculator.item_source import branch_losses, source_audit
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
+#: Cached-data defects whose only fix route is a re-pull, so this run is their
+#: scheduled home and the audit prints them.
+ESCALATED_CACHED_DATA = (
+    REPO_ROOT / "docs" / "receipts" / "escalated-defects-cached-data.json"
+)
 DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
 DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
@@ -364,6 +369,39 @@ def ally_effect_lines(old_items, new_items):
     return lines, not blocking
 
 
+def escalated_cached_data_lines(receipt_path=None):
+    """Audit section for the cached-data defects waiting on a re-pull.
+
+    ``docs/receipts/escalated-defects-cached-data.json`` holds defects in
+    cached wiki text that no lane may fix in place: ``data/`` has one writer,
+    so hand-editing the cache is a fix the next pull silently reverts.  Their
+    scheduled home is therefore this run — it is the only act that rewrites
+    the text, and its rebuild step regenerates the two consumers the entries
+    name.  A filed defect nobody is told about on the one day somebody can
+    act on it is a receipt with a filename, so the run prints them.
+
+    Informational, never blocking: neither defect reaches a damage number
+    (rule 5 keeps every runtime item value in ``item_effects.py``), and a
+    section that blocked on an upstream text would block every patch day
+    until the wiki changed.
+    """
+    path = receipt_path or ESCALATED_CACHED_DATA
+    lines = ["== Cached-data defects scheduled on this run =="]
+    if not path.exists():
+        lines.append(f"  (no receipt at {path.name})")
+        return lines
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    for defect in receipt.get("defects", ()):
+        home = defect.get("scheduled_home", {})
+        lines.append(f"  {defect['id']} (filed {defect['dated']}):")
+        lines.append(f"    {defect['what']}")
+        lines.append(f"    fires on: {home.get('what_fires_it', '(no home named)')}")
+        lines.append(f"    closes by: {home.get('how_it_closes_from_there', '')}")
+    if len(lines) == 1:
+        lines.append("  (none open)")
+    return lines
+
+
 def print_audit():
     """Print the full audit report (champions, items, deltas).
 
@@ -385,6 +423,8 @@ def print_audit():
         print(line)
     ally_lines, ally_ok = ally_effect_lines(old_items, new_items)
     for line in ally_lines:
+        print(line)
+    for line in escalated_cached_data_lines():
         print(line)
     print()
     return source_ok and ally_ok
