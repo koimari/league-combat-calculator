@@ -627,16 +627,23 @@
   }
  },
  "tests": {
-  "collected": 8814,
+  "collected": 8857,
   "skipped": 0,
   "xfailed": 0,
   "re_pinned": {
    "dated": "2026-08-18",
-   "from": 8813,
-   "to": 8814,
-   "cause": "The second move of this key by one pass, and it is disclosed as that rather than folded into the first. 8afc3ce pinned 8813 and was right on the tip it measured; two commits later the same pass shipped a slice it had not foreseen when it re-pinned. 1d34fd9 anchors close-report section 15.2's two readings, which this pass's own first commit moved by running Ruling 3's pass, and it declares 1 node id: the live counterpart asserting that exactly one pass now verifies 209da2f and that the backlog no longer prepares it. bb654bd declares none -- it narrows what the residue grade pins and runs the same three checks over it. Measured on bb654bd: 8813 at 8afc3ce and 8814 here. R-32's fourth carve-out puts no limit on how many times a lane's own slices move this key; what it asks is that each move be the owning lane's, in a receipt-only commit, disclosed. Re-pinning once and letting the second slice ship under a stale pin would have been the quiet option and would have left R-01 row 1's arithmetic unsatisfiable for anybody checking it. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them.",
+   "from": 8814,
+   "to": 8857,
+   "cause": "R-32's fourth carve-out says the pin moves whenever a lane's slices declare new node ids, and that moment is a lane's commit. Measured on 82345f8: 8814 at 5b663cb, the tip this pass opened on, and 8857 at its close, so this pass's four node-moving slices account for +43 between them and nothing else does -- +2 at df873bc for the bounded settlement sentence (the bound itself and the instrument overlap it rests on); +5 at 3831d88 for Ruling 5's batch verdicts (the partition over the enumeration, each batch's range against its own commits, its session provenance, the block's three refusals, and the red measured on the real batches); +38 at fd63d69 for close-report section 20 (16 figure checks and their 16 reds, the completeness scan and its own red, the R-01 verdict-table check, and 3 property checks the new range 5b663cb parametrizes); and -2 at 82345f8, which is the one a lane would miss. Closing G14 moves it out of three OPEN-parametrised checks in tests/test_campaign_gap_ledger.py and into one CLOSED-parametrised check, so a commit that adds no test subtracts two node ids -- a node id the tree generates from data, which is the shape close-report section 17.4 names and the reason this arithmetic is stated with the sign. The four declarations sum to the move exactly, which is what R-01 row 1's second half asks for. The pass's other four commits declare none and say so in their own bodies: three transcribe or dispose of verdicts and one repairs an R-05 red inside an existing node. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them. Moved in a receipt-only commit touching no src/, no gate script and neither compared baseline, which is R-32's shape for this key.",
    "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary.",
    "earlier_moves": [
+    {
+     "dated": "2026-08-18",
+     "from": 8813,
+     "to": 8814,
+     "cause": "The second move of this key by one pass, and it is disclosed as that rather than folded into the first. 8afc3ce pinned 8813 and was right on the tip it measured; two commits later the same pass shipped a slice it had not foreseen when it re-pinned. 1d34fd9 anchors close-report section 15.2's two readings, which this pass's own first commit moved by running Ruling 3's pass, and it declares 1 node id: the live counterpart asserting that exactly one pass now verifies 209da2f and that the backlog no longer prepares it. bb654bd declares none -- it narrows what the residue grade pins and runs the same three checks over it. Measured on bb654bd: 8813 at 8afc3ce and 8814 here. R-32's fourth carve-out puts no limit on how many times a lane's own slices move this key; what it asks is that each move be the owning lane's, in a receipt-only commit, disclosed. Re-pinning once and letting the second slice ship under a stale pin would have been the quiet option and would have left R-01 row 1's arithmetic unsatisfiable for anybody checking it. The 525 that the re-pin at 407428f could not attribute stay unattributed and unclaimed here, where 927964c left them.",
+     "skipped_and_xfailed": "still 0 and 0, so the half of the row that catches a test quietly becoming a skip is unaffected by the move, and it stays the integration agent's under the carve-out's own boundary."
+    },
     {
      "dated": "2026-08-18",
      "from": 8804,
