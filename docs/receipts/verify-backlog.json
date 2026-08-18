@@ -10,11 +10,12 @@
  "groups": {
   "campaign-close-criterion-11-closeout": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 2,
+   "commit_count": 3,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): the rendered verdict on the lane that recorded the ruling, transcribed (campaign-close-criterion-11-closeout)",
-    "docs(receipts): the rendered verdict on the lane that ran the ruling's work, transcribed (campaign-close-criterion-11-closeout)"
+    "docs(receipts): the rendered verdict on the lane that ran the ruling's work, transcribed (campaign-close-criterion-11-closeout)",
+    "fix(gates): the residue grade's staleness red can fail again (campaign-close-criterion-11-closeout)"
    ]
   }
  },

@@ -613,8 +613,26 @@ def test_the_residue_grade_has_a_red_it_can_reproduce() -> None:
     # The staleness red, which is the one this block was rebuilt for: a grade
     # that pinned the paths a tag had touched would differ from the tree the
     # moment that tag committed again, and every residue tag does.
-    assert set(_paths_by_tag()[a_tag]) - set(
-        ledger()["coverage"]["residue_is_not_an_implementation_slice"]["per_tag"][a_tag]
+    #
+    # Rewritten after round 132's first finding, which measured that the line
+    # here could not fail.  It subtracted a path set from ``per_tag[a_tag]``,
+    # and that row is a *dict*: ``set()`` of it yields its two key strings, so
+    # the difference was the tag's entire touched-path set and was non-empty
+    # for any tag that had ever touched a file.  A red that is non-empty by
+    # construction is not a red.
+    #
+    # What the block actually promises is that the receipt pins a grade and
+    # not an evidence list, so that is what is asserted: a per-tag row carries
+    # exactly the two findings, and a row that regrew a path list would differ
+    # from the derived grade the equality check above compares against.
+    with_an_evidence_list = {
+        tag: dict(row, paths_touched=sorted(set(_paths_by_tag()[tag])))
+        for tag, row in graded.items()
+    }
+    assert with_an_evidence_list != graded
+    assert all(
+        set(row) == {"in_a_behaviour_directory", "tests_without_a_declaring_receipt"}
+        for row in graded.values()
     )
 
 
