@@ -8,20 +8,12 @@
  },
  "gate": "tests/test_verify_backlog.py",
  "groups": {
-  "campaign-close-owner-ruling-criterion-11": {
+  "campaign-close-criterion-11-closeout": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 7,
-   "criteria_documents": [
-    "docs/plans/2026-08-08-silent-failure-campaign.md"
-   ],
+   "commit_count": 1,
+   "criteria_documents": [],
    "subjects": [
-    "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-owner-ruling-criterion-11)",
-    "docs(receipts): section 19's ledger readings are anchored at the commit that stated them (campaign-close-owner-ruling-criterion-11)",
-    "docs(plans): the campaign owner's ruling on criterion 11's first clause, recorded (campaign-close-owner-ruling-criterion-11)",
-    "docs(receipts): the coverage denominator is implementation slices, with the instruments named beside their records (campaign-close-owner-ruling-criterion-11)",
-    "docs(receipts): Ruling 5's untagged src-touching commits become a list with a length (campaign-close-owner-ruling-criterion-11)",
-    "docs(receipts): G14's blocker names the ruling that answered it, and what is left is work (campaign-close-owner-ruling-criterion-11)",
-    "chore(baseline): the pinned collected count moves for the node ids this pass declared (campaign-close-owner-ruling-criterion-11)"
+    "docs(receipts): the rendered verdict on the lane that recorded the ruling, transcribed (campaign-close-criterion-11-closeout)"
    ]
   },
   "campaign-close-ruling-residue": {

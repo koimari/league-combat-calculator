@@ -959,13 +959,26 @@ def test_the_lane_that_recorded_the_ruling_is_not_in_the_arm_it_recorded() -> No
 
     The lane transcribing the owner's ruling had every opportunity to place
     its own tag in the enumeration it was adding, on its own word, in the
-    commit that added it.  It is residue instead, and this asserts that
-    rather than trusting the prose which says so.
+    commit that added it.  It never did, and that is the half of this check
+    that can never stop being true.
+
+    The other half was ``recording_lane in slice_groups_without_one``, and it
+    was the *residue* half rather than the refusal: the block beside it said
+    "whether it ever leaves is a verifier's to say".  A verifier has said --
+    an R-35 pass rendered on 2026-08-18, transcribed from the journal that
+    holds it -- so the tag left the residue the only way it was ever allowed
+    to.  What replaces the membership assertion is the stronger fact, because
+    a covered tag whose coverage is a verifier's artifact is exactly what the
+    refusal was protecting: not enumerated, not self-declared, verified.
     """
     coverage = ledger()["coverage"]
     recording_lane = "campaign-close-owner-ruling-criterion-11"
     assert recording_lane not in {row["tag"] for row in _instruments()}
-    assert recording_lane in coverage["slice_groups_without_one"]
+    assert recording_lane in coverage["slice_groups_with_a_verdict_in_this_ledger"]
+    verdict = next(
+        block for block in ledger()["passes"] if block["slice_group"] == recording_lane
+    )
+    assert verdict["provenance"]["agent_ids"] and not verdict["backfilled"]
 
 
 def _pass(round_number: int) -> dict:

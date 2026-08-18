@@ -18311,6 +18311,137 @@
      "note": "Carried as the verifier wrote it, including its own ASIDE marking. The backlog row this pass creates for its own tag does name a criteria document, because the umbrella now names the tag -- so the shape the finding flags is not reproduced here, and the finding stands as the record of the day it was."
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-owner-ruling-criterion-11",
+   "round": 131,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "67163a3",
+    "5dac402",
+    "7cfa051",
+    "26c6bdf",
+    "0eaf00f",
+    "d3f2c97",
+    "7936a51"
+   ],
+   "dated": "2026-08-18",
+   "answered_by": [
+    "7936a51"
+   ],
+   "what_this_round_is": "The verdict on the lane that transcribed the owner's ruling, rendered on 2026-08-18 by a fresh read-only Opus 5 that had not read the plan, and never filed. The ledger said of this tag that it stays in slice_groups_without_one and 'whether it ever leaves is a verifier's to say' -- a verifier has said, and this is the saying, transcribed whole from the journal that holds it. Four criteria, all DISCHARGED, and seven behaviours the commit bodies do not mention. The tag leaves the residue on a verifier's artifact and on nothing else: no lane declared it an instrument, no denominator moved, and the two findings that read on this file's own claims are carried into it as open rows rather than argued with.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a9c0fdd0d4413eae1"
+    ],
+    "journal_key": "v2:19c97e04d15fac9c747d51e134bac4d9cf46ad3ade47c9df211965b18648e736",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "what_the_agent_was_handed": "R-35's brief with the slice group's seven commits and the plan document its stated completion criteria live in, plus the standing read-only and do-not-read-the-implementation-plan clauses. The four criterion ids are the verifier's own spellings, which is what the brief asks for.",
+    "all_discharged_as_returned": {
+     "a9c0fdd0d4413eae1": true
+    },
+    "criteria_returned_for_this_slice": 4,
+    "findings_returned_for_this_slice": 7,
+    "why_the_journal_and_not_the_handoff": "The rule the residue_sweep block already carries. The recording lane was handed nothing about this verdict at all -- it was rendered after the lane it grades and never filed -- so the journal line is not merely the fuller copy here, it is the only copy."
+   },
+   "criteria": [
+    {
+     "id": "owners-ruling-recorded-in-umbrella-dated-and-attributed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`docs/plans/2026-08-08-silent-failure-campaign.md` gains a new top-level `## Owner's rulings` section (94 added lines, commit 7cfa051; confirmed by `git diff 67163a3^..HEAD -- docs/plans/2026-08-08-silent-failure-campaign.md`). The section carries a preamble distinguishing a ruling from an amendment, then a blockquote  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "owed-row-answered-per-its-rule",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`docs/receipts/rulings-owed.json`: `owed` goes 1 \u2192 0 and `answered` 9 \u2192 10 (verified by loading both blobs via `git show 67163a3^:...` and comparing). The row `whether_criterion_11s_first_clause_binds_the_campaign_backwards` now carries `answered_on: 2026-08-17`, `recorded_in: docs/plans/2026-08-08-silent-failure-campa [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "coverage-derivation-corrected-with-instrument-pass-enumeration-beside-it",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`docs/receipts/verify-ledger.json` `coverage` gains five keys \u2014 `how_the_denominator_is_split`, `instrument_pass_tags`, `why_only_the_instruments_that_would_otherwise_be_residue_are_enumerated`, `why_the_lane_recording_the_ruling_did_not_enumerate_itself`, `untagged_commits_that_touch_src` \u2014 and changes `how_the_popula [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "plan-audit-green",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`python scripts/plan_audit.py` \u2192 `plan audit: 8 plan documents clean`, exit 0. Confirmed the audit actually reaches the changed file: `audit()` reads every `plan_documents()` path, runs `check_citations` + `check_golden_figures` on each, and runs `check_inventory(derive_inventory(umbrella), ...)` on `docs/plans/2026-08 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "owner-ruling-verify#1/unmentioned-1",
+     "what_was_found": "Emptying `owed[]` silently retired the file's own load-bearing assertion. `tests/test_rulings_owed.py`'s module docstring says \"The load-bearing assertion here is the last one: every row names what a lane may **not** do instead.\" That check \u2014 `test_every_row_names_what_a_lane_may_not_do_instead` \u2014 loops over `_owed()`, [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-2",
+     "what_was_found": "The instrument arm's floor is narrower than the ruling's own unit, and the gap is not named anywhere. `how_the_denominator_is_split` and the umbrella both define an implementation slice as \"a unit of work that changes behaviour in `src/`, `tests/`, `scripts/` or `data/`\", but the third prong (`test_no_instrument_pass_c [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-3",
+     "what_was_found": "The backlog regeneration erased a designed finding rather than fixing one, and only the mechanism is disclosed. `scripts/verify_backlog.py::documents_mentioning` is documented as \"a locator and deliberately not an authority ... a group whose tag appears in none of them is a real finding rather than an omission \u2014 it say [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-4",
+     "what_was_found": "`docs/receipts/rulings-owed.json`'s `how_a_row_closes` was itself amended by this pass, in the same commit that then satisfies it. A dated clause was appended \u2014 \"Extended 2026-08-18 by the tenth closure ... a ruling that is the campaign OWNER's is recorded in the umbrella's 'Owner's rulings' section...\" \u2014 and the row's [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-5",
+     "what_was_found": "`test_a_group_that_cites_a_verdict_in_a_commit_body_is_listed` was quietly widened in the same commit: its subset assertion changed from `cited <= missing | recorded` to `cited <= missing | recorded | instruments`. 26c6bdf's body discusses the three-way partition and disjointness but never names this second assertion.  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-6",
+     "what_was_found": "Four prepared R-35 passes were deleted from the work queue, not just recounted. `docs/receipts/verify-backlog.json` `prepared_passes` and `of_which_cite_an_r35_answer_in_a_commit_body` both drop 5 \u2192 2, and the `groups` rows for `campaign-close-certification`, `-r2`, `-r3`, `-r4` \u2014 26 commits' worth of prepared briefs,  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "owner-ruling-verify#1/unmentioned-7",
+     "what_was_found": "Minor, efficiency: the two new helpers in `tests/test_verify_ledger.py` \u2014 `_paths_by_tag()` and `_untagged_src_subjects()` \u2014 each shell out `git log --name-only 584071e..HEAD` over the whole campaign range and carry no `lru_cache`, while `_paths_by_tag()` is called once per row by three parametrized tests plus the red  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered by the verifier about the pass that recorded the owner's ruling. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -18419,6 +18550,7 @@
    "campaign-close-minor-findings-r35-2",
    "campaign-close-named-delivery-ruling",
    "campaign-close-on-hit-strike-retired",
+   "campaign-close-owner-ruling-criterion-11",
    "campaign-close-periodic-retired",
    "campaign-close-ratchet",
    "campaign-close-receipt-walk-r35",
@@ -18446,7 +18578,7 @@
    "umbrella [H] table"
   ],
   "slice_groups_without_one": [
-   "campaign-close-owner-ruling-criterion-11",
+   "campaign-close-criterion-11-closeout",
    "campaign-close-ruling-residue"
   ],
   "instrument_pass_tags": [
@@ -18588,6 +18720,7 @@
    "campaign-close-certification-r2",
    "campaign-close-certification-r3",
    "campaign-close-certification-r4",
+   "campaign-close-criterion-11-closeout",
    "campaign-close-dissent-docket",
    "campaign-close-final-integration",
    "campaign-close-final-integration-r35",
@@ -18635,7 +18768,7 @@
    "residue": 2,
    "residue_that_is_an_implementation_slice": 0,
    "per_tag": {
-    "campaign-close-owner-ruling-criterion-11": {
+    "campaign-close-criterion-11-closeout": {
      "in_a_behaviour_directory": [],
      "tests_without_a_declaring_receipt": []
     },
@@ -18716,7 +18849,7 @@
    "criterion_rows_documented_open": 175,
    "of_which_not_discharged": 60,
    "of_which_phase_tip_only": 115,
-   "finding_rows_documented_open": 650,
+   "finding_rows_documented_open": 657,
    "not_discharged_criterion_rows": 90
   },
   "gate": "tests/test_verify_ledger.py"
