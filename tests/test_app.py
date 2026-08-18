@@ -462,7 +462,7 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Muramana"],
+            "items": ["Eclipse"],
             "fight_mode": "timed",
             "fight_duration": 10,
             "enemies": [
@@ -478,7 +478,7 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert response.status_code == 400
     error = response.get_json()["error"]
     assert "Sterak's Gage" in error
-    assert "muramana_ability" in error
+    assert "proc_Eclipse" in error
     assert "not event-certified" in error
 
 
@@ -565,7 +565,7 @@ def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Muramana"],
+            "items": ["Eclipse"],
             "include_crossover": True,
             "enemies": [
                 {
