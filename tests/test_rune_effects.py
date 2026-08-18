@@ -132,7 +132,7 @@ class TestFirstStrike:
                     "effects": {
                         k: v
                         for k, v in entry["effects"].items()
-                        if k != "melee_ranged_ratios"
+                        if k != "gold_conversion_ratios"
                     },
                 }
                 if name == "First Strike"
@@ -141,7 +141,7 @@ class TestFirstStrike:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="First Strike.*melee_ranged_ratios"):
+        with pytest.raises(KeyError, match="First Strike.*gold_conversion_ratios"):
             rune_effects.resolve_keystone("First Strike")
 
 

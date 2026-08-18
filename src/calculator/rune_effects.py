@@ -300,7 +300,7 @@ def _compile_first_strike(entry: Mapping[str, Any]) -> KeystoneWindowAmpEffect:
     name = "First Strike"
     effects = _RequiredRuneValues(name, entry.get("effects", {}))
     melee_ratio, ranged_ratio = (
-        float(value) for value in effects.value("melee_ranged_ratios")
+        float(value) for value in effects.value("gold_conversion_ratios")
     )
     return KeystoneWindowAmpEffect(
         keystone_name=name,

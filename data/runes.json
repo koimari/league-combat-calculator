@@ -44,6 +44,60 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
     "description": "{{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.\nAt maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.",
     "effects": {
+      "melee_ranged_leveling": [
+        [
+          9.0,
+          10.235294117647058,
+          11.470588235294118,
+          12.705882352941178,
+          13.941176470588236,
+          15.176470588235293,
+          16.411764705882355,
+          17.647058823529413,
+          18.88235294117647,
+          20.11764705882353,
+          21.352941176470587,
+          22.58823529411765,
+          23.823529411764707,
+          25.058823529411764,
+          26.294117647058826,
+          27.529411764705884,
+          28.764705882352942,
+          30.0,
+          31.235294117647058,
+          32.470588235294116
+        ],
+        [
+          6.0,
+          7.0588235294117645,
+          8.117647058823529,
+          9.176470588235293,
+          10.235294117647058,
+          11.294117647058822,
+          12.352941176470589,
+          13.411764705882353,
+          14.470588235294118,
+          15.529411764705882,
+          16.588235294117645,
+          17.647058823529413,
+          18.705882352941178,
+          19.764705882352942,
+          20.823529411764707,
+          21.88235294117647,
+          22.941176470588236,
+          24.0,
+          25.058823529411764,
+          26.11764705882353
+        ]
+      ],
+      "attack_speed_ratios": [
+        0.06,
+        0.048
+      ],
+      "damage_per_bonus_attack_speed_ratios": [
+        0.01,
+        0.006666666666666666
+      ],
       "max_stacks": 6
     }
   },
@@ -55,15 +109,65 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
     "description": "{{Unique|Energized|Moving and basic attacking generates ''Charges'', up to 100.}}\nAt 100 ''Charges'', become {{tip|Energized}}, empowering your next {{tip|basic attack}} to {{tip|heal}} you for {{rd|10+(120/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|10*0.6+((120*0.6)/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|color=heal|pp=true}} {{as|(+ {{rd|10%|6%}} '''bonus''' AD)}} {{as|(+ {{rd|5%|3%}} AP)}} and grant {{as|{{rd|20%|15%}}|ms}} {{sti|{{as|'''bonus''' movement speed}}}} for 1 second. Against {{tip|minion|minions}}, the healing is 15% effective.",
     "effects": {
-      "melee_ranged_ratios": [
+      "heal_melee_ranged_leveling": [
+        [
+          10.0,
+          15.08235294117647,
+          20.411764705882355,
+          25.988235294117647,
+          31.81176470588235,
+          37.88235294117648,
+          44.199999999999996,
+          50.76470588235294,
+          57.576470588235296,
+          64.63529411764706,
+          71.94117647058825,
+          79.49411764705881,
+          87.29411764705883,
+          95.34117647058824,
+          103.63529411764705,
+          112.17647058823529,
+          120.96470588235294,
+          130.0,
+          139.28235294117647,
+          148.81176470588238
+        ],
+        [
+          6.0,
+          9.049411764705882,
+          12.24705882352941,
+          15.592941176470589,
+          19.08705882352941,
+          22.729411764705883,
+          26.520000000000003,
+          30.458823529411767,
+          34.54588235294118,
+          38.781176470588235,
+          43.16470588235294,
+          47.69647058823529,
+          52.3764705882353,
+          57.20470588235295,
+          62.18117647058824,
+          67.30588235294118,
+          72.57882352941176,
+          78.0,
+          83.56941176470589,
+          89.28705882352942
+        ]
+      ],
+      "move_speed_ratios": [
         0.2,
         0.15
+      ],
+      "bonus_ad_ratios": [
+        0.1,
+        0.06
+      ],
+      "ap_ratios": [
+        0.05,
+        0.03
       ]
-    },
-    "parse_warnings": [
-      "melee_ranged_ratios matched more than once: [0.1, 0.06], [0.05, 0.03]",
-      "melee_ranged_ratios matched more than once: [0.05, 0.03], [0.2, 0.15]"
-    ]
+    }
   },
   "Conqueror": {
     "name": "Conqueror",
@@ -73,9 +177,35 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
     "description": "{{sbc|Passive:}} Dealing damage to enemy {{tip|champions}} generates {{tip|stacks}} of ''Conqueror'', lasting for 5 seconds, refreshing on subsequent damage against champions, and stacking up to 12 times. Gain {{rd|2|1}} stacks for {{tip|basic damage}} {{tip|on-hit}}. Otherwise, gain 2 stacks for any damage that is neither {{tip|basic damage|basic}} nor non-{{tip|pet damage|pet}} {{tip|proc damage}}, up to once every 4 seconds per {{tip|cast instance}}.\nEach stack of ''Conqueror'' grants {{adaptive|1.8 + (4-1.8)/17*(x-1)|20}}, up to {{adaptive|1.8*12 + (4*12-1.8*12)/17*(x-1)|20}} at maximum stacks, at which you also {{tip|heal}} for {{rd|8%|5%}} of the {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against enemy champions.",
     "effects": {
-      "melee_ranged_ratios": [
+      "heal_share_ratios": [
         0.08,
         0.05
+      ],
+      "basic_damage_stacks": [
+        2.0,
+        1.0
+      ],
+      "adaptive_force_leveling": [
+        1.8,
+        1.9294117647058824,
+        2.058823529411765,
+        2.1882352941176473,
+        2.3176470588235296,
+        2.447058823529412,
+        2.5764705882352943,
+        2.7058823529411766,
+        2.835294117647059,
+        2.9647058823529413,
+        3.0941176470588236,
+        3.223529411764706,
+        3.3529411764705888,
+        3.4823529411764707,
+        3.6117647058823534,
+        3.7411764705882353,
+        3.870588235294118,
+        4.0,
+        4.129411764705883,
+        4.258823529411765
       ],
       "max_stacks": 12
     }
@@ -129,6 +259,8 @@
     "effects": {
       "bonus_ad_ratio": 0.1,
       "ap_ratio": 0.05,
+      "base_damage": 30.0,
+      "damage_per_soul": 11.0,
       "proc_delay_seconds": 1.75
     }
   },
@@ -140,16 +272,37 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
     "description": "{{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.\nWhile ''Hail of Blades'' is active, you gain {{as|{{rd|120%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|4 + (20-4)/17*(x-1) for 20|color=true damage}} {{as|(+ 8% '''bonus''' AD)}} {{as|(+ 6% AP)}} {{as|{{sti|'''bonus''' true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''",
     "effects": {
-      "bonus_ad_ratio": 0.08,
-      "ap_ratio": 0.06,
-      "melee_ranged_ratios": [
+      "leveling": [
+        [
+          4.0,
+          4.9411764705882355,
+          5.882352941176471,
+          6.823529411764706,
+          7.764705882352941,
+          8.705882352941178,
+          9.647058823529411,
+          10.588235294117647,
+          11.529411764705882,
+          12.470588235294118,
+          13.411764705882353,
+          14.352941176470589,
+          15.294117647058822,
+          16.235294117647058,
+          17.176470588235293,
+          18.11764705882353,
+          19.058823529411764,
+          20.0,
+          20.941176470588236,
+          21.88235294117647
+        ]
+      ],
+      "attack_speed_ratios": [
         1.2,
         0.6
-      ]
-    },
-    "parse_warnings": [
-      "pp formula '4 + (20-4)/17*(x-1) for 20' has no level range"
-    ]
+      ],
+      "bonus_ad_ratio": 0.08,
+      "ap_ratio": 0.06
+    }
   },
   "Summon Aery": {
     "name": "Summon Aery",
@@ -206,7 +359,8 @@
         ]
       ],
       "bonus_ad_ratio": 0.1,
-      "ap_ratio": 0.05
+      "ap_ratio": 0.05,
+      "proc_delay_seconds": 0.45
     }
   },
   "Arcane Comet": {
@@ -347,7 +501,7 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
     "description": "{{sbc|Passive:}} Dealing {{tt|damage|post-mitigation damage}} to an enemy champion equal to {{as|25% of their '''maximum''' health}} within 3 seconds grants you {{as|{{rd|48%|36%}} '''bonus''' movement speed}} and 50% {{tip|slow resist}} for 4 seconds.",
     "effects": {
-      "melee_ranged_ratios": [
+      "move_speed_ratios": [
         0.48,
         0.36
       ]
@@ -360,11 +514,57 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
     "description": "Dealing {{tip|ability damage}} or {{tip|pet damage}} to enemy {{tip|champions}} inflicts a burn that deals {{pp|(3/2) + ((12/2)-(3/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7/2}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5/2}}% AP)}} {{as|magic damage}} every {{fd|0.5}} seconds over the duration. After the burn has lingered on a target for 3 seconds, its damage to them is increased{{ft|by 75%|to {{pp|(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7*1.75/2|round=3}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5*1.75/2|round=3}}% AP)}} per tick}}while it lasts.\nThe burn's duration is based on the form of ability damage dealt to the target and is refreshed on subsequent applications:\n* {{tip|Spell damage}}: 4 seconds.\n* {{tip|Area damage}}: 2 seconds.\n* {{tip|Persistent damage}}: 1 second.\n* {{tip|Persistent area damage}}: 1 second.\n* {{tip|Pet damage}}: 1 second.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '(3/2) + ((12/2)-(3/2))/17*(x-1) for 20' has no level range",
-      "pp formula '(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20' has no level range"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          1.5,
+          1.7647058823529411,
+          2.0294117647058822,
+          2.2941176470588234,
+          2.5588235294117645,
+          2.8235294117647056,
+          3.088235294117647,
+          3.3529411764705883,
+          3.6176470588235294,
+          3.8823529411764706,
+          4.147058823529411,
+          4.411764705882353,
+          4.676470588235294,
+          4.9411764705882355,
+          5.205882352941177,
+          5.470588235294118,
+          5.735294117647059,
+          6.0,
+          6.264705882352941,
+          6.529411764705882
+        ],
+        [
+          2.625,
+          3.088235294117647,
+          3.5514705882352944,
+          4.014705882352941,
+          4.477941176470589,
+          4.9411764705882355,
+          5.404411764705882,
+          5.867647058823529,
+          6.330882352941177,
+          6.794117647058823,
+          7.257352941176471,
+          7.720588235294118,
+          8.183823529411764,
+          8.647058823529413,
+          9.110294117647058,
+          9.573529411764707,
+          10.036764705882353,
+          10.5,
+          10.963235294117647,
+          11.426470588235295
+        ]
+      ],
+      "bonus_ad_ratio": 0.035,
+      "ap_ratio": 0.0125,
+      "tick_interval_seconds": 0.5
+    }
   },
   "Grasp of the Undying": {
     "name": "Grasp of the Undying",
@@ -373,7 +573,20 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
     "description": "{{sbc|Passive:}} Entering [[Combat status|combat]] generates 1 [[stack]] every second for the next 3 seconds, refreshing the duration with each instance of combat and stacking the effect up to 4 times. At maximum stacks, your next [[basic attack]] {{tip|on-hit}} within 5 seconds against an enemy {{tip|champion}} consumes all stacks to deal {{as|'''bonus''' magic damage}} equal to {{as|{{rd|{{fd|3.5}}%|{{fd|1.4}}%}} of your '''maximum''' health}}, {{tip|heal}} you for {{as|(+ {{rd|{{fd|1.3}}%|{{fd|0.52}}%}} of your '''maximum''' health)}}, and permanently grant you {{as|{{rd|5|2}} '''bonus''' health}}.",
-    "effects": {}
+    "effects": {
+      "max_health_damage_ratios": [
+        0.035,
+        0.013999999999999999
+      ],
+      "max_health_heal_ratios": [
+        0.013000000000000001,
+        0.0052
+      ],
+      "permanent_bonus_health": [
+        5.0,
+        2.0
+      ]
+    }
   },
   "Aftershock": {
     "name": "Aftershock",
@@ -382,11 +595,50 @@
     "cooldown": 20.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
     "description": "{{sbc|Passive:}} {{tip|Immobilize|Immobilizing}} an enemy {{tip|champion}} grants you a static {{as|45|armor}} {{as|(+ 75% '''bonus''' armor)}} {{as|'''bonus''' armor}} and {{as|45|mr}} {{as|(+ 75% '''bonus''' magic resistance)}} {{as|'''bonus''' magic resistance}} for {{fd|2.5}} seconds. The '''bonus''' resistances are each capped at {{pp|80 to 150}}.\nAfter the duration, you release a shockwave that deals {{as|{{pp|25 to 120}}|magic damage}} {{as|(+ 8% of your '''bonus''' health)}} {{as|magic damage}} to enemy champions and {{tip|monster|monsters}} within a {{tip|cr|icononly=true}} 350 radius.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '80 to 150' has no level range",
-      "pp formula '25 to 120' has no level range"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          80.0,
+          84.11764705882354,
+          88.23529411764706,
+          92.35294117647058,
+          96.47058823529412,
+          100.58823529411765,
+          104.70588235294117,
+          108.8235294117647,
+          112.94117647058823,
+          117.05882352941177,
+          121.17647058823529,
+          125.29411764705881,
+          129.41176470588235,
+          133.52941176470588,
+          137.6470588235294,
+          141.76470588235293,
+          145.88235294117646,
+          150.0
+        ],
+        [
+          25.0,
+          30.588235294117645,
+          36.17647058823529,
+          41.76470588235294,
+          47.35294117647059,
+          52.94117647058823,
+          58.529411764705884,
+          64.11764705882354,
+          69.70588235294117,
+          75.29411764705881,
+          80.88235294117646,
+          86.47058823529412,
+          92.05882352941177,
+          97.6470588235294,
+          103.23529411764706,
+          108.8235294117647,
+          114.41176470588235,
+          120.0
+        ]
+      ]
+    }
   },
   "Guardian": {
     "name": "Guardian",
@@ -395,11 +647,54 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Guardian/Guardian.png",
     "description": "{{sbc|Passive:}} While within 350 units of an allied {{tip|champion}}, you raise your ''Guard''. Allied champions you affect with [[unit-targeted]] [[champion ability|abilities]] are also ''Guarded'' for 3 seconds, regardless of distance.\nIf you or a ''Guarded'' ally would take {{pp|50 + (165-50)/17*(x-1) for 20}} damage within {{fd|2.5}} seconds or lethal damage from an enemy champion, {{tip|monster}} or {{tip|turret}}, you both gain a {{tip|shield}} for {{pp|40 + (150-40)/17*(x-1) for 20}} {{as|(+ 20% of your AP)}} {{as|(+ 6% of your '''bonus''' health)}} for 2 seconds.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '50 + (165-50)/17*(x-1) for 20' has no level range",
-      "pp formula '40 + (150-40)/17*(x-1) for 20' has no level range"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          50.0,
+          56.76470588235294,
+          63.529411764705884,
+          70.29411764705883,
+          77.05882352941177,
+          83.8235294117647,
+          90.58823529411765,
+          97.35294117647058,
+          104.11764705882354,
+          110.88235294117646,
+          117.6470588235294,
+          124.41176470588235,
+          131.1764705882353,
+          137.94117647058823,
+          144.70588235294116,
+          151.47058823529412,
+          158.23529411764707,
+          165.0,
+          171.76470588235293,
+          178.52941176470588
+        ],
+        [
+          40.0,
+          46.470588235294116,
+          52.94117647058823,
+          59.411764705882355,
+          65.88235294117646,
+          72.35294117647058,
+          78.82352941176471,
+          85.29411764705883,
+          91.76470588235294,
+          98.23529411764706,
+          104.70588235294117,
+          111.17647058823529,
+          117.64705882352942,
+          124.11764705882354,
+          130.58823529411765,
+          137.05882352941177,
+          143.52941176470588,
+          150.0,
+          156.47058823529412,
+          162.94117647058823
+        ]
+      ]
+    }
   },
   "Glacial Augment": {
     "name": "Glacial Augment",
@@ -427,12 +722,12 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
     "description": "{{sbc|Passive:}} Initiating [[combat]] with an enemy {{tip|champion}} within the first {{fd|0.25}} seconds of champion combat grants {{g|10}} and ''First Strike'' for 3 seconds, causing all of your {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against champions to deal {{as|7% '''bonus''' true damage}}. Afterwards, you are granted {{g|gold}} equal to {{rd|50%|35%}} of all '''bonus''' damage dealt within the duration.\n''First Strike'' will be placed on full cooldown without activating its effects after being struck by an enemy champion before you strike them.",
     "effects": {
-      "bonus_true_damage_ratio": 0.07,
-      "flat_gold": 10.0,
-      "melee_ranged_ratios": [
+      "gold_conversion_ratios": [
         0.5,
         0.35
       ],
+      "bonus_true_damage_ratio": 0.07,
+      "flat_gold": 10.0,
       "buff_duration_seconds": 3.0
     }
   }

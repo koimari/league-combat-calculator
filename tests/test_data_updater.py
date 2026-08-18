@@ -63,7 +63,7 @@ def test_reparse_cached_rune_effects_recomputes_without_network(tmp_path):
     effects = updated["First Strike"]["effects"]
     assert effects["bonus_true_damage_ratio"] == 0.07
     assert effects["flat_gold"] == 10.0
-    assert effects["melee_ranged_ratios"] == [0.50, 0.35]
+    assert effects["gold_conversion_ratios"] == [0.50, 0.35]
     assert effects["buff_duration_seconds"] == 3.0
     on_disk = json.loads((tmp_path / "runes.json").read_text(encoding="utf-8"))
     assert on_disk["First Strike"]["effects"] == effects

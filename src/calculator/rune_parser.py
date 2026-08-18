@@ -5,22 +5,41 @@ The wiki keeps one machine-readable template per rune with named params
 numbers appear in a small set of template forms:
 
 - ``{{pp|60 + 10 * x|1 to 20 by 1}}`` — a leveling formula over champion level
+- ``{{pp|4 + (20-4)/17*(x-1) for 20}}`` — the same, range given as a suffix
+- ``{{pp|80 to 150}}`` — a stepless span, linear-filled over the wiki's
+  default 18 columns (Module:Ability progression, ``defaultSize = 18``)
 - ``{{pp|0 to 100 by 5|0 to 750|type=distance ...}}`` — a distance-keyed table
   (values enumerated by the first param, keyed over the second's span)
+- ``{{rd|<melee formula>|<ranged formula>|pp=true}}`` — a melee/ranged pair of
+  level tables (``color=heal`` marks a heal table, not damage)
 - ``{{as|(+ 10% '''bonus''' AD)}}`` / ``{{as|(+ 5% AP)}}`` — scaling ratios
-- ``{{fd|0.25}}-second delay`` / ``lands after {{rutngt|0.8}}`` — proc delays
+- ``{{adaptive|1.8 + (4-1.8)/17*(x-1)|20}}`` — per-level adaptive force
+- ``{{fd|0.25}}-second delay`` / ``lands after {{rutngt|0.8}}`` /
+  ``pounce ... over {{fd|0.45}} seconds, dealing`` — proc delays
 - ``{{as|7% '''bonus''' true damage}}`` — a post-mitigation true-damage ratio
 - ``{{g|10}}`` — flat gold grants
-- ``{{rd|50%|35%}}`` — a melee/ranged value split (melee first, per Template:Rd)
+- ``{{rd|50%|35%}}`` — a melee/ranged scalar split (melee first, per
+  Template:Rd), recorded under a key naming its quantity (attack speed,
+  movement speed, gold conversion, heal share, max-health damage/heal)
+- ``deals 30 {{as|(+ 11 per Soul)}}`` — flat base plus per-soul damage
+- display wrappers ``{{fd|3.5}}`` / ``{{ap|6*0.8}}`` / ``{{sti|...}}`` and
+  ``0.6{{recurring|6}}`` repeating decimals are inlined first so the value
+  patterns can see through them
 - prose stack rules — "Applying 3 stacks to a target within a 3 second period"
 - prose buff windows — "grants ... for 3 seconds, causing"
 - prose refreshing stacks — "apply a stack for 4 seconds ... stacking up to 3 times"
 - prose damage amps — "grant you 8% increased damage against champions"
+- ``every {{fd|0.5}} seconds`` — a damage-over-time tick interval
+
+"up to ... at maximum stacks/range" clauses restate per-stack (or minimum)
+values times a maximum — derived numbers, masked before scalar parsing so
+they never conflict with their sources.
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
 ``rune_effects`` consumes them with fail-closed typed accessors. A value this
-parser cannot read is simply absent from the payload — never defaulted.
+parser cannot read is simply absent from the payload — never defaulted, and a
+key matched with two different values is dropped, not guessed at.
 """
 
 import ast
@@ -29,8 +48,13 @@ from typing import Any
 
 _PARAM_LINE = re.compile(r"^\|(\w+)\s*=\s?(.*)$")
 _PP_TEMPLATE = re.compile(r"\{\{pp\|([^{}]+)\}\}")
+_RD_TEMPLATE = re.compile(r"\{\{rd\|([^{}]+)\}\}")
 _AS_RATIO = re.compile(
     r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
+)
+_AS_RATIO_PAIR = re.compile(
+    r"\{\{as\|\(\+\s*\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}\s*"
+    r"(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
@@ -38,12 +62,113 @@ _MAX_STACKS = re.compile(r"stacking up to (\d+) times")
 _DAMAGE_AMP = re.compile(r"([\d.]+)% increased damage against champions")
 _BONUS_TRUE_DAMAGE = re.compile(r"\{\{as\|([\d.]+)%\s*'''bonus'''\s*true damage\}\}")
 _FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
-_MELEE_RANGED_SPLIT = re.compile(r"\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}")
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
+_POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
 _LANDING_DELAY = re.compile(r"lands after \{\{rutngt\|([\d.]+)\}\}")
+_TICK_INTERVAL = re.compile(r"every \{\{fd\|([\d.]+)\}\} seconds")
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
+_FOR_SUFFIX = re.compile(r"^(.+?)\s+for\s+(\d+)$")
+_ADAPTIVE_FORCE = re.compile(r"\{\{adaptive\|([^{}|]+)\|(\d+)\}\}")
+_SOUL_DAMAGE = re.compile(r"deals ([\d.]+) \{\{as\|\(\+ ([\d.]+) per Soul\)\}\}")
+
+# Display wrappers the value patterns must see through.  {{ap}} resolves
+# only a single positional arithmetic param: a named param (``round=3``)
+# marks a wiki-side derived display value, and resolving it would conflict
+# with the source number it was derived from.
+_FD_NUMBER = re.compile(r"\{\{fd\|([\d.]+%?)\}\}")
+_STI_WRAPPER = re.compile(r"\{\{sti\|([^{}|]*)\}\}")
+_AP_ARITHMETIC = re.compile(r"\{\{ap\|([^{}|=]+)\}\}")
+# ``0.6{{recurring|6}}`` overlines the repeating decimals (Template:Recurring).
+_RECURRING = re.compile(r"(\d+)\.(\d*)\{\{recurring\|(\d+)\}\}")
+
+# "up to <derived value> at maximum stacks/range" — a restatement, never a
+# second source value.  Tempered so the span starts at the *nearest* "up to"
+# (an earlier "stacking up to N times" must not widen it).
+_MAXIMUM_RESTATEMENT = re.compile(
+    r"up to (?:(?!up to).)*? at maximum (?:stacks|range)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# One key, one quantity: every {{rd|X%|Y%}} scalar split is claimed by the
+# context rule naming what it measures.  An unclaimed pair warns and records
+# nothing.
+_RD_SPLIT_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "attack_speed_ratios",
+        re.compile(
+            r"\{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}[^{}|]*attack speed\|as\}\}"
+        ),
+    ),
+    (
+        "move_speed_ratios",
+        re.compile(
+            r"\{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}"
+            r"(?:\|ms\}\}|[^{}|]*movement speed\}\})"
+        ),
+    ),
+    (
+        "gold_conversion_ratios",
+        re.compile(
+            r"gold\}?\}? equal to \{\{rd\|([\d.]+)%\|([\d.]+)%\}\} of all "
+            r"(?:'''bonus'''|bonus) damage"
+        ),
+    ),
+    (
+        "heal_share_ratios",
+        re.compile(
+            r"\{\{tip\|heal\}\} for \{\{rd\|([\d.]+)%\|([\d.]+)%\}\} of the "
+            r"\{\{tt\|post-mitigation damage"
+        ),
+    ),
+    (
+        "max_health_damage_ratios",
+        re.compile(
+            r"equal to \{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\} of your "
+            r"'''maximum''' health\}\}"
+        ),
+    ),
+    (
+        "max_health_heal_ratios",
+        re.compile(
+            r"\{\{tip\|heal\}\} you for \{\{as\|\(\+ \{\{rd\|([\d.]+)%\|([\d.]+)%\}\} "
+            r"of your '''maximum''' health\)\}\}"
+        ),
+    ),
+    (
+        "damage_per_bonus_attack_speed_ratios",
+        re.compile(
+            r"increased by \{\{rd\|([\d.]+)%\|([\d.]+)%\}\} per "
+            r"\{\{as\|1% '''bonus''' attack speed\}\}"
+        ),
+    ),
+)
+
+#: Melee/ranged splits of a flat quantity — counts and flat stat grants,
+#: recorded as stated rather than divided by 100.
+_RD_FLAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "basic_damage_stacks",
+        re.compile(
+            r"Gain \{\{rd\|([\d.]+)\|([\d.]+)\}\} stacks for \{\{tip\|basic damage\}\}"
+        ),
+    ),
+    (
+        "permanent_bonus_health",
+        re.compile(
+            r"permanently grant you \{\{as\|\{\{rd\|([\d.]+)\|([\d.]+)\}\} "
+            r"'''bonus''' health\}\}"
+        ),
+    ),
+)
+
+# An rd template (up to two nesting levels deep) no rule claimed.
+_UNCLAIMED_RD = re.compile(r"\{\{rd\|(?:[^{}]|\{\{(?:[^{}]|\{\{[^{}]*\}\})*\}\})*\}\}")
+
+#: Module:Ability progression's ``defaultSize``: a stepless ``A to B`` with
+#: no explicit range renders 18 columns, endpoints anchored at levels 1/18.
+_DEFAULT_LEVEL_COUNT = 18
 
 _ALLOWED_PP_NODES = (
     ast.Expression,
@@ -92,20 +217,27 @@ def _strip_unbalanced_close(value: str) -> str:
 def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     """Evaluate one ``{{pp}}`` body into its per-step numeric values.
 
-    Three sourced forms exist: a semicolon list of literal values, an
-    ``N to M by S`` enumeration of the values themselves (the second
-    param then carries the keys, e.g. a distance span), and an
-    arithmetic formula in ``x`` evaluated over an ``N to M by S`` range.
+    Sourced forms: a semicolon list of literal values, an ``N to M by S``
+    enumeration of the values themselves (the second param then carries
+    the keys, e.g. a distance span), a stepless ``N to M`` span
+    (linear-filled with endpoints anchored — over the explicit range when
+    one is given, else the wiki's default 18 columns), and an arithmetic
+    formula in ``x``.  A ``for N`` suffix on the formula supplies the
+    range ``1..N`` when no second param does.
     """
     formula = formula.strip()
+    for_suffix = _FOR_SUFFIX.match(formula)
+    if for_suffix:
+        formula = for_suffix.group(1).strip()
+        if not range_spec:
+            range_spec = f"1 to {for_suffix.group(2)} by 1"
     if ";" in formula and "x" not in formula:
         return [float(part) for part in formula.split(";") if part.strip()]
     shorthand = _RANGE_SPEC.match(formula)
     if shorthand and shorthand.group(3):
-        # Only an explicit "by <step>" marks a value enumeration; a bare
-        # "A to B" scales over an implicit level span the template does
-        # not state, and expanding it would fabricate wrong values.
         return _enumerate_range(shorthand)
+    if shorthand:
+        return _interpolate_endpoints(shorthand, range_spec)
     if not range_spec:
         raise ValueError(f"pp formula {formula!r} has no level range")
     range_match = _RANGE_SPEC.match(range_spec.strip())
@@ -138,6 +270,27 @@ def _enumerate_range(match: re.Match) -> list[float]:
         values.append(value)
         value += step
     return values
+
+
+def _interpolate_endpoints(match: re.Match, range_spec: str | None) -> list[float]:
+    """Linear-fill a stepless ``A to B`` span, endpoints anchored.
+
+    Mirrors Module:Ability progression's linear filling: A at the first
+    level, B at the last, over the explicit range's count when one is
+    given, else the default 18 columns.
+    """
+    start_value, finish_value = float(match.group(1)), float(match.group(2))
+    if range_spec:
+        spec = _RANGE_SPEC.match(range_spec.strip())
+        if not spec:
+            raise ValueError(f"Unsupported pp range spec {range_spec!r}")
+        count = len(_enumerate_range(spec))
+    else:
+        count = _DEFAULT_LEVEL_COUNT
+    if count < 2:
+        raise ValueError(f"pp span {match.group(0)!r} needs at least two levels")
+    step = (finish_value - start_value) / (count - 1)
+    return [start_value + step * index for index in range(count)]
 
 
 def _safe_pp_expression(formula: str) -> ast.Expression:
@@ -202,28 +355,103 @@ def parse_cooldown(value: str | None) -> float | list[float] | None:
         return None
 
 
+class _EffectRecorder:
+    """Collects parsed effect values, failing closed on conflicts.
+
+    Two different numbers arriving under one key is a parse defect —
+    keeping either would be a plausible-looking wrong number.  The key is
+    dropped (consumers fail closed on absence) and the conflict recorded
+    as a warning.  Equal re-matches are one fact stated twice, not a
+    conflict.
+    """
+
+    def __init__(self) -> None:
+        self.effects: dict[str, Any] = {}
+        self.warnings: list[str] = []
+        self._conflicted: set[str] = set()
+
+    def warn(self, message: str) -> None:
+        """Record one parse warning for ``data/runes.json`` to carry."""
+        self.warnings.append(message)
+
+    def record(self, key: str, value: Any) -> None:
+        """Record one value, dropping the key on a conflicting duplicate."""
+        if key in self._conflicted:
+            self.warn(f"{key} matched again after a conflict: {value!r}")
+            return
+        if key in self.effects and self.effects[key] != value:
+            self.warn(
+                f"{key} matched conflicting values, dropped: "
+                f"{self.effects[key]!r}, {value!r}"
+            )
+            del self.effects[key]
+            self._conflicted.add(key)
+            return
+        self.effects[key] = value
+
+
 def parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     """Extract the numeric effect values a description carries.
 
     Returns the effects dict plus parse warnings. Keys are only present
     when their source text parsed — consumers fail closed on absence.
     """
-    effects: dict[str, Any] = {}
-    warnings: list[str] = []
-    _parse_leveling(description, effects, warnings)
-    _parse_scalar_templates(description, effects, warnings)
-    _parse_prose_rules(description, effects)
-    return effects, warnings
+    recorder = _EffectRecorder()
+    _parse_leveling(description, recorder)
+    _parse_scalar_templates(description, recorder)
+    _parse_prose_rules(description, recorder.effects)
+    return recorder.effects, recorder.warnings
 
 
-def _parse_leveling(
-    description: str, effects: dict[str, Any], warnings: list[str]
-) -> None:
-    """Evaluate every ``{{pp}}`` template into a per-level value list.
+def _resolve_ap_arithmetic(match: re.Match) -> str:
+    """Evaluate one ``{{ap|<arithmetic>}}`` body, or leave it untouched."""
+    try:
+        expression = _safe_pp_expression(match.group(1).strip())
+    except ValueError:
+        return match.group(0)
+    if any(isinstance(node, ast.Name) for node in ast.walk(expression)):
+        return match.group(0)
+    return f"{_evaluate_pp_node(expression.body, 0.0):g}"
 
-    A template whose ``type=`` names a distance is keyed by travel
-    distance, not champion level — it is stored as ``distance_scaling``
-    (values plus the distance span) instead of joining ``leveling``.
+
+def _resolve_recurring(match: re.Match) -> str:
+    """Expand ``0.6{{recurring|6}}`` into its exact repeating-decimal value."""
+    integer, fixed, repeating = match.groups()
+    scale = 10 ** len(fixed)
+    period = 10 ** len(repeating)
+    value = (int(integer + fixed + repeating) - int(integer + fixed)) / (
+        scale * period - scale
+    )
+    return repr(value)
+
+
+def _resolve_display_templates(text: str) -> str:
+    """Inline ``{{fd}}``/``{{ap}}``/``{{sti}}`` wrappers to a fixpoint.
+
+    Nesting like ``{{rd|{{fd|3.5}}%|{{fd|1.4}}%}}`` resolves inside-out;
+    anything a pass cannot resolve (unknown templates, ``{{ap|...|round=3}}``
+    derived displays) stays verbatim and its enclosing pattern simply
+    fails to match — absence, never a guess.
+    """
+    for _ in range(4):
+        resolved = _RECURRING.sub(_resolve_recurring, text)
+        resolved = _FD_NUMBER.sub(lambda match: match.group(1), resolved)
+        resolved = _STI_WRAPPER.sub(lambda match: match.group(1), resolved)
+        resolved = _AP_ARITHMETIC.sub(_resolve_ap_arithmetic, resolved)
+        if resolved == text:
+            break
+        text = resolved
+    return text
+
+
+def _parse_leveling(description: str, recorder: _EffectRecorder) -> None:
+    """Evaluate every level-table template into per-level value lists.
+
+    ``{{pp}}`` tables join ``leveling`` in sentence order (a ``type=``
+    naming a distance is keyed by travel distance instead and stored as
+    ``distance_scaling``).  ``{{rd|...|pp=true}}`` melee/ranged formula
+    pairs land under ``melee_ranged_leveling`` (``heal_melee_ranged_
+    leveling`` when ``color=heal`` marks them as a heal table).
     """
     leveling = []
     for pp_body in _PP_TEMPLATE.findall(description):
@@ -235,62 +463,134 @@ def _parse_leveling(
         try:
             values = evaluate_pp(formula, range_spec)
         except ValueError as exc:
-            warnings.append(str(exc))
+            recorder.warn(str(exc))
             continue
         if named.get("type", "").startswith("distance"):
             span = _RANGE_SPEC.match((range_spec or "").strip())
             if not span:
-                warnings.append(f"distance pp has no distance span: {pp_body!r}")
+                recorder.warn(f"distance pp has no distance span: {pp_body!r}")
                 continue
-            scaling = {
-                "values": values,
-                "distance_range": [float(span.group(1)), float(span.group(2))],
-            }
-            # Like duplicate ratios: silently keeping the last table would
-            # be a plausible-looking wrong number. Record the ambiguity.
-            if "distance_scaling" in effects and effects["distance_scaling"] != scaling:
-                warnings.append(f"distance_scaling matched more than once: {pp_body!r}")
-            effects["distance_scaling"] = scaling
+            recorder.record(
+                "distance_scaling",
+                {
+                    "values": values,
+                    "distance_range": [float(span.group(1)), float(span.group(2))],
+                },
+            )
         else:
             leveling.append(values)
     if leveling:
-        effects["leveling"] = leveling
+        recorder.effects["leveling"] = leveling
+    _parse_split_leveling(description, recorder)
 
 
-def _parse_scalar_templates(
-    description: str, effects: dict[str, Any], warnings: list[str]
-) -> None:
-    """Read the single-value template forms: ratios, gold, range splits."""
+def _parse_split_leveling(description: str, recorder: _EffectRecorder) -> None:
+    """Read ``{{rd|<melee>|<ranged>|pp=true}}`` level-table pairs."""
+    for rd_body in _RD_TEMPLATE.findall(description):
+        parts = rd_body.split("|")
+        named = dict(part.split("=", 1) for part in parts if "=" in part)
+        if named.get("pp") != "true":
+            continue
+        positional = [part for part in parts if "=" not in part]
+        if len(positional) != 2:
+            recorder.warn(f"rd pp pair needs melee and ranged formulas: {rd_body!r}")
+            continue
+        try:
+            pair = [evaluate_pp(formula, None) for formula in positional]
+        except ValueError as exc:
+            recorder.warn(str(exc))
+            continue
+        key = (
+            "heal_melee_ranged_leveling"
+            if named.get("color") == "heal"
+            else "melee_ranged_leveling"
+        )
+        recorder.record(key, pair)
 
-    def record(key: str, value: Any) -> None:
-        # A rune whose text matches the same key twice (Summon Aery's
-        # damage AND shield ratios) would silently keep the last value —
-        # a plausible-looking wrong number. Record the ambiguity so the
-        # implementer sees it in data/runes.json.
-        if key in effects and effects[key] != value:
-            warnings.append(f"{key} matched more than once: {effects[key]}, {value}")
-        effects[key] = value
 
-    for percent, bonus_marker, stat in _AS_RATIO.findall(description):
+def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
+    """Record every classified ``{{rd|...}}`` pair and blank its text."""
+
+    def claim(key: str):
+        def _claim(match: re.Match) -> str:
+            recorder.record(
+                key,
+                [float(match.group(1)) / 100.0, float(match.group(2)) / 100.0],
+            )
+            return " "
+
+        return _claim
+
+    def claim_flat(key: str):
+        def _claim(match: re.Match) -> str:
+            recorder.record(key, [float(match.group(1)), float(match.group(2))])
+            return " "
+
+        return _claim
+
+    for key, pattern in _RD_SPLIT_RULES:
+        text = pattern.sub(claim(key), text)
+    for key, pattern in _RD_FLAT_RULES:
+        text = pattern.sub(claim_flat(key), text)
+
+    def claim_ratio_pair(match: re.Match) -> str:
+        melee_percent, ranged_percent, bonus_marker, stat = match.groups()
+        if stat == "AP":
+            key = "ap_ratios"
+        elif bonus_marker:
+            key = "bonus_ad_ratios"
+        else:
+            key = "ad_ratios"
+        recorder.record(
+            key, [float(melee_percent) / 100.0, float(ranged_percent) / 100.0]
+        )
+        return " "
+
+    return _AS_RATIO_PAIR.sub(claim_ratio_pair, text)
+
+
+def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None:
+    """Read the single-value template forms: ratios, gold, range splits.
+
+    Works on resolved text (display wrappers inlined) with "up to ... at
+    maximum" restatements masked out — those are derived values whose
+    only effect would be conflicting with their sources.
+    """
+    text = _MAXIMUM_RESTATEMENT.sub(" ", _resolve_display_templates(description))
+    text = _claim_split_pairs(text, recorder)
+
+    for percent, bonus_marker, stat in _AS_RATIO.findall(text):
         if stat == "AP":
             key = "ap_ratio"
         elif bonus_marker:
             key = "bonus_ad_ratio"
         else:
             key = "ad_ratio"
-        record(key, float(percent) / 100.0)
+        recorder.record(key, float(percent) / 100.0)
 
-    for percent in _BONUS_TRUE_DAMAGE.findall(description):
-        record("bonus_true_damage_ratio", float(percent) / 100.0)
+    for percent in _BONUS_TRUE_DAMAGE.findall(text):
+        recorder.record("bonus_true_damage_ratio", float(percent) / 100.0)
 
-    for amount in _FLAT_GOLD.findall(description):
-        record("flat_gold", float(amount))
+    for amount in _FLAT_GOLD.findall(text):
+        recorder.record("flat_gold", float(amount))
 
-    for melee_percent, ranged_percent in _MELEE_RANGED_SPLIT.findall(description):
-        record(
-            "melee_ranged_ratios",
-            [float(melee_percent) / 100.0, float(ranged_percent) / 100.0],
-        )
+    for formula, levels in _ADAPTIVE_FORCE.findall(text):
+        try:
+            values = evaluate_pp(formula, f"1 to {levels} by 1")
+        except ValueError as exc:
+            recorder.warn(str(exc))
+            continue
+        recorder.record("adaptive_force_leveling", values)
+
+    for base, per_soul in _SOUL_DAMAGE.findall(text):
+        recorder.record("base_damage", float(base))
+        recorder.record("damage_per_soul", float(per_soul))
+
+    text = _RD_TEMPLATE.sub(
+        lambda match: " " if "pp=true" in match.group(1) else match.group(0), text
+    )
+    for leftover in _UNCLAIMED_RD.findall(text):
+        recorder.warn(f"unclassified melee/ranged split: {leftover}")
 
 
 def _parse_prose_rules(description: str, effects: dict[str, Any]) -> None:
@@ -316,9 +616,17 @@ def _parse_prose_rules(description: str, effects: dict[str, Any]) -> None:
     if amp_match:
         effects["damage_amp_ratio"] = float(amp_match.group(1)) / 100.0
 
-    delay_match = _PROC_DELAY.search(description) or _LANDING_DELAY.search(description)
+    delay_match = (
+        _PROC_DELAY.search(description)
+        or _POUNCE_DELAY.search(description)
+        or _LANDING_DELAY.search(description)
+    )
     if delay_match:
         effects["proc_delay_seconds"] = float(delay_match.group(1))
+
+    tick_match = _TICK_INTERVAL.search(description)
+    if tick_match:
+        effects["tick_interval_seconds"] = float(tick_match.group(1))
 
 
 def rune_payload(name: str, wikitext: str, icon: str = "") -> dict[str, Any]:
