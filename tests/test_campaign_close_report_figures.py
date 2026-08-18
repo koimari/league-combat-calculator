@@ -167,9 +167,21 @@ def section_17() -> str:
 
 @lru_cache(maxsize=1)
 def section_18() -> str:
-    """The report from its section 18 heading to the end of the file."""
+    """The report's section 18, bounded at 19 for section 15's own reason.
+
+    It ran to the end of the file until section 19 existed, which was true and
+    stopped being so; an unbounded section lets a gate match a figure a later
+    section states and report it as this one's.
+    """
     text = REPORT.read_text(encoding="utf-8")
-    return text[text.index("\n## 18.") :]
+    return text[text.index("\n## 18.") : text.index("\n## 19.")]
+
+
+@lru_cache(maxsize=1)
+def section_19() -> str:
+    """The report from its section 19 heading to the end of the file."""
+    text = REPORT.read_text(encoding="utf-8")
+    return text[text.index("\n## 19.") :]
 
 
 @lru_cache(maxsize=1)
@@ -1465,5 +1477,183 @@ def test_the_completeness_scan_reds_on_section_18() -> None:
 def test_the_r01_verdict_table_section_18_states_carries_no_figure() -> None:
     """15.8's ruling, held one section further on."""
     table = section_18()[section_18().index("### 18.5") :]
+    assert "GREEN" in table
+    assert re.search(r"\*\*(\d+)\*\*", table) is None
+
+
+# --------------------------------------------------------------------------
+# Section 19: the fourth certification review.
+#
+# Its ledger figures are read *live*, because they are facts about this tip and
+# this pass moved one of them itself -- the residue, which grew by the tag of
+# the pass writing the section.  Its counter figures are the pair the review's
+# minor is about: the reading section 5 states at the tip the report was
+# written on, read out of git there, and the tip's own, read by re-running the
+# instrument.  The movement population is derived by the migration frontier's
+# own gate, which is where that derivation belongs; this file imports it rather
+# than spelling it a second time.
+# --------------------------------------------------------------------------
+
+#: The tip section 5's frontier readings are dated at, by the report's header.
+SECTION_5_TIP = "067c94c"
+
+
+@lru_cache(maxsize=1)
+def migration_frontier():
+    """The frontier instrument, imported by path as the other scripts are."""
+    spec = importlib.util.spec_from_file_location(
+        "migration_frontier", ROOT / "scripts" / "migration_frontier.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("migration_frontier", module)
+    spec.loader.exec_module(module)
+    return module
+
+
+@lru_cache(maxsize=1)
+def frontier_gate():
+    """The migration frontier's own suite, for its movement derivation.
+
+    Imported rather than re-implemented: a movement is a value one commit's
+    receipt records differently from its parent's, and two spellings of that
+    derivation are two things that can disagree about what moved.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "test_migration_frontier", ROOT / "tests" / "test_migration_frontier.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("test_migration_frontier", module)
+    spec.loader.exec_module(module)
+    return module
+
+
+def counter_6_kernel_at(sha: str) -> str:
+    """Counter 6's kernel value as the receipt at one commit records it."""
+    blob = subprocess.run(
+        ["git", "show", f"{sha}:docs/migration-frontier.json"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    return str(json.loads(blob)["counters"]["counter_6"]["kernel_value"])
+
+
+def counter_movements_since_the_report() -> list[tuple[str, str, str, int, int]]:
+    """Every migration-frontier counter movement after section 5's tip."""
+    return frontier_gate().counter_movements(f"{SECTION_5_TIP}..HEAD")
+
+
+def movements_naming_their_cause() -> str:
+    """How many of those movements the moving commit's own body states."""
+    gate = frontier_gate()
+    return str(
+        sum(
+            1
+            for sha, counter, _key, old, new in counter_movements_since_the_report()
+            if gate.states_the_move(
+                gate._git("show", "-s", "--format=%B", sha), counter, old, new
+            )
+        )
+    )
+
+
+def prepared_passes_here() -> str:
+    """How many startable passes the backlog holds at this tip."""
+    return str(json.loads(BACKLOG.read_text(encoding="utf-8"))["prepared_passes"])
+
+
+#: Section 19's figures.
+FIGURES_19: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "19.1 residue",
+        r"The residue is \*\*(\d+)\*\*",
+        lambda: str(ledger()["coverage"]["residue"]),
+    ),
+    (
+        "19.1 prepared passes",
+        r"prepares \*\*(\d+)\*\* startable passes",
+        prepared_passes_here,
+    ),
+    (
+        "19.1 not discharged",
+        r"\*\*(\d+)\*\* `NOT_DISCHARGED` rows",
+        lambda: verdict_count(here(), "NOT_DISCHARGED"),
+    ),
+    (
+        "19.1 passes",
+        r"the ledger's \*\*(\d+)\*\*\s+passes",
+        lambda: str(len(here())),
+    ),
+    (
+        "19.1 documented_open",
+        r"of which \*\*(\d+)\*\* are `documented_open`",
+        lambda: disposition_count(here(), "documented_open"),
+    ),
+    (
+        "19.2 the reading section 5 states",
+        r"counter 6's kernel value read \*\*(\d+)\*\*",
+        lambda: counter_6_kernel_at(SECTION_5_TIP),
+    ),
+    (
+        "19.2 the tip's reading",
+        r"This tip\s+reads \*\*(\d+)\*\*",
+        lambda: str(migration_frontier().scan().counter_6_kernel),
+    ),
+    (
+        "19.2 movements since",
+        r"\*\*(\d+)\*\* commit in `067c94c\.\.HEAD` moved",
+        lambda: str(len(counter_movements_since_the_report())),
+    ),
+    (
+        "19.2 movements naming their cause",
+        r"counter and \*\*(\d+)\*\* states the move",
+        movements_naming_their_cause,
+    ),
+    (
+        "19.5 the gate's own size",
+        r"\*\*(\d+)\*\* figures, the count itself among them",
+        lambda: str(len(FIGURES_19)),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", FIGURES_19, ids=[case[0] for case in FIGURES_19])
+def test_every_figure_section_19_states_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """Section 19 answers a fourth review, so every count in it is re-derived."""
+    _label, pattern, measured = case
+    assert stated(section_19(), pattern) == measured()
+
+
+@pytest.mark.parametrize("case", FIGURES_19, ids=[case[0] for case in FIGURES_19])
+def test_the_section_19_gate_fails_when_a_stated_figure_drifts(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """R-05's permanent red for section 19, injected as every section's is."""
+    _label, pattern, measured = case
+    text = section_19()
+    match = re.search(pattern, text)
+    assert match is not None
+    drifted = str(int(match.group(1)) + 1)
+    doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
+    assert stated(doctored, pattern) != measured()
+
+
+def test_section_19_states_no_figure_this_file_does_not_read() -> None:
+    """The completeness scan, over the section that ships it."""
+    assert ungated_figures(section_19(), FIGURES_19, [], []) == []
+
+
+def test_the_completeness_scan_reds_on_section_19() -> None:
+    """R-05 for the scan on this section, as 15, 16 and 18's do."""
+    doctored = section_19() + "\n\nA later pass measured **4321** of them.\n"
+    assert ungated_figures(doctored, FIGURES_19, [], [])
+
+
+def test_the_r01_verdict_table_section_19_states_carries_no_figure() -> None:
+    """15.8's ruling, held one section further on again."""
+    table = section_19()[section_19().index("### 19.6") :]
     assert "GREEN" in table
     assert re.search(r"\*\*(\d+)\*\*", table) is None

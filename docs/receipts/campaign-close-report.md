@@ -2100,3 +2100,187 @@ over this range as over the two before it, and both compared baselines read
 is not discharged, the one decision that could discharge it is the owner's, and
 every defect two fresh readers found in the artifacts that say so has been fixed
 and gated.
+
+## 19. The fourth certification review — three minors closed, and the blocker's timing argument handed over
+
+*Appended 2026-08-17. Section 9's rule applies here as everywhere above:
+nothing before this line is rewritten, and where an earlier section states a
+figure this pass moved, that figure stays written and is read at the commit
+that stated it. §16.3's seven readings are anchored at `3799bef` and §17's
+nine at `407428f`; this pass moves one of the ledger's live counters and
+neither anchor with it.*
+
+A fourth certification review withheld sign-off with one blocker and three
+minors. The blocker is that runbook criterion 11 is not discharged, that no
+further lane work can discharge it, and that the decision is the campaign
+owner's — which is exactly what §17.3 and §18.2 already say, and this section
+does not claim otherwise. What is new is in the minors, and in one sentence
+the review wrote about the blocker that had never been carried to the artifact
+whoever rules opens.
+
+### 19.1 The blocker, and the one thing a lane could add to it
+
+Runbook criterion 11 stands **NOT DISCHARGED**, by both clauses, as §12.5
+grades it and §16.3, §17.3 and §18.2 restate it.
+
+*Clause 1.* The residue is **5**: `campaign-close-verify-p4-batch`, whose
+single commit no verifier's brief has ever reached; the three previous
+certification passes' tags; and this pass's own, added by its first commit
+rather than by a later one. [`verify-backlog.json`](verify-backlog.json)
+prepares **5** startable passes and this lane ran none, for the reason every
+pass since §17 has recorded: R-35's verifier is *a fresh read-only Opus 5 that
+has not read the plan*, this lane has read them, and it has no way to put the
+brief in front of one.
+
+*Clause 2.* **90** `NOT_DISCHARGED` rows stand over the ledger's **129**
+passes, of which **60** are `documented_open`. None moved and none could:
+re-dispositioning a verifier's finding about the lanes being checked is the
+reconstruction `what_this_ledger_does_not_hold` refuses.
+
+**What this pass added, and it is an input rather than an act.** The review's
+first minor is a measurement about the mechanism rather than about the clause:
+since round 129 every slice group to enter the residue has been a
+certification pass answering a review of this very question, so the process
+convened to grade the clause is now the only thing adding to what it grades.
+§16.3 measured that mechanism and named the third branch — a group's verdict
+may be recorded by a commit carrying that same group's tag, the only one of
+the three that terminates — and both of those lived in a report section, which
+is not what whoever rules opens. They are in
+[`rulings-owed.json`](rulings-owed.json)'s own row now, in
+`the_cost_of_deciding_late`, with the residue read through `live_figures`
+rather than restated, and with what a lane may not do about each branch
+written beside it: not adopt the third because it terminates, not adopt the
+forward reading because the residue is inconvenient, and not stop recording
+its own passes to keep the counter still, because an unrecorded pass is the
+residue hidden rather than closed.
+
+That is an argument about *when* the ruling is worth making. It is not an
+answer, it chooses no branch, and the three refused shortcuts — manufacture a
+verdict, reconstruct one from the bodies of the lanes being checked, shrink
+the denominator — stay refused by name.
+
+### 19.2 The counter that moved, and the cause it already carried
+
+§5 states the migration frontier's counters as of `067c94c`, the tip the
+report was written on, where counter 6's kernel value read **75**. This tip
+reads **78**. Nothing is contradicted — the §5 reading is dated by the
+report's own header, and the counter is a non-increasing ratchet whose bound
+the tip holds with headroom — but the review is right that the movement was
+unremarked wherever a reader of the closing artifacts would look, while every
+other counter movement in this campaign carries a named cause.
+
+The cause existed. **1** commit in `067c94c..HEAD` moved a migration-frontier
+counter and **1** states the move in its own body: `b3a594b`, the
+declared-pricing stage, whose body reads *"`docs/migration-frontier.json`
+counter 6 moves 75 -> 78: the three `round(..., 6)` calls in the new
+receipt"* — three calls in `apply_declared_price`'s receipt in
+`survival/transitions.py`, spelled as `reprice_dynamic_resistance`'s own
+receipt spells its. R-36 put the regenerated receipt in that commit, which is
+what made the move a diff at all.
+
+What did not exist is anything requiring it, so the property is asserted now:
+every commit after the report's tip that moves one of these counters states,
+in its own body, the counter and the value it moved from to the value it moved
+to. The movement population is derived — a movement is a value the receipt
+records differently from the commit before it — because a check ranging over
+an authored list would be green about the movements somebody remembered. A
+future move that arrives unremarked is red on the commit that lands it.
+
+### 19.3 G11's scheduled home
+
+G11's two cached-wiki-text defects are correctly outside this campaign's
+scope, and that is exactly what left them unowned: the row named a blocker and
+no home. Both entries name one now, in the artifact that owns them, and it is
+a route that runs rather than a promise. `data/` has one writer, so no lane
+may fix either in place; `patch_update.py run` is the only act that rewrites
+the text, and its rebuild step already re-runs the two consumers the entries
+name — `build_effect_catalog.py`, whose `_text` puts `simpleDescription`
+first, and `build_receipts.py`, which reads the atomized item domain. The run
+prints one line per open entry now, so the operator is told on the day the
+lever is in their hand instead of being expected to have read a receipt, and
+the gate asserts the schedule in both directions: every open entry names a
+route that exists, and the named route really reads the artifact. Scheduling
+is not fixing; both entries stay open and G11 stays `OPEN`.
+
+### 19.4 The gaps
+
+**No gap row changes state in this pass.** G14 stays `OPEN` on the ruling it
+has always named and G11 stays `OPEN` on the same two defects, its note
+gaining the dated clause that names where the work now lives. §16.4 therefore
+remains the report's final gap table and this section states none, for the gap
+ledger's own reason: one place holds the state, and a second table restating
+it is a second home.
+
+### 19.5 What gates section 19
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states from the instrument it was
+measured with — the verify ledger's coverage block and pass rows, the backlog,
+a fresh `migration_frontier` scan, the receipt `067c94c` left behind, and the
+movement derivation in
+[`tests/test_migration_frontier.py`](../../tests/test_migration_frontier.py).
+**10** figures, the count itself among them, each with R-05's red beside it,
+and the completeness scan §17.2's fifth finding bought runs over this section
+too: a bold figure this file does not read fails the gate on the commit that
+writes it.
+
+This section's ledger figures are read **live** rather than anchored, which is
+the choice §16.6 wrote down. They are facts about this tip, and this pass
+moves one of them itself; the next pass that moves another faces the same
+choice with both answers already written down.
+
+One thing §19.6's closing paragraph does deliberately, and it is §18.5's
+choice repeated rather than a new one. It is written in the *property* form —
+what holds over the live range — and not in the spelling §18.4's scan counts,
+because it makes no claim that a range is free of baseline moves; it says the
+opposite, that this pass moved `campaign-fingerprints.json` inside a carve-out
+and names it. Spelling it as a claim would have added a sixth site to a
+population §18.1 enumerated and turned that section's gate red on a sentence
+that asserts nothing §18.1 was about.
+
+And this section forced what 16, 17 and 18 each forced when they arrived:
+`section_18()` read from its heading to the end of the file, which was right
+until a section 19 existed. It is bounded at `## 19.` now.
+
+### 19.6 The R-01 matrix on this pass's tip
+
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**What each row read is in this pass's commit bodies, not here**, for the
+reason §15.8 ruled and §16.7, §17.7 and §18.5 restate: a gate reading cannot
+be re-derived without re-running the gate it came from.
+
+**What this pass did to `src/` and to the baselines, as a property.** Written
+the way §18.1 corrected the two sentences before it, rather than claiming a
+`..HEAD` range empty a fourth time. Over `407428f..HEAD`: the `src/` half is
+empty; no commit touches both `src/` and one of those five; and every commit
+that moved one of them moved only `campaign-fingerprints.json`, touching no
+`src/`, no gate script and neither compared baseline — this pass's
+`tests{collected}` re-pin for the node ids it declared, inside Amendment
+R-32's fourth carve-out and disclosed in its own body. The three checks §18.4
+names run over this range as over the two before it, and both compared
+baselines read `snapshot identical` on every commit here.
+
+**What is left, in one sentence.** Unchanged from §17.7's and §18.5's:
+runbook criterion 11 is not discharged, the one decision that could discharge
+it is the owner's — who now has all three branches, the population hole, the
+exact cost and the argument for deciding soon in the row that asks the
+question — and every defect four fresh readers have found in the artifacts
+that say so has been fixed and gated.

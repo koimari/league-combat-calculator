@@ -49,13 +49,14 @@
   },
   "campaign-close-certification-r4": {
    "cites_an_r35_answer_in_a_commit_body": true,
-   "commit_count": 4,
+   "commit_count": 5,
    "criteria_documents": [],
    "subjects": [
     "docs(receipts): this pass's own tag takes the explicit line the forward gate requires (campaign-close-certification-r4)",
     "test(gates): a migration-frontier counter that moves names its cause in the commit that moved it (campaign-close-certification-r4)",
     "docs(receipts): the two cached-data defects gain the patch-day route that can close them (campaign-close-certification-r4)",
-    "docs(receipts): the owed row carries the third branch and what deciding late costs (campaign-close-certification-r4)"
+    "docs(receipts): the owed row carries the third branch and what deciding late costs (campaign-close-certification-r4)",
+    "docs(receipts): the fourth review's pass is recorded where the report keeps its passes (campaign-close-certification-r4)"
    ]
   },
   "campaign-close-verify-p4-batch": {
