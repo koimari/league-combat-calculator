@@ -66,6 +66,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Callable
@@ -73,7 +74,8 @@ from typing import Callable
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-REPORT = ROOT / "docs" / "receipts" / "campaign-close-report.md"
+REPORT_RELATIVE = "docs/receipts/campaign-close-report.md"
+REPORT = ROOT / REPORT_RELATIVE
 LEDGER_PATH = "docs/receipts/verify-ledger.json"
 BACKLOG = ROOT / "docs" / "receipts" / "verify-backlog.json"
 
@@ -1069,16 +1071,63 @@ def node_id_declarations() -> tuple[int, int]:
     return parsed, unparsed
 
 
+#: What has to be materialised to collect ``SECTION_17_4_FILE`` as one commit
+#: left it: the file, the suite's conftest, and the two artifacts it reads at
+#: import time to build its parametrisations.
+SECTION_17_4_TREE = (
+    SECTION_17_4_FILE,
+    "tests/conftest.py",
+    "docs/receipts/campaign-gap-ledger.json",
+    REPORT_RELATIVE,
+)
+
+
 @lru_cache(maxsize=1)
 def collected_node_ids() -> str:
-    """How many node ids one test file holds at this tip, collected not counted."""
-    out = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", SECTION_17_4_FILE],
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-        check=True,
-    ).stdout
+    """How many node ids one test file held at the tip §17.4 measured it on.
+
+    Anchored 2026-08-18, under the rule §16.6 wrote for exactly this: a later
+    pass that moves a figure an earlier section states either restates it or
+    anchors it.  This one could not be restated, because §9 forbids rewriting
+    §17.4's sentence, and it moved for the reason that sentence is *about* --
+    "the parametrised live-figure check, which gained a case when that commit
+    added a counter to ``live_figures`` -- a node id the tree generated from
+    data rather than one anybody typed".  Closing G14 moved the gap ledger's
+    data the same way, and the count went with it.
+
+    So it is collected as ``SECTION_17_4_ANCHOR`` left it rather than at the
+    tip: the file, its conftest and the two artifacts it reads at import are
+    materialised from that commit into a scratch tree and collected there.
+    ``ROOT`` inside the module resolves to that tree, so the parametrisations
+    are built from that commit's ledger -- which is what makes this an anchor
+    and not a re-collection of today's data under an old file.  No worktree is
+    created; §17.4 says the lane may not, and ``git show`` needs none.
+    """
+    with tempfile.TemporaryDirectory() as scratch:
+        for relative in SECTION_17_4_TREE:
+            blob = subprocess.run(
+                ["git", "show", f"{SECTION_17_4_ANCHOR}:{relative}"],
+                capture_output=True,
+                cwd=ROOT,
+                check=True,
+            ).stdout
+            destination = Path(scratch) / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(blob)
+        out = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "--collect-only",
+                "-q",
+                str(Path(scratch) / SECTION_17_4_FILE),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+            check=True,
+        ).stdout
     match = re.search(r"(\d+) tests? collected", out)
     assert match is not None, out[-400:]
     return match.group(1)

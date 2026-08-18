@@ -2482,7 +2482,7 @@ it points at is no longer the last one.*
 | **G11** | **OPEN** |
 | **G12** | **CLOSED** |
 | **G13** | **CLOSED** |
-| **G14** | **OPEN** |
+| **G14** | **CLOSED** |
 
 ### 20.7 What gates section 20
 
