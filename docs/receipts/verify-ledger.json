@@ -18072,6 +18072,187 @@
      ]
     }
    ]
+  },
+  {
+   "slice_group": "campaign-close-verify-p4-batch",
+   "round": 130,
+   "backfilled": false,
+   "residue_sweep": true,
+   "verified_commits": [
+    "209da2f"
+   ],
+   "dated": "2026-08-18",
+   "answered_by": [
+    "209da2f"
+   ],
+   "what_this_round_is": "Ruling 3 of the campaign owner's ruling of 2026-08-17, run. That ruling says the one unreached range is verified rather than reclassified: campaign-close-verify-p4-batch is a transcription pass and Ruling 2 could have read it out of the denominator, and it is not read out, because a range no verifier ever reached is better answered than excused. So its prepared row in docs/receipts/verify-backlog.json was handed to a fresh read-only Opus 5 that had not read the plan, on 2026-08-18, and what it returned is transcribed here like any other verdict -- 13 criteria, all DISCHARGED, and five behaviours the commit bodies do not mention. This is the ledger recording a verdict about the commit that recorded verdicts, which is the shape the fixed-point reading makes terminating rather than endless: this pass is itself an instrument, its own tag enters the residue with an explicit line, and nothing about it asks for a further verdict about a verdict.",
+   "provenance": {
+    "verifier_labels": [],
+    "why_there_is_no_label": "The journal carries no label for this agent; its address is the agent id and the result key, both recorded here.",
+    "agent_ids": [
+     "a612b053543cf14a9"
+    ],
+    "journal_key": "v2:68f242f71f1a8f67126ad01f6cee02b0906119615d1af1f4f8592882909c8903",
+    "journal_sources": [
+     "wf_ceb627ed-8c0/journal.jsonl"
+    ],
+    "journal_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows",
+    "what_the_agent_was_handed": "R-35's brief plus the prepared backlog row for this one slice group -- its commit range and the plan document its stated completion criteria live in -- with the standing read-only and do-not-read-the-plan clauses. The agent stated its own thirteen criteria from that row rather than being handed a list, which is what R-35's brief asks for and why the ids are the verifier's spellings.",
+    "all_discharged_as_returned": {
+     "a612b053543cf14a9": true
+    },
+    "criteria_returned_for_this_slice": 13,
+    "findings_returned_for_this_slice": 5,
+    "why_the_journal_and_not_the_handoff": "The rule the residue_sweep block already carries, and this pass is the first case where following it changed the record. The recording lane's own task text carried 12 criteria and cut criterion 12 off mid-sentence at '(51, 10, 6, 4'; the journal line carries 13, the thirteenth being the R-01 gate matrix run at HEAD. Transcribing the handoff would have dropped a whole criterion and truncated another, and neither loss would have been visible in this file."
+   },
+   "criteria": [
+    {
+     "id": "campaign-close-verify-p4-batch-1-receipt-only-two-files-no-src-no-test-no-baseline",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --stat 209da2f` = exactly 2 files, both under docs/receipts/: verify-backlog.json (58 lines changed) and verify-ledger.json (+728). No src/, no tests/, no scripts/, no scripts/golden_*baseline*.json, no campaign-fingerprints.json. Matches the body's 'R-17/R-32/D-97: receipt-only, two files under docs/receipts [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-2-R20-population-enumerated-before-the-edit-51-criteria-10-findings-6-tags",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Opened the named journal line myself: ~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/subagents/workflows/wf_ceb627ed-8c0/journal.jsonl, agentId a5389eb9ae5c88ea2, key v2:e544de91fc08bc8b06eca4cddc7aacf17625dd0e33df6b692aa5ea51269035c9. The result object carr [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-3-split-into-six-blocks-rounds-80-85-with-the-declared-per-tag-counts",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 209da2f:docs/receipts/verify-ledger.json` holds 85 passes vs 79 at 209da2f^; new rounds are exactly [80,81,82,83,84,85]. Per-block (criteria, unmentioned_behaviour): 80 P4C (9,0); 81 P4C-P4E-C2R (9,2); 82 P4C/P4F (8,3); 83 P4-arbitrate (8,2); 84 P4-R18-amend (7,0); 85 P4-H2-ccscope (10,3). Sums 51 and 10, 0 d [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-4-verdict-tally-43-7-1-and-every-finding-documented_open",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Counter over the six new blocks: {'DISCHARGED': 43, 'PHASE_TIP_ONLY': 7, 'NOT_DISCHARGED': 1} = 51. Identical to the tally computed independently from the journal result's status field. All 10 unmentioned_behaviour rows carry disposition 'documented_open'. PHASE_TIP_ONLY and documented_open were already in the ledger's [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-5-the-tenth-finding-recorded-once-with-the-cross-reference-where-it-went",
+     "verdict": "DISCHARGED",
+     "what_was_found": "The journal's tenth finding is stamped '[P4-arbitrate / P4-R18-amend]'. In the ledger it appears exactly once, as P4-batch#1/unmentioned-10 under round 83 (P4-arbitrate); round 84 (P4-R18-amend) carries unmentioned_behaviour=[] plus a new key findings_recorded_under_another_slice naming where it went and why ('one retu [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-6-joined-to-slice-tags-by-commit-never-by-name",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git log -1 --format='%h %s'` on each of the six: 3989dea '(P4C)', 4c40c9d '(P4C-P4E-C2R)', 92f309f '(P4C/P4F)', f8ca700 '(P4-arbitrate)', 0302897 '(P4-R18-amend)', 067c94c '(P4-H2-ccscope)'. Every subject's trailing parenthetical is the tag its block is filed under, and each block's verified_commits is exactly that on [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-7-transcribed-from-the-journal-whole-not-from-the-truncated-handoff",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Byte-level comparison of all 51 rows: ledger id set == journal id set; every verdict equals the journal status; every what_was_found equals journal evidence when <=320 chars, else journal evidence[:320] + ' [...]' \u2014 zero mismatches. The truncation claim also reproduces: the recording lane's own task text (agent-ab6f151 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-8-a-sweep-row-claims-nothing-answered-it",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All six blocks carry residue_sweep=true, backfilled=false, dated 2026-08-17, and answered_by == the slice's own single commit. All 61 rows (51 criteria + 10 findings) carry answered_at == [] \u2014 no exceptions. The new top-level residue_sweep block states what_a_sweep_row_claims / what_it_does_not_claim in those terms, in [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-9-the-one-NOT_DISCHARGED-reproduces-at-HEAD",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Reproduced independently at HEAD 7936a51: `grep -rn '_support_effect_templates' src/` returns the definition at src/calculator/participant_timeline.py:939 and six call sites \u2014 1091, 2937, 3065, 3262, 3297, 3996 \u2014 exactly the line numbers the body names. Read the signature (939-947): `pair_defender_id: str | None` sits  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-10-coverage-arithmetic-and-backlog-regeneration",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Parsed both sides with git show. verify-ledger coverage: slice_groups_with_a_verdict_in_this_ledger 75 -> 81, gaining exactly {P4C, P4C-P4E-C2R, P4C/P4F, P4-arbitrate, P4-R18-amend, P4-H2-ccscope} and losing none; slice_groups_without_one 47 -> 42, losing those same six and gaining exactly {campaign-close-verify-p4-bat [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-11-nothing-already-in-the-ledger-was-rewritten",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Compared the two ledger objects key by key and pass by pass: the only changed top-level keys are 'coverage' and the newly added 'residue_sweep'; artifact, rule, gate, verdict_vocabulary, disposition_vocabulary, vocabulary_notes, backfill and what_this_ledger_does_not_hold are byte-identical. Of the 79 pre-existing pass [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-12-umbrella-C4-no-golden-shape-figure-restated",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`python scripts/plan_audit.py` -> 'plan audit: 8 plan documents clean', exit 0. `python scripts/sole_home_scan.py --check` over 584071e..HEAD -> '6 site(s), 0 unexplained, 4 forced restatement(s) (criterion 4's ruled carve-out), 1 coincidence(s)', exit 0. The commit body's integers (51, 10, 6, 47->42, 75->81, 36->31, 3 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "campaign-close-verify-p4-batch-13-umbrella-C5-gates-green-and-the-two-artifact-gates-hold",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Run by me on HEAD 7936a51 with a clean tree (`git status --porcelain` empty): pytest -q -> 8804 passed in 347.60s, 0 failed; golden_snapshot.py compare on both scripts/golden_baseline.json and scripts/golden_coupled_baseline.json -> 'OK: snapshot identical'; acceptance_matrix.py --json exit 0; champion_optimizer_matrix [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "P4-batch-verify#1/unmentioned-1",
+     "what_was_found": "The seven PHASE_TIP_ONLY criterion rows are filed as open debt, and the body never says so. It explains what PHASE_TIP_ONLY means ('the verifier recorded that rather than substituting a number it could not measure') and separately says 'A NOT DISCHARGED row is documented_open and nothing more' \u2014 but all seven PHASE_TIP [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "The open-row population this finding measures is the ledger's own, and it is what the dispositions arm of this pass counts: an open row is a row whose verdict is not DISCHARGED, PHASE_TIP_ONLY rows included, and the finding is right that the count had no home. Documented here and carried there."
+    },
+    {
+     "id": "P4-batch-verify#1/unmentioned-2",
+     "what_was_found": "A new PER-PASS boolean field `residue_sweep` is introduced on the six new blocks. The body announces the new TOP-LEVEL `residue_sweep` block, which is a different thing. All 79 pre-existing pass blocks lack the per-pass key entirely, so its meaning for them is absence-implies-false, and tests/test_verify_ledger.py vali [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Carried as the verifier wrote it. The per-pass `residue_sweep` flag and the top-level block of the same name are two different things and the gate reads neither; this row is the open debt, and closing it is a gate slice rather than a transcription's to do."
+    },
+    {
+     "id": "P4-batch-verify#1/unmentioned-3",
+     "what_was_found": "These are the first passes in the ledger to carry a provenance block with an EMPTY `verifier_labels` list. At 209da2f^ every pass that had a provenance block had a non-empty label list (the only seven label-less passes, rounds 1-7, have no provenance block at all). The six new blocks introduce `verifier_labels: []` plu [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Carried as the verifier wrote it. This pass's own block sets the precedent again -- one agent, one slice, no label in the journal -- and records the same `why_there_is_no_label` beside its agent id and key, so the address a reader would use is there whether or not a label ever was."
+    },
+    {
+     "id": "P4-batch-verify#1/unmentioned-4",
+     "what_was_found": "A new per-pass key `findings_recorded_under_another_slice` is added to round 84. The body describes the cross-reference in prose ('the P4-R18-amend block says where it went') but does not say it lands as a new schema field, and nothing in the ledger's gate reads it \u2014 so the pointer that keeps the finding count honest i [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Carried as the verifier wrote it. `findings_recorded_under_another_slice` keeps round 83's and round 84's finding counts honest and no test opens it; the open debt is the unread key, not the pointer, and this pass adds no second one."
+    },
+    {
+     "id": "P4-batch-verify#1/unmentioned-5",
+     "what_was_found": "ASIDE, not a change this commit made: the backlog row it creates for its own tag carries `criteria_documents: []`, so the pass it prepares for itself names no document its stated criteria live in. This is the generator's pre-existing behaviour rather than a regression \u2014 44 of 47 rows were already empty at 209da2f^ and  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "Carried as the verifier wrote it, including its own ASIDE marking. The backlog row this pass creates for its own tag does name a criteria document, because the umbrella now names the tag -- so the shape the finding flags is not reproduced here, and the finding stands as the record of the day it was."
+    }
+   ]
   }
  ],
  "coverage": {
@@ -18202,12 +18383,13 @@
    "campaign-close-verify-backfill",
    "campaign-close-verify-backlog",
    "campaign-close-verify-coverage",
+   "campaign-close-verify-p4-batch",
    "campaign-close-window-armed-coverage",
    "umbrella [H] table"
   ],
   "slice_groups_without_one": [
    "campaign-close-owner-ruling-criterion-11",
-   "campaign-close-verify-p4-batch"
+   "campaign-close-ruling-residue"
   ],
   "instrument_pass_tags": [
    {
@@ -18347,6 +18529,7 @@
    "campaign-close-owner-ruling-criterion-11",
    "campaign-close-receipt-walk-r35",
    "campaign-close-report",
+   "campaign-close-ruling-residue",
    "campaign-close-sweep-findings",
    "campaign-close-verify-backfill",
    "campaign-close-verify-coverage",
@@ -18414,6 +18597,7 @@
    "shape": "One JSON line per agent result, carrying all_discharged, criteria[] (id, status, evidence) and unmentioned_behaviour[]. The brief the agent was handed -- R-35's, including 'Do not read the implementation plan' -- is the first line of the agent's own transcript file beside the journal, and it is what names the commit range each slice was verified over.",
    "why_the_journal_and_not_the_handoff": "The lane that records a batch is handed the verdicts in its own task text, which is truncated to fit. The journal line is the verifier's artifact, complete, and it is what was transcribed -- the recording lane may not be the reason a verdict goes missing."
   },
-  "when_a_later_lane_answers_a_sweep_row": "Added 2026-08-17. `what_it_does_not_claim` says a NOT_DISCHARGED sweep row is documented and that no lane action is asserted. That is what a RECORDING lane may claim; it is not a rule that the row can never be answered. When a later lane does act, the row records what acted -- `answered_at` names the commit, `disposition` moves off documented_open, and `note` says what was measured. The verdict itself is never re-graded, because a verdict is the verifier's artifact and a disposition is the lane's. Without this sentence the two halves read as a contradiction, and the ledger would be teaching that a sweep row is unanswerable by construction, which the block never meant."
+  "when_a_later_lane_answers_a_sweep_row": "Added 2026-08-17. `what_it_does_not_claim` says a NOT_DISCHARGED sweep row is documented and that no lane action is asserted. That is what a RECORDING lane may claim; it is not a rule that the row can never be answered. When a later lane does act, the row records what acted -- `answered_at` names the commit, `disposition` moves off documented_open, and `note` says what was measured. The verdict itself is never re-graded, because a verdict is the verifier's artifact and a disposition is the lane's. Without this sentence the two halves read as a contradiction, and the ledger would be teaching that a sweep row is unanswerable by construction, which the block never meant.",
+  "ruling_3_scheduled_pass": "Added 2026-08-18. This block was written on 2026-08-17 for a batch of six slices and it now covers a second date and a second agent: the pass Ruling 3 of the campaign owner's ruling schedules by name, over campaign-close-verify-p4-batch, recorded at round 130 from the same journal directory. Everything the block says about what a sweep row claims and refuses holds of it unchanged -- the same 320-character clipping, the same empty answered_at, the same refusal to call a documented row a closed one. What is new is only that the sweep now reaches the pass that recorded a sweep, and that reaching it terminated instead of regressing."
  }
 }
