@@ -38,12 +38,29 @@ def ledger() -> dict:
     return json.loads(LEDGER.read_text(encoding="utf-8"))
 
 
+def verdict_blocks() -> list[tuple[str, dict]]:
+    """``(what to call it, the block)`` for every recorded verdict in this file.
+
+    Two shapes carry verdicts: a ``passes`` row, keyed by slice group, and a
+    Ruling 5 ``untagged_batches`` row, keyed by the commit range its brief
+    named.  They are separate lists because the coverage block's three arms
+    partition the *tag* population and a batch's commits carry no tag -- but
+    every schema and disposition rule in this file is about a verdict row, not
+    about which list it sits in, so they are read together here.
+    """
+    blocks = [(block["slice_group"], block) for block in ledger()["passes"]]
+    blocks += [
+        (f"batch {block['range']}", block) for block in ledger()["untagged_batches"]
+    ]
+    return blocks
+
+
 def rows() -> list[tuple[str, dict]]:
-    """Every criterion row and every finding row, with its pass id."""
+    """Every criterion row and every finding row, with what carried it."""
     out: list[tuple[str, dict]] = []
-    for block in ledger()["passes"]:
+    for name, block in verdict_blocks():
         for row in block["criteria"] + block["unmentioned_behaviour"]:
-            out.append((block["slice_group"], row))
+            out.append((name, row))
     return out
 
 
@@ -61,8 +78,9 @@ def test_every_pass_names_the_commits_it_verified_and_the_ones_that_answered() -
 
 
 def test_every_criterion_row_carries_a_verdict_from_the_closed_set() -> None:
+    """Over every recorded verdict, not only over the ones filed as passes."""
     allowed = set(ledger()["verdict_vocabulary"])
-    for block in ledger()["passes"]:
+    for _name, block in verdict_blocks():
         for row in block["criteria"]:
             assert row["verdict"] in allowed, row["id"]
             assert row["what_was_found"]
@@ -140,9 +158,17 @@ def _dispositions() -> dict:
 
 
 def _not_discharged() -> list[dict]:
+    """Every NOT_DISCHARGED criterion row, wherever its verdict was recorded.
+
+    Ruling 4 is written over the verdict word and not over the list a row is
+    filed in, so a batch verdict's rows owe a disposition exactly as a pass's
+    do.  Reading only ``passes`` here would have let eight batch verdicts land
+    with the word and nothing behind it, which is the state Ruling 4 exists to
+    end.
+    """
     return [
         row
-        for block in ledger()["passes"]
+        for _name, block in verdict_blocks()
         for row in block["criteria"]
         if row["verdict"] == "NOT_DISCHARGED"
     ]
@@ -196,12 +222,17 @@ def test_the_open_row_counters_are_the_measured_ones() -> None:
 
     A receipt-only commit added eighteen open rows and its body accounted for
     eleven; nothing in the tree would have caught the difference.  These are
-    derived from the passes on every run, so the open debt is a number and
-    not a paragraph.
+    derived from every recorded verdict on every run, so the open debt is a
+    number and not a paragraph -- and "every" is why they read
+    ``verdict_blocks()`` rather than ``passes``: eight Ruling 5 batches carry
+    verdict rows, and a counter that could not see them would have let the
+    open debt grow in exactly the silence it exists to prevent.
     """
-    criteria = [row for block in ledger()["passes"] for row in block["criteria"]]
+    criteria = [row for _name, block in verdict_blocks() for row in block["criteria"]]
     findings = [
-        row for block in ledger()["passes"] for row in block["unmentioned_behaviour"]
+        row
+        for _name, block in verdict_blocks()
+        for row in block["unmentioned_behaviour"]
     ]
     counters = _dispositions()["open_rows"]
     assert counters["criterion_rows_documented_open"] == sum(
@@ -964,16 +995,22 @@ def _untagged_src_shas() -> dict[str, str]:
 
 
 def _covered_by_a_recorded_pass() -> dict[str, str]:
-    """Untagged src commits a recorded pass names in ``verified_commits``.
+    """Untagged src commits a recorded verdict names in ``verified_commits``.
 
-    The join is by sha and the only source is ``verified_commits``.  No pass
-    block carries a range, so "the brief spanned it" has exactly one
-    machine-readable spelling; a sha that merely appears inside a verifier's
-    evidence prose is a boundary it read past or a parent tree it exported,
-    and calling that coverage would invent verdicts nobody rendered.
+    The join is by sha and the only source is ``verified_commits``.  A sha
+    that merely appears inside a verifier's evidence prose is a boundary it
+    read past or a parent tree it exported, and calling that coverage would
+    invent verdicts nobody rendered.
+
+    The source list is every recorded verdict, which since 2026-08-18 means
+    the passes *and* the Ruling 5 batches -- the batches being the only reason
+    any of these rows can be covered at all, since a commit with no tag can
+    never be a slice group's.  Nothing about the derivation weakened: a row
+    still cannot be typed into coverage, and a row whose verdict is later
+    removed still loses it.
     """
     verified = set()
-    for block in ledger()["passes"]:
+    for _name, block in verdict_blocks():
         for sha in block["verified_commits"]:
             resolved = subprocess.run(
                 ["git", "rev-parse", f"{sha}^{{commit}}"],
@@ -1070,6 +1107,138 @@ def test_the_untagged_src_gate_has_a_red_it_can_reproduce() -> None:
     # and it is now the difference between a typed map and a derived one.
     claimed = {block["subjects"][0]: _untagged_src_shas()[block["subjects"][0]]}
     assert claimed != _covered_by_a_recorded_pass()
+
+
+# --------------------------------------------------------------------------
+# Ruling 5's other half -- the batch verdicts that cover the enumeration.
+#
+# The enumeration above is what a lane could do about untagged commits, and the
+# block said so: "0 of 61 rows are covered, and no lane closed one".  What
+# closes one is what ``verify-backlog.json`` has described all along -- a fresh
+# read-only agent that has not read the implementation plan, handed R-35's
+# brief with a range.  Eight of them were, one per neighbourhood of the
+# enumeration, and ``untagged_batches`` holds what they returned.
+#
+# These checks are what stop a batch from being a lane's paragraph: the eight
+# ranges partition the enumeration exactly, each range is the one its own
+# commits span, and each row carries the session whose transcript holds the
+# answer whole.
+# --------------------------------------------------------------------------
+
+
+def _batches() -> list[dict]:
+    return ledger()["untagged_batches"]
+
+
+def _full(sha: str) -> str:
+    """A sha as the enumeration spells them, so the join is one spelling."""
+    return subprocess.run(
+        ["git", "rev-parse", f"{sha}^{{commit}}"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout.strip()
+
+
+def test_the_batches_partition_the_untagged_enumeration() -> None:
+    """Every enumerated commit verified once, and nothing else verified at all.
+
+    Total and disjoint, for the reason the coverage block's own three arms
+    are: a batch that missed a commit would leave a row uncovered while the
+    counter said otherwise, and a commit in two batches would let one verdict
+    stand in for a range nobody read.
+    """
+    enumerated = set(_untagged_src_shas().values())
+    seen: list[str] = []
+    for block in _batches():
+        seen.extend(_full(sha) for sha in block["verified_commits"])
+    assert set(seen) == enumerated
+    assert len(seen) == len(set(seen))
+    assert len(seen) == _untagged_src()["count"]
+
+
+def test_every_batch_names_the_range_its_own_commits_span() -> None:
+    """The range Ruling 5 asks a batch verdict to name, checked against it.
+
+    ``ruling_5_batches`` says the range in a row is the range in the brief
+    that agent was handed.  What a machine can check is that it is also the
+    range its own commit list spans, so a row cannot name a wider one than it
+    read.
+    """
+    for block in _batches():
+        commits = block["verified_commits"]
+        assert commits
+        assert block["range"] == f"{commits[0]}..{commits[-1]}"
+        assert _full(commits[0]) and _full(commits[-1])
+        assert block["dated"] == "2026-08-18"
+        assert isinstance(block["all_discharged_as_returned"], bool)
+
+
+def test_every_batch_carries_the_session_that_rendered_it() -> None:
+    """A verdict whose agent nobody can address is a verdict a lane wrote.
+
+    The session id and the directory its transcript lives in are the batch's
+    equivalent of a sweep row's journal key: the address of the artifact this
+    file is a clipped transcription of.  The returned counts are asserted
+    against the rows so a transcription cannot quietly drop one.
+    """
+    sessions = []
+    for block in _batches():
+        provenance = block["provenance"]
+        assert provenance["session_id"]
+        assert provenance["transcript_directory"].startswith("~/.claude/projects/")
+        assert "has not read the implementation plan" in (
+            provenance["why_a_lane_may_dispatch_one"]
+        )
+        assert provenance["criteria_returned_for_this_batch"] == len(block["criteria"])
+        assert provenance["findings_returned_for_this_batch"] == len(
+            block["unmentioned_behaviour"]
+        )
+        sessions.append(provenance["session_id"])
+    assert len(sessions) == len(set(sessions))
+
+
+def test_the_batch_block_says_what_a_batch_is_not() -> None:
+    """The refusals, where the reader of the counter already is.
+
+    A batch verdict covers commits; it does not tag them, does not enrol them
+    in a slice group, and does not put them in the clause's denominator.  The
+    block says all three, and says why a batch carries a range where a pass
+    may not.
+    """
+    block = ledger()["ruling_5_batches"]
+    assert block["dated"] == "2026-08-18"
+    assert "retroactively part of a slice group" in block["what_it_does_not_claim"]
+    assert "transcribed rather than reconstructed" in block["what_a_batch_row_claims"]
+    assert block["why_they_are_not_passes"].strip()
+    assert block["why_the_range_is_recorded_here_and_a_pass_has_none"].strip()
+    assert block["gate"] == "tests/test_verify_ledger.py"
+    # The partition the coverage block asserts is over *tags*, and a batch has
+    # none.  Asserted here so the two populations cannot quietly merge.
+    tags, _untagged = _slice_group_tags()
+    assert not {batch["range"] for batch in _batches()} & set(tags)
+
+
+def test_the_batch_gate_has_a_red_it_can_reproduce() -> None:
+    """R-05 over each way a batch could stop being what it says.
+
+    Measured against the real batches rather than a fixture, so a prong that
+    stopped discriminating shows up here as a green that should be red.
+    """
+    enumerated = set(_untagged_src_shas().values())
+    first = _batches()[0]
+    # A dropped commit no longer partitions the enumeration.
+    short = [_full(sha) for sha in first["verified_commits"][:-1]]
+    rest = [_full(sha) for block in _batches()[1:] for sha in block["verified_commits"]]
+    assert set(short + rest) != enumerated
+    # A widened range no longer matches the commits the row read.
+    widened = f"{first['verified_commits'][0]}..HEAD"
+    assert widened != first["range"]
+    # And a count that drifted from the rows would be caught.
+    assert first["provenance"]["criteria_returned_for_this_batch"] + 1 != len(
+        first["criteria"]
+    )
 
 
 def test_the_lane_that_recorded_the_ruling_is_not_in_the_arm_it_recorded() -> None:

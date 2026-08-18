@@ -18837,10 +18837,72 @@
     "docs(program): two more behaviours S4 changed and its commit bodies did not name",
     "fix(walk): one holder's re-arm refreshes its window, it does not stack a second"
    ],
-   "covered": {},
-   "uncovered": 61,
-   "what_closes_a_row": "A fresh R-35 pass whose brief spans the commit -- recorded in `passes` with the commit in its `verified_commits`, which is what puts the row under `covered` -- or a dated acceptance note recording that the commit's behaviour is accounted for elsewhere and by whom. Measured 2026-08-18: 0 of 61 rows are covered, and no lane closed one, because neither route is a lane's to take. A lane cannot run an R-35 pass -- the brief's whole content is that the reader has not read the plan -- and `what_a_lane_may_not_do_about_these` already refuses a lane-written acceptance note. What a lane could do was make the counter derived instead of authored, so that the day one of these is really covered the number moves by itself and no other day.",
-   "how_coverage_is_derived": "A row is covered when a pass recorded in this ledger names its commit in `verified_commits`. That is the only machine-readable record of what a verifier's brief actually spanned -- no pass block carries a range field, and inventing one now would be describing a brief nobody can open. So the join is by sha, `covered` maps a subject onto the sha the pass named, and the gate re-derives the whole map: a row cannot be typed into coverage, and a row whose pass is later removed loses it. Measured 2026-08-18: 0 of 61.",
+   "covered": {
+    "feat(items): derive the cross-participant damage_modifier producer set": "e4716e40b39869d2fda0febf2767b49c8585fc73",
+    "feat(optimizer): a work-counter seam threaded through the search": "d28d0321148669f5f58c05ea594d46ec0fd167f8",
+    "feat(survival): name the transition ladder, project it onto today's floats": "34ff21133b6ebbc393a36e1b2ef7c1ed735b6bde",
+    "refactor(survival): retire the open _priority float for a named rank": "7152954de00320a84b957bb3cc711a8b3846ebbd",
+    "feat(capabilities): derive the published phase list from the rank ladder": "e1d1d585edc720ab77bf05a8dbd30ca135e1d548",
+    "refactor(survival): every phase slot names its rank, not a float": "177f6479f1c076334cd8d7b401762b2c9bb13fdb",
+    "fix(survival): the compiled support branch arms at the walk's rank": "d23f7b29ac936e4fc5b828e16e63e88d986ef708",
+    "docs(survival): disclose what 0A.4 decided without saying so": "4e9f26a0b9114c287f2baa2a3d73ff97291c5bf4",
+    "fix(survival): the phase-slot guard counts what it cannot name": "6de4b27ed22b0f3de9048ff19aa9be6065509610",
+    "fix(survival): the widest phase slot is a class default, and it names its rank": "d648aca7b8fdeadbf4f332e92b3f8a9eaf0ddf61",
+    "docs(survival): disclose the four 0A.4 behaviours 4e9f26a still missed": "5d8945338861fae9a6d8fe17d11989771a739e63",
+    "feat(data): declare the runtime-cache generation counter": "2a64b01c0ae962dddb974e62aed8021ec1d594a4",
+    "refactor(survival): delete the second dispatch ladder": "e15bca174fe9323dcae96be058ef42c14f7fac42",
+    "refactor(survival): delete the utility state nothing read": "9a6d268344ab0f923281a0dfbad0325ac7299ba5",
+    "refactor(timeline): drop the unused catalyst-predicate import": "b98ceb3c54cb2edbfa13197acd548b34f04592e6",
+    "feat(spec): declare the campaign's four closed vocabularies in the leaf": "3527b8dca07f0110e3806751677225e3e724f358",
+    "refactor(support): the producer rows name the Authority they will carry": "c6c609332e46a08f575b44dfaf545a93887ac1c0",
+    "feat(rotation): the declared cast-dependency vocabulary gets its own leaf": "4beab6524bccd86c41ce943a5dbc41174314c8b7",
+    "feat(support): the item scan refuses the ledger it cannot read": "342d1b2789af3bd5a7dac6899005bdbf38ed6b91",
+    "feat(champions): the module contract carries declared cast dependencies": "c442d115e343c43049f03594d00277e1d0db5967",
+    "feat(syndra): E declares the sphere its stun rides on": "f1317541e9cdbc0aba38483607bce33ca7489f37",
+    "feat(rotation): Zed and Brand declare their heads and keep their tails": "06e41a79521e3529af7a03924c0a05b5dad57707",
+    "fix(champions): an empty carrier no longer discards a declaration": "1fb08ddf0272bae09b60b69a93b3c083200a51eb",
+    "refactor(packet): the slot map's declaration carrier is keyword-only": "ede25dca752e54cebca0a7180803a59d3f0ad5f1",
+    "docs(rotation): architecture.md gains the cast-dependency lane": "f35425792bd256d2bb10a36319a16411a8d6d10e",
+    "feat(rotation): the receipt publishes what the merge did": "488d295429b7183a6253d21aac044d4219b17c0f",
+    "docs(rotation): the module docstring names the declared lane": "ee02175a76a51823a8cddc087d959e7600369afa",
+    "fix(rotation): the derived-rule memo stores the full kit, not one fight's fit": "0090a14222b1d5a7378a70b1bcf848d615ff5929",
+    "feat(rotation): the derivation takes a declaration probe instead of a patch": "d61c540c8e7cd680a457430a9a6d7c9362468516",
+    "fix(rotation): the retired seeds' comments leave with them, and a gate says so": "6870c4aee88b3fe1e94cdeb16218a329339e3a57",
+    "fix(rotation): as_rows reads the ledgers off the class instead of retyping them": "47ab8fce3ca47d1a44ddefdcef35fff0a562bed2",
+    "docs(cast-dependency): the source docstring stops naming a script that shipped": "ad95b2fff2a8bd8ccb802b2cd8ebb9af373ada1e",
+    "feat(trigger-bus): the seam lands with every assertion and no consumer switched": "969bd4f2547c824b6247b5b0dc806978be28716d",
+    "fix(survival): the trigger-link guard stops calling itself dead code": "edef2e06c7f96da978b0ba1a056fe6462448618d",
+    "test(trigger-bus): the retired-symbol criterion is checked as written": "5d1f23830a1bfcedf0e0a38b6057603f944737ad",
+    "docs(survival): the trigger-link comment stops over-describing what it catches": "6459667d236e16eadd83f5db89d0507f5696c773",
+    "feat(coverage): typed claim evidence and the load tier that refuses a shape": "c3788b705a1c815a3261a66b060870696adab52f",
+    "fix(coverage): a modeled_state claim names where its state comes from": "1700b1e0b311e9cfd0cccbe54a2f4f6d2673e265",
+    "feat(coverage): PRECEDENCE beside the if/elif chain, read-only": "d25a9a0dbb996c904a65711cd631bf9e2b3486c7",
+    "fix(coverage): a TestRef may carry the parametrization id pytest builds": "bb50d5bdc62ce4cf88d9d01a6a0359356ad69ca6",
+    "feat(coverage): the claim corpus, and the frontier for what it cannot back": "e7357bcbbb354404178216c38d04b740b204659e",
+    "test(coverage): a packet the builder emits owes evidence to somebody": "b9c5696500ea6f8f02b5a9a3d61dd15255b356c5",
+    "feat(behavior): a declaration holds references, never numbers": "b31f574a266353d3016def99a943fcb1bfa53803",
+    "feat(behavior): the closed rule union, and the contract it lends survival/": "5a485293ae3d2eacf3a1992432b60cf060e72a2e",
+    "feat(behavior): the catalog, and the three closures that fail collection": "a22cbfca5012d2895f0b49767407f496c8144cce",
+    "feat(behavior): the (family, lane) registry, and both reachability directions": "2eb7f329383c19e07ed9cc02641cc0625de23304",
+    "refactor(behavior): criterion 6's reflection reaches every field of a rule": "9dfa5f5e5a177ca22745f033943c0a8f432eaa32",
+    "fix(behavior): the zero policy is metadata on a part, not part of its identity": "fd5dd350762d8c90b3bbb146faf6970debba48c9",
+    "fix(behavior): the declared zero policy is passed by keyword, never by arity": "fee3753e04f3e6cfe50f4578a6220df1fc34064a",
+    "fix(behavior): a superseded cache generation is evicted, not merely unreachable": "22e905f57a3781ea0247031cfba7a5ac367e6aa2",
+    "feat(behavior): the guard D-24's exception only holds with, as an assertion": "5d7d3297633e9191af8c29002171a44c10f7a10e",
+    "perf(behavior): the generation eviction moves to the memo write path": "826111ef8b051d713671716b5f7da4768a52a383",
+    "docs(behavior): the figures D-24's exception rests on get a producer": "3f96a57538016a41ef95965cd7d707723081fbd2",
+    "docs(behavior): the defensive closure's prose names the population it has": "518a6e31a0ea5e74666867626be604a86279660d",
+    "fix(behavior): criterion 6 becomes a mechanism, not a property of one fixture": "1fc3adcfa83615ac7fcf0468a72be2c5c27001fe",
+    "fix(behavior): the two sentences the stat-derivation migration falsified": "eff1e922f5a7d567984cc97637dde1457535d4af",
+    "docs(behavior): the P3-mig-r1 behaviour its two commit bodies did not mention": "a4e42b4296fa7bd5295a2ed7ae51a665aeffdfb5",
+    "fix(behavior): a dropped signature key stops un-declaring its mechanic": "392f5982234dfdf92d84cde32c87c77279b3eb75",
+    "docs(program): four behaviours S4 changed and its commit bodies did not name": "3cd2788eccc43bfd5e1f93f4212090218a581915",
+    "docs(program): two more behaviours S4 changed and its commit bodies did not name": "c232e95ef2679c9964745a843d3324f1caed5289",
+    "fix(walk): one holder's re-arm refreshes its window, it does not stack a second": "1fe7bf89c91fdc568190f5be6e885e53a90ae4d5"
+   },
+   "uncovered": 0,
+   "what_closes_a_row": "A fresh R-35 pass whose brief spans the commit -- recorded in `passes` with the commit in its `verified_commits`, which is what puts the row under `covered` -- or a dated acceptance note recording that the commit's behaviour is accounted for elsewhere and by whom. Measured 2026-08-18: 0 of 61 rows are covered, and no lane closed one, because neither route is a lane's to take. A lane cannot run an R-35 pass -- the brief's whole content is that the reader has not read the plan -- and `what_a_lane_may_not_do_about_these` already refuses a lane-written acceptance note. What a lane could do was make the counter derived instead of authored, so that the day one of these is really covered the number moves by itself and no other day. Corrected 2026-08-18, by the pass that closed them. The sentence above says 'no lane closed one, because neither route is a lane's to take', and the half of that which is true stays true: a lane cannot BE an R-35 verifier, and this lane was not one. What the sentence got wrong is the inference. verify-backlog.json's how_a_row_is_discharged already describes the act that closes a row -- 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief' -- and handing is a lane's act. Eight such agents were handed the eight ranges these rows fall in; what they returned is in untagged_batches, and covered is derived from it by sha as it always was.",
+   "how_coverage_is_derived": "A row is covered when a pass recorded in this ledger names its commit in `verified_commits`. That is the only machine-readable record of what a verifier's brief actually spanned -- no pass block carries a range field, and inventing one now would be describing a brief nobody can open. So the join is by sha, `covered` maps a subject onto the sha the pass named, and the gate re-derives the whole map: a row cannot be typed into coverage, and a row whose pass is later removed loses it. Measured 2026-08-18: 0 of 61. Corrected 2026-08-18: the join is unchanged and its source list is not. It reads verified_commits from the ledger's recorded verdicts, which are now the passes AND the Ruling 5 batches -- see ruling_5_batches for why a batch is not a pass. Nothing about the derivation weakened: a row still cannot be typed into coverage, a row whose verdict is later removed still loses it, and a sha that appears only in a verifier's evidence prose is still not coverage.",
    "what_a_mention_is_not": "Coverage, and this is the guard the derivation needed rather than a caution. Several of these shas do appear in the ledger -- inside verifiers' evidence prose -- and none of those appearances is a verdict about the commit. 3cd2788 is named as 'the range's own last commit', a boundary the verifier read past; a4e42b4 is named as 'the parent tree', the pre-change side a verifier exported to compare against, which is the opposite of the thing being verified. A text search over evidence would have called both covered and would have been wrong in both directions at once. The join is `verified_commits` and nothing else.",
    "by_era": {
     "why_the_split_is_recorded": "Because 'untagged' turns out to name two different debts and the counter could not tell them apart. The trailing-tag convention does not start at the campaign's first commit: it starts partway in, and everything before it is untagged because the convention did not exist yet. Everything after it is a lane that had the convention and shipped `src/` without a tag. The first is a hole in the convention; the second is a slice that did not label itself. Both are enumerated and both are uncovered, and a reader scheduling the work needs to know which is which, because only the second has a lane whose other commits say where it belongs.",
@@ -19021,12 +19083,1203 @@
   "open_rows": {
    "what_an_open_row_is": "A row whose disposition is `documented_open` -- the debt is recorded and nothing has answered it. Counted here because round 130's first finding measured that this population had no home: a receipt-only commit added 18 open rows and its body's accounting discussed 11 of them, and nothing in the tree would have caught the difference. The counter is derived and gated, so it cannot grow in silence.",
    "why_phase_tip_only_rows_are_counted_here_but_not_swept": "PHASE_TIP_ONLY is a verdict a verifier returned and Ruling 4's clause is written over NOT_DISCHARGED. So these rows are counted as the open debt they are -- which is the finding's point -- and the ruling's artifact requirement is not extended to them by a lane. Extending a ruling is not a lane's act, and the count is what makes the question visible to whoever may.",
-   "criterion_rows_documented_open": 175,
-   "of_which_not_discharged": 60,
+   "criterion_rows_documented_open": 181,
+   "of_which_not_discharged": 66,
    "of_which_phase_tip_only": 115,
-   "finding_rows_documented_open": 661,
-   "not_discharged_criterion_rows": 90
+   "finding_rows_documented_open": 708,
+   "not_discharged_criterion_rows": 96,
+   "and_the_ruling_5_batches": "Added 2026-08-18. These counters now range over the ledger's passes AND its untagged_batches, which is where Ruling 5's eight batch verdicts are filed. The population is the same population -- every criterion and finding row this file records -- and what changed is that it stopped being a synonym for `passes`. The gate re-derives all six figures over both lists, so the batches' open rows are counted here or the check is red."
   },
+  "gate": "tests/test_verify_ledger.py"
+ },
+ "untagged_batches": [
+  {
+   "batch": 1,
+   "range": "e4716e4..d28d032",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "e4716e4",
+    "d28d032"
+   ],
+   "all_discharged_as_returned": false,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "ccf86061-b6db-4602-9ba6-0dd30cf3377d",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 11,
+    "findings_returned_for_this_batch": 5
+   },
+   "criteria": [
+    {
+     "id": "e4716e4-derived-producer-set-via-ast",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Cloned to %TEMP% and checked out e4716e4. Ran the commit's own code: cross_participant_authorities() returned 6 rows -- 'Abyssal Mask \u2014 Unmake', 'Black Cleaver \u2014 Carve', \"Bloodletter's Curse \u2014 Vile Decay\", 'Bloodsong \u2014 Expose Weakness', 'Dream Maker \u2014 Blue Dream Bubble', 'Imperial Mandate \u2014 Command'. Independent AST re [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e4716e4-nonliteral-source-raises",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Exercised the commit's real function against three mutated copies of its own source: source=SOME_VAR (bare Name), source=f\"X \u2014 {y}\" (f-string), and source= omitted entirely. All three raised `ValueError: a damage_modifier packet must name a literal source; line 1313 of m.py does not`. None vanished from the set.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e4716e4-authorities-are-None-at-0A",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Ran cross_participant_authorities() at e4716e4: set of values == {None} for all six rows. Printed per-row: each producer -> None.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e4716e4-producer-item-splits-item-from-effect",
+     "verdict": "DISCHARGED",
+     "what_was_found": "All six source literals contain ' \u2014 '. producer_item() returned 'Abyssal Mask', 'Black Cleaver', \"Bloodletter's Curse\", 'Bloodsong', 'Dream Maker', 'Imperial Mandate' respectively -- verified by running the commit's own function, not by reading it.",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e4716e4-behaviour-free-no-reader",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show --stat e4716e4` = 2 files changed, 155 insertions(+), 0 deletions -- purely additive. `git grep -n -E 'cross_participant_authorities|producer_item' e4716e4 -- .` returns hits only in item_support_effects.py itself (defs + __all__), tests/test_item_support_effects.py, and docs/plans/ (not read). No reader in s [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e4716e4-gate-claim-both-baselines-zero-diffs",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Body: 'Behaviour-free: no call site reads either function yet, and both baselines show zero diffs.' At e4716e4 only ONE baseline exists. `ls scripts/*.json` at the commit -> scripts/golden_baseline.json only. `python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json` -> FileNotFoundError: 'scripts [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    },
+    {
+     "id": "d28d032-counting-sites-and-rung-ladder",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read at the commit: optimizer.py:152-153 (`if work_counters is not None: work_counters.measured_proposals += 1` in _evaluate_build), optimizer.py:244-245 (score_memo_misses in _evaluate_build_uncached), participant_timeline.py:100-110 (_pair_run_fight guards pair_run_fight_calls), work_counters.py record_rung (`if sink [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d28d032-only-run_fight-call-site-source-asserted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show d28d032^:src/calculator/participant_timeline.py | grep -c 'run_fight('` -> 5 bare sites at the parent. At d28d032, `grep -n 'run_fight(' | grep -v '_pair_run_fight('` -> exactly one line: `110:    return run_fight(*args, **kwargs)` (inside the wrapper). The source assertion exists at tests/test_work_counters. [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d28d032-behaviour-free-and-forced-walk-equivalence",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Full suite at the commit: `python -m pytest -q -p no:randomly` -> 5022 passed in 133.80s, 0 skipped, 0 xfailed. `golden_snapshot.py compare scripts/golden_baseline.json` -> 'OK: snapshot identical'. `compare scripts/golden_coupled_baseline.json` -> 'OK: snapshot identical' -- both matching the body's 'Measured: ... sna [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d28d032-config-seam-reaches-request-path",
+     "verdict": "DISCHARGED",
+     "what_was_found": "src/app.py sets OPTIMIZER_INSTRUMENTATION={} in app.config.update and api_optimize reads `instrumentation.get('work_counters')` / `.get('use_compiled_walk', True)` into common_optimizer_args (src/app.py:1408-1412). grep confirms common_optimizer_args has exactly two consumers, optimize_purchase (line 1431) and optimize [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d28d032-gate-claim-pytest-5035-and-23-new-tests",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Body: 'Gates: pytest 5035 passed (5012 at HEAD + 23 declared new, 0 skipped, 0 xfailed)'. The 5012 base is correct -- `pytest --collect-only -q` at d28d032^ (bc8bced) -> '5012 tests collected'. But at d28d032 the same command reports '5022 tests collected', and the full run is '5022 passed in 133.80s'. The commit's onl [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-1/unmentioned-1",
+     "what_was_found": "optimize_purchase's current_loadout_score() (src/calculator/optimizer.py:1510) is the only _evaluate_build call site that does not thread the sink, yet the evaluation still records a rung and pair fights through the shared combat_context['search_context'], which does carry it. Measured on a real purchase search at the  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-1/unmentioned-2",
+     "what_was_found": "The /api/optimize result cache short-circuits the instrumentation seam. cache_key = stable_cache_key(namespace, data) is computed from the request body alone (src/app.py:1338); OPTIMIZER_INSTRUMENTATION is not part of it. Demonstrated at the commit with the cache enabled (the production condition _result_cache_enabled( [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-1/unmentioned-3",
+     "what_was_found": "e4716e4's derivation is fail-closed on a non-literal source= but fail-open on a non-literal kind=: a _packet whose kind is computed fails the isinstance(kind, ast.Constant) test and is silently dropped rather than raising. Such a call site already exists -- src/calculator/item_support_effects.py:745 (Moonstone Renewer, [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-1/unmentioned-4",
+     "what_was_found": "Two comments added by d28d032 forward-reference code that does not exist at the commit, in the present tense: src/app.py's config comment says 'scripts/bench_coupled_optimizer.py installs it before posting', and work_counters.py's module docstring says 'the concrete sink is the benchmark harness's own dataclass in scri [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-1/unmentioned-5",
+     "what_was_found": "The sink installed via app.config is a mutable process-global incremented with non-atomic `+=` across concurrently served requests, so a harness installing one against a threaded/multi-worker server gets undercounts. Inert in production, where the config is {}.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 2,
+   "range": "34ff211..b98ceb3",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "34ff211",
+    "7152954",
+    "e1d1d58",
+    "177f647",
+    "d23f7b2",
+    "4e9f26a",
+    "6de4b27",
+    "d648aca",
+    "5d89453",
+    "2a64b01",
+    "e15bca1",
+    "9a6d268",
+    "b98ceb3"
+   ],
+   "all_discharged_as_returned": false,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "ee5864ea-de8f-466e-8e86-0fbd2b216cb3",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 13,
+    "findings_returned_for_this_batch": 8
+   },
+   "criteria": [
+    {
+     "id": "34ff211-rank-ladder-projects-onto-todays-floats",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read actions.py:32-90 at the commit: dense IntEnum 0..8, TERMINAL declared last -> math.inf. 8 producing members onto 5 distinct floats (-2.0,-1.0,0.0,0.5,1.0); LATE_BARRIER==REACTIVE==0.5; DEBUFF_ARM==RECOVERY==UTILITY_ARM==1.0; sequence -2,-1,0,.5,.5,1,1,1,inf is non-decreasing with no member exempted. Full diff of c [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "7152954-open-priority-float-retired-for-named-rank",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n _priority 34ff211 -- src/` -> exactly 3 producers plus the single reader: item_support_effects.py:506 (=0.5, inside the Fimbulwinter Everlasting branch, verified by reading :440-506), :1046 (=0.0, Redemption Intervention beam, :1020-1048), participant_timeline.py:3229 (=0.5, Eclipse Ever Rising Moon self-s [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e1d1d58-published-phase-list-derived-from-the-ladder",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Runtime probe at the commit's tree prints PARTICIPANT_LEDGER_CONTRACT['phases'] == ['state_transition','shield_or_temporary_health','damage_and_mitigation','reactive_effect','healing_and_regeneration','death_or_terminal_cutoff'] and CAPABILITY_SCHEMA_VERSION == 1; `git show e1d1d58^:src/calculator/capabilities.py` show [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "177f647-all-31-phase-slots-named-and-guard-widened",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Lifted the commit's own guard (shapes 1-4, one-level name resolution, subscript exclusion) into a standalone script and ran it against the e1d1d58 tree: reproduces the body's enumeration exactly -- participant_timeline.py 14 (:258 :314 :369 :377 :1773 :1881 :2000 :2016 :2399 :2790 :3433 :3618 :3628 :3637), transitions. [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d23f7b2-compiled-support-arms-at-the-walks-rank",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source: compile.py:950 now `priority = legacy_phase(support_transition_rank(template))`, feeding both `action_key(time_value, priority, ...)` and `phase=priority`; the walk's call is participant_timeline.py:1985 (the body cites :1970, which was its line at 7152954, two commits earlier). Probed unrepresentable_template_ [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "4e9f26a-four-undisclosed-0A.4-decisions-recorded",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Comments/docstrings only, proved not asserted: parsed pre- and post-images of both changed files, stripped module/class/function docstrings, compared ast.dump -> 'AST IDENTICAL' for item_support_effects.py and survival/actions.py. (1) DEBUFF_ARM=5 < RECOVERY=6 < UTILITY_ARM=7 and LATE_BARRIER=3 < REACTIVE=4 confirmed a [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "6de4b27-guard-counts-what-it-cannot-name",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The two-slot half is correct: running the commit's widened guard against the 4e9f26a tree yields exactly ('compile.py',676,'sort_key[1] (positional)') and ('compile.py',769,...) and nothing else, and both are byte-identical (legacy_phase(TransitionRank.DAMAGE) == 0.0, hoisted once per call). The derived map matches wha [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    },
+    {
+     "id": "d648aca-widest-phase-slot-is-the-class-default",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Runtime probe at the commit's tree: SurvivalAction().phase == 0.0 == DAMAGE_PHASE == legacy_phase(TransitionRank.DAMAGE) -> byte-identical. AST: DAMAGE_PHASE assigned at actions.py:101, `class SurvivalAction` at :204, so the constant is declared above the class as stated. `grep -rn _I_PHASE src/` returns only the docst [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "5d89453-four-more-0A.4-behaviours-disclosed",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Comments/docstrings only, proved: docstring-stripped ast.dump identical for all four changed files (capabilities.py, item_support_effects.py, survival/__init__.py, survival/compile.py). (1) Probe at the commit's tree reproduces the measured ladder swap exactly -- old `-1.0 if kind=='shield' else 1.0` vs new legacy_phas [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "2a64b01-runtime-cache-generation-counter",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Read data_registry.py at the commit: the filename refusal raises before anything else; os.replace (the atomic replace) then `_read_json_version.cache_clear()` then `global _DATA_VERSION; _DATA_VERSION += 1`, before the provenance metadata write -- exactly the ordering claimed, so a reader seeing a new version has a liv [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e15bca1-second-dispatch-ladder-deleted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n apply_transition e15bca1^ -- src tests scripts` -> the def at transitions.py:1588, the two exports (__init__.py:69 import and :93 __all__, transitions.py:1887 __all__) and five `:func:` docstring references; zero call sites anywhere -> 'zero callers' holds. At e15bca1 the name survives only inside tests/te [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "9a6d268-write-only-utility-state-deleted",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Probe at e15bca1 (the pre-image): `issubclass(ActionKind, str)` is False and `[k for k in ActionKind if k in _UTILITY_KINDS]` is empty, so `utility_kind=kind if kind in _UTILITY_KINDS else \"\"` could only ever produce \"\"; `kind` at that site is the return of _classify_prefetched (actions.py:614), i.e. an ActionKind memb [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "b98ceb3-unused-catalyst-predicate-alias-dropped",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n _has_catalyst b98ceb3^ -- src tests scripts` -> exactly one occurrence, the import alias itself at participant_timeline.py:28: imported, never called. `has_catalyst` remains live in its own module (roster_composition.py:206 def, :217 call), and the Catalyst path the timeline actually reads is `_catalyst_re [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-2/unmentioned-1",
+     "what_was_found": "BEHAVIOUR (6de4b27, still live at tip): replacing the guard's hard-coded callee list with a derivation over `def`s silently DROPPED coverage of callees spelled through an import alias. participant_timeline.py does `action_key as _action_key`, so no `def _action_key` exists in the scanned population and `_action_key(t,  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-2",
+     "what_was_found": "BEHAVIOUR (7152954, inert today, unmentioned): the declared-rank test changed from key-presence to non-None. Old: `float(event.get('_priority', 0.0)) if '_priority' in event else <kind ladder>`. New: `declared = event.get(SUPPORT_RANK_KEY); if declared is not None:`. A packet carrying `_rank: None` now falls through to [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-3",
+     "what_was_found": "BEHAVIOUR (d23f7b2, disclosed only retroactively): the one-line flip also swapped the whole kind ladder, not just honoured `_rank` -- temporary_health 1.0->-1.0, stasis 1.0->-2.0, stat_buff/damage_modifier and the utility kinds to new ranks at an unchanged 1.0. d23f7b2's own body prices only the `_rank` axis and stops  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-4",
+     "what_was_found": "BEHAVIOUR (9a6d268, minor, unmentioned): deleting the `utility_effects` initializer removes the key from the per-participant state dict entirely, so an out-of-tree reader of `state['utility_effects']` now raises KeyError rather than seeing an empty list. In-tree readers are genuinely zero (verified), so nothing regress [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-5",
+     "what_was_found": "INACCURACY (d23f7b2): the body attributes Eclipse's self-shield exclusion to `support_trigger_link`; the receipt that actually fires is `support_duration=2.0`, since unrepresentable_template_receipt runs before the trigger-link check and the packet is only authored when shield_duration > 0.0. `support_trigger_link` is  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-6",
+     "what_was_found": "INACCURACY (b98ceb3): the claimed pylint rise 9.6983 -> 9.6988 for participant_timeline.py does not occur -- 1162 statements and 35 messages on both sides give an unchanged 9.698795. The ratchet claim itself is fine (`pylint_ratchet.py --check` passes: 10 files at or above).",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-7",
+     "what_was_found": "ASIDE (pre-existing, not introduced by this batch): `src/calculator/survival/actions.py:188` defines a `_DAMAGE_KINDS` frozenset that nothing reads -- transitions.py:1568 defines and uses its own copy. It predates 34ff211, and the two deletion-frontier commits (e15bca1, 9a6d268) did not take it.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-2/unmentioned-8",
+     "what_was_found": "NOT CHECKED: each body's 'Expected qualifying occurrences: 0' line refers to a campaign metric defined in the implementation plan, which this runbook bars me from reading; I did not evaluate it. Per-commit gate lines (goldens, black, ratchet) were verified at d23f7b2 and b98ceb3 only, plus full pytest at 177f647, d648a [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 3,
+   "range": "3527b8d..ede25dc",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "3527b8d",
+    "c6c6093",
+    "4beab65",
+    "342d1b2",
+    "c442d11",
+    "f131754",
+    "06e41a7",
+    "1fb08dd",
+    "ede25dc"
+   ],
+   "all_discharged_as_returned": true,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "2efb8921-d2e3-4148-abbb-6b707962c5b7",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 9,
+    "findings_returned_for_this_batch": 5
+   },
+   "criteria": [
+    {
+     "id": "3527b8d-four-vocabularies-declared-in-the-leaf",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 3527b8d -- src/calculator/ability_spec.py`: DamageClass/AttackClass/Disposition/Authority declared at ability_spec.py:22/35/50/77; Authority carries all five members; every Disposition and Authority member's value equals its name. `git grep -n -E \"\\b(DamageClass|AttackClass|Disposition|Authority)\\b\" 3527b8d^  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "c6c6093-producer-row-type-names-authority-behaviour-free",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git diff c6c6093^ c6c6093 -- src/calculator/item_support_effects.py` filtered to non-comment/non-docstring lines yields exactly three code changes: the .ability_spec import gains `Authority`; `def cross_participant_authorities() -> Mapping[str, Any]` becomes `-> Mapping[str, Authority | None]`. No statement inside the [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "4beab65-stdlib-only-leaf-two-disjoint-vocabularies-no-consumer",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 4beab65:src/calculator/cast_dependency.py`: imports are collections.abc, dataclasses, typing only \u2014 nothing from src.calculator. `git grep -n cast_dependency 4beab65 -- src/ scripts/` -> 1 hit, a docstring reference to scripts/cast_dependency_audit.py inside the file itself: nothing in src/ imports it, so beh [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "342d1b2-tuple-ledger-starvation-raise-unreachable-on-public-path",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Pre-state: at 342d1b2^ item_support_effects.py:824-829 sums `event.get('raw_damage', event.get('damage', 0.0))` over `result.get('damage_events', [])` for Echoes of Helia, and survival/compile.py:652 documents those rows as positional tuples `(sort_key, damage, damage_type, source_key, raw_formula, raw_damage)` \u2014 `.get [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "c442d11-contract-carries-declarations-gated-173-empty",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show c442d11 -- src/`: ChampionModuleContract gains `cast_dependencies: tuple[CastDependency, ...] = ()`; get_champion_cast_dependencies added next to get_champion_cast_order in champions/__init__.py:352. `git show c442d11:src/calculator/champions/packet_module.py | sed -n '520,532p'` shows `*` after packet_sha256 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "f131754-syndra-declares-two-prerequisites-latent-suppression-true",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source: syndra.py CAST_DEPENDENCIES declares E requires Q and E requires Q2, both kind='cc_enabler', each nesting exactly one SuppressedInference(setup='E', consume=<requires>, kind='cc_setup'); only the Q2 one carries latent_reason. Runtime probe: both declarations' source == 'https://wiki.leagueoflegends.com/en-us/Sy [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "06e41a7-zed-and-brand-declare-heads-only-no-suppressions",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source: brand.py declares W requires Q (damage_enabler), zed.py declares Q requires W and E requires W (damage_enabler); no `suppresses=` on any of the three; Zed's R is left undeclared with the reason in the comment block at the declaration. Brand's priced row pairs with the declaration \u2014 brand.py:176 `\"W\": simple_dam [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "1fb08dd-eager-chain-becomes-a-survey-population-enumerated",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Old semantics reproduced directly (not inferred): evaluating `getattr(module,'CAST_DEPENDENCIES', getattr(parser,'cast_dependencies', getattr(slots,'cast_dependencies',())))` with parser carrying one dependency gives ('DEP',) when the module attribute is absent, () when it is (), and () when it is None \u2014 exactly the th [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "ede25dc-slot-map-carrier-is-keyword-only",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Diff inserts `*,` before cast_dependencies in PacketSlotMap.__init__ and changes the one construction to `PacketSlotMap(champion, packet_sha256, cast_dependencies=cast_dependencies)`. `grep -rn 'PacketSlotMap(' src/ tests/ scripts/` -> one src caller (packet_module.py:567, by name) plus two test references, so 'the one [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-3/unmentioned-1",
+     "what_was_found": "c442d11 widened `PacketSlotMap.__init__`'s positional arity from 2 to 3. Its body names only `build_packet_module`'s keyword-only parameter, so a stray third positional argument would have silently become a declaration. Named and reverted by ede25dc, the last commit of this same batch.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-3/unmentioned-2",
+     "what_was_found": "1fb08dd widened WHICH carriers get the malformed-shape check, not just its message. Before, only the carrier the eager chain selected was type-checked; `_declared_cast_dependencies` now type-checks every non-empty carrier. A module with a well-formed `CAST_DEPENDENCIES` and a malformed `parse_abilities.cast_dependencie [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-3/unmentioned-3",
+     "what_was_found": "3527b8d added a Python-level function call to `DamagePart.__post_init__` on every construction, against a body that states 'DamagePart's validation cost is unchanged'. Measured: `x in part_damage_types()` 31.5 ns vs `x in _PART_DAMAGE_TYPES` 13.3 ns, i.e. +18 ns on an 812 ns construction (~2%). Small, but the direction [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-3/unmentioned-4",
+     "what_was_found": "342d1b2's 'the set and the per-item stream have one home and cannot drift' holds only by coincidence of the current data. `EVENT_VIEW_STREAMS` groups three registries and never consults the fourth, `DAMAGE_TRIGGER_ITEMS`; that set is a subset of `EVENT_SCAN_SUPPORT_ITEMS` today (verified at the commit: {Black Cleaver,  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-3/unmentioned-5",
+     "what_was_found": "c442d11 made `src.calculator.cast_dependency` an import-time dependency of the `src.calculator.champions` package and added the three-carrier `getattr` lookup to every one of the 173 contract builds. Low severity, and the body's 'no runtime path changes' is plainly about damage output, but import-time work changed for  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 4,
+   "range": "f354257..ad95b2f",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "f354257",
+    "488d295",
+    "ee02175",
+    "0090a14",
+    "d61c540",
+    "6870c4a",
+    "47ab8fc",
+    "ad95b2f"
+   ],
+   "all_discharged_as_returned": false,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "55958050-f2de-4bc7-b4d9-1ee737f69dd6",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 8,
+    "findings_returned_for_this_batch": 7
+   },
+   "criteria": [
+    {
+     "id": "f354257-architecture-gains-the-cast-dependency-lane",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show f354257 -- architecture.md: champion-module bullet gains 'and declared cast dependencies' (architecture.md:30) and the combat-model section gains the two-surface paragraph (architecture.md:46), both present at tip. Every factual assertion in that paragraph checked against source: DEPENDENCY_KINDS has exactly 4 [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "488d295-the-receipt-publishes-what-the-merge-did",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show 488d295 -- src/calculator/rotation_resolver.py: DependencyReceipt gains the `unconsulted` field and as_rows key; build_rotation_receipt emits 'dependencies' unconditionally, falling back to DependencyReceipt().as_rows() when rule is None or rule.dependencies is None, so 'published for every champion / empty is [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "ee02175-module-docstring-names-the-declared-lane",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show ee02175: the entire 18-line diff sits inside the module docstring (rotation_resolver.py lines 8-30) -- no executable line, so 'comment-only; no behaviour' holds. Content checked against source: merge_declared_edges exists (rotation_resolver.py:1156) and resolved_edges exists (:1288); `grep -rn resolved_edges s [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "0090a14-the-reachable-case-is-syndra-and-the-defect-is-latent",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The FIX half verifies. git show 0090a14 reorders all three store sites (cache the full-kit rule, return the fit). I copied the tree to %TEMP%\\r35 and restored the pre-fix store order in remember(); runtime probe there: cold-120 ('Q','Q2','E','W','R'), cold-39 ('Q','E','W','R'), warm-120-after-39 ('Q','E','W','R','Q2')  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    },
+    {
+     "id": "d61c540-derivation-takes-a-declaration-probe-that-is-never-memoised",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show d61c540 -- src: derive_champion_rule gains keyword-only `declarations: Sequence[CastDependency] | None = None`; `memoised = declarations is None` gates BOTH the cache read (`_DERIVED_RULE_CACHE.get(cache_key) if memoised else None`) and the write inside remember(); the module lookup stays exactly where it was, [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "6870c4a-orphan-seed-comments-deleted-and-gated",
+     "verdict": "DISCHARGED",
+     "what_was_found": "At 6870c4a^ the table held seven entries (Cassiopeia, Varus, Brand, Vladimir, Annie, Lux, Zed -- confirmed by grep of '^    \"X\": ComboRule(' on that revision) and I read the two orphans directly: Aatrox's 'R grants bonus AD as a percentage of total AD before Q/W are priced.' and Jhin's 'The rotation is anchored on Whis [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "47ab8fc-as_rows-reads-the-ledgers-off-the-class",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show 47ab8fc: as_rows now builds `{ledger.name: list(getattr(self, ledger.name)) for ledger in dataclass_fields(self)}` and the docstring states a rule instead of a count; the miscount it describes is real (488d295's diff added `unconsulted` to the dataclass and the literal and left 'The six ledgers' above them). A [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "ad95b2f-docstring-stops-naming-a-script-as-absent",
+     "verdict": "DISCHARGED",
+     "what_was_found": "git show ad95b2f: five docstring lines inside UnsourcedDependencyError and nothing else -- 'comment only: no statement changed, no test changed, no baseline' holds. The premise checks out: `git ls-tree HEAD scripts/ | grep cast` -> scripts/cast_dependency_audit.py exists (landed at 268f7a1), and the named gate exists a [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-4/unmentioned-1",
+     "what_was_found": "0090a14 changed the derived cast order for 50 unseeded champions on the public surface (54 of 173 registered champions total) whenever a lower-level request warms _DERIVED_RULE_CACHE before a higher-level one -- the memo key has no level component. Its body scopes the defect to Syndra's splinter axis and calls it laten [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-2",
+     "what_was_found": "488d295 stopped returning the CAST_ORDER_OVERRIDES object from resolve_cast_order for EVERY seeded champion, not just declarers: it now returns replace(rule, dependencies=...). Probed at tip -- for Cassiopeia, Varus and Brand both `rule is table` and `rule == table` are False, because the table entry holds dependencies [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-3",
+     "what_was_found": "488d295 added a new runtime edge from rotation_resolver to the champion registry on the seeded resolution path: _unconsulted_receipt does a function-body `from .champions import get_champion_cast_dependencies` and a registry lookup on every seeded resolve_cast_order call, including for the four seeded champions that de [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-4",
+     "what_was_found": "488d295's stated purpose for the unconsulted ledger -- 'which is also how the frontier counts a declarer whose seed still wins' -- is not realized anywhere. A repo-wide grep finds `unconsulted` only in rotation_resolver.py, tests/test_f2_rotation.py, the receipts and the coupled baseline; scripts/behavior_frontier.py n [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-5",
+     "what_was_found": "The 'six ledgers' miscount that 47ab8fc fixed in as_rows survives in two other places at tip, one of them written by 488d295 in the same diff that made the count seven: build_rotation_receipt's Returns docstring says 'the declared-vs-inferred merge's six ledgers' (rotation_resolver.py:2016) and the DependencyReceipt cl [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-6",
+     "what_was_found": "The four _WIKI_SOURCE / UnsourcedDependencyError comments f354257 rewrote to say scripts/cast_dependency_audit.py 'is not in the tree yet' went false when the audit landed at 268f7a1, and ad95b2f repaired only one of them. At tip, brand.py:183-186, syndra.py:334-337 and zed.py:142-145 all still assert the script is abs [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-4/unmentioned-7",
+     "what_was_found": "47ab8fc's field-driven as_rows publishes any future DependencyReceipt field, not only ledgers: `list(getattr(self, f.name))` over dataclass_fields(self) would silently explode a future str field into a list of characters, or raise TypeError on a non-iterable. The new pinning test only fixes the current seven names, so  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 5,
+   "range": "969bd4f..b9c5696",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "969bd4f",
+    "edef2e0",
+    "5d1f238",
+    "6459667",
+    "c3788b7",
+    "1700b1e",
+    "d25a9a0",
+    "bb50d5b",
+    "e7357bc",
+    "b9c5696"
+   ],
+   "all_discharged_as_returned": true,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "e76d61c5-f7e6-4145-a9c1-bf073157c8d2",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 10,
+    "findings_returned_for_this_batch": 6
+   },
+   "criteria": [
+    {
+     "id": "969bd4f-bus-lands-with-one-src-reader-and-all-assertions",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n trigger_stream 969bd4f -- src/` -> only src/app.py:49 imports it (other hit is an ability_spec.py docstring). AST of trigger_stream.py@969bd4f: 1208 lines; imports = math/re/collections/dataclasses/enum/functools/types/typing + `.ability_spec` (Authority re-exported, not redefined); CcClass has exactly 5 m [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "edef2e0-trigger-link-comment-replaced-by-three-asserted-facts",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Independent runtime probe (my own script, not the committed test) through derive_item_support_effects + WalkCompiler at the tip: one 'Fimbulwinter - Everlasting' shield; _trigger_event_id == 'e1' under the enriched view and None under the plain one; duration == 3.0; unrepresentable_template_receipt(enriched) == 'suppor [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "5d1f238-retired-symbol-prose-scan-red-on-parent-green-here",
+     "verdict": "DISCHARGED",
+     "what_was_found": "RETIRED_SYMBOL_HOMES holds exactly 14 names (tests/test_trigger_stream.py:1046-1066); the scan set adds EVENT_VIEW_STREAMS -> 15. I re-implemented the word-boundary scan over every src/**/*.py and ran it at three revisions via `git show`: 5d1f238^ -> {'_cc_triggers': ['src/calculator/trigger_stream.py']}; 5d1f238 -> {} [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "6459667-comment-names-the-receipt-instead-of-enumerating-clauses",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Diff of src/calculator/survival/compile.py: 'an instant shield or heal with no amount formula' -> '``unrepresentable_template_receipt`` admits -- whatever clears every clause it checks'; 'Both halves are pinned' -> 'All three facts are pinned'. Read unrepresentable_template_receipt at survival/compile.py:134-150: five  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "c3788b7-typed-claim-evidence-and-a-load-tier-that-refuses-a-shape",
+     "verdict": "DISCHARGED",
+     "what_was_found": "AST at c3788b7: exactly nine evidence classes (Symbol, PacketSource, PairedSides, EffectKey, EffectTag, OptionSchema, TestRef, SourceRef, Absence); StreamMembership and PrecedenceRule both absent; imports are exactly keyword/collections.abc/dataclasses/typing. test_the_load_gate_imports_nothing_and_reads_nothing assert [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "1700b1e-modeled-state-names-one-of-three-state-homes",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Diff: STATE_HOME_KINDS = frozenset({'OptionSchema','PacketSource','EffectKey'}) added; _STATUS_POLICIES['modeled_state'] required goes {Symbol,TestRef,OptionSchema} -> {Symbol,TestRef} with min_count still 3; the choice is enforced in _validate_field_rules beside the certification-guard role rule. Measured against the  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "d25a9a0-precedence-mirror-is-read-only-and-agrees-with-the-ladder",
+     "verdict": "DISCHARGED",
+     "what_was_found": "AST at d25a9a0: PRECEDENCE is a 20-element tuple, 15 lane='attacker' followed by 5 lane='target'; RuleKind is exactly 8 literals (effect_type, container, option_state, named_item, predicate, cached_record, status_passthrough, terminal); coverage_evidence.py is 1089 lines with '# pylint: disable=too-many-lines' at L42 c [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "bb50d5b-whitespace-rule-applies-to-the-location-not-the-parametrization",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source: TestRef.validate now does location, bracket, param = text.partition('['), applies _require_no_whitespace to `location` only, rejects an opened-but-unclosed bracket, rejects any of '\\r\\n\\t', and parses '<path>.py::<node>' out of `location`. Probed the live validator at the tip: 'tests/test_coverage_claims.py::te [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "e7357bc-198-claims-and-a-17-entry-frontier-with-no-damage-lane",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Ran on an extracted e7357bc tree. len(COVERAGE_EVIDENCE) == 198; by subject_kind {item: 178, rule: 20}; len(PRECEDENCE) == 20, so one rule claim per rung. Container sizes measured live: _STATEFUL_MODELED_ITEMS 20, _REVIEWED_STATS_ONLY 56, _TARGET_MODELED_REASONS 29, _TARGET_EVENT_CERTIFIED_REASONS 9, _TARGET_BLOCKED_RE [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "b9c5696-packet-totality-runs-the-return-edge",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Ran on an extracted b9c5696 tree with my own probe over coverage_resolver.packet_sites(item_support_effects.py): 26 distinct source= literals; 23 quoted by some claim's PacketSource; the 3 unquoted are exactly ['Diadem of Songs - Consonance', 'Dream Maker - Purple Dream Bubble', 'Echoes of Helia - Soul Siphon']. unquot [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-5/unmentioned-1",
+     "what_was_found": "969bd4f: the new request boundary reports to Sentry. `_within_starvation_boundary` calls `_capture_exception(starved)` (src/app.py:578), which forwards to `_sentry.capture_exception` when configured (src/app.py:217-220). The body enumerates what the handler does -- 'converting the signal into a 500 carrying the STARVED [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-5/unmentioned-2",
+     "what_was_found": "969bd4f: the boundary wraps HTML routes and Flask's built-in `static` endpoint too. The module-scope loop rebinds every entry of `app.view_functions`, so `/`, `/privacy`, `/terms`, `/riot-disclaimer`, `/auth/login`, `/auth/logout` and `static` are wrapped; a ProjectionStarvation on any of them now returns a JSON body i [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-5/unmentioned-3",
+     "what_was_found": "969bd4f: `capture_coupled`'s `producers` argument changed both type and derivation. It was a `Mapping[str, Authority]` derived from the six `kind=\"damage_modifier\"` construction sites; it is now a `frozenset[str]` derived from `engine is Engine.WALK and authority in CROSS_PARTICIPANT_AUTHORITIES and packet_source is no [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-5/unmentioned-4",
+     "what_was_found": "d25a9a0 and e7357bc: `item_coverage` gained import-time failure modes on the serving path. `validate_precedence(PRECEDENCE)` and `validate_claim_table(COVERAGE_EVIDENCE)` now run at module scope, and `git grep` shows item_coverage is imported by src/app.py, calculate.py, optimizer.py, bis.py, participant_timeline.py an [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-5/unmentioned-5",
+     "what_was_found": "bb50d5b: a node id containing a tab is now rejected with an inaccurate message. The new line-span check tests `any(c in text for c in \"\\r\\n\\t\")`, so a tab anywhere -- including inside a parametrization id, which the old blanket whitespace rule caught as 'carries whitespace' -- now raises 'spans lines; a node id is one  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-5/unmentioned-6",
+     "what_was_found": "b9c5696: FRONTIER grows from 17 entries to 18. e7357bc's body pins 'The frontier holds 17 entries'; b9c5696 adds `packet:Dream Maker - Purple Dream Bubble` and describes the new key *shape* without noting that the pinned count moves.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 6,
+   "range": "b31f574..22e905f",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "b31f574",
+    "5a48529",
+    "a22cbfc",
+    "2eb7f32",
+    "9dfa5f5",
+    "fd5dd35",
+    "fee3753",
+    "22e905f"
+   ],
+   "all_discharged_as_returned": true,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "06687c3e-fa78-4587-8cf9-7b84b89a7e5f",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 8,
+    "findings_returned_for_this_batch": 3
+   },
+   "criteria": [
+    {
+     "id": "b31f574-declaration-holds-references-never-numbers",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Clean archive of b31f574 to %TEMP% (blobs verified against git). Probe: VALUE_REGISTRIES == {ITEM_EFFECTS, ALLY_ITEM_EFFECTS, RUNE_EFFECTS}; same ValueRef object resolved 7.0 -> 118.0 after in-place ITEM_EFFECTS mutation (liveness); missing key -> KeyError \"ITEM_EFFECTS['Vampiric Scepter'] is missing 'no_such_key_zzz'\" [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "5a48529-closed-rule-union-and-the-leaf-contract",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Probe at 5a48529: RuleFamily = 18 members / 18 distinct values, RULE_FAMILY_COUNT = 18; EngineLane here, ClaimLane at coverage_evidence.py:51 (D-45); COMPILABILITY_TYPES = (Compilable, ReceiptOnly); AST import scan of item_behavior.py -> intra-package imports ['.ability_spec', '.value_ref'] only; TRIGGER_STREAM total o [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "a22cbfc-catalog-and-the-three-closures-that-fail-collection",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Probe at a22cbfc reproduces every measured number: TAG_FAMILY 38 == known_effect_types() 38; ActionKind 19 and ACTION_KIND_FAMILY total; ast-derived DefenseSource labels 25 == DEFENSE_SOURCE_FAMILY 25; registry_owners 136 over 142 entries (undeclared_entry_count 142, declared_owners 0). H4: 4 dead + 6 self-referential, [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "2eb7f32-family-lane-registry-and-both-reachability-directions",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Probe at 2eb7f32: _FAMILY_LANES covers 18/18 families, declared_pairs() = 51, INTERPRETERS = 0, uninterpreted_pairs() = 51 (counter 4). compilability_for: known owner with no rules -> ReceiptOnly('Abyssal Mask: the registry declares behaviour that no BehaviorRule models yet...'), unknown owner -> Compilable(), mixed ru [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "9dfa5f5-criterion-six-reflection-with-no-escape",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source at 9dfa5f5: _flatten_policy recurses through dataclass fields, stops at is_value_reference, skips POLICY_IDENTIFIER_FIELDS; policy_values folds family, compilability, payload, receipt, zero_policy. Probe over a ReceiptOnly rule: 17 values, `any callable` False, `any dict` False, `any str` False; receipt, ZeroPol [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "fd5dd35-zero-policy-is-metadata-not-part-identity",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Same probe run at parent b2caf71 and at fd5dd35. Parent: repr equal True, eq False, hash eq False, set size 2, field.compare True. fd5dd35: repr equal True, eq True, hash eq True, set size 1, field.compare False, zero_policy still stored. `git diff dff401f fd5dd35 -- tests/test_engine.py` shows the three assertions res [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "fee3753-declared-zero-policy-is-keyword-only",
+     "verdict": "DISCHARGED",
+     "what_was_found": "inspect.signature at parent fd5dd35: zero_policy POSITIONAL_OR_KEYWORD on both builders; at fee3753: KEYWORD_ONLY on both, positional params drop to 6 / 9. Repo-wide AST scan at the parent found exactly one call exceeding the pre-zero_policy arity: src/calculator/champions/slotlib.py:754 damage_entry(...) with 7 positi [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "22e905f-superseded-generation-evicted-not-retained",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Same probe at parent fee3753 and at 22e905f, touching all four memos then bumping data_registry._DATA_VERSION twice. Parent: each memo 1 -> 2 -> 3 entries, generations [0] -> [0,1] -> [0,1,2] (retention reproduced). 22e905f: sizes 1 -> 1 -> 1, generations [0] -> [1] -> [2], exactly one generation each. Source: live_gen [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-6/unmentioned-1",
+     "what_was_found": "b31f574: LevelValueRef's `linear_1_18` scale silently clamps the level to [1,18] and truncates a float level (`clamped = max(1, min(18, int(level)))`), so at this repo's level cap of 20 a ramp returns its level-18 value with no error and level 17.9 resolves as 17 \u2014 probed: levels 18/19/20/99 all -> 27.0, 17.9 -> 26.0.  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-6/unmentioned-2",
+     "what_was_found": "2eb7f32: validate_registrations() runs a third gate the body never names \u2014 `_validate_authority_agreement`, which reads trigger_stream.CAPABILITIES and refuses any rule whose subject is roster-scoped while its mechanic declares no MechanicCapability, or whose capability's authority cannot see the subject. Probed live:  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-6/unmentioned-3",
+     "what_was_found": "9dfa5f5: criterion 6's exemption matches by bare field *name* at arbitrary recursion depth, not just on the rule's and receipt's own identifier fields. Any future policy record carrying a field named reason/owner/url/revision_id/revision_timestamp/mechanic_id is silently excluded from the reflection wherever it sits \u2014  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 7,
+   "range": "5d7d329..392f598",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "5d7d329",
+    "826111e",
+    "3f96a57",
+    "518a6e3",
+    "1fc3adc",
+    "eff1e92",
+    "a4e42b4",
+    "392f598"
+   ],
+   "all_discharged_as_returned": false,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "d7702886-e49d-419c-9d29-a0cb84dc791b",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 8,
+    "findings_returned_for_this_batch": 7
+   },
+   "criteria": [
+    {
+     "id": "5d7d329-champion-input-fallback-guard-is-an-assertion-at-zero",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Wrote my own AST scanner implementing the stated rule (`x.get(key,<numeric literal>)` whose receiver expression walks to a name/attribute in {stats,target,options,champion_stats,target_stats,champion_options,stats_context}, excluding nodes inside `damage_entry`). Ran over three trees extracted with `git archive` to %TE [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "826111e-eviction-moves-from-memo-read-to-memo-write",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 826111e` shows `live_generation(memo) -> int` replaced by `store_for_generation(memo, key, value) -> None` in data_registry.py, and all four memo sites in stats.py / support_effects.py rewritten to `memo_key = (data_version(), id(x))` + `memo.get(memo_key)` (bare lookup) with the write going through store_for [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "3f96a57-blast-radius-is-375-across-141-with-a-producer",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Implemented the body's counting rule myself (every ast.Call under champions/ whose callee spells damage_entry or simple_damage by Name or Attribute, excluding slotlib.py) and ran it on the tree extracted at 3f96a57: 375 calls across 141 modules \u2014 the stated figure exactly. Same on 5d7d329^ and on HEAD (375/141), so the [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "518a6e3-DefenseSource-has-zero-occurrences-and-the-stale-prose-is-gone",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git grep -n DefenseSource 518a6e3^ -- src/` -> 6 occurrences (defensive_effects.py:83, item_behavior.py:77, item_behavior.py:1138, item_behavior_catalog.py:18, :302, :4263). `git grep -n DefenseSource 518a6e3 -- src/` -> nothing. `git show 518a6e3 -- src/` is prose-only: no executable line changes, so 'both baselines  [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "1fc3adc-criterion-6-becomes-a-compile-time-mechanism",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show 1fc3adc -- src/calculator/item_behavior.py`: validate_rule now calls _validate_policy_types(rule); _walk_policy is entered at the rule itself (`_walk_policy(rule, '', sites, identifiers)`) so owner and mechanic_id are reached and skipped via POLICY_IDENTIFIER_FIELDS (6 members: owner, mechanic_id, reason, url [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "eff1e92-the-blocker-clause-is-derived-and-the-docstring-count-is-gone",
+     "verdict": "DISCHARGED",
+     "what_was_found": "`git show eff1e92` shows the hand-typed 'stat_derivation is unmigrated' clause replaced by `*_undeclared_base_blocker()`, which returns () when catalog.undeclared_owners() is empty and otherwise names the sorted owners; the committed receipt line moved to 'Actualizer, Hexoptics C44 \u2026', and at that tree DELTA_AMP_UNMIGR [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "a4e42b4-six-unmentioned-P3-mig-r1-behaviours-recorded",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Item 1: parsed docs/behavior-frontier.json across the range \u2014 derived_only 45 (155370b) -> 28 (b6923f9), legacy_only 5 throughout; the 17 owners that left the set are exactly the 17 the body enumerates (Archangel's Staff, Axiom Arc, Dawncore, Endless Hunger, Experimental Hexplate, Frozen Heart, Hubris, Manamune, Overlo [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "392f598-twelve-such-keys-today",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "The mechanism is sound and verified: `git show 392f598 -- src/` shows entry_families taking `owner` and testing `key in _schema_keys(owner, registry, entry)` instead of `key in entry`, with _schema_keys returning item_effects.entry_schema_keys(owner) for ITEM_EFFECTS and frozenset(entry) for the hand-authored ally regi [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-7/unmentioned-1",
+     "what_was_found": "5d7d329 changed a fallback value it says it did not: shaco.py:141 read ctx.stats.get('attack_speed', 1.0) and now reads ctx.stat('attack_speed'), whose declared default is 0.0. Unlike hecarim (move_speed 325.0->0.0, absorbed by max(0.0, x-325.0)) and locke (target_max_health 1.0->0.0, absorbed by `or 1.0`), the surroun [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-2",
+     "what_was_found": "5d7d329 dropped a fallback chain rather than a literal at galio.py:67: ctx.target.get('target_max_health', ctx.target.get('health', 0.0)) became ctx.target_stat('target_max_health'), so the 'health' arm is gone. Inert today (FightParams.target_stats() emits target_max_health always and 'health' never, and 'health' is n [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-3",
+     "what_was_found": "5d7d329 put the input vocabulary on a data-derived key path: scaling.resolve_scaling and scaling._parse_compound_unit resolve stat keys parsed out of wiki unit strings (e.g. hp_key = f'target_{...}_health') through scaling_input, so a unit string that maps outside SCALING_INPUTS now raises ChampionInputError mid-parse  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-4",
+     "what_was_found": "5d7d329 added a never-invalidated per-parser cache: engine.build_parser resolves declared_option_defaults(champion) on the first parse into a nonlocal and reuses it for the process, so a module's OPTIONS mutated after the first parse (a test monkeypatch) is invisible. This is the same class of blind spot a4e42b4 later  [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-5",
+     "what_was_found": "5d7d329 made direct SlotCtx construction raise: option_defaults defaults to an empty mapping, so any synthetic fixture or test building a SlotCtx by hand now raises ChampionInputError on ctx.option(...). Stated in the SlotCtx docstring, not in the commit body.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-6",
+     "what_was_found": "826111e changed when a superseded memo generation is released, not only what a hit costs: eviction moved from the first read after a data_version() bump to the first write, so a memo read (but not written) after a bump now retains the old generation and its strong references to cached dicts until a write occurs. Answer [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-7/unmentioned-7",
+     "what_was_found": "1fc3adc widened the exported policy_values: it is now derived from policy_walk(rule).sites, which starts at the rule (adding rule-level fields) and descends into tuples/lists/sets/frozensets (adding container members), so it returns strictly more values per rule than the old _flatten_policy over five surfaces. Only the [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  },
+  {
+   "batch": 8,
+   "range": "3cd2788..1fe7bf8",
+   "dated": "2026-08-18",
+   "verified_commits": [
+    "3cd2788",
+    "c232e95",
+    "1fe7bf8"
+   ],
+   "all_discharged_as_returned": false,
+   "provenance": {
+    "agent": "a fresh read-only Opus 5 that had not read the implementation plan",
+    "session_id": "caeb9164-bee9-42ee-9c5b-bf4f51ba393c",
+    "transcript_directory": "~/.claude/projects/C--Users-skywa-Desktop-claude-code-merged-calculator",
+    "dispatched_by": "campaign-close-criterion-11-closeout",
+    "what_the_agent_was_handed": "R-35's brief quoted verbatim from the runbook, this batch's range and its commit list by sha and subject, the standing read-only clause, and the do-not-read-docs/plans clause. It was told there is no plan document stating completion criteria for these commits and that the criteria are the ones each commit states for itself, which is what an untagged commit leaves a verifier.",
+    "why_a_lane_may_dispatch_one": "Because dispatching is not answering. The ledger's rule is that a lane cannot BE an R-35 verifier -- the brief's whole content is that the reader has not read the plan, and this lane has -- and verify-backlog.json's how_a_row_is_discharged already names the act a lane may do: 'a fresh read-only agent that has not read the implementation plan is handed R-35's brief'. The handing is the lane's; the answer is the agent's, and it is transcribed rather than edited.",
+    "criteria_returned_for_this_batch": 3,
+    "findings_returned_for_this_batch": 6
+   },
+   "criteria": [
+    {
+     "id": "3cd2788-four-S4-behaviours-documented-accurately",
+     "verdict": "NOT_DISCHARGED",
+     "what_was_found": "Docs-only holds: AST-with-docstrings-stripped identical parent->commit on all four files (participant_timeline.py, program/compile.py, program/walk.py, survival/__init__.py). Item 1 exact by AST count of SurvivalAction(...) over `git ls-tree` of src/: 771c9dc = 9 (participant_timeline 1, survival/actions 2, survival/co [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "note": "Recorded as the open debt it is. The commit it grades landed long before this verdict was rendered and no lane action is asserted here; what changed is that the debt is a row rather than an absence.",
+     "artifact": "docs/receipts/verify-ledger.json"
+    },
+    {
+     "id": "c232e95-inert-caps-and-retargeted-frontier-gate",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Docs-only holds: build.py AST identical with docstrings stripped. Item 1: AST scan of build_program at c232e95 finds exactly one Name('caps') (line 288, the discard), zero attribute accesses on caps, zero call sites passing it; pair_program (line 214) does say 'caps is taken and not yet read' in its own docstring; buil [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    },
+    {
+     "id": "1fe7bf8-rearm-refreshes-window-does-not-stack",
+     "verdict": "DISCHARGED",
+     "what_was_found": "Source (transitions.py:1017-1073): _refresh_live_modifier matches on (source, armed_by), armed_by = action.attacker (line 1011), survivor is max(previous, new) expiry. Fixture: tests/test_modifier_rearm.py from 1fe7bf8 planted into an archive of the parent 36e72c9 runs '6 failed, 5 passed'; on the 1fe7bf8 archive '11 p [...]",
+     "answered_at": [],
+     "disposition": "no_action_required",
+     "note": "Discharged; no finding to dispose of."
+    }
+   ],
+   "unmentioned_behaviour": [
+    {
+     "id": "untagged-batch-8/unmentioned-1",
+     "what_was_found": "1fe7bf8: a truncating re-arm publishes an expires_at the walk does not honour. _apply_damage_modifier writes expires_at = round(action.time + action.duration, 3) unconditionally after the fold while state keeps max(previous, new). Probe on the fix tree: arm(t=1.0, dur=6.0) then arm(t=2.0, dur=1.0) -> state until 7.0, r [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-8/unmentioned-2",
+     "what_was_found": "1fe7bf8: persistent (infinite-window) modifiers are now deduplicated too. until is inf when persistent and the (source, armed_by) match runs before any window comparison, so a second persistent arm replaces the first instead of stacking. Probe: two persistent arms -> 1 live modifier carrying the second's multiplier, wi [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-8/unmentioned-3",
+     "what_was_found": "1fe7bf8: the fold is last-arm-wins on every field, not only the window. armed[index] = {**modifier, 'until': max(...)} overwrites multiplier, reduction, armor_reduction_percent and both class sets with the newest arm's. Probe: 1.30 at t=1.0 then 1.05 at t=2.0 -> 1.05 in force until 6.0, where pre-fix both applied. Corr [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-8/unmentioned-4",
+     "what_was_found": "1fe7bf8: a new receipt key `refresh` ({reason, source, previous_expires_at}) is written onto the packet by ctx.ledger.write(action, refresh=replaced), and nothing serializes it. participant_timeline.py:4326 projects support events through a per-key whitelist containing expires_at and not refresh; the rebuilt coupled sn [...]",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-8/unmentioned-5",
+     "what_was_found": "1fe7bf8: a standing Phase-0 shape gate was widened -- tests/test_phase0_sentinels.py's ARMED_MODIFIER_FIELDS gained 'armed_by'. The body discusses armed_by as the fold identity but never says a committed sentinel over the armed-modifier payload had to be re-declared to accept it.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    },
+    {
+     "id": "untagged-batch-8/unmentioned-6",
+     "what_was_found": "3cd2788 and c232e95: none. Both are documentation-only -- ASTs with docstrings stripped are identical to their parents on every file touched -- so no behaviour changed to go unmentioned; their defects are documentation defects and are graded in the criterion rows above.",
+     "answered_at": [],
+     "disposition": "documented_open",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "note": "R-35's load-bearing question, answered over a batch of commits no slice-group brief ever reached. Documented here; no lane answer is asserted, and no verdict is re-graded."
+    }
+   ]
+  }
+ ],
+ "ruling_5_batches": {
+  "dated": "2026-08-18",
+  "what_it_is": "Ruling 5 of the campaign owner's ruling of 2026-08-17 says an untagged commit that touches src/ is covered by a batch verdict naming its range or by a dated acceptance note. These are the batch verdicts. The enumeration in coverage.untagged_commits_that_touch_src was split into eight neighbourhoods, each handed whole to a fresh read-only Opus 5 that had not read the implementation plan, and every one of the enumerated commits is in exactly one of them.",
+  "why_they_are_not_passes": "A pass row is keyed by slice group and the coverage block's three arms partition the derived tag population. These commits carry no tag -- that is the whole of why they needed a batch -- so filing them as passes would either invent a tag the tree does not hold or break the partition that keeps a tag from leaving the denominator by leaving a file. They are their own list, joined to the enumeration by sha.",
+  "what_a_batch_row_claims": "That this verdict was rendered on these commits by that agent, and is transcribed rather than reconstructed. Evidence strings are clipped to 320 characters exactly as a sweep row's are; the session transcript holds them whole, and its id is on every row.",
+  "what_it_does_not_claim": "That anything answered the findings. A batch's rows carry an empty answered_at for the same reason a sweep's do: a verdict rendered in 2026 about a commit that landed earlier in the campaign has no answering commit, and a NOT_DISCHARGED row is documented rather than closed. Nor does a batch verdict make its commits tagged, retroactively part of a slice group, or members of the clause's denominator. It makes them verified, which is what Ruling 5 asks for and all it asks for.",
+  "why_the_range_is_recorded_here_and_a_pass_has_none": "coverage.how_coverage_is_derived says no pass block carries a range field and that inventing one would be describing a brief nobody can open. A batch brief is openable: its text was handed to the agent whose session id the row carries, and the range in the row is the range in that brief. So the field is recorded where the brief exists and stays absent where it does not, which is the same rule rather than an exception to it.",
   "gate": "tests/test_verify_ledger.py"
  }
 }
