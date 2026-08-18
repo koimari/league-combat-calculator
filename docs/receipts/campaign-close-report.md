@@ -2321,3 +2321,214 @@ it is the owner's — who now has all three branches, the population hole, the
 exact cost and the argument for deciding soon in the row that asks the
 question — and every defect four fresh readers have found in the artifacts
 that say so has been fixed and gated.
+
+---
+
+## 20. The fifth certification review — the blocker's work, run
+
+*Appended 2026-08-18. Section 9's rule applies here as everywhere above: nothing
+before this line is rewritten, and where an earlier section states a figure this
+pass moved, that figure stays written and is read at the commit that stated it.
+§16.3's readings stay anchored at `3799bef`, §17's at `407428f` and §19.1's at
+`53b792c`; this pass moves several of the counters those readings are of, and
+moves no anchor with them.*
+
+A fifth certification review withheld sign-off with one blocker and two minors,
+and said something about the blocker no earlier review could: it had stopped
+being a decision. The campaign owner ruled on criterion 11's first clause on
+2026-08-17 — the fixed-point reading, transcribed into the umbrella's Owner's
+rulings section — and the ruling's own closing paragraph declines to discharge
+the criterion, naming what is left as work rather than as a question:
+*"Ruling 3's pass and Ruling 5's enumeration are work that has to land."* The
+review's blocker was that the work had not landed. This pass ran it.
+
+It is also the section §19.6's last sentence made necessary. That sentence —
+"runbook criterion 11 is not discharged, the one decision that could discharge it
+is the owner's" — was true when it was written and was superseded the next day by
+the owner ruling. It stays written under its date, and this is its successor.
+
+### 20.1 What the ruling left, and where each piece landed
+
+| Ruling | What it left to do | Where it landed |
+|---|---|---|
+| 1 — the clause binds backwards for implementation slices | the residue had to hold no unit that changed behaviour, on the tip a reader measures | `d324db0` graded it; `df873bc` bounded the sentence that overstated the grade |
+| 2 — instruments are not subjects | the enumeration and its three-pronged check | `26c6bdf`, unchanged by this pass except that the overlap between Ruling 2's `src/`-only check and Ruling 1's four directories is now recorded beside it |
+| 3 — the one unreached range is verified, not reclassified | a fresh R-35 pass over `campaign-close-verify-p4-batch` | round 130, at `209da2f` |
+| 4 — every `NOT_DISCHARGED` row carries a disposition | dispositions with the thing behind the word | `acf1df9`, and this pass's three answered rows at `bc9f6ea` |
+| 5 — untagged `src/`-touching commits owe a batch verdict or an acceptance note | the enumeration was made and nothing was covered | eight batch verdicts at `3831d88` |
+
+### 20.2 The two residue verdicts, rendered and never filed
+
+The residue the review named held two slice groups, and the campaign had already
+answered both. Two R-35 verdicts about them were rendered on 2026-08-18 by fresh
+read-only agents that had not read the plan, and neither had ever reached the
+ledger: the orchestration journal holds them at agents `a9c0fdd0d4413eae1` and
+`af867f96bd9300ec2`, and no pass row cited either. Rounds **131** and **132**
+transcribe them by the `residue_sweep` route the ledger already carries — **9**
+criteria, every one `DISCHARGED`, and **14** behaviours the commit bodies do not
+mention.
+
+Ruling 1 names this route and distinguishes it from the thing it must not become:
+a transcription of a verifier's rendered answer is *the verifier's artifact
+reaching the ledger late*, while a lane reconstructing an answer out of the commit
+bodies of the lanes being checked stays forbidden. Nothing here is reconstructed,
+and the journal keys are on the rows.
+
+What that leaves in the residue is **1** tag, and it is this pass's own — the
+mechanism `a_lane_that_works_adds_a_row_to_this_list` has now recorded five times:
+the act of recording a verdict is itself a commit, every commit carries a tag, and
+a tag with no verdict is residue. The fixed point the owner ruled is what makes it
+terminate rather than regress. The question is not how big the residue is but
+whether anything in it changed behaviour, and
+`residue_that_is_an_implementation_slice` is **0**, re-derived by the gate from
+this pass's own commit list rather than asserted by it.
+
+### 20.3 Ruling 5's untagged commits, covered
+
+The enumeration of untagged `src/`-touching commits landed with sixty-one rows and
+none of them covered, and the block explained the zero: *"no lane closed one,
+because neither route is a lane's to take."* Half of that is true and stays true —
+a lane cannot **be** an R-35 verifier, because the brief's whole content is that
+the reader has not read the plan, and this lane has read them. The inference was
+wrong. `verify-backlog.json`'s `how_a_row_is_discharged` has described the closing
+act since it was written: *"a fresh read-only agent that has not read the
+implementation plan is handed R-35's brief with this row's commit range."* Handing
+is a lane's act, and it is the only part of it that is.
+
+So the enumeration was split into **8** neighbourhoods and each was handed to its
+own fresh read-only Opus 5, with R-35's brief quoted verbatim from the runbook,
+the range and commit list by sha and subject, the standing read-only clause and an
+explicit refusal to read `docs/plans/`. Each was told there is no plan document
+holding completion criteria for these commits and that the criteria are the ones
+each commit states for itself — which is exactly what an untagged commit leaves a
+verifier, and is the honest form of the question rather than a weaker one.
+
+They returned **70** criteria, of which **6** are `NOT_DISCHARGED`, and **47**
+behaviours nobody's commit body mentions. Coverage moves to **61** of the
+enumeration's **61** rows, leaving **0** uncovered, by the same sha join the gate
+re-computes from `verified_commits`; a row still cannot be typed into coverage.
+The verdicts are filed as `untagged_batches` rather than as passes because a pass
+row is keyed by slice group and these commits carry no tag, which is the whole
+reason they needed a batch at all.
+
+**The debt this bought is recorded rather than absorbed.** Covering sixty-one
+previously unverified commits found six claims that do not reproduce and
+forty-seven undisclosed behaviours, and every one of them is now an open row with
+the artifact Ruling 4 requires. Criterion 11's second clause is worse by
+measurement and better by knowledge, and this section says so rather than
+reporting the coverage without its price.
+
+### 20.4 The two minors
+
+*Minor 1 — the settlement sentence outran its own justification.* The reviewer and
+round 132's verifier reached this independently.
+`residue_is_not_an_implementation_slice.what_this_settles` quantified over "every
+implementation slice in the campaign range" while its justifying clause reached
+only the residue. It does not reach the instrument arm, whose **4** tags carry no
+verdict either and **2** of which touched `scripts/` — one of Ruling 1's own four
+directories. Fixed at `df873bc`: the sentence is bounded to the clause's
+denominator, the original stays written under its date, and a new
+`what_this_does_not_reach` carries both populations the bound leaves outside, with
+a per-tag directory grade the gate re-derives and a pointer — never a copy — to
+Ruling 5's counters. What is **not** fixed is said on the row: Ruling 2's check is
+still `src/`-only, because narrowing it would eject tags the campaign owner ruled
+out of the denominator, and that is not a lane's to do.
+
+*Minor 2 — this report's final word was stale.* §19.6 said the one decision that
+could discharge criterion 11 is the owner's, and by the time a reader could act on
+it the owner had ruled. Section 20 is the fix the review asked for: the ruling
+pass, the residue pass and this pass are recorded in the certification artifact
+itself, so a reader who opens only this file learns that the blocker changed shape
+and then what happened to it.
+
+One defect this pass found outside both minors: the R-05 red in
+`test_the_residue_grade_has_a_red_it_can_reproduce` could not fail. It subtracted a
+path set from a dict, comparing a tag's paths against two key strings, so it was
+non-empty by construction on every tree it could ever describe. Fixed at
+`c2dabf6`, with the replacement demonstrated red in-process before it landed.
+
+### 20.5 What this pass did not do
+
+It did not re-grade a verdict, and no verdict in this ledger has ever been
+re-graded by a lane. It did not narrow Ruling 2's check, widen the instrument
+enumeration, or place its own tag in any arm — its tag is the residue, graded and
+not excused. It did not write an acceptance note for a single untagged commit;
+every one of them is covered by a verifier's answer or not at all. It retro-tagged
+nothing. And it did not touch `src/`: not one commit of this pass changes
+production behaviour, which is what lets the residue grade come out at zero
+honestly rather than by construction.
+
+### 20.6 The gaps, as they finally stand
+
+*The report's final table, derived-checked against
+[`campaign-gap-ledger.json`](campaign-gap-ledger.json) by
+[`tests/test_campaign_gap_ledger.py`](../../tests/test_campaign_gap_ledger.py),
+which now points at this heading rather than §16.4's. The constant moved
+deliberately, which its own comment says is the moment somebody notices the table
+it points at is no longer the last one.*
+
+| # | State |
+|---|---|
+| **G1** | **CLOSED** |
+| **G2** | **CLOSED** |
+| **G3** | **CLOSED** |
+| **G4** | **CLOSED** |
+| **G5** | **CLOSED** |
+| **G6** | **CLOSED** |
+| **G7** | **CLOSED** |
+| **G8** | **CLOSED** |
+| **G9** | **OPEN BY DESIGN** |
+| **G10** | **CLOSED** |
+| **G11** | **OPEN** |
+| **G12** | **CLOSED** |
+| **G13** | **CLOSED** |
+| **G14** | **OPEN** |
+
+### 20.7 What gates section 20
+
+[`tests/test_campaign_close_report_figures.py`](../../tests/test_campaign_close_report_figures.py)
+re-derives every figure this section states from the instrument it was measured
+with — the verify ledger's pass rows, its batch rows, its coverage block and its
+residue grade — all read live, because this section is about the tip and every
+figure in it is a property of the tip by construction. **16** figures, the count
+itself among them, each with R-05's red beside it, and the completeness scan runs
+over this section too: a bold figure this file does not read fails the gate on the
+commit that writes it.
+
+`section_19()` read from its heading to the end of the file, which was right until
+a section 20 existed and would have let this section's figures be matched as that
+one's. It is bounded at `## 20.` now, for the same reason §17.6 records for
+section 16.
+
+### 20.8 The R-01 matrix on this pass's tip
+
+| # | Verdict |
+|---|---|
+| 1 | **GREEN** |
+| 2 | **GREEN** |
+| 3 | **GREEN** |
+| 4 | **GREEN** |
+| 5 | **GREEN** |
+| 6 | **GREEN** |
+| 7 | **GREEN** |
+| 8 | **GREEN** |
+| 9 | **GREEN** |
+| 10 | **GREEN** |
+| 11 | **GREEN** |
+
+`plan_audit.py` (R-37) clean, and `sole_home_scan.py --check`,
+`standing_dissent_scan.py --check`, `behavior_frontier.py --check`,
+`migration_frontier.py --check`, `receipt_walk_schedule.py --check`,
+`term_census.py --check` and `verify_backlog.py --check` all exit 0.
+
+**What each row read is in this pass's commit bodies, not here**, for the reason
+§15.8 ruled and every section since restates: a gate reading cannot be re-derived
+without re-running the gate it came from.
+
+**What this pass did to `src/` and to the baselines, as a property.** Over
+`5b663cb..HEAD`: the `src/` half is empty; no commit touches both `src/` and one of
+those five; and every commit that moved one of them moved only
+`campaign-fingerprints.json`, touching no `src/`, no gate script and neither
+compared baseline — this pass's `tests{collected}` re-pin for the node ids it
+declared, inside Amendment R-32's fourth carve-out and disclosed in its own body.
+Both compared baselines read `snapshot identical` on every commit here.

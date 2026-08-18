@@ -202,9 +202,21 @@ def section_18() -> str:
 
 @lru_cache(maxsize=1)
 def section_19() -> str:
-    """The report from its section 19 heading to the end of the file."""
+    """The report's section 19, bounded at 20 for section 15's own reason.
+
+    It ran to the end of the file until section 20 existed, which was true and
+    stopped being so; an unbounded section lets a gate match a figure a later
+    section states and report it as this one's.
+    """
     text = REPORT.read_text(encoding="utf-8")
-    return text[text.index("\n## 19.") :]
+    return text[text.index("\n## 19.") : text.index("\n## 20.")]
+
+
+@lru_cache(maxsize=1)
+def section_20() -> str:
+    """The report from its section 20 heading to the end of the file."""
+    text = REPORT.read_text(encoding="utf-8")
+    return text[text.index("\n## 20.") :]
 
 
 @lru_cache(maxsize=1)
@@ -1261,12 +1273,14 @@ BASELINE_CLAIMS = (("16.7", "04cdfbf", "3799bef"), ("17.7", "3799bef", "407428f"
 #: measures it in.
 DATED_MOVER = "927964c"
 
-#: Every range this report states the properties over: the two claimed ones and
-#: section 18.5's, which is this pass's own.  18.5 is not in ``BASELINE_CLAIMS``
-#: because it never claims its range empty -- it is the paragraph written the
-#: way 18.1 corrected the two before it, and it is gated as what it says.
+#: Every range this report states the properties over: the two claimed ones,
+#: section 18.5's, and section 20.8's.  Neither of the last two is in
+#: ``BASELINE_CLAIMS`` because neither claims its range empty -- both are the
+#: paragraph written the way 18.1 corrected the two before it, and both are
+#: gated as what they say.
 PROPERTY_RANGES = tuple(start for _section, start, _tip in BASELINE_CLAIMS) + (
     "407428f",
+    "5b663cb",
 )
 
 
@@ -1715,5 +1729,191 @@ def test_the_completeness_scan_reds_on_section_19() -> None:
 def test_the_r01_verdict_table_section_19_states_carries_no_figure() -> None:
     """15.8's ruling, held one section further on again."""
     table = section_19()[section_19().index("### 19.6") :]
+    assert "GREEN" in table
+    assert re.search(r"\*\*(\d+)\*\*", table) is None
+
+
+# --------------------------------------------------------------------------
+# Section 20 -- the pass that ran the blocker's work.
+#
+# Every figure here is read live rather than anchored, and the section says so:
+# it is about the tip, and each of its counts is a property of the tip by
+# construction.  The one figure it deliberately does not state is the
+# enumeration's old zero coverage -- that is a past reading and the section
+# spells it in words, which is the discipline 16.6 asked of a section that
+# moves a counter an earlier one stated.
+# --------------------------------------------------------------------------
+
+
+def _pass_for(slice_group: str) -> dict:
+    """The pass this section names, by the slice group it graded."""
+    return next(block for block in here() if block["slice_group"] == slice_group)
+
+
+RESIDUE_PASSES = (
+    "campaign-close-owner-ruling-criterion-11",
+    "campaign-close-ruling-residue",
+)
+
+
+def residue_pass_rows(key: str) -> str:
+    """How many criterion or finding rows the two residue verdicts carry."""
+    return str(sum(len(_pass_for(group)[key]) for group in RESIDUE_PASSES))
+
+
+def batches() -> list[dict]:
+    """The Ruling 5 batch verdicts at this tip."""
+    return ledger()["untagged_batches"]
+
+
+def batch_rows(key: str) -> str:
+    return str(sum(len(block[key]) for block in batches()))
+
+
+def batch_not_discharged() -> str:
+    return str(
+        sum(
+            1
+            for block in batches()
+            for row in block["criteria"]
+            if row["verdict"] == "NOT_DISCHARGED"
+        )
+    )
+
+
+def untagged_block() -> dict:
+    return ledger()["coverage"]["untagged_commits_that_touch_src"]
+
+
+def residue_grade() -> dict:
+    return ledger()["coverage"]["residue_is_not_an_implementation_slice"]
+
+
+def instrument_overlap() -> dict:
+    return residue_grade()["what_this_does_not_reach"]["the_instrument_arm"]
+
+
+#: Section 20's figures.  All live: this section grades the tip it ships on.
+FIGURES_20: list[tuple[str, str, Callable[[], str]]] = [
+    (
+        "20.2 first residue round",
+        r"Rounds \*\*(\d+)\*\* and",
+        lambda: str(_pass_for(RESIDUE_PASSES[0])["round"]),
+    ),
+    (
+        "20.2 second residue round",
+        r"Rounds \*\*\d+\*\* and \*\*(\d+)\*\*",
+        lambda: str(_pass_for(RESIDUE_PASSES[1])["round"]),
+    ),
+    (
+        "20.2 criteria",
+        r"\*\*(\d+)\*\*\s+criteria, every one",
+        lambda: residue_pass_rows("criteria"),
+    ),
+    (
+        "20.2 findings",
+        r"and \*\*(\d+)\*\* behaviours the commit bodies do not\s+mention",
+        lambda: residue_pass_rows("unmentioned_behaviour"),
+    ),
+    (
+        "20.2 residue",
+        r"leaves in the residue is \*\*(\d+)\*\* tag",
+        lambda: str(ledger()["coverage"]["residue"]),
+    ),
+    (
+        "20.2 residue that is an implementation slice",
+        r"is \*\*(\d+)\*\*, re-derived by the gate",
+        lambda: str(residue_grade()["residue_that_is_an_implementation_slice"]),
+    ),
+    (
+        "20.3 batches",
+        r"into \*\*(\d+)\*\* neighbourhoods",
+        lambda: str(len(batches())),
+    ),
+    (
+        "20.3 batch criteria",
+        r"returned \*\*(\d+)\*\* criteria",
+        lambda: batch_rows("criteria"),
+    ),
+    (
+        "20.3 batch not discharged",
+        r"of which \*\*(\d+)\*\* are `NOT_DISCHARGED`",
+        batch_not_discharged,
+    ),
+    (
+        "20.3 batch findings",
+        r"and \*\*(\d+)\*\*\s+behaviours nobody's commit body mentions",
+        lambda: batch_rows("unmentioned_behaviour"),
+    ),
+    (
+        "20.3 covered",
+        r"Coverage moves to \*\*(\d+)\*\* of the",
+        lambda: str(len(untagged_block()["covered"])),
+    ),
+    (
+        "20.3 enumerated",
+        r"enumeration's \*\*(\d+)\*\* rows",
+        lambda: str(untagged_block()["count"]),
+    ),
+    (
+        "20.3 uncovered",
+        r"leaving \*\*(\d+)\*\* uncovered",
+        lambda: str(untagged_block()["uncovered"]),
+    ),
+    (
+        "20.4 instrument tags in a behaviour directory",
+        r"whose \*\*(\d+)\*\* tags carry no",
+        lambda: str(instrument_overlap()["tags_touching_a_behaviour_directory"]),
+    ),
+    (
+        "20.4 of which touch scripts",
+        r"and \*\*(\d+)\*\* of which touched",
+        lambda: str(instrument_overlap()["of_which_touch_scripts"]),
+    ),
+    (
+        "20.7 the gate's own size",
+        r"\*\*(\d+)\*\* figures, the count\s+itself among them",
+        lambda: str(len(FIGURES_20)),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", FIGURES_20, ids=[case[0] for case in FIGURES_20])
+def test_every_figure_section_20_states_is_the_measured_one(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """Section 20 grades the clause its own pass discharged, so it is re-read."""
+    _label, pattern, measured = case
+    assert stated(section_20(), pattern) == measured()
+
+
+@pytest.mark.parametrize("case", FIGURES_20, ids=[case[0] for case in FIGURES_20])
+def test_the_section_20_gate_fails_when_a_stated_figure_drifts(
+    case: tuple[str, str, Callable[[], str]],
+) -> None:
+    """R-05's permanent red for section 20, injected as every section's is."""
+    _label, pattern, measured = case
+    text = section_20()
+    match = re.search(pattern, text)
+    assert match is not None
+    drifted = str(int(match.group(1)) + 1)
+    doctored = text[: match.start(1)] + drifted + text[match.end(1) :]
+    assert stated(doctored, pattern) != measured()
+
+
+def test_section_20_states_no_figure_this_file_does_not_read() -> None:
+    """The completeness scan, over the section that ships it."""
+    assert ungated_figures(section_20(), FIGURES_20, [], []) == []
+
+
+def test_the_completeness_scan_reds_on_section_20() -> None:
+    """R-05 for the scan on this section, as 15, 16, 18 and 19's do."""
+    doctored = section_20() + "\n\nA later pass measured **4321** of them.\n"
+    assert ungated_figures(doctored, FIGURES_20, [], [])
+
+
+def test_the_r01_verdict_table_section_20_states_carries_no_figure() -> None:
+    """15.8's ruling, held one section further on again."""
+    table = section_20()[section_20().index("### 20.8") :]
     assert "GREEN" in table
     assert re.search(r"\*\*(\d+)\*\*", table) is None
