@@ -4,7 +4,11 @@ import pytest
 
 from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.app import app
-from src.calculator.champions import get_champion_options_meta
+from src.calculator.champions import (
+    get_champion_options_meta,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
+)
 from src.calculator.pipeline import FightParams, run_fight
 
 
@@ -186,134 +190,49 @@ def test_calculate_api_soraka_exposes_exact_delayed_equinox_receipt():
     assert "E" in coverage["exact_sources"]
 
 
-def test_vi_timed_mode_is_rejected_before_any_partial_timeline_is_exposed():
-    params = _timed_params()
-    with pytest.raises(ValueError, match="Time-based Vi calculations are withheld"):
-        params.validate_for_champion("Vi", 18)
+#: The four modules whose persistent state once withheld every timed window.
+#: Each now models its own mechanic on the shared timeline — Denting Blows on
+#: the merged stream, Plasma across the window, Defile until mana runs dry,
+#: Worked Ground between casts — so the window they refused is the window they
+#: serve.  Each mechanic's own behaviour is pinned in its champion test file;
+#: what belongs here is that no fight mode is refused and no source is coarse.
+FORMERLY_ONE_ROTATION_ONLY = ("Vi", "Kai'Sa", "Karthus", "Taliyah")
 
 
-def test_karthus_timed_mode_is_rejected_before_defile_timeline_is_built():
-    params = _timed_params()
-    with pytest.raises(
-        ValueError, match="Time-based Karthus calculations are withheld"
-    ):
-        params.validate_for_champion("Karthus", 18)
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_persistent_state_champions_validate_for_every_fight_window(champion):
+    _timed_params().validate_for_champion(champion, 18)
 
 
-def test_calculate_api_surfaces_vi_timed_withholding_as_a_client_error():
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_calculate_api_serves_persistent_state_champions_in_timed_windows(champion):
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",
-            json={"champion": "Vi", "level": 18, "fight_mode": "time_based"},
+            json={"champion": champion, "level": 18, "fight_mode": "time_based"},
         )
-    assert response.status_code == 400
-    assert "Time-based Vi calculations are withheld" in response.get_json()["error"]
+    assert response.status_code == 200
+    coverage = response.get_json()["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
 
 
-def test_calculate_api_surfaces_karthus_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Karthus", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Karthus calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_calculate_api_surfaces_taliyah_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Taliyah", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Taliyah calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_calculate_api_surfaces_kaisa_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Kai'Sa", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert "Time-based Kai'Sa calculations are withheld" in response.get_json()["error"]
-
-
-def test_optimize_api_surfaces_vi_timed_withholding_as_a_client_error():
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_optimize_api_matches_calculate_for_persistent_state_champions(champion):
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Vi",
+                "champion": champion,
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
-    assert "Time-based Vi calculations are withheld" in response.get_json()["error"]
-
-
-def test_optimize_api_matches_calculate_withholding_for_karthus():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Karthus",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Karthus calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_optimize_api_matches_calculate_withholding_for_taliyah():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Taliyah",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Taliyah calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_optimize_api_matches_calculate_withholding_for_kaisa():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Kai'Sa",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert "Time-based Kai'Sa calculations are withheld" in response.get_json()["error"]
+    assert response.status_code == 200
+    assert response.get_json()["items"] is not None
 
 
 def test_optimize_api_certifies_tahm_kench_event_order():
@@ -445,16 +364,10 @@ def test_optimize_api_certifies_ziggs_minefield_cadence():
     assert body["ranked_builds"]
 
 
-@pytest.mark.parametrize(
-    "champion,reason",
-    (
-        ("Kai'Sa", "Time-based Kai'Sa calculations are withheld"),
-        ("Taliyah", "Time-based Taliyah calculations are withheld"),
-    ),
-)
-def test_persistent_state_champions_reject_unsupported_timed_mode(champion, reason):
-    with pytest.raises(ValueError, match=reason):
-        _timed_params().validate_for_champion(champion, 18)
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_persistent_state_champions_publish_every_fight_mode(champion):
+    assert get_supported_fight_modes(champion) is None
+    assert get_unsupported_fight_mode_reason(champion) is None
 
 
 def test_shyvana_multi_form_e_and_w_have_certified_sources():

@@ -1,17 +1,24 @@
-"""Reference, event-order, and fail-closed tests for Kai'Sa."""
+"""Reference, event-order, and timed-mode tests for Kai'Sa."""
+
+import math
+import re
 
 import pytest
 
 from src import app as app_module
+from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
+    get_comparison_curve_unavailable_reason,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.optimizer import _evaluate_build
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -255,20 +262,173 @@ def test_rotation_is_event_order_certified_and_resource_legal(kaisa_data):
     )
 
 
-def test_timed_and_auto_only_requests_fail_closed():
-    client = app_module.app.test_client()
-    for fight_mode in ("time_based", "auto_only"):
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Kai'Sa", "level": 12, "fight_mode": fight_mode},
-        )
-        assert response.status_code == 400
-        assert (
-            "Time-based Kai'Sa calculations are withheld"
-            in response.get_json()["error"]
-        )
+def _timed_payload(duration, *, champion_options=None, include_autos=True):
+    """The criterion-3 probe shape: timed calculate_payload, no items."""
+    request = {
+        "champion": "Kai'Sa",
+        "level": 18,
+        "items": [],
+        "fight_mode": "timed",
+        "include_auto_attacks": include_autos,
+        "fight_duration": duration,
+    }
+    if champion_options:
+        request["champion_options"] = champion_options
+    return calculate_payload(request)
 
-    reordered = client.post(
+
+def _plasma_counts(payload):
+    """(applications, ruptures) quoted from the plasma row's engine detail."""
+    detail = payload["breakdown"]["passive_plasma"]["detail"]
+    match = re.search(r"(\d+) stack applications, (\d+) ruptures", detail)
+    assert match is not None, detail
+    return int(match.group(1)), int(match.group(2))
+
+
+def test_timed_plasma_ruptures_recur_across_the_window():
+    short = _timed_payload(6)
+    long = _timed_payload(20)
+
+    _, short_ruptures = _plasma_counts(short)
+    long_applications, long_ruptures = _plasma_counts(long)
+
+    assert short_ruptures >= 1
+    assert long_ruptures > short_ruptures
+    for payload in (short, long):
+        coverage = payload["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []
+        assert coverage["certification"] == "event_order_certified"
+
+    plasma = long["breakdown"]["passive_plasma"]
+    plasma_events = [
+        event for event in long["damage_events"] if event["source"] == "passive_plasma"
+    ]
+    assert plasma["total_damage"] > 0
+    assert len(plasma_events) == long_applications + long_ruptures
+    assert sum(event["damage"] for event in plasma_events) == pytest.approx(
+        plasma["total_damage"], rel=1e-3
+    )
+
+
+@pytest.mark.parametrize(
+    "items",
+    ([], ["Kraken Slayer"], ["Nashor's Tooth", "Rabadon's Deathcap"]),
+)
+def test_timed_plasma_stream_reconciles_with_the_engine_timeline(items):
+    """The module's walked application stream is the engine's own cadence:
+    one stack per real swing plus 2 (3 evolved) per real Void Seeker cast."""
+    payload = calculate_payload(
+        {
+            "champion": "Kai'Sa",
+            "level": 18,
+            "items": items,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": 20,
+        }
+    )
+    applications, _ = _plasma_counts(payload)
+    per_w_hit = 3 if payload["champion_stats"]["evolution_ability_power"] >= 100 else 2
+    assert applications == (
+        payload["breakdown"]["auto_attacks"]["count"]
+        + payload["breakdown"]["W"]["casts"] * per_w_hit
+    )
+
+
+def test_timed_plasma_stacks_expire_without_an_auto_stream():
+    """Void Seeker alone cannot rupture: its recast outlasts the sourced 4s
+    stack window, so the walk expires the chain instead of banking stacks."""
+    applications, ruptures = _plasma_counts(_timed_payload(20, include_autos=False))
+
+    assert applications > 0
+    assert ruptures == 0
+
+
+def test_timed_plasma_seeded_stacks_rupture_sooner():
+    unseeded = _timed_payload(6)
+    seeded = _timed_payload(6, champion_options={"plasma_starting_stacks": 4})
+
+    assert _plasma_counts(seeded)[1] > _plasma_counts(unseeded)[1]
+    assert (
+        seeded["breakdown"]["passive_plasma"]["total_damage"]
+        > unseeded["breakdown"]["passive_plasma"]["total_damage"]
+    )
+
+
+def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():
+    timed = _timed_payload(20)
+    rotation = calculate_payload({"champion": "Kai'Sa", "level": 18, "items": []})
+
+    timed_as = timed["champion_stats"]["attack_speed"]
+    assert timed_as > rotation["champion_stats"]["attack_speed"]
+    assert (
+        timed["champion_stats"]["bonus_attack_speed"]
+        > rotation["champion_stats"]["bonus_attack_speed"]
+    )
+
+    autos = timed["breakdown"]["auto_attacks"]
+    expected_swings = math.floor(timed_as * 20.0 * DEFAULT_AUTO_ATTACK_UPTIME)
+    assert autos["count"] == expected_swings
+    swing_events = [
+        event for event in timed["damage_events"] if event["source"] == "auto_attacks"
+    ]
+    assert len(swing_events) == expected_swings
+
+
+def test_timed_mode_drops_the_one_rotation_travel_wait():
+    """The certified W -> Q wait is a one-rotation artifact; timed casts run
+    on the real shared timeline (W occupies its 0.4s cast, Q volleys while
+    Void Seeker is still in flight, R anchors the Plasma ledger once)."""
+    payload = _timed_payload(20)
+
+    q_first = min(
+        event["time"] for event in payload["damage_events"] if event["source"] == "Q"
+    )
+    w_first = min(
+        event["time"] for event in payload["damage_events"] if event["source"] == "W"
+    )
+    assert q_first < w_first
+
+    timeline = payload["cast_timeline"]
+    assert [event["slot"] for event in timeline[:2]] == ["W", "Q"]
+    assert timeline[0]["time"] == pytest.approx(0.0)
+    assert [event["slot"] for event in timeline].count("R") == 1
+
+
+def test_evolved_void_seeker_refunds_its_timed_cooldown():
+    base = _timed_payload(20, champion_options={"w_evolved": "base"})
+    evolved = _timed_payload(20, champion_options={"w_evolved": "evolved"})
+
+    assert evolved["breakdown"]["W"]["casts"] > base["breakdown"]["W"]["casts"]
+
+
+def test_timed_and_auto_only_requests_now_compute():
+    client = app_module.app.test_client()
+
+    timed = client.post(
+        "/api/calculate",
+        json={"champion": "Kai'Sa", "level": 12, "fight_mode": "time_based"},
+    )
+    assert timed.status_code == 200
+    assert timed.get_json()["total_damage"] > 0
+
+    auto_only = client.post(
+        "/api/calculate",
+        json={
+            "champion": "Kai'Sa",
+            "level": 12,
+            "fight_mode": "auto_only",
+            "auto_attacks_only": True,
+            "include_auto_attacks": True,
+        },
+    )
+    assert auto_only.status_code == 200
+    assert auto_only.get_json()["breakdown"]["auto_attacks"]["total_damage"] > 0
+
+
+def test_custom_cast_orders_stay_refused():
+    reordered = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Kai'Sa",
@@ -281,11 +441,14 @@ def test_timed_and_auto_only_requests_fail_closed():
     assert "certified W -> Q sequence" in reordered.get_json()["error"]
 
 
-def test_sources_options_and_mode_are_public_revision_receipts():
+def test_sources_options_and_unrestricted_modes_are_public_receipts():
     meta = get_champion_options_meta("Kai'Sa")
 
     assert len(meta["options"]) == 4
-    assert meta["supported_fight_modes"] == ["one_rotation"]
+    assert "supported_fight_modes" not in meta
+    assert get_supported_fight_modes("Kai'Sa") is None
+    assert get_unsupported_fight_mode_reason("Kai'Sa") is None
+    assert get_comparison_curve_unavailable_reason("Kai'Sa") is None
     assert {row["revision_id"] for row in meta["sources"]} == {
         4046579,
         4038389,

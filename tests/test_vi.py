@@ -1,8 +1,9 @@
-"""Reference, ordering, multi-target, and fail-closed tests for Vi."""
+"""Reference, ordering, multi-target, and timed-mode tests for Vi."""
 
 import pytest
 
 from src import app as app_module
+from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
@@ -10,6 +11,22 @@ from src.calculator.champions import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
+
+
+def _timed_payload(duration, *, include_autos=True, champion_options=None):
+    """Timed-mode request through the real public pipeline."""
+    data = {
+        "champion": "Vi",
+        "level": 18,
+        "items": [],
+        "fight_mode": "timed",
+        "include_auto_attacks": include_autos,
+        "fight_duration": duration,
+    }
+    if champion_options is not None:
+        data["champion_options"] = champion_options
+    return calculate_payload(data)
+
 
 RANKS = {"Q": 5, "W": 3, "E": 3, "R": 2}
 
@@ -204,13 +221,87 @@ def test_w_max_health_scaling_is_repriced_for_protoplasm(vi_data):
     assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
 
 
-def test_timed_and_custom_order_requests_fail_closed():
-    client = app_module.app.test_client()
-    timed = client.post(
-        "/api/calculate",
-        json={"champion": "Vi", "level": 10, "fight_mode": "time_based"},
+def test_timed_w_proc_count_grows_with_duration_and_ambient_autos():
+    """W procs ride the merged auto+Q stream, so a longer fight procs more.
+
+    Engine output (level 18, no items, uptime 0.8): D=6 procs once at
+    1.721s (autos at 0/1.449s plus the Q hit complete the third stack);
+    D=18 procs five times at 1.721 / 5.794 / 8.971 / 13.037 / 16.221s
+    (W row total 213.6 vs 42.9), interleaved with 12 ambient autos and
+    Q casts at 0 / 7.25 / 14.5s.
+    """
+    short = _timed_payload(6)
+    long = _timed_payload(18)
+
+    short_row = short["breakdown"]["W"]
+    long_row = long["breakdown"]["W"]
+    assert short_row["count"] == 1
+    assert long_row["count"] == 5
+    assert long_row["count"] > short_row["count"]
+    # Each proc is one authored event in the fight's shared ordered ledger,
+    # interleaved with the auto/Q/E stream that built its stacks.
+    long_procs = [event for event in long["damage_events"] if event["source"] == "W"]
+    assert len(long_procs) == long_row["count"]
+    times = [event["time"] for event in long_procs]
+    assert times == sorted(times)
+    assert long_row["total_damage"] > short_row["total_damage"]
+
+
+def test_timed_w_stacks_expire_without_a_carrier_stream():
+    """With no ambient autos, Q/E hits alone sit >4s apart: stacks expire
+    between applications and Denting Blows never completes a cycle."""
+    payload = _timed_payload(18, include_autos=False)
+
+    assert "W" not in payload["breakdown"]
+    assert payload["total_damage"] > 0
+
+
+def test_timed_starting_stacks_seed_the_counter():
+    """`denting_blows_starting_stacks` seeds the walk: the first proc lands
+    earlier and the window fits at least as many procs."""
+    unseeded = _timed_payload(12)
+    seeded = _timed_payload(12, champion_options={"denting_blows_starting_stacks": 2})
+
+    unseeded_row = unseeded["breakdown"]["W"]
+    seeded_row = seeded["breakdown"]["W"]
+    assert seeded_row["count"] >= unseeded_row["count"]
+    first_seeded = next(
+        event["time"] for event in seeded["damage_events"] if event["source"] == "W"
     )
-    reordered = client.post(
+    first_unseeded = next(
+        event["time"] for event in unseeded["damage_events"] if event["source"] == "W"
+    )
+    assert first_seeded < first_unseeded
+
+
+def test_timed_shred_falls_back_to_e_when_q_is_unranked():
+    """With Q unranked the walk still procs (autos alone reach the third
+    stack), and E carries the shred windows: E recharges at 8s (rank 5),
+    so casts at 0 / 8s cover 4 + 4 = 8s of a 12s fight and the 20% shred
+    weights to 13.333%, pricing 100 armor as 86.7."""
+    payload = calculate_payload(
+        {
+            "champion": "Vi",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": 12,
+            "ability_ranks": {"Q": 0, "W": 5, "E": 5, "R": 3},
+            "target_health": 2500,
+            "target_armor": 100,
+        }
+    )
+
+    assert "Q" not in payload["breakdown"]
+    assert payload["breakdown"]["W"]["count"] == 2
+    assert payload["effective_armor"] == pytest.approx(
+        round(100.0 - 20.0 * (8.0 / 12.0), 1)
+    )
+
+
+def test_custom_order_requests_still_fail_closed():
+    reordered = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Vi",
@@ -220,13 +311,46 @@ def test_timed_and_custom_order_requests_fail_closed():
         },
     )
 
-    assert timed.status_code == 400
-    assert "Time-based Vi calculations are withheld" in timed.get_json()["error"]
     assert reordered.status_code == 400
     assert "certified Q -> E -> R sequence" in reordered.get_json()["error"]
 
 
-def test_one_rotation_compare_keeps_result_and_withholds_only_curve():
+def test_timed_timeline_coverage_is_complete_with_no_coarse_sources():
+    """The unlocked timed model authors or cast-orders every active row."""
+    payload = _timed_payload(18)
+
+    coverage = payload["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
+    assert coverage["certification"] == "event_order_certified"
+    assert "W" in coverage["exact_sources"]
+
+
+def test_timed_w_procs_shred_armor_for_later_hits():
+    """The walk's procs carry the 20% shred: 4s windows at Q's cast times
+    (0 / 7.25 / 14.5s over an 18s fight; the last clips at the fight end,
+    so 4 + 4 + 3.5 = 11.5s covered) weight the shred to 20% x 11.5/18 =
+    12.778%, so 100 armor prices as 87.222 (87.2 in the rounded payload)."""
+    payload = calculate_payload(
+        {
+            "champion": "Vi",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": 18,
+            "target_health": 2500,
+            "target_armor": 100,
+        }
+    )
+
+    assert "W" in payload["breakdown"]
+    assert payload["effective_armor"] == pytest.approx(
+        round(100.0 - 20.0 * (11.5 / 18.0), 1)
+    )
+
+
+def test_comparison_curve_returns_populated_points():
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -242,9 +366,11 @@ def test_one_rotation_compare_keeps_result_and_withholds_only_curve():
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["total_damage"] > 0
-    assert payload["comparison_curve"] == []
-    assert payload["comparison_curve_status"]["available"] is False
-    assert "withheld for Vi" in payload["comparison_curve_status"]["reason"]
+    assert payload["comparison_curve_status"]["available"] is True
+    curve = payload["comparison_curve"]
+    assert len(curve) == 6
+    assert all(point["total_damage"] > 0 for point in curve)
+    assert curve[-1]["total_damage"] > curve[0]["total_damage"]
 
 
 def test_public_bis_returns_two_distinct_event_ordered_builds():
@@ -280,7 +406,9 @@ def test_sources_and_options_are_public_revision_receipts():
     meta = get_champion_options_meta("Vi")
 
     assert len(meta["options"]) == 5
-    assert meta["supported_fight_modes"] == ["one_rotation"]
+    # No SUPPORTED_FIGHT_MODES restriction: absence means every public
+    # fight mode is certified (app publishes None = unrestricted).
+    assert "supported_fight_modes" not in meta
     assert {row["revision_id"] for row in meta["sources"]} == {
         3986701,
         3921391,

@@ -1,11 +1,18 @@
-"""Karthus — sourced alive-state W -> Q -> E -> R one-rotation model.
+"""Karthus — sourced alive-state W -> Q -> E -> R model, both fight modes.
 
-Wall of Pain applies its resistance reduction before the damaging sequence.
-Lay Waste switches between isolated and shared-target formulas, Defile exposes
-an exact selected tick count, and Requiem lands after its three-second channel.
-Death Defied is deliberately outside this certified alive-state package.
+Wall of Pain applies its resistance reduction before the damaging sequence
+(timed fights time-weight the shred over its 5s windows on the W schedule).
+Lay Waste switches between isolated and shared-target formulas and recasts
+on its real cooldown in timed fights.  Defile exposes an exact selected
+tick count per rotation; in timed fights it is the persistent toggle,
+modeled as engine-scheduled one-second pulses (four sourced 0.25s ticks,
+one second of the sourced mana drain each) that the ordered resource
+timeline shuts off at mana exhaustion.  Requiem lands after its
+three-second channel.  Death Defied is deliberately outside the
+alive-window model in both modes.
 """
 
+import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -20,6 +27,10 @@ _Q_CONSERVATIVE_DETONATION_DELAY = 0.75
 _E_FIRST_TICK_TIME = _W_CAST_TIME + _Q_CAST_TIME
 _E_TICK_INTERVAL = 0.25
 _E_MAX_SELECTED_TICKS = 40
+# Timed mode prices the toggle in one-second pulses: the sourced drain is
+# "mana per second" and 4 ticks x the sourced per-tick row is exactly the
+# sourced "Damage Per Second" row (cross-checked at parse time).
+_E_PULSE_SECONDS = 1.0
 _R_CAST_START = _E_FIRST_TICK_TIME
 _R_CHANNEL_DURATION = 3.0
 _R_CAST_TIME = 0.25
@@ -88,6 +99,65 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _defile_mana_per_second(ability: dict[str, Any], rank: int) -> float:
+    """Defile's sourced toggle drain: its cost row is mana per second."""
+    return float(
+        (ability.get("cost") or {})
+        .get("modifiers", [{}])[0]
+        .get("values", [0])[rank - 1]
+    )
+
+
+def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]:
+    """E as a persistent toggle: one entry per pulse-second of uptime.
+
+    The engine's shared cast timeline recasts this entry every second
+    (each "cast" is one second of the toggle being on) and its ordered
+    resource timeline charges each pulse the sourced drain against the
+    real pool, regen, and the mana Q/W/R spend — so Defile shuts off at
+    mana exhaustion instead of ticking for free.  ``dot_duration`` +
+    ``dot_tick_interval`` let the engine author the four exact 0.25s
+    ticks each accepted pulse spreads over its second.
+    """
+    per_tick = extract_named(
+        ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
+    )
+    per_second = extract_named(
+        ability, "Damage Per Second", rank, ctx.stats, ctx.target
+    )
+    ticks_per_pulse = round(_E_PULSE_SECONDS / _E_TICK_INTERVAL)
+    if not math.isclose(
+        per_tick * ticks_per_pulse, per_second, rel_tol=1e-9, abs_tol=1e-6
+    ):
+        raise ValueError(
+            "Karthus E: the sourced 'Magic Damage Per Tick' x 4 no longer "
+            "equals the sourced 'Damage Per Second' row - the 0.25s tick "
+            "cadence pinned here has changed upstream"
+        )
+    # The engine divides every Q/W/E cooldown by (100 + haste) / 100; the
+    # toggle's drain cadence is not haste-accelerated, so declare the
+    # inverse and land back on the fixed one-second beat.
+    haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
+    entry = damage_entry(
+        ability.get("name", "Defile"),
+        rank,
+        _E_PULSE_SECONDS * (100.0 + haste) / 100.0,
+        per_second,
+        "magic",
+    )
+    drain = _defile_mana_per_second(ability, rank)
+    entry["parts"] = (DamagePart("magic", per_tick, count=ticks_per_pulse),)
+    entry["resource_type"] = "MANA"
+    entry["resource_cost"] = drain * _E_PULSE_SECONDS
+    entry["dot_duration"] = _E_PULSE_SECONDS
+    entry["dot_tick_interval"] = _E_TICK_INTERVAL
+    entry["detail"] = (
+        f"toggle as one-second pulses: 4 ticks at 0.25-second intervals, "
+        f"{drain:g} mana per second until the shared pool runs dry"
+    )
+    return entry
+
+
 def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -95,6 +165,8 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
+    if ctx.options.get("fight_duration_seconds") is not None:
+        return _defile_timed(ctx, ability, rank)
 
     requested = int(ctx.option("e_ticks"))
     ticks = int(_clamp(float(requested), 0.0, float(_E_MAX_SELECTED_TICKS)))
@@ -110,11 +182,7 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
         for index in range(ticks)
     )
     active_seconds = max(0.0, (ticks - 1) * _E_TICK_INTERVAL)
-    mana_per_second = float(
-        (ability.get("cost") or {})
-        .get("modifiers", [{}])[0]
-        .get("values", [0])[rank - 1]
-    )
+    mana_per_second = _defile_mana_per_second(ability, rank)
     entry = damage_entry(
         ability.get("name", "Defile"),
         rank,
@@ -156,19 +224,9 @@ def _requiem(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 CAST_ORDER = ("W", "Q", "E", "R")
-SUPPORTED_FIGHT_MODES = ("one_rotation",)
-UNSUPPORTED_FIGHT_MODE_REASON = (
-    "Time-based Karthus calculations are withheld until Defile toggles, its "
-    "mana drain, Lay Waste cadence, and Death Defied share one persistent "
-    "cast timeline. Use One Rotation."
-)
 CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
     "Karthus uses the certified alive-state W -> Q -> E -> R sequence so the "
     "wall reduction is established before damage."
-)
-COMPARISON_CURVE_UNAVAILABLE_REASON = (
-    "Crossover windows are withheld until Defile and Death Defied persist "
-    "between rotations."
 )
 
 OPTIONS = [
@@ -191,23 +249,34 @@ OPTIONS = [
         "min": 0,
         "max": _E_MAX_SELECTED_TICKS,
         "step": 1,
-        "label": "Defile damage ticks",
+        "label": "Defile damage ticks (one rotation)",
     },
 ]
 
 ASSUMPTIONS = [
-    "Certified mode is one alive-state W -> Q -> E -> R sequence against each "
-    "selected target.",
+    "The certified sequence is the alive-state W -> Q -> E -> R order "
+    "against each selected target; timed fights recast it on the engine's "
+    "shared cast timeline.",
     "Wall of Pain reduces the selected target's magic resistance by 25% only "
-    "when its contact option is on.",
+    "when its contact option is on; timed fights time-weight the shred over "
+    "its 5-second windows on the W cast schedule.",
     "Lay Waste doubles only for a single selected target; a multi-target hit "
     "automatically uses the shared-target formula.",
-    "Defile uses exactly the selected tick count and charges mana for the "
-    "elapsed 0.25-second intervals.",
+    "In one rotation Defile uses exactly the selected tick count and charges "
+    "mana for the elapsed 0.25-second intervals; timed fights ignore the "
+    "selector and model the toggle as one-second pulses (four sourced ticks, "
+    "one second of the sourced drain each) paid on the ordered resource "
+    "timeline beside Q/W/R, so Defile shuts off at mana exhaustion.",
+    "Toggle pulses are conservative: a pulse begun within the window prices "
+    "its full second of ticks, re-arms only at instants the shared cast "
+    "timeline leaves free (Requiem's channel and cast times can delay it), "
+    "and holds a fixed one-second cadence against ability haste; cooldown "
+    "effects beyond haste (Navori) are not counteracted.",
     "Lay Waste uses the sourced upper 0.75-second detonation delay because the "
     "Wiki records its live delay as inconsistent between 0.5 and 0.75 seconds.",
-    "Death Defied is not entered in this alive-state package; timed and "
-    "post-death casts remain unavailable.",
+    "Death Defied is outside the alive-window model in both fight modes: the "
+    "fight engine has no death event for the attacker, so the 7-second "
+    "post-death window stays a documented zero-damage boundary.",
 ]
 
 SOURCES = [

@@ -482,10 +482,26 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert "not event-certified" in error
 
 
-def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
-    """The coupled timeline runs every roster member as an attacker, so a
-    timed window with a one-rotation-only enemy module is a clean 400
-    naming the member — never an uncaught 500 mid-timeline."""
+@pytest.mark.parametrize("side,field", (("Enemy", "enemies"), ("Ally", "allies")))
+def test_timed_fight_rejects_a_window_a_roster_module_cannot_join(
+    monkeypatch, side, field
+):
+    """The coverage campaign left no champion declaring a window restriction,
+    so the guard is proven against a module made to declare one.  The coupled
+    timeline runs every roster member as an attacker: a member that cannot
+    join is a clean 400 naming it, never an uncaught 500 mid-timeline."""
+    import src.calculator.champions.vi as vi_module
+
+    monkeypatch.setattr(
+        vi_module, "SUPPORTED_FIGHT_MODES", ("one_rotation",), raising=False
+    )
+    monkeypatch.setattr(
+        vi_module,
+        "UNSUPPORTED_FIGHT_MODE_REASON",
+        "Synthetic restriction. Use One Rotation.",
+        raising=False,
+    )
+
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -494,17 +510,19 @@ def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
             "items": ["Rabadon's Deathcap"],
             "fight_mode": "timed",
             "fight_duration": 10,
-            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+            field: [{"champion": "Vi", "level": 18, "items": []}],
         },
     )
 
     assert response.status_code == 400
     error = response.get_json()["error"]
-    assert "Enemy Kai'Sa" in error
+    assert f"{side} Vi" in error
     assert "One Rotation" in error
 
 
-def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
+@pytest.mark.parametrize("field", ("enemies", "allies"))
+@pytest.mark.parametrize("champion", ("Vi", "Kai'Sa", "Karthus", "Taliyah"))
+def test_timed_fight_accepts_every_champion_on_the_roster(field, champion):
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -513,14 +531,11 @@ def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
             "items": ["Rabadon's Deathcap"],
             "fight_mode": "timed",
             "fight_duration": 10,
-            "allies": [{"champion": "Vi", "level": 18, "items": []}],
+            field: [{"champion": champion, "level": 18, "items": []}],
         },
     )
 
-    assert response.status_code == 400
-    error = response.get_json()["error"]
-    assert "Ally Vi" in error
-    assert "One Rotation" in error
+    assert response.status_code == 200
 
 
 def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
@@ -2130,21 +2145,20 @@ class TestChampionVerifiedFlags:
         }
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
-    def test_fight_mode_restrictions_are_published(self):
-        """A module certifying a fight-mode subset publishes it with its
-        sourced reason, so the interface can request a supported mode (the
-        timed recast window by default) instead of failing closed."""
+    def test_every_champion_publishes_an_unrestricted_fight_window(self):
+        """The published contract carries the restriction and its sourced
+        reason together, and after the coverage campaign no module declares
+        one: every champion certifies every public fight mode."""
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {champion["name"]: champion for champion in champs}
 
-        # Unrestricted module: every public fight mode is certified.
-        assert by_name["Ahri"]["supported_fight_modes"] is None
-        assert by_name["Ahri"]["unsupported_fight_mode_reason"] is None
-
-        # Restricted module: modes and the sourced reason ride together.
-        assert by_name["Karthus"]["supported_fight_modes"] == ["one_rotation"]
-        assert "time-based" in (
-            by_name["Karthus"]["unsupported_fight_mode_reason"].lower()
+        restricted = {
+            champion["name"]: champion["supported_fight_modes"]
+            for champion in champs
+            if champion["supported_fight_modes"] is not None
+        }
+        assert restricted == {}
+        assert all(
+            champion["unsupported_fight_mode_reason"] is None for champion in champs
         )
 
     def test_verified_champions_sort_first(self):
