@@ -696,8 +696,16 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             if amp:
                 atoms.append(f"stat_buff({','.join(amp)})")
         for part in info.get("parts", ()):
-            if getattr(part, "cc_kind", None):
-                atoms.append(f"cc_kind={part.cc_kind}")
+            # ``"none"`` is a reviewed ABSENCE of crowd control, so it is
+            # not an apply atom: fanning a cc_setup edge out of it would
+            # order the whole rotation around a stun the module explicitly
+            # said does not exist.  Every reader below (the fan-out, the
+            # enhanced-vs-condition pairing, ``applies_condition``) sees
+            # atoms, so refusing the atom here is the one place the rule
+            # has to hold.
+            kind = getattr(part, "cc_kind", None)
+            if kind and kind != "none":
+                atoms.append(f"cc_kind={kind}")
         if _P_APPLIES_STACK.search(texts[s]):
             atoms.append("phrase:applies-stack")
         if _P_MARKS_TARGET.search(texts[s]):

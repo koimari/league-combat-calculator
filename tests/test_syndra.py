@@ -651,9 +651,51 @@ class TestScatterTheWeakStun:
     """E carries the authored stun so CC-triggered item passives (Imperial
     Mandate's Command, Bandlepipes' Fanfare) can see it in the event ledger."""
 
+    def test_the_stun_is_declared_once_in_module_cc(self) -> None:
+        """MODULE_CC is the kit's one crowd-control declaration site; the
+        slot map states only the separate event-order claim."""
+        from src.calculator.champions import syndra
+
+        assert syndra.MODULE_CC == {"E": "stun"}
+
+    def test_the_rest_of_the_kit_stays_unreviewed(self, syndra_data) -> None:
+        """Not an oversight: Q's sphere lands after a delay the module does
+        not author, W is the mixed magic+true pair and R is one part per
+        sphere, so none of them can carry a reviewed kind into the event
+        ledger — and a declaration the ledger cannot show is refused."""
+        parsed = _parse(syndra_data)
+        unreviewed = {
+            slot
+            for slot, entry in parsed.items()
+            if any(part.cc_kind is None for part in entry.get("parts", ()))
+        }
+        assert unreviewed == {"Q", "Q2", "W", "R"}
+
+    def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
+        """The honest consequence of the line above: the control token
+        stays until those four rows author events of their own."""
+        from src.calculator.calculate import calculate_payload
+
+        coverage = calculate_payload(
+            {
+                "champion": "Syndra",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )["timeline_coverage"]
+
+        assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
+
     def test_e_part_carries_stun_marker(self, syndra_data) -> None:
         (part,) = _parse(syndra_data)["E"]["parts"]
         assert part.cc_kind == "stun"
+
+    def test_e_certifies_its_event_order_in_its_own_right(self, syndra_data) -> None:
+        """Reviewing the stun does not certify the event order: the module
+        makes that claim explicitly, or the marker never reaches a ledger."""
+        assert _parse(syndra_data)["E"]["event_order_certified"] == "single_hit"
 
     def test_e_fight_event_carries_stun_marker(
         self, syndra_data, attacker_stats

@@ -20,7 +20,7 @@
       "site": [
         {
           "file": "src/calculator/champions/engine.py",
-          "fragment": "part for part in parts if getattr(part, \"cc_kind\", None) not in (None, \"none\")"
+          "fragment": "part for part in parts if getattr(part, \"cc_kind\", None) is not None"
         },
         {
           "file": "src/calculator/damage.py",

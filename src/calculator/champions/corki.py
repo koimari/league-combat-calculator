@@ -292,10 +292,22 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     cycle = min(max(int(ctx.option("r_big_one_cycle_position")), 0), 2)
     big_ones = (cycle + missiles) // _R_BIG_ONE_CYCLE
 
+    # One part per missile, in firing order, each riding the barrage's own
+    # cast boundary. The barrage is ONE cast in this model (see the
+    # assumptions below: one entry on the shared cast timeline, one
+    # spellblade proc), so the cast boundary is where its missiles land —
+    # authoring that here is what carries the row's reviewed control state
+    # into the event ledger instead of leaving it a coarse aggregate.
+    # The missiles' real 2-second firing cadence is a separate, unauthored
+    # fact: modelling it would move each missile onto its own timeline
+    # slot, which is a different fight model than "the barrage is one cast".
     parts = tuple(
-        DamagePart("physical", amount, count=count)
-        for amount, count in ((regular, missiles - big_ones), (big_one, big_ones))
-        if count > 0
+        DamagePart(
+            "physical",
+            big_one if (cycle + index + 1) % _R_BIG_ONE_CYCLE == 0 else regular,
+            time_offset=0.0,
+        )
+        for index in range(missiles)
     )
     return {
         "name": ability.get("name", "Missile Barrage"),
@@ -382,14 +394,29 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Q is one bomb, one explosion: the cached entry gives no travel
+    # duration to author as a time offset, so the cast boundary is the only
+    # sourced placement its hit has, and certifying that is what keeps the
+    # row out of the coarse aggregate.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _valkyrie,
     "E": _gatling_gun,
     "R": _missile_barrage,
     "P": _hextech_munitions,
 }
 
-parse_abilities = build_parser(SLOTS, "Corki")
+# Reviewed cc-free, whole kit.  Nothing in the cached entries applies any
+# crowd control to an enemy: the bomb, the blazing patches, the gatling
+# cone (resistance shred, not control) and the missiles all deal damage
+# only, and Hextech Munitions is a true-damage rider on basic attacks.
+# Every slot says so explicitly, which is what lets control-armed item
+# passives (Fimbulwinter's Everlasting) price a Corki fight instead of
+# withholding on an unreviewed kit.
+MODULE_CC = {slot: "none" for slot in SLOTS}
+
+parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

@@ -20,7 +20,7 @@ including zero-damage entries (stat-buff ultimates must never silently
 vanish). Dropping a non-damaging slot is the parser's decision.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
 from ..ability_spec import CC_KIND_VOCABULARY
@@ -434,13 +434,15 @@ def _validate_cc_event_contract(
     certification, no authored ``time_offset``, no dynamic part, no
     module-authored event list — silently never triggers anything, so it
     is rejected here, at parse time, instead. Mirrors the emission gate in
-    ``damage._evaluate_cast_parts``. ``cc_kind="none"`` is an explicit
-    reviewed no-CC statement and needs no event path.
+    ``damage._evaluate_cast_parts``. ``cc_kind="none"`` is held to the same
+    standard: a reviewed *absence* of control is only worth declaring where
+    the ledger can see it, because that is where the control token is
+    cleared — a "none" that never reaches an event proves nothing about the
+    fight it was supposed to certify, and would read as a reviewed slot
+    while leaving the coarse row it rides on unreviewed.
     """
     parts = entry.get("parts") or ()
-    cc_parts = [
-        part for part in parts if getattr(part, "cc_kind", None) not in (None, "none")
-    ]
+    cc_parts = [part for part in parts if getattr(part, "cc_kind", None) is not None]
     if not cc_parts:
         return
     for part in cc_parts:
@@ -474,6 +476,48 @@ def _validate_cc_event_contract(
             )
 
 
+def _apply_module_cc(
+    entry: dict[str, Any],
+    kind: str,
+    champion_name: str,
+    slot: str,
+) -> None:
+    """Stamp the module's declared cc kind on every part this slot emits.
+
+    ``MODULE_CC`` declares the kit fact once, per slot; a slot emits one
+    cast, so every part of that cast carries the same reviewed control
+    state.  Stamping here rather than at each construction site is what
+    makes the declaration true of parts a module rebuilds after
+    ``damage_entry`` (Pantheon's Q and R do exactly that) instead of only
+    of the ones that happened to go through a builder keyword.
+
+    A part that already carries its own kind keeps it — an explicit
+    per-part statement is the more specific one — but a part that carries a
+    *different* kind is two declarations of one fact that disagree, so it
+    raises rather than silently preferring either.
+    """
+    parts = entry.get("parts") or ()
+    if not parts:
+        return
+    stamped: list[Any] = []
+    changed = False
+    for part in parts:
+        existing = getattr(part, "cc_kind", None)
+        if existing is None:
+            stamped.append(replace(part, cc_kind=kind))
+            changed = True
+            continue
+        if existing != kind:
+            raise ValueError(
+                f"{champion_name} slot {slot!r}: MODULE_CC declares "
+                f"{kind!r} but the part declares {existing!r} — one cast's "
+                "crowd control has one answer"
+            )
+        stamped.append(part)
+    if changed:
+        entry["parts"] = tuple(stamped)
+
+
 def _result_key(slot: str) -> str:
     """Map a slot-map key to its key in the results dict.
 
@@ -486,6 +530,8 @@ def _result_key(slot: str) -> str:
 def build_parser(
     slot_map: dict[str, SlotParser],
     champion_name: str,
+    *,
+    cc_kinds: Mapping[str, str] | None = None,
 ) -> Callable[..., dict[str, dict[str, Any]]]:
     """Build a ``parse_abilities``-signature function from a slot map.
 
@@ -495,6 +541,12 @@ def build_parser(
     Args:
         slot_map: Mapping of slot key (Q/W/E/R/P/...) to slot parser.
         champion_name: Display name, used for skill-order lookup.
+        cc_kinds: The module's ``MODULE_CC`` declaration — ``{slot: kind}``
+            reviewed crowd control, stamped onto every part the slot emits
+            (:func:`_apply_module_cc`).  Keyword-only, and echoed on the
+            returned parser so ``module_contract`` can prove the wiring and
+            the declaration are the same dict.  Absent for the synthetic
+            slot map, which declares no kit facts of its own.
 
     Returns:
         A function with the standard champion-module signature
@@ -519,6 +571,7 @@ def build_parser(
     # so its OPTIONS list does not exist yet.  A module's declaration is
     # source, so one resolution per champion per process is the whole cost.
     declared_options: dict[str, Any] | None = None
+    declared_cc_kinds: Mapping[str, str] = dict(cc_kinds) if cc_kinds else {}
 
     def parse_abilities(
         champion_data: dict[str, Any],
@@ -558,6 +611,9 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
+                declared_cc = declared_cc_kinds.get(slot)
+                if declared_cc is not None:
+                    _apply_module_cc(entry, declared_cc, champion_name, slot)
                 _stamp_slot_facts(entry, ctx, level=level, resource_type=resource_type)
                 results[_result_key(slot)] = entry
 
@@ -569,4 +625,6 @@ def build_parser(
 
         return results
 
+    if cc_kinds is not None:
+        parse_abilities.cc_kinds = declared_cc_kinds
     return parse_abilities

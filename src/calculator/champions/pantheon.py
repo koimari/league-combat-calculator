@@ -103,8 +103,9 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     percent += _W_BONUS_HEALTH_PER_100 * bonus_health / 100.0
     value = percent / 100.0 * target_max
 
-    # cc_kind routes through damage_entry so the stun certifies its event —
-    # a marker outside the event ledger never triggers Imperial Mandate's
+    # The stun itself is declared once in MODULE_CC; certifying the event
+    # order is the separate claim that gets the marker into the ledger —
+    # a marker outside the ledger never triggers Imperial Mandate's
     # Command or Fimbulwinter's Everlasting.
     entry = damage_entry(
         ability.get("name", "Shield Vault"),
@@ -112,7 +113,7 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         value,
         "physical",
-        cc_kind="stun",
+        event_order_certified="single_hit",
     )
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
@@ -154,7 +155,15 @@ SLOTS = dict(_packet_slots)
 SLOTS["Q"] = _comet_spear
 SLOTS["W"] = _shield_vault
 SLOTS["R"] = _grand_starfall
-parse_abilities = build_parser(SLOTS, "Pantheon")
+
+# W alone is reviewed.  Q's charge slows Pantheon himself (not the target)
+# and R's spear slows on impact, but neither row authors an event the
+# marker could ride: Q rebuilds its part with no sourced travel time and
+# R's magic row is the shockwave, a separate hit from the slowing spear.
+# Declaring either would claim a review the ledger cannot show.
+MODULE_CC = {"W": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Pantheon", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     {

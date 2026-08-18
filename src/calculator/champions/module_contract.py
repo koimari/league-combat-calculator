@@ -7,11 +7,12 @@ the module publishes the complete parser/evidence contract.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from string import hexdigits
 from types import ModuleType
 from typing import Any, Callable
 
+from ..ability_spec import CC_KIND_VOCABULARY
 from ..cast_dependency import (
     CastDependency,
     validate_cast_dependencies,
@@ -43,6 +44,7 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     packet_spec: dict[str, Any] | None = None
     packet_sha256: str | None = None
     cast_dependencies: tuple[CastDependency, ...] = ()
+    cc_kinds: dict[str, str] = field(default_factory=dict)
 
 
 def _declared_cast_dependencies(
@@ -138,11 +140,77 @@ def _cast_dependencies(
     return dependencies
 
 
-def _require_list(module: ModuleType, field: str) -> list[Any]:
-    value = getattr(module, field, None)
+def _module_cc(
+    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+) -> dict[str, str]:
+    """The module's reviewed crowd control, one entry per slot it emits.
+
+    ``MODULE_CC`` is the single declaration site for a kit's crowd-control
+    facts (D-6): ``{slot: kind}`` with kinds from
+    :data:`ability_spec.CC_KIND_VOCABULARY`, where ``"none"`` is a reviewed
+    *absence* of control and an **absent slot is unreviewed** — the two
+    are different answers and only the first one clears the Fimbulwinter /
+    Imperial Mandate control token.
+
+    A slot the module does not emit is a declaration with no referent, and
+    a kind outside the vocabulary is a typo that would author a no-op stun,
+    so both stop registration here rather than at some later reader.
+
+    The engine applies the declaration through ``build_parser``'s
+    ``cc_kinds`` argument, which stamps it on the parser it returns.  That
+    is a second carrier of one fact, so — exactly as with
+    ``CAST_DEPENDENCIES`` — the two are surveyed rather than chained: a
+    module that declares one thing and wires another stops the import
+    instead of quietly running the wired one.
+
+    Raises:
+        ChampionModuleContractError: The declaration is malformed, names a
+            slot the module does not emit, uses an unknown kind, or
+            disagrees with what the module wired into its parser.
+    """
+    declared = getattr(module, "MODULE_CC", None)
+    if declared is None:
+        declared = {}
+    if not isinstance(declared, dict):
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_CC must be a dict of slot -> cc kind"
+        )
+    unknown_slots = sorted(set(declared) - set(slots))
+    if unknown_slots:
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_CC declares slot(s) {unknown_slots} "
+            f"the module does not emit (its slots are {sorted(slots)})"
+        )
+    invalid = sorted(
+        f"{slot}={kind!r}"
+        for slot, kind in declared.items()
+        if not isinstance(kind, str) or kind not in CC_KIND_VOCABULARY
+    )
+    if invalid:
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
+            "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY)"
+        )
+    wired = getattr(parser, "cc_kinds", None)
+    if declared and wired is None:
+        raise ChampionModuleContractError(
+            f"{module.__name__} declares MODULE_CC but never wired it into "
+            "build_parser(..., cc_kinds=MODULE_CC) — an unwired declaration "
+            "reviews nothing"
+        )
+    if wired is not None and dict(wired) != dict(declared):
+        raise ChampionModuleContractError(
+            f"{module.__name__} declares MODULE_CC {dict(declared)} but wired "
+            f"{dict(wired)} into build_parser — one declaration, one wiring"
+        )
+    return dict(declared)
+
+
+def _require_list(module: ModuleType, field_name: str) -> list[Any]:
+    value = getattr(module, field_name, None)
     if not isinstance(value, list):
         raise ChampionModuleContractError(
-            f"{module.__name__} must declare {field} as a list"
+            f"{module.__name__} must declare {field_name} as a list"
         )
     return value
 
@@ -230,6 +298,7 @@ def contract_from_module(
         )
 
     cast_dependencies = _cast_dependencies(module, parser, slots)
+    cc_kinds = _module_cc(module, parser, slots)
 
     return ChampionModuleContract(
         name=name,
@@ -245,4 +314,5 @@ def contract_from_module(
         packet_spec=packet_spec,
         packet_sha256=packet_sha256,
         cast_dependencies=cast_dependencies,
+        cc_kinds=cc_kinds,
     )

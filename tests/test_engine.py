@@ -1226,24 +1226,126 @@ class TestCcEventContract:
         with pytest.raises(ValueError, match="stunn"):
             parse(_champion(Q=[_ability()]), 9, 0.0)
 
-    def test_reviewed_no_cc_result_needs_no_event_path(self) -> None:
-        """cc_kind='none' is a reviewed no-CC statement, not a trigger."""
-
-        def parse_slot(ctx):
+    @staticmethod
+    def _cc_free_slot(**entry_overrides):
+        def parse(ctx):
             entry = damage_entry("Plain Nuke", 3, 8.0, 100.0, "physical")
             entry["parts"] = (DamagePart("physical", 100.0, cc_kind="none"),)
+            entry.update(entry_overrides)
             return entry
 
-        parse_slot.phase = DAMAGE
-        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        parse.phase = DAMAGE
+        return parse
+
+    def test_reviewed_no_cc_result_without_event_path_is_rejected(self) -> None:
+        """A reviewed ABSENCE of control is only worth declaring where the
+        ledger can see it: that is where the control token is cleared, so a
+        "none" on a coarse aggregate row claims a review it cannot show."""
+        parse = build_parser({"Q": self._cc_free_slot()}, "TestChamp")
+        with pytest.raises(ValueError, match="event ledger"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_certified_reviewed_no_cc_result_is_accepted(self) -> None:
+        parse = build_parser(
+            {"Q": self._cc_free_slot(event_order_certified="single_hit")}, "TestChamp"
+        )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert results["Q"]["parts"][0].cc_kind == "none"
 
-    def test_damage_entry_cc_kind_certifies_single_hit(self) -> None:
+    def test_damage_entry_cc_kind_does_not_certify_single_hit(self) -> None:
+        """Reviewing a kit fact is not certifying an event order: the two
+        claims are separate keywords, so a module cannot certify by
+        accident."""
         entry = damage_entry("X", 1, 5.0, 100.0, "magic", cc_kind="stun")
-        assert entry["event_order_certified"] == "single_hit"
+        assert "event_order_certified" not in entry
         assert entry["parts"][0].cc_kind == "stun"
+
+    def test_damage_entry_certifies_only_when_asked(self) -> None:
+        entry = damage_entry(
+            "X", 1, 5.0, 100.0, "magic", event_order_certified="single_hit"
+        )
+        assert entry["event_order_certified"] == "single_hit"
+        assert entry["parts"][0].cc_kind is None
+
+    def test_simple_damage_cc_kind_does_not_certify_single_hit(self) -> None:
+        parse = build_parser(
+            {"Q": simple_damage(attr="Damage", dmg_type="magic", cc_kind="stun")},
+            "TestChamp",
+        )
+        with pytest.raises(ValueError, match="event ledger"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
 
     def test_damage_entry_rejects_mixed_cc(self) -> None:
         with pytest.raises(ValueError, match="mixed"):
             damage_entry("X", 1, 5.0, 100.0, "mixed", cc_kind="stun")
+
+
+# ---------------------------------------------------------------------------
+# MODULE_CC — the module's one crowd-control declaration site
+# ---------------------------------------------------------------------------
+
+
+class TestModuleCcApplication:
+    """``MODULE_CC`` declares the kit fact once per slot; the engine stamps
+    it on every part that slot emits, including parts a module rebuilt
+    after ``damage_entry``."""
+
+    @staticmethod
+    def _two_part_slot(*kinds):
+        def parse(ctx):
+            entry = damage_entry("Two Parter", 3, 8.0, 100.0, "physical")
+            entry["parts"] = tuple(
+                DamagePart("physical", 50.0, time_offset=0.0, cc_kind=kind)
+                for kind in kinds
+            )
+            return entry
+
+        parse.phase = DAMAGE
+        return parse
+
+    def test_declared_kind_reaches_every_part(self) -> None:
+        parse = build_parser(
+            {"Q": self._two_part_slot(None, None)},
+            "TestChamp",
+            cc_kinds={"Q": "none"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.cc_kind for part in results["Q"]["parts"]] == ["none", "none"]
+
+    def test_explicit_part_kind_survives_an_agreeing_declaration(self) -> None:
+        parse = build_parser(
+            {"Q": self._two_part_slot("stun", None)},
+            "TestChamp",
+            cc_kinds={"Q": "stun"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.cc_kind for part in results["Q"]["parts"]] == ["stun", "stun"]
+
+    def test_disagreeing_declarations_raise(self) -> None:
+        parse = build_parser(
+            {"Q": self._two_part_slot("stun", None)},
+            "TestChamp",
+            cc_kinds={"Q": "none"},
+        )
+        with pytest.raises(ValueError, match="one cast's crowd control"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_undeclared_slot_stays_unreviewed(self) -> None:
+        parse = build_parser(
+            {"Q": self._two_part_slot(None, None)},
+            "TestChamp",
+            cc_kinds={},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.cc_kind for part in results["Q"]["parts"]] == [None, None]
+
+    def test_wiring_is_echoed_on_the_parser(self) -> None:
+        """``module_contract`` proves the declaration and the wiring agree,
+        which it can only do if the wiring is readable."""
+        parse = build_parser(
+            {"Q": self._two_part_slot(None)}, "X", cc_kinds={"Q": "none"}
+        )
+        assert parse.cc_kinds == {"Q": "none"}
+        assert not hasattr(
+            build_parser({"Q": self._two_part_slot(None)}, "X"), "cc_kinds"
+        )

@@ -534,11 +534,21 @@ def build_packet_module(
     variant_parsers: dict[tuple[str, int], Any] | None = None,
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
     cast_dependencies: tuple[CastDependency, ...] = (),
+    cc_kinds: dict[str, str] | None = None,
 ):
     """Compile one named module's reviewed packet declaration.
 
     Champion-specific timing, parser, and assumption choices are passed by
     the named champion module.  This compiler contains no champion switchboard.
+
+    ``cc_kinds`` is the module's ``MODULE_CC`` declaration, handed to the
+    same ``build_parser`` application every hand-written module uses so a
+    packet champion reviews its crowd control in one place and not in its
+    packet evidence — the evidence is what the Wiki says, the review is
+    what the module says about it.  It rides the compiled parser too, so
+    ``contract_from_module`` can prove the declaration and the wiring are
+    one dict; a module that declares ``MODULE_CC`` and forgets to pass it
+    here fails registration rather than reviewing nothing.
 
     ``cast_dependencies`` are the module's declared ordering prerequisites
     (``src/calculator/cast_dependency.py``).  They are deliberately **not**
@@ -687,7 +697,7 @@ def build_packet_module(
             cast_dependencies, slot_surface=set(slots), module=champion_name
         )
 
-    parser = build_parser(slots, champion_name)
+    parser = build_parser(slots, champion_name, cc_kinds=cc_kinds)
 
     def parse_abilities(*args, **kwargs):
         result = parser(*args, **kwargs)
@@ -707,4 +717,6 @@ def build_packet_module(
     parse_abilities.packet_spec = champion
     parse_abilities.packet_sha256 = packet_sha256
     parse_abilities.cast_dependencies = cast_dependencies
+    if cc_kinds is not None:
+        parse_abilities.cc_kinds = parser.cc_kinds
     return parse_abilities, slots, assumptions, sources, options

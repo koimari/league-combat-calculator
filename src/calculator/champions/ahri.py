@@ -118,7 +118,10 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Charm"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
-        "parts": (DamagePart("magic", damage, cc_kind="immobilize"),),
+        # The charm marker is declared once in MODULE_CC; what this entry
+        # states is the separate claim that E's one hit lands at the cast
+        # boundary, which is what puts the marker in the event ledger.
+        "parts": (DamagePart("magic", damage),),
         "total_raw": damage,
         "damage_type": "magic",
         "event_order_certified": "single_hit",
@@ -165,9 +168,16 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
+
+# E alone is reviewed: Q is the mixed magic+true pair, W is two flame
+# tiers and R is three dashes, so none of them can carry a reviewed kind
+# into the event ledger yet, and a declaration the ledger cannot show is
+# refused rather than stamped.
+MODULE_CC = {"E": "immobilize"}
+
 REVIEW_STATUS = "reviewed_module"
 
-parse_abilities = build_parser(SLOTS, "Ahri")
+parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

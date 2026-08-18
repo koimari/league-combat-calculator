@@ -472,6 +472,7 @@ def damage_entry(
     cc_kind: str | None = None,
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
+    event_order_certified: str | None = None,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -491,15 +492,15 @@ def damage_entry(
     hundreds of call sites bind a non-``ZeroPolicy`` value into it silently.
 
     ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
-    "immobilize") on the entry's single part AND certifies ``single_hit``
-    event order — authoring CC is authoring an event, and without the
-    certification the marker would dissolve into a coarse aggregate row
-    that CC-triggered item passives never see. Certifying means the hit
-    lands at the cast boundary; an ability with meaningful travel or
-    delay should author the part's ``time_offset`` instead. A "mixed"
-    entry is two parts, which the engine's certified single-hit export
-    cannot carry — that combination raises rather than silently dropping
-    the marker.
+    "immobilize") on the entry's single part.  It is a statement about the
+    kit, not about event timing: certifying that the cast's hit lands at
+    the cast boundary is a *separate* claim the caller makes with
+    ``event_order_certified="single_hit"``.  The two used to be one
+    keyword, which meant reviewing a stun silently certified an event
+    order nobody had checked; a slot that needs both now says both.  A
+    "mixed" entry is two parts, which the engine's certified single-hit
+    export cannot carry — that combination raises rather than silently
+    dropping the marker.
     """
     if cc_kind is not None and dmg_type == "mixed":
         raise ValueError(
@@ -522,8 +523,8 @@ def damage_entry(
         entry["parts"] = (
             DamagePart(dmg_type, total, cc_kind=cc_kind, zero_policy=zero_policy),
         )
-    if cc_kind is not None:
-        entry["event_order_certified"] = "single_hit"
+    if event_order_certified is not None:
+        entry["event_order_certified"] = event_order_certified
     return entry
 
 
@@ -695,6 +696,7 @@ def simple_damage(
     cc_kind: str | None = None,
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
+    event_order_certified: str | None = None,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -726,16 +728,22 @@ def simple_damage(
         cc_kind: Reviewed crowd control the cast applies ("stun",
             "immobilize", "root", "slow", …), stamped on the entry's
             first part so CC-triggered item passives can see the cast
-            in the event ledger. Authoring CC is authoring an event:
-            the entry also certifies ``single_hit`` event order, so the
-            marker actually reaches the ledger instead of dissolving
-            into a coarse aggregate row. Requires a single-part slot
+            in the event ledger. Requires a single-part slot
             (``dmg_type != "mixed"``). None (default) authors no CC.
+            A whole kit's kinds are better declared once in the module's
+            ``MODULE_CC``; this stays for a kind that is genuinely a
+            property of one construction rather than of the slot.
         zero_policy: Keyword-only. What a zero total from this slot means.
             Defaults to
             :data:`MODULE_FORMULA_ZERO`, the champion tree's one declared
             disposition (D-24); pass a different policy where a zero is a
             declaration rather than a computed result.
+        event_order_certified: Keyword-only. ``"single_hit"`` states that
+            this cast's one hit lands at the cast boundary, so the engine
+            exports it as an authored event instead of folding it into a
+            coarse aggregate row. It is a claim about timing and nothing
+            else — an ability with sourced travel or delay authors the
+            part's ``time_offset`` instead of certifying.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -752,6 +760,11 @@ def simple_damage(
         raise ValueError(
             "simple_damage: cc_kind requires a single-part slot "
             "(dmg_type must not be 'mixed')"
+        )
+    if event_order_certified is not None and dmg_type == "mixed":
+        raise ValueError(
+            "simple_damage: event_order_certified requires a single-part "
+            "slot (dmg_type must not be 'mixed')"
         )
     extract_cd = extract_recharge if cooldown == "recharge" else extract_cooldown
 
@@ -799,6 +812,7 @@ def simple_damage(
             resolved_type,
             cc_kind,
             zero_policy=zero_policy,
+            event_order_certified=event_order_certified,
         )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration

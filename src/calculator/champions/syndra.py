@@ -311,7 +311,7 @@ ASSUMPTIONS = [
     "spheres banked on the field); the Min/Max JSON damage rows are "
     "derived totals and are not used",
     "E is assumed to scatter a sphere into the target (the standard QE "
-    "combo), so its cast is authored as a stun event (cc_kind) for "
+    "combo), so its cast is authored as a stun event (MODULE_CC) for "
     "CC-triggered item passives (Imperial Mandate, Fimbulwinter, …); the "
     "stun itself adds no damage. The 80-splinter upgrade (wider angle, "
     "slow), the sphere-less knockback, and W's slow remain unmodeled "
@@ -326,9 +326,22 @@ SLOTS = {
     "Q": _dark_sphere,
     "Q2": _dark_sphere_second_charge,
     "W": _force_of_will,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic", cc_kind="stun"),
+    # The stun itself is declared once, in MODULE_CC below; what E states
+    # here is the separate claim that its one hit lands at the cast
+    # boundary, which is what puts the marker in the event ledger.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _unleashed_power,
 }
+
+# E alone is reviewed: the rest of the kit's rows are multi-hit or
+# multi-part casts with no sourced sub-cast timing (Q's sphere lands after
+# a 0.6s delay the module does not yet author, W is the mixed
+# magic+true pair, R is one part per sphere), so no "none" can be declared
+# for them — an unreachable declaration is refused by the engine, and
+# declaring one anyway would claim a review the ledger cannot show.
+MODULE_CC = {"E": "stun"}
 
 # The revision these declarations were read from, in the shape
 # scripts/cast_dependency_audit.py will resolve against the committed
@@ -406,7 +419,7 @@ CAST_DEPENDENCIES = (
     ),
 )
 
-parse_abilities = build_parser(SLOTS, "Syndra")
+parse_abilities = build_parser(SLOTS, "Syndra", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

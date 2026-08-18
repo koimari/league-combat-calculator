@@ -122,3 +122,45 @@ class TestActualizerFightDamage:
         )
         q_damage = fight["breakdown"]["Q"]["total_damage"]
         assert abs(q_damage - 314.55) <= 2, f"Q damage {q_damage:.1f} expected ~314.55"
+
+
+class TestCharmIsTheKitsOneReviewedControl:
+    """E's charm is declared once, in MODULE_CC, and reaches the ledger."""
+
+    def test_the_charm_is_declared_once_in_module_cc(self) -> None:
+        from src.calculator.champions import ahri
+
+        assert ahri.MODULE_CC == {"E": "immobilize"}
+
+    def test_the_declaration_lands_on_the_part(self, ahri_data, parse_at) -> None:
+        _, abilities = parse_at(ahri_data, 18, ap=100)
+        (part,) = abilities["E"]["parts"]
+        assert part.cc_kind == "immobilize"
+        assert abilities["E"]["event_order_certified"] == "single_hit"
+
+    def test_the_rest_of_the_kit_stays_unreviewed(self, ahri_data, parse_at) -> None:
+        """Q is the mixed magic+true pair, W two flame tiers, R three
+        dashes: none of them authors an event a reviewed kind could ride,
+        so none of them may claim one."""
+        _, abilities = parse_at(ahri_data, 18, ap=100)
+        unreviewed = {
+            slot
+            for slot, entry in abilities.items()
+            if any(part.cc_kind is None for part in entry.get("parts", ()))
+        }
+        assert unreviewed == {"Q", "W", "R"}
+
+    def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
+        from src.calculator.calculate import calculate_payload
+
+        coverage = calculate_payload(
+            {
+                "champion": "Ahri",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )["timeline_coverage"]
+
+        assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
