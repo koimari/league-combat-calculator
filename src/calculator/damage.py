@@ -1375,6 +1375,12 @@ def _row_declaration_share(
 # Phase precedence inside one timestamp of the reconstructed ledger.
 _EVENT_PHASE_ORDER = {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}
 
+# ``cast_events`` publishes times rounded to 3 decimals (the one rounding
+# site, in ``_compute_ability_rotation``) while rows author raw plan times.
+# Walkers matching authored events against that public boundary must accept
+# half the rounding step, or an up-rounded cast time disowns its own hit.
+_CAST_TIME_RESOLUTION = 5e-4
+
 
 def _ordered_damage_events(
     breakdown: dict[str, Any],
@@ -4591,6 +4597,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 ]
                 if len(fallback_times) >= applications:
                     application_times = fallback_times[:applications]
+            application_events: list[dict[str, Any]] | None = []
             for application_index in range(applications):
                 hp_now = max(0.0, target_health - mitigated_damage_dealt)
                 authored_time = (
@@ -4616,6 +4623,22 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 applied_sum = sum(applied.values())
                 for dtype, amount in applied.items():
                     applied_by_type[dtype] = applied_by_type.get(dtype, 0.0) + amount
+                # Each application applies every per-hit item packet at its
+                # own triggering hit's authored time; one untimed carrier
+                # keeps the row coarse rather than inventing a boundary.
+                if application_events is not None:
+                    if authored_time is None:
+                        application_events = None
+                    else:
+                        application_events.extend(
+                            {
+                                "time": authored_time,
+                                "damage": amount,
+                                "damage_type": dtype,
+                            }
+                            for dtype, amount in applied.items()
+                            if amount > 0
+                        )
                 applied_total += applied_sum
                 mitigated_damage_dealt += applied_sum
             if applied_total > 0:
@@ -4626,6 +4649,13 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     "total_damage": applied_total,
                     **_damage_type_fields(applied_by_type),
                 }
+                if application_events:
+                    breakdown[f"on_hit_items_{ability_key}"].update(
+                        {
+                            "damage_events": application_events,
+                            "event_phase": "ability",
+                        }
+                    )
                 state.total_damage += applied_total
 
         # Stack/combo procs whose resistance debuff begins only AFTER the
@@ -5399,7 +5429,7 @@ def _shaped_charge_proc_receipts(
                 candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                 if candidate_time is None or candidate_damage is None:
                     return None
-                if candidate_time + 1e-9 < event_time:
+                if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
                     cursor += 1
                     continue
                 if candidate_damage > 0.0:
@@ -5496,6 +5526,14 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
                     / 100.0,
                 )
             )
+            if len(times) != state.num_auto_attacks:
+                # A kit stat buff re-priced the auto count on the flat
+                # model (``_apply_stat_buff_ultimates``) after this ramp
+                # schedule fixed the count at build time.  The count is
+                # the priced fact, so the schedule follows the model that
+                # produced it rather than being dropped — an eventless
+                # fallback kept every swing-riding row coarse.
+                times = [index / normal_rate for index in range(state.num_auto_attacks)]
         else:
             times = [index / normal_rate for index in range(state.num_auto_attacks)]
         return _apply_spellblade_attack_speed(state, times)
@@ -6276,6 +6314,7 @@ def _layer_on_hit_effects(
                 seq += 1
         phantom_ability_damage = 0.0
         phantom_by_type: dict[str, float] = {}
+        phantom_events: list[dict[str, Any]] | None = []
         for position in ability_phantoms:
             app = apps[attack_app_indices[position]]
             applied = _ability_applied_on_hit_damage(
@@ -6283,6 +6322,22 @@ def _layer_on_hit_effects(
             )
             for dtype, amount in applied.items():
                 phantom_by_type[dtype] = phantom_by_type.get(dtype, 0.0) + amount
+            # A phantom re-application fires with its triggering attack, so
+            # it shares that hit's authored timestamp; one untimed carrier
+            # keeps the row coarse rather than inventing a boundary.
+            if phantom_events is not None:
+                if app.time is None:
+                    phantom_events = None
+                else:
+                    phantom_events.extend(
+                        {
+                            "time": float(app.time),
+                            "damage": amount,
+                            "damage_type": dtype,
+                        }
+                        for dtype, amount in applied.items()
+                        if amount > 0
+                    )
             phantom_ability_damage += sum(applied.values())
             mapped = on_hit_seq_index.get(attack_app_indices[position])
             if mapped is not None:
@@ -6295,6 +6350,10 @@ def _layer_on_hit_effects(
                 "total_damage": phantom_ability_damage,
                 **_damage_type_fields(phantom_by_type),
             }
+            if phantom_events:
+                breakdown["on_hit_items_phantom"].update(
+                    {"damage_events": phantom_events, "event_phase": "ability"}
+                )
             on_hit_total += phantom_ability_damage
 
     # Double shot applies on-hit effects an additional time per auto
@@ -7148,11 +7207,15 @@ def _add_spellblade_damage(
                     source.item_name, raw_sb * plain
                 )
             state.breakdown[source.breakdown_key] = plain_row
-            if converted == 0 and proc_times:
+            if proc_times:
                 # Every proc of one fight shares a magnitude: the engine
                 # prices one raw value and multiplies its mitigated figure by
                 # the proc count, so each authored event carries that value
-                # rather than a share of the row's total.
+                # rather than a share of the row's total.  A converted build
+                # was priced on the assumption that procs land on the flagged
+                # casts first, so the plain row's events are the LAST
+                # ``plain`` boundaries of the same certified weave schedule —
+                # the authored assignment restates the priced one.
                 plain_row["damage_events"] = [
                     {
                         "time": proc_time,
@@ -7168,7 +7231,7 @@ def _add_spellblade_damage(
                             else {}
                         ),
                     }
-                    for proc_time in proc_times
+                    for proc_time in proc_times[converted:]
                 ]
         if converted > 0:
             converted_by_type = {"true": raw_sb * converted_ratio * converted}
@@ -7184,6 +7247,26 @@ def _add_spellblade_damage(
                 "total_damage": converted_per_proc * converted,
                 **_damage_type_fields(converted_by_type),
             }
+            if proc_times:
+                # The first ``converted`` weave boundaries carry the procs
+                # the pricing converted; each splits into its unmitigated
+                # true share and (below 100% conversion) the item-typed rest.
+                state.breakdown[f"{source.breakdown_key}_true"]["damage_events"] = [
+                    {
+                        "time": proc_time,
+                        "damage": amount,
+                        "damage_type": dtype,
+                    }
+                    for proc_time in proc_times[:converted]
+                    for dtype, amount in (
+                        ("true", raw_sb * converted_ratio),
+                        (
+                            source.damage_type,
+                            result.damage_per_proc * (1.0 - converted_ratio),
+                        ),
+                    )
+                    if amount > 0
+                ]
         state.total_damage += sb_total
         _add_spellblade_true_rider(state, source, raw_sb, result.procs, proc_times)
 
@@ -7248,6 +7331,21 @@ def _add_spellblade_damage(
                     "total_damage": extra_on_hit,
                     **_damage_type_fields(extra_by_type),
                 }
+                # Each double application rides the attack that consumed the
+                # charge, at the weave-timed proc boundary the spellblade
+                # row itself was priced on; every proc doubles the same
+                # per-hit packet, so each event is one proc's typed share.
+                if len(proc_times) == result.double_on_hit_procs:
+                    state.breakdown[f"double_on_hit_{result.item}"]["damage_events"] = [
+                        {
+                            "time": proc_time,
+                            "damage": amount / result.double_on_hit_procs,
+                            "damage_type": dtype,
+                        }
+                        for proc_time in proc_times
+                        for dtype, amount in extra_by_type.items()
+                        if amount > 0
+                    ]
                 state.total_damage += extra_on_hit
 
     # Double shot on-hit stacking: each auto generates an extra on-hit
@@ -7745,6 +7843,14 @@ def _stacked_champion_proc_times(
                     candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                     if candidate_time is None or candidate_damage is None:
                         return None
+                    # NOT rounding-tolerant, deliberately, unlike its two
+                    # sibling walkers: this one's receipts decide a stack
+                    # PAIRING and a cooldown gate, so completing a walk the
+                    # rounded boundary used to abandon re-prices the row
+                    # (the coarse fallback assumes ``1 + duration/cooldown``
+                    # procs; the certified pairing proves fewer for a sparse
+                    # cast stream).  That re-pricing is a behavior change and
+                    # belongs to a wave allowed to move numbers.
                     if candidate_time + 1e-9 < event_time:
                         cursor += 1
                         continue
@@ -8659,7 +8765,17 @@ def _muramana_proc_events(
             return None
         row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
         authored_events = row.get("damage_events") if isinstance(row, Mapping) else None
-        if isinstance(authored_events, list):
+        # Eclipse's gate, mirrored: the walk below consumes one POSITIVE
+        # authored packet per cast instance, so a row holding none has
+        # nothing for it to find.  A damage-less cast (Kayle E — its rider
+        # is re-attributed, leaving only zero-damage events) therefore
+        # procs on its own cast instance rather than exhausting the ledger
+        # and withholding the whole row's events.
+        if isinstance(authored_events, list) and any(
+            isinstance(candidate, Mapping)
+            and (_finite_numeric_receipt(candidate.get("damage")) or 0.0) > 0.0
+            for candidate in authored_events
+        ):
             cursor = event_cursors.get(slot, 0)
             cast_events: list[dict[str, Any]] = []
             for _ in range(raw_instances):
@@ -8671,7 +8787,7 @@ def _muramana_proc_events(
                     candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                     if candidate_time is None or candidate_damage is None:
                         return None
-                    if candidate_time + 1e-9 < event_time:
+                    if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
                         cursor += 1
                         continue
                     if candidate_damage > 0.0:
@@ -9871,6 +9987,7 @@ def _add_single_proc_on_hits(
                 if source.basic_damage and source.damage_type != "true"
                 else 1.0
             )
+            ability_proc_records: list[tuple[float | None, float]] = []
             for hit_index in ability_procs:
                 app = counted_hits[hit_index]
                 inputs = _damage_inputs(state, max(0.0, app.target_hp - proc_hp_dealt))
@@ -9881,6 +9998,7 @@ def _add_single_proc_on_hits(
                 total_damage += mitigated
                 proc_hp_dealt += mitigated
                 declared_raws.append(raw * basic_share)
+                ability_proc_records.append((app.time, mitigated))
 
             # Auto-segment procs: unchanged auto-timeline behavior at
             # the auto stream's effectiveness.
@@ -9931,25 +10049,42 @@ def _add_single_proc_on_hits(
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
                 # This row is the pair engine's preview of a number the
-                # coupled walk owns since ``charged_strike`` retired.  A row
-                # holding an ability-segment proc stays coarse below, so the
-                # row-level declaration is the one the reconstruction splits
-                # and hands over (``_row_declaration_share``).
+                # coupled walk owns since ``charged_strike`` retired.  The
+                # row-level declaration is what a row with no authored events
+                # hands the walk, which the reconstruction splits
+                # (``_row_declaration_share``).
                 "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
                 "declared": _strike_declaration(source.item_name, sum(declared_raws)),
             }
-            # Every proc fired on a timestamped swing: author its events.
-            # Ability-segment procs carry no authored timestamps yet, so
-            # a row containing any stays coarse deliberately.
-            if not ability_procs and auto_proc_damages and swing_times:
+            # Every proc fired on a timestamped hit: author its events.
+            # Ability-segment procs ride their triggering application's
+            # accepted-cast time (the shared counter's leading hits);
+            # auto-segment procs ride their swings.  One untimed carrier
+            # keeps the row coarse rather than inventing a boundary.
+            ability_procs_timed = all(
+                time is not None for time, _ in ability_proc_records
+            )
+            autos_stampable = not proc_autos or bool(swing_times)
+            if ability_procs_timed and autos_stampable:
                 breakdown[source.breakdown_key]["event_phase"] = "auto"
                 breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": float(time),
+                        "damage": damage,
+                        "damage_type": source.damage_type,
+                        "declared": _strike_declaration(
+                            source.item_name, declared_raws[position]
+                        ),
+                    }
+                    for position, (time, damage) in enumerate(ability_proc_records)
+                ] + [
                     {
                         "time": swing_times[auto_index],
                         "damage": damage,
                         "damage_type": source.damage_type,
                         "declared": _strike_declaration(
-                            source.item_name, declared_raws[position]
+                            source.item_name,
+                            declared_raws[len(ability_proc_records) + position],
                         ),
                     }
                     for position, (auto_index, damage) in enumerate(
@@ -10339,8 +10474,39 @@ def _add_shadowflame_cinderbloom(
         state.total_damage += shadowflame_bonus
 
 
+def _expose_weakness_delta_events(
+    state: FightState,
+    rotation: RotationResult,
+    bonus: float,
+) -> list[dict[str, Any]]:
+    """Author Expose Weakness's amp onto every event after its arming proc.
+
+    The arming sequence completes when the first spellblade proc lands
+    (``Isolation.TRIGGER_SEQUENCE``), so the bonus rides every later ledger
+    event pro-rata at that event's own time.  A true-conversion build's
+    first procs live on the ``_true`` sibling row (Camille), so the
+    boundary is the earliest event of either.  Without an authored proc
+    boundary no events are authored and the row stays explicitly coarse.
+    """
+    assert state.item_spellblade is not None
+    proc_key = state.item_spellblade.source.breakdown_key
+    proc_keys = {proc_key, f"{proc_key}_true"}
+    ledger = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+        light=True,
+    )
+    boundary = min((row[0] for row in ledger if row[3] in proc_keys), default=None)
+    if boundary is None:
+        return []
+    return _amplifier_delta_events([row for row in ledger if row[0] > boundary], bonus)
+
+
 def _add_expose_weakness(
     state: FightState,
+    rotation: RotationResult,
     autos: AutoAttackResult,
     spellblade: SpellbladeResult,
 ) -> None:
@@ -10404,6 +10570,11 @@ def _add_expose_weakness(
         # regardless.
         "pair_preview_of": slot.rules[0].mechanic_id,
     }
+    delta_events = _expose_weakness_delta_events(state, rotation, expose_bonus)
+    if delta_events:
+        breakdown[f"expose_weakness_{slot.owner}"].update(
+            {"damage_events": delta_events, "event_phase": "amplifier"}
+        )
     state.total_damage += expose_bonus
 
 
@@ -10484,10 +10655,35 @@ def _hypershot_delta_events(
         ),
         None,
     )
-    if trigger_event_index is None:
+    if trigger_event_index is not None:
+        excluded = {trigger_event_index}
+    elif str(state.breakdown[trigger_key].get("damage_type", "")) != "mixed":
+        # A first cast split into several ledger events (multi-hit or
+        # multi-tick opener) matches no single event.  The accepted cast
+        # ledger scopes the trigger cast instead: every trigger-slot event
+        # landing before that slot's second cast belongs to the cast that
+        # armed Hypershot.  A mixed opener is the one shape whose priced
+        # trigger is a PART of its cast (the non-triggering part IS
+        # amped), so it must resolve above or stay coarse.
+        slot_cast_times = sorted(
+            float(event.get("time", 0.0))
+            for event in rotation.cast_events
+            if isinstance(event, Mapping) and event.get("slot") == trigger_key
+        )
+        next_cast_boundary = (
+            slot_cast_times[1] - _CAST_TIME_RESOLUTION - 1e-9
+            if len(slot_cast_times) > 1
+            else float("inf")
+        )
+        excluded = {
+            index
+            for index, row in enumerate(events)
+            if row[3] == trigger_key and row[0][0] < next_cast_boundary
+        }
+    else:
         return []
     return _amplifier_delta_events(
-        [row for index, row in enumerate(events) if index != trigger_event_index],
+        [row for index, row in enumerate(events) if index not in excluded],
         bonus,
     )
 
@@ -11259,7 +11455,7 @@ def calculate_fight_damage(
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)
-    _add_expose_weakness(state, autos, spellblade)
+    _add_expose_weakness(state, rotation, autos, spellblade)
 
     # ── Keystone opening-window bonus (First Strike-class) ──────────────
     _add_keystone_window_amp_damage(state, rotation)
