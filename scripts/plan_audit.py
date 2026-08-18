@@ -87,6 +87,12 @@ from typing import Any, Iterable, Mapping, Sequence
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLANS_DIR = REPO_ROOT / "docs" / "plans"
 UMBRELLA_NAME = "2026-08-08-silent-failure-campaign.md"
+# The full-coverage campaign's plan and its recon notes, which state 0 for the
+# same reasons the earlier plans do.
+FULL_COVERAGE_DOCS = (
+    "2026-08-18-full-coverage-campaign.md",
+    "full-coverage-notes.md",
+)
 FINGERPRINTS_PATH = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 INVENTORY_PATH = REPO_ROOT / "docs" / "receipts" / "decision-inventory.json"
 
@@ -205,6 +211,25 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         value=2,
         context="rounds to 2 dp",
         reason="golden's rounding precision (R-13), not a count of anything",
+    ),
+    *(
+        Allowance(
+            doc=doc,
+            value=0,
+            context="",
+            reason=(
+                "the full-coverage campaign's documents state 0 as a frontier "
+                "count, a comparison operand and a tolerance; the same reading "
+                "the earlier plans carry"
+            ),
+        )
+        for doc in FULL_COVERAGE_DOCS
+    ),
+    Allowance(
+        doc="2026-08-18-full-coverage-campaign.md",
+        value=20,
+        context="20 s window",
+        reason="a fight duration in seconds, the window Kai'Sa's ruptures recur across",
     ),
     *(
         Allowance(

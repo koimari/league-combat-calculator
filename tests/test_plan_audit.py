@@ -37,7 +37,8 @@ class TestTheRealPlans:
         names = {path.name for path in plan_audit.plan_documents()}
         assert plan_audit.UMBRELLA_NAME in names
         assert "silent-failure-runbook.md" in names
-        assert len(names) == 8
+        assert set(plan_audit.FULL_COVERAGE_DOCS) <= names
+        assert len(names) == 10
 
     def test_the_umbrella_carries_citations_worth_checking(self):
         """A citation check over a document with no citations proves nothing."""
