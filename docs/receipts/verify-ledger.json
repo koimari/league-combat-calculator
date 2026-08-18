@@ -18913,11 +18913,44 @@
      "tests_without_a_declaring_receipt": []
     }
    },
-   "what_this_settles": "Criterion 11's first clause, for the units Ruling 1 binds it over. Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothing that changed behaviour in any of the four directories the ruling names. That is the fixed point the ruling was reaching for, stated as a number a gate re-derives rather than as a reading.",
+   "what_this_settles": "Criterion 11's first clause, for the units Ruling 1 binds it over that this grade reaches -- and it does not reach all of them, which is the correction below. Written on 2026-08-18 as: \"Criterion 11's first clause, for the units Ruling 1 binds it over. Every implementation slice in the campaign range carries a recorded R-35 verdict in this ledger, because the residue -- the only place a tag without one can be -- holds nothing that changed behaviour in any of the four directories the ruling names. That is the fixed point the ruling was reaching for, stated as a number a gate re-derives rather than as a reading.\" Corrected the same day, and found twice independently: by the R-35 verifier of the pass that wrote it (round 132, finding 2) and by a certification reviewer. The residue is NOT the only place a tag without a verdict can be. The instrument arm holds four more -- Ruling 2 takes them out of the denominator on the owner's words, and two of them touched `scripts/`, which is one of Ruling 1's own four directories -- so the quantifier 'every implementation slice in the campaign range' reaches further than the residue this block grades. The sentence stays written, because a justification that is only deleted is one no reader can check was ever real. What replaces it is narrower and is what the counters re-derive: no tag in the residue is an implementation slice, so every implementation slice IN THE CLAUSE'S DENOMINATOR carries a recorded verdict in this ledger. The two populations that bound leaves outside are named in `what_this_does_not_reach`, each beside the counter that owns it, so a reader does not have to take the bound on trust.",
    "what_this_is_not": "An exclusion, an enumeration, or a shrunk denominator. Nothing leaves any list: the residue is still what it was, both tags are still in slice_groups_without_one, and instrument_pass_tags gains nobody. In particular this does NOT enumerate the two remaining tags as instruments -- the lane that recorded the ruling refused to enumerate itself, a gate pins that refusal, and this lane will not do for it what it would not do for itself. What is added is a grade on the residue, which is strictly conservative: it holds the denominator at its largest and answers the clause anyway.",
    "what_it_does_not_claim": "That either remaining tag is an instrument, or that either has a verdict. Neither does. It claims the weaker and checkable thing: whatever they are, they are not units that changed behaviour in the directories Ruling 1's sentence quantifies over, so the clause as the owner ruled it does not reach them. Whether they ever leave the residue is still a verifier's to say, exactly as why_the_lane_recording_the_ruling_did_not_enumerate_itself says.",
    "gate": "tests/test_verify_ledger.py",
-   "what_per_tag_holds": "Two findings per tag and no evidence list, and the omission is the point. An earlier shape of this block pinned every path each residue tag had touched, which made it stale on the tag's very next commit -- this pass's baseline re-pin added one path and the gate went red on a receipt that had recorded a true thing about a tree one commit older. A receipt derived from the commit list has to be written in the commit that changes the commit list, and a residue tag is the one population that goes on changing it. So what is pinned is the grade rather than the evidence: the behaviour-directory paths the tag touched, and the tests/ files no receipt of the tag declares as its gate. Both are empty, both are re-derived by the gate against the tree, and a receipt-only commit by a residue tag leaves both empty while an src/ commit cannot."
+   "what_per_tag_holds": "Two findings per tag and no evidence list, and the omission is the point. An earlier shape of this block pinned every path each residue tag had touched, which made it stale on the tag's very next commit -- this pass's baseline re-pin added one path and the gate went red on a receipt that had recorded a true thing about a tree one commit older. A receipt derived from the commit list has to be written in the commit that changes the commit list, and a residue tag is the one population that goes on changing it. So what is pinned is the grade rather than the evidence: the behaviour-directory paths the tag touched, and the tests/ files no receipt of the tag declares as its gate. Both are empty, both are re-derived by the gate against the tree, and a receipt-only commit by a residue tag leaves both empty while an src/ commit cannot.",
+   "what_this_does_not_reach": {
+    "dated": "2026-08-18",
+    "rule": "The two populations the settlement sentence is now bounded away from. Neither is new and neither is hidden anywhere else in this file; what is new is that they sit beside the sentence that used to quantify over them, because a bound a reader has to reconstruct is a bound that reads as an oversight.",
+    "the_instrument_arm": {
+     "why_it_is_here": "Ruling 2 takes verification, certification, transcription and receipt-only passes out of the denominator, and the check it names is `src/`-only: an instrument tag whose commits touch `src/` fails. Ruling 1's unit names four directories. So an enumerated instrument may have touched `tests/` or `scripts/` and still be outside the denominator, and two of the four did. That gap is the owner's reading and a lane may not narrow it -- narrowing the check would eject tags the owner ruled out of the denominator, which is a lane re-deciding a ruled question. What a lane may do is measure the overlap and record it where the sentence it bounds is, which is this.",
+     "per_tag": {
+      "campaign-close-certification": [
+       "scripts/",
+       "tests/"
+      ],
+      "campaign-close-certification-r2": [
+       "tests/"
+      ],
+      "campaign-close-certification-r3": [
+       "tests/"
+      ],
+      "campaign-close-certification-r4": [
+       "scripts/",
+       "tests/"
+      ]
+     },
+     "tags_touching_a_behaviour_directory": 4,
+     "of_which_touch_scripts": 2,
+     "none_touch_src": true,
+     "why_directories_and_not_paths": "A pinned path list goes stale on the tag's next commit, which is the same lesson `what_per_tag_holds` records one key up. A directory set is the grade and survives it."
+    },
+    "the_untagged_commits": {
+     "why_it_is_here": "Ruling 5's population sits outside the denominator by construction -- the denominator is derived from a commit subject's trailing tag and these carry none -- so no statement about slice groups reaches them, this block's included.",
+     "artifact": "docs/receipts/verify-ledger.json",
+     "path": "coverage.untagged_commits_that_touch_src",
+     "why_no_number_is_restated_here": "Criterion 4's sole-home rule. That block owns the enumeration, the coverage map and both counters; a copy of any of them here is the second home the criterion exists to forbid, and it is the second home that goes stale."
+    }
+   }
   }
  },
  "vocabulary_notes": {

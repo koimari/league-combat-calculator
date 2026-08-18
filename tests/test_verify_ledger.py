@@ -575,6 +575,106 @@ def test_no_tag_in_the_residue_is_an_implementation_slice() -> None:
     assert block["what_per_tag_holds"].strip()
 
 
+#: Ruling 1's unit, spelled as the ruling spells it.  ``BEHAVIOUR_DIRS`` above is
+#: the residue grade's emptiness arm and is deliberately three of these four --
+#: ``tests/`` is checked by containment there.  This tuple is the whole list,
+#: because what it measures is how far Ruling 2's ``src/``-only check falls short
+#: of it.
+RULING_1_DIRS = ("src/", "tests/", "scripts/", "data/")
+
+
+def _instrument_overlap() -> dict[str, list[str]]:
+    """Per instrument tag, which of Ruling 1's four directories it touched.
+
+    Directories and not paths, for the reason ``what_per_tag_holds`` gives one
+    block up: a pinned path list goes stale on the tag's next commit and a
+    directory set is the grade.
+    """
+    grouped = _paths_by_tag()
+    return {
+        row["tag"]: sorted(
+            {
+                directory
+                for directory in RULING_1_DIRS
+                if any(path.startswith(directory) for path in grouped[row["tag"]])
+            }
+        )
+        for row in _instruments()
+    }
+
+
+def test_the_settlement_sentence_is_bounded_to_what_it_measures() -> None:
+    """Round 132's second finding, and a certification reviewer's minor.
+
+    The sentence quantified over "every implementation slice in the campaign
+    range" and justified itself with "the residue -- the only place a tag
+    without one can be".  The residue is not the only such place: the four
+    instrument tags carry no verdict either, and Ruling 2 takes them out of the
+    denominator on an ``src/``-only check while Ruling 1's unit names four
+    directories.  Two of the four touched ``scripts/``.
+
+    So the bound is asserted rather than promised: the sentence says which
+    population it settles, the block beside it names both populations it does
+    not reach, and the overlap is a derived number rather than a paragraph.
+    """
+    block = ledger()["coverage"]["residue_is_not_an_implementation_slice"]
+    assert "IN THE CLAUSE'S DENOMINATOR" in block["what_this_settles"]
+    assert "what_this_does_not_reach" in block["what_this_settles"]
+    unreached = block["what_this_does_not_reach"]
+    assert unreached["dated"] == "2026-08-18"
+    assert unreached["the_untagged_commits"]["path"] == (
+        "coverage.untagged_commits_that_touch_src"
+    )
+    # And no second home: the bound points at Ruling 5's counters, it does not
+    # copy them.  A copy is what criterion 4 forbids and what goes stale.  The
+    # rule is on the schema rather than on the prose -- "Ruling 5" and
+    # "criterion 4" are references and a digit scan cannot tell them from a
+    # count -- so what is asserted is that no field here holds a number at all.
+    untagged = unreached["the_untagged_commits"]
+    assert all(isinstance(value, str) for value in untagged.values())
+    owner = _untagged_src()
+    assert not {"count", "uncovered", "covered"} & set(untagged)
+    assert all(
+        str(owner[key]) not in untagged.values() for key in ("count", "uncovered")
+    )
+
+
+def test_the_instrument_overlap_is_the_measured_one() -> None:
+    """The number the bound rests on, re-derived from the tree.
+
+    An authored overlap would be a lane's account of how far a ruling's check
+    falls short of its own unit, which is exactly the kind of claim this
+    ledger refuses to take on a lane's word.
+    """
+    unreached = ledger()["coverage"]["residue_is_not_an_implementation_slice"][
+        "what_this_does_not_reach"
+    ]["the_instrument_arm"]
+    measured = _instrument_overlap()
+    assert unreached["per_tag"] == measured
+    assert unreached["tags_touching_a_behaviour_directory"] == sum(
+        1 for dirs in measured.values() if dirs
+    )
+    assert unreached["of_which_touch_scripts"] == sum(
+        1 for dirs in measured.values() if "scripts/" in dirs
+    )
+    # The prong Ruling 2 does check, asserted here as the reason the overlap is
+    # recorded rather than repaired: no instrument touched ``src/``, so nothing
+    # in this arm is out of the denominator against the owner's own check.
+    assert unreached["none_touch_src"] is True
+    assert all("src/" not in dirs for dirs in measured.values())
+    # R-05: the overlap is discriminating.  A tag that really shipped source
+    # would show ``src/`` here, and one of the campaign's own does.
+    source_slice = {
+        directory
+        for directory in RULING_1_DIRS
+        if any(
+            path.startswith(directory)
+            for path in _paths_by_tag()["campaign-close-swing-composition"]
+        )
+    }
+    assert "src/" in source_slice
+
+
 def test_the_residue_grade_changes_no_list_and_enumerates_nobody() -> None:
     """The conservative half, asserted rather than promised.
 
