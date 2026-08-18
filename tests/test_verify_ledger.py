@@ -495,6 +495,104 @@ def test_the_block_says_the_split_is_the_owners_ruling_and_not_an_exclusion() ->
     assert coverage["why_the_lane_recording_the_ruling_did_not_enumerate_itself"]
 
 
+# --------------------------------------------------------------------------
+# Ruling 5 -- the untagged commits, and which of them the clause reaches.
+#
+# The denominator is derived from a commit subject's trailing tag, so a commit
+# carrying none sits outside it.  ``untagged_commits`` reported how many there
+# were and nothing said what they *were*: outside "every slice" because they
+# touch no behaviour, or evidence the tag convention was not universal.  A
+# certification reviewer raised it, the owed row carried it to whoever ruled,
+# and the owner's ruling of 2026-08-17 settles it -- an untagged commit that
+# touches no behaviour owes nothing, and one that touches ``src/`` is
+# enumerated and owes a batch verdict or a dated acceptance note.
+#
+# What is gated here is the enumeration, not the coverage.  Every row is
+# uncovered today; the counter says so, and a list with a length is what makes
+# the remaining debt work somebody can start.
+# --------------------------------------------------------------------------
+
+
+def _untagged_src_subjects() -> list[str]:
+    """Untagged campaign commits that touch ``src/``, oldest first."""
+    unit, record = chr(31), chr(30)
+    out = subprocess.run(
+        [
+            "git",
+            "log",
+            "--reverse",
+            f"--format={record}%h{unit}%s",
+            "--name-only",
+            "584071e..HEAD",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=True,
+    ).stdout
+    tag_pattern = re.compile(TRAILING_TAG)
+    subjects: list[str] = []
+    for chunk in out.split(record):
+        lines = [line for line in chunk.splitlines() if line.strip()]
+        if not lines:
+            continue
+        _sha, subject = lines[0].split(unit, 1)
+        if tag_pattern.search(subject):
+            continue
+        if any(path.startswith("src/") for path in lines[1:]):
+            subjects.append(subject)
+    return subjects
+
+
+def _untagged_src() -> dict:
+    return ledger()["coverage"]["untagged_commits_that_touch_src"]
+
+
+def test_the_untagged_src_enumeration_is_the_measured_one() -> None:
+    """Derived, in order, and re-derived here -- never authored.
+
+    The population hole closed by being counted, and a hole counted by hand
+    is the hole with a receipt on it.  Subjects rather than shas, for the
+    reason the citation list gives one function up.
+    """
+    block = _untagged_src()
+    measured = _untagged_src_subjects()
+    assert block["subjects"] == measured
+    assert block["count"] == len(measured)
+
+
+def test_the_untagged_src_rows_carry_their_coverage_honestly() -> None:
+    """The counter that stops the list from reading as closed."""
+    block = _untagged_src()
+    covered = block["covered"]
+    assert set(covered) <= set(block["subjects"])
+    assert block["uncovered"] == block["count"] - len(covered)
+
+
+def test_the_untagged_src_enumeration_says_what_a_lane_may_not_do() -> None:
+    """Retro-tagging is the shortcut this list would otherwise invite.
+
+    Rewriting a commit subject closes the list by making it underivable,
+    which is why the refusal lives beside the enumeration rather than only
+    in the ruling that ordered it.
+    """
+    block = _untagged_src()
+    forbidden = block["what_a_lane_may_not_do_about_these"]
+    assert "Retro-tag" in forbidden
+    assert "2026-08-17" in block["rule"]
+    assert block["what_closes_a_row"].strip()
+
+
+def test_the_untagged_src_gate_has_a_red_it_can_reproduce() -> None:
+    """R-05: drop a row, add one, or claim coverage nobody recorded."""
+    block = _untagged_src()
+    measured = _untagged_src_subjects()
+    assert measured[:-1] != measured
+    assert measured + ["a subject no commit carries"] != measured
+    doctored = dict(block, covered={"a subject no commit carries": {}})
+    assert not set(doctored["covered"]) <= set(block["subjects"])
+
+
 def test_the_lane_that_recorded_the_ruling_is_not_in_the_arm_it_recorded() -> None:
     """The one check nobody else could have written for this pass.
 
