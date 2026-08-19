@@ -292,14 +292,14 @@ def test_an_unmarked_row_classifies_unreviewed_and_never_none():
 
 
 def test_control_that_is_neither_immobilize_nor_slow_is_reviewed_and_arms_nothing():
-    """Malphite's cripple and Malzahar's silence have their own words.
+    """Malphite's cripple, Malzahar's silence and Teemo's blind have words.
 
     Calling either one "slow" claims a movement slow the Wiki does not,
     and calling it "none" denies a control the ability applies — so the
     vocabulary carries them, and they narrow a part to reviewed control
     that triggers neither Command nor Everlasting.
     """
-    for kind in ("cripple", "silence"):
+    for kind in ("cripple", "silence", "blind"):
         cc_class, cc_kind, reviewed = ts._classify_cc(_row(cc_kind=kind))
         assert cc_class is ts.CcClass.NONE
         assert cc_kind == kind
