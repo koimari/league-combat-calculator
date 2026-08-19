@@ -1,20 +1,59 @@
-"""Swain — CP10.8 full-entry-reviewed packet module."""
+"""Swain — CP10.8 full-entry-reviewed packet module.
+
+Row-selection fix (Q): Death's Hand "unleashes five bolts of eldritch
+power over 0.264 seconds ... Subsequent bolts against an enemy deal 25%
+bonus damage".  The generated packet priced the cached per-bolt "Magic
+Damage" row (60/90/120/150/180 + 45% AP); the single-target total the
+cache computes for the whole cast is "Total Damage"
+(120/180/240/300/360 + 90% AP) — the first bolt at 100% plus four at the
+25% "Bonus Damage Per Bolt" row, exactly twice the per-bolt row at every
+rank.  Five bolts is not one hit, so Q declares its aggregate at the cast
+boundary instead of certifying a single hit; the 0.264-second bolt
+cadence is left for the timing wave.
+
+R (variant 0, Demonic Ascension) still prices ONE 0.5-second drain tick
+for a whole channel on a 120-second cooldown.  The cache carries no total
+for it — the channel's length is a Demonic Energy economy (50 energy,
+-5 per 0.5s and -7.5 after five seconds, +10 per 0.5s while draining a
+champion) — so pricing it needs a modeled duration, not another row.
+"""
 
 from dataclasses import replace
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
 
+
+def _deaths_hand(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: all five bolts against one enemy, declared at the cast."""
+    return typed_damage(ctx, "Total Damage", "magic", time_offset=0.0)
+
+
 _packet_parse, _packet_slots, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Swain",
     PACKET_SHA256,
-    # Each packet prices one blow: Q the cached first-bolt "Magic Damage"
-    # row, W the single delayed explosion, E the single detonation, and R
-    # either one drain tick or the one Demonflare nova.
-    single_hit_slots=frozenset({"Q", "W", "E", "R"}),
+    # Each of these packets prices one blow: W the single delayed
+    # explosion, E the single detonation, and R either one drain tick or
+    # the one Demonflare nova.  Q prices five bolts and declares their
+    # aggregate at the cast instead.
+    single_hit_slots=frozenset({"W", "E", "R"}),
+    slot_parsers={"Q": _deaths_hand},
+    assumption_overrides=(
+        "Q (Death's Hand) prices the single-target total of all five "
+        "bolts — the cached Total Damage row (120/180/240/300/360 + 90% "
+        "AP), which is the per-bolt Magic Damage row plus four "
+        "subsequent bolts at the 25% Bonus Damage Per Bolt row.  The "
+        "generated packet priced one bolt.  The 0.264-second cadence "
+        "across the five bolts is not authored.",
+        "R variant 0 (Demonic Ascension) prices ONE 0.5-second drain "
+        "tick.  The cache lists no total for the channel, whose length "
+        "is set by the Demonic Energy economy, so the whole-channel "
+        "price is withheld rather than guessed.",
+    ),
 )
 PACKET_SPEC = _packet_slots.packet_spec
 VARIANT_OPTION_KEYS = ("r_variant",)

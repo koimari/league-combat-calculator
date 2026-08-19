@@ -7,8 +7,10 @@ of three empowered attacks, so it carries no slot-wide answer and this kit
 stays coarse.
 """
 
+import pytest
+
 from src.calculator.champions import xin_zhao
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -25,8 +27,8 @@ class TestReviewedCrowdControl:
         assert xin_zhao.MODULE_CC == {"W": "slow", "E": "slow", "R": "none"}
         assert xin_zhao.parse_abilities.cc_kinds == xin_zhao.MODULE_CC
         assert "slowing all targets hit by 30%" in cc_review.slot_text(data, "E")
-        # W's slow is the thrust's; the packet prices the per-slash row,
-        # but the cast still slows the target it damages.
+        # W's slow is the thrust's, and the module now prices the whole
+        # cast — the four slashes plus that thrust.
         assert "slowing them by 50%" in cc_review.slot_text(data, "W")
         assert xin_zhao.PACKET_SPEC["slots"]["W"]["base"] == [
             7.5,
@@ -47,7 +49,8 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Xin Zhao")
         assert "Q" not in xin_zhao.MODULE_CC
         assert "the third attack knocks up the target" in cc_review.slot_text(data, "Q")
-        # The priced row is one empowered attack, not the three-attack total.
+        # The row covers all three empowered attacks, but only one of them
+        # knocks up, so no slot-wide kind answers for it.
         assert xin_zhao.PACKET_SPEC["slots"]["Q"]["base"] == [
             15.0,
             30.0,
@@ -61,3 +64,31 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Xin Zhao")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+class TestPricedRows:
+    """Q and W price the cast's own total, not one instance of it.
+
+    The generated packet picked "Bonus Physical Damage" for Q (one of the
+    three empowered attacks) and "Physical Damage per Slash" for W (one
+    slash of four, and no thrust).  Both cached entries also carry the
+    total the wiki computes for the whole cast, and that is what the
+    module reads.
+    """
+
+    def test_three_talon_strike_prices_all_three_empowered_attacks(self):
+        total = row_review.cached_row("Xin Zhao", "Q", "Total Bonus Physical Damage")
+        one = row_review.cached_row("Xin Zhao", "Q", "Bonus Physical Damage")
+        assert total == pytest.approx(3 * one)
+        assert row_review.priced("Xin Zhao", "Q") == pytest.approx(total)
+        assert row_review.packet_row("Xin Zhao", "Q", xin_zhao)[4] == 75.0
+
+    def test_wind_becomes_lightning_prices_the_slashes_and_the_thrust(self):
+        total = row_review.cached_row("Xin Zhao", "W", "Total Physical Damage")
+        slashes = row_review.cached_row("Xin Zhao", "W", "Slash Total Physical Damage")
+        thrust = row_review.cached_row("Xin Zhao", "W", "Thrust Physical Damage")
+        per_slash = row_review.cached_row("Xin Zhao", "W", "Physical Damage per Slash")
+        assert total == pytest.approx(slashes + thrust)
+        assert slashes == pytest.approx(4 * per_slash)
+        assert row_review.priced("Xin Zhao", "W") == pytest.approx(total)
+        assert row_review.packet_row("Xin Zhao", "W", xin_zhao)[4] == 17.5

@@ -5,8 +5,10 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
+import pytest
+
 from src.calculator.champions import smolder
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -43,3 +45,30 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Smolder")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestPricedRows:
+    """W and E price the whole cast, not one of its hits.
+
+    The generated packets read "Glob Physical Damage" for W (no
+    explosion) and "Physical Damage per Hit" for E (one bolt of five).
+    Both cached entries carry the cast's total, and that is what the
+    module reads.
+    """
+
+    def test_achooo_prices_the_glob_and_the_champion_hit_explosion(self):
+        total = row_review.cached_row(
+            "Smolder", "W", "Total Physical Damage On Champion Hit"
+        )
+        glob = row_review.cached_row("Smolder", "W", "Glob Physical Damage")
+        explosion = row_review.cached_row("Smolder", "W", "Explosion Physical Damage")
+        assert total == pytest.approx(glob + explosion)
+        assert row_review.priced("Smolder", "W") == pytest.approx(total)
+        assert row_review.packet_row("Smolder", "W", smolder)[4] == 100.0
+
+    def test_flap_flap_flap_prices_the_five_bolt_floor(self):
+        total = row_review.cached_row("Smolder", "E", "Minimum Total Physical Damage")
+        per_bolt = row_review.cached_row("Smolder", "E", "Physical Damage per Hit")
+        assert total == pytest.approx(5 * per_bolt)
+        assert row_review.priced("Smolder", "E") == pytest.approx(total)
+        assert row_review.packet_row("Smolder", "E", smolder)[4] == 30.0

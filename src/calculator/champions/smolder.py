@@ -18,12 +18,32 @@ E9-2 gap fixes over the packet module:
   scaled bonus magic damage on basic abilities and the 6.5% burn
   execution are documented boundaries, not priced.
 - E flight utility remains documented out.
+
+Row-selection fix (W and E).  Both generated packets priced one leg of a
+multi-hit cast where the cache also carries the cast's total:
+- W (Achooo!) "deals physical damage to enemies hit ... Hitting an enemy
+  champion creates an explosion that deals physical damage to nearby
+  enemies".  The packet priced "Glob Physical Damage"
+  (60/70/80/90/100 + 60% bonus AD) alone; against a champion both land,
+  and the cache's "Total Physical Damage On Champion Hit" row
+  (70/105/140/175/210 + 110% bonus AD + 80% AP) is glob + explosion.
+- E (Flap, Flap, Flap) "fires up to 5 (+ 1 per 100 Dragon Practice
+  stacks) bolts ... dealing physical damage with each hit".  The packet
+  priced "Physical Damage per Hit" (10/15/20/25/30 + 30% AD), one bolt;
+  the cache's "Minimum Total Physical Damage" row
+  (50/75/100/125/150 + 150% AD) is the five-bolt floor at every rank.
+
+Neither row is one hit any more, so both declare their aggregate at the
+cast boundary rather than certifying a single hit; the explosion's delay
+and the bolts' cadence across the 1.25-second flight are left for the
+timing wave, as is the stack-scaled sixth bolt onward.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
 
@@ -142,11 +162,25 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _achooo(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: glob plus the champion-hit explosion, declared at the cast."""
+    return typed_damage(
+        ctx, "Total Physical Damage On Champion Hit", "physical", time_offset=0.0
+    )
+
+
+def _flap_flap_flap(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the five-bolt floor of the flight, declared at the cast."""
+    return typed_damage(
+        ctx, "Minimum Total Physical Damage", "physical", time_offset=0.0
+    )
+
+
 SLOTS = dict(_packet_slots)
 SLOTS["P"] = _dragon_practice
 SLOTS["Q"] = _super_scorcher_breath
-SLOTS["W"] = _certified_single_hit(SLOTS["W"])
-SLOTS["E"] = _certified_single_hit(SLOTS["E"])
+SLOTS["W"] = _achooo
+SLOTS["E"] = _flap_flap_flap
 SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
@@ -193,6 +227,17 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "basic abilities and the 6.5%-health burn execution are documented "
     "boundaries, not priced",
     "E (Flap, Flap, Flap) flight utility remains a documented " "out-of-scope row.",
+    "W (Achooo!) prices the whole champion hit — the cached Total "
+    "Physical Damage On Champion Hit row (70/105/140/175/210 + 110% "
+    "bonus AD + 80% AP) == Glob Physical Damage + Explosion Physical "
+    "Damage.  The generated packet priced the glob alone.  The "
+    "explosion's delay behind the glob is not authored, and the 75% "
+    "falloff on repeat explosions against the same target is unpriced.",
+    "E (Flap, Flap, Flap) prices the five-bolt floor — the cached "
+    "Minimum Total Physical Damage row (50/75/100/125/150 + 150% AD) == "
+    "5 x Physical Damage per Hit, the row the generated packet priced "
+    "once.  The extra bolt per 100 Dragon Practice stacks and the bolts' "
+    "cadence across the 1.25-second flight are not priced.",
 ]
 
 SOURCES = list(_packet_sources)

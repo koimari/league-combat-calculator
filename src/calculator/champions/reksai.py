@@ -8,25 +8,42 @@ P1 addition over the reviewed packet:
   state, so the fight is deterministic through the ``e_fury`` option
   (0-100, default 0 = no Fury): at 100 Fury the E packet prices the
   sourced true-damage row, otherwise the reviewed physical row.
+
+Row-selection fix (Q variant 0): Queen's Wrath empowers Rek'Sai's next
+basic attack, and "if Rek'Sai completes an attack, the duration is
+refreshed, for up to 3 total empowered attacks".  The generated packet
+priced "Bonus Physical Damage" (30/35/40/45/50% AD), one of the three;
+the cache's "Total Bonus Physical Damage" row (90/105/120/135/150% AD)
+is all three.  Three attacks is not one hit, so the variant declares its
+aggregate at the cast boundary instead of certifying a single hit —
+Prey Seeker (variant 1) keeps its own certification.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
 
+
+def _queens_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q variant 0: all three empowered attacks, declared at the cast."""
+    return typed_damage(ctx, "Total Bonus Physical Damage", "physical", time_offset=0.0)
+
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rek'Sai",
     PACKET_SHA256,
-    # Queen's Wrath's empowered attack, Prey Seeker's bolt and Unburrow's
-    # emergence each land one hit, like Void Rush already did — the
-    # boundary claim that carries MODULE_CC's reviewed answers into the
-    # event ledger.
+    # Prey Seeker's bolt and Unburrow's emergence each land one hit, like
+    # Void Rush already did — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.  Queen's Wrath prices three
+    # empowered attacks and declares their aggregate at the cast instead.
     single_hit_slots=frozenset({"Q", "W", "R"}),
+    variant_parsers={("Q", 0): _queens_wrath},
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -109,6 +126,12 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "AD == 120% of the physical row, 'converted to true damage').  Fury "
     "generation (P Fury of the Xer'Sai) and burrow CC remain documented "
     "out-of-scope",
+    "Q variant 0 (Queen's Wrath) prices all three empowered attacks — "
+    "the cached Total Bonus Physical Damage row (90/105/120/135/150% "
+    "AD), three times the per-attack Bonus Physical Damage row the "
+    "generated packet selected.  The aggregate is declared at the cast "
+    "boundary; the attacks' spacing across the 3-second window and the "
+    "primary target's critical-strike modifiers are not priced.",
 ]
 
 VARIANT_OPTION_KEYS = ("q_variant", "e_fury")

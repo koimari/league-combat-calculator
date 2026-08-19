@@ -4,8 +4,10 @@ Dreaded Return stuns and pulls; The Darkin Glaive knocks up only on its
 recast, so that kind is authored per part.
 """
 
+import pytest
+
 from src.calculator.champions import parse_champion_abilities, zaahen
-from tests import cc_review
+from tests import cc_review, row_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -61,3 +63,21 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Zaahen")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestPricedRows:
+    """Dreaded Return prices both of its legs.
+
+    The generated packet read "Initial Physical Damage" alone, dropping
+    the "Subsequent Physical Damage" the cast deals when the glaive
+    reaches maximum range.  The cache's "Total Physical Damage" is the
+    two summed, and that is what the module reads.
+    """
+
+    def test_dreaded_return_prices_the_extension_and_the_return(self):
+        total = row_review.cached_row("Zaahen", "W", "Total Physical Damage")
+        initial = row_review.cached_row("Zaahen", "W", "Initial Physical Damage")
+        subsequent = row_review.cached_row("Zaahen", "W", "Subsequent Physical Damage")
+        assert total == pytest.approx(initial + subsequent)
+        assert row_review.priced("Zaahen", "W") == pytest.approx(total)
+        assert row_review.packet_row("Zaahen", "W", zaahen)[4] == 120.0

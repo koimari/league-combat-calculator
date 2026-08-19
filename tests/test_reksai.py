@@ -1,7 +1,9 @@
 """Tests for the Rek'Sai champion module."""
 
+import pytest
+
 from src.calculator.champions import reksai
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -40,3 +42,24 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Rek'Sai")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestPricedRows:
+    """Queen's Wrath prices all three empowered attacks.
+
+    The generated packet read "Bonus Physical Damage", one of the three
+    the cast empowers ("for up to 3 total empowered attacks"); the
+    cache's "Total Bonus Physical Damage" row is all three.
+    """
+
+    def test_queens_wrath_prices_all_three_empowered_attacks(self):
+        total = row_review.cached_row("Rek'Sai", "Q", "Total Bonus Physical Damage")
+        one = row_review.cached_row("Rek'Sai", "Q", "Bonus Physical Damage")
+        assert total == pytest.approx(3 * one)
+        assert row_review.priced("Rek'Sai", "Q", q_variant=0) == pytest.approx(total)
+        assert row_review.packet_row("Rek'Sai", "Q", reksai, variant=0)[4] == 0.0
+
+    def test_prey_seeker_is_untouched(self):
+        """Variant 1 is one bolt and keeps the packet's own row."""
+        magic = row_review.cached_row("Rek'Sai", "Q", "Magic Damage", entry=1)
+        assert row_review.priced("Rek'Sai", "Q", q_variant=1) == pytest.approx(magic)

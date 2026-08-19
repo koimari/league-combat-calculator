@@ -3,12 +3,25 @@
 Wiki-sourced item on-hit application is attached as a post-process on the
 batch parser output (the batch parser builds its slot map at build time, so
 declarations cannot be injected into the slot dict after the fact).
+
+Row-selection fix (W): Dreaded Return "extends his glaive in the target
+direction, dealing physical damage to enemies hit.  Upon reaching maximum
+range, all enemies hit are dealt physical damage".  The generated packet
+priced only the first leg — "Initial Physical Damage"
+(40/60/80/100/120 + 50% bonus AD) — dropping the "Subsequent Physical
+Damage" row (30/50/70/90/110 + 30% bonus AD).  This module prices the
+cache's "Total Physical Damage" (70/110/150/190/230 + 80% bonus AD),
+which is the two summed.  Two legs is not one hit, so W declares its
+aggregate at the cast boundary instead of certifying a single hit; the
+glaive's travel time to maximum range is not in the entry, so the second
+leg's offset is left for the timing wave.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -71,14 +84,20 @@ def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _darkin_glaive.phase = "damage"
 
+
+def _dreaded_return(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the extension plus the maximum-range hit, declared at the cast."""
+    return typed_damage(ctx, "Total Physical Damage", "physical", time_offset=0.0)
+
+
 # Dreaded Return's glaive reaches its end and "all enemies hit are dealt
 # physical damage, stunned for 0.25 seconds, and pulled 225 units toward
-# Zaahen" — the cast stuns the target it damages, even though this packet
-# prices only the "Initial Physical Damage" leg of the extension.  Aureate
-# Rush only flourishes, and Grim Deliverance's shockwave only slams.  Q is
-# not here: its knock-up belongs to the recast variant, so the kind is
-# authored per part in ``_darkin_glaive``.  P is the Determination stack
-# buff and authors no damage part.
+# Zaahen" — the cast stuns the target it damages, and the row now prices
+# both of the cast's legs.  Aureate Rush only flourishes, and Grim
+# Deliverance's shockwave only slams.  Q is not here: its knock-up belongs
+# to the recast variant, so the kind is authored per part in
+# ``_darkin_glaive``.  P is the Determination stack buff and authors no
+# damage part.
 MODULE_CC = {"W": "stun", "E": "none", "R": "none"}
 
 _base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -87,15 +106,23 @@ _base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     assumption_overrides=(
         "The Darkin Glaive prices both strikes (Physical Damage per Hit x 2 "
         "== Total Physical Damage).",
+        "Dreaded Return prices both legs — the cached Total Physical "
+        "Damage row (70/110/150/190/230 + 80% bonus AD) == Initial "
+        "Physical Damage + Subsequent Physical Damage.  The generated "
+        "packet priced the Initial leg alone.  The aggregate is declared "
+        "at the cast boundary; the glaive's travel to maximum range is "
+        "not authored.",
     ),
-    # W's extension and E's flourish are one hit each at the cast; the
-    # packets carry no travel or tick phase to place.
-    single_hit_slots=frozenset({"W", "E"}),
+    # E's flourish is one hit at the cast; its packet carries no travel or
+    # tick phase to place.  W prices two legs and declares their aggregate
+    # at the cast instead.
+    single_hit_slots=frozenset({"E"}),
     # "He then slams his glaive down after a 0.6-second delay, unleashing a
     # shockwave that deals physical damage" — R's hit is the slam's.
     packet_part_timings={"R": {"time_offset": _R_SLAM_DELAY_SECONDS}},
     slot_parsers={
         "Q": _darkin_glaive,
+        "W": _dreaded_return,
     },
     cc_kinds=MODULE_CC,
 )
