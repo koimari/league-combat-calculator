@@ -99,7 +99,12 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
     then the 1.6s base-AS interval) truncated to the fight window; the
     ``tibbers_attacks`` option overrides it — the player steers Tibbers,
     so positioning/leash uptime is a player choice.
+
+    An ``auto_attacks_only`` window casts no R, and R's Active is what
+    summons Tibbers, so there is no pet to steer.
     """
+    if ctx.option("auto_attacks_only"):
+        return None
     window = float(ctx.options.get("fight_duration_seconds", _TIBBERS_DEFAULT_WINDOW))
     requested = ctx.options.get("tibbers_attacks")
     if requested is None:
@@ -265,6 +270,11 @@ ASSUMPTIONS = [
     "attacks from the summon, then the 0.625 base AS) truncated to the "
     "fight window; positioning/leash uptime is a player choice via the "
     "tibbers_attacks option",
+    "An autos-only fight has no Tibbers at all (the pipeline states this "
+    "with the auto_attacks_only reserved option): the cached R text "
+    "sources him to 'Active: Annie summons Tibbers to the target "
+    "location', which no basic attack performs. R's magic-penetration "
+    "passive is innate and still applies",
     "Tibbers aura defaults to 5 seconds of damage",
     "E retaliation damage is not modeled (requires enemies to hit Annie)",
 ]

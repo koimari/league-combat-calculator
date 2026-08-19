@@ -49,9 +49,16 @@ def _certified_single_hit(parser):
 
 
 def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: one 3-stack consume bleed per fight (``passive_procs`` option)."""
+    """P: one 3-stack consume bleed per fight (``passive_procs`` option).
+
+    Abilities apply the Wound stacks and a basic attack consumes them, so
+    an ``auto_attacks_only`` window has nothing to consume however many
+    procs the option asks for.
+    """
     ability = ctx.ability()
     if ability is None:
+        return None
+    if ctx.option("auto_attacks_only"):
         return None
     count = max(0, int(ctx.option("passive_procs")))
     if count <= 0:
@@ -138,6 +145,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "of the sourced per-tick array every 0.125 seconds.  The "
     "consuming basic attack's own swing is not a separate damage "
     "event.",
+    "An autos-only fight bleeds nothing (the pipeline states this with "
+    "the auto_attacks_only reserved option): the cached P text sources "
+    "stacking to \"Talon's abilities apply a stack of Wound... refreshing "
+    'on basic attacks", so the consuming swing has no stacks to consume '
+    "when no ability was cast.",
     "Q's on-kill self-heal (9 : 60.41 based on level) is authored by "
     "the HEALING_RULE_CHAMPIONS rule in healing.py; the fight model "
     "prices it once per Q cast because the outgoing ledger cannot "

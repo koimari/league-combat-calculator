@@ -60,7 +60,11 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Deconstruction stacks come from damaging abilities (Q, W's two
     # rift hits, E, R). Any full rotation applies 3+, so a fight with
-    # the rotation present prices one proc.
+    # the rotation present prices one proc. An autos-only window casts
+    # none of them, and a basic attack only refreshes a stack it cannot
+    # create, so the counter never leaves zero.
+    if ctx.option("auto_attacks_only"):
+        return None
     applications = sum(1 for slot in ("Q", "W", "E", "R") if slot in ctx.results)
     if applications < _PROC_STACKS:
         return None
@@ -106,6 +110,11 @@ ASSUMPTIONS = [
     "Organic Deconstruction procs once per fight: the rotation's "
     "damaging abilities apply 3+ stacks (Q, W's two rift hits, E, and R "
     "ticks), so the conservative floor is one 3-stack consume per fight",
+    "An autos-only fight never reaches the third stack (the pipeline "
+    "states this with the auto_attacks_only reserved option): the cached "
+    "P text sources stacking to \"Vel'Koz's abilities apply a stack of "
+    "Deconstruction to enemies hit for 7 seconds, refreshing on basic "
+    'attacks on-hit" — a swing refreshes a stack it cannot create',
     "Proc damage = the 'Per-Level Scaling' array value at the champion's "
     "level (35 at 1 up to 197.06 at 19+) + 60% AP (prose ratio, module "
     "constant)",

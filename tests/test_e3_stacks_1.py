@@ -56,23 +56,27 @@ def _fight(
     options: dict | None = None,
     include_autos: bool = False,
     one_rotation: bool = False,
+    auto_only: bool = False,
     duration: float = 10.0,
     target_health: float = 2000.0,
 ) -> dict:
     """One /api/calculate fight at level 18, rank 5 / R rank 3, no items."""
+    mode = "one_rotation" if one_rotation else "time_based"
     payload = {
         "champion": champion,
         "level": 18,
         "items": [],
         "role": "mid",
         "ability_ranks": _FULL_RANKS,
-        "fight_mode": "one_rotation" if one_rotation else "time_based",
+        "fight_mode": "auto_only" if auto_only else mode,
         "fight_duration": duration,
         "include_auto_attacks": include_autos,
         "target_health": target_health,
         "target_armor": 0,
         "target_mr": 0,
     }
+    if auto_only:
+        payload["auto_attacks_only"] = True
     if options:
         payload["champion_options"] = options
     app_module.app.config["TESTING"] = True
@@ -329,6 +333,21 @@ class TestVelkozDeconstruction:
         expected = flat + 0.6 * float(stats.get("ability_power", 0.0))
         row = data["breakdown"]["passive"]
         assert row["total_damage"] == pytest.approx(expected)
+
+    def test_autos_only_never_reaches_the_third_stack(self) -> None:
+        """Only abilities add Deconstruction stacks; autos merely refresh.
+
+        Cached P text: "Vel'Koz's abilities apply a stack of
+        Deconstruction to enemies hit for 7 seconds, refreshing on basic
+        attacks on-hit and subsequent applications" — a basic attack
+        refreshes a stack it cannot create, so an autos-only window
+        never holds one, let alone three.  One-rotation and timed still
+        price the consume.
+        """
+        autos_only = _fight("Vel'Koz", auto_only=True, include_autos=True)
+        assert "passive" not in autos_only["breakdown"]
+        for kwargs in ({"one_rotation": True}, {"include_autos": True}):
+            assert "passive" in _fight("Vel'Koz", **kwargs)["breakdown"]
 
 
 # ---------------------------------------------------------------------------

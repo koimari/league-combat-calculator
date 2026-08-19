@@ -122,12 +122,18 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     default is the sourced cadence truncated to the fight window.  The
     proc row is fixed-count — re-casting W refreshes the swarm in-game,
     which the option models instead of multiplying by W casts.
+
+    An ``auto_attacks_only`` window casts nothing, so there is no swarm:
+    the Zz'Rot stacks come from casting another ability and the Voidlings
+    from W's Active, neither of which a basic attack does.
     """
     ability = ctx.ability()
     if ability is None:
         return None
     w_rank = ctx.rank_for()
     if w_rank < 1:
+        return None
+    if ctx.option("auto_attacks_only"):
         return None
 
     count = min(max(int(ctx.option("voidling_count")), 2), 4)
@@ -290,6 +296,11 @@ ASSUMPTIONS = [
     "One summon wave per fight window; re-casting W refreshes the swarm "
     "in-game, modeled by the voidling_count option (up to 4) instead of "
     "multiplying the proc row by W casts",
+    "An autos-only fight summons no swarm at all (the pipeline states "
+    "this with the auto_attacks_only reserved option): the cached W text "
+    "sources the Zz'Rot stacks to 'when he casts another ability' and the "
+    "Voidlings to 'Active: Malzahar consumes all Zz'Rot Swarm stacks "
+    "and... summons a Voidling', so a basic attack produces neither",
 ]
 
 MODULE_COVERAGE = {
