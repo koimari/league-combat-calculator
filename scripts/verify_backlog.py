@@ -51,6 +51,8 @@ PLANS_DIR = REPO_ROOT / "docs" / "plans"
 #: The commit the campaign branched from -- the same left-hand end the ledger's
 #: own derivation uses, and not a figure about anything.
 CAMPAIGN_BASE = "584071e"
+# The campaign is closed at this tip; a later campaign carries its own receipt.
+CAMPAIGN_TIP = "7e1de9e"
 
 #: The trailing parenthetical every lane stamps on a commit subject.  Spelled
 #: the same way the ledger spells it, because the two populations must be the
@@ -251,7 +253,7 @@ def backlog(pending: Sequence[str] = ()) -> dict[str, Any]:
             "because the ledger's residue list no longer holds the tag."
         ),
         "how_to_enumerate_a_range": (
-            "git log --reverse --format='%h %s' 584071e..HEAD, keeping the "
+            "git log --reverse --format='%h %s' 584071e..7e1de9e, keeping the "
             "commits whose subject's trailing parenthetical begins with the "
             "group's tag. The rows carry subjects rather than shas on purpose: "
             "this file is committed inside the commit a sha would point at, so "

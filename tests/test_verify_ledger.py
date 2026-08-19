@@ -32,6 +32,18 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "docs" / "receipts" / "verify-ledger.json"
 
+# The silent-failure campaign's own commit range.  It is CLOSED: its tip is
+# 7e1de9e, whose subject carries the very slice tag this ledger records as its
+# one residue.  The range was written open-ended, as ``584071e..HEAD``, back
+# when HEAD was that tip — so every campaign that lands afterwards fell into
+# this campaign's denominator and made its recorded figures stale, which is a
+# category error rather than a measurement: the full-coverage campaign's waves
+# are not slices of the silent-failure runbook's criterion 11, and counting
+# them here would report unverified slices this campaign never had.  Each
+# campaign measures its own commits; this one carries its own receipt in
+# docs/coverage-census.json.
+CAMPAIGN_RANGE = "584071e..7e1de9e"
+
 
 def ledger() -> dict:
     """The committed artifact this file is the gate for."""
@@ -324,7 +336,7 @@ def _slice_group_tags() -> tuple[list[str], int]:
     the ledger says it is.
     """
     out = subprocess.run(
-        ["git", "log", "--format=%h\x1f%s\x1e", "584071e..HEAD"],
+        ["git", "log", "--format=%h\x1f%s\x1e", CAMPAIGN_RANGE],
         capture_output=True,
         text=True,
         cwd=ROOT,
@@ -369,7 +381,7 @@ def _groups_citing_a_verdict_in_a_commit_body() -> list[str]:
     """
     unit, record = chr(31), chr(30)
     out = subprocess.run(
-        ["git", "log", f"--format=%h{unit}%s{unit}%b{record}", "584071e..HEAD"],
+        ["git", "log", f"--format=%h{unit}%s{unit}%b{record}", CAMPAIGN_RANGE],
         capture_output=True,
         text=True,
         cwd=ROOT,
@@ -795,7 +807,7 @@ def _paths_by_tag() -> dict[str, list[str]]:
     """Every campaign commit's touched paths, grouped by its slice tag."""
     unit, record = chr(31), chr(30)
     out = subprocess.run(
-        ["git", "log", f"--format={record}%h{unit}%s", "--name-only", "584071e..HEAD"],
+        ["git", "log", f"--format={record}%h{unit}%s", "--name-only", CAMPAIGN_RANGE],
         capture_output=True,
         text=True,
         cwd=ROOT,
@@ -925,7 +937,7 @@ def _untagged_src_subjects() -> list[str]:
             "--reverse",
             f"--format={record}%h{unit}%s",
             "--name-only",
-            "584071e..HEAD",
+            CAMPAIGN_RANGE,
         ],
         capture_output=True,
         text=True,
@@ -973,7 +985,7 @@ def _untagged_src_shas() -> dict[str, str]:
             "--reverse",
             f"--format={record}%H{unit}%s",
             "--name-only",
-            "584071e..HEAD",
+            CAMPAIGN_RANGE,
         ],
         capture_output=True,
         text=True,
@@ -1054,7 +1066,7 @@ def test_the_untagged_src_rows_are_split_by_the_era_they_landed_in() -> None:
     subjects = _untagged_src_subjects()
     unit, record = chr(31), chr(30)
     out = subprocess.run(
-        ["git", "log", "--reverse", f"--format=%s{record}", "584071e..HEAD"],
+        ["git", "log", "--reverse", f"--format=%s{record}", CAMPAIGN_RANGE],
         capture_output=True,
         text=True,
         cwd=ROOT,

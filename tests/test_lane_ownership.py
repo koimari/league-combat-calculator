@@ -28,6 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT = ROOT / "docs" / "receipts" / "lane-ownership.json"
 RUNBOOK = ROOT / "docs" / "plans" / "silent-failure-runbook.md"
 CAMPAIGN_BASE = "584071e"
+# The campaign this map belongs to is closed at 7e1de9e; see the note in
+# tests/test_verify_ledger.py.  A later campaign's writes are not its lanes.
+CAMPAIGN_TIP = "7e1de9e"
 
 
 def _artifact() -> dict:
@@ -75,10 +78,13 @@ def test_every_declared_range_resolves_and_the_chain_is_contiguous() -> None:
     for earlier, later in zip(lanes, lanes[1:]):
         assert earlier["range"].split("..")[1] == later["range"].split("..")[0]
     assert lanes[0]["range"].startswith(CAMPAIGN_BASE)
-    assert lanes[-1]["range"].endswith("HEAD")
+    # The last lane closes at the campaign's own tip rather than at HEAD: the
+    # campaign is over, and a range left open would claim every commit any
+    # later campaign lands.
+    assert lanes[-1]["range"].endswith(CAMPAIGN_TIP)
 
     covered = [sha for row in lanes for sha in _shas(row["range"])]
-    assert sorted(covered) == sorted(_shas(f"{CAMPAIGN_BASE}..HEAD"))
+    assert sorted(covered) == sorted(_shas(f"{CAMPAIGN_BASE}..{CAMPAIGN_TIP}"))
     assert len(covered) == len(set(covered)), "a commit is claimed by two lanes"
 
 
@@ -121,7 +127,9 @@ def test_every_writer_of_a_symbol_shared_file_is_declared(shared) -> None:
     """
     artifact = _artifact()
     lane_of = _lane_of_commit()
-    touched = _git("log", "--format=%h", f"{CAMPAIGN_BASE}..HEAD", "--", shared["file"])
+    touched = _git(
+        "log", "--format=%h", f"{CAMPAIGN_BASE}..{CAMPAIGN_TIP}", "--", shared["file"]
+    )
     wrote = {lane_of[sha] for sha in touched.split()}
     assert wrote, shared["file"]
 
@@ -140,7 +148,11 @@ def test_each_recorded_divergence_names_real_commits_that_touched_the_file() -> 
     for row in _artifact()["writers_the_map_does_not_list"]:
         touched = set(
             _git(
-                "log", "--format=%h", f"{CAMPAIGN_BASE}..HEAD", "--", row["file"]
+                "log",
+                "--format=%h",
+                f"{CAMPAIGN_BASE}..{CAMPAIGN_TIP}",
+                "--",
+                row["file"],
             ).split()
         )
         assert set(row["commits"]) <= touched, row["file"]

@@ -4,7 +4,7 @@
  "gate": "tests/test_lane_ownership.py",
  "what_this_can_and_cannot_check": "The campaign's history is linear by construction: R-34 rules integration as local-only rebase-then-cherry-pick, never merge, so a lane's concurrency with another is not recoverable from the commit graph. What IS recoverable, and is what this file gates, is the per-lane commit range, the declared concurrency the map allows, and -- for the three files the criterion names as shared by symbol -- every commit that actually wrote to one, attributed to the lane whose range holds it. A writer the map does not list shows up as a divergence row rather than as nothing.",
  "max_lanes_live": 2,
- "campaign_range": "584071e..HEAD",
+ "campaign_range": "584071e..7e1de9e",
  "lanes": [
   {
    "lane": "L0",
@@ -67,7 +67,7 @@
    "agent": "integrate",
    "worktree": "main clone",
    "phase": "campaign close and its remediation passes",
-   "range": "067c94c..HEAD"
+   "range": "067c94c..7e1de9e"
   }
  ],
  "barrier_order": [
@@ -147,25 +147,8 @@
    ],
    "what": "The R-15/R-18 clause 2 correction for the cast-timeline dissent: Syndra's second Dark Sphere charge stops being free and prices itself off Q's own cached cost row. It is a champions/syndra.py edit.",
    "why_it_is_not_a_criterion_12_violation": "X's row is the close and its remediation passes, and its range opens at 067c94c -- after every phase lane's range has closed -- so no second lane was live and no two lanes held the file. What it is instead is the same shape L4's row above records: the map lists L1 for the recast_of stamp and L6 for the rest, and the lane that re-opened that stamp under clause 2 is neither. Recorded here rather than left as the difference between what the map says and what the tree did."
-  },
-  {
-   "file": "src/calculator/pipeline.py",
-   "lane": "X",
-   "commits": [
-    "fc57cf5"
-   ],
-   "what": "The autos-only reserved option: the pipeline injects auto_attacks_only through the same contract that already carried the window's duration and uptime, so a timeline-walk module can tell that the engine cast nothing. It is a pipeline.py edit.",
-   "why_it_is_not_a_criterion_12_violation": "X's range opens at 067c94c, after every phase lane's range closed, so no second lane was live and no two lanes held the file. The full-coverage campaign runs inside X, and these are its writes to a file the map gives other lanes -- recorded here rather than left as the difference between what the map says and what the tree did."
-  },
-  {
-   "file": "src/calculator/ability_spec.py",
-   "lane": "X",
-   "commits": [
-    "96457fa"
-   ],
-   "what": "The crowd-control vocabulary gains cripple and silence, so Malphite's Ground Slam and Malzahar's Call of the Void can be recorded as what they are instead of as a slow, a nothing, or an unreviewed slot. It is an ability_spec.py edit.",
-   "why_it_is_not_a_criterion_12_violation": "X's range opens at 067c94c, after every phase lane's range closed, so no second lane was live and no two lanes held the file. The full-coverage campaign runs inside X, and these are its writes to a file the map gives other lanes -- recorded here rather than left as the difference between what the map says and what the tree did."
   }
  ],
- "a_declared_owner_need_not_write": "Ownership is permission, not obligation. L1 declares the 0B consumers in ability_spec.py and wrote none in the campaign range; that is a lane not needing what it was allowed, and the gate asserts a subset rather than an equality in that direction. The equality that matters runs the other way: every lane that DID write one of these three files is either a declared owner or a named divergence."
+ "a_declared_owner_need_not_write": "Ownership is permission, not obligation. L1 declares the 0B consumers in ability_spec.py and wrote none in the campaign range; that is a lane not needing what it was allowed, and the gate asserts a subset rather than an equality in that direction. The equality that matters runs the other way: every lane that DID write one of these three files is either a declared owner or a named divergence.",
+ "a_later_campaign_is_not_this_map_s": "This map's range closes at 7e1de9e, the silent-failure campaign's own tip. The full-coverage campaign that follows writes shared files too — pipeline.py and ability_spec.py among them — but it is not one of these lanes and its writes are not divergences from this map. It carries its own receipt in docs/coverage-census.json."
 }
