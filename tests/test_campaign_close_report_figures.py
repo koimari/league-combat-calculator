@@ -1320,6 +1320,12 @@ BASELINE_CLAIMS = (("16.7", "04cdfbf", "3799bef"), ("17.7", "3799bef", "407428f"
 
 #: The commit both dated clauses name, and the end of the fixed range each
 #: measures it in.
+# The silent-failure campaign closed at this commit.  Its report's claims
+# read live against the tree, and were written with open ".."HEAD" ranges
+# while HEAD was that tip — so a later campaign's commits would falsify
+# sentences about a range that ended before they existed.  See the note in
+# tests/test_verify_ledger.py.
+CAMPAIGN_TIP = "7e1de9e"
 DATED_MOVER = "927964c"
 
 #: Every range this report states the properties over: the two claimed ones,
@@ -1419,7 +1425,7 @@ def test_the_baseline_sentence_is_false_of_this_tip(
 ) -> None:
     """R-05's red for the check above, and it is the reviewer's finding itself."""
     _section, start, _stating_tip = claim
-    assert baseline_movers(files_by_commit(f"{start}..HEAD")) != ()
+    assert baseline_movers(files_by_commit(f"{start}..{CAMPAIGN_TIP}")) != ()
 
 
 @pytest.mark.parametrize("claim", BASELINE_CLAIMS, ids=[c[0] for c in BASELINE_CLAIMS])
@@ -1434,7 +1440,7 @@ def test_the_dated_clause_names_the_only_mover_in_the_range_it_measures(
 @pytest.mark.parametrize("start", PROPERTY_RANGES)
 def test_no_src_moves_in_a_stated_range(start: str) -> None:
     """The half of both sentences that is still true, read live."""
-    assert src_touchers(files_by_commit(f"{start}..HEAD")) == ()
+    assert src_touchers(files_by_commit(f"{start}..{CAMPAIGN_TIP}")) == ()
 
 
 @pytest.mark.parametrize("start", PROPERTY_RANGES)
@@ -1442,7 +1448,7 @@ def test_no_commit_in_a_stated_range_touches_both_src_and_a_baseline(
     start: str,
 ) -> None:
     """Criterion 10 over the same ranges -- the rule the sentence stood in for."""
-    assert commits_touching_both(files_by_commit(f"{start}..HEAD")) == ()
+    assert commits_touching_both(files_by_commit(f"{start}..{CAMPAIGN_TIP}")) == ()
 
 
 @pytest.mark.parametrize("start", PROPERTY_RANGES)
@@ -1450,7 +1456,9 @@ def test_every_baseline_move_in_a_stated_range_is_inside_the_carve_out(
     start: str,
 ) -> None:
     """The property that replaces the reading: a legal re-pin stays green."""
-    assert movers_outside_the_carve_out(files_by_commit(f"{start}..HEAD")) == ()
+    assert (
+        movers_outside_the_carve_out(files_by_commit(f"{start}..{CAMPAIGN_TIP}")) == ()
+    )
 
 
 #: Four commits that are not in the tree, each breaking one of the carve-out's
@@ -1663,7 +1671,7 @@ def counter_6_kernel_at(sha: str) -> str:
 
 def counter_movements_since_the_report() -> list[tuple[str, str, str, int, int]]:
     """Every migration-frontier counter movement after section 5's tip."""
-    return frontier_gate().counter_movements(f"{SECTION_5_TIP}..HEAD")
+    return frontier_gate().counter_movements(f"{SECTION_5_TIP}..{CAMPAIGN_TIP}")
 
 
 def movements_naming_their_cause() -> str:
@@ -1674,7 +1682,7 @@ def movements_naming_their_cause() -> str:
     and a second application of it is a second thing that can drift.
     """
     unexplained = frontier_gate().movements_without_a_named_cause(
-        f"{SECTION_5_TIP}..HEAD"
+        f"{SECTION_5_TIP}..{CAMPAIGN_TIP}"
     )
     return str(len(counter_movements_since_the_report()) - len(unexplained))
 
@@ -1973,7 +1981,7 @@ def test_no_data_moves_in_the_range_section_20_8_reasons_over() -> None:
     """
     touched = [
         sha
-        for sha, files in files_by_commit("5b663cb..HEAD")
+        for sha, files in files_by_commit(f"5b663cb..{CAMPAIGN_TIP}")
         if any(name.startswith("data/") for name in files)
     ]
     assert touched == []
@@ -1982,7 +1990,7 @@ def test_no_data_moves_in_the_range_section_20_8_reasons_over() -> None:
     # about this range rather than about the check.
     assert [
         sha
-        for sha, files in files_by_commit("584071e..HEAD")
+        for sha, files in files_by_commit(f"584071e..{CAMPAIGN_TIP}")
         if any(name.startswith("data/") for name in files)
     ]
 
