@@ -96,7 +96,9 @@ SLOTS = {
         "P",
         "Phenomenal Evil Power is a stacking AP passive; no enemy damage.",
     ),
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "E": no_damage_parser(
         "E",
@@ -115,5 +117,20 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-parse_abilities = build_parser(SLOTS, "Veigar")
+# Baleful Strike "deals magic damage to the first two enemies hit" and
+# Primordial Burst "deals magic damage, increased by 0% : 100%" — neither
+# applies control.
+#
+# Two slots stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Event Horizon is where the kit's stun lives ("knocked down and
+# stunned for a duration"), but the cage deals no damage, so no part can
+# carry the answer.  Dark Matter is control-free but "strikes the target
+# location after a 1.221 seconds delay", and this entry does not author
+# that delay: certifying a cast-boundary hit would state the wrong instant,
+# and authoring the offset moves the row's ledger position (measured: it
+# drops Shadowflame's proc out of the level-18 magic build), which is a
+# re-timing decision this review does not own.
+MODULE_CC = {"Q": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)
 REVIEW_STATUS = "reviewed_module"

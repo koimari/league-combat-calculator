@@ -21,8 +21,21 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
 
+# Both basic-ability hits land 0.528 seconds after their cast: Arcanopulse's
+# recast makes Xerath "unable to act for 0.528 seconds and afterwards fires
+# a beam", and Eye of Destruction "strikes the target location after 0.528
+# seconds" (cached Q and W prose).
+_BLAST_DELAY_SECONDS = 0.528
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Xerath", PACKET_SHA256
+    "Xerath",
+    PACKET_SHA256,
+    # E's orb has no sourced travel number to place — the packet is one hit.
+    single_hit_slots=frozenset({"E"}),
+    packet_part_timings={
+        "Q": {"time_offset": _BLAST_DELAY_SECONDS},
+        "W": {"time_offset": _BLAST_DELAY_SECONDS},
+    },
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -103,7 +116,16 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["R"] = _rite_of_the_arcane
-parse_abilities = build_parser(SLOTS, "Xerath")
+
+# Eye of Destruction lands "dealing magic damage to enemies hit and slowing
+# them by 25% for 2.5 seconds"; Shocking Orb "deals magic damage to the
+# first enemy hit and stuns them for 0.75 : 2.25 ... seconds".  Arcanopulse
+# only beams (its 0% : 40% slow is Xerath's own charge penalty) and the
+# Arcane Barrages only strike.  P restores mana on a basic attack and
+# authors no ability part.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "stun", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Xerath", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

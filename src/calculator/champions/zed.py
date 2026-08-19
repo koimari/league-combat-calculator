@@ -119,12 +119,22 @@ SLOTS = {
         "Contempt for the Weak is a % max-HP on-hit rider on basic attacks; "
         "no separate enemy-damage formula is priced for the passive slot.",
     ),
-    "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # One shuriken, one slash — neither packet has a travel or tick phase
+    # to place, which is what carries the cast into the event ledger.
+    "Q": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "W": no_damage_parser(
         "W",
         "Living Shadow is a shadow/utility placement; no enemy damage.",
     ),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": _death_mark,
 }
 
@@ -181,5 +191,14 @@ CAST_DEPENDENCIES = (
     ),
 )
 
-parse_abilities = build_parser(SLOTS, "Zed")
+# Razor Shuriken only "deals physical damage to enemies hit"; Shadow Slash
+# is "Zed slashes to deal physical damage to nearby enemies" and its slow
+# belongs to a different caster — "enemies hit by a *Shadow's* slash are
+# slowed for 1.5 seconds", and the Shadow's copies are outside this
+# module's single-instance pricing; Death Mark only stores and detonates
+# damage.  P is the on-hit execute rider and W is the Shadow placement;
+# both are explicit no-damage slots.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Zed", cc_kinds=MODULE_CC)
 REVIEW_STATUS = "reviewed_module"

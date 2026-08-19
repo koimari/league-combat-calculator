@@ -35,6 +35,11 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, extract_valu
 # percentage is the cached "Damage Stored" row read live.
 _E_SPIRIT_FORM_SECONDS = 5.0
 
+# Fate Sealed's damage is the gust's, not the mark's: "After 0.3 seconds, a
+# gust rushes along the same area that deals equal parts physical and magic
+# damage to marked enemies" (cached R prose).
+_R_GUST_DELAY_SECONDS = 0.3
+
 PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"
 
 
@@ -71,7 +76,15 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
         damage,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", damage),)
+    # The knock-up is a property of the branch, not of the slot, so it is
+    # authored here rather than in MODULE_CC: only the 2-stack cast is the
+    # whirlwind that "additionally knock[s] up enemies hit in their path".
+    entry["parts"] = (
+        DamagePart("physical", damage, cc_kind="knockup" if stacks >= 2 else "none"),
+    )
+    # One thrust on the first enemy hit; the cached packet has no separate
+    # travel or tick phase to place.
+    entry["event_order_certified"] = "single_hit"
     if stacks >= 2:
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
@@ -91,8 +104,16 @@ def _mixed_damage_entry(
     ctx: SlotCtx,
     *,
     attributes: tuple[tuple[str, str], ...],
+    time_offset: float,
 ) -> dict[str, Any] | None:
-    """Build one mixed packet from its sourced physical and magic rows."""
+    """Build one mixed packet from its sourced physical and magic rows.
+
+    ``time_offset`` is when the cast's one damage instance lands, relative
+    to the cast: both rows are "equal parts" of a single hit, so they share
+    it.  Authoring it is what carries the cast into the event ledger — a
+    two-part mixed entry cannot use the single-part ``single_hit``
+    certification.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -103,6 +124,7 @@ def _mixed_damage_entry(
         DamagePart(
             damage_type,
             extract_named(ability, attribute, rank, ctx.stats, ctx.target),
+            time_offset=time_offset,
         )
         for damage_type, attribute in attributes
     )
@@ -128,6 +150,7 @@ def _spirit_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
             ("physical", "Physical Damage"),
             ("magic", "Magic Damage"),
         ),
+        time_offset=0.0,
     )
 
 
@@ -139,6 +162,7 @@ def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
             ("magic", "Magic Damage"),
             ("physical", "Physical Damage"),
         ),
+        time_offset=_R_GUST_DELAY_SECONDS,
     )
 
 
@@ -192,7 +216,23 @@ SLOTS = {
     # E declares metadata consumed after the fight event ledger is authored.
     "E": _soul_unbound,
 }
-parse_abilities = build_parser(SLOTS, "Yone")
+# Spirit Cleave only cleaves; Fate Sealed's gust "deals equal parts
+# physical and magic damage to marked enemies within and pulls them towards
+# the location Yone blinked to, then knocks them up for 0.75 seconds" — the
+# pull is the control that lands with the damage (the 1-second stun is
+# applied at the mark and "ends prematurely upon the pull").  Q is not here:
+# its knock-up belongs to the Gathering Storm branch, so the kind is
+# authored per part in ``_mortal_steel``.  P is the soul-mark state row.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Soul Unbound's recast controls nothing, but its true-damage event is
+# built by the fight engine from the ``stored_damage`` declaration, not
+# from a part this module authors — there is nothing here for a kind to be
+# stamped on, and a declaration that never reaches the ledger would claim a
+# review the coverage scan cannot see.
+MODULE_CC = {"W": "none", "R": "pull"}
+
+parse_abilities = build_parser(SLOTS, "Yone", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

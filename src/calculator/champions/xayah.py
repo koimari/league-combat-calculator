@@ -27,6 +27,10 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
+# Featherstorm's feathers fly after the leap: "Xayah leaps into the air ...
+# After 1 second, she shoots 5 Feathers" (cached R prose).
+_R_LEAP_SECONDS = 1.0
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_packet_module(
         "Xayah",
@@ -35,6 +39,11 @@ _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_opti
             "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
             "== Total Physical Damage).",
         ),
+        # W's row is the one extra feather the frenzy fires per attack.
+        single_hit_slots=frozenset({"W"}),
+        # "After 1 second, she shoots 5 Feathers" — R's hit is not at the
+        # cast, so it authors the sourced delay instead of certifying.
+        packet_part_timings={"R": {"time_offset": _R_LEAP_SECONDS}},
         slot_parsers={
             "Q": repeat_damage_parser(
                 attr="Physical Damage Per Hit",
@@ -109,7 +118,23 @@ def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 SLOTS = {**_packet_slots, "P": _clean_cuts, "E": _bladecaller}
-parse_abilities = build_parser(SLOTS, "Xayah")
+
+# Double Daggers' feathers "each deal physical damage to enemies hit",
+# Deadly Plumage's extra feather only damages, and Featherstorm's cone
+# "deal[s] physical damage to enemies hit".  P is the stack bookkeeping
+# row and authors no damage part.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Bladecaller does control — "a target hit by at least three Feathers is
+# rooted for 1.25 seconds" — and the root is a property of the recalled
+# feather count, which is this module's option, not of the slot.  Authoring
+# it per part (the Fiddlesticks branch pattern) is the right shape, but the
+# row cannot carry it either way: the recall is one aggregated part of
+# ``bladecaller_feathers`` hits with no sourced cadence between them, so no
+# event ever reaches the ledger.
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Xayah", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options) + [
     {

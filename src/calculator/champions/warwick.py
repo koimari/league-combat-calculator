@@ -72,7 +72,16 @@ SLOTS["R"] = _infinite_duress
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
 )
-parse_abilities = build_parser(SLOTS, "Warwick")
+# Jaws of the Beast only bites ("dealing magic damage, healing himself...");
+# the displacement immunity is Warwick's own.  Infinite Duress "knocks them
+# down and channels for up to 1.5 seconds to suppress, reveal, and deal
+# magic damage every 0.25 seconds" — the suppression is the control the
+# damaged target is under for the whole priced channel.  W (Blood Hunt) and
+# E (Primal Howl, where the fear and 90% slow live) are out_of_scope with no
+# damage row, and P is an on-hit rider on basic attacks.
+MODULE_CC = {"Q": "none", "R": "suppression"}
+
+parse_abilities = build_parser(SLOTS, "Warwick", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Infinite Duress) prices the wiki Total Magic Damage "

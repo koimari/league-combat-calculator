@@ -13,7 +13,9 @@ Sanity anchors (magic damage, pre-mitigation, 500 AP, all ranks maxed):
 
 import pytest
 
+from src.calculator.champions import ziggs
 from src.calculator.champions.slotlib import extract_named
+from tests import cc_review
 
 TARGET = {"target_max_health": 3000.0}
 
@@ -218,3 +220,44 @@ class TestZiggsFightIntegration:
                 "event_precision": "exact",
             }
         ]
+
+
+class TestReviewedCrowdControl:
+    """Ziggs's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Ziggs")
+        assert ziggs.MODULE_CC == {
+            "Q": "none",
+            "W": "knockback",
+            "E": "slow",
+            "R": "none",
+        }
+        assert ziggs.parse_abilities.cc_kinds == ziggs.MODULE_CC
+        assert "knock them back over 0.5 seconds" in cc_review.slot_text(data, "W")
+        assert "slowing them for 1.5 seconds" in cc_review.slot_text(data, "E")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_short_fuse_stays_absent_from_the_declaration(self):
+        """The passive's row is an empowered basic attack, not a cast."""
+        assert "P" not in ziggs.MODULE_CC
+        assert (
+            cc_review.control_words(cc_review.slot_text(cc_review.kit("Ziggs"), "P"))
+            == []
+        )
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Ziggs") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Ziggs")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

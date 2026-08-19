@@ -32,12 +32,28 @@ from ..stats import growth_multiplier
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import damage_entry, extract_cooldown, simple_damage
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Yorick", PACKET_SHA256)
+    build_packet_module(
+        "Yorick",
+        PACKET_SHA256,
+        # Q is one empowered swing and E is one globule's splash; neither
+        # has a travel or tick phase to place.  E states its certification
+        # through a slot parser because it is a ``wiki_attribute`` slot,
+        # which ``single_hit_slots`` does not reach.
+        single_hit_slots=frozenset({"Q"}),
+        slot_parsers={
+            "E": simple_damage(
+                attr="Magic Damage",
+                dmg_type="magic",
+                source=("E", 0),
+                event_order_certified="single_hit",
+            )
+        },
+    )
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
@@ -215,6 +231,8 @@ ASSUMPTIONS = [
     "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked ",
     "enemies for 8 attacks is not modeled (mark state)",
 ]
+
+
 SLOTS = {
     "P": _mist_walkers,
     "Q": _BATCH_SLOTS["Q"],
@@ -223,7 +241,15 @@ SLOTS = {
     "R": _maiden,
 }
 
-parse_abilities = build_parser(SLOTS, "Yorick")
+# Mourning Mist's globule lands and "enemy champions and monsters hit are
+# slowed by 30% for 1.5 seconds"; Last Rites' empowered swing only damages
+# and heals, and the R row prices the Maiden's basic attacks, which control
+# nothing.  W (Dark Procession) is where the knock-aside and the pull live,
+# but the ring deals no damage.  P is the Mist Walker pet row, not an
+# ability event.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Yorick", cc_kinds=MODULE_CC)
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")

@@ -174,7 +174,17 @@ SLOTS["Q"] = with_item_on_hits(
 SLOTS["R"] = with_item_on_hits(
     SLOTS["R"], effectiveness=1.0, hits=1, triggers=("on_hit",)
 )
-parse_abilities = build_parser(SLOTS, "Viego")
+# Q's thrust "deals physical damage to enemies hit" and its passive second
+# strike only damages; Spectral Maw's mist "deals magic damage to the first
+# enemy hit and stuns them for 0.25 : 1.25 (based on channel time) seconds";
+# Heartbreaker "strikes the most wounded enemy champion nearby, dealing
+# physical damage, slowing them by 99% for 0.25 seconds" — the slow is what
+# lands on the target this module prices (the knockback is for the *other*
+# nearby enemies).  E creates a mist trail and P is the possession mechanic;
+# both are out_of_scope and author no damage part.
+MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Viego", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

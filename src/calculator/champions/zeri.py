@@ -28,6 +28,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
         "Total Physical Damage).",
     ),
+    # W's pulse and R's nova are one hit each at the cast; neither packet
+    # carries a travel or tick phase to place.
+    single_hit_slots=frozenset({"W", "R"}),
     slot_parsers={
         "Q": repeat_damage_parser(
             attr="Physical Damage per Hit",
@@ -87,7 +90,21 @@ def _spark_surge(ctx: SlotCtx):
 
 SLOTS = dict(SLOTS)
 SLOTS["E"] = _spark_surge
-parse_abilities = build_parser(SLOTS, "Zeri")
+
+# Ultrashock Laser's pulse "deals physical damage to the first enemy hit
+# and slows them for 2 seconds".  Burst Fire's rounds and Lightning Crash's
+# nova only damage — the nova empowers Zeri (Overcharged), not the enemies
+# it hits.  P is the charged basic attack, not an ability event.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Spark Surge controls nothing, but its row is the Lightning Rounds bonus
+# aggregated over seven Burst Fire rounds with no timing of its own, and
+# giving it Q's burst timing so it reaches the ledger moves the row's
+# ledger position (measured: Shadowflame's level-18 magic totals move),
+# which is a re-timing decision this review does not own.
+MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Zeri", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst "

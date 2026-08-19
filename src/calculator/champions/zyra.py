@@ -31,7 +31,13 @@ from .packet_module import build_packet_module
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Zyra", PACKET_SHA256)
+    build_packet_module(
+        "Zyra",
+        PACKET_SHA256,
+        # E's vines burst on the enemies they reach and R damages "as it
+        # expands"; neither packet carries a travel or tick phase to place.
+        single_hit_slots=frozenset({"E", "R"}),
+    )
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
@@ -159,7 +165,25 @@ SLOTS = {
     "R": _BATCH_SLOTS["R"],
 }
 
-parse_abilities = build_parser(SLOTS, "Zyra")
+# Grasping Roots' vines "deal[] magic damage to enemies hit and root[] them
+# for a duration"; Stranglethorns damages "as it expands" and then "snaps
+# upward to knock up enemies within for 1 second".  P is the seed-spawn
+# state row and authors no damage part.
+#
+# Two slots stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  The W row is not a cast at all but ``plant_count`` plants' basic
+# attacks, and the two plant kinds do not answer alike: a Thorn Spitter
+# (sprouted by Q) controls nothing while a Vine Lasher (sprouted by E)
+# slows — a pets-page fact this module already records as unmodelled
+# state.  The option cannot tell them apart, so no one kind is true of the
+# row.  Q controls nothing, but its thorns "appear after a 0.625-seconds
+# delay": certifying a cast-boundary hit would state the wrong instant,
+# and authoring the offset moves the row's ledger position (measured:
+# Shadowflame's level-18 magic totals move), which is a re-timing decision
+# this review does not own.
+MODULE_CC = {"E": "root", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Zyra", cc_kinds=MODULE_CC)
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")

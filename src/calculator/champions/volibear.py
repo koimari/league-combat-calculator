@@ -28,7 +28,12 @@ from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Volibear", PACKET_SHA256, single_hit_slots=frozenset({"E"}))
+    build_packet_module(
+        "Volibear",
+        PACKET_SHA256,
+        # Q's empowered attack is one pounce on one target; E is one bolt.
+        single_hit_slots=frozenset({"Q", "E"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -166,7 +171,25 @@ SLOTS["P"] = _relentless_storm
 SLOTS["W"] = _frenzied_maul
 _packet_e = SLOTS["E"]
 SLOTS["E"] = _sky_splitter
-parse_abilities = build_parser(SLOTS, "Volibear")
+# Thundering Smash's empowered attack pounces "dealing bonus physical
+# damage and stunning them for 1 second"; Sky Splitter's bolt "deals magic
+# damage to enemies hit ... and slows them by 40% for 2 seconds".  P is the
+# stack buff plus its Lightning Claws on-hit rider — a basic-attack row,
+# not an ability event.
+#
+# Two slots stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Stormbringer does slow ("Volibear impacts after 1 second, slowing
+# nearby enemies by 50%"), but the same sentence is why the slot cannot
+# carry it: the damage is the impact's, a second after the cast, and this
+# packet does not author that offset.  Frenzied Maul controls nothing, but
+# the Wounded bite splits its one slash into a base and a bonus part, so
+# the single-part ``single_hit`` certification is unavailable and the only
+# other route — authoring a shared cast instant — splits the row's heal
+# ledger from one event into three (tests/test_heal_ledger_phase2.py).
+# Both would be re-timing decisions this review does not own.
+MODULE_CC = {"Q": "stun", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Volibear", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options) + [
     {

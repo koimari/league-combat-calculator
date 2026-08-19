@@ -28,6 +28,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
         "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
     ),
+    # Q "drains blood from the target enemy, dealing magic damage" and E's
+    # nova damages an enemy "only once": one hit each, at the cast.
+    single_hit_slots=frozenset({"Q", "E"}),
     slot_parsers={
         "W": repeat_damage_parser(
             attr="Magic Damage Per Tick",
@@ -103,7 +106,24 @@ _hemoplague_amp.phase = AMP
 
 SLOTS = dict(SLOTS)
 SLOTS["hemoplague"] = _hemoplague_amp
-parse_abilities = build_parser(SLOTS, "Vladimir")
+
+# Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of
+# Blood prices the fully charged nova, and "if Tides of Blood was charged
+# for at least 1 second, enemies hit are also slowed for 0.5 seconds".
+# Transfusion only drains.  P is the AP/health conversion and ``hemoplague``
+# is the AMP pseudo-slot; neither emits a cast.
+#
+# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Hemoplague controls nothing — it "increas[es] the damage they take from
+# all sources by 10%" — but the packet's burst is not a cast-boundary hit:
+# the plague "infects enemies hit for 4 seconds ... After the duration, the
+# infection bursts to deal magic damage".  Certifying it would state the
+# wrong instant, and authoring the 4-second offset moves the row's ledger
+# position (measured: it changes every Shadowflame total in the registered
+# magic builds), which is a re-timing decision this review does not own.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Vladimir", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

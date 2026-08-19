@@ -112,6 +112,13 @@ SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _personal_space
 SLOTS["P"] = _gloom_detonation
+
+# No MODULE_CC: Doom makes every basic ability's control a state, not a slot
+# fact — "Periodically, Vex empowers her next basic ability to knock down
+# and fear enemies hit", and "If Looming Darkness triggers Doom, enemies hit
+# will flee from the epicenter instead" replaces even E's own slow.  Neither
+# a slot-wide fear nor a slot-wide "none" is true of Q, W or E (the Annie
+# Pyromania rule), so this kit keeps the coarse control-armed scan.
 parse_abilities = build_parser(SLOTS, "Vex")
 
 OPTIONS = list(OPTIONS) + [

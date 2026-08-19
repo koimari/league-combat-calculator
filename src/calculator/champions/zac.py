@@ -14,11 +14,13 @@ passive with no outgoing damage).  No summon slot is added; the
 reviewed bounce packet pricing is unchanged.
 """
 
+from dataclasses import replace
+
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module, full_plus_reduced_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
@@ -30,7 +32,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
         "Damage).",
     ),
+    # E's landing and W's explosion are one hit each at the cast.  W states
+    # its certification through a slot parser because it is a
+    # ``wiki_attribute`` slot, which ``single_hit_slots`` does not reach.
+    single_hit_slots=frozenset({"E"}),
     slot_parsers={
+        "W": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            source=("W", 0),
+            event_order_certified="single_hit",
+        ),
         "R": full_plus_reduced_parser(
             full_attr="Magic Damage Per Hit",
             reduced_attr="Reduced Damage Per Hit",
@@ -39,7 +51,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=3.0,
-        )
+        ),
     },
 )
 PACKET_SPEC = SLOTS.packet_spec
@@ -108,9 +120,42 @@ def _stretching_strikes(ctx: SlotCtx):
     return entry
 
 
+def _lets_bounce(ctx: SlotCtx):
+    """R: the opening bounce displaces; the later bounces only slow.
+
+    "Each bounce deals magic damage to enemies hit, knocks them back over 1
+    second, and slows them by 20% ... ones beyond the first deal 50% damage
+    to them and do not apply the knock back" — one cast, two answers, so
+    they are authored per part instead of in ``MODULE_CC``.  The parts are
+    already the same split: the full-damage opening bounce, then the three
+    reduced ones.
+    """
+    entry = _packet_r(ctx)
+    if entry is None:
+        return None
+    entry["parts"] = tuple(
+        replace(part, cc_kind="knockback" if index == 0 else "slow")
+        for index, part in enumerate(entry.get("parts") or ())
+    )
+    return entry
+
+
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _stretching_strikes
-parse_abilities = build_parser(SLOTS, "Zac")
+_packet_r = SLOTS["R"]
+SLOTS["R"] = _lets_bounce
+
+# Stretching Strikes catches the first enemy hit, "dealing magic damage,
+# slowing them by 40% for 0.5 seconds" (its root and knock-up need a
+# *second*, different target, which a duel does not have); Unstable Matter
+# only "explodes to deal magic damage to nearby enemies"; Elastic
+# Slingshot lands "deal[ing] magic damage to nearby enemies and knock[ing]
+# them up and stun[ning] them for 0.5 seconds".  R is not here: its opening
+# bounce and its later ones apply different control, so the kinds are
+# authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Zac", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")

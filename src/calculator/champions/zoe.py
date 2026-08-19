@@ -20,7 +20,11 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zoe", PACKET_SHA256
+    "Zoe",
+    PACKET_SHA256,
+    # Q's star explodes on the first enemy it hits and E's bubble bursts on
+    # it; neither packet carries a travel phase to place.
+    single_hit_slots=frozenset({"Q", "E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -85,7 +89,21 @@ def _spell_thief(ctx: SlotCtx):
 
 SLOTS = dict(SLOTS)
 SLOTS["W"] = _spell_thief
-parse_abilities = build_parser(SLOTS, "Zoe")
+
+# Paddle Star! only explodes.  Sleepy Trouble Bubble's burst "deals magic
+# damage to the target and inflicts them with drowsy for 1.4 seconds, which
+# gradually slows them until they fall asleep for 2.25 seconds" — the
+# drowsy is the ramp, the sleep is the control the cast lands.  R (Portal
+# Jump) is out_of_scope with no damage, and P is the empowered next attack.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Spell Thief's bolts control nothing, but Wheeeee "shoots one bolt at a
+# time" over its 10-second window and the row is one aggregated part of
+# three hits with no sourced cadence between them, so no event reaches the
+# ledger.
+MODULE_CC = {"Q": "none", "E": "sleep"}
+
+parse_abilities = build_parser(SLOTS, "Zoe", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

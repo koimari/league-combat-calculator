@@ -7,8 +7,24 @@ from ..champions.skill_orders import get_ability_rank
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
 
+# Time Bomb's damage is the detonation's, not the throw's: "After 3
+# seconds, or when the attached unit dies, the bomb explodes to deal magic
+# damage to nearby enemies" (cached Q prose).
+_Q_FUSE_SECONDS = 3.0
+
+# A lone bomb only explodes.  The kit's stun needs a second bomb inside the
+# first one's fuse — "the bomb detonates immediately if another bomb
+# attaches itself to the same unit, stunning nearby enemies" — which Time
+# Bomb's own cooldown puts out of reach of one cast.  W (Rewind), E (Time
+# Warp, where the enemy slow lives) and R (Chronoshift) are out_of_scope
+# rows with no damage, and P is the experience channel.
+MODULE_CC = {"Q": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zilean", PACKET_SHA256
+    "Zilean",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_FUSE_SECONDS}},
+    cc_kinds=MODULE_CC,
 )
 PACKET_SPEC = SLOTS.packet_spec
 

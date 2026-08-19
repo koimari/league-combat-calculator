@@ -183,7 +183,16 @@ SLOTS = {
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions
 }
 
-parse_abilities = build_parser(SLOTS, "Vel'Koz")
+# Q's bolt "slows them by 70% decaying over a duration" and R's beam
+# "slows them by 20%, lingering for 1 second"; E lands "knocking them up
+# and stunning them for 0.75 seconds" — the airborne is the kind, and the
+# stun rides the same cast.  W's rift only "deal[s] magic damage to enemies
+# within", both on the cascade and on the collapse.  P is the Deconstruction
+# consume: its true-damage row is not an ability event, so it carries no
+# reviewable marker.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Vel'Koz", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"

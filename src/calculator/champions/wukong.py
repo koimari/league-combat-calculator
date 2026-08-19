@@ -123,11 +123,23 @@ SLOTS = {
     "Q": _crushing_blow,
     # The W clone's attacks are a separate pet timeline; it is not a direct
     # cast packet and therefore is intentionally omitted here.
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One strike on the dash target (the two clone strikes land on *other*
+    # enemies), so the single-target row is one hit at the cast.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _cyclone,
 }
 
-parse_abilities = build_parser(SLOTS, "Wukong")
+# Cyclone's staff "deals physical damage every 0.25 seconds to enemies hit,
+# and can knock them up once for 0.6 seconds".  Crushing Blow's empowered
+# swing only deals damage and "inflict[s] armor reduction" — a resistance
+# shred, not control — and Nimbus Strike only strikes.  W is the clone's
+# pet timeline (no direct cast packet) and P is the armor buff; neither
+# authors a damage part.
+MODULE_CC = {"Q": "none", "E": "none", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

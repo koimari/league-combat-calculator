@@ -36,7 +36,8 @@ from .slotlib import (
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Yasuo", PACKET_SHA256)
+    # R's slashes are one priced sweep over the knock-up's duration.
+    build_packet_module("Yasuo", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
@@ -107,9 +108,24 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     flat = extract_value(ability, "Physical Damage", rank, 0)
     ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
     ad_part = ctx.stat("attack_damage") * ad_ratio
+    # Both parts are the one thrust — the split is crit eligibility, not a
+    # second hit — so they share the cast instant.  Authoring it is what
+    # carries the cast into the event ledger; a two-part entry cannot use
+    # the single-part ``event_order_certified`` certification.
+    #
+    # The knock-up is a property of the branch, not of the slot, so it is
+    # authored here rather than in MODULE_CC: only the 2-stack cast is the
+    # whirlwind that "additionally knocks up enemies hit for 0.9 seconds".
+    cc_kind = "knockup" if stacks >= 2 else "none"
     entry["parts"] = (
-        DamagePart("physical", flat),
-        DamagePart("physical", ad_part, crit_effectiveness=1.0),
+        DamagePart("physical", flat, time_offset=0.0, cc_kind=cc_kind),
+        DamagePart(
+            "physical",
+            ad_part,
+            crit_effectiveness=1.0,
+            time_offset=0.0,
+            cc_kind=cc_kind,
+        ),
     )
     if stacks >= 2:
         entry["detail"] = (
@@ -164,6 +180,9 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", total),)
+    # One impact at the end of the dash — the cached packet has no separate
+    # travel or tick phase to place.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"Ride the Wind {stacks}/4 stacks: base {base:.2f} + {stacks} x "
         f"per-stack bonus {per_stack:.2f} = {total:.2f}; at 4 stacks this "
@@ -181,7 +200,15 @@ SLOTS = {
     "E": _sweeping_blade,
     "R": _BATCH_SLOTS["R"],
 }
-parse_abilities = build_parser(SLOTS, "Yasuo")
+# Sweeping Blade only "deals magic damage to the target"; Last Breath
+# "knocks up all nearby airborne enemy champions for 1 second ... slashing
+# them with his sword over the duration to deal physical damage".  Q is not
+# here: its knock-up belongs to the Gathering Storm branch, so the kind is
+# authored per part in ``_steel_tempest``.  W raises a projectile wall and P
+# is the Flow/crit state row; neither authors a damage part.
+MODULE_CC = {"E": "none", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Yasuo", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

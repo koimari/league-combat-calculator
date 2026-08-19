@@ -45,6 +45,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Arcane Storm prices the impact plus the full 6.5-second storm "
         "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
     ),
+    # One beam, one hit: "fires an energy beam along the target path that
+    # deals magic damage to enemies hit" — the packet has no travel or tick
+    # phase to place, so the hit lands at the cast.
+    single_hit_slots=frozenset({"E"}),
     slot_parsers={
         "R": initial_plus_ticks_parser(
             initial_attr="Magic Damage",
@@ -141,7 +145,21 @@ def _siphon_power(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _siphon_power
-parse_abilities = build_parser(SLOTS, "Viktor")
+# Siphon Power's device and its Discharge auto only "deal[] magic damage",
+# Hextech Ray's beam "deals magic damage to enemies hit and briefly grants
+# sight", and Arcane Storm's impact and bolts only damage.  W (Gravity
+# Field) is where this kit's slow and 5-stack stun live, and it is
+# documented out_of_scope — no damage row, no reviewable marker.
+#
+# Two facts this declaration does not carry, both out of the module's
+# modelled kit: Arcane Storm also "disrupt[s] their channeled abilities",
+# an interrupt the campaign's kind vocabulary has no word for and which no
+# control-armed item passive keys on; and the W augment Magnetize would
+# make "Viktor's other abilities ... slow enemies hit by 20%", which the
+# Hex Fragment augments (out of scope here) are the only way to buy.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Viktor", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Siphon Power) shields Viktor for the per-level 40 : 140 (+ 25% AP) "

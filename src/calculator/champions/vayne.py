@@ -43,7 +43,11 @@ from .slotlib import (
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
 
-_tumble_damage = simple_damage(attr="Bonus Physical Damage", dmg_type="physical")
+_tumble_damage = simple_damage(
+    attr="Bonus Physical Damage",
+    dmg_type="physical",
+    event_order_certified="single_hit",
+)
 
 
 def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -120,14 +124,31 @@ SLOTS = {
     "E": by_option(
         "condemn_wall",
         {
-            True: simple_damage(attr="Total Physical Damage", dmg_type="physical"),
-            False: simple_damage(attr="Physical Damage", dmg_type="physical"),
+            True: simple_damage(
+                attr="Total Physical Damage",
+                dmg_type="physical",
+                event_order_certified="single_hit",
+            ),
+            False: simple_damage(
+                attr="Physical Damage",
+                dmg_type="physical",
+                event_order_certified="single_hit",
+            ),
         },
         default=True,
     ),
 }
 
-parse_abilities = build_parser(SLOTS, "Vayne")
+# Tumble only "empowers her next basic attack ... to deal bonus physical
+# damage"; Condemn "knocks them back 475 units" on every cast, and adds a
+# 1.5s stun only "if the target collides with terrain" — the knockback is
+# the control the cast always applies, and both branches of the
+# ``condemn_wall`` option carry it.  W is the Silver Bolts on-hit shell
+# (its true damage rides a basic attack, not an ability event) and R is a
+# pure stat buff, so neither authors a part a review could reach.
+MODULE_CC = {"Q": "none", "E": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Vayne", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

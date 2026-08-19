@@ -34,7 +34,11 @@ _R_ARC_OF_RUIN_AP_RATIO = 0.75
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Yunara", PACKET_SHA256
+    "Yunara",
+    PACKET_SHA256,
+    # Q's row is one empowered swing's bonus magic damage — no travel or
+    # tick phase to place.
+    single_hit_slots=frozenset({"Q"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -137,7 +141,16 @@ SLOTS["R"] = _transcend_one_self
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=0.3, hits=1, triggers=("on_hit",)
 )
-parse_abilities = build_parser(SLOTS, "Yunara")
+
+# Arc of Judgment's initial hit "deals magic damage and slows them by 99%
+# decaying over 1.5 seconds", and the Transcendent upgrade Arc of Ruin
+# likewise "slows them by 99% decaying over 1 second" — one answer for both
+# branches of ``r_transcendent``.  Cultivation of Spirit only adds bonus
+# magic damage on-hit.  E is a dash, R is the Transcendent State buff shell
+# and P is the crit bonus; none of the three authors a damage part.
+MODULE_CC = {"Q": "none", "W": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Yunara", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead "
