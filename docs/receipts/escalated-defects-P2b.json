@@ -1,58 +1,60 @@
 {
-  "artifact": "escalated_defects",
-  "slice": "P2b",
-  "escalated_in": "4aaa6d3",
-  "why_this_file_exists": "The verify-P2b signoff found that unifying four readings of cc_kind onto the bus turned an out-of-vocabulary kind from a silent 'not immobilizing' into a live ValueError on four production paths. The raise itself is ruled and correct -- Phase 2's Types section rules that a cc_kind outside CC_KIND_VOCABULARY cannot enter the stream, because a misspelled kind must never author a no-op stun -- and the named-champion contract already rejects the part-authored spelling at parse time. What is not ruled, and what this slice may not fix, is the one authoring path that reaches the walk without passing that parse-time gate: a module-authored damage_events row. There the loud failure fires inside the walk as a plain ValueError, which the endpoints' own except-ValueError clauses report to the caller as a 400 bad request -- a champion module's authoring defect billed to the caller, and not the STARVED disposition the campaign's single boundary produces for the sibling condition. The fix belongs to the champion-module contract, which is outside this phase's Shape table and outside a phase ruled a pure refactor (D-90). Written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
-  "gate": "tests/test_trigger_stream.py::TestTheEscalatedDefectIsStillTracked",
-  "defects": [
+ "artifact": "escalated_defects",
+ "slice": "P2b",
+ "escalated_in": "4aaa6d3",
+ "why_this_file_exists": "The verify-P2b signoff found that unifying four readings of cc_kind onto the bus turned an out-of-vocabulary kind from a silent 'not immobilizing' into a live ValueError on four production paths. The raise itself is ruled and correct -- Phase 2's Types section rules that a cc_kind outside CC_KIND_VOCABULARY cannot enter the stream, because a misspelled kind must never author a no-op stun -- and the named-champion contract already rejects the part-authored spelling at parse time. What is not ruled, and what this slice may not fix, is the one authoring path that reaches the walk without passing that parse-time gate: a module-authored damage_events row. There the loud failure fires inside the walk as a plain ValueError, which the endpoints' own except-ValueError clauses report to the caller as a 400 bad request -- a champion module's authoring defect billed to the caller, and not the STARVED disposition the campaign's single boundary produces for the sibling condition. The fix belongs to the champion-module contract, which is outside this phase's Shape table and outside a phase ruled a pure refactor (D-90). Written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
+ "gate": "tests/test_trigger_stream.py::TestTheEscalatedDefectIsStillTracked",
+ "defects": [
+  {
+   "id": "authored_damage_events_cc_kind_is_unchecked_until_the_walk",
+   "dated": "2026-08-10",
+   "origin": "the parse-time gap is pre-campaign; P2b (7dd52a7, 3e61b51, 44e10ea) changed what happens when it is hit",
+   "raised_by": [
     {
-      "id": "authored_damage_events_cc_kind_is_unchecked_until_the_walk",
-      "dated": "2026-08-10",
-      "origin": "the parse-time gap is pre-campaign; P2b (7dd52a7, 3e61b51, 44e10ea) changed what happens when it is hit",
-      "raised_by": [
-        {
-          "signoff": "verify-P2b",
-          "pass": 2,
-          "finding": "THE BIG ONE -- the bus's out-of-vocabulary cc_kind ValueError went from an unconsumed leaf assertion to a live raise on four production paths, with no handler at the request boundary.",
-          "corrected_here": "The signoff concluded the raise 'surfaces as an unnamed 500 with no STARVED disposition'. Measured, it does not: /api/calculate and /api/optimize each wrap their engine call in except ValueError -> 400, so the caller gets a 400 whose body is the vocabulary message and nothing else. That is a milder outcome and a different defect -- an authoring error billed to the caller -- and it is the one recorded here."
-        }
-      ],
-      "site": [
-        {
-          "file": "src/calculator/champions/engine.py",
-          "fragment": "part for part in parts if getattr(part, \"cc_kind\", None) is not None"
-        },
-        {
-          "file": "src/calculator/damage.py",
-          "fragment": "row[\"cc_kind\"] = str(event[\"cc_kind\"])"
-        },
-        {
-          "file": "src/calculator/trigger_stream.py",
-          "fragment": "is not in CC_KIND_VOCABULARY "
-        }
-      ],
-      "defect": "champions.engine._validate_cc_event_contract checks cc_kind against CC_KIND_VOCABULARY for the parts of an entry and for nothing else. A module that authors its own damage_events list writes cc_kind straight onto a ledger row (damage.add_declared_events copies it with str(...) and no membership check), so an unknown kind -- silence, disarm, blind, polymorph, nearsight and drowsy are all real League crowd control and all outside the seventeen-member vocabulary -- passes parse time. Before P2b the four consumers each re-read the token and coerced an unknown kind to 'not immobilizing', so such a module priced zero silently. After P2b all four read trigger_stream._classify_cc, which raises ValueError. The raise is the right answer; where it lands is not. It is a plain ValueError, so the campaign's single request-boundary catch does not see it and the endpoints' own except-ValueError clauses turn it into a 400 naming the kind and the vocabulary but naming neither the champion nor the entry -- a champion module's authoring defect reported as a malformed request. The sibling authoring path, a cc_kind on a part, is refused at parse time by a message that names all three.",
-      "live_signature": {
-        "unknown_kind": "silence",
-        "part_authored_spelling_is_refused_at_parse_time": true,
-        "damage_events_authored_spelling_is_accepted_at_parse_time": true,
-        "walk_paths_that_now_raise": [
-          "calculator.survival.actions.survival_action_from_event",
-          "calculator.damage._apply_command_amp",
-          "calculator.damage._fimbulwinter_event_coverage",
-          "calculator.item_support_effects.derive_item_support_effects"
-        ],
-        "raised_type": "ValueError",
-        "caught_at_the_request_boundary": false,
-        "surfaced_to_the_caller_as": {
-          "status": 400,
-          "body_keys": ["error"],
-          "carries_disposition": false
-        }
-      },
-      "reaches_the_committed_coupled_baseline": false,
-      "not_fixed_here_because": "The fix is a new parse-time rejection in champions/engine.py: a champion-module contract file that appears in no row of this phase's Shape table, and a semantic hardening inside a phase D-90 rules a pure refactor end to end. The two alternatives are worse and both reverse a ruling: widening the app.py catch past ProjectionStarvation reverses D-25's allowlist of one and would swallow every unrelated ValueError, and raising ProjectionStarvation from the classifier would call a misspelled kind a stream the result cannot answer, which it is not. Reverting the unification instead restores the silent no-op stun that is the incident this campaign exists to end.",
-      "resolution": "A named follow-on slice against the champion-module contract: _validate_cc_event_contract also walks a module-authored damage_events list and refuses an out-of-vocabulary cc_kind there, with the same message that names the champion, the entry and the kind. Then the bus's raise is unreachable from every authoring path rather than from one of two, and the walk cannot produce it at all."
+     "signoff": "verify-P2b",
+     "pass": 2,
+     "finding": "THE BIG ONE -- the bus's out-of-vocabulary cc_kind ValueError went from an unconsumed leaf assertion to a live raise on four production paths, with no handler at the request boundary.",
+     "corrected_here": "The signoff concluded the raise 'surfaces as an unnamed 500 with no STARVED disposition'. Measured, it does not: /api/calculate and /api/optimize each wrap their engine call in except ValueError -> 400, so the caller gets a 400 whose body is the vocabulary message and nothing else. That is a milder outcome and a different defect -- an authoring error billed to the caller -- and it is the one recorded here."
     }
-  ]
+   ],
+   "site": [
+    {
+     "file": "src/calculator/champions/engine.py",
+     "fragment": "part for part in parts if getattr(part, \"cc_kind\", None) is not None"
+    },
+    {
+     "file": "src/calculator/damage.py",
+     "fragment": "row[\"cc_kind\"] = str(event[\"cc_kind\"])"
+    },
+    {
+     "file": "src/calculator/trigger_stream.py",
+     "fragment": "is not in CC_KIND_VOCABULARY "
+    }
+   ],
+   "defect": "champions.engine._validate_cc_event_contract checks cc_kind against CC_KIND_VOCABULARY for the parts of an entry and for nothing else. A module that authors its own damage_events list writes cc_kind straight onto a ledger row (damage.add_declared_events copies it with str(...) and no membership check), so an unknown kind -- silence, disarm, blind, polymorph, nearsight and drowsy are all real League crowd control and all outside the seventeen-member vocabulary -- passes parse time. Before P2b the four consumers each re-read the token and coerced an unknown kind to 'not immobilizing', so such a module priced zero silently. After P2b all four read trigger_stream._classify_cc, which raises ValueError. The raise is the right answer; where it lands is not. It is a plain ValueError, so the campaign's single request-boundary catch does not see it and the endpoints' own except-ValueError clauses turn it into a 400 naming the kind and the vocabulary but naming neither the champion nor the entry -- a champion module's authoring defect reported as a malformed request. The sibling authoring path, a cc_kind on a part, is refused at parse time by a message that names all three.",
+   "live_signature": {
+    "unknown_kind": "mesmerize",
+    "part_authored_spelling_is_refused_at_parse_time": true,
+    "damage_events_authored_spelling_is_accepted_at_parse_time": true,
+    "walk_paths_that_now_raise": [
+     "calculator.survival.actions.survival_action_from_event",
+     "calculator.damage._apply_command_amp",
+     "calculator.damage._fimbulwinter_event_coverage",
+     "calculator.item_support_effects.derive_item_support_effects"
+    ],
+    "raised_type": "ValueError",
+    "caught_at_the_request_boundary": false,
+    "surfaced_to_the_caller_as": {
+     "status": 400,
+     "body_keys": [
+      "error"
+     ],
+     "carries_disposition": false
+    }
+   },
+   "reaches_the_committed_coupled_baseline": false,
+   "not_fixed_here_because": "The fix is a new parse-time rejection in champions/engine.py: a champion-module contract file that appears in no row of this phase's Shape table, and a semantic hardening inside a phase D-90 rules a pure refactor end to end. The two alternatives are worse and both reverse a ruling: widening the app.py catch past ProjectionStarvation reverses D-25's allowlist of one and would swallow every unrelated ValueError, and raising ProjectionStarvation from the classifier would call a misspelled kind a stream the result cannot answer, which it is not. Reverting the unification instead restores the silent no-op stun that is the incident this campaign exists to end.",
+   "resolution": "A named follow-on slice against the champion-module contract: _validate_cc_event_contract also walks a module-authored damage_events list and refuses an out-of-vocabulary cc_kind there, with the same message that names the champion, the entry and the kind. Then the bus's raise is unreachable from every authoring path rather than from one of two, and the walk cannot produce it at all."
+  }
+ ]
 }

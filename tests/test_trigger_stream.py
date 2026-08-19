@@ -291,6 +291,22 @@ def test_an_unmarked_row_classifies_unreviewed_and_never_none():
     assert ts._classify_cc(_row(cc_kind="none")) == (ts.CcClass.NONE, "none", True)
 
 
+def test_control_that_is_neither_immobilize_nor_slow_is_reviewed_and_arms_nothing():
+    """Malphite's cripple and Malzahar's silence have their own words.
+
+    Calling either one "slow" claims a movement slow the Wiki does not,
+    and calling it "none" denies a control the ability applies — so the
+    vocabulary carries them, and they narrow a part to reviewed control
+    that triggers neither Command nor Everlasting.
+    """
+    for kind in ("cripple", "silence"):
+        cc_class, cc_kind, reviewed = ts._classify_cc(_row(cc_kind=kind))
+        assert cc_class is ts.CcClass.NONE
+        assert cc_kind == kind
+        assert reviewed is True
+        assert not ts.is_immobilizing_event(_row(cc_kind=kind))
+
+
 def test_a_bare_crowd_control_row_is_unclassified_control():
     """The live stream admits rows carrying only the bare marker (D-33)."""
     cc_class, cc_kind, _ = ts._classify_cc(_row(crowd_control=True))
@@ -2514,7 +2530,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
         "target": "enemy:Aatrox",
         "attacker": "main:Annie",
         "is_ability": True,
-        "cc_kind": "silence",
+        "cc_kind": "mesmerize",
     }
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         ts.is_immobilizing_event(row)
@@ -2539,7 +2555,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
         _validate_cc_event_contract(
             "Fakechamp",
             "Q",
-            {"parts": (DamagePart("magic", 100.0, cc_kind="silence"),)},
+            {"parts": (DamagePart("magic", 100.0, cc_kind="mesmerize"),)},
         )
 
 

@@ -381,11 +381,20 @@ IMMOBILIZING_CC_KINDS = frozenset(
     }
 )
 
-# Every value a module may author as a part's ``cc_kind``. "slow" is real
-# crowd control that never counts as an immobilize; "none" is an explicit
-# reviewed no-CC result. Anything else is a typo the engine rejects —
+# Crowd control that is neither an immobilize nor a slow. Each is real
+# control a reviewer read off the Wiki, and none of them arms Command or
+# Everlasting, so they narrow a part to "reviewed, and it triggers nothing".
+# They exist because the alternative for Malphite's Ground Slam cripple and
+# Malzahar's Call of the Void silence was to call them "slow" or "none",
+# and both of those are false.
+NON_IMMOBILIZING_CC_KINDS = frozenset({"slow", "cripple", "silence"})
+
+# Every value a module may author as a part's ``cc_kind``. "none" is an
+# explicit reviewed no-CC result. Anything else is a typo the engine rejects —
 # a misspelled kind must never author a no-op stun.
-CC_KIND_VOCABULARY = IMMOBILIZING_CC_KINDS | frozenset({"slow", "none"})
+CC_KIND_VOCABULARY = (
+    IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | frozenset({"none"})
+)
 
 
 # The predicate that reads a raw row against the two constants above lives
