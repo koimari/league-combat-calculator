@@ -1631,11 +1631,29 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
             holder_stacking=None,
         )
+        # Every keystone ``rune_effects._KEYSTONE_COMPILERS`` compiles, spelled
+        # here rather than derived from it: this module is a data-free leaf
+        # (D-35) and ``rune_effects`` reads ``data/runes.json`` at import. The
+        # two tables are pinned equal by test_trigger_stream, which is where a
+        # cache-reading join belongs.
         for slug, keystone in (
             ("electrocute", "Electrocute"),
             ("first_strike", "First Strike"),
             ("press_the_attack", "Press the Attack"),
             ("arcane_comet", "Arcane Comet"),
+            ("summon_aery", "Summon Aery"),
+            ("hail_of_blades", "Hail of Blades"),
+            ("grasp_of_the_undying", "Grasp of the Undying"),
+            ("lethal_tempo", "Lethal Tempo"),
+            ("deathfire_touch", "Deathfire Touch"),
+            ("dark_harvest", "Dark Harvest"),
+            ("conqueror", "Conqueror"),
+            ("fleet_footwork", "Fleet Footwork"),
+            ("aftershock", "Aftershock"),
+            ("guardian", "Guardian"),
+            ("glacial_augment", "Glacial Augment"),
+            ("stormraiders_surge", "Stormraider's Surge"),
+            ("unsealed_spellbook", "Unsealed Spellbook"),
         )
     ),
     *(

@@ -126,6 +126,7 @@ from collections.abc import Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
+from types import MappingProxyType
 from typing import Any, Callable, NamedTuple
 
 from . import item_effects
@@ -8407,16 +8408,37 @@ def _record_keystone_proc_row(
     state.total_damage += total
 
 
-def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
-    """Add keystone rune proc damage from the fight's real instance stream.
+def _keystone_trigger_times(
+    state: FightState, rotation: RotationResult, trigger: "rune_effects.KeystoneTrigger"
+) -> list[float]:
+    """The fight event stream one keystone declares it watches.
 
-    Walks the timestamped instances with the keystone's sourced stack
-    window: a stack expires ``stack_window_seconds`` after it was applied,
-    so reaching ``stacks_required`` live stacks means that many instances
-    landed within one window. Procs start the cooldown, clear the stacks,
-    and suppress new stacks until the keystone is ready again (runes do
-    not stack while on cooldown). Each proc is priced once and recorded
-    as a timestamped damage event for the ledger and timeline consumers.
+    The keystone names the stream; the engine owns what is in it. Nothing
+    here interprets a rune — the three members are the three streams the
+    fight already publishes.
+    """
+    if trigger is rune_effects.KeystoneTrigger.BASIC_ATTACKS:
+        return sorted(_auto_attack_timestamps(state))
+    if trigger is rune_effects.KeystoneTrigger.DAMAGING_CASTS:
+        return _damaging_cast_times(state, rotation)
+    return _keystone_instance_times(state, rotation)
+
+
+def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add keystone rune proc damage from the fight's real trigger stream.
+
+    Walks the timestamped triggers the keystone declares with its sourced
+    stack rule: a stack expires ``stack_window_seconds`` after it was
+    applied (a keystone whose cache states no expiry keeps its stacks), so
+    reaching ``stacks_required`` live stacks means that many triggers
+    landed within one window. Procs start the cooldown and suppress new
+    stacks until the keystone is ready again (runes do not stack while on
+    cooldown); a keystone that consumes its stacks clears them, one that
+    does not empowers every later trigger. Each proc is priced once and
+    recorded as a timestamped damage event for the ledger and timeline
+    consumers, and the keystone's own disclosures reach the notes whether
+    it procced or not — a withheld half that goes quiet at zero is the
+    silent zero this campaign removes.
     """
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneProcEffect):
@@ -8424,22 +8446,73 @@ def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
     proc_times: list[float] = []
     live_stacks: list[float] = []
     ready_at = 0.0
-    for instance_time in _keystone_instance_times(state, rotation):
+    for instance_time in _keystone_trigger_times(state, rotation, effect.trigger):
         if instance_time < ready_at:
             continue
-        live_stacks = [
-            applied
-            for applied in live_stacks
-            if instance_time - applied < effect.stack_window_seconds
-        ]
+        if effect.stack_window_seconds is not None:
+            live_stacks = [
+                applied
+                for applied in live_stacks
+                if instance_time - applied < effect.stack_window_seconds
+            ]
         live_stacks.append(instance_time)
         if len(live_stacks) >= effect.stacks_required:
             proc_times.append(instance_time + effect.proc_delay_seconds)
             ready_at = instance_time + effect.cooldown_seconds
-            live_stacks = []
+            if effect.consumes_stacks:
+                live_stacks = []
+    state.notes.extend(effect.disclosures)
     if not proc_times:
+        _note_keystone_never_procced(state, effect)
         return
     _record_keystone_proc_row(state, effect, proc_times)
+
+
+_KEYSTONE_TRIGGER_SHORTFALLS: Mapping["rune_effects.KeystoneTrigger", str] = (
+    MappingProxyType(
+        {
+            rune_effects.KeystoneTrigger.BASIC_ATTACKS: "basic attacks",
+            rune_effects.KeystoneTrigger.DAMAGING_CASTS: "damaging ability casts",
+            rune_effects.KeystoneTrigger.DAMAGE_INSTANCES: (
+                "damage instances (damaging ability casts and basic attacks)"
+            ),
+        }
+    )
+)
+
+
+def _note_keystone_never_procced(
+    state: FightState, effect: "rune_effects.KeystoneProcEffect"
+) -> None:
+    """Disclose a selected keystone whose trigger stream never armed it.
+
+    Electrocute has always been able to end a fight without proccing; what
+    it did not do was say so. Every proc-class keystone says it here, in
+    the words of the stream it declared.
+    """
+    stream = _KEYSTONE_TRIGGER_SHORTFALLS[effect.trigger]
+    shortfall = (
+        f"produced no {stream}"
+        if effect.stacks_required <= 1
+        else f"never landed {effect.stacks_required} {stream} inside its stack rule"
+    )
+    state.notes.append(
+        f"{effect.keystone_name} never procced: the simulated fight {shortfall}."
+    )
+
+
+def _add_keystone_no_damage_receipts(state: FightState) -> None:
+    """Publish the receipts of a keystone that books no damage.
+
+    Three keystones have no combat damage in any source and five have
+    halves this engine holds no channel for. Both are selectable, compiled and
+    receipted; the difference between "zero is the answer" and "the number
+    exists and is refused" is the declaration's disposition, and the
+    keystone owns the words.
+    """
+    effect = state.keystone_effect
+    if isinstance(effect, rune_effects.KeystoneNoDamageEffect):
+        state.notes.extend(effect.receipts)
 
 
 def _add_keystone_ability_proc_damage(
@@ -11631,6 +11704,9 @@ def calculate_fight_damage(
 
     # ── Keystone ability-cast proc (Arcane Comet-class) ─────────────────
     _add_keystone_ability_proc_damage(state, rotation)
+
+    # ── Keystones that book no damage, and their receipts ───────────────
+    _add_keystone_no_damage_receipts(state)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)

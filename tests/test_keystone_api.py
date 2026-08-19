@@ -3,6 +3,7 @@
 import pytest
 
 import src.app as app_module
+from src.calculator import rune_effects
 
 
 @pytest.fixture(autouse=True)
@@ -24,22 +25,44 @@ def _payload(**overrides):
     return payload
 
 
-def test_config_serves_keystone_roster_with_coverage():
+def test_config_serves_the_whole_keystone_roster_as_implemented():
     config = app_module.app.test_client().get("/api/config").get_json()
 
     keystones = config["keystones"]
     assert len(keystones) == 17
     by_name = {entry["name"]: entry for entry in keystones}
-    assert by_name["Electrocute"]["implemented"] is True
     assert by_name["Electrocute"]["path"] == "Domination"
-    assert by_name["First Strike"]["implemented"] is True
-    assert by_name["Press the Attack"]["implemented"] is True
-    assert by_name["Arcane Comet"]["implemented"] is True
-    assert by_name["Dark Harvest"]["implemented"] is False
+    assert all(entry["implemented"] is True for entry in keystones)
     assert all(entry["icon"] for entry in keystones)
     # Paths arrive grouped in wiki order for direct picker rendering.
     paths = [entry["path"] for entry in keystones]
     assert paths.index("Precision") < paths.index("Domination") < paths.index("Sorcery")
+
+
+def test_every_keystone_computes_through_the_calculate_route():
+    """Criterion 5: no selection in the roster refuses."""
+    client = app_module.app.test_client()
+    keystones = [
+        entry["name"] for entry in client.get("/api/config").get_json()["keystones"]
+    ]
+    for keystone in keystones:
+        response = client.post(
+            "/api/calculate",
+            json=_payload(
+                keystone=keystone,
+                fight_mode="time_based",
+                include_auto_attacks=True,
+                fight_duration=10.0,
+                auto_attack_uptime=1.0,
+            ),
+        )
+        assert response.status_code == 200, keystone
+        result = response.get_json()
+        # Every keystone either books a row or publishes a receipt saying
+        # why it did not; silence is the one answer that is not allowed.
+        assert f"keystone_{keystone}" in result["breakdown"] or any(
+            note.startswith(keystone) for note in result["notes"]
+        ), keystone
 
 
 def test_calculate_includes_electrocute_breakdown_row():
@@ -146,16 +169,76 @@ def test_calculate_includes_arcane_comet_breakdown_row():
     assert any("Arcane Comet" in note and "375" in note for note in result["notes"])
 
 
-@pytest.mark.parametrize(
-    "keystone",
-    ["Dark Harvest", "Fake Rune", 42],
-)
-def test_calculate_and_optimize_reject_unmodeled_keystones(keystone):
+@pytest.mark.parametrize("keystone", ["Fake Rune", 42])
+def test_calculate_and_optimize_reject_unknown_keystones(keystone):
     client = app_module.app.test_client()
     for endpoint in ("/api/calculate", "/api/optimize"):
         response = client.post(endpoint, json=_payload(keystone=keystone))
         assert response.status_code == 400
         assert response.get_json()["error"]
+
+
+def test_an_uncompiled_keystone_is_still_rejected(monkeypatch):
+    """The withhold survives: a rune with no compiler still 400s."""
+    monkeypatch.setitem(
+        rune_effects.RUNE_EFFECTS, "Synthetic Keystone", {"name": "Synthetic"}
+    )
+    response = app_module.app.test_client().post(
+        "/api/calculate", json=_payload(keystone="Synthetic Keystone")
+    )
+    assert response.status_code == 400
+    assert "not modeled" in response.get_json()["error"]
+
+
+@pytest.mark.parametrize(
+    "keystone,expected_row",
+    [
+        ("Summon Aery", True),
+        ("Hail of Blades", True),
+        ("Grasp of the Undying", True),
+        ("Lethal Tempo", True),
+        ("Deathfire Touch", True),
+        ("Dark Harvest", False),
+        ("Conqueror", False),
+        ("Fleet Footwork", False),
+        ("Aftershock", False),
+        ("Guardian", False),
+        ("Glacial Augment", False),
+        ("Stormraider's Surge", False),
+        ("Unsealed Spellbook", False),
+    ],
+)
+def test_the_thirteen_new_keystones_price_exactly_what_they_declare(
+    keystone, expected_row
+):
+    """Each new keystone either adds its own row to the total, or nothing.
+
+    A keystone that books damage adds exactly its row; one that books none
+    leaves the total bit-identical to the same fight without it. Either way
+    the receipt reaches the user through the notes.
+    """
+    fight = {
+        "fight_mode": "time_based",
+        "include_auto_attacks": True,
+        "fight_duration": 10.0,
+        "auto_attack_uptime": 1.0,
+    }
+    client = app_module.app.test_client()
+    result = client.post(
+        "/api/calculate", json=_payload(keystone=keystone, **fight)
+    ).get_json()
+    baseline = client.post("/api/calculate", json=_payload(**fight)).get_json()
+
+    row = result["breakdown"].get(f"keystone_{keystone}")
+    if expected_row:
+        assert row is not None and row["total_damage"] > 0
+        assert result["total_damage"] == pytest.approx(
+            baseline["total_damage"] + row["total_damage"], rel=1e-6
+        )
+    else:
+        assert row is None
+        assert result["total_damage"] == pytest.approx(baseline["total_damage"])
+    assert any(note.startswith(keystone) for note in result["notes"])
 
 
 def test_empty_keystone_is_the_default():

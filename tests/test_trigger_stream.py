@@ -3009,3 +3009,28 @@ def test_the_three_held_authority_moves_name_their_blocking_human_decision():
         preamble = source[max(0, row - 700) : row]
         assert marker in preamble, mechanic
         assert ts.CAPABILITIES[mechanic].authority is Authority.SPLIT
+
+
+def test_every_compiled_keystone_declares_exactly_one_capability():
+    """The rune half of D-36's non-item owners, joined to its own table.
+
+    ``trigger_stream`` is a data-free leaf (D-35) and ``rune_effects`` reads
+    ``data/runes.json`` at import, so the seventeen names are spelled in the
+    declaration rather than derived from the compiler table.  The join that
+    keeps the two spellings equal therefore lives here — the same place the
+    item-name projections are pinned — and a keystone compiled without a
+    capability (or the reverse) fails here rather than in review.
+    """
+    # pylint: disable-next=import-outside-toplevel
+    from src.calculator import rune_effects
+
+    declared = {
+        capability.owner.name: capability
+        for capability in ts.CAPABILITIES.values()
+        if isinstance(capability.owner, ts.RuneOwner)
+    }
+    assert set(declared) == set(rune_effects._KEYSTONE_COMPILERS)
+    for name, capability in declared.items():
+        assert capability.engine is ts.Engine.PAIR, name
+        assert capability.authority is Authority.PAIR_ONLY, name
+        assert capability.impl == "rune_effects.resolve_keystone", name
