@@ -1060,16 +1060,20 @@ def run_fight(
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
-    # sent, then hand timed fights the fight window and auto uptime so
-    # duration/timeline-driven champion mechanics (Aurelion Sol's
-    # continuous Q channel, Braum's passive stack cycle) can scale with
-    # them. One-rotation mode keeps the per-cast ability models.
+    # sent, then hand timed fights the fight window, the auto uptime and
+    # whether the engine casts anything at all, so duration/timeline-driven
+    # champion mechanics (Aurelion Sol's continuous Q channel, Braum's
+    # passive stack cycle) scale with the same fight the engine runs — an
+    # autos-only window schedules zero casts, so a walk module that merges
+    # ability hits into its stream has to be told. One-rotation mode keeps
+    # the per-cast ability models.
     champion_options = dict(params.champion_options or {})
     for reserved_key in RESERVED_OPTION_KEYS:
         champion_options.pop(reserved_key, None)
     if not params.one_rotation:
         champion_options["fight_duration_seconds"] = params.fight_duration_seconds
         champion_options["auto_attack_uptime"] = params.auto_attack_uptime
+        champion_options["auto_attacks_only"] = params.auto_attacks_only
 
     # Champion mechanics priced in crit at parse time (Caitlyn's Headshot
     # rider) need the build's bonus crit damage above the 2.0 base

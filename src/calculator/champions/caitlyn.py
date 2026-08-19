@@ -92,9 +92,12 @@ def _trap_grants(ctx: SlotCtx) -> int:
     ``w_traps`` (default 1) is the player-controlled count of traps the
     enemy steps on, capped by W's "Maximum Number of Traps" at rank
     (3/3/4/4/5).  Each sprung trap grants exactly one trap Headshot.
+    An autos-only fight never casts W, so no trap is ever laid.
     """
     ability = ctx.ability("W")
     if ability is None or ctx.rank_for("W") < 1:
+        return 0
+    if ctx.option("auto_attacks_only"):
         return 0
     rank = ctx.rank_for("W")
     cap = max(1, int(extract_value(ability, "Maximum Number of Traps", rank) or 5))
@@ -102,10 +105,13 @@ def _trap_grants(ctx: SlotCtx) -> int:
 
 
 def _e_cast_count(ctx: SlotCtx, duration: float) -> int:
-    """E casts over a timed fight: t=0 then on cooldown (rotation's count)."""
+    """E casts over a timed fight: t=0 then on cooldown (rotation's count).
+
+    An autos-only fight casts nothing, so it grants no headshots.
+    """
     ability = ctx.ability("E")
     rank = ctx.rank_for("E")
-    if ability is None or rank < 1:
+    if ability is None or rank < 1 or ctx.option("auto_attacks_only"):
         return 0
     haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
     cd = effective_cooldown(extract_cooldown(ability, rank), haste)
@@ -299,6 +305,9 @@ ASSUMPTIONS = [
     "headshots convert existing autos rather than adding attacks — with "
     "no auto stream (one-rotation mode, or auto attacks disabled) they "
     "are the forced basic attacks themselves (swing + headshot)",
+    "An autos-only fight casts neither E nor W, so only the every-6th "
+    "cadence lands (the pipeline states this with the auto_attacks_only "
+    "reserved option)",
     "Headshot (swing and rider) is basic damage: basic-damage "
     "amplifiers (Hexoptics C44) apply to it",
     "Q assumes the target is hit first (full damage; the 60% "

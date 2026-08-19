@@ -11,9 +11,10 @@ Why each slot is non-generic:
   (16 + 10 x level), stun, and immunity period exist only in
   description prose, so the formula lives here. Timed fights walk the
   fight's auto/Q hit timeline (via the pipeline-injected
-  ``fight_duration_seconds`` / ``auto_attack_uptime`` reserved
-  options); one-rotation mode emits nothing — a single Q application
-  never reaches 4 stacks.
+  ``fight_duration_seconds`` / ``auto_attack_uptime`` /
+  ``auto_attacks_only`` reserved options — an autos-only window casts
+  no Q, so only the ambient swings stack); one-rotation mode emits
+  nothing — a single Q application never reaches 4 stacks.
 - Q (Winter's Bite) scales with 2.5% of BRAUM'S OWN max health — the
   JSON unit ("% of Braum's maximum health") is champion-named, which
   ``scaling.resolve_scaling`` cannot map, so a ``sum_modifiers``
@@ -100,7 +101,8 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     with ``rate = attack_speed x auto_attack_uptime`` (uptime 0 means no
     autos), and Q is cast at t=0 then on cooldown (ability haste plus
     basic-ability haste), giving ``1 + duration // cd`` casts — the same
-    count the rotation computes.
+    count the rotation computes.  An ``auto_attacks_only`` window
+    schedules zero casts, so the stream is the ambient swings alone.
     """
     events: list[tuple[float, int]] = []
 
@@ -114,7 +116,7 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
 
     q_ability = ctx.ability("Q")
     q_rank = ctx.rank_for("Q")
-    if q_ability is not None and q_rank >= 1:
+    if q_ability is not None and q_rank >= 1 and not ctx.option("auto_attacks_only"):
         haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
         cd = effective_cooldown(extract_cooldown(q_ability, q_rank), haste)
         casts = 1 + int(duration / cd) if cd > 0 else 1
@@ -298,6 +300,9 @@ ASSUMPTIONS = [
     "auto/Q timeline, with Q assumed cast on cooldown from t=0); in "
     "one-rotation mode a single Q application never reaches 4 stacks, so "
     "no passive damage is shown",
+    "An autos-only fight casts no Q, so only the ambient swings stack "
+    "(the pipeline states this with the auto_attacks_only reserved "
+    "option)",
     "Passive stacks last 4s (refreshing) — with autos in the timeline "
     "they never expire mid-buildup; without autos (Q-only stacking) the "
     "expiry IS modeled, so the passive correctly never procs off Q alone",

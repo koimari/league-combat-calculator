@@ -63,6 +63,49 @@ def test_fight_params_resolve_modes(
     assert params.one_rotation is one_rotation
 
 
+@pytest.mark.parametrize(
+    ("params_kwargs", "expected"),
+    [
+        ({"one_rotation": True}, None),
+        ({"one_rotation": False}, {"auto_attacks_only": False}),
+        (
+            {"one_rotation": False, "auto_attacks_only": True},
+            {"auto_attacks_only": True},
+        ),
+    ],
+)
+def test_run_fight_owns_the_autos_only_reserved_option(
+    monkeypatch, params_kwargs, expected
+):
+    """The pipeline injects it for timed fights and strips caller input.
+
+    A walk module can only tell an autos-only window from a timed one
+    because ``run_fight`` says so, and a caller must not be able to lie
+    about it through ``champion_options``.
+    """
+    seen = {}
+
+    def _capture(*args, champion_options=None, **kwargs):
+        seen["options"] = dict(champion_options or {})
+        return {}
+
+    monkeypatch.setattr("src.calculator.pipeline.parse_champion_abilities", _capture)
+    params = FightParams(
+        target_health=1000.0,
+        target_armor=0.0,
+        target_magic_resistance=0.0,
+        fight_duration_seconds=10.0,
+        # The smuggled value the pipeline must overwrite or drop.
+        champion_options={"auto_attacks_only": "smuggled"},
+        **params_kwargs,
+    )
+    run_fight(get_champion("Braum"), 11, [], params)
+
+    assert seen["options"].get("auto_attacks_only") == (
+        None if expected is None else expected["auto_attacks_only"]
+    )
+
+
 def test_request_defaults_have_one_canonical_home():
     params = FightParams.from_request({})
 

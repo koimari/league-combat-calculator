@@ -188,17 +188,21 @@ TARGET_STATS: Mapping[str, InputDefault] = {
 """Every target stat a module may read.  Asserted against its producer too."""
 
 
-RESERVED_OPTION_DEFAULTS: Mapping[str, float] = {
+RESERVED_OPTION_DEFAULTS: Mapping[str, float | bool] = {
     "fight_duration_seconds": 0.0,
     "auto_attack_uptime": 0.0,
+    "auto_attacks_only": False,
 }
 """The pipeline-owned option keys and what their absence means.
 
-``pipeline.run_fight`` injects both for timed fights and strips them
+``pipeline.run_fight`` injects them for timed fights and strips them
 otherwise, so absence is the one-rotation mode saying "no fight window" —
-a declaration, not a missing value.  They are never in a module's
-``OPTIONS``, which is why the option accessor consults this table too
-(``champions.RESERVED_OPTION_KEYS`` is the same set, asserted equal).
+a declaration, not a missing value.  ``auto_attacks_only`` defaults to
+``False`` for the same reason: a window the pipeline did not mark is one
+where the engine casts the rotation, so a walk module counts ability
+hits.  They are never in a module's ``OPTIONS``, which is why the option
+accessor consults this table too (``champions.RESERVED_OPTION_KEYS`` is
+the same set, asserted equal).
 """
 
 

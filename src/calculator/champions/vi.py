@@ -9,7 +9,8 @@ modifies on the primary target and as cone damage on secondary roster targets.
 Timed fights walk W's stack cycle over the merged hit stream (Braum-pattern
 module walk): ambient autos plus Q hits — E's empowered attacks ride the
 ambient stream itself, so they are already counted as the swings they
-consume, and only with no stream do E casts force their own attacks.  Stacks
+consume, and only with no stream do E casts force their own attacks.  An
+autos-only fight casts nothing, so its stream is the ambient swings.  Stacks
 expire 4 seconds after the last application, every third hit procs the
 %max-health damage as an authored exact event, and the 20% shred is carried
 as a 4-second ``target_debuff`` on the first ranked cast slot (Q, else E)
@@ -226,7 +227,8 @@ def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     attack consumes an ambient swing (the engine models attack resets as
     spending attack-cooldown dead time), so with a stream it is already
     one of the counted autos; with no stream each E cast forces its own
-    attack on the primary target only.
+    attack on the primary target only.  An ``auto_attacks_only`` window
+    schedules no casts at all, so the stream is the ambient swings alone.
     """
     events: list[tuple[float, int]] = []
     rate = ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime"))
@@ -234,11 +236,14 @@ def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
         events.extend(
             (index / rate, _ATTACK) for index in range(math.floor(rate * duration))
         )
-    starts = _timed_cast_starts(ctx, duration)
-    q_hit_offset = _q_geometry(ctx)[3]
-    events.extend((start + q_hit_offset, _ABILITY_HIT) for start in starts.get("Q", ()))
-    if rate <= 0 and _is_primary_target(ctx):
-        events.extend((start, _ABILITY_HIT) for start in starts.get("E", ()))
+    if not ctx.option("auto_attacks_only"):
+        starts = _timed_cast_starts(ctx, duration)
+        q_hit_offset = _q_geometry(ctx)[3]
+        events.extend(
+            (start + q_hit_offset, _ABILITY_HIT) for start in starts.get("Q", ())
+        )
+        if rate <= 0 and _is_primary_target(ctx):
+            events.extend((start, _ABILITY_HIT) for start in starts.get("E", ()))
     events.sort()
     return events
 
@@ -520,10 +525,9 @@ ASSUMPTIONS = [
     "after the last application, and Q/E are assumed cast on cooldown from "
     "t=0 on one shared cast timeline without item cooldown modifiers or "
     "mana exhaustion",
-    "Autos-only mode still counts Q's hits in the W stack stream: the "
-    "pipeline injects only the fight window and auto uptime, so a "
-    "timeline-walk module cannot see that the engine cast nothing (the "
-    "same limitation the Braum exemplar carries)",
+    "An autos-only fight casts nothing, so only the ambient swings stack "
+    "(the pipeline states this with the auto_attacks_only reserved "
+    "option) and no cast carries the shred window",
     "Timed W procs are priced against the fight's static target max health "
     "and the 20% shred is time-weighted over 4s windows anchored at the "
     "carrier ability's cast times (Q, else E) — the engine anchors shred "

@@ -464,6 +464,46 @@ class TestHeadshotTimedFight:
         assert abilities["passive"]["total_raw"] == pytest.approx(835.0)
         assert "forced" in abilities["passive"]["detail"]
 
+    def test_autos_only_window_grants_no_e_or_trap_headshots(
+        self, caitlyn_data
+    ) -> None:
+        """`auto_attacks_only` casts nothing: only the every-6th cadence.
+
+        Same 10s window as ``test_cadence_plus_grants`` (12 autos), but
+        neither E nor W is ever cast, so the E-granted and trap
+        conversions vanish: 2 x 200 = 400, not 835.
+        """
+        abilities = parse_abilities(
+            caitlyn_data,
+            13,
+            0.0,
+            ability_ranks={"Q": 5, "W": 1, "E": 1, "R": 2},
+            champion_stats=self._stats(),
+            champion_options=dict(TIMED_10S, auto_attacks_only=True),
+        )
+        assert abilities["passive"]["total_raw"] == pytest.approx(400.0)
+        assert abilities["passive"]["detail"] == (
+            "2 headshot(s) over 10s: 2 cadence + 0 E-granted + 0 trap"
+        )
+
+    def test_autos_only_without_an_auto_stream_has_no_headshot(
+        self, caitlyn_data
+    ) -> None:
+        """Zero uptime and no casts: nothing forces a basic attack."""
+        abilities = parse_abilities(
+            caitlyn_data,
+            13,
+            0.0,
+            ability_ranks={"Q": 5, "W": 1, "E": 1, "R": 2},
+            champion_stats=self._stats(),
+            champion_options={
+                "fight_duration_seconds": 10.0,
+                "auto_attack_uptime": 0.0,
+                "auto_attacks_only": True,
+            },
+        )
+        assert "passive" not in abilities
+
     def test_e_casts_on_cooldown_grant_more_headshots(self, caitlyn_data) -> None:
         """E rank 5 (8s cd) over 10s = 2 casts: 2 cadence + 2 E + 1 trap
         -> 4 x 200 + 235 = 1035."""

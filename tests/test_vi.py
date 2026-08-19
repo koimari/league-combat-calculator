@@ -28,6 +28,21 @@ def _timed_payload(duration, *, include_autos=True, champion_options=None):
     return calculate_payload(data)
 
 
+def _auto_only_payload(duration):
+    """Autos-only request through the real public pipeline."""
+    return calculate_payload(
+        {
+            "champion": "Vi",
+            "level": 18,
+            "items": [],
+            "fight_mode": "auto_only",
+            "auto_attacks_only": True,
+            "include_auto_attacks": True,
+            "fight_duration": duration,
+        }
+    )
+
+
 RANKS = {"Q": 5, "W": 3, "E": 3, "R": 2}
 
 
@@ -245,6 +260,41 @@ def test_timed_w_proc_count_grows_with_duration_and_ambient_autos():
     times = [event["time"] for event in long_procs]
     assert times == sorted(times)
     assert long_row["total_damage"] > short_row["total_damage"]
+
+
+def test_auto_only_w_procs_count_only_the_ambient_swings():
+    """auto_only casts nothing, so Q must not feed the Denting Blows walk.
+
+    Level 18, no items, 18s: the engine swings 12 ambient autos and casts
+    zero abilities, so every third swing procs — 4 procs, not the merged
+    stream's 5 (``test_timed_w_proc_count_grows_with_duration_and_ambient_autos``).
+    """
+    payload = _auto_only_payload(18)
+
+    assert payload["breakdown"]["auto_attacks"]["count"] == 12
+    for slot in ("Q", "E", "R"):
+        assert payload["breakdown"][slot]["casts"] == 0
+    row = payload["breakdown"]["W"]
+    assert row["count"] == 4
+    assert row["total_damage"] == pytest.approx(160.0)
+
+
+def test_auto_only_w_is_silent_without_an_auto_stream():
+    """No autos and no casts leaves nothing to apply a stack."""
+    payload = calculate_payload(
+        {
+            "champion": "Vi",
+            "level": 18,
+            "items": [],
+            "fight_mode": "auto_only",
+            "auto_attacks_only": True,
+            "auto_attack_uptime": 0,
+            "auto_attack_uptime_mode": "explicit",
+            "fight_duration": 18,
+        }
+    )
+
+    assert "W" not in payload["breakdown"]
 
 
 def test_timed_w_stacks_expire_without_a_carrier_stream():

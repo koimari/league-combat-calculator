@@ -234,7 +234,13 @@ def get_champion_module_contract(champion_name: str) -> ChampionModuleContract:
 # ``auto_attack_uptime``: the fight's auto uptime, so auto-timeline
 # mechanics (e.g. Braum's passive stack cycle) walk the same auto
 # cadence (attack_speed x uptime) the fight engine schedules.
-RESERVED_OPTION_KEYS = frozenset({"fight_duration_seconds", "auto_attack_uptime"})
+# ``auto_attacks_only``: the engine casts no abilities in this window,
+# so a walk module must count ambient swings alone — without it a
+# merged auto+ability stream (Braum P, Vi W, Caitlyn P) keeps pricing
+# hits from casts that never happened.
+RESERVED_OPTION_KEYS = frozenset(
+    {"fight_duration_seconds", "auto_attack_uptime", "auto_attacks_only"}
+)
 
 
 def parse_abilities(
