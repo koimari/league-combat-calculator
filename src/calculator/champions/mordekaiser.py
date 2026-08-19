@@ -11,6 +11,8 @@ schedules the W cast that arms the recast.
 """
 
 from .packet_module import build_packet_module
+from .engine import build_parser
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
 
@@ -27,6 +29,21 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "grey-health primitive authors it from the incoming/outgoing "
     "ledgers. Shield conversion and both decay curves are state.",
 ]
+
+
+SLOTS = dict(SLOTS)
+# The reviewed packet folded Obliterate's per-level term into its per-rank
+# base, so one index served both and the level term was read at the rank —
+# at level 18 rank 5 the swing priced its level-5 scaling.  Reading the
+# cached row through the shared slot repairs the axis without changing
+# which row is read.
+SLOTS["Q"] = simple_damage(
+    attr="Magic Damage",
+    dmg_type="magic",
+    event_order_certified="single_hit",
+)
+parse_abilities = build_parser(SLOTS, "Mordekaiser")
+
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
 }

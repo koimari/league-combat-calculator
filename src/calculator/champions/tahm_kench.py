@@ -35,7 +35,11 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    # Tongue Lash's row carries a per-rank base and an eighteen-entry per-level
+    # term, so reading it needs the level as well as the rank.
+    total = extract_named(
+        ability, "Magic Damage", rank, ctx.stats, ctx.target, level=ctx.level
+    )
     stacks = min(max(int(ctx.option("q_passive_stacks")), 0), 3)
     if stacks:
         total += extract_named(

@@ -15,7 +15,7 @@ is a documented no-damage row instead of being collapsed into a bolt.
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
@@ -88,6 +88,16 @@ def _spell_thief(ctx: SlotCtx):
 
 
 SLOTS = dict(SLOTS)
+# The reviewed packet folded Paddle Star's per-level term into its
+# per-rank base, so one index served both and the level term was read at
+# the rank — at level 18 rank 5 the star priced its level-5 scaling.  The
+# packet's own reading is kept (the Maximum row, the star at full travel);
+# reading the cached row through the shared slot repairs the axis.
+SLOTS["Q"] = simple_damage(
+    attr="Maximum Magic Damage",
+    dmg_type="magic",
+    event_order_certified="single_hit",
+)
 SLOTS["W"] = _spell_thief
 
 # Paddle Star! only explodes.  Sleepy Trouble Bubble's burst "deals magic

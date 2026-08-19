@@ -12,7 +12,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry
+from .slotlib import damage_entry, extract_cooldown
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -145,8 +145,14 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     base = (125.0, 175.0, 225.0)[r_rank - 1]
     ad = float(ctx.stat("bonus_attack_damage"))
     ap = float(ctx.stat("ability_power"))
+    # The cache carries no leveling row for Moonlight Vigil, so its bases stay
+    # reviewed constants — but the cooldown row is there, and it falls by rank.
     entry = damage_entry(
-        ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical"
+        ability["name"],
+        r_rank,
+        extract_cooldown(ability, r_rank),
+        base + 0.20 * ad + ap,
+        "physical",
     )
     entry["parts"] = (DamagePart("physical", amount=base + 0.20 * ad + ap),)
     detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
