@@ -293,7 +293,17 @@ SLOTS = {
     "P": _living_vengeance,
 }
 
-parse_abilities = build_parser(SLOTS, "Varus")
+# Reviewed crowd control, read from the cached kit.  Q (Piercing Arrow)
+# "deals physical damage to enemies hit" — the 20% slow in its text is on
+# Varus himself while he charges, not on the target.  E (Hail of Arrows)
+# lands, then "the area then becomes desecrated for 4 seconds, slowing
+# enemies within".  R (Chain of Corruption) infects the first champion
+# hit, "dealing magic damage and rooting them for 2 seconds".  W is an
+# on-hit Blight rider with no cast damage and P is a kill-triggered stat
+# buff.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "root"}
+
+parse_abilities = build_parser(SLOTS, "Varus", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")

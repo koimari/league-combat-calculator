@@ -2,10 +2,11 @@
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import parse_champion_abilities, shen
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review
 
 
 def _stats(shen_data, level: int = 12) -> dict:
@@ -235,3 +236,28 @@ def test_target_max_health_change_is_repriced(shen_data):
     assert result["target_effective_max_health"] == pytest.approx(700.0)
     assert result["target_healing_received"] > 0.0
     assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+
+
+class TestReviewedCrowdControl:
+    """Shen's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    Both rows already carry their authored dash/swing timing, so the
+    declaration rides an event the ledger can see.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Shen")
+        assert shen.MODULE_CC == {"E": "taunt", "Q": "slow"}
+        assert "are slowed for the next 2 seconds" in cc_review.slot_text(data, "Q")
+        assert "taunting them for 1.5 seconds" in cc_review.slot_text(data, "E")
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Shen") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Shen")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

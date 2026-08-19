@@ -17,6 +17,19 @@ from .packet_module import build_packet_module
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
+# Cached kit review.  E's harpoon deals magic damage while "inflicting them
+# with magic resistance reduction ... and slowing them for 2 seconds" — the
+# shred is a resistance effect, the slow is the control.  R's field marks
+# enemies burning, "taking magic damage every 0.25 seconds and being slowed
+# by 35%".  Q is deliberately absent rather than "none", and it is why a
+# Rumble fight still reads coarse for control-armed items: Flamespitter is
+# a 3-second flamethrower ticking "every 0.25 seconds" that this packet
+# prices as one aggregate row with no per-tick timing, so no event of its
+# own could carry an answer.  Its flames apply no control either way; the
+# missing piece is the ledger boundary, not the reading.  W (a shield) and
+# P (the heat system) carry no damage row at all.
+MODULE_CC = {"E": "slow", "R": "slow"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rumble",
     PACKET_SHA256,
@@ -28,6 +41,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 5.0,
         }
     },
+    # The harpoon "deals magic damage to the first enemy hit" once — the
+    # boundary claim that carries MODULE_CC's reviewed answer for E into
+    # the event ledger.  R already authors its own twenty-tick timing.
+    single_hit_slots=frozenset({"E"}),
+    cc_kinds=MODULE_CC,
 )
 PACKET_SPEC = SLOTS.packet_spec
 ASSUMPTIONS = list(ASSUMPTIONS) + [

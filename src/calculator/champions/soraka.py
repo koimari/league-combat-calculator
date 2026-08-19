@@ -119,12 +119,24 @@ SOURCES = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One star, one landing ("dealing magic damage to enemies hit and
+    # slowing them by 30%"), so the row is a hit the ledger can time.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _astral_infusion,
     "E": _equinox,
 }
 
-parse_abilities = build_parser(SLOTS, "Soraka")
+# Reviewed crowd control, read from the cached kit.  Q (Starcall) deals
+# its damage "and slowing them by 30% for 1.5 seconds".  E (Equinox)
+# "deals magic damage to enemy champions within at the time of cast", then
+# "silences enemies within" for 1.5 seconds before the zone "erupts to
+# deal the same damage ... and root them for a duration" — the root is the
+# immobilizing half of what this row's two hits apply.  W deals no damage.
+MODULE_CC = {"Q": "slow", "E": "root"}
+
+parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

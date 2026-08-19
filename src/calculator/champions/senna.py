@@ -30,7 +30,15 @@ from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extra
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Senna", PACKET_SHA256)
+    build_packet_module(
+        "Senna",
+        PACKET_SHA256,
+        # Piercing Darkness' shadow ray and Last Embrace's globule each
+        # deal their packet once, like Dawning Shadow already did — the
+        # boundary claim that carries MODULE_CC's reviewed answers into
+        # the event ledger.
+        single_hit_slots=frozenset({"Q", "W"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -149,7 +157,18 @@ SLOTS["R"] = _dawning_shadow
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
 )
-parse_abilities = build_parser(SLOTS, "Senna")
+
+# Cached kit review.  Q's shadow ray "deals physical damage to enemies hit
+# and slows them by 15% (+ 15% per 100 bonus AD) (+ 7% per 100 AP)".  W's
+# globule "deals physical damage to the first enemy hit and attaches to
+# them", then "the black mist spreads out of the target, rooting them and
+# surrounding enemies".  R's shadow wave only "deals physical damage to
+# enemy champions hit and reveals them"; the light wave shields allies.  E
+# (camouflage) deals no damage, and P is a stat/on-hit innate whose mark
+# consume rides the auto stream, so neither carries an ability event.
+MODULE_CC = {"Q": "slow", "W": "root", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Senna", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options) + [
     {

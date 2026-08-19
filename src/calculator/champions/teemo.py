@@ -123,7 +123,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 PACKET_SPEC = SLOTS.packet_spec
 _R_SLOT = SLOTS["R"]
 SLOTS["R"] = _noxious_trap
-parse_abilities = build_parser(SLOTS, "Teemo")
+
+# Reviewed crowd control, read from the cached kit.  E (Toxic Shot) is an
+# on-hit poison — "the target takes magic damage every second over 4
+# seconds" — with no control clause.  R (Noxious Trap) detonates
+# "inflicting poison to nearby enemies and slowing them for 4 seconds".
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Blinding Dart "deals magic damage and blinds them for a duration": a
+# blind is real crowd control, and ability_spec.CC_KIND_VOCABULARY has no
+# term for it (its non-immobilizing kinds are slow, cripple and silence),
+# so there is nothing true this slot could declare.  "none" would be
+# false.  Q would also need single-hit certification before any answer
+# could reach the ledger.
+MODULE_CC = {"E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Teemo", cc_kinds=MODULE_CC)
 ASSUMPTIONS.extend(
     [
         "R (Noxious Trap) is a summoned trap: one detonation prices the "

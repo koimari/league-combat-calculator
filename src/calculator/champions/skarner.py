@@ -27,6 +27,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     find_named_leveling,
+    simple_damage,
     sum_modifiers,
 )
 
@@ -39,6 +40,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Shattered Earth prices all three empowered basic attacks (Bonus "
         "Physical Damage per Hit x 3 == Total Bonus Physical Damage).",
     ),
+    # Impale is one lash ("lashes them forward ... dealing magic damage to
+    # enemies hit"), so its single part is a hit the ledger can time.
+    single_hit_slots=frozenset({"R"}),
     variant_parsers={
         ("Q", 0): repeat_damage_parser(
             attr="Bonus Physical Damage per Hit",
@@ -47,7 +51,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             time_offset=0.0,
             hit_interval=0.0,
             name="Shattered Earth",
-        )
+        ),
+        # Upheaval "explodes upon colliding with the first enemy hit" —
+        # one blow, so it certifies the same way Shattered Earth's
+        # authored three-swing schedule does.
+        ("Q", 1): simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            ranks="rank",
+            source=("Q", 1),
+            event_order_certified="single_hit",
+        ),
     },
 )
 PACKET_SPEC = SLOTS.packet_spec
@@ -125,13 +139,35 @@ def _ixtals_impact(ctx: SlotCtx):
         "collide): 30-150 + 120% bonus AD + 6% of Skarner's maximum "
         "health by rank"
     )
+    # One collision, one blow ("the charge ends, detaching them from him,
+    # dealing physical damage, stunning them for 1.1 seconds").
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
 SLOTS = dict(SLOTS)
 SLOTS["W"] = _seismic_bastion
 SLOTS["E"] = _ixtals_impact
-parse_abilities = build_parser(SLOTS, "Skarner")
+
+# Reviewed crowd control, read from the cached kit.  P (Threads of
+# Vibration) only stacks Quaking for max-health magic damage.  Q, in both
+# variants, ends on the boulder slam "slowing afflicted enemies by 40% for
+# 1 second" (Upheaval applies "the same damage and slow").  W (Seismic
+# Bastion) deals its shockwave damage "and slow them by 20% for 1 second".
+# E (Ixtal's Impact) prices the terrain collision, which ends "dealing
+# physical damage, stunning them for 1.1 seconds" — the suppression is the
+# grab that precedes it, the stun is what lands with the damage.  R
+# (Impale) deals its damage "and impaling up to 3 of the closest enemy
+# champions within the area to suppress them for 1.5 seconds".
+MODULE_CC = {
+    "P": "none",
+    "Q": "slow",
+    "W": "slow",
+    "E": "stun",
+    "R": "suppression",
+}
+
+parse_abilities = build_parser(SLOTS, "Skarner", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Seismic Bastion) shields Skarner for 8% of his maximum health "

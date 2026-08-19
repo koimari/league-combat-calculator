@@ -32,7 +32,13 @@ from .slotlib import (
 PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Urgot", PACKET_SHA256)
+    build_packet_module(
+        "Urgot",
+        PACKET_SHA256,
+        # One canister explosion and one dash blow per target, so each row
+        # is a hit the ledger can time.
+        single_hit_slots=frozenset({"Q", "E"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -108,6 +114,8 @@ def _fear_beyond_death(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", value),)
+    # One chem-drill, one impale ("impales the first enemy champion hit").
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Chem-drill initial physical damage; the Mercy recast below 25% "
         "of the target's maximum health is an execution — a kill "
@@ -131,7 +139,19 @@ SLOTS = dict(_packet_slots)
 SLOTS["P"] = _echoing_flames_proc
 SLOTS["W"] = _purge
 SLOTS["R"] = _fear_beyond_death
-parse_abilities = build_parser(SLOTS, "Urgot")
+
+# Reviewed crowd control, read from the cached kit.  Q (Corrosive Charge)
+# explodes "to deal physical damage to enemies hit and slow them for 1.25
+# seconds".  W (Purge) is a machine-gun attack stream with no control.  E
+# (Disdain) deals its damage "knocking them aside and stunning them for 1
+# second" — two immobilize kinds on one target, so the reviewed answer is
+# the un-narrowed one.  R prices the chem-drill impale, which leashes the
+# target "during which they are revealed and slowed by 0% : 75%"; the
+# Mercy recast's suppression and post-execution fear ride the execution
+# branch this row does not price.  P is an attack-stream shotgun rider.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "immobilize", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Urgot", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     {

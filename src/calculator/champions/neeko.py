@@ -32,7 +32,12 @@ from .slotlib import (
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Neeko", PACKET_SHA256
+    "Neeko",
+    PACKET_SHA256,
+    # Shapesplitter's empowered attack and Tangle-Barbs' spiral each deal
+    # their packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"W", "E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -128,7 +133,20 @@ def _pop_blossom(ctx: SlotCtx):
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _blooming_burst
 SLOTS["R"] = _pop_blossom
-parse_abilities = build_parser(SLOTS, "Neeko")
+
+# Cached kit review.  Q's seed and re-blooms only "deal magic damage"; W's
+# consumed stacks "deal bonus magic damage and grant her bonus movement
+# speed".  E's spiral "deals magic damage to enemies hit and roots them for
+# a duration".  R is the kit's one two-control cast, but its parts do not
+# apply both: the leap knocks up first and deals nothing, and the landing
+# burst "deals magic damage to nearby enemies and stuns them" — the stun is
+# what the damaging part applies, so it is the kind that rides it.  P is
+# absent because Inherent Glamour is a disguise with no damage (its
+# "immobilized" wording is about Neeko losing the disguise, not about
+# control she applies).
+MODULE_CC = {"Q": "none", "W": "none", "E": "root", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Neeko", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "

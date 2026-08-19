@@ -64,6 +64,10 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         bonus,
         "physical",
+        # The bonus rides one empowered basic attack — one hit, at the cast
+        # boundary — which is the claim that carries MODULE_CC's reviewed
+        # answer for Q into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart("physical", bonus),)
     entry["empowers_next_auto"] = True
@@ -228,7 +232,17 @@ SLOTS = {
     "P": _soul_eater,
 }
 
-parse_abilities = build_parser(SLOTS, "Nasus")
+# Cached kit review.  Nothing Nasus damages with applies control: Q only
+# empowers a basic attack to "deal bonus physical damage", E's fire deals
+# magic damage and "inflict[s] them with armor reduction" (a resistance
+# shred, not a control class), and R "deals magic damage every 0.5 seconds
+# to nearby enemies" while buffing his own stats.  W is absent rather than
+# "none" — Wither is the kit's one control ("slowing them by 35% and
+# crippling them"), but it deals no damage, so no event of its own could
+# carry an answer.  P (lifesteal) likewise damages nothing.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")

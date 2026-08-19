@@ -217,10 +217,24 @@ SLOTS = {
     "Q": _emberstrike,
     "W": _inferno_aegis,
     "E": _molten_burst,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One flight, one cone of fire per target ("breathing fire in a cone
+    # along the way that deals magic damage to enemies hit"), so the row
+    # is a hit the ledger can time and its fear reaches the readers.
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Shyvana")
+# Reviewed crowd control, read from the cached kit.  Q (Emberstrike) is
+# empowered attacks — slash, tail slam, dragon-form bite — with no control
+# clause; W (Inferno Aegis) shields and explodes "dealing magic damage to
+# nearby enemies" and applies none either.  E (Molten Burst) deals damage
+# "and slowing by 30% them for 2 seconds".  R (Dragon's Descent) "deals
+# magic damage to enemies hit and fears them for 0.75 seconds, as well as
+# slows them by 99%" — the fear is the immobilizing half.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
+
+parse_abilities = build_parser(SLOTS, "Shyvana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

@@ -15,8 +15,23 @@ from .packet_module import build_packet_module
 
 PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
 
+# Cached kit review.  Undertow's axe "deals physical damage to enemies it
+# passes through and slows them for 1 : 3 (based on distance travelled)
+# seconds" — the armour reduction beside it is a resistance shred, not a
+# control class.  Reckless Swing only "deal[s] true damage".  W (a shield
+# and attack speed), R (Olaf's own cleanse and immunity) and P (attack
+# speed and life steal) damage nothing, so no event of theirs could carry
+# an answer.
+MODULE_CC = {"Q": "slow", "E": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Olaf", PACKET_SHA256
+    "Olaf",
+    PACKET_SHA256,
+    # The axe hits each enemy in its line once and Reckless Swing strikes
+    # its target once — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
+    cc_kinds=MODULE_CC,
 )
 PACKET_SPEC = SLOTS.packet_spec
 

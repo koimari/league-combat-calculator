@@ -30,7 +30,7 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Seraphine", PACKET_SHA256
+    "Seraphine", PACKET_SHA256, single_hit_slots=frozenset({"E", "R"})
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -87,7 +87,18 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _high_note
-parse_abilities = build_parser(SLOTS, "Seraphine")
+
+# Reviewed crowd control, read from the cached kit: Q (High Note) "deals
+# magic damage to enemies within the area" and applies nothing else; E
+# (Beat Drop) "slows them by 99%" (its root and stun are conditional on
+# the target already being slowed / immobilized, which the duel model
+# does not establish); R (Encore) "deals magic damage to enemies hit,
+# charms them ... and slows them by 40%" — the charm is the control the
+# damaged target takes.  W and P emit no damage event, so they carry no
+# reviewable control.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "charm"}
+
+parse_abilities = build_parser(SLOTS, "Seraphine", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (High Note) prices the missing-health amplifier: base (60-160 + "

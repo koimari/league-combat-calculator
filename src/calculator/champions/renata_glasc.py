@@ -27,7 +27,15 @@ from .slotlib import attach_self_shield, extract_named, extract_value, proc_dama
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Renata Glasc", PACKET_SHA256)
+    build_packet_module(
+        "Renata Glasc",
+        PACKET_SHA256,
+        # The hook deals its damage to the first enemy it hits, once — the
+        # boundary claim that carries MODULE_CC's reviewed answer for Q
+        # into the event ledger.  E authors its own cast-boundary offset
+        # below, beside the shield that rides its events.
+        single_hit_slots=frozenset({"Q"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -108,7 +116,18 @@ def _loyalty_program(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(_packet_slots)
 SLOTS["P"] = _leverage
 SLOTS["E"] = _loyalty_program
-parse_abilities = build_parser(SLOTS, "Renata Glasc")
+
+# Cached kit review.  Q's hook "deals magic damage to the first enemy hit
+# and roots them for 1 second"; the recast's throw and its 0.5-second stun
+# land on the enemies the thrown target passes through, not on the hooked
+# target this row prices.  E's rockets are the kit's other damaging cast:
+# "enemies struck are dealt magic damage and slowed by 30% for 2 seconds".
+# W (Bailout) and R (Hostile Takeover) deal no damage — R's berserk is
+# real control with no damage row to carry it — and P is an on-hit mark on
+# the auto stream, so none of the three can carry an answer of its own.
+MODULE_CC = {"Q": "root", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Renata Glasc", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     {

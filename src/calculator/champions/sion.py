@@ -50,13 +50,25 @@ def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
     )
     value = low + (high - low) * fraction
+    # Q's crowd control is charge-dependent, so it is authored on the part
+    # rather than declared once in MODULE_CC: the uncharged recast is
+    # "dealing physical damage to enemies hit and slowing them by 50%",
+    # while "if Decimating Smash was charged for at least 1 second" — half
+    # of the cached 2-second charge — Sion "instead slams his axe down ...
+    # knocking them up ... and stunning them", two immobilize kinds at
+    # once, which is what the un-narrowed reviewed kind names.
+    charged = fraction >= 0.5
     return {
         "name": ability.get("name", "Decimating Smash"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
         "total_raw": value,
-        "parts": (DamagePart("physical", value),),
+        "parts": (
+            DamagePart("physical", value, cc_kind="immobilize" if charged else "slow"),
+        ),
+        # One strike, one blow per target, at either charge.
+        "event_order_certified": "single_hit",
         "detail": (
             f"Minimum/Maximum Physical Damage rows interpolated by charge "
             f"fraction {fraction:.2f}"
@@ -86,6 +98,8 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "total_raw": value,
         "parts": (DamagePart("magic", value),),
+        # One shockwave, "magic damage to the first enemy hit".
+        "event_order_certified": "single_hit",
         "target_debuff": {
             "armor_reduction_percent": 25.0,
             "duration": 4.0,
@@ -119,10 +133,26 @@ SLOTS = {
         "Glory in Death is a post-death reanimation state; no enemy damage.",
     ),
     "Q": _decimating_smash,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _roar_of_the_slayer,
-    "R": simple_damage(attr="Maximum Physical Damage", dmg_type="physical"),
+    "R": simple_damage(
+        attr="Maximum Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
 }
+
+# Reviewed crowd control, read from the cached kit.  W (Soul Furnace)
+# "consumes the shield to deal magic damage to nearby enemies" and applies
+# nothing.  E (Roar of the Slayer) "slows them for 2.5 seconds"; its stun
+# and knock-back are gated on the target being "a minion or non-epic
+# monster".  R (Unstoppable Onslaught): every enemy "hit by the slam are
+# dealt the same damage and are slowed for 3 seconds", while the pull and
+# stun reach only "enemies in a smaller radius", which the duel model does
+# not place.  Q's answer is charge-dependent and is authored on its part.
+MODULE_CC = {"W": "none", "E": "slow", "R": "slow"}
 
 MODULE_COVERAGE = {
     "P": "no_damage",
@@ -144,5 +174,5 @@ OPTIONS = [
     },
 ]
 
-parse_abilities = build_parser(SLOTS, "Sion")
+parse_abilities = build_parser(SLOTS, "Sion", cc_kinds=MODULE_CC)
 REVIEW_STATUS = "reviewed_module"

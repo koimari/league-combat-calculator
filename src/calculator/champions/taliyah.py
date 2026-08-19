@@ -81,7 +81,14 @@ def _boulder_damage(ctx: SlotCtx, ability: dict, rank: int) -> tuple[float, bool
 def _volley_parts(
     ctx: SlotCtx, ability: dict, rank: int, distance: float, start: float
 ) -> tuple[DamagePart, ...]:
-    """One full fresh-ground volley: 5 shards from a cast starting at ``start``."""
+    """One full fresh-ground volley: 5 shards from a cast starting at ``start``.
+
+    The shards carry the reviewed no-control answer: a fresh-ground Stone
+    Shard is "dealing magic damage to nearby enemies and revealing them",
+    with no control clause — only the Worked Ground boulder slows.  Q's
+    two terrain states can share one entry (the timed walk authors both),
+    so the answer rides the part rather than MODULE_CC.
+    """
     first = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
     travel = _normal_projectile_time(distance)
@@ -90,6 +97,7 @@ def _volley_parts(
             "magic",
             first if index == 0 else reduced,
             time_offset=start + launch + travel,
+            cc_kind="none",
         )
         for index, launch in enumerate(_Q_NORMAL_LAUNCH_OFFSETS)
     )
@@ -141,7 +149,15 @@ def _timed_threaded_volley(
     boulder, primary = _boulder_damage(ctx, ability, rank)
     boulder_travel = _worked_travel_time(distance)
     parts = _volley_parts(ctx, ability, rank, distance, starts[0]) + tuple(
-        DamagePart("magic", boulder, time_offset=start + _Q_CAST_TIME + boulder_travel)
+        # The empowered cast is the one that controls: "dealing 180% damage
+        # to them and normal damage to nearby enemies, slowing all targets
+        # hit for 1.5 seconds".
+        DamagePart(
+            "magic",
+            boulder,
+            time_offset=start + _Q_CAST_TIME + boulder_travel,
+            cc_kind="slow",
+        )
         for start in starts[1:]
     )
     boulders = len(starts) - 1
@@ -198,7 +214,9 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
             raw,
             "magic",
         )
-        entry["parts"] = (DamagePart("magic", raw, time_offset=hit_time),)
+        entry["parts"] = (
+            DamagePart("magic", raw, time_offset=hit_time, cc_kind="slow"),
+        )
         entry["resource_type"] = "MANA"
         entry["resource_cost"] = _Q_WORKED_COST
         target_label = "primary" if primary else "secondary"
@@ -257,12 +275,17 @@ def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Detonation Magic Damage", rank, ctx.stats, ctx.target
     )
     first_detonation = _W_CAST_START + _W_ERUPTION_DELAY
-    parts = [DamagePart("magic", initial, time_offset=_E_CAST_START)]
+    # E's two hits control differently, so each part carries its own answer:
+    # the eruption leaves a field that "slow[s] enemies within the area by
+    # 20%", while a stone the target is knocked over detonates "taking
+    # magic damage and becoming stunned for 0.75 seconds".
+    parts = [DamagePart("magic", initial, time_offset=_E_CAST_START, cc_kind="slow")]
     parts.extend(
         DamagePart(
             "magic",
             detonation * multiplier,
             time_offset=first_detonation + index * _E_ROW_INTERVAL,
+            cc_kind="stun",
         )
         for index, multiplier in enumerate(_E_DETONATION_MULTIPLIERS[:detonations])
     )

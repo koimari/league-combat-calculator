@@ -11,7 +11,9 @@ from src.calculator.champions import (
     get_custom_cast_order_unavailable_reason,
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
+    taliyah,
 )
+from tests import cc_review
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -350,3 +352,57 @@ def test_payload_timed_timeline_is_complete_with_no_coarse_sources():
     assert not any("insufficient resource" in note for note in payload["notes"])
     # Engine total 838.75 (Q 612.5 + E 226.25), rounded by the payload.
     assert payload["total_damage"] == pytest.approx(838.75, abs=0.05)
+
+
+class TestReviewedCrowdControl:
+    """Taliyah's reviewed crowd control, authored per part.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    Neither damaging slot has one answer for the whole cast — Q's fresh
+    shards control nothing while its Worked Ground boulders slow, and E's
+    eruption slows while its stone detonations stun — so each part carries
+    its own reviewed kind instead of a per-slot MODULE_CC entry.
+    """
+
+    def test_the_kit_has_no_single_per_slot_answer_to_declare(self):
+        data = cc_review.kit("Taliyah")
+        assert not hasattr(taliyah, "MODULE_CC")
+        assert "slowing all targets hit for 1.5 seconds" in cc_review.slot_text(
+            data, "Q"
+        )
+        assert "slow enemies within the area by 20%" in cc_review.slot_text(data, "E")
+        assert "becoming stunned for 0.75 seconds" in cc_review.slot_text(data, "E")
+
+    def test_each_part_carries_the_kind_its_own_cached_branch_gives(self):
+        results = taliyah.parse_abilities(
+            cc_review.kit("Taliyah"),
+            18,
+            0.0,
+            champion_options={"q_ground": "worked", "e_detonations": 4},
+        )
+        assert [part.cc_kind for part in results["Q"]["parts"]] == ["slow"]
+        assert [part.cc_kind for part in results["E"]["parts"]] == [
+            "slow",
+            "stun",
+            "stun",
+            "stun",
+            "stun",
+        ]
+        fresh = taliyah.parse_abilities(
+            cc_review.kit("Taliyah"),
+            18,
+            0.0,
+            champion_options={"q_ground": "normal", "e_detonations": 0},
+        )
+        assert {part.cc_kind for part in fresh["Q"]["parts"]} == {"none"}
+        assert [part.cc_kind for part in fresh["E"]["parts"]] == ["slow"]
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Taliyah") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Taliyah")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

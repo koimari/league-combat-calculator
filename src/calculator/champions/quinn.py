@@ -17,7 +17,12 @@ from .slotlib import extract_named, on_hit_entry
 PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Quinn", PACKET_SHA256
+    "Quinn",
+    PACKET_SHA256,
+    # Valor's dive, the Vault dash and Skystrike's volley each deal their
+    # packet once, at the cast — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -37,7 +42,22 @@ _harrier.phase = ONHIT
 
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _harrier
-parse_abilities = build_parser(SLOTS, "Quinn")
+
+# Cached kit review.  Q damages and then "the primary target is
+# nearsighted for 1.75 seconds if they are a champion ... otherwise, they
+# are disarmed": against the fight's champion target that is a nearsight,
+# which is not an immobilize and has no kind in the vocabulary (the Graves
+# W reading), and the disarm branch never reaches a champion.  E "deal[s]
+# physical damage, knock[s] them back a very short distance over 0.5
+# seconds, and slow[s] them by 50%" — the knock back is the immobilize the
+# slow rides with.  R's Skystrike only rains arrows "dealing physical
+# damage to nearby enemies and marking them with harrier"; the
+# "immobilized" wording on that entry is about Quinn losing the ability, not
+# about control she applies.  W (vision) deals no damage and P is an on-hit
+# rider on the auto stream.
+MODULE_CC = {"Q": "none", "E": "knockback", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Quinn", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Harrier) prices the wiki's on-hit row: 15 : 132.35 (based on "

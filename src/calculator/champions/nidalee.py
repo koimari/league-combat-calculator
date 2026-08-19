@@ -67,13 +67,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 4.0,
         }
     },
+    # Javelin Toss and Takedown each land one hit, Swipe slashes once, and
+    # W's Pounce variant damages once on arrival — the boundary claim that
+    # carries MODULE_CC's reviewed answers into the event ledger.  W's
+    # Bushwhack variant authors its own four-tick timing above and keeps it.
+    single_hit_slots=frozenset({"Q", "W", "E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 # The packet builder consumes these two explicit form selectors at parse time.
 VARIANT_OPTION_KEYS = ("q_variant", "w_variant")
 _W_SLOT = SLOTS["W"]
 SLOTS["W"] = _bushwhack_traps
-parse_abilities = build_parser(SLOTS, "Nidalee")
+
+# Cached kit review: reviewed cc-free, whole kit.  No entry applies any
+# crowd control to an enemy — Javelin Toss and Takedown only deal magic
+# damage, Bushwhack's trap "deal[s] magic damage every second over 4
+# seconds" (the old slow is gone from the cached text), Pounce and Swipe
+# damage on arrival, Primal Surge heals, and Prowl / Aspect of the Cougar
+# are Nidalee's own movement and form swap.  Every damaging slot says so
+# explicitly, which is what lets control-armed item passives price a
+# Nidalee fight instead of withholding on an unreviewed kit.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Nidalee", cc_kinds=MODULE_CC)
 ASSUMPTIONS.extend(
     [
         "W (Bushwhack) is a summoned trap: one sprung trap prices the "

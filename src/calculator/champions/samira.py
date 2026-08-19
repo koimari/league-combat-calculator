@@ -43,6 +43,11 @@ _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS =
                 "dot_duration": 2.013,
             },
         },
+        # Flair's shot lands on "the first enemy hit" and Wild Rush damages
+        # what its dash passes through once — the boundary claim that
+        # carries MODULE_CC's reviewed answers into the event ledger.  W
+        # and R already author their own slash and shot timings above.
+        single_hit_slots=frozenset({"Q", "E"}),
     )
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
@@ -111,7 +116,18 @@ SLOTS = {
     "E": _BATCH_SLOTS["E"],
     "R": _inferno_trigger,
 }
-parse_abilities = build_parser(SLOTS, "Samira")
+
+# Cached kit review: reviewed cc-free on every damaging cast.  Flair's shot
+# and slash, Blade Whirl's two slashes, Wild Rush's dash and Inferno
+# Trigger's torrent all only deal damage; the projectile destruction on W
+# and the takedown reset on E are not control applied to a target.  P is
+# absent: Daredevil Impulse is a state row with no damage of its own, and
+# its knock-up rider fires only on the empowered basic attack against a
+# target that is already a monster or airborne — an auto-stream effect, not
+# an ability event.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Samira", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

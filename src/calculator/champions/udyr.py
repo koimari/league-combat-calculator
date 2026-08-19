@@ -191,7 +191,16 @@ _wilding_claw.phase = ONHIT
 
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _wilding_claw
-parse_abilities = build_parser(SLOTS, "Udyr")
+
+# Reviewed crowd control, read from the cached kit: R (Wingborne Storm)
+# "summons a blizzard around himself for 4 seconds that deals magic damage
+# every 0.5 seconds to nearby enemies and slows them while they remain
+# within" (the Awakened storm "slows by an additional 5%").  Q rides the
+# attack stream as an on-hit payload and W is a shield; E (Blazing
+# Stampede), where the stun lives, deals no damage of its own.
+MODULE_CC = {"R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Udyr", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "

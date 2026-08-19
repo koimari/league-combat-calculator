@@ -22,7 +22,7 @@ from typing import Any
 
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import on_hit_entry
+from .slotlib import on_hit_entry, simple_damage
 
 # HARDCODED: verify on patch updates — Break the Mold's on-hit formula
 # ("5% of her total armor and 5% of her total magic resistance") is wiki
@@ -44,6 +44,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 2.0,
         }
     },
+    # Shattering Strike thrusts once and both W forms land one hit — the
+    # crash-down impact and the mounted charge's empowered attack — which
+    # is the boundary claim that carries MODULE_CC's reviewed answers into
+    # the event ledger.  R already authors its own eight-tick timing above.
+    single_hit_slots=frozenset({"Q", "W"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 VARIANT_OPTION_KEYS = ("w_variant",)
@@ -67,7 +72,32 @@ _break_the_mold.phase = ONHIT
 
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _break_the_mold
-parse_abilities = build_parser(SLOTS, "Rell")
+# E's explosion lands once on the target, so it certifies the cast
+# boundary its reviewed answer rides on.  The parser is rebuilt from the
+# pinned packet's own evidence rather than restating the attribute here.
+_E_SPEC = PACKET_SPEC["slots"]["E"]
+SLOTS["E"] = simple_damage(
+    attr=str(_E_SPEC["attribute"]),
+    dmg_type=str(_E_SPEC.get("damage_type", "auto")),
+    ranks=str(_E_SPEC.get("ranks", "rank")),
+    source=tuple(_E_SPEC["source"]) if _E_SPEC.get("source") else None,
+    event_order_certified="single_hit",
+)
+
+# Cached kit review.  Q "deal[s] them magic damage and stun[s] them for
+# 0.65 seconds"; its "immobilized" wording is about Rell failing to lunge,
+# not control she applies.  Both W forms apply two immobilize kinds at
+# once, which is what the un-narrowed "immobilize" states: Crash Down
+# "deals magic damage to nearby enemies, stuns them for 0.8 seconds, and
+# knocks them up for 0.4 seconds", and Mount Up's charge "deals bonus
+# magic damage, stuns the target for 0.6 seconds, and flings them 150
+# units over herself".  E only "deals bonus magic damage" through the
+# explosion it creates.  R's field "deals magic damage every 0.25 seconds
+# to nearby enemies and drags them towards her".  P is an on-hit rider on
+# the auto stream, so it carries no ability event of its own.
+MODULE_CC = {"Q": "stun", "W": "immobilize", "E": "none", "R": "pull"}
+
+parse_abilities = build_parser(SLOTS, "Rell", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total "

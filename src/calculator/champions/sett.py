@@ -32,6 +32,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     find_named_leveling,
+    simple_damage,
 )
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -47,7 +48,25 @@ _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca3820"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Sett", PACKET_SHA256)
+    build_packet_module(
+        "Sett",
+        PACKET_SHA256,
+        # Facebreaker and The Show Stopper each land one blow on a target
+        # ("dealing physical damage and slowing them"; "Enemies within the
+        # epicenter take physical damage"), so their single authored part
+        # is a hit the ledger can time — which is what carries their
+        # MODULE_CC answer to the control-armed readers.
+        single_hit_slots=frozenset({"E"}),
+        slot_parsers={
+            "R": simple_damage(
+                attr="Physical Damage",
+                dmg_type="physical",
+                ranks="rank",
+                source=("R", 0),
+                event_order_certified="single_hit",
+            )
+        },
+    )
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
@@ -204,6 +223,11 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
         "true",
     )
     entry["parts"] = (DamagePart("true", flat + grit_ratio * grit),)
+    # One blast, one blow per target ("he unleashes a massive blast ...
+    # dealing physical damage to enemies hit; those hit in a line in the
+    # middle are dealt true damage instead"), so the single part is a hit
+    # the ledger can time.
+    entry["event_order_certified"] = "single_hit"
     if grit > 0.0:
         return attach_self_shield(
             entry,
@@ -233,7 +257,19 @@ SLOTS = {
     "E": _BATCH_SLOTS["E"],
     "R": _BATCH_SLOTS["R"],
 }
-parse_abilities = build_parser(SLOTS, "Sett")
+
+# Reviewed crowd control, read from the cached kit.  W (Haymaker) is a
+# blast with no control clause.  E (Facebreaker) "pulls in enemies at his
+# front and back ... dealing physical damage and slowing them by 70%" —
+# the pull is the immobilizing half and the one a control-armed reader
+# needs; the two-sided stun is conditional on hitting both sides.  R (The
+# Show Stopper) "suppresses and reveals the target enemy champion" it
+# then slams.  Q is deliberately absent: its row is BOTH empowered basic
+# attacks summed at the cast, so no part of it is a hit the ledger can
+# time, and an unreachable declaration reviews nothing.
+MODULE_CC = {"W": "none", "E": "pull", "R": "suppression"}
+
+parse_abilities = build_parser(SLOTS, "Sett", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

@@ -32,7 +32,12 @@ _THORNS_MAGIC_RESISTANCE_RATIO = 0.10
 PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f0"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Rammus", PACKET_SHA256
+    "Rammus",
+    PACKET_SHA256,
+    # Powerball stops on the enemy it collides with and Soaring Slam lands
+    # one impact — the boundary claim that carries MODULE_CC's reviewed
+    # answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -54,14 +59,27 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
         + _THORNS_MAGIC_RESISTANCE_RATIO * magic_resistance
     )
     total = per_auto * autos
+    # The thorns row answers its own crowd control instead of MODULE_CC,
+    # because it can only answer when it prices a single reactive hit: the
+    # stance retaliates against enemy basic attacks, whose arrival times
+    # nothing sources, so a row of several of them is one aggregate with no
+    # per-hit boundary for the marker to ride.  The stance applies no
+    # control either way, and says so wherever the ledger can hear it.
+    count = max(autos, 1)
+    certified = count <= 1
     entry = damage_entry(
         "Defensive Ball Curl (thorns)",
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
+        event_order_certified="single_hit" if certified else None,
     )
-    entry["parts"] = (DamagePart("magic", per_auto, count=max(autos, 1)),)
+    entry["parts"] = (
+        DamagePart(
+            "magic", per_auto, count=count, cc_kind="none" if certified else None
+        ),
+    )
     entry["detail"] = (
         f"thorns: {per_auto:.2f} magic damage per enemy basic attack "
         f"(15 + 10% total armor ({armor:.1f}) + 10% total magic "
@@ -74,7 +92,19 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["W"] = _defensive_ball_curl
-parse_abilities = build_parser(SLOTS, "Rammus")
+
+# Cached kit review.  Q's collision deals magic damage while "knocking them
+# back 125 units" and the enemies hit "are then stunned ... as well as
+# slowed": two immobilize kinds from one cast, which is what the
+# un-narrowed "immobilize" states.  R's impact "deals magic damage to
+# nearby enemies and slows them for 1.5 seconds"; the epicentre knock-up is
+# gated on Soaring Slam being cast during Powerball, a combination this
+# module does not price.  W answers per part (``_defensive_ball_curl``).  E
+# taunts, but "monsters are additionally dealt magic damage" is its only
+# damage row, so against a champion it emits nothing; P is a stat innate.
+MODULE_CC = {"Q": "immobilize", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Rammus", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

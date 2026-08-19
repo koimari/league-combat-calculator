@@ -48,7 +48,12 @@ SLOTS = {
         "W",
         "Mocking Shout reduces enemy AD and slows; no enemy damage.",
     ),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # One dash, one blow ("dealing physical damage to enemies hit").
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": no_damage_parser(
         "R",
         "Undying Rage is a minimum-health/fury ultimate; no enemy damage.",
@@ -65,7 +70,15 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-parse_abilities = build_parser(SLOTS, "Tryndamere")
+# Reviewed crowd control, read from the cached kit: E (Spinning Slash)
+# "dashes to the target location, dealing physical damage to enemies hit"
+# and applies no control.  It is the kit's only damaging slot — W (Mocking
+# Shout) is where the slow lives ("they become slowed while facing in the
+# opposite direction of Tryndamere"), and it deals no damage, so no part
+# can carry that answer.
+MODULE_CC = {"E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
 REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (

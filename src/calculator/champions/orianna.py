@@ -109,6 +109,10 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # The ball crosses the target once on its way to the ally — one
+        # hit at the cast boundary, the claim that carries MODULE_CC's
+        # reviewed answer for E into the event ledger.
+        event_order_certified="single_hit",
     )
 
 
@@ -138,14 +142,33 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Each command moves the ball once and damages what it crosses once,
+    # with no sourced sub-cast phase, so each certifies the cast boundary
+    # its reviewed control rides on.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _command_protect,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "P": _clockwork_windup,
 }
 
-parse_abilities = build_parser(SLOTS, "Orianna")
+# Cached kit review.  Q's ball and E's fly-through only "deal[] magic
+# damage".  W's pulse damages and "leaves behind an electric field ...
+# enemies that move within the field are slowed by the same amount", which
+# is the control the pulse's own targets stand in.  R "deals magic damage
+# to nearby enemies, stuns them for 0.75 seconds, and pulls them over 325
+# units": two immobilize kinds in one cast, which is what the un-narrowed
+# "immobilize" states.  P is absent — Clockwork Windup is an on-hit rider
+# on the auto stream, not an ability event of its own.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Orianna", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

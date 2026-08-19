@@ -33,6 +33,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 1.0,
         }
     },
+    # Slipstream damages once, on the dash it passes through — the boundary
+    # claim that carries MODULE_CC's reviewed answer for E into the event
+    # ledger.  R already authors its own four-tick timing above, and Q
+    # certifies its own hit in ``_formless_blade``.
+    single_hit_slots=frozenset({"E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -78,6 +83,10 @@ def _formless_blade(ctx: SlotCtx):
         extract_cooldown(ability, rank),
         total,
         "physical",
+        # One crack of the whip-blade in a line — one hit at the cast
+        # boundary, which is what carries MODULE_CC's answer for Q into
+        # the event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "Minimum Physical Damage row (0% crit) scaled by "
@@ -88,7 +97,17 @@ def _formless_blade(ctx: SlotCtx):
 
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _formless_blade
-parse_abilities = build_parser(SLOTS, "Nilah")
+
+# Cached kit review.  Q's whip-blade and E's dash only "deal physical
+# damage".  R is the kit's one control cast and the module prices its whirl
+# ticks (Physical Damage per Tick x4 == Total Physical Damage): "each hit
+# also slows targets by 10% for 3 seconds", so the priced hits apply a
+# slow.  The pull belongs to the unpriced Burst Physical Damage row, so it
+# is not what any emitted part applies.  P and W are absent — the
+# heal/shield innate and the mist damage nothing.
+MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Nilah", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Joy Unending) converts self-heal excess beyond maximum health "

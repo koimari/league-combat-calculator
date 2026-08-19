@@ -258,7 +258,17 @@ SOURCES = [
 CAST_ORDER = ["E", "Q"]
 SLOTS = {"E": _shadow_dash, "Q": _twilight_assault}
 
-parse_abilities = build_parser(SLOTS, "Shen")
+# Reviewed crowd control, read from the cached kit.  Q (Twilight Assault):
+# "Enemy champions hit by the Spirit Blade along its path are slowed for
+# the next 2 seconds while moving away from Shen" — the blade recall
+# applies the slow, and the empowered attacks this row prices land on that
+# same target.  E (Shadow Dash): "dealing physical damage to enemy
+# champions and monsters he passes through and taunting them for 1.5
+# seconds".  Both rows already carry their authored swing/dash timing, so
+# the declaration rides an event the ledger can see.
+MODULE_CC = {"E": "taunt", "Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

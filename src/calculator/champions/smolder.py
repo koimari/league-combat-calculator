@@ -151,7 +151,22 @@ SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
 )
-parse_abilities = build_parser(SLOTS, "Smolder")
+
+# Reviewed crowd control, read from the cached kit.  Q (Super Scorcher
+# Breath) "spits a fireball at the target enemy that deals physical
+# damage" and its tiers add explosions, bolts and a burn — no control.  W
+# (Achooo!) "deals physical damage to enemies hit and slows them by 35%
+# for 1.5 seconds".  E (Flap, Flap, Flap) "fires up to 5 ... bolts ...
+# dealing physical damage with each hit" and applies none.  R
+# (MMOOOMMMM!) reads "none" because of the row it prices: the slow is
+# gated on the centre ("with those in the center taking 50% increased
+# damage and becoming slowed by 40% for 2 seconds") and the packet prices
+# the cached outer "Physical Damage" row (150/250/350 + 100% bonus AD),
+# not the "Increased Physical Damage" centre row — if a later pass prices
+# the centre, R's answer becomes "slow".
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Smolder", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     {

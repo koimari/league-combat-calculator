@@ -32,6 +32,14 @@ def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# "Call of the Forge God can be recast after 1.25 seconds while the
+# elemental is active" — the cadence between the two priced passes.
+_R_RECAST_DELAY = 1.25
+# The control each pass applies: the outbound stampede slows, the recast
+# pass "knocks them up and stuns them", two immobilize kinds at once.
+_R_PASS_CC_KINDS = ("slow", "immobilize")
+
+
 def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("R")
     if ability is None:
@@ -50,27 +58,55 @@ def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
-    entry["parts"] = (
+    # One part per pass, because the two passes apply different control:
+    # the stampede out "slows them for 2 seconds", and the recast pass
+    # "knocks them up and stuns them for 1 second".  A single count=2 part
+    # would have to answer both with one kind, so the passes are authored
+    # separately at the same 1.25-second cadence they already had.
+    entry["parts"] = tuple(
         DamagePart(
             "magic",
             per_pass,
-            count=passes,
-            time_offset=0.0,
-            hit_interval=1.25 if passes > 1 else None,
-        ),
+            time_offset=index * _R_RECAST_DELAY,
+            cc_kind=_R_PASS_CC_KINDS[index],
+        )
+        for index in range(passes)
     )
     entry["detail"] = f"{passes} elemental pass(es); each pass applies Brittle"
     return entry
 
 
 SLOTS = {
-    "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # The fissure and the charge each damage what they cross once, with no
+    # sourced sub-cast phase, so each certifies the cast boundary its
+    # reviewed control rides on.
+    "Q": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "W": _bellows_breath,
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": _call_of_the_forge_god,
 }
 
-parse_abilities = build_parser(SLOTS, "Ornn")
+# Cached kit review.  Q's fissure "deals physical damage to enemies hit and
+# slows them by 40% for 2 seconds"; its magma pillar knocks aside a second
+# later but deals nothing.  W's ticks only damage — the Brittle they apply
+# is a debuff other control consumes, not a control class of its own.  E's
+# priced row is the charge's pass-through damage, which applies nothing:
+# the knock-up and stun belong to the terrain-collision shockwave, whose
+# own damage lands only on enemies "not already hit by the charge" and
+# whose collision this module does not model.  R answers per part instead
+# of here, because its two passes apply different control
+# (``_call_of_the_forge_god``).
+MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

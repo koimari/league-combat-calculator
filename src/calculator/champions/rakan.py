@@ -83,7 +83,11 @@ def _p_shield_amount(level: int, ability_power: float) -> float:
 
 
 def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
-    entry = simple_damage(attr="Magic Damage", dmg_type="magic")(ctx)
+    entry = simple_damage(
+        attr="Magic Damage",
+        dmg_type="magic",
+        event_order_certified="single_hit",
+    )(ctx)
     if entry is None or int(entry.get("rank", 0) or 0) < 1:
         return entry
     shield = _p_shield_amount(ctx.level, ctx.stat("ability_power"))
@@ -101,12 +105,29 @@ def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
 
 
 SLOTS = {
+    # Each of the three deals one magic-damage instance per enemy (the
+    # module's own assumption above), so each certifies the cast boundary
+    # its reviewed control rides on.
     "Q": _q_with_p_shield,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Rakan")
+# Cached kit review.  Q's feather only "deals magic damage to the first
+# enemy hit" before healing Rakan and his allies.  W "deals magic damage to
+# nearby enemies and knocks them up for 1 second" — the "immobilizing"
+# wording beside it is about Rakan being knocked down mid-dash, not about
+# control he applies.  R "deals magic damage to enemies he collides with
+# and charms and slows them by 75%": the charm is the immobilize the slow
+# rides with.  P (a self-shield) and E (an ally shield and dash) damage
+# nothing and are not in the slot map at all.
+MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
+
+parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

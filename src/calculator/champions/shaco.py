@@ -109,6 +109,10 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", raw),)
+    # One thrown dagger, one hit ("Shaco throws a dagger at the target
+    # enemy that deals magic damage ... and slows them"), so the single
+    # part is a hit the ledger can time and the slow reaches its readers.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "increased-by-50% damage against a target below 30% of its maximum "
         "health (sourced Increased Damage row)"
@@ -162,13 +166,25 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
 PACKET_SHA256 = "3a7a57f56c3c5d06404558fb69b2bdac0244775181a3b338c6cf369b8f328ffa"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Shaco", PACKET_SHA256
+    "Shaco", PACKET_SHA256, single_hit_slots=frozenset({"Q"})
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["W"] = _jack_in_the_box
 SLOTS["E"] = _two_shiv_poison
 SLOTS["R"] = _hallucinate
-parse_abilities = build_parser(SLOTS, "Shaco")
+
+# Reviewed crowd control, read from the cached kit.  Q (Deceive) is a
+# stealth blink and one empowered attack with no control clause.  W (Jack
+# in the Box) springs "fearing nearby enemies for a duration ... and
+# rooting them for a duration" before its volley — two immobilize kinds
+# on the same target, so the reviewed answer is the un-narrowed one.  E
+# (Two-Shiv Poison) "slows them for 3 seconds".  R is deliberately
+# absent: with r_clone_attacks set its entry carries a second, separately
+# timed part, so the death-explosion part is not a hit the ledger can
+# time in every configuration.
+MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Shaco", cc_kinds=MODULE_CC)
 ASSUMPTIONS.extend(
     [
         "W (Jack in the Box) is a summoned trap: the sprung box fires "

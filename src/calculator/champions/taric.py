@@ -10,11 +10,31 @@ reply for the missing hook.  R (Cosmic Radiance) is invulnerability state
 """
 
 from .packet_module import build_packet_module
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 
+# Reviewed crowd control, read from the cached kit: E (Dazzle) "projects a
+# beam of starlight in the target direction that deals magic damage to
+# enemies hit and stuns them for 1.5 seconds".  Q, W and R deal no damage
+# — heal, shield and invulnerability — and P is an attack-stream rider, so
+# E is the whole of this kit's reviewable control.
+MODULE_CC = {"E": "stun"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Taric", PACKET_SHA256
+    "Taric",
+    PACKET_SHA256,
+    slot_parsers={
+        # One beam, one blow, so the row is a hit the ledger can time.
+        "E": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            ranks="rank",
+            source=("E", 0),
+            event_order_certified="single_hit",
+        )
+    },
+    cc_kinds=MODULE_CC,
 )
 PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {

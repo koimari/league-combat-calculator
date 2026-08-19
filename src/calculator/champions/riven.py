@@ -30,7 +30,13 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Riven", PACKET_SHA256
+    "Riven",
+    PACKET_SHA256,
+    # Each priced row is one blow: the packet's Q is a single Broken Wings
+    # slash ("Physical Damage" 45 : 165, not the three-cast total), Ki
+    # Burst is one flash and Wind Slash one wave — the boundary claim that
+    # carries MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -96,7 +102,18 @@ _runic_blade.phase = ONHIT
 SLOTS = dict(SLOTS)
 SLOTS["R_buff"] = _blade_of_the_exile
 SLOTS["P"] = _runic_blade
-parse_abilities = build_parser(SLOTS, "Riven")
+
+# Cached kit review.  W "deal[s] physical damage to nearby enemies and
+# stun[s] them for 0.75 seconds", and R's Wind Slash only damages.  Q is
+# the priced *per-cast* slash ("Physical Damage", the row each of the three
+# casts deals), which "deal[s] physical damage to enemies struck within an
+# area" and applies nothing; only the third cast adds a 75-unit knock back,
+# and this module prices one slash rather than that specific one.  E deals
+# no damage, P is an on-hit rider on the auto stream, and R_buff is the AD
+# steroid with a zero-damage row, so none of the three carries an event.
+MODULE_CC = {"Q": "none", "W": "stun", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Riven", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Runic Blade) prices the wiki's per-level AD ratio: empowered "

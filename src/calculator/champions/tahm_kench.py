@@ -52,7 +52,19 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", total, time_offset=0.0),)
+    # Q's crowd control is stack-dependent, so it is authored on the part
+    # rather than declared once in MODULE_CC: the lash "deals magic damage
+    # to the first enemy hit and slows them by 50% for 2 seconds", and the
+    # "An Acquired Taste Bonus" at three stacks adds "The target is
+    # stunned for 1.5 seconds" on top of it.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total,
+            time_offset=0.0,
+            cc_kind="stun" if stacks >= 3 else "slow",
+        ),
+    )
     entry["detail"] = f"{stacks} Acquired Taste stack(s) before Q"
     return entry
 
@@ -80,7 +92,11 @@ def _regurgitate(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = {
     "P": _acquired_taste,
     "Q": _tongue_lash,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One emergence, one blow ("dealing magic damage to nearby enemies and
+    # knocking them up and stunning them for 1 second").
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     # Thick Skin is grey-health/shield state, not damage; omitting it keeps
     # the damage timeline from inventing an enemy hit.  The E8a grey-health
     # primitive authors the E store (15/23/31/39/47% by rank, 42-50% with
@@ -90,7 +106,18 @@ SLOTS = {
     "R": _regurgitate,
 }
 
-parse_abilities = build_parser(SLOTS, "Tahm Kench")
+# Reviewed crowd control, read from the cached kit.  W (Abyssal Dive)
+# lands "dealing magic damage to nearby enemies and knocking them up and
+# stunning them for 1 second" — two immobilize kinds on one target, so the
+# reviewed answer is the un-narrowed one.  R prices Regurgitate, the spit
+# at the end of Devour, and Devour "can only be cast on enemies with 3
+# stacks of An Acquired Taste", whose bonus reads "The target is
+# suppressed during Devour's cast time and while attached".  P is an
+# on-hit rider on the attack stream and Q's answer is stack-dependent, so
+# Q authors its own kind on its part.
+MODULE_CC = {"W": "immobilize", "R": "suppression"}
+
+parse_abilities = build_parser(SLOTS, "Tahm Kench", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

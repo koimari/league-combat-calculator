@@ -108,6 +108,7 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             bonus,
             "physical",
+            event_order_certified="single_hit",
         )
         entry["detail"] = (
             "Ferocity-empowered: 35 : 260 by level + 20% AD (the wiki "
@@ -123,6 +124,7 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             bonus,
             "physical",
+            event_order_certified="single_hit",
         )
         entry["detail"] = (
             "Base Savagery: 20 : 160 by rank + 5% AD on the first "
@@ -149,6 +151,7 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             damage,
             "magic",
+            event_order_certified="single_hit",
         )
         entry["detail"] = (
             "Ferocity-empowered: 50 : 240 by level + 80% AP (the wiki "
@@ -162,6 +165,7 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             damage,
             "magic",
+            event_order_certified="single_hit",
         )
         entry["detail"] = (
             "Base Battle Roar: 50 : 170 by rank + 80% AP; the grey-health "
@@ -172,7 +176,12 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage."""
+    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage.
+
+    E answers its own crowd control rather than ``MODULE_CC`` because the
+    Ferocity bonus changes it: the base bola "slows them for 1.75 seconds",
+    and the empowered one roots "instead of slowed".
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -187,11 +196,13 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             damage,
             "physical",
+            event_order_certified="single_hit",
         )
+        cc_kind = "root"
         entry["detail"] = (
             "Ferocity-empowered: 50 : 335 by level + 80% bonus AD (the "
-            "wiki Ferocity Bonus), consuming all 4 stacks; the root is "
-            "crowd-control state."
+            "wiki Ferocity Bonus), consuming all 4 stacks; the target "
+            "is rooted instead of slowed."
         )
     else:
         damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
@@ -201,12 +212,14 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
             extract_cooldown(ability, rank),
             damage,
             "physical",
+            event_order_certified="single_hit",
         )
+        cc_kind = "slow"
         entry["detail"] = (
-            "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the slow "
-            "and reveal are state."
+            "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the bola "
+            "slows the first enemy hit for 1.75 seconds."
         )
-    entry["parts"] = (DamagePart("physical", entry["total_raw"]),)
+    entry["parts"] = (DamagePart("physical", entry["total_raw"], cc_kind=cc_kind),)
     return entry
 
 
@@ -217,7 +230,18 @@ SLOTS = {
     "E": _bola_strike,
     "R": _BATCH_SLOTS["R"],
 }
-parse_abilities = build_parser(SLOTS, "Rengar")
+
+# Cached kit review.  Q's empowered stab only "deal[s] additional physical
+# damage" and W's roar "deal[s] magic damage to nearby enemies" while
+# healing Rengar — neither applies control in either Ferocity branch.  E
+# answers per cast because its Ferocity bonus changes the kind
+# (``_bola_strike``).  R is absent: Thrill of the Hunt's damage row is the
+# empowered basic attack's armour reduction rider, which the reviewed
+# packet prices as no enemy-damage of its own, and P is the Ferocity state
+# row.
+MODULE_CC = {"Q": "none", "W": "none"}
+
+parse_abilities = build_parser(SLOTS, "Rengar", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

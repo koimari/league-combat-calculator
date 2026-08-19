@@ -37,6 +37,9 @@ def _consume(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         damage,
         "magic",
+        # One bite, at the cast boundary — the claim that carries
+        # MODULE_CC's reviewed answer for Q into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "Champion Magic Damage basis (60-220 + 65% AP + 5% bonus "
@@ -65,10 +68,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "tick_interval": 0.2,
         }
     },
+    # The snowball "explodes upon hitting an enemy champion ... dealing
+    # magic damage to nearby enemies" once, and Absolute Zero's recast is
+    # one blizzard explosion — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.  E already authors its own
+    # three-snowball timing above, and Q certifies its own bite.
+    single_hit_slots=frozenset({"W", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["Q"] = _consume
-parse_abilities = build_parser(SLOTS, "Nunu & Willump")
+
+# Cached kit review.  Q against the fight's champion target "deals magic
+# damage and the heal is reduced to 60%" — its stun-and-pull devour fires
+# only when the bite would kill a minion or a small/medium monster, so
+# nothing lands on a champion.  W's explosion is "knocking them up for
+# 0.5 : 0.75 ... and subsequently stunning them": two immobilize kinds in
+# one cast, which is what the un-narrowed "immobilize" states.  E prices
+# the three-snowball volley, and "enemies hit 3 times are slowed for 1
+# second" (the snowbound root belongs to the unpriced delayed detonation).
+# R's explosion leaves "affected enemies ... slowed".  P is absent: Call of
+# the Freljord is an attack-speed buff with no damage row of its own.
+MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Nunu & Willump", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Consume) prices the champion branch — Champion Magic Damage "

@@ -20,7 +20,13 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Rek'Sai", PACKET_SHA256, single_hit_slots=frozenset({"R"})
+    "Rek'Sai",
+    PACKET_SHA256,
+    # Queen's Wrath's empowered attack, Prey Seeker's bolt and Unburrow's
+    # emergence each land one hit, like Void Rush already did — the
+    # boundary claim that carries MODULE_CC's reviewed answers into the
+    # event ledger.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -55,6 +61,9 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         value,
         dtype,
+        # One bite on the target, at the cast boundary — the claim that
+        # carries MODULE_CC's reviewed answer for E into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart(dtype, value),)
     entry["detail"] = detail
@@ -63,7 +72,20 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["E"] = _furious_bite
-parse_abilities = build_parser(SLOTS, "Rek'Sai")
+
+# Cached kit review.  Both Q variants only damage — Queen's Wrath's
+# empowered attack "deal[s] bonus physical damage to the target and
+# surrounding enemies" and Prey Seeker's bolt deals "magic damage to all
+# nearby enemies and reveal[s] them".  W's Unburrow "deal[s] magic damage
+# to nearby enemies and knock[s] them up for 1 second" (minions and small
+# monsters get the knock back instead, and never reach a champion fight).
+# E "bites the target enemy, dealing physical damage" and applies nothing;
+# its "immobilized" wording is about Rek'Sai being unable to enter a
+# tunnel.  R "slashes at the target with her claws, dealing physical
+# damage".  P is Fury generation and healing, with no damage row.
+MODULE_CC = {"Q": "none", "W": "knockup", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Rek'Sai", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

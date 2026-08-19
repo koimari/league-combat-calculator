@@ -123,7 +123,18 @@ SLOTS["P"] = _blades_end
 SLOTS["Q"] = _certified_single_hit(SLOTS["Q"])
 SLOTS["W"] = _certified_single_hit(SLOTS["W"])
 SLOTS["R"] = _certified_single_hit(SLOTS["R"])
-parse_abilities = build_parser(SLOTS, "Talon")
+
+# Reviewed crowd control, read from the cached kit.  Q (Noxian Diplomacy)
+# "dashes toward the target enemy, stabbing the target upon arrival to
+# deal physical damage" and applies no control.  W (Rake)'s return pass is
+# "dealing physical damage to enemies hit and slowing them for 1 second".
+# R (Shadow Assault) "disperses a ring of blades ... that deals physical
+# damage to enemies hit" and its recast converges them — no control
+# either.  P's bleed is an attack-stream rider with its own authored
+# events, and E (Assassin's Path) is terrain parkour with no damage.
+MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Talon", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

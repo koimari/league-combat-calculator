@@ -33,6 +33,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "total_multiplier": 2.0,
         }
     },
+    # Steadfast Presence damages a dashing enemy once, Heroic Charge lands
+    # its hit on arrival and the uncharged Keeper's Verdict is one hammer
+    # blow — the boundary claim that carries MODULE_CC's reviewed answers
+    # into the event ledger.  Q already authors its impact/rupture timing.
+    single_hit_slots=frozenset({"W", "E", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -76,6 +81,8 @@ def _keepers_verdict(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "physical",
+        # One hammer blow, like the uncharged packet branch beside it.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart("physical", total),)
     entry["detail"] = (
@@ -89,7 +96,21 @@ SLOTS = dict(SLOTS)
 SLOTS["P"] = _iron_ambassador
 _packet_r = SLOTS["R"]
 SLOTS["R"] = _keepers_verdict
-parse_abilities = build_parser(SLOTS, "Poppy")
+
+# Cached kit review.  Q's impact "creates a field for 1 second that slows
+# enemies within, which then ruptures to deal the same physical damage".  W
+# damages a dashing enemy and "knocked up for 0.5 seconds" (its grounding
+# and 25% slow follow only a successful interrupt, and neither is what the
+# damaging hit applies first).  E is the kit's un-narrowed cast: it "deals
+# physical damage and carries them along with her" — a forced displacement
+# — and on terrain "deal[s] the same physical damage again and stuns
+# them", two immobilize kinds from one cast.  R "knock[s] them up for 1
+# second" in both priced branches; the fully-charged branch adds a knock
+# back on top, which is a second immobilize and not a different answer.
+# P is absent — Iron Ambassador is an on-hit rider on the auto stream.
+MODULE_CC = {"Q": "slow", "W": "knockup", "E": "immobilize", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Poppy", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

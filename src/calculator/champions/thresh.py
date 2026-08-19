@@ -18,7 +18,14 @@ from .packet_module import build_packet_module
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Thresh", PACKET_SHA256)
+    build_packet_module(
+        "Thresh",
+        PACKET_SHA256,
+        # Each packet is one blow: the scythe "catches the first enemy
+        # hit", Flay "sweeps his chain" once, and one Box wall breaks on
+        # contact — so each row is a hit the ledger can time.
+        single_hit_slots=frozenset({"Q", "E", "R"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -77,7 +84,19 @@ _damnation.phase = BUFF
 
 
 SLOTS = {**_packet_slots, "P": _damnation}
-parse_abilities = build_parser(SLOTS, "Thresh")
+
+# Reviewed crowd control, read from the cached kit.  Q (Death Sentence)'s
+# scythe catches to "deal magic damage, stun and reveal them for 1.5
+# seconds, and render them airborne for 0.4 seconds" — two immobilize
+# kinds on one target, so the reviewed answer is the un-narrowed one.  E
+# (Flay): enemies "are dealt magic damage and knocked 200 units in the
+# target direction, and then are slowed for 1 second" — the knock-back is
+# the immobilizing half.  R (The Box): a wall breaks "dealing magic damage
+# and slowing them by 99% for 2 seconds".  P is a soul-stack buff and W is
+# a lantern shield, neither of which damages.
+MODULE_CC = {"Q": "immobilize", "E": "knockback", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Thresh", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options) + [
     {

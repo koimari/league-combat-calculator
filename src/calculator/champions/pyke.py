@@ -26,7 +26,12 @@ from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_mo
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Pyke", PACKET_SHA256
+    "Pyke",
+    PACKET_SHA256,
+    # The harpoon damages the first enemy it hits once and the phantom
+    # damages once on its return — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -60,6 +65,9 @@ def _death_from_below(ctx: SlotCtx):
         extract_cooldown(ability, ctx.rank_for()),
         damage,
         "physical",
+        # One strike inside the x, at the cast boundary — the claim that
+        # carries MODULE_CC's reviewed answer for R into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "Non-execute damage (50% of the 250 : 550 + "
@@ -72,7 +80,19 @@ def _death_from_below(ctx: SlotCtx):
 
 SLOTS = dict(SLOTS)
 SLOTS["R"] = _death_from_below
-parse_abilities = build_parser(SLOTS, "Pyke")
+
+# Cached kit review.  Q's harpoon deals "physical damage to the first enemy
+# hit and pull[s] them ... then slow[s] them by 90% for 1 second": the pull
+# is the immobilize the slow rides with.  (Releasing within 0.4 seconds
+# thrusts instead, "dealing the same damage" with no displacement; the
+# module prices one Bone Skewer row and does not split the two releases,
+# so the ability's own recast is what the kind describes.)  E's phantom
+# "stun[s] enemies around it" and the champions it hits "also take physical
+# damage".  R executes or deals its non-execute damage row and applies no
+# control at all.  W (camouflage) and P (grey health) damage nothing.
+MODULE_CC = {"Q": "pull", "E": "stun", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Pyke", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "

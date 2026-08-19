@@ -59,6 +59,9 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", total),)
+    # One detonation, one blow ("The charge then detonates, dealing
+    # physical damage to nearby enemies").
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"{stacks}/4 stack(s); "
         f"base {base:.2f} + {stacks} x {per_stack:.2f} per-stack bonus"
@@ -131,13 +134,28 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "Q": _rapid_fire,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One landing and one cannonball: each row is one blow the ledger can
+    # time, which is what carries its MODULE_CC answer.
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _explosive_charge,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "P": _draw_a_bead,
 }
 
-parse_abilities = build_parser(SLOTS, "Tristana")
+# Reviewed crowd control, read from the cached kit.  W (Rocket Jump):
+# "Upon landing, she deals magic damage to nearby enemies and slows them
+# by 40% for 2 seconds".  E (Explosive Charge) detonates "dealing physical
+# damage to nearby enemies" and applies none.  R (Buster Shot) deals its
+# damage and the targets "are also knocked back and stunned for a
+# duration" — two immobilize kinds, so the reviewed answer is the
+# un-narrowed one.  Q and P deal no damage.
+MODULE_CC = {"W": "slow", "E": "none", "R": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Tristana", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"W", "E", "R"} else "out_of_scope") for slot in "PQWER"

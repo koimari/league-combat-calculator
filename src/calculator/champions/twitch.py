@@ -227,7 +227,15 @@ SLOTS = {
     "P": _deadly_venom,
 }
 
-parse_abilities = build_parser(SLOTS, "Twitch")
+# Reviewed crowd control, read from the cached kit: E (Contaminate)
+# "sends out a lethal toxin to each nearby enemy afflicted by Deadly
+# Venom, dealing them physical damage" and applies no control.  It is the
+# only slot whose cast reaches the ability ledger — P's venom rides the
+# attack stream, Q is a stealth buff, R is an attack-range/AD steroid, and
+# W (Venom Cask), where the kit's slow lives, deals no damage at all.
+MODULE_CC = {"E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Twitch", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "E", "R"} else "out_of_scope") for slot in "PQWER"
