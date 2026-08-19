@@ -127,9 +127,21 @@ The edge taxonomy (closed, asserted by the tests):
 | `execute` | burst → execute | missing-health / stored-damage executes cast after the burst (Veigar R, Mel R, Pantheon Q) |
 | `shred` | shredder → burst | resistance-reduction `target_debuff` opens so the burst benefits (Sion E, Corki E, Jayce R) |
 | `buff` | buffer → burst | damage-amp `stat_buff` resolves before the abilities it amplifies (Vayne R, Twitch R, Darius E pen) |
-| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst (Ahri charm, Pantheon stun) |
+| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst — **retired for champion modules**, see below (Ahri charm, Pantheon stun) |
 | `amp` | amplifier → burst | damage-taken amplifiers resolve first (Vladimir R Hemoplague) |
 | `recast` | parent → recast | a recast rides its parent's casts on the shared timeline (Q → Q2, Ambessa) |
+
+**`cc_setup` no longer fires from a champion module's own `cc_kind`.** A
+module recording its reviewed crowd control — per slot in `MODULE_CC` or
+on the part at its construction site — states what a cast *applies*, not
+when to cast it, and recording a true fact must not move published
+damage. Ordering from crowd control is a `CAST_DEPENDENCIES` declaration
+(`cc_enabler`), which is where `architecture.md` puts a module's
+assertions about its own kit. The inference survives only for kits with
+no champion module (synthetic and development fixtures) and for the three
+slots in `rotation_resolver._PRE_CAMPAIGN_CC_ORDERING`, whose orders were
+published before the rule; that table is closed and shrinks by moving the
+ordering into the kit's own declaration.
 
 Consumers that are also detonators (e.g. Varus Q — `post_hit_proc` +
 missing-health rider) are positioned by the consume relationship; the

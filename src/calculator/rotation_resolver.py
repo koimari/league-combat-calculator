@@ -608,6 +608,69 @@ def _castable(info: Mapping[str, Any], slot: str) -> bool:
     return float(info.get("cooldown", 0.0) or 0.0) > 0
 
 
+# Slots whose crowd control ordered the rotation before champion modules
+# reviewed their kits' control.  A module's ``cc_kind`` is a statement about
+# what a cast APPLIES and never an ordering constraint (see
+# :func:`_cc_orders_the_burst`); these three markers are the ones whose
+# published orders predate that rule, so pinning them keeps it from
+# re-deriving a rotation the coverage campaign never set out to touch.
+#
+# The table is closed and shrinks only through the module: declare the
+# ordering in ``CAST_DEPENDENCIES``, the home architecture.md gives it, and
+# delete the entry.  Nothing may be added — a kit that needs cc-driven
+# ordering has the declared vocabulary for it.
+_PRE_CAMPAIGN_CC_ORDERING: dict[str, frozenset[str]] = {
+    "Ahri": frozenset({"E"}),  # Charm opens the burst
+    "Pantheon": frozenset({"W"}),  # Shield Vault's stun opens the burst
+    "Syndra": frozenset({"E"}),  # Scatter the Weak's stun (E->Q suppressed)
+}
+
+
+def _has_champion_module(champion_name: str) -> bool:
+    """Whether this name resolves to a validated champion module.
+
+    The synthetic and development fixtures do not, which is the whole of
+    the distinction below: their markers are authored by a test or a
+    scratch kit, not sourced from a reviewed module.
+    """
+    from .champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_module_contract,
+    )
+
+    try:
+        get_champion_module_contract(champion_name)
+    except KeyError:
+        return False
+    return True
+
+
+def _cc_orders_the_burst(champion_name: str, slot: str) -> bool:
+    """Whether this slot's crowd control is an ORDERING claim.
+
+    A module's ``cc_kind`` says what a cast applies — a reviewed kit fact,
+    the same class of statement as "this ability deals magic damage".  It
+    says nothing about when to cast it, so it must not fan ``cc_setup``
+    edges across the kit: a coverage pass that records a slow honestly
+    would otherwise reorder the rotation and move published damage, which
+    is precisely the pressure that made a batch withhold true facts.
+
+    That holds however the module said it.  Reading a per-part marker as
+    an ordering claim and a ``MODULE_CC`` slot declaration as a kit fact
+    would make "does recording this move my damage?" turn on which
+    authoring site a module happened to use — and Morgana's R cannot even
+    choose, since its parts carry different kinds and ``MODULE_CC`` admits
+    one per slot.  A kit that genuinely needs cc-driven ordering declares
+    it in ``CAST_DEPENDENCIES``.
+
+    Every other reader of the ``cc_kind=`` atom — the enhanced-vs-condition
+    pairing, ``applies_condition``, the edge citations — sees every kind
+    unchanged; only this fan-out asks where the marker came from.
+    """
+    if slot in _PRE_CAMPAIGN_CC_ORDERING.get(champion_name, frozenset()):
+        return True
+    return not _has_champion_module(champion_name)
+
+
 # ─────────────────────────────────────────────────────────────────────
 # Edge detection
 # ─────────────────────────────────────────────────────────────────────
@@ -702,7 +765,10 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             # said does not exist.  Every reader below (the fan-out, the
             # enhanced-vs-condition pairing, ``applies_condition``) sees
             # atoms, so refusing the atom here is the one place the rule
-            # has to hold.
+            # has to hold.  A real kind is an atom wherever it was
+            # authored; whether it also ORDERS the rotation is a separate
+            # question, asked once at the fan-out
+            # (:func:`_cc_orders_the_burst`).
             kind = getattr(part, "cc_kind", None)
             if kind and kind != "none":
                 atoms.append(f"cc_kind={kind}")
@@ -1031,7 +1097,9 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                         "buff",
                         f"{s} {amp_keys[0]} amplifies ability damage — before {d}",
                     )
-        if any(a.startswith("cc_kind=") for a in atoms):
+        if any(a.startswith("cc_kind=") for a in atoms) and _cc_orders_the_burst(
+            champion_name, s
+        ):
             for d in corpora:
                 if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
                     add(
