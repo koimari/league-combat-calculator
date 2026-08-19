@@ -323,17 +323,13 @@ PROC_WALKER_CHAMPIONS = [
 
 
 class TestCastProcWalkerRoundingTolerance:
-    """The Muramana walker accepts the cast ledger's rounded boundary.
+    """Both cast-proc walkers accept the cast ledger's rounded boundary.
 
     ``cast_events`` publishes times rounded to 3 decimals while ability
-    rows author raw plan times; when rounding went up, the walker skipped
+    rows author raw plan times; when rounding went up, a walker skipped
     the true matching hit, exhausted the ledger and returned no events —
-    leaving ``muramana_ability`` coarse for these champions.
-
-    Eclipse's walker deliberately keeps the exact comparison: its receipts
-    decide a stack pairing and a cooldown gate, so completing the walk
-    moves the row's proc count off the coarse fallback.  ``proc_Eclipse``
-    stays coarse for these champions until a wave allowed to re-price it.
+    leaving ``muramana_ability`` coarse for these champions, and Eclipse's
+    stack schedule falling back to a coarse proc count.
     """
 
     @pytest.mark.parametrize("champion", PROC_WALKER_CHAMPIONS)
@@ -342,7 +338,155 @@ class TestCastProcWalkerRoundingTolerance:
         assert coverage["coarse_sources"] == []
         assert coverage["complete"] is True
 
-    def test_eclipse_row_stays_coarse_rather_than_repricing(self):
-        """The stop is pinned: closing Eclipse here would move a number."""
-        coverage = _coverage("Ziggs", ["Eclipse"])
-        assert coverage["coarse_sources"] == ["proc_Eclipse"]
+
+def _eclipse_row(champion: str, duration: float):
+    """The engine's own ``proc_Eclipse`` row, events and all.
+
+    ``calculate_payload`` strips per-row ``damage_events`` from its
+    published breakdown, and the invariants below are about the schedule
+    the engine authored, so this runs the identically resolved scenario.
+    """
+    request = parse_scenario_request(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": ["Eclipse"],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": duration,
+        },
+        deterministic=True,
+    )
+    resolved = resolve_scenario(request)
+    result = run_fight(
+        resolved.champion_data,
+        request.level,
+        list(resolved.items),
+        resolved.fight_params,
+    )
+    return result["breakdown"]["proc_Eclipse"]
+
+
+#: Ever Rising Moon's own cooldown and pairing window, read from the item.
+ECLIPSE_COOLDOWN = 6.0
+ECLIPSE_STACK_WINDOW = 2.0
+
+#: Every fight length the cadence is measured over, with the proc count a
+#: representative sparse-cast champion (Ziggs) reaches in each.  The coarse
+#: fallback priced ``1 + duration // cooldown`` — 1, 2, 2, 4, 6.
+ZIGGS_CADENCE = [(5.0, 1), (8.0, 1), (10.0, 2), (20.0, 3), (30.0, 4)]
+
+
+class TestEclipseStackPairingCadence:
+    """Ever Rising Moon prices its sourced pairing, not an arithmetic count.
+
+    ``data/items.json``'s Ever Rising Moon: damaging basic attacks and
+    abilities "apply stacks against enemy champions, up to one per cast
+    instance per champion", and "applying 2 stacks to a champion within a
+    2 second period" deals the damage, on the passive's 6 s cooldown.  The
+    coarse fallback priced ``1 + duration / cooldown`` procs, which assumes
+    a second stack is always waiting the instant the cooldown expires; a
+    sparse cast stream does not offer one.
+    """
+
+    @pytest.mark.parametrize(("duration", "procs"), ZIGGS_CADENCE)
+    def test_the_proc_count_follows_the_sourced_cadence(self, duration, procs):
+        row = _eclipse_row("Ziggs", duration)
+        assert row["count"] == procs
+        assert len(row["damage_events"]) == procs
+        assert procs <= 1 + int(duration / ECLIPSE_COOLDOWN)
+
+    @pytest.mark.parametrize("champion", ["Ziggs", "Skarner", "Ahri", "Aatrox"])
+    @pytest.mark.parametrize("duration", [5.0, 8.0, 10.0, 20.0, 30.0])
+    def test_consecutive_procs_wait_out_the_per_target_cooldown(
+        self, champion, duration
+    ):
+        row = _eclipse_row(champion, duration)
+        times = [event["time"] for event in row["damage_events"]]
+        assert times == sorted(times)
+        assert all(
+            later - earlier >= ECLIPSE_COOLDOWN - 1e-9
+            for earlier, later in zip(times, times[1:])
+        )
+
+    @pytest.mark.parametrize("champion", ["Ziggs", "Skarner", "Ahri", "Aatrox"])
+    @pytest.mark.parametrize("duration", [5.0, 8.0, 10.0, 20.0, 30.0])
+    def test_every_proc_pairs_two_hits_inside_the_stack_window(
+        self, champion, duration
+    ):
+        """Two distinct cast instances land in the window that armed it."""
+        payload = {
+            "champion": champion,
+            "level": 18,
+            "items": ["Eclipse"],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": duration,
+        }
+        ledger = calculate_payload(payload)["damage_events"]
+        instances = {
+            (event["source"], round(float(event["time"]), 3))
+            for event in ledger
+            if event["source"] != "proc_Eclipse"
+        }
+        procs = [
+            float(event["time"])
+            for event in ledger
+            if event["source"] == "proc_Eclipse"
+        ]
+        ready = 0.0
+        for proc in procs:
+            window = [
+                time
+                for _source, time in instances
+                if proc - ECLIPSE_STACK_WINDOW - 1e-6 <= time <= proc + 1e-6
+                and time >= ready - 1e-6
+            ]
+            assert len(window) >= 2
+            ready = proc + ECLIPSE_COOLDOWN
+
+    @pytest.mark.parametrize("champion", ["Ziggs", "Skarner", "Ahri", "Aatrox"])
+    @pytest.mark.parametrize("duration", [5.0, 8.0, 10.0, 20.0, 30.0])
+    def test_the_authored_events_sum_to_the_row(self, champion, duration):
+        row = _eclipse_row(champion, duration)
+        authored = sum(float(event["damage"]) for event in row["damage_events"])
+        assert authored == pytest.approx(float(row["total_damage"]))
+        assert len(row["self_shield_events"]) == row["count"]
+
+    def test_a_multi_hit_cast_contributes_one_stack_not_one_per_hit(self):
+        """Skarner's Q authors three packets at one timestamp — one instance.
+
+        Counting per packet would pair the cast with itself and proc at
+        ``t = 0`` twice over; the sourced clause is one stack per cast
+        instance, so an 8 s fight whose only other trigger inside the
+        window is the opening swing procs exactly once.
+        """
+        row = _eclipse_row("Skarner", 8.0)
+        assert row["count"] == 1
+        assert [event["time"] for event in row["damage_events"]] == [0.0]
+
+
+#: Champions whose Eclipse row was coarse before the walk was completed —
+#: one per reason the cursor used to abandon a cast (an up-rounded cast
+#: time, a multi-hit cast's repeated packets, a forced-swing cast).
+ECLIPSE_COARSE_CHAMPIONS = [
+    "Ziggs",
+    "Jayce",
+    "Ambessa",
+    "Alistar",
+    "Blitzcrank",
+    "Jarvan IV",
+    "Camille",
+    "Draven",
+]
+
+
+class TestEclipseTimedCoverage:
+    """Timed coverage is complete for every champion holding Eclipse."""
+
+    @pytest.mark.parametrize("champion", ECLIPSE_COARSE_CHAMPIONS)
+    @pytest.mark.parametrize("duration", [8.0, 20.0, 30.0])
+    def test_eclipse_certifies_complete(self, champion, duration):
+        coverage = _coverage(champion, ["Eclipse"], fight_duration=duration)
+        assert coverage["coarse_sources"] == []
+        assert coverage["complete"] is True

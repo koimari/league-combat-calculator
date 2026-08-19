@@ -7786,13 +7786,20 @@ def _stacked_champion_proc_times(
     """Schedule a stack-gated champion proc from authored hit boundaries.
 
     Eclipse's passive counts separate damaging ability casts and basic
-    attacks, not every part of a multi-hit spell.  Cast events and the
-    shared auto schedule are the only timestamps this engine certifies, so
-    each accepted cast contributes one stack at its authored hit time when
-    available, otherwise at its explicit cast boundary; each authored swing
-    contributes one stack at its swing time.  A pair must
+    attacks, not every part of a multi-hit spell — *"up to one per cast
+    instance per champion"*, paired *"within a 2 second period"* on the
+    item's 6 s cooldown (Ever Rising Moon, ``data/items.json``).  Cast
+    events and the shared auto schedule are the only timestamps this engine
+    certifies, so each accepted cast contributes one stack at its authored
+    hit time when available, otherwise at its explicit cast boundary; each
+    authored swing contributes one stack at its swing time.  A pair must
     land inside ``stack_window`` and later pairs wait for the item's
     per-target cooldown.  A malformed receipt withholds event precision.
+
+    The returned length is the proc count: this schedule prices the row,
+    and it is sparser than the caller's ``1 + duration / cooldown``
+    fallback wherever the trigger stream does not offer a second stack
+    inside the window each time the cooldown expires.
     """
     required = effect.stack_required
     window = effect.stack_window
@@ -7849,15 +7856,7 @@ def _stacked_champion_proc_times(
                     candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                     if candidate_time is None or candidate_damage is None:
                         return None
-                    # NOT rounding-tolerant, deliberately, unlike its two
-                    # sibling walkers: this one's receipts decide a stack
-                    # PAIRING and a cooldown gate, so completing a walk the
-                    # rounded boundary used to abandon re-prices the row
-                    # (the coarse fallback assumes ``1 + duration/cooldown``
-                    # procs; the certified pairing proves fewer for a sparse
-                    # cast stream).  That re-pricing is a behavior change and
-                    # belongs to a wave allowed to move numbers.
-                    if candidate_time + 1e-9 < event_time:
+                    if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
                         cursor += 1
                         continue
                     if candidate_damage > 0.0:
