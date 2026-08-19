@@ -26,6 +26,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
+from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -43,6 +44,15 @@ _ABLAZE_DOT_PCT_MAX_HP = 0.02  # per stack, full 4 s burn
 _ABLAZE_DURATION_S = 4.0  # every tick is ability damage: refreshes item burns
 _ABLAZE_MAX_STACKS = 3
 _R_MAX_BOUNCES = 3
+
+# Pillar of Flame erupts on its own delay, and the cached note fixes the
+# offset's origin for us: "After a 0.627 seconds delay, Brand erupts a
+# pillar of flame at the target location that deals magic damage to
+# enemies hit", with "The delay before the eruption does not include the
+# cast time. The delay would be a total of 0.891 seconds if it included
+# the cast time."  ``time_offset`` is measured from the cast start, so the
+# sourced total is the number to author.
+_W_ERUPTION_FROM_CAST_START_S = 0.891
 
 
 def _r_bounces(ctx: SlotCtx) -> int:
@@ -172,16 +182,26 @@ ASSUMPTIONS = [
 ]
 
 # Cached kit review.  E "creates a blast that deals magic damage" and its
-# Ablaze Bonus only doubles the spread range — no control either way.  The
-# rest stay unreviewed: W erupts "after a 0.627 seconds delay" the row does
-# not author, and Q's stun and R's slow are both "Ablaze Bonus" branches,
-# so they depend on the target's stack state at the cast rather than on the
-# slot.  P is the Ablaze burn row.
-MODULE_CC = {"E": "none"}
+# Ablaze Bonus only doubles the spread range; W's eruption "deals magic
+# damage to enemies hit" and its Ablaze Bonus is "The target takes 25%
+# increased damage" — no control on either, either way.
+#
+# Q and R stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan, and the reason is not timing: Q's stun and R's slow are both
+# "Ablaze Bonus" branches, so whether a cast controls depends on the
+# target's stack state at that cast, not on the slot.  The rotation's
+# opening Q is the applier and stuns nothing; every later one does.  One
+# kind per slot cannot say both, and Q additionally authors no event
+# (its fireball has no sourced travel time).  P is the Ablaze burn row.
+MODULE_CC = {"E": "none", "W": "none"}
 
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Increased Damage", dmg_type="magic"),
+    "W": delayed_damage(
+        delay=_W_ERUPTION_FROM_CAST_START_S,
+        attr="Increased Damage",
+        dmg_type="magic",
+    ),
     # One blast on the target Brand sets aflame, landing at the cast.
     "E": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"

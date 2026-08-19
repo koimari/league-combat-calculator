@@ -1133,7 +1133,9 @@ class TestHeadOnlyDeclarations:
         module = (ROOT / "src" / "calculator" / "champions" / "brand.py").read_text(
             encoding="utf-8"
         )
-        assert '"W": simple_damage(attr="Increased Damage"' in module
+        slots_block = module.split("SLOTS = {", 1)[1].split("\n}", 1)[0]
+        w_declaration = slots_block.split('"W":', 1)[1].split('"E":', 1)[0]
+        assert 'attr="Increased Damage"' in w_declaration
         assert "Increased Damage" in get_champion_cast_dependencies("Brand")[0].reason
 
     def test_neither_declares_a_suppression(self) -> None:

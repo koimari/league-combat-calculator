@@ -60,6 +60,14 @@ from .slotlib import (
 _CLEAVE_EVERY_N_ATTACKS = 3
 _R_MAX_CHAMPIONS_PULLED = 5
 
+# Moonfall's damage is the beam, and the beam lands after the pull: "If an
+# enemy champion is pulled, she calls down a beam of moonlight to strike
+# upon the area around her after 1 second, dealing magic damage to all
+# nearby enemies" (data/champions.json Diana R).  The cached entry
+# attaches no cast-time qualifier to the number, so it is read from the
+# cast start as written.
+_R_BEAM_SECONDS = 1.0
+
 # P stores base and tripled attack speed as the 1st and 2nd
 # "Per-Level Scaling" leveling entries (both arrays run 40 entries,
 # indexed by level - 1). The base values (37.35% at level 20) are
@@ -210,6 +218,7 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    entry["parts"] = (DamagePart("magic", total, time_offset=_R_BEAM_SECONDS),)
     if pulled > 1:
         entry["detail"] = f"beam vs {pulled} champions pulled"
     return entry
@@ -272,12 +281,18 @@ SLOTS = {
 }
 
 # Cached kit review.  Q only "afflict[s] them with Moonlight", a mark that
-# reveals and that Lunar Rush consumes — no control.  W is left unreviewed
-# because its row is the cached "Total Magic Damage" of all three spheres,
-# E because its row is the dash count in one part, and R because its beam
-# "strike[s] ... after 1 second" — a sourced delay the row does not author,
-# which is where R's pull and slow actually land.
-MODULE_CC = {"Q": "none"}
+# reveals and that Lunar Rush consumes — no control.  R "pulls all nearby
+# enemies towards her ... then slows them for 2 seconds" and only then
+# lands the beam this row prices, so the pull is the immobilizing control
+# the damaged target took; the beam's sourced 1-second delay is now
+# authored, which is what lets the row say so.
+#
+# W and E stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  W's row is the cached "Total Magic Damage" of all three spheres,
+# which detonate "upon contact with an enemy" on no sourced cadence, and
+# E's row is the dash count in one part with no interval between the two
+# dashes.  Neither is a delay this review can author.
+MODULE_CC = {"Q": "none", "R": "pull"}
 
 parse_abilities = build_parser(SLOTS, "Diana", cc_kinds=MODULE_CC)
 

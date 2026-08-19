@@ -21,6 +21,12 @@ from .packet_module import build_packet_module, repeat_damage_parser
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 
+# Hemoplague's damage lands at the end of the infection, not at the cast:
+# "infects enemies hit for 4 seconds ... After the duration, the infection
+# bursts to deal magic damage to all affected targets" (data/champions.json
+# Vladimir R).  The same 4 seconds is the mark's duration.
+_R_INFECTION_SECONDS = 4.0
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vladimir",
     PACKET_SHA256,
@@ -31,6 +37,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # Q "drains blood from the target enemy, dealing magic damage" and E's
     # nova damages an enemy "only once": one hit each, at the cast.
     single_hit_slots=frozenset({"Q", "E"}),
+    packet_part_timings={"R": {"time_offset": _R_INFECTION_SECONDS}},
     slot_parsers={
         "W": repeat_damage_parser(
             attr="Magic Damage Per Tick",
@@ -110,18 +117,11 @@ SLOTS["hemoplague"] = _hemoplague_amp
 # Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of
 # Blood prices the fully charged nova, and "if Tides of Blood was charged
 # for at least 1 second, enemies hit are also slowed for 0.5 seconds".
-# Transfusion only drains.  P is the AP/health conversion and ``hemoplague``
-# is the AMP pseudo-slot; neither emits a cast.
-#
-# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Hemoplague controls nothing — it "increas[es] the damage they take from
-# all sources by 10%" — but the packet's burst is not a cast-boundary hit:
-# the plague "infects enemies hit for 4 seconds ... After the duration, the
-# infection bursts to deal magic damage".  Certifying it would state the
-# wrong instant, and authoring the 4-second offset moves the row's ledger
-# position (measured: it changes every Shadowflame total in the registered
-# magic builds), which is a re-timing decision this review does not own.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
+# Transfusion only drains.  Hemoplague controls nothing — it "increas[es]
+# the damage they take from all sources by 10%" and bursts for damage.  P
+# is the AP/health conversion and ``hemoplague`` is the AMP pseudo-slot;
+# neither emits a cast.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Vladimir", cc_kinds=MODULE_CC)
 

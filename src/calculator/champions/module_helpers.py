@@ -9,14 +9,16 @@ champion membership or champion-specific formulas.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import DAMAGE, SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    simple_damage,
 )
 
 REVIEWED_MODULE_ASSUMPTIONS = (
@@ -69,6 +71,40 @@ def typed_damage(
         ),
     )
     return entry
+
+
+def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
+    """A :func:`slotlib.simple_damage` slot whose hit lands after a delay.
+
+    ``DamagePart.time_offset`` is seconds from the *cast start*, so an
+    ability the cache places on a post-cast delay ("strikes the target
+    location after 1.221 seconds") authors that number here instead of
+    certifying a cast-boundary hit it does not have.  Authoring it is also
+    what puts the row in the event ledger at all, which is where a
+    reviewed ``cc_kind`` becomes visible to control-armed item passives.
+
+    Where the cached entry says the delay excludes the cast time, the
+    caller adds the cached ``castTime`` and passes the sum — the offset's
+    origin is one fixed instant, so the champion module resolves the
+    source's convention rather than this helper guessing it.
+
+    Every keyword of ``simple_damage`` passes through unchanged (the
+    damage read, cooldown, and any per-part ``cc_kind``), so the delayed
+    slot and the plain one price identically.
+    """
+    base = simple_damage(**simple_damage_kwargs)
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = base(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, time_offset=delay) for part in entry.get("parts", ())
+        )
+        return entry
+
+    parse.phase = getattr(base, "phase", DAMAGE)
+    return parse
 
 
 def mixed_damage(

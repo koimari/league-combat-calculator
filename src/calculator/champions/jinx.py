@@ -14,20 +14,27 @@ from .slotlib import damage_entry, extract_cooldown, extract_value
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 
+# Flame Chompers do not damage at the cast: the Chompers are "landing
+# after 0.4 seconds, arming after 0.5 seconds, and exploding after 5
+# seconds to deal magic damage to nearby enemies", and "Each Chomper
+# explodes on contact with an enemy champion, knocking them down and
+# rooting them for 1.5 seconds".  Against a champion standing in them the
+# explosion is the contact one, so the earliest instant this row's damage
+# can land is the arming time — the 5-second figure is the untouched
+# timeout, not the champion case.
+_E_ARMING_SECONDS = 0.5
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
     build_packet_module(
         "Jinx",
         PACKET_SHA256,
-        # Neither W nor E is certified here, so neither can carry a reviewed
-        # cc marker and Jinx stays coarse to the control scan.  E cannot:
-        # the Chompers land after 0.4s and are "arming after 0.5 seconds",
-        # so a cast-boundary certification would be false, and authoring the
-        # 0.5s delay instead moves Shadowflame's threshold amp onto the row
-        # (+79.1 magic at level 18) — a re-pricing, not a review.  W's one
-        # shock blast could be certified, but with E coarse that buys no
-        # coverage and costs one Muramana proc (-31.7 physical at level 18)
-        # through the walker cursor matching wave 1C owns.
-        single_hit_slots=frozenset({"R"}),
+        # W's one shock blast lands at the cast: "Jinx fires a shock blast
+        # in the target direction that deals physical damage to the first
+        # enemy it hits", with no travel duration in the cached entry, and
+        # the cast is "from wherever the caster is at the start of the cast
+        # time".  R's rocket is likewise one explosion.
+        single_hit_slots=frozenset({"W", "R"}),
+        packet_part_timings={"E": {"time_offset": _E_ARMING_SECONDS}},
     )
 )
 PACKET_SPEC = _packet_slots.packet_spec
@@ -101,13 +108,15 @@ _get_excited.phase = BUFF
 
 SLOTS = {**_packet_slots, "P": _get_excited, "Q": _switcheroo}
 
-# R's rocket only explodes for damage and sight.  W's blast "reveals and
-# slows them for 2 seconds" and E's Chomper roots ("knocking them down and
-# rooting them for 1.5 seconds"), but neither row reaches an event the
-# ledger can carry a marker on (see the packet build above), and a
-# declaration the ledger never reads reviews nothing.  P and Q are
-# zero-damage stat rows (Get Excited! stacks, the weapon toggle).
-MODULE_CC = {"R": "none"}
+# Reviewed crowd control, read from the cached kit.  R's rocket only
+# explodes for damage and sight.  W's blast "deals physical damage to the
+# first enemy it hits and reveals and slows them for 2 seconds".  E's
+# Chomper "explodes on contact with an enemy champion, knocking them down
+# and rooting them for 1.5 seconds" — the root is the immobilizing half
+# of the same explosion this row prices, now placed at its arming time.
+# P and Q are zero-damage stat rows (Get Excited! stacks, the weapon
+# toggle).
+MODULE_CC = {"W": "slow", "E": "root", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Jinx", cc_kinds=MODULE_CC)
 

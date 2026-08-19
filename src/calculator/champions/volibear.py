@@ -27,12 +27,20 @@ from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
+# Stormbringer's damage is its landing: "Volibear impacts after 1 second,
+# slowing nearby enemies by 50% decaying over 1 second. Enemies within the
+# epicenter are also dealt physical damage" (data/champions.json Volibear
+# R), and he "leaps to the target location ... over 1 second" regardless of
+# distance, so the offset is a constant, not a travel estimate.
+_R_IMPACT_SECONDS = 1.0
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_packet_module(
         "Volibear",
         PACKET_SHA256,
         # Q's empowered attack is one pounce on one target; E is one bolt.
         single_hit_slots=frozenset({"Q", "E"}),
+        packet_part_timings={"R": {"time_offset": _R_IMPACT_SECONDS}},
     )
 )
 PACKET_SPEC = _packet_slots.packet_spec
@@ -177,17 +185,20 @@ SLOTS["E"] = _sky_splitter
 # stack buff plus its Lightning Claws on-hit rider — a basic-attack row,
 # not an ability event.
 #
-# Two slots stay UNREVIEWED, so this kit keeps the coarse control-armed
-# scan.  Stormbringer does slow ("Volibear impacts after 1 second, slowing
-# nearby enemies by 50%"), but the same sentence is why the slot cannot
-# carry it: the damage is the impact's, a second after the cast, and this
-# packet does not author that offset.  Frenzied Maul controls nothing, but
-# the Wounded bite splits its one slash into a base and a bonus part, so
-# the single-part ``single_hit`` certification is unavailable and the only
-# other route — authoring a shared cast instant — splits the row's heal
-# ledger from one event into three (tests/test_heal_ledger_phase2.py).
-# Both would be re-timing decisions this review does not own.
-MODULE_CC = {"Q": "stun", "E": "slow"}
+# Stormbringer's landing "slow[s] nearby enemies by 50% decaying over 1
+# second" on the same impact that deals its damage, now authored at that
+# impact.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Frenzied Maul controls nothing, but the Wounded bite splits its one
+# slash into a base and a bonus part, so the single-part ``single_hit``
+# certification is unavailable, and authoring the bite's shared cast
+# instant instead is not a timing change alone: the self-heal rule counts
+# W *damage events* and skips the first (healing_legacy.py "Volibear"),
+# so two parts per bite turn one heal into three and move an applied heal
+# amount.  Fixing that means counting bites rather than parts, in a file
+# this review does not own.
+MODULE_CC = {"Q": "stun", "E": "slow", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Volibear", cc_kinds=MODULE_CC)
 

@@ -1,17 +1,16 @@
-"""Reviewed crowd control for Vladimir (MODULE_CC) — and the slot that
-still withholds.
+"""Reviewed crowd control for Vladimir (MODULE_CC), and R's burst timing.
 
 Sanguine Pool and a fully charged Tides of Blood slow; Transfusion does
-not.  Hemoplague's burst lands 4 seconds after its cast, and the packet
-does not author that, so this kit stays coarse.
+not.  Hemoplague controls nothing and its burst lands 4 seconds after the
+cast, which the packet now authors.
 """
 
-from src.calculator.champions import vladimir
+from src.calculator.champions import parse_champion_abilities, vladimir
 from tests import cc_review
 
 
 class TestReviewedCrowdControl:
-    """Vladimir's reviewed crowd control, and the slot that still withholds.
+    """Vladimir's reviewed crowd control, and the delay that carries R.
 
     A control-armed holder shield (Fimbulwinter's Everlasting) has to know
     whether an ability event was a control event; an ability packet that
@@ -21,7 +20,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Vladimir")
-        assert vladimir.MODULE_CC == {"Q": "none", "W": "slow", "E": "slow"}
+        assert vladimir.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "slow",
+            "R": "none",
+        }
         assert vladimir.parse_abilities.cc_kinds == vladimir.MODULE_CC
         # Q's only control words describe Vladimir's own Crimson Rush:
         # it "depletes 75% slower during Sanguine Pool, Tides of Blood, or
@@ -42,17 +46,22 @@ class TestReviewedCrowdControl:
             180.0,
         ]
 
-    def test_hemoplague_withholds_on_its_unauthored_infection_delay(self):
-        """R controls nothing, but its burst does not land at the cast."""
+    def test_hemoplague_bursts_at_the_end_of_its_sourced_infection(self):
+        """R controls nothing, and its burst lands 4 seconds after the cast."""
         data = cc_review.kit("Vladimir")
-        assert "R" not in vladimir.MODULE_CC
         r_text = cc_review.slot_text(data, "R")
         assert cc_review.control_words(r_text) == []
         assert "infects enemies hit for 4 seconds" in r_text
         assert "after the duration, the infection bursts" in r_text
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+        )
+        (part,) = parsed["R"]["parts"]
+        assert part.time_offset == 4.0
+        assert part.cc_kind == "none"
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Vladimir") == ["R"]
+    def test_the_reviewed_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Vladimir") == []
         coverage = cc_review.fimbulwinter_coverage("Vladimir")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

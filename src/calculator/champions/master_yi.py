@@ -28,8 +28,23 @@ from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
 
 PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
 
+# Alpha Strike's priced hit is its primary damage, and the cached entry
+# puts that after the whole vanish: Master Yi "reappears ... and then
+# becomes able to act again[ after 0.165 seconds. ][ 1.087 seconds total
+# after the start of the cast with 4 bounces. ]" with the note "Alpha
+# Strike's primary damage applies after Master Yi reappears."  The cached
+# number is already measured from the cast start, which is where
+# ``time_offset`` starts.  The lesser marks that "detonate instantly upon
+# application to deal 25% damage" are a multi-target branch this
+# single-target packet does not price.
+_Q_REAPPEAR_SECONDS = 1.087
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Master Yi", PACKET_SHA256)
+    build_packet_module(
+        "Master Yi",
+        PACKET_SHA256,
+        packet_part_timings={"Q": {"time_offset": _Q_REAPPEAR_SECONDS}},
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -91,7 +106,22 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(_packet_slots)
 SLOTS["P"] = _double_strike
 SLOTS["W"] = _meditate
-parse_abilities = build_parser(SLOTS, "Master Yi")
+
+# Reviewed crowd control, read from the cached kit.  Alpha Strike marks
+# and detonates for damage and on-hit effects only — nothing in the entry
+# controls the enemies it strikes (Master Yi is the one made unable to
+# act).  P is an on-hit rider, W a self-channel, R a self-buff.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan,
+# and the reason is not timing: Wuju Style "empowers his basic attacks
+# within the next 5 seconds to deal bonus true damage on-hit", but the
+# reviewed packet prices it as one direct hit on the E row.  Certifying
+# that hit at the cast boundary would state an instant the ability does
+# not have — the rider lands on a later basic attack — so the row needs
+# to move onto the on-hit stream before it can carry any marker.
+MODULE_CC = {"Q": "none"}
+
+parse_abilities = build_parser(SLOTS, "Master Yi", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options)
 ASSUMPTIONS = list(_packet_assumptions) + [

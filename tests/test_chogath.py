@@ -364,20 +364,35 @@ class TestPassiveCarnivore:
 class TestReviewedCrowdControl:
     """Cho'Gath's crowd-control review, and the slot that still withholds.
 
-    Q's knock-up lands with the rupture after a sourced 0.627-second
-    delay the row does not author, and E's row is its three empowered
-    attacks in one part.
+    Q's knock-up lands with the rupture, on the sourced delay the row now
+    authors; E's row is its three empowered attacks in one part with no
+    per-swing cadence, so it cannot carry a marker at all.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Cho'Gath")
-        assert chogath.MODULE_CC == {"W": "silence", "R": "none"}
+        assert chogath.MODULE_CC == {"Q": "knockup", "W": "silence", "R": "none"}
+        assert "knocking them up for 1 second" in cc_review.slot_text(data, "Q")
         assert "silenced for a duration" in cc_review.slot_text(data, "W")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
 
+    def test_rupture_lands_on_the_cast_time_plus_its_sourced_delay(self):
+        """The cached note says the delay excludes the cast time."""
+        data = cc_review.kit("Cho'Gath")
+        assert "after a 0.627 seconds delay" in cc_review.slot_text(data, "Q")
+        entry = data["abilities"]["Q"][0]
+        assert "The delay before the rupture does not include the cast time." in (
+            entry["notes"]
+        )
+        assert entry["castTime"] == "0.5"
+        parsed = parse_abilities(data, 20, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3})
+        (part,) = parsed["Q"]["parts"]
+        assert part.time_offset == pytest.approx(1.127)
+        assert part.cc_kind == "knockup"
+
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Cho'Gath") == ["E", "Q"]
+        assert cc_review.unreviewed_ability_slots("Cho'Gath") == ["E"]
         coverage = cc_review.fimbulwinter_coverage("Cho'Gath")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

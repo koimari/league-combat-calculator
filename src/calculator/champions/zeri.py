@@ -21,6 +21,17 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
 
+# Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q, locked
+# by tests/test_e2_dot_3.py) "in the target direction over the cast time",
+# and the cached Q entry carries no castTime of its own ("Burst Fire's
+# cooldown and cast time are reduced with attack speed"), so the burst is
+# authored at the cast with no interval between rounds.  E's Lightning
+# Rounds bonus rides these same seven rounds, so both slots read the
+# placement from here — a rider on Burst Fire cannot land anywhere else.
+_BURST_ROUNDS = 7
+_BURST_ROUND_TIME_OFFSET = 0.0
+_BURST_ROUND_INTERVAL = 0.0
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zeri",
     PACKET_SHA256,
@@ -35,18 +46,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": repeat_damage_parser(
             attr="Physical Damage per Hit",
             dmg_type="physical",
-            count=7,
-            time_offset=0.0,
-            hit_interval=0.0,
+            count=_BURST_ROUNDS,
+            time_offset=_BURST_ROUND_TIME_OFFSET,
+            hit_interval=_BURST_ROUND_INTERVAL,
         )
     },
 )
 PACKET_SPEC = SLOTS.packet_spec
 
-# Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q,
-# locked by tests/test_e2_dot_3.py); Lightning Rounds empowers each
-# round's first-enemy hit.
-_E_LIGHTNING_ROUNDS_ROUNDS = 7
+# Lightning Rounds empowers each round's first-enemy hit.
+_E_LIGHTNING_ROUNDS_ROUNDS = _BURST_ROUNDS
 # Lightning Rounds bonus "increased by 0% : 100% (+ 0% : 30%) (based on
 # critical strike chance)": x2.3 at 100% crit -> 1 + 1.3 x crit_chance.
 _E_BONUS_CRIT_MULTIPLIER_AT_MAX = 2.3
@@ -79,6 +88,8 @@ def _spark_surge(ctx: SlotCtx):
             "magic",
             amount=per_round,
             count=_E_LIGHTNING_ROUNDS_ROUNDS,
+            time_offset=_BURST_ROUND_TIME_OFFSET,
+            hit_interval=_BURST_ROUND_INTERVAL,
         ),
     )
     entry["detail"] = (
@@ -94,15 +105,11 @@ SLOTS["E"] = _spark_surge
 # Ultrashock Laser's pulse "deals physical damage to the first enemy hit
 # and slows them for 2 seconds".  Burst Fire's rounds and Lightning Crash's
 # nova only damage — the nova empowers Zeri (Overcharged), not the enemies
-# it hits.  P is the charged basic attack, not an ability event.
-#
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Spark Surge controls nothing, but its row is the Lightning Rounds bonus
-# aggregated over seven Burst Fire rounds with no timing of its own, and
-# giving it Q's burst timing so it reaches the ledger moves the row's
-# ledger position (measured: Shadowflame's level-18 magic totals move),
-# which is a re-timing decision this review does not own.
-MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+# it hits.  Spark Surge's dash and its Lightning Rounds bonus control
+# nothing either: the buff "empower[s] Burst Fire to deal bonus magic
+# damage to the first enemy hit ... and pierce through enemies".  P is the
+# charged basic attack, not an ability event.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Zeri", cc_kinds=MODULE_CC)
 

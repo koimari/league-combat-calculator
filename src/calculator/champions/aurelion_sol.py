@@ -27,13 +27,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import delayed_damage
 from .slotlib import (
     by_option,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
-    simple_damage,
 )
 
 # One full Q channel: 3.25 s of beam, with a burst on the primary target
@@ -48,6 +48,15 @@ _Q_BURSTS_PER_CHANNEL = 3
 _Q_BURST_MAXHP_PCT_PER_STARDUST = 0.031  # % of target max HP per stack
 _E_EXECUTE_BASE_PCT = 5.0
 _E_EXECUTE_PCT_PER_100_STARDUST = 2.6
+
+# Both R branches strike after their own sourced delay, from cast start:
+# "calls down a star that strikes the target location after 1.25 seconds,
+# dealing magic damage to enemies hit and stunning them for 1 second"
+# (R[0]) and "calls down a giant star that strikes the target location
+# after 2 seconds, dealing 25% increased damage in a larger area and
+# knocking up enemies hit for 1 second" (R[1]).
+_R_FALLING_STAR_SECONDS = 1.25
+_R_SKIES_DESCEND_SECONDS = 2.0
 
 
 def _w_beam_modifier(ctx: SlotCtx) -> float:
@@ -249,15 +258,25 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _breath_of_light,
     "E": _singularity,
+    # Both R branches land on their own sourced delay, and the two apply
+    # different control, so each authors its own kind on its own part
+    # rather than sharing one MODULE_CC answer.
     "R": by_option(
         "r_empowered",
         {
-            False: simple_damage(attr="Magic Damage", dmg_type="magic"),
-            True: simple_damage(
+            False: delayed_damage(
+                delay=_R_FALLING_STAR_SECONDS,
+                attr="Magic Damage",
+                dmg_type="magic",
+                cc_kind="stun",
+            ),
+            True: delayed_damage(
+                delay=_R_SKIES_DESCEND_SECONDS,
                 attr="Empowered Magic Damage",
                 dmg_type="magic",
                 source=("R", 1),
                 cooldown_from=("R", 0),
+                cc_kind="knockup",
             ),
         },
         default=False,
@@ -269,10 +288,11 @@ SLOTS = {
 # not list among its four displacements (knock aside/back/up, pull) nor
 # among the immobilizing effects, and its movement-speed floor applies to
 # "minions and monsters" only — so neither slot controls the champion it
-# damages.  R is left unreviewed: both of its branches land on a sourced
-# delay (Falling Star's 1.25s stun, The Skies Descend's 2s knock-up) that
-# the row does not author, so the ledger has no hit to attach either
-# answer to.
+# damages.  R is deliberately absent from this dict rather than
+# unreviewed: its two branches apply different control (Falling Star
+# stuns, The Skies Descend knocks up) on different sourced delays, so the
+# answer is a property of the branch and each variant authors its own
+# ``cc_kind`` on its own part above.
 MODULE_CC = {"Q": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)

@@ -26,7 +26,7 @@ hardcoded.
 from typing import Any, Callable
 
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage_parser
+from .module_helpers import delayed_damage, no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
@@ -99,7 +99,12 @@ SLOTS = {
     "Q": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # "Veigar casts down a mass of dark matter that strikes the target
+    # location after a 1.221 seconds delay ... afterwards dealing magic
+    # damage to enemies hit", and the cached note fixes the offset's
+    # origin: "The delay starts at the beginning of the cast time." So
+    # 1.221 s from the cast start is the whole sourced placement.
+    "W": delayed_damage(delay=1.221, attr="Magic Damage", dmg_type="magic"),
     "E": no_damage_parser(
         "E",
         "Event Horizon is a stun cage; no enemy damage.",
@@ -117,20 +122,13 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-# Baleful Strike "deals magic damage to the first two enemies hit" and
-# Primordial Burst "deals magic damage, increased by 0% : 100%" — neither
-# applies control.
-#
-# Two slots stay UNREVIEWED, so this kit keeps the coarse control-armed
-# scan.  Event Horizon is where the kit's stun lives ("knocked down and
-# stunned for a duration"), but the cage deals no damage, so no part can
-# carry the answer.  Dark Matter is control-free but "strikes the target
-# location after a 1.221 seconds delay", and this entry does not author
-# that delay: certifying a cast-boundary hit would state the wrong instant,
-# and authoring the offset moves the row's ledger position (measured: it
-# drops Shadowflame's proc out of the level-18 magic build), which is a
-# re-timing decision this review does not own.
-MODULE_CC = {"Q": "none", "R": "none"}
+# Baleful Strike "deals magic damage to the first two enemies hit", Dark
+# Matter "deal[s] magic damage to enemies hit" on its delayed strike, and
+# Primordial Burst "deals magic damage, increased by 0% : 100%" — none of
+# the three applies control.  Event Horizon is where the kit's stun lives
+# ("knocked down and stunned for a duration"), but the cage deals no
+# damage, so it emits no event a marker could ride and stays absent.
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)
 REVIEW_STATUS = "reviewed_module"

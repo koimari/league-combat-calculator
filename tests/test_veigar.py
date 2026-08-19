@@ -1,16 +1,16 @@
-"""Reviewed crowd control for Veigar (MODULE_CC) — and the two slots that
-still withhold.
+"""Reviewed crowd control for Veigar (MODULE_CC), and Dark Matter's timing.
 
-Q and R are control-free; the cage deals no damage and Dark Matter's
-sourced impact delay is not authored, so this kit stays coarse.
+Q, W and R are control-free; the cage deals no damage.  W's hit lands on
+the cached 1.221-second delay rather than at the cast, which is both what
+the source says and what puts the row in the event ledger.
 """
 
-from src.calculator.champions import veigar
+from src.calculator.champions import parse_champion_abilities, veigar
 from tests import cc_review
 
 
 class TestReviewedCrowdControl:
-    """Veigar's reviewed crowd control, and the slots that still withhold.
+    """Veigar's reviewed crowd control, and the delay that carries it.
 
     A control-armed holder shield (Fimbulwinter's Everlasting) has to know
     whether an ability event was a control event; an ability packet that
@@ -20,9 +20,9 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Veigar")
-        assert veigar.MODULE_CC == {"Q": "none", "R": "none"}
+        assert veigar.MODULE_CC == {"Q": "none", "W": "none", "R": "none"}
         assert veigar.parse_abilities.cc_kinds == veigar.MODULE_CC
-        for slot in ("Q", "R"):
+        for slot in ("Q", "W", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
 
     def test_the_cage_carries_the_kits_stun_and_no_damage(self):
@@ -31,15 +31,22 @@ class TestReviewedCrowdControl:
         assert "stunned for a duration" in cc_review.slot_text(data, "E")
         assert veigar.MODULE_COVERAGE["E"] == "no_damage"
 
-    def test_dark_matter_withholds_on_its_unauthored_impact_delay(self):
-        """W is control-free, but its hit does not land at the cast."""
+    def test_dark_matter_lands_on_its_sourced_impact_delay(self):
+        """The offset is the cached number, from the cast start."""
         data = cc_review.kit("Veigar")
-        assert "W" not in veigar.MODULE_CC
-        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         assert "after a 1.221 seconds delay" in cc_review.slot_text(data, "W")
+        assert "The delay starts at the beginning of the cast time." in (
+            data["abilities"]["W"][0]["notes"]
+        )
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+        )
+        (part,) = parsed["W"]["parts"]
+        assert part.time_offset == 1.221
+        assert part.cc_kind == "none"
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Veigar") == ["W"]
+    def test_the_reviewed_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Veigar") == []
         coverage = cc_review.fimbulwinter_coverage("Veigar")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

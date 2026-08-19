@@ -16,8 +16,18 @@ from .slotlib import simple_damage
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
 
+# Death's Grasp lands on its own delay: Mordekaiser "summons a claw in the
+# target direction that grants sight of the area. After 0.5 seconds, it
+# deals magic damage to enemies within and pulls them over 250 units"
+# (data/champions.json Mordekaiser E).  The cached entry attaches no
+# cast-time qualifier to the number, so it is read from the cast start as
+# written.
+_E_CLAW_SECONDS = 0.5
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Mordekaiser", PACKET_SHA256
+    "Mordekaiser",
+    PACKET_SHA256,
+    packet_part_timings={"E": {"time_offset": _E_CLAW_SECONDS}},
 )
 PACKET_SPEC = SLOTS.packet_spec
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -42,7 +52,15 @@ SLOTS["Q"] = simple_damage(
     dmg_type="magic",
     event_order_certified="single_hit",
 )
-parse_abilities = build_parser(SLOTS, "Mordekaiser")
+# Reviewed crowd control, read from the cached kit.  Obliterate "deal[s]
+# magic damage to enemies within, increased if only one enemy is hit" and
+# applies nothing else.  Death's Grasp "deals magic damage to enemies
+# within and pulls them over 250 units" — the pull lands with the damage
+# on the same 0.5-second claw, which the slot now authors.  P (Darkness
+# Rise) is a basic-attack/aura row, and W and R author no damage part.
+MODULE_CC = {"Q": "none", "E": "pull"}
+
+parse_abilities = build_parser(SLOTS, "Mordekaiser", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"

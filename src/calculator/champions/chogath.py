@@ -29,6 +29,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -54,6 +55,16 @@ _FEAST_STACK_RIDER = re.compile(
 
 # Default Feast stacks: the minion / non-epic-monster stack cap.
 _DEFAULT_FEAST_STACKS = 6
+
+# Rupture erupts on its own delay: "Cho'Gath ruptures the target location
+# after a 0.627 seconds delay ... dealing magic damage to enemies within
+# and knocking them up for 1 second", with the cached note "The delay
+# before the rupture does not include the cast time."  ``time_offset`` is
+# measured from the cast start, so the cached castTime (0.5) is added to
+# the cached delay; both numbers come from the same Q entry.
+_Q_CAST_TIME_S = 0.5
+_Q_RUPTURE_DELAY_S = 0.627
+_Q_RUPTURE_FROM_CAST_START_S = _Q_CAST_TIME_S + _Q_RUPTURE_DELAY_S
 
 
 def _feast_stacks(ctx: SlotCtx) -> int:
@@ -172,7 +183,11 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "R": _feast,
-    "Q": simple_damage(attr="Magic damage", dmg_type="magic"),
+    "Q": delayed_damage(
+        delay=_Q_RUPTURE_FROM_CAST_START_S,
+        attr="Magic damage",
+        dmg_type="magic",
+    ),
     # One roar in a cone, landing at the cast.
     "W": simple_damage(
         attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
@@ -180,13 +195,17 @@ SLOTS = {
     "E": _vorpal_spikes,
 }
 
-# Cached kit review.  W's only debuff is a silence — real control, but
-# neither an immobilizing effect nor a slow — and R "deal[s] them true
-# damage" and nothing else.  Q is left
-# unreviewed because its knock-up lands with the rupture after a sourced
-# 0.627-second delay the row does not author, and E because its row is the
-# three empowered attacks in one part with no per-swing cadence.
-MODULE_CC = {"W": "silence", "R": "none"}
+# Cached kit review.  Q's rupture deals its magic damage while "knocking
+# them up for 1 second" on the same delayed eruption, which the slot now
+# authors; the 60% slow that follows rides the same airborne.  W's only
+# debuff is a silence — real control, but neither an immobilizing effect
+# nor a slow — and R "deal[s] them true damage" and nothing else.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan:
+# its row is the three empowered basic attacks summed in one part with no
+# per-swing cadence to place them on, so no part of it is a hit the
+# ledger can time.
+MODULE_CC = {"Q": "knockup", "W": "silence", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 

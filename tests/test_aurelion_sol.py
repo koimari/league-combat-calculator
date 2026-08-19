@@ -489,10 +489,11 @@ class TestFightIntegration:
 
 
 class TestReviewedCrowdControl:
-    """Aurelion Sol's crowd-control review, and the slot that still withholds.
+    """Aurelion Sol's crowd-control review, per branch where it differs.
 
-    R lands on a sourced delay in both branches (Falling Star's 1.25s
-    stun, The Skies Descend's 2s knock-up) that the row does not author.
+    R lands on a sourced delay in both branches and applies a different
+    kind in each (Falling Star's 1.25 s stun, The Skies Descend's 2 s
+    knock-up), so the answer is authored per part rather than per slot.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -501,8 +502,35 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Aurelion Sol") == ["R"]
+    def test_each_r_branch_authors_its_own_delay_and_kind(
+        self, aurelion_sol_data, parse_at
+    ):
+        """R is absent from MODULE_CC because its two branches disagree."""
+        assert "R" not in aurelion_sol.MODULE_CC
+        entries = aurelion_sol_data["abilities"]["R"]
+        assert "strikes the target location after 1.25 seconds" in (
+            entries[0]["effects"][0]["description"]
+        )
+        assert "stunning them for 1 second" in entries[0]["effects"][0]["description"]
+        assert "strikes the target location after 2 seconds" in (
+            entries[1]["effects"][0]["description"]
+        )
+        assert "knocking up enemies hit for 1 second" in (
+            entries[1]["effects"][0]["description"]
+        )
+        for empowered, delay, kind in ((False, 1.25, "stun"), (True, 2.0, "knockup")):
+            _, abilities = parse_at(
+                aurelion_sol_data,
+                18,
+                ap=100.0,
+                ability_ranks=MAX_RANKS,
+                champion_options={"r_empowered": empowered},
+            )
+            (part,) = abilities["R"]["parts"]
+            assert (part.time_offset, part.cc_kind) == (delay, kind)
+
+    def test_the_reviewed_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Aurelion Sol") == []
         coverage = cc_review.fimbulwinter_coverage("Aurelion Sol")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -248,15 +248,36 @@ def _nether_grasp(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8f"
 
+# Call of the Void lands on its own delay: Malzahar "opens two portals to
+# the void centered at the target location ... After 0.4 seconds, enemies
+# between the portals are dealt magic damage and silenced for a duration"
+# (data/champions.json Malzahar Q).  The cached entry attaches no
+# cast-time qualifier to the number, so it is read from the cast start as
+# written.
+_Q_PORTAL_SECONDS = 0.4
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malzahar", PACKET_SHA256
+    "Malzahar",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_PORTAL_SECONDS}},
 )
 PACKET_SPEC = SLOTS.packet_spec
 # Override the packet DoT rows with the full-total tick pricing above and
 # the packet's single-attack W with the sourced voidling swarm, then
 # rebuild the parser so the module's parse_abilities sees them.
 SLOTS = {**SLOTS, "W": _void_swarm, "E": _malefic_visions, "R": _nether_grasp}
-parse_abilities = build_parser(SLOTS, "Malzahar")
+
+# Reviewed crowd control, read from the cached kit.  Call of the Void's
+# delayed hit leaves the enemies it damages "silenced for a duration".
+# Malefic Visions only deals "magic damage every 0.25 seconds over 4
+# seconds" and spreads on death.  Nether Grasp's channel is
+# "suppressing and revealing the target and dealing them magic damage
+# every 0.25 seconds" — the suppression is what the damaged target takes.
+# W's cast authors no damage part (the swarm rides its own pet row, which
+# is not an ability event) and P is a self-buff.
+MODULE_CC = {"Q": "silence", "E": "none", "R": "suppression"}
+
+parse_abilities = build_parser(SLOTS, "Malzahar", cc_kinds=MODULE_CC)
 OPTIONS = [
     *OPTIONS,
     {
