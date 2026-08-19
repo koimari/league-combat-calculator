@@ -53,19 +53,46 @@ from .scaling import is_flat_unit, resolve_scaling
 ModifierOverride = Callable[[str, float], float | None]
 
 
-_MODIFIER_PAIRS_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
+_MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # Attribute-lookup memos over the same cached JSON, keyed and
 # identity-verified the same way.
 _NAMED_LEVELING_MEMO: dict[tuple[int, str, int], tuple[dict, Any]] = {}
 _PRIMARY_LEVELING_MEMO: dict[int, tuple[dict, Any]] = {}
 
 
-def sum_modifiers(
+# An ability's rank array holds one value per rank — five, or six for
+# Jayce's dual-form kit, which is the longest rank axis the cache carries.
+# An array this long can only hold one value per champion level.  It is the
+# same rule ``extract_resource_cost`` applies to cost rows, and it is a
+# length test rather than a unit test because the Wiki emits per-level
+# terms under a bare unit.  Level-*bracket* arrays (Pyke R's levels 6-18,
+# Aphelios P's every-third-level steps) are shorter than this and stay on
+# the rank axis, unchanged: reading them needs their own sourced domain,
+# not this rule.
+_PER_LEVEL_VALUES = 18
+
+
+def _axis_index(values: list[Any], rank: int, level: int | None) -> int:
+    """Index one modifier array by the axis its own length declares.
+
+    A single leveling row mixes both axes — Zoe Q's "Maximum Magic Damage"
+    carries an 18-entry per-level term beside 5-entry per-rank terms — so
+    the axis is a property of each array, not of the row or the caller.
+    ``level=None`` is a caller that does not know the champion's level; its
+    arrays are all read at *rank*, which is what they were before.
+    """
+    axis = level if level is not None and len(values) >= _PER_LEVEL_VALUES else rank
+    return min(axis - 1, len(values) - 1)
+
+
+def sum_modifiers(  # pylint: disable=too-many-arguments
     leveling: dict[str, Any],
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
     modifier_override: ModifierOverride | None = None,
+    *,
+    level: int | None = None,
 ) -> float:
     """Sum one leveling entry's modifiers at a rank (flat + scaling).
 
@@ -74,6 +101,9 @@ def sum_modifiers(
         rank: 1-indexed rank (or level, for per-level entries).
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it. Per-level
+            modifier arrays in this row are then read at the level
+            (:func:`_axis_index`) instead of at *rank*.
 
     Returns:
         Total raw damage contribution of this leveling entry.
@@ -81,7 +111,7 @@ def sum_modifiers(
     # The (value, unit) pair at a rank is pure cached-JSON data; memoize it
     # by leveling-entry identity (verified on every hit) so the optimizer's
     # thousands of identical parses skip the JSON walk.
-    memo_key = (id(leveling), rank)
+    memo_key = (id(leveling), rank, level)
     memo = _MODIFIER_PAIRS_MEMO.get(memo_key)
     if memo is not None and memo[0] is leveling:
         pairs = memo[1]
@@ -92,7 +122,7 @@ def sum_modifiers(
             units = modifier.get("units", [])
             if not values:
                 continue
-            idx = min(rank - 1, len(values) - 1)
+            idx = _axis_index(values, rank, level)
             pairs.append((float(values[idx]), units[idx] if idx < len(units) else ""))
         pairs = tuple(pairs)
         _MODIFIER_PAIRS_MEMO[memo_key] = (leveling, pairs)
@@ -109,12 +139,14 @@ def sum_modifiers(
     return total
 
 
-def extract_named(
+def extract_named(  # pylint: disable=too-many-arguments
     ability: dict[str, Any],
     attribute: str,
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
+    *,
+    level: int | None = None,
 ) -> float:
     """Extract damage for an exact attribute name from ability JSON.
 
@@ -126,6 +158,8 @@ def extract_named(
         rank: Ability rank (1-indexed).
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Total raw damage at the given rank, or 0.0 if not found.
@@ -133,7 +167,7 @@ def extract_named(
     leveling = find_named_leveling(ability, attribute)
     if leveling is None:
         return 0.0
-    return sum_modifiers(leveling, rank, stats, target)
+    return sum_modifiers(leveling, rank, stats, target, level=level)
 
 
 def _find_primary_damage_leveling(
@@ -169,6 +203,8 @@ def extract_auto(
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
+    *,
+    level: int | None = None,
 ) -> tuple[float, str]:
     """Extract damage with classifier-driven attribute auto-detection.
 
@@ -180,6 +216,8 @@ def extract_auto(
         rank: Ability rank (1-indexed), or level for per-level entries.
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Tuple of (total_raw_damage, damage_type). Damage is 0.0 when no
@@ -189,7 +227,7 @@ def extract_auto(
     leveling = _find_primary_damage_leveling(ability)
     if leveling is None:
         return 0.0, damage_type
-    return sum_modifiers(leveling, rank, stats, target), damage_type
+    return sum_modifiers(leveling, rank, stats, target, level=level), damage_type
 
 
 def find_named_leveling(
@@ -226,6 +264,7 @@ def _modifier_value(
     leveling: dict[str, Any],
     modifier_index: int,
     rank: int,
+    level: int | None = None,
 ) -> float:
     """Raw value of one modifier at a rank (0.0 when absent/empty)."""
     modifiers = leveling.get("modifiers", [])
@@ -234,8 +273,7 @@ def _modifier_value(
     values = modifiers[modifier_index].get("values", [])
     if not values:
         return 0.0
-    idx = min(rank - 1, len(values) - 1)
-    return float(values[idx])
+    return float(values[_axis_index(values, rank, level)])
 
 
 def extract_value(
@@ -243,6 +281,8 @@ def extract_value(
     attribute: str,
     rank: int,
     modifier_index: int = 0,
+    *,
+    level: int | None = None,
 ) -> float:
     """Extract a raw numeric leveling value without resolving scaling.
 
@@ -255,6 +295,8 @@ def extract_value(
         attribute: Exact attribute name to look for.
         rank: Ability rank (1-indexed).
         modifier_index: Which modifier to read (default 0 = first).
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         The flat numeric value at the given rank, or 0.0 if not found.
@@ -262,7 +304,7 @@ def extract_value(
     leveling = find_named_leveling(ability, attribute)
     if leveling is None:
         return 0.0
-    return _modifier_value(leveling, modifier_index, rank)
+    return _modifier_value(leveling, modifier_index, rank, level)
 
 
 def pct_health_per_hit(
@@ -274,6 +316,8 @@ def pct_health_per_hit(
     ap_ratio_per_100: bool = False,
     floor_attr: str | None = None,
     stacks_required: int = 1,
+    *,
+    level: int | None = None,
 ) -> float | None:
     """Per-hit on-hit damage as a percentage of the target's max health.
 
@@ -293,6 +337,8 @@ def pct_health_per_hit(
         ap_ratio_per_100: Modifier 1 is bonus % per 100 AP.
         floor_attr: Attribute holding the minimum per-proc damage.
         stacks_required: Hits needed per proc; divides the proc damage.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Damage per hit, or None when *attr* is absent from the ability
@@ -302,23 +348,28 @@ def pct_health_per_hit(
     if leveling is None:
         return None
 
-    percent = _modifier_value(leveling, 0, rank)
+    percent = _modifier_value(leveling, 0, rank, level)
     if ap_ratio_per_100:
-        percent += ap * _modifier_value(leveling, 1, rank) / 100.0
+        percent += ap * _modifier_value(leveling, 1, rank, level) / 100.0
 
     max_health = target_stat(target or {}, "target_max_health")
     per_proc = (percent / 100.0) * max_health
     if floor_attr:
-        per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
+        per_proc = max(per_proc, extract_value(ability, floor_attr, rank, level=level))
     return per_proc / stacks_required
 
 
-def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
+def extract_cooldown(
+    ability: dict[str, Any], rank: int, *, level: int | None = None
+) -> float:
     """Extract the base cooldown for an ability at a given rank.
 
     Args:
         ability: Single ability dict from champion JSON.
         rank: Ability rank (1-indexed).
+        level: Champion level, when the caller knows it. A per-level
+            cooldown row (Aphelios' rankless weapon cooldowns) is then read
+            at the level — see :func:`_axis_index`.
 
     Returns:
         Base cooldown in seconds, or 0.0 if not found.
@@ -331,8 +382,7 @@ def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
     if not values:
         return 0.0
 
-    idx = min(rank - 1, len(values) - 1)
-    return float(values[idx])
+    return float(values[_axis_index(values, rank, level)])
 
 
 def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
@@ -655,6 +705,7 @@ def _resolve_casts(
     casts: int | str,
     ability: dict[str, Any],
     rank: int,
+    level: int | None = None,
 ) -> float:
     """Resolve a casts param to a damage multiplier.
 
@@ -664,12 +715,14 @@ def _resolve_casts(
     than silently zeroing the slot's damage.
     """
     if isinstance(casts, str):
-        count = extract_named(ability, casts, rank)
+        count = extract_named(ability, casts, rank, level=level)
         return count if count > 0 else 1.0
     return float(casts)
 
 
-def extract_recharge(ability: dict[str, Any], rank: int) -> float:
+def extract_recharge(
+    ability: dict[str, Any], rank: int, *, level: int | None = None
+) -> float:
     """Cooldown for a charge ability: rechargeRate at rank.
 
     The JSON ``cooldown`` field of a charge ability stores the short
@@ -679,9 +732,8 @@ def extract_recharge(ability: dict[str, Any], rank: int) -> float:
     """
     rates = ability.get("rechargeRate") or []
     if not rates:
-        return extract_cooldown(ability, rank)
-    idx = min(rank - 1, len(rates) - 1)
-    return float(rates[idx])
+        return extract_cooldown(ability, rank, level=level)
+    return float(rates[_axis_index(rates, rank, level)])
 
 
 def simple_damage(
@@ -783,7 +835,7 @@ def simple_damage(
             return None
 
         cd_ability = ctx.ability(*cooldown_from) if cooldown_from else ability
-        cd_value = extract_cd(cd_ability, rank) if cd_ability else 0.0
+        cd_value = extract_cd(cd_ability, rank, level=ctx.level) if cd_ability else 0.0
 
         if attr is None:
             total, resolved_type = extract_auto(
@@ -791,18 +843,21 @@ def simple_damage(
                 rank,
                 ctx.stats,
                 ctx.target,
+                level=ctx.level,
             )
             if total <= 0 and not ability.get("damageType"):
                 # Non-damaging ability (shields, buffs, etc.)
                 return None
         else:
-            total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+            total = extract_named(
+                ability, attr, rank, ctx.stats, ctx.target, level=ctx.level
+            )
             resolved_type = classify_damage_type(ability)
 
         if dmg_type != "auto":
             resolved_type = dmg_type
 
-        total *= _resolve_casts(casts, ability, rank)
+        total *= _resolve_casts(casts, ability, rank, ctx.level)
         name = ability.get("name", f"Ability {ctx.slot}")
         entry = damage_entry(
             name,
@@ -875,25 +930,29 @@ def stat_buff(
         if rank < 1:
             return None
 
-        value = extract_value(ability, attr, rank)
+        value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":
             value = value / 100.0 * ctx.stat(percent_of)
 
         damage = 0.0
         if damage_attr is not None:
-            damage = extract_named(ability, damage_attr, rank, ctx.stats, ctx.target)
+            damage = extract_named(
+                ability, damage_attr, rank, ctx.stats, ctx.target, level=ctx.level
+            )
 
         for key in apply_to:
             ctx.stats[key] = ctx.stat(key) + value
         if couples is not None:
             stats_key, couple_attr = couples
-            ctx.stats[stats_key] = extract_value(ability, couple_attr, rank)
+            ctx.stats[stats_key] = extract_value(
+                ability, couple_attr, rank, level=ctx.level
+            )
 
         name = ability.get("name", f"Ability {ctx.slot}")
         entry = damage_entry(
             name,
             rank,
-            extract_cooldown(ability, rank),
+            extract_cooldown(ability, rank, level=ctx.level),
             damage,
             dmg_type,
             zero_policy=(
@@ -1030,7 +1089,9 @@ def _slot_passive_on_hit(
     if rank < 1:
         return None
 
-    total, resolved_type = extract_auto(ability, rank, ctx.stats, ctx.target)
+    total, resolved_type = extract_auto(
+        ability, rank, ctx.stats, ctx.target, level=ctx.level
+    )
     if total <= 0:
         return None
 
@@ -1077,6 +1138,7 @@ def on_hit_auto(source: tuple[str, int] | None = None) -> SlotParser:
             ctx.level,
             ctx.stats,
             ctx.target,
+            level=ctx.level,
         )
         if total <= 0:
             return None

@@ -1295,11 +1295,12 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     )
     assert response.status_code == 200
     combat = response.get_json()["combat"]
-    shield = next(
+    shields = [
         event
         for event in combat["support_events"]
         if event["attacker"] == "main" and event["source"].startswith("Help, Pix!")
-    )
+    ]
+    shield = shields[0]
     assert shield["target"] == "ally:Jinx"
     assert shield["recipient"] == "ally:Jinx"
     assert shield["event_id"].startswith("main:support:")
@@ -1309,7 +1310,9 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     jinx = next(
         row for row in combat["participants"] if row["participant_id"] == "ally:Jinx"
     )
-    assert jinx["survival"]["support_shield_received"] == 230.0
+    # Every cast the window fits shields once; how many that is belongs to
+    # the cooldown, not to this receipt.
+    assert jinx["survival"]["support_shield_received"] == 230.0 * len(shields)
 
 
 def test_sona_aria_supports_sona_and_the_selected_ally():

@@ -1,0 +1,207 @@
+"""Tests for the champion-agnostic packet compiler.
+
+The claim under test is provenance, not arithmetic: every number a packet
+slot serves must come from the cache row the packet says it is evidence of.
+So each assertion is computed from ``data/champions.json`` at the rank the
+entry reports, never written as a literal — a patch that moves a cooldown
+moves both sides together.
+
+The compiler is exercised directly, over every packet in the reviewed
+asset, so the population is the evidence itself rather than whichever
+champions a test session happens to import first.
+"""
+
+import json
+from pathlib import Path
+
+import pytest
+
+from src.calculator.champions.engine import SlotCtx
+from src.calculator.champions.packet_module import _packet_parser
+from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions.slotlib import extract_cooldown
+from src.calculator.scenario import load_public_champion
+
+LEVEL = 18
+RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+STATS = {
+    "ability_power": 200.0,
+    "attack_damage": 200.0,
+    "base_attack_damage": 100.0,
+    "bonus_attack_damage": 100.0,
+    "health": 2000.0,
+    "base_health": 1200.0,
+    "bonus_health": 800.0,
+    "armor": 100.0,
+    "bonus_armor": 50.0,
+    "magic_resistance": 60.0,
+    "bonus_magic_resistance": 30.0,
+    "max_mana": 1000.0,
+    "bonus_mana": 400.0,
+}
+TARGET = {
+    "target_max_health": 2500.0,
+    "target_current_health": 2500.0,
+    "target_missing_health": 0.0,
+}
+
+_ASSET = Path(__file__).resolve().parents[1] / "static" / "reviewed-packets.json"
+
+
+def _packet_specs():
+    """Every ``(champion, slot, spec)`` the asset declares as a packet."""
+    champions = json.loads(_ASSET.read_text(encoding="utf-8"))["champions"]
+    rows = []
+    for champion, entry in champions.items():
+        for slot, spec in (entry.get("slots") or {}).items():
+            if spec.get("kind") == "packet":
+                rows.append((champion, slot, spec))
+            elif spec.get("kind") == "variants":
+                for variant in spec.get("variants") or []:
+                    if variant.get("kind") == "packet":
+                        rows.append((champion, slot, variant))
+    return rows
+
+
+PACKET_SPECS = _packet_specs()
+
+
+def _ctx(champion: str, slot: str) -> SlotCtx:
+    return SlotCtx(
+        slot=slot,
+        champion_name=champion,
+        abilities=load_public_champion(champion).get("abilities") or {},
+        level=LEVEL,
+        stats=dict(STATS),
+        target=dict(TARGET),
+        ability_ranks=dict(RANKS),
+    )
+
+
+def _source_ability(champion: str, slot: str, spec: dict):
+    source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
+    entries = (load_public_champion(champion).get("abilities") or {}).get(source[0], [])
+    return entries[source[1]] if source[1] < len(entries) else None
+
+
+def _compiled(champion: str, slot: str, spec: dict):
+    return _packet_parser(spec, slot)(_ctx(champion, slot))
+
+
+class TestPacketCooldownProvenance:
+    """The compiled cooldown is the cache's row at the rank being cast."""
+
+    def test_population_is_the_whole_asset(self) -> None:
+        assert len(PACKET_SPECS) > 400
+
+    def test_stored_scalar_is_only_ever_the_cache_rank_one_value(self) -> None:
+        """The asset's scalar is evidence of rank 1 and of nothing else.
+
+        This is what makes reading the cache a *fix* rather than a second
+        opinion: the two agree at the only rank a scalar can express, and
+        the scalar has nothing to say about any other.
+        """
+        divergent = []
+        for champion, slot, spec in PACKET_SPECS:
+            ability = _source_ability(champion, slot, spec)
+            if ability is None:
+                continue
+            stored = float(spec.get("cooldown", 0.0))
+            if abs(stored - extract_cooldown(ability, 1)) > 1e-9:
+                divergent.append((champion, slot, spec.get("name"), stored))
+        assert not divergent
+
+    def test_no_packet_serves_a_rank_one_cooldown_at_a_higher_rank(self) -> None:
+        """The defect's own signature, swept over every packet in the asset."""
+        frozen = []
+        for champion, slot, spec in PACKET_SPECS:
+            ability = _source_ability(champion, slot, spec)
+            entry = _compiled(champion, slot, spec)
+            if ability is None or entry is None:
+                continue
+            rank = entry["rank"]
+            expected = extract_cooldown(ability, rank, level=LEVEL)
+            if abs(float(entry["cooldown"]) - expected) > 1e-9:
+                frozen.append((champion, slot, entry["cooldown"], expected))
+        assert not frozen
+
+    def test_the_sweep_covers_rank_varying_cooldowns(self) -> None:
+        """The sweep above is only worth running because the axis moves."""
+        varying = 0
+        for champion, slot, spec in PACKET_SPECS:
+            ability = _source_ability(champion, slot, spec)
+            if ability is None:
+                continue
+            entry = _compiled(champion, slot, spec)
+            if entry is None:
+                continue
+            if extract_cooldown(ability, 1) != extract_cooldown(
+                ability, entry["rank"], level=LEVEL
+            ):
+                varying += 1
+        assert varying > 100
+
+    @pytest.mark.parametrize(
+        "champion,slot",
+        [("Thresh", "Q"), ("Vladimir", "E"), ("Talon", "R"), ("Samira", "Q")],
+    )
+    def test_a_maxed_ability_is_served_its_maxed_cooldown(
+        self, champion: str, slot: str
+    ) -> None:
+        """End to end, through the champion's own registered module."""
+        ability = load_public_champion(champion)["abilities"][slot][0]
+        parsed = parse_champion_abilities(
+            load_public_champion(champion),
+            LEVEL,
+            STATS["ability_power"],
+            dict(RANKS),
+            champion_stats=dict(STATS),
+            target_stats=dict(TARGET),
+        )
+        served = parsed[slot]["cooldown"]
+        assert served == extract_cooldown(ability, RANKS[slot])
+        assert served < extract_cooldown(ability, 1)
+
+    def test_alternate_source_reads_that_entry_cooldown(self) -> None:
+        """A packet pricing a form entry reads that entry's cooldown row.
+
+        Nidalee's Q packet is cougar-form Takedown (``["Q", 1]``), whose
+        cooldown row is not Javelin Toss's.
+        """
+        spec = next(
+            spec
+            for champion, slot, spec in PACKET_SPECS
+            if champion == "Nidalee" and slot == "Q" and spec.get("name") == "Takedown"
+        )
+        assert list(spec["source"]) == ["Q", 1]
+        abilities = load_public_champion("Nidalee")["abilities"]["Q"]
+        entry = _compiled("Nidalee", "Q", spec)
+        assert entry["cooldown"] == extract_cooldown(abilities[1], RANKS["Q"])
+
+    def test_per_level_cooldown_row_is_read_at_the_level(self) -> None:
+        """Aphelios' weapon cooldowns hold one value per level, not per rank."""
+        spec = next(
+            spec
+            for champion, slot, spec in PACKET_SPECS
+            if champion == "Aphelios" and slot == "Q"
+        )
+        values = _source_ability("Aphelios", "Q", spec)["cooldown"]["modifiers"][0][
+            "values"
+        ]
+        assert len(values) >= 18
+        entry = _compiled("Aphelios", "Q", spec)
+        assert entry["cooldown"] == pytest.approx(float(values[LEVEL - 1]))
+
+    def test_a_packet_without_a_cached_cooldown_row_serves_zero(self) -> None:
+        """No literal survives the cache going quiet — the row is the source."""
+        rows = [
+            (champion, slot, spec)
+            for champion, slot, spec in PACKET_SPECS
+            if (ability := _source_ability(champion, slot, spec)) is not None
+            and not (ability.get("cooldown") or {}).get("modifiers")
+        ]
+        assert rows
+        for champion, slot, spec in rows:
+            entry = _compiled(champion, slot, spec)
+            if entry is not None:
+                assert entry["cooldown"] == 0.0

@@ -9,6 +9,7 @@ from src.calculator.champions import (
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
 )
+from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.pipeline import FightParams, run_fight
 
 
@@ -404,13 +405,18 @@ def test_garen_demacian_justice_is_a_single_dynamic_health_hit():
 
 
 def test_poppy_hammer_shock_exports_both_authored_hits():
+    # The certified fact is the pair: every cast authors its impact and the
+    # sourced 1.0s aftershock. How many pairs fit the window is the
+    # cooldown's business, so only the first cast's absolute time is pinned.
     result = run_fight(_load_public_champion("Poppy"), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     hammer_shock = result["breakdown"]["Q"]
-    assert [round(event["time"], 2) for event in hammer_shock["damage_events"]] == [
-        0.0,
-        1.0,
-    ]
+    times = [round(event["time"], 2) for event in hammer_shock["damage_events"]]
+    assert times[0] == 0.0
+    assert len(times) % 2 == 0
+    assert [second - first for first, second in zip(times[::2], times[1::2])] == [
+        pytest.approx(1.0)
+    ] * (len(times) // 2)
     assert sum(
         event["damage"] for event in hammer_shock["damage_events"]
     ) == pytest.approx(hammer_shock["total_damage"])
@@ -461,11 +467,16 @@ def test_aurora_spirit_abjuration_on_hit_receipts_are_chronological():
 
 
 def test_warwick_jaws_of_the_beast_uses_the_sourced_bite_delay():
+    # The bite delay is the certified fact; the recast lands one cached
+    # cooldown later, read at the rank being cast rather than restated here.
     result = run_fight(_load_public_champion("Warwick"), 18, [], _timed_params())
     jaws = result["breakdown"]["Q"]
+    cooldown = extract_cooldown(
+        _load_public_champion("Warwick")["abilities"]["Q"][0], 5
+    )
     assert [round(event["time"], 3) for event in jaws["damage_events"]] == [
         0.264,
-        8.264,
+        round(0.264 + cooldown, 3),
     ]
     assert sum(event["damage"] for event in jaws["damage_events"]) == pytest.approx(
         jaws["total_damage"]

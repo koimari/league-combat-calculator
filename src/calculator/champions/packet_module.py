@@ -32,8 +32,9 @@ _FULL_ENTRY_ASSUMPTIONS = (
     "The complete parent Wiki entry was read before certifying this module.",
     "Passive plus Q/W/E/R entries are represented by explicit packet or "
     "no-damage slot declarations.",
-    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
-    "remain sourced from the local reviewed-packet asset.",
+    "Rank arrays, typed target-health terms, and packet variants remain "
+    "sourced from the local reviewed-packet asset; the cooldown of each "
+    "cast is read from the champion cache at the rank being cast.",
     "Non-damaging shields, buffs, movement, and utility branches remain "
     "explicit state/out-of-scope rows rather than invented damage.",
 )
@@ -96,11 +97,13 @@ def repeat_damage_parser(
         rank = ctx.rank_for()
         if rank < 1:
             return None
-        per_tick = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+        per_tick = extract_named(
+            ability, attr, rank, ctx.stats, ctx.target, level=ctx.level
+        )
         entry = damage_entry(
             name or ability.get("name", f"Ability {ctx.slot}"),
             rank,
-            extract_cooldown(ability, rank),
+            extract_cooldown(ability, rank, level=ctx.level),
             per_tick * count,
             dmg_type,
         )
@@ -147,12 +150,16 @@ def initial_plus_ticks_parser(
         rank = ctx.rank_for()
         if rank < 1:
             return None
-        initial = extract_named(ability, initial_attr, rank, ctx.stats, ctx.target)
-        per_tick = extract_named(ability, tick_attr, rank, ctx.stats, ctx.target)
+        initial = extract_named(
+            ability, initial_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        )
+        per_tick = extract_named(
+            ability, tick_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        )
         entry = damage_entry(
             name or ability.get("name", f"Ability {ctx.slot}"),
             rank,
-            extract_cooldown(ability, rank),
+            extract_cooldown(ability, rank, level=ctx.level),
             initial + per_tick * tick_count,
             dmg_type,
         )
@@ -199,12 +206,16 @@ def full_plus_reduced_parser(
         rank = ctx.rank_for()
         if rank < 1:
             return None
-        full = extract_named(ability, full_attr, rank, ctx.stats, ctx.target)
-        reduced = extract_named(ability, reduced_attr, rank, ctx.stats, ctx.target)
+        full = extract_named(
+            ability, full_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        )
+        reduced = extract_named(
+            ability, reduced_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        )
         entry = damage_entry(
             name or ability.get("name", f"Ability {ctx.slot}"),
             rank,
-            extract_cooldown(ability, rank),
+            extract_cooldown(ability, rank, level=ctx.level),
             full + reduced * reduced_count,
             dmg_type,
         )
@@ -244,6 +255,23 @@ def _ranked(values: list[float], rank: int) -> float:
     if not values:
         return 0.0
     return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+
+
+def _packet_cooldown(ctx: SlotCtx, spec: dict[str, Any], slot: str, rank: int) -> float:
+    """The cast's cooldown, read from the cache at the rank being cast.
+
+    The packet asset stores one scalar per slot — the rank-1 value its
+    generator captured — which served rank 1's cooldown at every rank and so
+    suppressed casts in every timed fight.  The cooldown's one home is
+    ``data/champions.json``, the same cache every hand-written module reads,
+    so the packet stays evidence and the served number comes from the row it
+    is evidence of.  It is read at the packet's *declared* source, because a
+    packet may price a recast or form entry (Nidalee's cougar Q, Aphelios'
+    weapon variants) rather than entry 0 of its own slot.
+    """
+    source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
+    ability = ctx.ability(*source)
+    return extract_cooldown(ability, rank, level=ctx.level) if ability else 0.0
 
 
 def _packet_parser(
@@ -308,7 +336,7 @@ def _packet_parser(
         entry = damage_entry(
             ability.get("name", spec.get("name", f"Ability {slot}")),
             rank,
-            float(spec.get("cooldown", 0.0)),
+            _packet_cooldown(ctx, spec, slot, rank),
             total_raw,
             damage_type,
         )
@@ -410,6 +438,7 @@ def _apply_packet_tick_fix(
                 rank,
                 ctx.stats,
                 ctx.target,
+                level=ctx.level,
             )
             if ability is not None
             else 0.0
@@ -486,6 +515,7 @@ def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
             rank,
             ctx.stats,
             ctx.target,
+            level=ctx.level,
         )
         count = int(fix.get("count", 1))
         total = per_tick * count
@@ -495,7 +525,7 @@ def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
         entry = damage_entry(
             ability.get("name", spec.get("name", f"Ability {ctx.slot}")),
             rank,
-            extract_cooldown(ability, rank),
+            extract_cooldown(ability, rank, level=ctx.level),
             total,
             dmg_type,
         )
